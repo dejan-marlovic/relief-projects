@@ -1,6 +1,7 @@
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./pages/Layout";
+import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Budget from "./pages/Budget";
 import Project from "./pages/Project";
@@ -10,6 +11,8 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/login" element={<Login />} />
+
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
           <Route path="project" element={<Project />} />
