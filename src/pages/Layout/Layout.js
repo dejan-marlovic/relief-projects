@@ -29,7 +29,7 @@ const Layout = () => {
               to="/budgets"
               className={location.pathname === "/budgets" ? styles.active : ""}
             >
-              Budget
+              Budgets
             </Link>
           </li>
           <li>
