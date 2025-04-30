@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function Login() {
+  //inital state of username is "" and the update function is given name "setUsername"
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -10,26 +11,27 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const payload = { username, password };
+    const loginDetails = { username, password };
 
     try {
       const response = await fetch("http://localhost:8080/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        //turns provided login details from the form into json string and adds it to POST request body
+        body: JSON.stringify(loginDetails),
       });
 
       if (!response.ok) throw new Error("Login failed");
 
-      const data = await response.json();
+      const tokenJsonObject = await response.json();
 
       // 🔐 Store the token in localStorage
-      localStorage.setItem("authToken", data.token);
+      localStorage.setItem("authToken", tokenJsonObject.token);
 
       setMessage("Login successful!");
 
       // ✅ Redirect to Home
-      navigate("/");
+      navigate("/project");
     } catch (error) {
       console.error("Error:", error);
       setMessage("Login failed. Please try again.");
