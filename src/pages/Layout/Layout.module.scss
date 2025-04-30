@@ -10,7 +10,13 @@ $nav-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 $tab-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 $tab-active-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 
+h1 {
+  color: #4a90e2;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
 nav {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background-color: $nav-bg-color;
   border-radius: $border-radius;
   margin: 1.5rem 0; // removed auto-centering

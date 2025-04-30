@@ -6,6 +6,9 @@ const Layout = () => {
 
   return (
     <>
+      <h1>
+        <strong>Relief Projects</strong>
+      </h1>
       <nav className={styles.nav}>
         <ul>
           <li>
