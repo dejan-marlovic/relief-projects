@@ -38,12 +38,14 @@ const Project = () => {
   };
 
   return (
-    <div style={{ maxWidth: "500px", margin: "2rem auto" }}>
-      <h2>Select a Project</h2>
+    <div style={{ maxWidth: "500px" }}>
+      <div>
+        <strong>Select a Project</strong>
+      </div>
       <select
         value={selectedProjectId}
         onChange={handleSelectChange}
-        style={{ width: "100%", padding: "0.5rem" }}
+        style={{ padding: "0.5rem" }}
       >
         <option value="">-- Select a Project --</option>
         {projects.map((project) => (
@@ -55,7 +57,7 @@ const Project = () => {
 
       {selectedProjectId && (
         <p style={{ marginTop: "1rem" }}>
-          Selected Project ID: <strong>{selectedProjectId}</strong>
+          Selected Project ID: {selectedProjectId}
         </p>
       )}
     </div>
