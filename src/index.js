@@ -1,6 +1,6 @@
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Layout from "./pages/Layout";
+import Layout from "./pages/Layout/Layout";
 import Login from "./pages/Login/Login";
 import Transactions from "./pages/Transactions";
 import Budgets from "./pages/Budgets";
