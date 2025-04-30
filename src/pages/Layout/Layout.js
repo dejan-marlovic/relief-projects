@@ -10,14 +10,6 @@ const Layout = () => {
         <ul>
           <li>
             <Link
-              to="/"
-              className={location.pathname === "/" ? styles.active : ""}
-            >
-              Home
-            </Link>
-          </li>
-          <li>
-            <Link
               to="/project"
               className={location.pathname === "/project" ? styles.active : ""}
             >
