@@ -2,13 +2,14 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./pages/Layout/Layout";
 import Login from "./pages/Login/Login";
-import Transactions from "./pages/Transactions";
-import Budgets from "./pages/Budgets";
-import Project from "./pages/Project";
-import Payments from "./pages/Payments";
-import Signatures from "./pages/Signatures";
-import Recipients from "./pages/Recipients";
-import NoPage from "./pages/NoPage";
+import Transactions from "./pages/Transactions/Transactions";
+import Budgets from "./pages/Budgets/Budgets";
+import Project from "./pages/Project/Project";
+import Payments from "./pages/Payments/Payments";
+import Signatures from "./pages/Signatures/Signatures";
+import Recipients from "./pages/Recipients/Recipients";
+import Documents from "./pages/Documents/Documents";
+import NoPage from "./pages/NoPage/NoPage";
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="payments" element={<Payments />} />
           <Route path="signatures" element={<Signatures />} />
           <Route path="recipients" element={<Recipients />} />
+          <Route path="documents" element={<Documents />} />
           <Route path="*" element={<NoPage />} />
         </Route>
       </Routes>
