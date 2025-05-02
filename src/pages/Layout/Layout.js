@@ -65,6 +65,16 @@ const Layout = () => {
               Recipients
             </Link>
           </li>
+          <li>
+            <Link
+              to="/documents"
+              className={
+                location.pathname === "/documents" ? styles.active : ""
+              }
+            >
+              Documents
+            </Link>
+          </li>
         </ul>
       </nav>
 
