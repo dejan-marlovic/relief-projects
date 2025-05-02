@@ -6,6 +6,9 @@ const Layout = () => {
 
   return (
     <>
+      <h1>
+        <strong>Relief Projects</strong>
+      </h1>
       <nav className={styles.nav}>
         <ul>
           <li>
@@ -60,6 +63,16 @@ const Layout = () => {
               }
             >
               Recipients
+            </Link>
+          </li>
+          <li>
+            <Link
+              to="/documents"
+              className={
+                location.pathname === "/documents" ? styles.active : ""
+              }
+            >
+              Documents
             </Link>
           </li>
         </ul>
