@@ -1,46 +1,33 @@
-//Import React core and two hooks: useEffect and useState
-import React, { useEffect, useState } from "react";
-import styles from "./Project.module.scss"; // Import scoped styles
+// Import React core and two hooks: useEffect and useState
+import React, { useEffect, useState, useContext } from "react";
 
-//Define main project component
+// Import styling
+import styles from "./Project.module.scss";
+
+// Import context to access selected project ID
+import { ProjectContext } from "../../context/ProjectContext"; // Adjust path as needed
+
+// Define main project component
 const Project = () => {
-  const [projects, setProjects] = useState([]); // List of projects
-  const [selectedProjectId, setSelectedProjectId] = useState(""); // Selected ID
-  const [projectDetails, setProjectDetails] = useState(null); // Full project details
-  const [loading, setLoading] = useState(false); // Loading state
+  // Access selected project ID from global context
+  const { selectedProjectId } = useContext(ProjectContext);
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch(
-          "http://localhost:8080/api/projects/ids-names",
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        if (!response.ok) throw new Error("Failed to fetch projects");
-        const projectNameAndIds = await response.json();
-        setProjects(projectNameAndIds);
-        if (projectNameAndIds.length > 0) {
-          setSelectedProjectId(projectNameAndIds[0].id.toString()); // Set first project as default
-        }
-      } catch (error) {
-        console.error("Error fetching project list:", error);
-      }
-    };
-    fetchProjects();
-  }, []);
+  // State to store full project details
+  const [projectDetails, setProjectDetails] = useState(null);
 
+  // State to track loading status
+  const [loading, setLoading] = useState(false);
+
+  // Fetch full project details when selected project ID changes
   useEffect(() => {
     if (!selectedProjectId) return;
+
     const fetchProjectDetails = async () => {
       try {
         setLoading(true);
+
         const token = localStorage.getItem("authToken");
+
         const response = await fetch(
           `http://localhost:8080/api/projects/${selectedProjectId}`,
           {
@@ -50,7 +37,9 @@ const Project = () => {
             },
           }
         );
-        if (!response.ok) throw new Error("Faild to fetch project details");
+
+        if (!response.ok) throw new Error("Failed to fetch project details");
+
         const projectDetailsData = await response.json();
         setProjectDetails(projectDetailsData);
       } catch (error) {
@@ -59,13 +48,11 @@ const Project = () => {
         setLoading(false);
       }
     };
+
     fetchProjectDetails();
   }, [selectedProjectId]);
 
-  const handleSelectChange = (e) => {
-    setSelectedProjectId(e.target.value);
-  };
-
+  // Handle edits to project detail form fields
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setProjectDetails((prev) => ({
@@ -76,22 +63,7 @@ const Project = () => {
 
   return (
     <div className={styles.projectContainer}>
-      <div className={styles.selectorContainer}>
-        <strong>Select a Project</strong>
-        <br />
-        <select
-          value={selectedProjectId}
-          onChange={handleSelectChange}
-          className={styles.selectInput}
-        >
-          {projects.map((project) => (
-            <option key={project.id} value={project.id}>
-              {project.projectName}
-            </option>
-          ))}
-        </select>
-      </div>
-
+      {/* Project details form, shown only if a project is loaded */}
       {projectDetails && (
         <div className={styles.formContainer}>
           <h3>Project Details</h3>
@@ -162,4 +134,5 @@ const Project = () => {
   );
 };
 
+// Export the component
 export default Project;
