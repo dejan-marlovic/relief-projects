@@ -1,14 +1,55 @@
+// Import React core and hooks
+import React, { useContext } from "react";
+
+// Import routing tools for navigation and current location highlighting
 import { Outlet, Link, useLocation } from "react-router-dom";
+
+// Import styling
 import styles from "./Layout.module.scss";
 
+// Import the ProjectContext to access project list and selected project ID
+import { ProjectContext } from "../../context/ProjectContext"; // Adjust path if needed
+
+// Define the Layout component that wraps the whole app UI
 const Layout = () => {
+  // Use location hook to highlight the active tab
   const location = useLocation();
+
+  // Destructure context values: full project list, selected project ID, and the setter
+  const { projects, selectedProjectId, setSelectedProjectId } =
+    useContext(ProjectContext);
+
+  // Handle project selection changes
+  const handleSelectChange = (e) => {
+    setSelectedProjectId(e.target.value);
+  };
 
   return (
     <>
+      {/* Page title */}
       <h1>
         <strong>Relief Projects</strong>
       </h1>
+
+      {/* Project Selector - now persistent across all tabs */}
+      <div className={styles.selectorContainer}>
+        <strong>Select a Project</strong>
+        <br />
+        <select
+          value={selectedProjectId}
+          onChange={handleSelectChange}
+          className={styles.selectInput}
+        >
+          {/* Render project options */}
+          {projects.map((project) => (
+            <option key={project.id} value={project.id}>
+              {project.projectName}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Navigation bar for different tabs */}
       <nav className={styles.nav}>
         <ul>
           <li>
@@ -78,9 +119,11 @@ const Layout = () => {
         </ul>
       </nav>
 
+      {/* Renders the selected route's component */}
       <Outlet />
     </>
   );
 };
 
+// Export Layout component
 export default Layout;
