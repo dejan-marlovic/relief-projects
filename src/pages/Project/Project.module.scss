@@ -56,3 +56,35 @@ h3 {
   margin-bottom: 1rem;
   color: #4a90e2;
 }
+
+.imageAndFormWrapper {
+  display: flex;
+  flex-direction: row-reverse; /* ⬅️ This moves the image to the right */
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+/*
+
+✅ What this does:
+.imageContainer is now exactly 30% of the .imageAndFormWrapper's width.
+
+The image fills that space, scales responsively, and looks clean.
+
+.formContent will naturally take the remaining 70% thanks to flex: 1.
+*/
+
+.imageContainer {
+  flex: 0 0 35%; /* Fixed to 30% of the parent container */
+}
+
+.coverImage {
+  width: 100%; /* Fill the container */
+  height: auto;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.formContent {
+  flex: 1; /* 💡 This lets it fill remaining space */
+}
