@@ -50,7 +50,22 @@ const Project = () => {
     };
 
     fetchProjectDetails();
+    //Dependency passed to useEffect so useEffect will run every time
+    //selectedProjectId is changed
   }, [selectedProjectId]);
+
+  /*
+   An empty array:
+
+  useEffect(() => {
+    //Runs only on the first render, because we pass empty arry to useEffect()
+  }, []);
+
+  useEffect(() => {
+    //Runs on the first render
+    //And any time any dependency value changes
+  }, [prop, state]);
+  */
 
   // Handle edits to project detail form fields
   const handleInputChange = (e) => {
