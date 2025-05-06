@@ -8,7 +8,7 @@ import { Outlet, Link, useLocation } from "react-router-dom";
 import styles from "./Layout.module.scss";
 
 // Import the ProjectContext to access project list and selected project ID
-import { ProjectContext } from "../../context/ProjectContext"; // Adjust path if needed
+import { ProjectContext } from "../../context/ProjectContext";
 
 // Define the Layout component that wraps the whole app UI
 const Layout = () => {

@@ -12,11 +12,12 @@ $tab-active-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 
 .selectorContainer {
   flex: 1;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .selectInput {
   padding: 0.75rem;
-  width: 100%;
+  width: 25%;
   margin-top: 0.5rem;
   border: 1px solid #ccc;
   border-radius: 8px;
