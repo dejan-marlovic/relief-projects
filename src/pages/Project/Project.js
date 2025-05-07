@@ -21,6 +21,12 @@ const Project = () => {
   // State to track whether the data is being loaded
   const [loading, setLoading] = useState(false);
 
+  const [projectStatuses, setProjectStatuses] = useState([]);
+
+  const [projectTypes, setProjectTypes] = useState([]);
+
+  const [addresses, setAddresses] = useState([]);
+
   // Fetch full project details from backend when selectedProjectId changes
   useEffect(() => {
     if (!selectedProjectId) return; // Do nothing if no project selected
@@ -52,6 +58,68 @@ const Project = () => {
 
     fetchProjectDetails(); // Trigger fetch
   }, [selectedProjectId]); // Dependency: runs when selectedProjectId changes
+
+  useEffect(() => {
+    const fetchProjectStatuses = async () => {
+      try {
+        const token = localStorage.getItem("authToken");
+        const response = await fetch(
+          "http://localhost:8080/api/project-statuses/active",
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) throw new Error("Failed to fetch project statuses");
+
+        const statuses = await response.json();
+        setProjectStatuses(statuses);
+      } catch (error) {
+        console.error("Error fetching project statuses:", error);
+      }
+    };
+
+    fetchProjectStatuses();
+  }, []);
+
+  useEffect(() => {
+    const fetchTypesAndAddresses = async () => {
+      try {
+        const token = localStorage.getItem("authToken");
+
+        const [typeRes, addressRes] = await Promise.all([
+          fetch("http://localhost:8080/api/project-types/active", {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+          fetch("http://localhost:8080/api/addresses/active", {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+        ]);
+
+        if (!typeRes.ok) throw new Error("Failed to fetch project types");
+        if (!addressRes.ok) throw new Error("Failed to fetch addresses");
+
+        const typesData = await typeRes.json();
+        const addressesData = await addressRes.json();
+
+        setProjectTypes(typesData);
+        setAddresses(addressesData);
+      } catch (error) {
+        console.error("Error fetching types or addresses:", error);
+      }
+    };
+
+    fetchTypesAndAddresses();
+  }, []);
 
   // Fetch project cover image from backend when selectedProjectId changes
   useEffect(() => {
@@ -236,7 +304,7 @@ const Project = () => {
                           name="approved"
                           value={projectDetails.approved || ""}
                           onChange={handleInputChange}
-                          className={styles.selectInput}
+                          className={styles.textInput}
                         >
                           <option value="Yes">Yes</option>
                           <option value="No">No</option>
@@ -248,38 +316,57 @@ const Project = () => {
                     <div className={styles.formColumnRight}>
                       {/* Project Status ID */}
                       <div>
-                        <label>Project Status ID:</label>
-                        <input
-                          type="number"
+                        <label>Project Status:</label>
+                        <select
                           name="projectStatusId"
                           value={projectDetails.projectStatusId || ""}
                           onChange={handleInputChange}
                           className={styles.textInput}
-                        />
+                        >
+                          <option value="">Select status</option>
+                          {projectStatuses.map((status) => (
+                            <option key={status.id} value={status.id}>
+                              {status.statusName}
+                            </option>
+                          ))}
+                        </select>
                       </div>
 
                       {/* Project Type ID */}
                       <div>
-                        <label>Project Type ID:</label>
-                        <input
-                          type="number"
+                        <label>Project Type:</label>
+                        <select
                           name="projectTypeId"
                           value={projectDetails.projectTypeId || ""}
                           onChange={handleInputChange}
                           className={styles.textInput}
-                        />
+                        >
+                          <option value="">Select type</option>
+                          {projectTypes.map((type) => (
+                            <option key={type.id} value={type.id}>
+                              {type.projectTypeName}
+                            </option>
+                          ))}
+                        </select>
                       </div>
 
                       {/* Address ID */}
                       <div>
-                        <label>Address ID:</label>
-                        <input
-                          type="number"
+                        <label>Address:</label>
+                        <select
                           name="addressId"
                           value={projectDetails.addressId || ""}
                           onChange={handleInputChange}
                           className={styles.textInput}
-                        />
+                        >
+                          <option value="">Select address</option>
+                          {addresses.map((address) => (
+                            <option key={address.id} value={address.id}>
+                              {address.street || ""}, {address.city || ""},{" "}
+                              {address.country}
+                            </option>
+                          ))}
+                        </select>
                       </div>
 
                       {/* Project Period (Months) */}
