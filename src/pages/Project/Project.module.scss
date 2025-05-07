@@ -88,3 +88,20 @@ The image fills that space, scales responsively, and looks clean.
 .formContent {
   flex: 1; /* 💡 This lets it fill remaining space */
 }
+
+.formTwoColumn {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap; /* Helps on smaller screens */
+}
+
+.formColumnLeft,
+.formColumnRight {
+  flex: 1;
+  min-width: 300px;
+}
+
+.fullWidthField {
+  width: 100%;
+  margin-bottom: 2rem;
+}
