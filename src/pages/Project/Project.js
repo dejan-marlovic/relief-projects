@@ -194,7 +194,7 @@ const Project = () => {
               ) : (
                 <form>
                   {/* Project Description */}
-                  <div className={styles.fullWidthField}>
+                  <div className={(styles.fullWidthField, styles.textInput)}>
                     <label>Project Description:</label>
                     <textarea
                       name="projectDescription"
