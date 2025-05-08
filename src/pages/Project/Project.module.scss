@@ -96,3 +96,28 @@ The image fills that space, scales responsively, and looks clean.
   flex: 1;
   min-width: 300px;
 }
+
+.saveButton {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #4a90e2;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.deleteButton {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #e74c3c;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  align-self: flex-start;
+  margin-left: 1rem; /* adds spacing if it's next to the Save button */
+}
