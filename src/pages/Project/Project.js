@@ -27,6 +27,8 @@ const Project = () => {
 
   const [addresses, setAddresses] = useState([]);
 
+  const [availableParentProjects, setAvailableParentProjects] = useState([]);
+
   // Fetch full project details from backend when selectedProjectId changes
   useEffect(() => {
     if (!selectedProjectId) return; // Do nothing if no project selected
@@ -84,6 +86,38 @@ const Project = () => {
 
     fetchProjectStatuses();
   }, []);
+
+  useEffect(() => {
+    const fetchAvailableParentProjects = async () => {
+      try {
+        const token = localStorage.getItem("authToken");
+        const response = await fetch(
+          "http://localhost:8080/api/projects/ids-names",
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) throw new Error("Failed to fetch project list");
+
+        const allProjects = await response.json();
+
+        // Exclude the currently selected project from the dropdown
+        const filteredProjects = allProjects.filter(
+          (p) => p.id.toString() !== selectedProjectId
+        );
+
+        setAvailableParentProjects(filteredProjects);
+      } catch (error) {
+        console.error("Error fetching parent projects:", error);
+      }
+    };
+
+    fetchAvailableParentProjects();
+  }, [selectedProjectId]);
 
   useEffect(() => {
     const fetchTypesAndAddresses = async () => {
@@ -463,14 +497,20 @@ const Project = () => {
 
                       {/* Part Of Project ID */}
                       <div>
-                        <label>Part Of (Project ID):</label>
-                        <input
-                          type="number"
+                        <label>Part Of Project:</label>
+                        <select
                           name="partOfId"
                           value={projectDetails.partOfId || ""}
                           onChange={handleInputChange}
                           className={styles.textInput}
-                        />
+                        >
+                          <option value="">Select parent project</option>
+                          {availableParentProjects.map((proj) => (
+                            <option key={proj.id} value={proj.id}>
+                              {proj.projectName}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                     </div>
                   </div>
