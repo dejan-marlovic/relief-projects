@@ -201,6 +201,31 @@ const Project = () => {
     textarea.style.height = `${textarea.scrollHeight}px`; // Set height to fit content
   };
 
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+
+      const response = await fetch(
+        `http://localhost:8080/api/projects/${projectDetails.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(projectDetails),
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to update project");
+
+      alert("Project updated successfully!");
+    } catch (error) {
+      console.error("Update error:", error);
+      alert("Error updating project.");
+    }
+  };
+
   return (
     <div className={styles.projectContainer}>
       {/* Render form only if project details are available */}
@@ -344,6 +369,13 @@ const Project = () => {
                           <option value="No">No</option>
                         </select>
                       </div>
+                      <button
+                        type="button"
+                        onClick={handleSave}
+                        className={styles.saveButton}
+                      >
+                        Save
+                      </button>
                     </div>
 
                     {/* Right Column */}
