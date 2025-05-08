@@ -13,26 +13,22 @@
   flex: 1;
 }
 
-.selectInput {
-  padding: 0.75rem;
-  width: 100%;
-  margin-top: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 1rem;
-}
-
 .formContainer {
   flex: 2;
 }
 
-.textInput {
+.textInput,
+input[type="datetime-local"] {
   width: 100%;
   padding: 0.75rem;
   margin-bottom: 1.25rem;
   border: 1px solid #ccc;
   border-radius: 8px;
   font-size: 1rem;
+  font-family: inherit;
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none; /* Safari */
 }
 
 .textareaInput {
@@ -99,9 +95,4 @@ The image fills that space, scales responsively, and looks clean.
 .formColumnRight {
   flex: 1;
   min-width: 300px;
-}
-
-.fullWidthField {
-  width: 100%;
-  margin-bottom: 2rem;
 }
