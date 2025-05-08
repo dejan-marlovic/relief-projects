@@ -52,7 +52,7 @@ const ProjectProvider = ({ children }) => {
 
   return (
     <ProjectContext.Provider
-      value={{ projects, selectedProjectId, setSelectedProjectId }}
+      value={{ projects, setProjects, selectedProjectId, setSelectedProjectId }}
     >
       {children}
     </ProjectContext.Provider>
