@@ -32,22 +32,23 @@ const Layout = () => {
       </h1>
 
       {/* Project Selector - now persistent across all tabs */}
-      <div className={styles.selectorContainer}>
-        <strong>Select a Project</strong>
-        <br />
-        <select
-          value={selectedProjectId}
-          onChange={handleSelectChange}
-          className={styles.selectInput}
-        >
-          {/* Render project options */}
-          {projects.map((project) => (
-            <option key={project.id} value={project.id}>
-              {project.projectName}
-            </option>
-          ))}
-        </select>
-      </div>
+      {location.pathname !== "/register-project" && (
+        <div className={styles.selectorContainer}>
+          <strong>Select a Project</strong>
+          <br />
+          <select
+            value={selectedProjectId}
+            onChange={handleSelectChange}
+            className={styles.selectInput}
+          >
+            {projects.map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.projectName}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Navigation bar for different tabs */}
       <nav className={styles.nav}>
@@ -114,6 +115,16 @@ const Layout = () => {
               }
             >
               Documents
+            </Link>
+          </li>
+          <li>
+            <Link
+              to="/register-project"
+              className={
+                location.pathname === "/register-project" ? styles.active : ""
+              }
+            >
+              Register New Project
             </Link>
           </li>
         </ul>
