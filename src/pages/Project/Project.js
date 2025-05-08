@@ -10,7 +10,8 @@ import { ProjectContext } from "../../context/ProjectContext";
 // Define the Project component
 const Project = () => {
   // Extract selected project ID from global context
-  const { selectedProjectId } = useContext(ProjectContext);
+  const { selectedProjectId, setSelectedProjectId, projects, setProjects } =
+    useContext(ProjectContext);
 
   // Local state for full project details
   const [projectDetails, setProjectDetails] = useState(null);
@@ -201,6 +202,49 @@ const Project = () => {
     textarea.style.height = `${textarea.scrollHeight}px`; // Set height to fit content
   };
 
+  const handleDelete = async () => {
+    if (!window.confirm("Are you sure you want to delete this project?"))
+      return;
+
+    try {
+      const token = localStorage.getItem("authToken");
+
+      const response = await fetch(
+        `http://localhost:8080/api/projects/${projectDetails.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to delete project");
+
+      alert("Project deleted successfully!");
+
+      // Filter it out from context
+      const updatedProjects = projects.filter(
+        (p) => p.id !== projectDetails.id
+      );
+      setProjects(updatedProjects);
+
+      // Reset to another project if available
+      if (updatedProjects.length > 0) {
+        setSelectedProjectId(updatedProjects[0].id.toString());
+      } else {
+        setSelectedProjectId("");
+      }
+
+      // Optionally clear UI state
+      setProjectDetails(null);
+      setCoverImage(null);
+    } catch (error) {
+      console.error("Delete error:", error);
+      alert("Error deleting project.");
+    }
+  };
+
   const handleSave = async () => {
     try {
       const token = localStorage.getItem("authToken");
@@ -375,6 +419,13 @@ const Project = () => {
                         className={styles.saveButton}
                       >
                         Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleDelete}
+                        className={styles.deleteButton}
+                      >
+                        Delete
                       </button>
                     </div>
 
