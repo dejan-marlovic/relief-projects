@@ -98,7 +98,7 @@ const RegisterProject = () => {
   };
 
   return (
-    <div className={styles.projectContainer}>
+    <div className={styles.registerContainer}>
       <div className={styles.formContainer}>
         <h3>Register New Project</h3>
         <form className={styles.formTwoColumn}>
@@ -157,7 +157,7 @@ const RegisterProject = () => {
               onChange={handleInputChange}
             />
 
-            <div className={styles.fieldGroup}>
+            <div className={styles.textInput}>
               <label>Project Date:</label>
               <input
                 type="datetime-local"
@@ -171,7 +171,7 @@ const RegisterProject = () => {
               </small>
             </div>
 
-            <div className={styles.fieldGroup}>
+            <div className={styles.textInput}>
               <label>Project Start:</label>
               <input
                 type="datetime-local"
@@ -185,7 +185,7 @@ const RegisterProject = () => {
               </small>
             </div>
 
-            <div className={styles.fieldGroup}>
+            <div className={styles.textInput}>
               <label>Project End:</label>
               <input
                 type="datetime-local"
@@ -257,7 +257,7 @@ const RegisterProject = () => {
               ))}
             </select>
 
-            <div className={styles.fieldGroup}>
+            <div className={styles.textInput}>
               <label>Project Start (Revised):</label>
               <input
                 type="datetime-local"
@@ -271,7 +271,7 @@ const RegisterProject = () => {
               </small>
             </div>
 
-            <div className={styles.fieldGroup}>
+            <div className={styles.textInput}>
               <label>Project End (Revised):</label>
               <input
                 type="datetime-local"

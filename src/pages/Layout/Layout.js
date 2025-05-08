@@ -24,6 +24,7 @@ const Layout = () => {
     setSelectedProjectId(e.target.value);
   };
 
+  const isRegisterPage = location.pathname === "/register-project";
   return (
     <>
       {/* Page title */}
@@ -31,24 +32,29 @@ const Layout = () => {
         <strong>Relief Projects</strong>
       </h1>
 
+      {/* 👇 Conditionally apply a hidden style */}
+
       {/* Project Selector - now persistent across all tabs */}
-      {location.pathname !== "/register-project" && (
-        <div className={styles.selectorContainer}>
-          <strong>Select a Project</strong>
-          <br />
-          <select
-            value={selectedProjectId}
-            onChange={handleSelectChange}
-            className={styles.selectInput}
-          >
-            {projects.map((project) => (
-              <option key={project.id} value={project.id}>
-                {project.projectName}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
+
+      <div
+        className={`${styles.selectorContainer} ${
+          isRegisterPage ? styles.hiddenSelector : ""
+        }`}
+      >
+        <strong>Select a Project</strong>
+        <br />
+        <select
+          value={selectedProjectId}
+          onChange={handleSelectChange}
+          className={styles.selectInput}
+        >
+          {projects.map((project) => (
+            <option key={project.id} value={project.id}>
+              {project.projectName}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {/* Navigation bar for different tabs */}
       <nav className={styles.nav}>
