@@ -1,3 +1,4 @@
+/* Budgets.jsx */
 import React, { useEffect, useState, useContext } from "react";
 import styles from "./Budgets.module.scss";
 import { ProjectContext } from "../../context/ProjectContext";
@@ -83,7 +84,7 @@ const Budgets = () => {
           />
         </div>
 
-        <div className={styles.formItem}>
+        <div className={`${styles.formItem} ${styles.narrowField}`}>
           <label htmlFor="budgetPreparationDate">
             Budget Preparation Date:
           </label>
@@ -97,7 +98,7 @@ const Budgets = () => {
           />
         </div>
 
-        <div className={styles.formItem}>
+        <div className={`${styles.formItem} ${styles.narrowField}`}>
           <label htmlFor="totalAmount">Total Amount:</label>
           <input
             type="number"

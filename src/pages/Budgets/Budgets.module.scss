@@ -1,3 +1,4 @@
+/* Budgets.module.scss */
 .budgetContainer {
   display: flex;
   flex-direction: column;
@@ -21,6 +22,12 @@
   flex: 1;
   min-width: 180px;
   margin-bottom: 0 !important;
+}
+
+.narrowField {
+  width: 30%;
+  flex: none;
+  min-width: 180px;
 }
 
 .fullWidthField {
