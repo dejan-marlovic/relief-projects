@@ -1,0 +1,98 @@
+.registerContainer {
+  display: flex;
+  gap: 2rem;
+  padding: 2rem;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin-top: 1rem;
+}
+
+.formContainer {
+  flex: 2;
+}
+
+.textInput,
+input[type="datetime-local"] {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1.25rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.textareaInput {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1.25rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  resize: vertical;
+}
+
+label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.4rem;
+  color: #333;
+}
+
+h3 {
+  margin-bottom: 1rem;
+  color: #4a90e2;
+}
+
+.formTwoColumn {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.formColumnLeft,
+.formColumnRight {
+  flex: 1;
+  min-width: 300px;
+}
+
+.saveButton {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #4a90e2;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.cancelButton {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #999;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  align-self: flex-start;
+  margin-left: 1rem;
+}
+
+.fieldGroup {
+  margin-bottom: 1.5rem;
+}
+
+.helperText {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 0.25rem;
+  display: block;
+}
