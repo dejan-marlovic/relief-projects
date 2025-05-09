@@ -14,22 +14,18 @@ import Payments from "./pages/Payments/Payments";
 import Signatures from "./pages/Signatures/Signatures";
 import Recipients from "./pages/Recipients/Recipients";
 import Documents from "./pages/Documents/Documents";
+import RegisterProject from "./pages/RegisterProject/RegisterProject"; // ✅ Add this line
 import NoPage from "./pages/NoPage/NoPage";
 
 // Import the ProjectProvider to share project data across the app
-import { ProjectProvider } from "./context/ProjectContext"; // 👈 Make sure path is correct
+import { ProjectProvider } from "./context/ProjectContext";
 
-// Define and export App component
 export default function App() {
   return (
-    // Wrap the entire app in ProjectProvider so context is available globally
     <ProjectProvider>
       <BrowserRouter>
         <Routes>
-          {/* Login page is separate and doesn’t use Layout */}
           <Route path="/login" element={<Login />} />
-
-          {/* All other pages are nested inside the Layout */}
           <Route path="/" element={<Layout />}>
             <Route index element={<Project />} />
             <Route path="project" element={<Project />} />
@@ -39,6 +35,8 @@ export default function App() {
             <Route path="signatures" element={<Signatures />} />
             <Route path="recipients" element={<Recipients />} />
             <Route path="documents" element={<Documents />} />
+            <Route path="register-project" element={<RegisterProject />} />{" "}
+            {/* ✅ New route */}
             <Route path="*" element={<NoPage />} />
           </Route>
         </Routes>
@@ -47,6 +45,6 @@ export default function App() {
   );
 }
 
-// Mount the app to the DOM
+// Mount the app
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(<App />);
