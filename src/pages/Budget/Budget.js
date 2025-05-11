@@ -163,8 +163,6 @@ const Budget = ({
               <button className={styles.saveButton} onClick={handleSave}>
                 Save
               </button>
-            </div>
-            <div className={styles.headerRow}>
               <button className={styles.deleteButton} onClick={handleDelete}>
                 Delete
               </button>

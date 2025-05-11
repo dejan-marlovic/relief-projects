@@ -1,4 +1,4 @@
-/* Budgets.module.scss */
+/* Budget.module.scss */
 .budgetContainer {
   display: flex;
   flex-direction: column;
@@ -104,45 +104,47 @@ h3 {
   grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
 }
+
 .formColumnRight {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
 
-.saveButton {
+.buttonRow {
+  display: flex;
+  gap: 1.5rem;
   margin-top: 1rem;
+}
+
+.saveButton {
   padding: 0.75rem 1.5rem;
   background-color: #4a90e2;
   color: #fff;
   border: none;
   border-radius: 8px;
   font-weight: 600;
+  font-size: 1rem;
   cursor: pointer;
-  align-self: flex-start;
+  transition: background-color 0.2s;
 }
 
-.cancelButton {
-  margin-top: 1rem;
-  padding: 0.75rem 1.5rem;
-  background-color: #e74c3c;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  align-self: flex-start;
-  margin-left: 1rem; /* adds spacing if it's next to the Save button */
+.saveButton:hover {
+  background-color: #357abd;
 }
 
 .deleteButton {
-  margin-top: 1rem;
   padding: 0.75rem 1.5rem;
   background-color: #e74c3c;
   color: #fff;
   border: none;
   border-radius: 8px;
   font-weight: 600;
+  font-size: 1rem;
   cursor: pointer;
-  align-self: flex-start;
+  transition: background-color 0.2s;
+}
+
+.deleteButton:hover {
+  background-color: #c0392b;
 }
