@@ -224,24 +224,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
               </div>
             </div>
 
-            <div className={styles.currencyRateRow}>
-              <div>
-                <label>Local Exchange Rate:</label>
-                <select
-                  name="localExchangeRateId"
-                  className={styles.textInput}
-                  value={budget.localExchangeRateId}
-                  onChange={handleChange}
-                >
-                  <option value="">Select rate</option>
-                  {exchangeRates.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.exchangeRate}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+            <div className={styles.currencyRateRow}></div>
           </div>
         </form>
 
