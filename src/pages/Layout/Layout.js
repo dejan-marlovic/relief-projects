@@ -21,7 +21,14 @@ const Layout = () => {
 
   // Handle project selection changes
   const handleSelectChange = (e) => {
-    setSelectedProjectId(e.target.value);
+    const newValue = e.target.value;
+    console.log(
+      "handleSelectChange: new value =",
+      newValue,
+      "selectedProjectId =",
+      selectedProjectId
+    );
+    setSelectedProjectId(newValue);
   };
 
   const isRegisterPage = location.pathname === "/register-project";

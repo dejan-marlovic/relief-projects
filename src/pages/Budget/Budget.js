@@ -1,17 +1,27 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
+import { ProjectContext } from "../../context/ProjectContext";
 import styles from "./Budget.module.scss";
 
-const Budget = ({ budget: initialBudget }) => {
+const Budget = ({
+  budget: initialBudget,
+  isSelected,
+  onSelect,
+  onUpdated,
+  onDeleted,
+}) => {
+  const { selectedProjectId } = useContext(ProjectContext);
   const formatDate = (dateString) =>
     dateString ? dateString.slice(0, 16) : "";
-
   const [budget, setBudget] = useState(initialBudget || {});
   const [currencies, setCurrencies] = useState([]);
   const [exchangeRates, setExchangeRates] = useState([]);
 
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
+    setBudget(initialBudget || {});
+  }, [initialBudget]);
 
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
     const fetchFormData = async () => {
       try {
         const [currencyRes, rateRes] = await Promise.all([
@@ -22,17 +32,12 @@ const Budget = ({ budget: initialBudget }) => {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
-
-        const currencies = await currencyRes.json();
-        const exchangeRates = await rateRes.json();
-
-        setCurrencies(currencies);
-        setExchangeRates(exchangeRates);
+        setCurrencies(await currencyRes.json());
+        setExchangeRates(await rateRes.json());
       } catch (error) {
         console.error("Failed to fetch currency or exchange rate data", error);
       }
     };
-
     fetchFormData();
   }, []);
 
@@ -45,45 +50,85 @@ const Budget = ({ budget: initialBudget }) => {
   };
 
   const handleDelete = async () => {
-    if (!budget.id) {
-      alert("No budget ID to delete.");
-      return;
-    }
-
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this budget?"
-    );
-    if (!confirmed) return;
-
+    if (!budget.id) return;
+    if (!window.confirm("Are you sure you want to delete this budget?")) return;
     const token = localStorage.getItem("authToken");
-
     try {
       const response = await fetch(
         `http://localhost:8080/api/budgets/${budget.id}`,
         {
           method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
-
       if (!response.ok) throw new Error("Failed to delete budget.");
-
       alert("Budget deleted successfully.");
-      // Optional: you can call a prop like `onDelete()` here if needed
+      if (onDeleted) onDeleted();
     } catch (err) {
       console.error("Delete error:", err);
       alert("Error deleting budget.");
     }
   };
 
+  const handleSave = async () => {
+    if (!budget.id) return;
+    const token = localStorage.getItem("authToken");
+    const payload = {
+      projectId: selectedProjectId,
+      budgetDescription: budget.budgetDescription,
+      budgetPreparationDate: budget.budgetPreparationDate,
+      totalAmount: parseFloat(budget.totalAmount),
+      localCurrencyId: budget.localCurrencyId,
+      localCurrencyToGbpId: budget.localCurrencyToGbpId,
+      reportingCurrencySekId: budget.reportingCurrencySekId,
+      reportingCurrencyEurId: budget.reportingCurrencyEurId,
+      localExchangeRateId: budget.localExchangeRateId,
+      localExchangeRateToGbpId: budget.localExchangeRateToGbpId,
+      reportingExchangeRateSekId: budget.reportingExchangeRateSekId,
+      reportingExchangeRateEurId: budget.reportingExchangeRateEurId,
+    };
+
+    try {
+      console.log(
+        "Sending PUT request for budget:",
+        budget.id,
+        "with payload:",
+        payload
+      );
+      const response = await fetch(
+        `http://localhost:8080/api/budgets/${budget.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+      const responseData = await response.json();
+      console.log("PUT response:", responseData);
+      if (!response.ok)
+        throw new Error(`Failed to update budget: ${response.status}`);
+      console.log("Budget updated successfully");
+      alert("Budget updated successfully!");
+      if (onUpdated) onUpdated();
+    } catch (err) {
+      console.error("Update error:", err.message);
+      alert("Error updating budget.");
+    }
+  };
+
   return (
-    <div className={styles.budgetContainer}>
+    <div
+      className={`${styles.budgetContainer} ${
+        isSelected ? styles.selected : ""
+      }`}
+      onClick={onSelect}
+    >
       <div className={styles.formContainer}>
         <h3>Budget Details</h3>
         <form className={styles.formTwoColumn}>
-          {/* Left column */}
           <div className={styles.formColumnLeft}>
             <div>
               <label>Description:</label>
@@ -94,7 +139,6 @@ const Budget = ({ budget: initialBudget }) => {
                 onChange={handleChange}
               />
             </div>
-
             <div>
               <label>Preparation Date:</label>
               <input
@@ -105,7 +149,6 @@ const Budget = ({ budget: initialBudget }) => {
                 onChange={handleChange}
               />
             </div>
-
             <div>
               <label>Total Amount:</label>
               <input
@@ -116,6 +159,11 @@ const Budget = ({ budget: initialBudget }) => {
                 onChange={handleChange}
               />
             </div>
+            <div className={styles.buttonRow}>
+              <button className={styles.saveButton} onClick={handleSave}>
+                Save
+              </button>
+            </div>
             <div className={styles.headerRow}>
               <button className={styles.deleteButton} onClick={handleDelete}>
                 Delete
@@ -123,7 +171,6 @@ const Budget = ({ budget: initialBudget }) => {
             </div>
           </div>
 
-          {/* Right column */}
           <div className={styles.formColumnRight}>
             <div className={styles.currencyRateRow}>
               <div>
@@ -160,7 +207,6 @@ const Budget = ({ budget: initialBudget }) => {
               </div>
             </div>
 
-            {/* SEK pair */}
             <div className={styles.currencyRateRow}>
               <div>
                 <label>SEK Currency:</label>
@@ -196,7 +242,6 @@ const Budget = ({ budget: initialBudget }) => {
               </div>
             </div>
 
-            {/* EUR pair */}
             <div className={styles.currencyRateRow}>
               <div>
                 <label>EUR Currency:</label>
@@ -238,4 +283,4 @@ const Budget = ({ budget: initialBudget }) => {
   );
 };
 
-export default Budget;
+export default React.memo(Budget);

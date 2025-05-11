@@ -1,29 +1,27 @@
-// Import React core and hooks for managing context and state
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useRef } from "react";
 
-// Create the context object.
-// This is like creating a "global store" that components can read from or write to.
-/*
-🧠 What is React Context?
-React Context is a built-in feature that allows you to share data globally across your component 
-tree—without manually passing props down at every level.
-
-In this case, you're sharing the list of projects and the currently selected project ID between 
-many components (like Project, Budgets, etc.). Instead of lifting state up and drilling props down through 
-every layout or tab component, Context gives you a cleaner, centralized way to do that.
-*/
 export const ProjectContext = createContext();
 
-// Define the provider component
 const ProjectProvider = ({ children }) => {
   const [projects, setProjects] = useState([]);
-  const [selectedProjectId, setSelectedProjectId] = useState("");
+  const [selectedProjectId, setSelectedProjectIdState] = useState(
+    localStorage.getItem("selectedProjectId") || ""
+  );
+  const hasSetInitialProject = useRef(false);
+
+  const setSelectedProjectId = (id) => {
+    const newId = id.toString();
+    console.log("setSelectedProjectId called with:", newId, new Error().stack);
+    setSelectedProjectIdState(newId);
+    localStorage.setItem("selectedProjectId", newId);
+  };
 
   useEffect(() => {
+    console.log("ProjectProvider mounted");
     const fetchProjects = async () => {
+      console.log("Fetching projects...");
       try {
         const token = localStorage.getItem("authToken");
-
         const response = await fetch(
           "http://localhost:8080/api/projects/ids-names",
           {
@@ -33,22 +31,33 @@ const ProjectProvider = ({ children }) => {
             },
           }
         );
-
         if (!response.ok) throw new Error("Failed to fetch projects");
-
         const projectNamesAndIds = await response.json();
-        setProjects(projectNamesAndIds);
-
-        if (projectNamesAndIds.length > 0) {
-          setSelectedProjectId(projectNamesAndIds[0].id.toString());
+        const normalizedProjects = projectNamesAndIds.map((project) => ({
+          ...project,
+          id: project.id.toString(),
+        }));
+        setProjects(normalizedProjects);
+        if (normalizedProjects.length > 0 && !hasSetInitialProject.current) {
+          const storedId = localStorage.getItem("selectedProjectId");
+          const validStoredId =
+            storedId && normalizedProjects.some((p) => p.id === storedId);
+          const initialId = validStoredId ? storedId : normalizedProjects[0].id;
+          console.log("Setting initial selectedProjectId:", initialId);
+          setSelectedProjectId(initialId);
+          hasSetInitialProject.current = true;
         }
       } catch (error) {
         console.error("Error fetching project list:", error);
       }
     };
-
     fetchProjects();
+    return () => console.log("ProjectProvider unmounted");
   }, []);
+
+  useEffect(() => {
+    console.log("selectedProjectId changed:", selectedProjectId);
+  }, [selectedProjectId]);
 
   return (
     <ProjectContext.Provider
@@ -59,5 +68,4 @@ const ProjectProvider = ({ children }) => {
   );
 };
 
-// Export the provider at the end
 export { ProjectProvider };
