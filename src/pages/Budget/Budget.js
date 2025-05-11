@@ -192,42 +192,6 @@ const Budget = ({ budget: initialBudget }) => {
                 </select>
               </div>
             </div>
-
-            {/* Local alt rate pair */}
-            <div className={styles.currencyRateRow}>
-              <div>
-                <label>Local Exchange Rate:</label>
-                <select
-                  name="localExchangeRateId"
-                  className={styles.textInput}
-                  value={budget.localExchangeRateId || ""}
-                  onChange={handleChange}
-                >
-                  <option value="">Select rate</option>
-                  {exchangeRates.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.exchangeRate}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label>Local → GBP Exchange Rate (Alt):</label>
-                <select
-                  name="localExchangeRateToGbpId"
-                  className={styles.textInput}
-                  value={budget.localExchangeRateToGbpId || ""}
-                  onChange={handleChange}
-                >
-                  <option value="">Select rate</option>
-                  {exchangeRates.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.exchangeRate}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
           </div>
         </form>
       </div>

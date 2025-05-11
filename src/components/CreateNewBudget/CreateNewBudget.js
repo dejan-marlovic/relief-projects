@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import styles from "./CreateNewBudget.module.scss";
+import styles from "../../pages/Budget/Budget.module.scss"; // Reuse styling from Budget
 import { ProjectContext } from "../../context/ProjectContext";
 
 const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
@@ -76,153 +76,183 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
   };
 
   return (
-    <div className={styles.modal}>
-      <h3>Create New Budget</h3>
+    <div className={styles.budgetContainer}>
+      <div className={styles.formContainer}>
+        <h3>Create New Budget</h3>
+        <form className={styles.formTwoColumn}>
+          {/* Left column */}
+          <div className={styles.formColumnLeft}>
+            <div>
+              <label>Description:</label>
+              <textarea
+                name="budgetDescription"
+                className={styles.textareaInput}
+                value={budget.budgetDescription}
+                onChange={handleChange}
+                placeholder="Budget Description"
+              />
+            </div>
 
-      <textarea
-        name="budgetDescription"
-        value={budget.budgetDescription}
-        onChange={handleChange}
-        placeholder="Budget Description"
-        className={styles.textareaInput}
-      />
+            <div>
+              <label>Preparation Date:</label>
+              <input
+                type="datetime-local"
+                name="budgetPreparationDate"
+                value={budget.budgetPreparationDate}
+                onChange={handleChange}
+                className={styles.textInput}
+              />
+            </div>
 
-      <input
-        type="datetime-local"
-        name="budgetPreparationDate"
-        value={budget.budgetPreparationDate}
-        onChange={handleChange}
-        className={styles.textInput}
-      />
+            <div>
+              <label>Total Amount:</label>
+              <input
+                type="number"
+                name="totalAmount"
+                placeholder="Total Amount"
+                value={budget.totalAmount}
+                onChange={handleChange}
+                className={styles.textInput}
+              />
+            </div>
+          </div>
 
-      <input
-        type="number"
-        name="totalAmount"
-        placeholder="Total Amount"
-        value={budget.totalAmount}
-        onChange={handleChange}
-        className={styles.textInput}
-      />
+          {/* Right column */}
+          <div className={styles.formColumnRight}>
+            <div className={styles.currencyRateRow}>
+              <div>
+                <label>Local Currency:</label>
+                <select
+                  name="localCurrencyId"
+                  className={styles.textInput}
+                  value={budget.localCurrencyId}
+                  onChange={handleChange}
+                >
+                  <option value="">Select currency</option>
+                  {currencies.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label>Local → GBP Rate:</label>
+                <select
+                  name="localCurrencyToGbpId"
+                  className={styles.textInput}
+                  value={budget.localCurrencyToGbpId}
+                  onChange={handleChange}
+                >
+                  <option value="">Select rate</option>
+                  {exchangeRates.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.exchangeRate}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
-      <select
-        name="localCurrencyId"
-        value={budget.localCurrencyId}
-        onChange={handleChange}
-        className={styles.textInput}
-      >
-        <option value="">Local Currency</option>
-        {currencies.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.name}
-          </option>
-        ))}
-      </select>
+            <div className={styles.currencyRateRow}>
+              <div>
+                <label>SEK Currency:</label>
+                <select
+                  name="reportingCurrencySekId"
+                  className={styles.textInput}
+                  value={budget.reportingCurrencySekId}
+                  onChange={handleChange}
+                >
+                  <option value="">Select currency</option>
+                  {currencies.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label>SEK Exchange Rate:</label>
+                <select
+                  name="reportingExchangeRateSekId"
+                  className={styles.textInput}
+                  value={budget.reportingExchangeRateSekId}
+                  onChange={handleChange}
+                >
+                  <option value="">Select rate</option>
+                  {exchangeRates.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.exchangeRate}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
-      <select
-        name="localCurrencyToGbpId"
-        value={budget.localCurrencyToGbpId}
-        onChange={handleChange}
-        className={styles.textInput}
-      >
-        <option value="">Local to GBP Rate</option>
-        {exchangeRates.map((r) => (
-          <option key={r.id} value={r.id}>
-            {r.exchangeRate}
-          </option>
-        ))}
-      </select>
+            <div className={styles.currencyRateRow}>
+              <div>
+                <label>EUR Currency:</label>
+                <select
+                  name="reportingCurrencyEurId"
+                  className={styles.textInput}
+                  value={budget.reportingCurrencyEurId}
+                  onChange={handleChange}
+                >
+                  <option value="">Select currency</option>
+                  {currencies.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label>EUR Exchange Rate:</label>
+                <select
+                  name="reportingExchangeRateEurId"
+                  className={styles.textInput}
+                  value={budget.reportingExchangeRateEurId}
+                  onChange={handleChange}
+                >
+                  <option value="">Select rate</option>
+                  {exchangeRates.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.exchangeRate}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
-      <select
-        name="reportingCurrencySekId"
-        value={budget.reportingCurrencySekId}
-        onChange={handleChange}
-        className={styles.textInput}
-      >
-        <option value="">SEK Currency</option>
-        {currencies.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.name}
-          </option>
-        ))}
-      </select>
+            <div className={styles.currencyRateRow}>
+              <div>
+                <label>Local Exchange Rate:</label>
+                <select
+                  name="localExchangeRateId"
+                  className={styles.textInput}
+                  value={budget.localExchangeRateId}
+                  onChange={handleChange}
+                >
+                  <option value="">Select rate</option>
+                  {exchangeRates.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.exchangeRate}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        </form>
 
-      <select
-        name="reportingExchangeRateSekId"
-        value={budget.reportingExchangeRateSekId}
-        onChange={handleChange}
-        className={styles.textInput}
-      >
-        <option value="">SEK Rate</option>
-        {exchangeRates.map((r) => (
-          <option key={r.id} value={r.id}>
-            {r.exchangeRate}
-          </option>
-        ))}
-      </select>
-
-      <select
-        name="reportingCurrencyEurId"
-        value={budget.reportingCurrencyEurId}
-        onChange={handleChange}
-        className={styles.textInput}
-      >
-        <option value="">EUR Currency</option>
-        {currencies.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.name}
-          </option>
-        ))}
-      </select>
-
-      <select
-        name="reportingExchangeRateEurId"
-        value={budget.reportingExchangeRateEurId}
-        onChange={handleChange}
-        className={styles.textInput}
-      >
-        <option value="">EUR Rate</option>
-        {exchangeRates.map((r) => (
-          <option key={r.id} value={r.id}>
-            {r.exchangeRate}
-          </option>
-        ))}
-      </select>
-
-      <select
-        name="localExchangeRateId"
-        value={budget.localExchangeRateId}
-        onChange={handleChange}
-        className={styles.textInput}
-      >
-        <option value="">Local Exchange Rate</option>
-        {exchangeRates.map((r) => (
-          <option key={r.id} value={r.id}>
-            {r.exchangeRate}
-          </option>
-        ))}
-      </select>
-
-      <select
-        name="localExchangeRateToGbpId"
-        value={budget.localExchangeRateToGbpId}
-        onChange={handleChange}
-        className={styles.textInput}
-      >
-        <option value="">Local → GBP Rate (Alternative)</option>
-        {exchangeRates.map((r) => (
-          <option key={r.id} value={r.id}>
-            {r.exchangeRate}
-          </option>
-        ))}
-      </select>
-
-      <div className={styles.buttonRow}>
-        <button onClick={handleSave} className={styles.saveButton}>
-          Save
-        </button>
-        <button onClick={onClose} className={styles.cancelButton}>
-          Cancel
-        </button>
+        <div className={styles.buttonRow}>
+          <button onClick={handleSave} className={styles.saveButton}>
+            Save
+          </button>
+          <button onClick={onClose} className={styles.cancelButton}>
+            Cancel
+          </button>
+        </div>
       </div>
     </div>
   );
