@@ -83,3 +83,29 @@ h3 {
 .formItem input[type="datetime-local"] {
   margin-bottom: 0 !important;
 }
+
+.formTwoColumn {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.formColumnLeft,
+.formColumnRight {
+  flex: 1;
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.currencyRateRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+.formColumnRight {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}

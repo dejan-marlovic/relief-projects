@@ -86,140 +86,147 @@ const Budget = ({ budget: initialBudget }) => {
 
           {/* Right column */}
           <div className={styles.formColumnRight}>
-            <div>
-              <label>Local Currency:</label>
-              <select
-                name="localCurrencyId"
-                className={styles.textInput}
-                value={budget.localCurrencyId || ""}
-                onChange={handleChange}
-              >
-                <option value="">Select currency</option>
-                {currencies.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+            <div className={styles.currencyRateRow}>
+              <div>
+                <label>Local Currency:</label>
+                <select
+                  name="localCurrencyId"
+                  className={styles.textInput}
+                  value={budget.localCurrencyId || ""}
+                  onChange={handleChange}
+                >
+                  <option value="">Select currency</option>
+                  {currencies.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label>Local → GBP Rate:</label>
+                <select
+                  name="localCurrencyToGbpId"
+                  className={styles.textInput}
+                  value={budget.localCurrencyToGbpId || ""}
+                  onChange={handleChange}
+                >
+                  <option value="">Select rate</option>
+                  {exchangeRates.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.exchangeRate}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            <div>
-              <label>Local → GBP Rate:</label>
-              <select
-                name="localCurrencyToGbpId"
-                className={styles.textInput}
-                value={budget.localCurrencyToGbpId || ""}
-                onChange={handleChange}
-              >
-                <option value="">Select rate</option>
-                {exchangeRates.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.exchangeRate}
-                  </option>
-                ))}
-              </select>
+            {/* SEK pair */}
+            <div className={styles.currencyRateRow}>
+              <div>
+                <label>SEK Currency:</label>
+                <select
+                  name="reportingCurrencySekId"
+                  className={styles.textInput}
+                  value={budget.reportingCurrencySekId || ""}
+                  onChange={handleChange}
+                >
+                  <option value="">Select currency</option>
+                  {currencies.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label>SEK Exchange Rate:</label>
+                <select
+                  name="reportingExchangeRateSekId"
+                  className={styles.textInput}
+                  value={budget.reportingExchangeRateSekId || ""}
+                  onChange={handleChange}
+                >
+                  <option value="">Select rate</option>
+                  {exchangeRates.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.exchangeRate}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            <div>
-              <label>SEK Currency:</label>
-              <select
-                name="reportingCurrencySekId"
-                className={styles.textInput}
-                value={budget.reportingCurrencySekId || ""}
-                onChange={handleChange}
-              >
-                <option value="">Select currency</option>
-                {currencies.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+            {/* EUR pair */}
+            <div className={styles.currencyRateRow}>
+              <div>
+                <label>EUR Currency:</label>
+                <select
+                  name="reportingCurrencyEurId"
+                  className={styles.textInput}
+                  value={budget.reportingCurrencyEurId || ""}
+                  onChange={handleChange}
+                >
+                  <option value="">Select currency</option>
+                  {currencies.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label>EUR Exchange Rate:</label>
+                <select
+                  name="reportingExchangeRateEurId"
+                  className={styles.textInput}
+                  value={budget.reportingExchangeRateEurId || ""}
+                  onChange={handleChange}
+                >
+                  <option value="">Select rate</option>
+                  {exchangeRates.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.exchangeRate}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            <div>
-              <label>SEK Exchange Rate:</label>
-              <select
-                name="reportingExchangeRateSekId"
-                className={styles.textInput}
-                value={budget.reportingExchangeRateSekId || ""}
-                onChange={handleChange}
-              >
-                <option value="">Select rate</option>
-                {exchangeRates.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.exchangeRate}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label>EUR Currency:</label>
-              <select
-                name="reportingCurrencyEurId"
-                className={styles.textInput}
-                value={budget.reportingCurrencyEurId || ""}
-                onChange={handleChange}
-              >
-                <option value="">Select currency</option>
-                {currencies.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label>EUR Exchange Rate:</label>
-              <select
-                name="reportingExchangeRateEurId"
-                className={styles.textInput}
-                value={budget.reportingExchangeRateEurId || ""}
-                onChange={handleChange}
-              >
-                <option value="">Select rate</option>
-                {exchangeRates.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.exchangeRate}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label>Local Exchange Rate:</label>
-              <select
-                name="localExchangeRateId"
-                className={styles.textInput}
-                value={budget.localExchangeRateId || ""}
-                onChange={handleChange}
-              >
-                <option value="">Select rate</option>
-                {exchangeRates.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.exchangeRate}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label>Local → GBP Exchange Rate (Alt):</label>
-              <select
-                name="localExchangeRateToGbpId"
-                className={styles.textInput}
-                value={budget.localExchangeRateToGbpId || ""}
-                onChange={handleChange}
-              >
-                <option value="">Select rate</option>
-                {exchangeRates.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.exchangeRate}
-                  </option>
-                ))}
-              </select>
+            {/* Local alt rate pair */}
+            <div className={styles.currencyRateRow}>
+              <div>
+                <label>Local Exchange Rate:</label>
+                <select
+                  name="localExchangeRateId"
+                  className={styles.textInput}
+                  value={budget.localExchangeRateId || ""}
+                  onChange={handleChange}
+                >
+                  <option value="">Select rate</option>
+                  {exchangeRates.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.exchangeRate}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label>Local → GBP Exchange Rate (Alt):</label>
+                <select
+                  name="localExchangeRateToGbpId"
+                  className={styles.textInput}
+                  value={budget.localExchangeRateToGbpId || ""}
+                  onChange={handleChange}
+                >
+                  <option value="">Select rate</option>
+                  {exchangeRates.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.exchangeRate}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
         </form>
