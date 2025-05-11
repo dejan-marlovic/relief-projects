@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { ProjectContext } from "../../context/ProjectContext";
 import Budget from "../Budget/Budget";
 import CreateNewBudget from "../../components/CreateNewBudget/CreateNewBudget";
+import styles from "./Budgets.module.scss";
 
 const Budgets = () => {
   const { selectedProjectId } = useContext(ProjectContext);
@@ -15,13 +16,18 @@ const Budgets = () => {
       try {
         const res = await fetch(
           `http://localhost:8080/api/budgets/project/${selectedProjectId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
         );
         const data = await res.json();
-        setBudgets(Array.isArray(data) ? data : []); // ✅ Force array
+        setBudgets(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Failed to fetch budgets", err);
-        setBudgets([]); // ✅ Fallback to empty array on error
+        setBudgets([]);
       }
     };
 
@@ -35,9 +41,13 @@ const Budgets = () => {
   };
 
   return (
-    <div>
-      <h2>Budgets</h2>
-      <button onClick={() => setShowCreateForm(true)}>Create Budget</button>
+    <div className={styles.container}>
+      <button
+        className={styles.createButton}
+        onClick={() => setShowCreateForm(true)}
+      >
+        Create Budget
+      </button>
 
       {showCreateForm && (
         <CreateNewBudget
@@ -46,8 +56,13 @@ const Budgets = () => {
         />
       )}
 
-      {Array.isArray(budgets) &&
-        budgets.map((budget) => <Budget key={budget.id} budget={budget} />)}
+      <div className={styles.budgetList}>
+        {budgets.length === 0 ? (
+          <p>No budgets available for this project.</p>
+        ) : (
+          budgets.map((budget) => <Budget key={budget.id} budget={budget} />)
+        )}
+      </div>
     </div>
   );
 };
