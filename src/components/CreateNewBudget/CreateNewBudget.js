@@ -247,7 +247,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
 
         <div className={styles.buttonRow}>
           <button onClick={handleSave} className={styles.saveButton}>
-            Save
+            Create Budget
           </button>
           <button onClick={onClose} className={styles.cancelButton}>
             Cancel

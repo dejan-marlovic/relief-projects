@@ -46,7 +46,7 @@ const Budgets = () => {
         className={styles.createButton}
         onClick={() => setShowCreateForm(true)}
       >
-        Create Budget
+        New Budget
       </button>
 
       {showCreateForm && (
