@@ -1,0 +1,84 @@
+.budgetContainer {
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin-top: 1rem;
+  gap: 1.5rem;
+}
+
+.formContainer {
+  display: flex;
+  flex-direction: column;
+}
+
+.formItem {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 180px;
+  margin-bottom: 0 !important;
+}
+
+.narrowField {
+  width: 30%;
+  flex: none;
+  min-width: 180px;
+}
+
+.fullWidthField {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.textInput,
+input[type="datetime-local"] {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.textInput[type="select"] {
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.textareaInput {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  resize: vertical;
+  min-height: 100px;
+}
+
+label {
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  color: #333;
+}
+
+h3 {
+  margin-bottom: 0.5rem;
+  color: #4a90e2;
+}
+
+.formRowPair {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.formItem input[type="datetime-local"] {
+  margin-bottom: 0 !important;
+}
