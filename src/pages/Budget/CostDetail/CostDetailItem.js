@@ -220,7 +220,6 @@ const CostDetailItem = ({
               className={styles.numericInput}
               value={costDetail.amountLocalCurrency || ""}
               step="0.001"
-              readOnly
             />
           </div>
           <div className={styles.formItem}>
@@ -230,7 +229,6 @@ const CostDetailItem = ({
               className={styles.numericInput}
               value={costDetail.amountReportingCurrency || ""}
               step="0.001"
-              readOnly
             />
           </div>
           <div className={styles.formItem}>
@@ -240,7 +238,6 @@ const CostDetailItem = ({
               className={styles.numericInput}
               value={costDetail.amountGBP || ""}
               step="0.001"
-              readOnly
             />
           </div>
           <div className={styles.formItem}>
@@ -250,7 +247,6 @@ const CostDetailItem = ({
               className={styles.numericInput}
               value={costDetail.amountEuro || ""}
               step="0.001"
-              readOnly
             />
           </div>
           <div className={styles.buttonRow}>
