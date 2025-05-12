@@ -123,7 +123,7 @@ const CostDetail = ({ budgetId }) => {
           setShowCreateForm(true);
         }}
       >
-        Create new cost detail for this budget
+        Create new cost detail row for this budget
       </button>
 
       {showCreateForm && (
