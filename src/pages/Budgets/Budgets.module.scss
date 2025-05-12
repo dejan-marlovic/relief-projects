@@ -95,3 +95,19 @@ h3 {
   cursor: pointer;
   align-self: flex-start;
 }
+
+.cancelButton {
+  padding: 0.75rem 1.5rem;
+  background-color: #e74c3c;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cancelButton:hover {
+  background-color: #c0392b;
+}
