@@ -45,6 +45,12 @@ const CostDetailItem = ({
       ...prev,
       [name]: value,
     }));
+    // Warn for percentageCharging exceeding schema limit
+    if (name === "percentageCharging" && value > 999.999) {
+      console.warn(
+        "Warning: percentageCharging exceeds DECIMAL(6,3) limit of 999.999. Value may be truncated in database."
+      );
+    }
   };
 
   const handleDelete = async () => {
@@ -124,6 +130,7 @@ const CostDetailItem = ({
               className={styles.textInput}
               value={costDetail.costDescription || ""}
               onChange={handleChange}
+              maxLength="255"
             />
           </div>
           <div className={styles.formItem}>
@@ -134,6 +141,8 @@ const CostDetailItem = ({
               className={styles.numericInput}
               value={costDetail.noOfUnits || ""}
               onChange={handleChange}
+              step="1"
+              min="0"
             />
           </div>
           <div className={styles.formItem}>
@@ -144,6 +153,8 @@ const CostDetailItem = ({
               className={styles.numericInput}
               value={costDetail.frequencyMonths || ""}
               onChange={handleChange}
+              step="1"
+              min="0"
             />
           </div>
           <div className={styles.formItem}>
@@ -155,6 +166,7 @@ const CostDetailItem = ({
               value={costDetail.unitPrice || ""}
               onChange={handleChange}
               step="0.01"
+              min="0"
             />
           </div>
           <div className={styles.formItem}>
@@ -166,6 +178,7 @@ const CostDetailItem = ({
               value={costDetail.percentageCharging || ""}
               onChange={handleChange}
               step="0.001"
+              min="0"
             />
           </div>
           <div className={styles.formItem}>
@@ -206,6 +219,7 @@ const CostDetailItem = ({
               type="number"
               className={styles.numericInput}
               value={costDetail.amountLocalCurrency || ""}
+              step="0.001"
               readOnly
             />
           </div>
@@ -215,6 +229,7 @@ const CostDetailItem = ({
               type="number"
               className={styles.numericInput}
               value={costDetail.amountReportingCurrency || ""}
+              step="0.001"
               readOnly
             />
           </div>
@@ -224,6 +239,7 @@ const CostDetailItem = ({
               type="number"
               className={styles.numericInput}
               value={costDetail.amountGBP || ""}
+              step="0.001"
               readOnly
             />
           </div>
@@ -233,6 +249,7 @@ const CostDetailItem = ({
               type="number"
               className={styles.numericInput}
               value={costDetail.amountEuro || ""}
+              step="0.001"
               readOnly
             />
           </div>

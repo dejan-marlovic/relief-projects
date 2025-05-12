@@ -40,6 +40,12 @@ const CreateNewCostDetail = ({ budgetId, onClose, onCostDetailCreated }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setCostDetail((prev) => ({ ...prev, [name]: value }));
+    // Warn for percentageCharging exceeding schema limit
+    if (name === "percentageCharging" && value > 999.999) {
+      console.warn(
+        "Warning: percentageCharging exceeds DECIMAL(6,3) limit of 999.999. Value may be truncated in database."
+      );
+    }
   };
 
   const handleSave = async () => {
@@ -88,6 +94,7 @@ const CreateNewCostDetail = ({ budgetId, onClose, onCostDetailCreated }) => {
               value={costDetail.costDescription}
               onChange={handleChange}
               placeholder="Cost Description"
+              maxLength="255"
             />
           </div>
           <div className={styles.formItem}>
@@ -99,6 +106,8 @@ const CreateNewCostDetail = ({ budgetId, onClose, onCostDetailCreated }) => {
               value={costDetail.noOfUnits}
               onChange={handleChange}
               placeholder="Units"
+              step="1"
+              min="0"
             />
           </div>
           <div className={styles.formItem}>
@@ -110,6 +119,8 @@ const CreateNewCostDetail = ({ budgetId, onClose, onCostDetailCreated }) => {
               value={costDetail.frequencyMonths}
               onChange={handleChange}
               placeholder="Months"
+              step="1"
+              min="0"
             />
           </div>
           <div className={styles.formItem}>
@@ -122,6 +133,7 @@ const CreateNewCostDetail = ({ budgetId, onClose, onCostDetailCreated }) => {
               onChange={handleChange}
               placeholder="Price"
               step="0.01"
+              min="0"
             />
           </div>
           <div className={styles.formItem}>
@@ -134,6 +146,7 @@ const CreateNewCostDetail = ({ budgetId, onClose, onCostDetailCreated }) => {
               onChange={handleChange}
               placeholder="%"
               step="0.001"
+              min="0"
             />
           </div>
           <div className={styles.formItem}>
@@ -169,7 +182,7 @@ const CreateNewCostDetail = ({ budgetId, onClose, onCostDetailCreated }) => {
             </select>
           </div>
           <div className={styles.buttonRow}>
-            <button onClick={handleSave} className={styles.saveButton}>
+            <button onClick={handleSave} className={styles.createButton}>
               Create Cost Detail
             </button>
             <button onClick={onClose} className={styles.cancelButton}>
