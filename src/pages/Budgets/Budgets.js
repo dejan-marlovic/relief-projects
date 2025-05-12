@@ -103,7 +103,6 @@ const Budgets = () => {
 
   return (
     <div className={styles.budgetsContainer}>
-      <h2>Budgets</h2>
       {budgets.length === 0 ? (
         <p>No budgets available for this project.</p>
       ) : (

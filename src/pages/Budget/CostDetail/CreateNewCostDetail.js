@@ -78,104 +78,103 @@ const CreateNewCostDetail = ({ budgetId, onClose, onCostDetailCreated }) => {
     <div className={styles.costDetailContainer}>
       <div className={styles.formContainer}>
         <h3>Create New Cost Detail</h3>
-        <form className={styles.formTwoColumn}>
-          <div className={styles.formColumnLeft}>
-            <div>
-              <label>Description:</label>
-              <textarea
-                name="costDescription"
-                className={styles.textareaInput}
-                value={costDetail.costDescription}
-                onChange={handleChange}
-                placeholder="Cost Description"
-              />
-            </div>
-            <div>
-              <label>Number of Units:</label>
-              <input
-                type="number"
-                name="noOfUnits"
-                className={styles.textInput}
-                value={costDetail.noOfUnits}
-                onChange={handleChange}
-                placeholder="Number of Units"
-              />
-            </div>
-            <div>
-              <label>Frequency (Months):</label>
-              <input
-                type="number"
-                name="frequencyMonths"
-                className={styles.textInput}
-                value={costDetail.frequencyMonths}
-                onChange={handleChange}
-                placeholder="Frequency in Months"
-              />
-            </div>
-            <div>
-              <label>Unit Price:</label>
-              <input
-                type="number"
-                name="unitPrice"
-                className={styles.textInput}
-                value={costDetail.unitPrice}
-                onChange={handleChange}
-                placeholder="Unit Price"
-                step="0.01"
-              />
-            </div>
-            <div>
-              <label>Percentage Charging:</label>
-              <input
-                type="number"
-                name="percentageCharging"
-                className={styles.textInput}
-                value={costDetail.percentageCharging}
-                onChange={handleChange}
-                placeholder="Percentage Charging"
-                step="0.001"
-              />
-            </div>
-            <div>
-              <label>Cost Type:</label>
-              <select
-                name="costTypeId"
-                className={styles.textInput}
-                value={costDetail.costTypeId}
-                onChange={handleChange}
-              >
-                <option value="">Select cost type</option>
-                {costTypes.map((ct) => (
-                  <option key={ct.id} value={ct.id}>
-                    {ct.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label>Cost:</label>
-              <select
-                name="costId"
-                className={styles.textInput}
-                value={costDetail.costId}
-                onChange={handleChange}
-              >
-                <option value="">Select cost</option>
-                {costs.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className={styles.buttonRow}>
-              <button onClick={handleSave} className={styles.saveButton}>
-                Create Cost Detail
-              </button>
-              <button onClick={onClose} className={styles.cancelButton}>
-                Cancel
-              </button>
-            </div>
+        <form className={styles.formRow}>
+          <div className={styles.formItem}>
+            <label>Desc:</label>
+            <input
+              type="text"
+              name="costDescription"
+              className={styles.textInput}
+              value={costDetail.costDescription}
+              onChange={handleChange}
+              placeholder="Cost Description"
+            />
+          </div>
+          <div className={styles.formItem}>
+            <label>Units:</label>
+            <input
+              type="number"
+              name="noOfUnits"
+              className={styles.numericInput}
+              value={costDetail.noOfUnits}
+              onChange={handleChange}
+              placeholder="Units"
+            />
+          </div>
+          <div className={styles.formItem}>
+            <label>Freq (Mo):</label>
+            <input
+              type="number"
+              name="frequencyMonths"
+              className={styles.numericInput}
+              value={costDetail.frequencyMonths}
+              onChange={handleChange}
+              placeholder="Months"
+            />
+          </div>
+          <div className={styles.formItem}>
+            <label>Price:</label>
+            <input
+              type="number"
+              name="unitPrice"
+              className={styles.numericInput}
+              value={costDetail.unitPrice}
+              onChange={handleChange}
+              placeholder="Price"
+              step="0.01"
+            />
+          </div>
+          <div className={styles.formItem}>
+            <label>% Charge:</label>
+            <input
+              type="number"
+              name="percentageCharging"
+              className={styles.numericInput}
+              value={costDetail.percentageCharging}
+              onChange={handleChange}
+              placeholder="%"
+              step="0.001"
+            />
+          </div>
+          <div className={styles.formItem}>
+            <label>Type:</label>
+            <select
+              name="costTypeId"
+              className={styles.selectInput}
+              value={costDetail.costTypeId}
+              onChange={handleChange}
+            >
+              <option value="">Select cost type</option>
+              {costTypes.map((ct) => (
+                <option key={ct.id} value={ct.id}>
+                  {ct.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className={styles.formItem}>
+            <label>Cost:</label>
+            <select
+              name="costId"
+              className={styles.selectInput}
+              value={costDetail.costId}
+              onChange={handleChange}
+            >
+              <option value="">Select cost</option>
+              {costs.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className={styles.buttonRow}>
+            <button onClick={handleSave} className={styles.saveButton}>
+              Create Cost Detail
+            </button>
+            <button onClick={onClose} className={styles.cancelButton}>
+              Cancel
+            </button>
           </div>
         </form>
       </div>
