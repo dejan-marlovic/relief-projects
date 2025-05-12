@@ -85,12 +85,6 @@ const CostDetailItem = ({
     };
 
     try {
-      console.log(
-        "Sending PUT request for cost detail:",
-        costDetail.costDetailId,
-        "with payload:",
-        payload
-      );
       const response = await fetch(
         `http://localhost:8080/api/cost-details/${costDetail.costDetailId}`,
         {
@@ -103,10 +97,8 @@ const CostDetailItem = ({
         }
       );
       const responseData = await response.json();
-      console.log("PUT response:", responseData);
       if (!response.ok)
         throw new Error(`Failed to update cost detail: ${response.status}`);
-      console.log("Cost detail updated successfully");
       alert("Cost detail updated successfully!");
       if (onUpdated) onUpdated();
     } catch (err) {
@@ -123,138 +115,134 @@ const CostDetailItem = ({
       onClick={onSelect}
     >
       <div className={styles.formContainer}>
-        <h3>Cost Detail</h3>
-        <form className={styles.formTwoColumn}>
-          <div className={styles.formColumnLeft}>
-            <div>
-              <label>Description:</label>
-              <textarea
-                name="costDescription"
-                className={styles.textareaInput}
-                value={costDetail.costDescription || ""}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label>Number of Units:</label>
-              <input
-                type="number"
-                name="noOfUnits"
-                className={styles.textInput}
-                value={costDetail.noOfUnits || ""}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label>Frequency (Months):</label>
-              <input
-                type="number"
-                name="frequencyMonths"
-                className={styles.textInput}
-                value={costDetail.frequencyMonths || ""}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label>Unit Price:</label>
-              <input
-                type="number"
-                name="unitPrice"
-                className={styles.textInput}
-                value={costDetail.unitPrice || ""}
-                onChange={handleChange}
-                step="0.01"
-              />
-            </div>
-            <div>
-              <label>Percentage Charging:</label>
-              <input
-                type="number"
-                name="percentageCharging"
-                className={styles.textInput}
-                value={costDetail.percentageCharging || ""}
-                onChange={handleChange}
-                step="0.001"
-              />
-            </div>
-            <div>
-              <label>Cost Type:</label>
-              <select
-                name="costTypeId"
-                className={styles.textInput}
-                value={costDetail.costTypeId || ""}
-                onChange={handleChange}
-              >
-                <option value="">Select cost type</option>
-                {costTypes.map((ct) => (
-                  <option key={ct.id} value={ct.id}>
-                    {ct.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label>Cost:</label>
-              <select
-                name="costId"
-                className={styles.textInput}
-                value={costDetail.costId || ""}
-                onChange={handleChange}
-              >
-                <option value="">Select cost</option>
-                {costs.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className={styles.buttonRow}>
-              <button className={styles.saveButton} onClick={handleSave}>
-                Save
-              </button>
-              <button className={styles.deleteButton} onClick={handleDelete}>
-                Delete
-              </button>
-            </div>
+        <form className={styles.formRow}>
+          <div className={styles.formItem}>
+            <label>Description:</label>
+            <input
+              type="text"
+              name="costDescription"
+              className={styles.textInput}
+              value={costDetail.costDescription || ""}
+              onChange={handleChange}
+            />
           </div>
-          <div className={styles.formColumnRight}>
-            <div>
-              <label>Amount (Local Currency):</label>
-              <input
-                type="number"
-                className={styles.textInput}
-                value={costDetail.amountLocalCurrency || ""}
-                readOnly
-              />
-            </div>
-            <div>
-              <label>Amount (Reporting Currency):</label>
-              <input
-                type="number"
-                className={styles.textInput}
-                value={costDetail.amountReportingCurrency || ""}
-                readOnly
-              />
-            </div>
-            <div>
-              <label>Amount (GBP):</label>
-              <input
-                type="number"
-                className={styles.textInput}
-                value={costDetail.amountGBP || ""}
-                readOnly
-              />
-            </div>
-            <div>
-              <label>Amount (Euro):</label>
-              <input
-                type="number"
-                className={styles.textInput}
-                value={costDetail.amountEuro || ""}
-                readOnly
-              />
-            </div>
+          <div className={styles.formItem}>
+            <label>Number of Units:</label>
+            <input
+              type="number"
+              name="noOfUnits"
+              className={styles.textInput}
+              value={costDetail.noOfUnits || ""}
+              onChange={handleChange}
+            />
+          </div>
+          <div className={styles.formItem}>
+            <label>Frequency (Months):</label>
+            <input
+              type="number"
+              name="frequencyMonths"
+              className={styles.textInput}
+              value={costDetail.frequencyMonths || ""}
+              onChange={handleChange}
+            />
+          </div>
+          <div className={styles.formItem}>
+            <label>Unit Price:</label>
+            <input
+              type="number"
+              name="unitPrice"
+              className={styles.textInput}
+              value={costDetail.unitPrice || ""}
+              onChange={handleChange}
+              step="0.01"
+            />
+          </div>
+          <div className={styles.formItem}>
+            <label>Percentage Charging:</label>
+            <input
+              type="number"
+              name="percentageCharging"
+              className={styles.textInput}
+              value={costDetail.percentageCharging || ""}
+              onChange={handleChange}
+              step="0.001"
+            />
+          </div>
+          <div className={styles.formItem}>
+            <label>Cost Type:</label>
+            <select
+              name="costTypeId"
+              className={styles.textInput}
+              value={costDetail.costTypeId || ""}
+              onChange={handleChange}
+            >
+              <option value="">Select cost type</option>
+              {costTypes.map((ct) => (
+                <option key={ct.id} value={ct.id}>
+                  {ct.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className={styles.formItem}>
+            <label>Cost:</label>
+            <select
+              name="costId"
+              className={styles.textInput}
+              value={costDetail.costId || ""}
+              onChange={handleChange}
+            >
+              <option value="">Select cost</option>
+              {costs.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className={styles.formItem}>
+            <label>Amount (Local Currency):</label>
+            <input
+              type="number"
+              className={styles.textInput}
+              value={costDetail.amountLocalCurrency || ""}
+              readOnly
+            />
+          </div>
+          <div className={styles.formItem}>
+            <label>Amount (Reporting Currency):</label>
+            <input
+              type="number"
+              className={styles.textInput}
+              value={costDetail.amountReportingCurrency || ""}
+              readOnly
+            />
+          </div>
+          <div className={styles.formItem}>
+            <label>Amount (GBP):</label>
+            <input
+              type="number"
+              className={styles.textInput}
+              value={costDetail.amountGBP || ""}
+              readOnly
+            />
+          </div>
+          <div className={styles.formItem}>
+            <label>Amount (Euro):</label>
+            <input
+              type="number"
+              className={styles.textInput}
+              value={costDetail.amountEuro || ""}
+              readOnly
+            />
+          </div>
+          <div className={styles.buttonRow}>
+            <button className={styles.saveButton} onClick={handleSave}>
+              Save
+            </button>
+            <button className={styles.deleteButton} onClick={handleDelete}>
+              Delete
+            </button>
           </div>
         </form>
       </div>
