@@ -117,7 +117,7 @@ const CostDetailItem = ({
       <div className={styles.formContainer}>
         <form className={styles.formRow}>
           <div className={styles.formItem}>
-            <label>Description:</label>
+            <label>Desc:</label>
             <input
               type="text"
               name="costDescription"
@@ -127,52 +127,52 @@ const CostDetailItem = ({
             />
           </div>
           <div className={styles.formItem}>
-            <label>Number of Units:</label>
+            <label>Units:</label>
             <input
               type="number"
               name="noOfUnits"
-              className={styles.textInput}
+              className={styles.numericInput}
               value={costDetail.noOfUnits || ""}
               onChange={handleChange}
             />
           </div>
           <div className={styles.formItem}>
-            <label>Frequency (Months):</label>
+            <label>Freq (Mo):</label>
             <input
               type="number"
               name="frequencyMonths"
-              className={styles.textInput}
+              className={styles.numericInput}
               value={costDetail.frequencyMonths || ""}
               onChange={handleChange}
             />
           </div>
           <div className={styles.formItem}>
-            <label>Unit Price:</label>
+            <label>Price:</label>
             <input
               type="number"
               name="unitPrice"
-              className={styles.textInput}
+              className={styles.numericInput}
               value={costDetail.unitPrice || ""}
               onChange={handleChange}
               step="0.01"
             />
           </div>
           <div className={styles.formItem}>
-            <label>Percentage Charging:</label>
+            <label>% Charge:</label>
             <input
               type="number"
               name="percentageCharging"
-              className={styles.textInput}
+              className={styles.numericInput}
               value={costDetail.percentageCharging || ""}
               onChange={handleChange}
               step="0.001"
             />
           </div>
           <div className={styles.formItem}>
-            <label>Cost Type:</label>
+            <label>Type:</label>
             <select
               name="costTypeId"
-              className={styles.textInput}
+              className={styles.selectInput}
               value={costDetail.costTypeId || ""}
               onChange={handleChange}
             >
@@ -188,7 +188,7 @@ const CostDetailItem = ({
             <label>Cost:</label>
             <select
               name="costId"
-              className={styles.textInput}
+              className={styles.selectInput}
               value={costDetail.costId || ""}
               onChange={handleChange}
             >
@@ -201,37 +201,37 @@ const CostDetailItem = ({
             </select>
           </div>
           <div className={styles.formItem}>
-            <label>Amount (Local Currency):</label>
+            <label>Amt (Local):</label>
             <input
               type="number"
-              className={styles.textInput}
+              className={styles.numericInput}
               value={costDetail.amountLocalCurrency || ""}
               readOnly
             />
           </div>
           <div className={styles.formItem}>
-            <label>Amount (Reporting Currency):</label>
+            <label>Amt (Report):</label>
             <input
               type="number"
-              className={styles.textInput}
+              className={styles.numericInput}
               value={costDetail.amountReportingCurrency || ""}
               readOnly
             />
           </div>
           <div className={styles.formItem}>
-            <label>Amount (GBP):</label>
+            <label>Amt (GBP):</label>
             <input
               type="number"
-              className={styles.textInput}
+              className={styles.numericInput}
               value={costDetail.amountGBP || ""}
               readOnly
             />
           </div>
           <div className={styles.formItem}>
-            <label>Amount (Euro):</label>
+            <label>Amt (Euro):</label>
             <input
               type="number"
-              className={styles.textInput}
+              className={styles.numericInput}
               value={costDetail.amountEuro || ""}
               readOnly
             />
