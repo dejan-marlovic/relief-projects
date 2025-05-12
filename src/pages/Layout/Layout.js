@@ -1,29 +1,17 @@
-// Import React core and hooks
 import React, { useContext } from "react";
-
-// Import routing tools for navigation and current location highlighting
 import { Outlet, Link, useLocation } from "react-router-dom";
-
-// Import styling
 import styles from "./Layout.module.scss";
-
-// Import the ProjectContext to access project list and selected project ID
 import { ProjectContext } from "../../context/ProjectContext";
 
-// Define the Layout component that wraps the whole app UI
 const Layout = () => {
-  // Use location hook to highlight the active tab
   const location = useLocation();
-
-  // Destructure context values: full project list, selected project ID, and the setter
   const { projects, selectedProjectId, setSelectedProjectId } =
     useContext(ProjectContext);
 
-  // Handle project selection changes
   const handleSelectChange = (e) => {
     const newValue = e.target.value;
     console.log(
-      "handleSelectChange: new value =",
+      "Layout.js: handleSelectChange: new value =",
       newValue,
       "selectedProjectId =",
       selectedProjectId
@@ -31,18 +19,14 @@ const Layout = () => {
     setSelectedProjectId(newValue);
   };
 
+  console.log("Layout.js: Rendering, selectedProjectId:", selectedProjectId);
+
   const isRegisterPage = location.pathname === "/register-project";
   return (
     <>
-      {/* Page title */}
       <h1>
         <strong>Relief Projects</strong>
       </h1>
-
-      {/* 👇 Conditionally apply a hidden style */}
-
-      {/* Project Selector - now persistent across all tabs */}
-
       <div
         className={`${styles.selectorContainer} ${
           isRegisterPage ? styles.hiddenSelector : ""
@@ -51,10 +35,11 @@ const Layout = () => {
         <strong>Select a Project</strong>
         <br />
         <select
-          value={selectedProjectId}
+          value={selectedProjectId ?? ""}
           onChange={handleSelectChange}
           className={styles.selectInput}
         >
+          <option value="">Select a project</option>
           {projects.map((project) => (
             <option key={project.id} value={project.id}>
               {project.projectName}
@@ -62,8 +47,6 @@ const Layout = () => {
           ))}
         </select>
       </div>
-
-      {/* Navigation bar for different tabs */}
       <nav className={styles.nav}>
         <ul>
           <li>
@@ -142,12 +125,9 @@ const Layout = () => {
           </li>
         </ul>
       </nav>
-
-      {/* Renders the selected route's component */}
       <Outlet />
     </>
   );
 };
 
-// Export Layout component
 export default Layout;

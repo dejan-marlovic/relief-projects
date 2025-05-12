@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
-import { ProjectContext } from "../../context/ProjectContext";
-import styles from "./Budget.module.scss";
+import { ProjectContext } from "../../context/ProjectContext.js";
+import CostDetail from "../Budget/CostDetail/CostDetail.js";
+import styles from "../Budget/Budget.module.scss";
 
 const Budget = ({
   budget: initialBudget,
@@ -17,6 +18,7 @@ const Budget = ({
   const [exchangeRates, setExchangeRates] = useState([]);
 
   useEffect(() => {
+    console.log("Budget.js: initialBudget:", initialBudget);
     setBudget(initialBudget || {});
   }, [initialBudget]);
 
@@ -176,7 +178,7 @@ const Budget = ({
                 <select
                   name="localCurrencyId"
                   className={styles.textInput}
-                  value={budget.localCurrencyId || ""}
+                  value={budget.localCurrencyId ?? ""}
                   onChange={handleChange}
                 >
                   <option value="">Select currency</option>
@@ -192,7 +194,7 @@ const Budget = ({
                 <select
                   name="localCurrencyToGbpId"
                   className={styles.textInput}
-                  value={budget.localCurrencyToGbpId || ""}
+                  value={budget.localCurrencyToGbpId ?? ""}
                   onChange={handleChange}
                 >
                   <option value="">Select rate</option>
@@ -211,7 +213,7 @@ const Budget = ({
                 <select
                   name="reportingCurrencySekId"
                   className={styles.textInput}
-                  value={budget.reportingCurrencySekId || ""}
+                  value={budget.reportingCurrencySekId ?? ""}
                   onChange={handleChange}
                 >
                   <option value="">Select currency</option>
@@ -227,7 +229,7 @@ const Budget = ({
                 <select
                   name="reportingExchangeRateSekId"
                   className={styles.textInput}
-                  value={budget.reportingExchangeRateSekId || ""}
+                  value={budget.reportingExchangeRateSekId ?? ""}
                   onChange={handleChange}
                 >
                   <option value="">Select rate</option>
@@ -246,7 +248,7 @@ const Budget = ({
                 <select
                   name="reportingCurrencyEurId"
                   className={styles.textInput}
-                  value={budget.reportingCurrencyEurId || ""}
+                  value={budget.reportingCurrencyEurId ?? ""}
                   onChange={handleChange}
                 >
                   <option value="">Select currency</option>
@@ -262,7 +264,7 @@ const Budget = ({
                 <select
                   name="reportingExchangeRateEurId"
                   className={styles.textInput}
-                  value={budget.reportingExchangeRateEurId || ""}
+                  value={budget.reportingExchangeRateEurId ?? ""}
                   onChange={handleChange}
                 >
                   <option value="">Select rate</option>
@@ -276,6 +278,13 @@ const Budget = ({
             </div>
           </div>
         </form>
+
+        {isSelected && (
+          <div className={styles.costDetailsSection}>
+            <h3>Cost Details</h3>
+            <CostDetail budgetId={budget.id} />
+          </div>
+        )}
       </div>
     </div>
   );

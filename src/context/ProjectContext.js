@@ -1,71 +1,115 @@
-import React, { createContext, useState, useEffect, useRef } from "react";
+import React, { createContext, useState, useEffect, useCallback } from "react";
 
 export const ProjectContext = createContext();
 
-const ProjectProvider = ({ children }) => {
+export const ProjectProvider = ({ children }) => {
+  const [selectedProjectId, setSelectedProjectIdState] = useState(null);
   const [projects, setProjects] = useState([]);
-  const [selectedProjectId, setSelectedProjectIdState] = useState(
-    localStorage.getItem("selectedProjectId") || ""
-  );
-  const hasSetInitialProject = useRef(false);
+  const [pendingProjectId, setPendingProjectId] = useState(null);
 
-  const setSelectedProjectId = (id) => {
-    const newId = id.toString();
-    console.log("setSelectedProjectId called with:", newId, new Error().stack);
-    setSelectedProjectIdState(newId);
-    localStorage.setItem("selectedProjectId", newId);
-  };
-
+  // Log state changes for debugging
   useEffect(() => {
-    console.log("ProjectProvider mounted");
+    if (selectedProjectId !== null) {
+      console.log(
+        "ProjectContext.js: selectedProjectId changed:",
+        selectedProjectId
+      );
+    }
+  }, [selectedProjectId]);
+
+  // Debounced setSelectedProjectId
+  const safeSetSelectedProjectId = useCallback((projectId) => {
+    console.log(
+      "ProjectContext.js: setSelectedProjectId called with:",
+      projectId
+    );
+    if (projectId === undefined || projectId === null) {
+      console.warn(
+        "ProjectContext.js: Attempted to set invalid projectId:",
+        projectId
+      );
+      return;
+    }
+    setPendingProjectId(projectId);
+  }, []);
+
+  // Handle debounced projectId updates
+  useEffect(() => {
+    if (pendingProjectId === null) return;
+    const debounceTimeout = setTimeout(() => {
+      setSelectedProjectIdState((prev) => {
+        if (prev !== pendingProjectId) {
+          return pendingProjectId;
+        }
+        return prev;
+      });
+      setPendingProjectId(null);
+    }, 300); // 300ms debounce
+    return () => clearTimeout(debounceTimeout);
+  }, [pendingProjectId]);
+
+  // Fetch projects on mount
+  useEffect(() => {
+    console.log("ProjectContext.js: ProjectProvider mounted");
+    let isMounted = true;
+
     const fetchProjects = async () => {
-      console.log("Fetching projects...");
+      console.log("ProjectContext.js: Fetching projects...");
       try {
         const token = localStorage.getItem("authToken");
         const response = await fetch(
-          "http://localhost:8080/api/projects/ids-names",
+          "http://localhost:8080/api/projects/active",
           {
             headers: {
-              "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
             },
           }
         );
-        if (!response.ok) throw new Error("Failed to fetch projects");
-        const projectNamesAndIds = await response.json();
-        const normalizedProjects = projectNamesAndIds.map((project) => ({
-          ...project,
-          id: project.id.toString(),
-        }));
-        setProjects(normalizedProjects);
-        if (normalizedProjects.length > 0 && !hasSetInitialProject.current) {
-          const storedId = localStorage.getItem("selectedProjectId");
-          const validStoredId =
-            storedId && normalizedProjects.some((p) => p.id === storedId);
-          const initialId = validStoredId ? storedId : normalizedProjects[0].id;
-          console.log("Setting initial selectedProjectId:", initialId);
-          setSelectedProjectId(initialId);
-          hasSetInitialProject.current = true;
+        if (!response.ok) {
+          throw new Error(`Failed to fetch projects: ${response.status}`);
+        }
+        const data = await response.json();
+        if (isMounted) {
+          const normalizedProjects = Array.isArray(data) ? data : [];
+          setProjects(normalizedProjects);
+          // Set initial selectedProjectId if not already set
+          if (normalizedProjects.length > 0 && selectedProjectId === null) {
+            console.log(
+              "ProjectContext.js: Setting initial selectedProjectId:",
+              normalizedProjects[0].id
+            );
+            safeSetSelectedProjectId(normalizedProjects[0].id);
+          }
         }
       } catch (error) {
-        console.error("Error fetching project list:", error);
+        if (isMounted) {
+          console.error(
+            "ProjectContext.js: Error fetching projects:",
+            error.message
+          );
+        }
       }
     };
-    fetchProjects();
-    return () => console.log("ProjectProvider unmounted");
-  }, []);
 
-  useEffect(() => {
-    console.log("selectedProjectId changed:", selectedProjectId);
-  }, [selectedProjectId]);
+    fetchProjects();
+
+    // Cleanup to prevent state updates on unmounted component
+    return () => {
+      isMounted = false;
+      console.log("ProjectContext.js: ProjectProvider unmounted");
+    };
+  }, [selectedProjectId, safeSetSelectedProjectId]);
 
   return (
     <ProjectContext.Provider
-      value={{ projects, setProjects, selectedProjectId, setSelectedProjectId }}
+      value={{
+        selectedProjectId,
+        setSelectedProjectId: safeSetSelectedProjectId,
+        projects,
+      }}
     >
       {children}
     </ProjectContext.Provider>
   );
 };
-
-export { ProjectProvider };

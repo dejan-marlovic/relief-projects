@@ -1,0 +1,265 @@
+import React, { useEffect, useState, useContext } from "react";
+import { ProjectContext } from "../../../context/ProjectContext";
+import styles from "./CostDetail.module.scss";
+
+const CostDetailItem = ({
+  costDetail: initialCostDetail,
+  isSelected,
+  onSelect,
+  onUpdated,
+  onDeleted,
+}) => {
+  const { selectedProjectId } = useContext(ProjectContext);
+  const [costDetail, setCostDetail] = useState(initialCostDetail || {});
+  const [costTypes, setCostTypes] = useState([]);
+  const [costs, setCosts] = useState([]);
+
+  useEffect(() => {
+    setCostDetail(initialCostDetail || {});
+  }, [initialCostDetail]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    const fetchData = async () => {
+      try {
+        const [costTypesRes, costsRes] = await Promise.all([
+          fetch("http://localhost:8080/api/cost-types/active", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch("http://localhost:8080/api/costs/active", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+        setCostTypes(await costTypesRes.json());
+        setCosts(await costsRes.json());
+      } catch (error) {
+        console.error("Failed to fetch cost types or costs:", error);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setCostDetail((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleDelete = async () => {
+    if (!costDetail.costDetailId) return;
+    if (!window.confirm("Are you sure you want to delete this cost detail?"))
+      return;
+    const token = localStorage.getItem("authToken");
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/cost-details/${costDetail.costDetailId}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (!response.ok) throw new Error("Failed to delete cost detail.");
+      alert("Cost detail deleted successfully.");
+      if (onDeleted) onDeleted();
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert("Error deleting cost detail.");
+    }
+  };
+
+  const handleSave = async () => {
+    if (!costDetail.costDetailId) return;
+    const token = localStorage.getItem("authToken");
+    const payload = {
+      budgetId: costDetail.budgetId,
+      projectId: selectedProjectId,
+      costTypeId: costDetail.costTypeId,
+      costId: costDetail.costId,
+      costDescription: costDetail.costDescription,
+      noOfUnits: parseInt(costDetail.noOfUnits),
+      frequencyMonths: parseInt(costDetail.frequencyMonths),
+      unitPrice: parseFloat(costDetail.unitPrice),
+      percentageCharging: parseFloat(costDetail.percentageCharging),
+    };
+
+    try {
+      console.log(
+        "Sending PUT request for cost detail:",
+        costDetail.costDetailId,
+        "with payload:",
+        payload
+      );
+      const response = await fetch(
+        `http://localhost:8080/api/cost-details/${costDetail.costDetailId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+      const responseData = await response.json();
+      console.log("PUT response:", responseData);
+      if (!response.ok)
+        throw new Error(`Failed to update cost detail: ${response.status}`);
+      console.log("Cost detail updated successfully");
+      alert("Cost detail updated successfully!");
+      if (onUpdated) onUpdated();
+    } catch (err) {
+      console.error("Update error:", err.message);
+      alert("Error updating cost detail.");
+    }
+  };
+
+  return (
+    <div
+      className={`${styles.costDetailContainer} ${
+        isSelected ? styles.selected : ""
+      }`}
+      onClick={onSelect}
+    >
+      <div className={styles.formContainer}>
+        <h3>Cost Detail</h3>
+        <form className={styles.formTwoColumn}>
+          <div className={styles.formColumnLeft}>
+            <div>
+              <label>Description:</label>
+              <textarea
+                name="costDescription"
+                className={styles.textareaInput}
+                value={costDetail.costDescription || ""}
+                onChange={handleChange}
+              />
+            </div>
+            <div>
+              <label>Number of Units:</label>
+              <input
+                type="number"
+                name="noOfUnits"
+                className={styles.textInput}
+                value={costDetail.noOfUnits || ""}
+                onChange={handleChange}
+              />
+            </div>
+            <div>
+              <label>Frequency (Months):</label>
+              <input
+                type="number"
+                name="frequencyMonths"
+                className={styles.textInput}
+                value={costDetail.frequencyMonths || ""}
+                onChange={handleChange}
+              />
+            </div>
+            <div>
+              <label>Unit Price:</label>
+              <input
+                type="number"
+                name="unitPrice"
+                className={styles.textInput}
+                value={costDetail.unitPrice || ""}
+                onChange={handleChange}
+                step="0.01"
+              />
+            </div>
+            <div>
+              <label>Percentage Charging:</label>
+              <input
+                type="number"
+                name="percentageCharging"
+                className={styles.textInput}
+                value={costDetail.percentageCharging || ""}
+                onChange={handleChange}
+                step="0.001"
+              />
+            </div>
+            <div>
+              <label>Cost Type:</label>
+              <select
+                name="costTypeId"
+                className={styles.textInput}
+                value={costDetail.costTypeId || ""}
+                onChange={handleChange}
+              >
+                <option value="">Select cost type</option>
+                {costTypes.map((ct) => (
+                  <option key={ct.id} value={ct.id}>
+                    {ct.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label>Cost:</label>
+              <select
+                name="costId"
+                className={styles.textInput}
+                value={costDetail.costId || ""}
+                onChange={handleChange}
+              >
+                <option value="">Select cost</option>
+                {costs.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className={styles.buttonRow}>
+              <button className={styles.saveButton} onClick={handleSave}>
+                Save
+              </button>
+              <button className={styles.deleteButton} onClick={handleDelete}>
+                Delete
+              </button>
+            </div>
+          </div>
+          <div className={styles.formColumnRight}>
+            <div>
+              <label>Amount (Local Currency):</label>
+              <input
+                type="number"
+                className={styles.textInput}
+                value={costDetail.amountLocalCurrency || ""}
+                readOnly
+              />
+            </div>
+            <div>
+              <label>Amount (Reporting Currency):</label>
+              <input
+                type="number"
+                className={styles.textInput}
+                value={costDetail.amountReportingCurrency || ""}
+                readOnly
+              />
+            </div>
+            <div>
+              <label>Amount (GBP):</label>
+              <input
+                type="number"
+                className={styles.textInput}
+                value={costDetail.amountGBP || ""}
+                readOnly
+              />
+            </div>
+            <div>
+              <label>Amount (Euro):</label>
+              <input
+                type="number"
+                className={styles.textInput}
+                value={costDetail.amountEuro || ""}
+                readOnly
+              />
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default React.memo(CostDetailItem);
