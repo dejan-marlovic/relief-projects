@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { ProjectContext } from "../../context/ProjectContext";
 import Budget from "../Budget/Budget";
-import CreateNewBudget from "../../components/CreateNewBudget/CreateNewBudget";
+import CreateNewBudget from "../Budgets/CreateNewBudget/CreateNewBudget";
 import styles from "./Budgets.module.scss";
 
 const Budgets = () => {
