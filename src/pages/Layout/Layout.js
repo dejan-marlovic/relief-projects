@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import styles from "./Layout.module.scss";
 import { ProjectContext } from "../../context/ProjectContext";
@@ -8,8 +8,21 @@ const Layout = () => {
   const { projects, selectedProjectId, setSelectedProjectId } =
     useContext(ProjectContext);
 
+  // Ensure selectedProjectId is valid when projects change
+  useEffect(() => {
+    if (
+      projects.length > 0 &&
+      !projects.some((p) => p.id === selectedProjectId)
+    ) {
+      console.log(
+        "Layout.js: selectedProjectId is invalid, resetting to first project or null"
+      );
+      setSelectedProjectId(projects[0]?.id || null);
+    }
+  }, [projects, selectedProjectId, setSelectedProjectId]);
+
   const handleSelectChange = (e) => {
-    const newValue = e.target.value;
+    const newValue = e.target.value ? parseInt(e.target.value, 10) : null;
     console.log(
       "Layout.js: handleSelectChange: new value =",
       newValue,
@@ -19,7 +32,12 @@ const Layout = () => {
     setSelectedProjectId(newValue);
   };
 
-  console.log("Layout.js: Rendering, selectedProjectId:", selectedProjectId);
+  console.log(
+    "Layout.js: Rendering, selectedProjectId:",
+    selectedProjectId,
+    "projects:",
+    projects
+  );
 
   const isRegisterPage = location.pathname === "/register-project";
   return (
@@ -59,68 +77,12 @@ const Layout = () => {
           </li>
           <li>
             <Link
-              to="/budgets"
-              className={location.pathname === "/budgets" ? styles.active : ""}
-            >
-              Budgets
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/transactions"
-              className={
-                location.pathname === "/transactions" ? styles.active : ""
-              }
-            >
-              Transactions
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/payments"
-              className={location.pathname === "/payments" ? styles.active : ""}
-            >
-              Payments
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/signatures"
-              className={
-                location.pathname === "/signatures" ? styles.active : ""
-              }
-            >
-              Signatures
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/recipients"
-              className={
-                location.pathname === "/recipients" ? styles.active : ""
-              }
-            >
-              Recipients
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/documents"
-              className={
-                location.pathname === "/documents" ? styles.active : ""
-              }
-            >
-              Documents
-            </Link>
-          </li>
-          <li>
-            <Link
               to="/register-project"
               className={
                 location.pathname === "/register-project" ? styles.active : ""
               }
             >
-              Register New Project
+              Register Project
             </Link>
           </li>
         </ul>
