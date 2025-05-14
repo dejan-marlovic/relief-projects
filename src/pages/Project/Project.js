@@ -402,6 +402,19 @@ const Project = () => {
                         />
                       </div>
 
+                      {/* Project Cover Image Filename */}
+                      <div>
+                        <label>Project Cover Image Filename:</label>
+                        <input
+                          type="text"
+                          name="projectCoverImage"
+                          value={projectDetails.projectCoverImage || ""}
+                          onChange={handleInputChange}
+                          className={styles.textInput}
+                          placeholder="e.g., flood_relief.jpg"
+                        />
+                      </div>
+
                       {/* Approved */}
                       <div>
                         <label>Approved:</label>
