@@ -18,6 +18,7 @@ const RegisterProject = () => {
     foSupportCostPercent: "",
     irwSupportCostPercent: "",
     projectDescription: "",
+    projectCoverImage: "",
     projectStatusId: "",
     approved: "Yes",
     projectPeriodMonths: "",
@@ -156,6 +157,20 @@ const RegisterProject = () => {
               value={projectDetails.irwSupportCostPercent}
               onChange={handleInputChange}
             />
+            <div className={styles.textInput}>
+              <label>Cover Image Filename:</label>
+              <input
+                type="text"
+                name="projectCoverImage"
+                className={styles.textInput}
+                value={projectDetails.projectCoverImage}
+                onChange={handleInputChange}
+                placeholder="e.g., flood_relief.jpg"
+              />
+              <small className={styles.helperText}>
+                Enter just the filename (no path), e.g., flood_relief.jpg
+              </small>
+            </div>
 
             <div className={styles.textInput}>
               <label>Project Date:</label>
