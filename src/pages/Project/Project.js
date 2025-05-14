@@ -19,6 +19,8 @@ const Project = () => {
   // Local state for project cover image URL
   const [coverImage, setCoverImage] = useState(null);
 
+  const coverImagePath = "/images/projects/";
+
   // State to track whether the data is being loaded
   const [loading, setLoading] = useState(false);
 
@@ -283,7 +285,7 @@ const Project = () => {
             {coverImage && (
               <div className={styles.imageContainer}>
                 <img
-                  src={coverImage}
+                  src={`${coverImagePath}${coverImage}`}
                   alt="Project Cover"
                   className={styles.coverImage}
                 />
