@@ -83,10 +83,11 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
           {/* Left Column */}
           <div className={styles.formColumnLeft}>
             <div className={styles.formItem}>
-              <label>Description:</label>
+              <label>Budget Description:</label>
               <textarea
                 name="budgetDescription"
                 className={styles.textareaInput}
+                placeholder="Enter a brief description of the budget purpose"
                 value={budget.budgetDescription}
                 onChange={handleChange}
               />
@@ -101,6 +102,9 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
                 value={budget.budgetPreparationDate}
                 onChange={handleChange}
               />
+              <small className={styles.helperText}>
+                Date the budget was prepared.
+              </small>
             </div>
 
             <div className={styles.formItem}>
@@ -109,6 +113,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
                 type="number"
                 name="totalAmount"
                 className={styles.textInput}
+                placeholder="Enter total budget amount"
                 value={budget.totalAmount}
                 onChange={handleChange}
               />
@@ -126,19 +131,19 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
                 rateField: "localCurrencyToGbpId",
               },
               {
-                currencyName: "SEK Currency",
+                currencyName: "SEK Reporting Currency",
                 currencyField: "reportingCurrencySekId",
                 rateLabel: "SEK Exchange Rate",
                 rateField: "reportingExchangeRateSekId",
               },
               {
-                currencyName: "EUR Currency",
+                currencyName: "EUR Reporting Currency",
                 currencyField: "reportingCurrencyEurId",
                 rateLabel: "EUR Exchange Rate",
                 rateField: "reportingExchangeRateEurId",
               },
               {
-                currencyName: "Local Exchange Rate",
+                currencyName: "Alternative Local Exchange Currency",
                 currencyField: "localExchangeRateId",
                 rateLabel: "Local → GBP Exchange Rate (Alt)",
                 rateField: "localExchangeRateToGbpId",
@@ -146,7 +151,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
             ].map((pair, index) => (
               <div className={styles.formRowPair} key={index}>
                 <div className={styles.formItem}>
-                  <label>{pair.currencyName}</label>
+                  <label>{pair.currencyName}:</label>
                   <select
                     name={pair.currencyField}
                     className={styles.textInput}
@@ -163,7 +168,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
                 </div>
 
                 <div className={styles.formItem}>
-                  <label>{pair.rateLabel}</label>
+                  <label>{pair.rateLabel}:</label>
                   <select
                     name={pair.rateField}
                     className={styles.textInput}
