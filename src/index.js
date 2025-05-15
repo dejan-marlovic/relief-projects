@@ -1,10 +1,10 @@
-// Import React and ReactDOM
+// Import ReactDOM to render the React app into the DOM
 import ReactDOM from "react-dom/client";
 
-// Import routing tools
+// React Router imports to manage client-side routing
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-// Import pages/components
+// Importing all page components and views used in the routing
 import Layout from "./pages/Layout/Layout";
 import Login from "./pages/Login/Login";
 import Transactions from "./pages/Transactions/Transactions";
@@ -14,20 +14,30 @@ import Payments from "./pages/Payments/Payments";
 import Signatures from "./pages/Signatures/Signatures";
 import Recipients from "./pages/Recipients/Recipients";
 import Documents from "./pages/Documents/Documents";
-import RegisterProject from "./pages/RegisterProject/RegisterProject"; // ✅ Add this line
-import NoPage from "./pages/NoPage/NoPage";
+import RegisterProject from "./pages/RegisterProject/RegisterProject"; // ✅ Register Project page
+import NoPage from "./pages/NoPage/NoPage"; // Catch-all for undefined routes (404)
 
-// Import the ProjectProvider to share project data across the app
+// Import the context provider to share state across all components
 import { ProjectProvider } from "./context/ProjectContext";
 
+// ✅ Main App component: this sets up routing and wraps everything in context
 export default function App() {
   return (
+    // 🌐 Wrap the app in ProjectProvider so project-related context is globally available
     <ProjectProvider>
+      {/* Set up React Router to handle browser navigation without full page reloads */}
       <BrowserRouter>
+        {/* Define all the routes of the application */}
         <Routes>
+          {/* Public route: login is outside the main layout */}
           <Route path="/login" element={<Login />} />
+
+          {/* Main route with Layout wrapper — this becomes the base for all subroutes */}
           <Route path="/" element={<Layout />}>
+            {/* 👇 Nested routes rendered inside <Outlet /> of Layout.jsx */}
+            {/* Default route for "/" (i.e., homepage) */}
             <Route index element={<Project />} />
+            {/* Other sections/tabs of the app */}
             <Route path="project" element={<Project />} />
             <Route path="budgets" element={<Budgets />} />
             <Route path="transactions" element={<Transactions />} />
@@ -36,7 +46,8 @@ export default function App() {
             <Route path="recipients" element={<Recipients />} />
             <Route path="documents" element={<Documents />} />
             <Route path="register-project" element={<RegisterProject />} />{" "}
-            {/* ✅ New route */}
+            {/* ✅ New page to register a project */}
+            {/* Catch-all route (if user navigates to a non-existent route) */}
             <Route path="*" element={<NoPage />} />
           </Route>
         </Routes>
@@ -45,6 +56,7 @@ export default function App() {
   );
 }
 
-// Mount the app
+// 🧩 Mount the React app to the DOM
+// This is the entry point that connects React with the HTML file (usually index.html)
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(<App />);
