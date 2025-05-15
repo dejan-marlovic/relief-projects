@@ -11,12 +11,12 @@ import styles from "./Login.module.scss";
 function Login() {
   /**
    *
-   *  We don’t have to define our own setter functions manually! (IMPORTANT)
+   *  We don’t have to define our own setter functions manually but we assign return value to a fuction name! (IMPORTANT)
    *
    * useState returns a 2-element array:
    * [stateValue, functionToUpdateIt]
    *
-   *  We don’t have to define our own setter functions manually! (IMPORTANT)
+   *
    *
    * We're using array destructuring to assign:
    * - username: holds the current username input (initially "")

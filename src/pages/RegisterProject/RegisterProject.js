@@ -1,11 +1,18 @@
-// RegisterProject.jsx
+// Core React imports
 import React, { useEffect, useState, useContext } from "react";
+
+// Styles specific to the RegisterProject form
 import styles from "./RegisterProject.module.scss";
+
+// Import context to update the global list of projects
 import { ProjectContext } from "../../context/ProjectContext";
 
+// The main functional component to register a new project
 const RegisterProject = () => {
+  // Extract the setProjects function from context to update the global project list
   const { setProjects } = useContext(ProjectContext);
 
+  // Local state to hold all input values for the form (controlled component)
   const [projectDetails, setProjectDetails] = useState({
     projectCode: "",
     refProjectNo: "",
@@ -18,8 +25,9 @@ const RegisterProject = () => {
     foSupportCostPercent: "",
     irwSupportCostPercent: "",
     projectDescription: "",
+    projectCoverImage: "",
     projectStatusId: "",
-    approved: "Yes",
+    approved: "Yes", // Default value
     projectPeriodMonths: "",
     projectDate: "",
     projectStart: "",
@@ -30,11 +38,13 @@ const RegisterProject = () => {
     projectTypeId: "",
   });
 
+  // Dropdown options fetched from backend
   const [projectStatuses, setProjectStatuses] = useState([]);
   const [projectTypes, setProjectTypes] = useState([]);
   const [addresses, setAddresses] = useState([]);
   const [availableParentProjects, setAvailableParentProjects] = useState([]);
 
+  // Load form dropdown data from the server once when component mounts
   useEffect(() => {
     const token = localStorage.getItem("authToken");
 
@@ -44,12 +54,15 @@ const RegisterProject = () => {
           fetch("http://localhost:8080/api/project-statuses/active", {
             headers: { Authorization: `Bearer ${token}` },
           }).then((res) => res.json()),
+
           fetch("http://localhost:8080/api/project-types/active", {
             headers: { Authorization: `Bearer ${token}` },
           }).then((res) => res.json()),
+
           fetch("http://localhost:8080/api/addresses/active", {
             headers: { Authorization: `Bearer ${token}` },
           }).then((res) => res.json()),
+
           fetch("http://localhost:8080/api/projects/ids-names", {
             headers: { Authorization: `Bearer ${token}` },
           }).then((res) => res.json()),
@@ -67,21 +80,37 @@ const RegisterProject = () => {
     fetchData();
   }, []);
 
+  // 🧠 This function handles **all input field changes** in the form
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setProjectDetails((prev) => ({ ...prev, [name]: value }));
+    const { name, value } = e.target; // Destructure the name and value of the input that triggered the change
+
+    // Update the corresponding field in projectDetails state immutably
+    // React will re-render the component with the new value
+    setProjectDetails((prev) => ({
+      ...prev, // Copy all existing values
+      [name]: value, // Dynamically update only the changed field using bracket notation
+    }));
   };
 
+  /*
+  📌 What handleInputChange does:
+  - Makes this a controlled form (state = single source of truth)
+  - Works generically for all inputs by using the input's `name` attribute as the key
+  - Allows real-time form updates and validations
+  */
+
+  // Submit handler for creating a new project
   const handleRegister = async () => {
     try {
       const token = localStorage.getItem("authToken");
+
       const response = await fetch("http://localhost:8080/api/projects", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(projectDetails),
+        body: JSON.stringify(projectDetails), // Send entire form data to backend
       });
 
       if (!response.ok) throw new Error("Failed to create project");
@@ -89,7 +118,10 @@ const RegisterProject = () => {
       const newProject = await response.json();
       alert("Project created successfully!");
 
+      // Update global context with the new project
       setProjects((prev) => [...prev, newProject]);
+
+      // Optionally reset the form (currently clears everything)
       setProjectDetails({});
     } catch (error) {
       console.error("Create error:", error);
@@ -101,8 +133,12 @@ const RegisterProject = () => {
     <div className={styles.registerContainer}>
       <div className={styles.formContainer}>
         <h3>Register New Project</h3>
+
+        {/* Begin Form Layout */}
         <form className={styles.formTwoColumn}>
+          {/* LEFT COLUMN — general project info */}
           <div className={styles.formColumnLeft}>
+            {/* Each input is bound to projectDetails and updates it via handleInputChange */}
             <input
               className={styles.textInput}
               name="projectName"
@@ -157,6 +193,23 @@ const RegisterProject = () => {
               onChange={handleInputChange}
             />
 
+            {/* Cover Image Filename */}
+            <div className={styles.textInput}>
+              <label>Cover Image Filename:</label>
+              <input
+                type="text"
+                name="projectCoverImage"
+                className={styles.textInput}
+                value={projectDetails.projectCoverImage}
+                onChange={handleInputChange}
+                placeholder="e.g., flood_relief.jpg"
+              />
+              <small className={styles.helperText}>
+                Enter just the filename (no path)
+              </small>
+            </div>
+
+            {/* Date inputs */}
             <div className={styles.textInput}>
               <label>Project Date:</label>
               <input
@@ -166,11 +219,7 @@ const RegisterProject = () => {
                 value={projectDetails.projectDate}
                 onChange={handleInputChange}
               />
-              <small className={styles.helperText}>
-                The date the project was officially registered or approved.
-              </small>
             </div>
-
             <div className={styles.textInput}>
               <label>Project Start:</label>
               <input
@@ -180,11 +229,7 @@ const RegisterProject = () => {
                 value={projectDetails.projectStart}
                 onChange={handleInputChange}
               />
-              <small className={styles.helperText}>
-                The planned starting date for the project activities.
-              </small>
             </div>
-
             <div className={styles.textInput}>
               <label>Project End:</label>
               <input
@@ -194,13 +239,12 @@ const RegisterProject = () => {
                 value={projectDetails.projectEnd}
                 onChange={handleInputChange}
               />
-              <small className={styles.helperText}>
-                The planned completion date for the project.
-              </small>
             </div>
           </div>
 
+          {/* RIGHT COLUMN — dropdowns and additional info */}
           <div className={styles.formColumnRight}>
+            {/* Project Status */}
             <select
               className={styles.textInput}
               name="projectStatusId"
@@ -215,6 +259,7 @@ const RegisterProject = () => {
               ))}
             </select>
 
+            {/* Project Type */}
             <select
               className={styles.textInput}
               name="projectTypeId"
@@ -229,6 +274,7 @@ const RegisterProject = () => {
               ))}
             </select>
 
+            {/* Address */}
             <select
               className={styles.textInput}
               name="addressId"
@@ -243,6 +289,7 @@ const RegisterProject = () => {
               ))}
             </select>
 
+            {/* Parent Project */}
             <select
               className={styles.textInput}
               name="partOfId"
@@ -257,6 +304,7 @@ const RegisterProject = () => {
               ))}
             </select>
 
+            {/* Revised dates */}
             <div className={styles.textInput}>
               <label>Project Start (Revised):</label>
               <input
@@ -266,9 +314,6 @@ const RegisterProject = () => {
                 value={projectDetails.projectStartRev}
                 onChange={handleInputChange}
               />
-              <small className={styles.helperText}>
-                If applicable, enter the revised or actual project start date.
-              </small>
             </div>
 
             <div className={styles.textInput}>
@@ -280,9 +325,6 @@ const RegisterProject = () => {
                 value={projectDetails.projectEndRev}
                 onChange={handleInputChange}
               />
-              <small className={styles.helperText}>
-                If applicable, enter the revised or actual project end date.
-              </small>
             </div>
 
             <input
@@ -296,6 +338,7 @@ const RegisterProject = () => {
           </div>
         </form>
 
+        {/* Project Description field */}
         <div className={styles.fullWidthField}>
           <label>Description:</label>
           <textarea
@@ -306,6 +349,7 @@ const RegisterProject = () => {
           />
         </div>
 
+        {/* Submit button */}
         <button
           type="button"
           onClick={handleRegister}
