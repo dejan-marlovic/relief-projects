@@ -5,7 +5,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { ProjectContext } from "../../context/ProjectContext";
 
 // Import child components used in this component
-import Budget from "../Budget/Budget"; // Displays a single budget item
+import Budget from "../Budgets/Budget/Budget"; // Displays a single budget item
 import CreateNewBudget from "../Budgets/CreateNewBudget/CreateNewBudget"; // Form to create a new budget
 
 // Import scoped CSS styles

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import styles from "../../Budget/Budget.module.scss";
+import styles from "../Budgets.module.scss";
 import { ProjectContext } from "../../../context/ProjectContext";
 
 const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
