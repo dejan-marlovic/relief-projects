@@ -265,6 +265,27 @@ const Project = () => {
 
       if (!response.ok) throw new Error("Failed to update project");
 
+      // ✅ Update the project in the global context list
+      // We use the functional form of setProjects to ensure we're working with the latest state.
+      // React will call the function below and pass in the most current version of `projects`.
+      // The parameter name `prevProjects` is just a name — you could call it anything.
+      // What's important is that React gives us the actual current state.
+      setProjects((prevProjects) =>
+        // Create a new array using .map() so React sees it as a fresh update
+        prevProjects.map(
+          (proj) =>
+            // Check if this is the project we just edited
+            proj.id === projectDetails.id
+              ? {
+                  // Copy all properties of the existing project object
+                  ...proj,
+                  // Overwrite just the projectName with the updated one
+                  projectName: projectDetails.projectName,
+                }
+              : proj // If it's not the edited project, return it unchanged
+        )
+      );
+
       alert("Project updated successfully!");
     } catch (error) {
       console.error("Update error:", error);
