@@ -105,6 +105,35 @@ const Budget = ({ budget: initialBudget }) => {
     }
   };
 
+  const handleDelete = async () => {
+    if (!window.confirm("Are you sure you want to delete this budget?")) return;
+
+    try {
+      const token = localStorage.getItem("authToken");
+
+      const response = await fetch(
+        `http://localhost:8080/api/budgets/${budget.id}`, // Adjust endpoint if needed
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to delete budget");
+
+      alert("Budget deleted successfully!");
+
+      // Optionally: reset budget state or navigate away
+      setBudget({});
+      // If using routing: navigate("/budgets") or call a callback prop
+    } catch (error) {
+      console.error("Error deleting budget:", error);
+      alert("Error deleting budget.");
+    }
+  };
+
   // Render the form UI
   return (
     <div className={styles.budgetContainer}>
@@ -156,6 +185,13 @@ const Budget = ({ budget: initialBudget }) => {
                 className={styles.saveButton}
               >
                 Save
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                className={styles.deleteButton}
+              >
+                Delete
               </button>
             </div>
           </div>
