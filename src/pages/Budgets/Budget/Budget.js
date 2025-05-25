@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import styles from "./Budget.module.scss";
 
 // Define the Budget component, accepting a prop called "budget" (initialBudget)
-const Budget = ({ budget: initialBudget }) => {
+const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
   // Helper function to format date/time input values for the form
   // Ensures we slice the date string to a "YYYY-MM-DDTHH:mm" format for datetime-local input
   const formatDate = (dateString) =>
@@ -99,6 +99,10 @@ const Budget = ({ budget: initialBudget }) => {
       if (!response.ok) throw new Error("Failed to update budget");
 
       alert("Budget updated successsfully!");
+
+      const updated = await response.json();
+
+      onUpdate?.(updated); //
     } catch (error) {
       console.error("Error updating budget:", error);
       alert("Error saving budget.");
@@ -124,6 +128,7 @@ const Budget = ({ budget: initialBudget }) => {
       if (!response.ok) throw new Error("Failed to delete budget");
 
       alert("Budget deleted successfully!");
+      onDelete?.(budget.id); //
 
       // Optionally: reset budget state or navigate away
       setBudget({});
