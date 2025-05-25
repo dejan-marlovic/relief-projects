@@ -80,6 +80,31 @@ const Budget = ({ budget: initialBudget }) => {
     }));
   };
 
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+
+      const response = await fetch(
+        `http://localhost:8080/api/budgets/${budget.id}`,
+
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(budget),
+        }
+      );
+      if (!response.ok) throw new Error("Failed to update budget");
+
+      alert("Budget updated successsfully!");
+    } catch (error) {
+      console.error("Error updating budget:", error);
+      alert("Error saving budget.");
+    }
+  };
+
   // Render the form UI
   return (
     <div className={styles.budgetContainer}>
@@ -123,6 +148,15 @@ const Budget = ({ budget: initialBudget }) => {
                 value={budget.totalAmount || ""}
                 onChange={handleChange}
               />
+            </div>
+            <div className={styles.saveButtonContainer}>
+              <button
+                type="button"
+                onClick={handleSave}
+                className={styles.saveButton}
+              >
+                Save
+              </button>
             </div>
           </div>
 
