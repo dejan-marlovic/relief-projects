@@ -66,7 +66,22 @@ const CostDetails = ({ costDetails }) => {
 
   return (
     <div>
-      <h4>Cost Details</h4>
+      <div
+        style={{
+          fontWeight: "bold",
+          display: "flex",
+          gap: "16px",
+          paddingBottom: "8px",
+          borderBottom: "2px solid #000",
+        }}
+      >
+        <div style={{ flex: "1 1 150px" }}>Description</div>
+        <div style={{ flex: "1 1 120px" }}>Type</div>
+        <div style={{ flex: "1 1 150px" }}>Category</div>
+        <div style={{ flex: "1 1 100px" }}>Units × Price</div>
+        <div style={{ flex: "1 1 80px" }}>Charged</div>
+        <div style={{ flex: "1 1 200px" }}>Amounts</div>
+      </div>
 
       {Object.entries(groupedData).map(([typeId, costGroups]) => {
         const type = costTypes.find((t) => t.id === parseInt(typeId));
