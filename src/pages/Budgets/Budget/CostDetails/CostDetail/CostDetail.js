@@ -1,16 +1,23 @@
 // CostDetail.js
-const CostDetail = ({ cost }) => {
+const CostDetail = ({ cost, costType }) => {
   return (
     <div
       style={{ border: "1px solid #ccc", padding: "8px", marginBottom: "8px" }}
     >
       <strong>{cost.costDescription}</strong>
-      <br />
-      Units: {cost.noOfUnits} × {cost.unitPrice}
-      <br />
-      Charged: {cost.percentageCharging}%<br />
-      Local: {cost.amountLocalCurrency} | GBP: {cost.amountGBP} | EUR:{" "}
-      {cost.amountEURO}
+      {costType && (
+        <div style={{ fontStyle: "italic", color: "#666" }}>
+          {costType.costTypeName}
+        </div>
+      )}
+      <div>
+        Units: {cost.noOfUnits} × {cost.unitPrice}
+      </div>
+      <div>Charged: {cost.percentageCharging}%</div>
+      <div>
+        Local: {cost.amountLocalCurrency} | GBP: {cost.amountGBP} | EUR:{" "}
+        {cost.amountEURO}
+      </div>
     </div>
   );
 };
