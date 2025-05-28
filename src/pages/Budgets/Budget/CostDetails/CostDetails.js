@@ -1,15 +1,13 @@
+// CostDetails.js
+import CostDetail from "./CostDetail/CostDetail"; // Adjust path if needed
+
 const CostDetails = ({ costDetails }) => {
   return (
     <div>
       <h4>Cost Details</h4>
-      <ul>
-        {costDetails.map((cost) => (
-          <li key={cost.costDetailId}>
-            {cost.costDescription} – {cost.amountLocalCurrency} {cost.unitPrice}{" "}
-            x {cost.noOfUnits}
-          </li>
-        ))}
-      </ul>
+      {costDetails.map((cost) => (
+        <CostDetail key={cost.costDetailId} cost={cost} />
+      ))}
     </div>
   );
 };
