@@ -80,6 +80,18 @@ const CostDetails = ({ costDetails }) => {
 
             {Object.entries(costGroups).map(([costId, items]) => {
               const category = costs.find((c) => c.id === parseInt(costId));
+
+              // ✅ Calculate totals per category
+              const totals = items.reduce(
+                (acc, item) => {
+                  acc.local += item.amountLocalCurrency || 0;
+                  acc.gbp += item.amountGBP || 0;
+                  acc.eur += item.amountEURO || 0;
+                  return acc;
+                },
+                { local: 0, gbp: 0, eur: 0 }
+              );
+
               return (
                 <div
                   key={costId}
@@ -102,6 +114,18 @@ const CostDetails = ({ costDetails }) => {
                       costCategory={category}
                     />
                   ))}
+
+                  {/* 🧮 Totals */}
+                  <div
+                    style={{
+                      marginTop: "8px",
+                      fontWeight: "bold",
+                      fontSize: "14px",
+                    }}
+                  >
+                    Total (Category): Local: {totals.local.toFixed(2)} | GBP:{" "}
+                    {totals.gbp.toFixed(2)} | EUR: {totals.eur.toFixed(2)}
+                  </div>
                 </div>
               );
             })}
