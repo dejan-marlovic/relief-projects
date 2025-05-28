@@ -26,7 +26,7 @@ const CostDetail = ({ cost, costType, costCategory }) => {
       <div style={{ flex: "1 1 80px" }}>{cost.percentageCharging}%</div>
       <div style={{ flex: "1 1 200px" }}>
         Local: {cost.amountLocalCurrency} | GBP: {cost.amountGBP} | EUR:{" "}
-        {cost.amountEURO}
+        {cost.amountEuro}
       </div>
     </div>
   );

@@ -101,7 +101,7 @@ const CostDetails = ({ costDetails }) => {
                 (acc, item) => {
                   acc.local += item.amountLocalCurrency || 0;
                   acc.gbp += item.amountGBP || 0;
-                  acc.eur += item.amountEURO || 0;
+                  acc.eur += item.amountEuro || 0;
                   return acc;
                 },
                 { local: 0, gbp: 0, eur: 0 }
@@ -138,8 +138,8 @@ const CostDetails = ({ costDetails }) => {
                       fontSize: "14px",
                     }}
                   >
-                    Total (Category): Local: {totals.local.toFixed(2)} | GBP:{" "}
-                    {totals.gbp.toFixed(2)} | EUR: {totals.eur.toFixed(2)}
+                    Total (Category): Local: {totals.local.toFixed(3)} | GBP:{" "}
+                    {totals.gbp.toFixed(3)} | EUR: {totals.eur.toFixed(3)}
                   </div>
                 </div>
               );
