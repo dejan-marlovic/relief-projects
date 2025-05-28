@@ -1,6 +1,5 @@
-// CostDetails.js
-import CostDetail from "./CostDetail/CostDetail"; // Adjust path if needed
 import React, { useEffect, useState } from "react";
+import CostDetail from "./CostDetail/CostDetail";
 
 const CostDetails = ({ costDetails }) => {
   const [costTypes, setCostTypes] = useState([]);
@@ -13,9 +12,7 @@ const CostDetails = ({ costDetails }) => {
         const response = await fetch(
           "http://localhost:8080/api/cost-types/active",
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
           }
         );
         if (!response.ok) throw new Error("Failed to fetch cost types");
@@ -26,17 +23,11 @@ const CostDetails = ({ costDetails }) => {
       }
     };
 
-    fetchCostTypes();
-  }, []);
-
-  useEffect(() => {
     const fetchCosts = async () => {
       try {
         const token = localStorage.getItem("authToken");
         const response = await fetch("http://localhost:8080/api/costs/active", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
         if (!response.ok) throw new Error("Failed to fetch costs");
         const data = await response.json();
@@ -46,38 +37,75 @@ const CostDetails = ({ costDetails }) => {
       }
     };
 
+    fetchCostTypes();
     fetchCosts();
   }, []);
+
+  const groupCosts = () => {
+    const grouped = {};
+
+    costDetails.forEach((cost) => {
+      const typeId = cost.costTypeId;
+      const costId = cost.costId;
+
+      if (!grouped[typeId]) {
+        grouped[typeId] = {};
+      }
+
+      if (!grouped[typeId][costId]) {
+        grouped[typeId][costId] = [];
+      }
+
+      grouped[typeId][costId].push(cost);
+    });
+
+    return grouped;
+  };
+
+  const groupedData = groupCosts();
 
   return (
     <div>
       <h4>Cost Details</h4>
-      <div
-        style={{
-          fontWeight: "bold",
-          display: "flex",
-          gap: "16px",
-          paddingBottom: "8px",
-          borderBottom: "2px solid #000",
-        }}
-      >
-        <div style={{ flex: "1 1 150px" }}>Description</div>
-        <div style={{ flex: "1 1 120px" }}>Type</div>
-        <div style={{ flex: "1 1 150px" }}>Category</div>
-        <div style={{ flex: "1 1 100px" }}>Units × Price</div>
-        <div style={{ flex: "1 1 80px" }}>Charged</div>
-        <div style={{ flex: "1 1 200px" }}>Amounts</div>
-      </div>
-      {costDetails.map((cost) => {
-        const costType = costTypes.find((type) => type.id === cost.costTypeId);
-        const costCategory = costs.find((c) => c.id === cost.costId); // match by costId
+
+      {Object.entries(groupedData).map(([typeId, costGroups]) => {
+        const type = costTypes.find((t) => t.id === parseInt(typeId));
         return (
-          <CostDetail
-            key={cost.costDetailId}
-            cost={cost}
-            costType={costType}
-            costCategory={costCategory}
-          />
+          <div key={typeId} style={{ marginBottom: "24px" }}>
+            <h5
+              style={{ borderBottom: "2px solid #333", paddingBottom: "4px" }}
+            >
+              {type?.costTypeName || "Unknown Type"}
+            </h5>
+
+            {Object.entries(costGroups).map(([costId, items]) => {
+              const category = costs.find((c) => c.id === parseInt(costId));
+              return (
+                <div
+                  key={costId}
+                  style={{ marginLeft: "16px", marginBottom: "16px" }}
+                >
+                  <h6
+                    style={{
+                      borderBottom: "1px dashed #aaa",
+                      paddingBottom: "2px",
+                    }}
+                  >
+                    {category?.costName || "Unknown Category"}
+                  </h6>
+
+                  {items.map((cost) => (
+                    <CostDetail
+                      key={cost.costDetailId}
+                      cost={cost}
+                      costType={type}
+                      costCategory={category}
+                    />
+                  ))}
+                </div>
+              );
+            })}
+          </div>
         );
       })}
     </div>
