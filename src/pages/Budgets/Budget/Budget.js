@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 
 // Import scoped styles for this component
 import styles from "./Budget.module.scss";
-import CostDetails from "./CostDetail/CostDetail";
+import CostDetails from "./CostDetails/CostDetails";
 
 // Define the Budget component, accepting a prop called "budget" (initialBudget)
 const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
