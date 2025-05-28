@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 
 // Import scoped styles for this component
 import styles from "./Budget.module.scss";
-import CostDetail from "./CostDetail/CostDetail";
+import CostDetails from "./CostDetail/CostDetail";
 
 // Define the Budget component, accepting a prop called "budget" (initialBudget)
 const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
@@ -214,7 +214,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                 onChange={handleChange}
               />
             </div>
-            {budget?.id && <CostDetail costDetails={costDetails} />}
+            {budget?.id && <CostDetails costDetails={costDetails} />}
             <div className={styles.saveButtonContainer}>
               <button
                 type="button"

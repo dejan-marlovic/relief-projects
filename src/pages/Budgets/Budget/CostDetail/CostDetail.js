@@ -1,4 +1,4 @@
-const CostDetail = ({ costDetails }) => {
+const CostDetails = ({ costDetails }) => {
   return (
     <div>
       <h4>Cost Details</h4>
@@ -14,4 +14,4 @@ const CostDetail = ({ costDetails }) => {
   );
 };
 
-export default CostDetail;
+export default CostDetails;
