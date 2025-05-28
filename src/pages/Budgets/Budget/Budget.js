@@ -228,7 +228,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                 onClick={handleDelete}
                 className={styles.deleteButton}
               >
-                Delete
+                Delete this budget
               </button>
             </div>
           </div>
