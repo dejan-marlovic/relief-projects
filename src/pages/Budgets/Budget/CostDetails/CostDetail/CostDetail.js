@@ -38,7 +38,7 @@ const CostDetail = ({
       }}
     >
       <div style={{ flex: "1 1 150px" }}>
-        <strong>{cost.costDescription}</strong>
+        <strong style={{ fontWeight: 650 }}>{cost.costDescription}</strong>
       </div>
 
       <div style={{ flex: "1 1 120px", color: "#666" }}>
