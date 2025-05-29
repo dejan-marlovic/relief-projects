@@ -1,9 +1,64 @@
 import React, { useEffect, useState } from "react";
 import CostDetail from "./CostDetail/CostDetail";
 
-const CostDetails = ({ costDetails }) => {
+const CostDetails = ({ costDetails: initialCostDetails = [] }) => {
   const [costTypes, setCostTypes] = useState([]);
   const [costs, setCosts] = useState([]);
+  const [localCosts, setLocalCosts] = useState([]);
+  const [editingId, setEditingId] = useState(null);
+  const [editedValues, setEditedValues] = useState({});
+
+  useEffect(() => {
+    setLocalCosts(initialCostDetails || []);
+  }, [initialCostDetails]);
+
+  const handleEdit = (cost) => {
+    console.log("Entering edit mode for cost:", cost.costDetailId);
+    setEditingId(cost.costDetailId);
+    setEditedValues((prev) => ({
+      ...prev,
+      [cost.costDetailId]: {
+        noOfUnits: cost.noOfUnits,
+        unitPrice: cost.unitPrice,
+      },
+    }));
+  };
+
+  const handleChange = (field, value) => {
+    setEditedValues((prev) => ({
+      ...prev,
+      [editingId]: {
+        ...prev[editingId],
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleSave = (costId) => {
+    console.log("Saving cost:", costId, editedValues[costId]);
+    const values = editedValues[costId];
+    if (values && values.noOfUnits != null && values.unitPrice != null) {
+      setLocalCosts((prev) =>
+        prev.map((cost) =>
+          cost.costDetailId === costId ? { ...cost, ...values } : cost
+        )
+      );
+      setEditingId(null);
+      setEditedValues((prev) => {
+        const newValues = { ...prev };
+        delete newValues[costId];
+        return newValues;
+      });
+    } else {
+      console.warn("Invalid values, not saving:", values);
+    }
+  };
+
+  const handleCancel = () => {
+    console.log("Canceling edit for cost:", editingId);
+    setEditingId(null);
+    setEditedValues({});
+  };
 
   useEffect(() => {
     const fetchCostTypes = async () => {
@@ -43,29 +98,30 @@ const CostDetails = ({ costDetails }) => {
 
   const groupCosts = () => {
     const grouped = {};
-
-    costDetails.forEach((cost) => {
+    localCosts.forEach((cost) => {
       const typeId = cost.costTypeId;
       const costId = cost.costId;
-
-      if (!grouped[typeId]) {
-        grouped[typeId] = {};
-      }
-
-      if (!grouped[typeId][costId]) {
-        grouped[typeId][costId] = [];
-      }
-
+      if (!grouped[typeId]) grouped[typeId] = {};
+      if (!grouped[typeId][costId]) grouped[typeId][costId] = [];
       grouped[typeId][costId].push(cost);
     });
-
     return grouped;
   };
 
   const groupedData = groupCosts();
 
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    console.log("Prevented parent form submission");
+  };
+
+  const handleClick = (e) => {
+    e.stopPropagation();
+    console.log("Click event in CostDetails:", e.target);
+  };
+
   return (
-    <div>
+    <div onSubmit={handleFormSubmit} onClick={handleClick}>
       <div
         style={{
           fontWeight: "bold",
@@ -96,7 +152,6 @@ const CostDetails = ({ costDetails }) => {
             {Object.entries(costGroups).map(([costId, items]) => {
               const category = costs.find((c) => c.id === parseInt(costId));
 
-              // ✅ Calculate totals per category
               const totals = items.reduce(
                 (acc, item) => {
                   acc.local += item.amountLocalCurrency || 0;
@@ -127,10 +182,15 @@ const CostDetails = ({ costDetails }) => {
                       cost={cost}
                       costType={type}
                       costCategory={category}
+                      isEditing={editingId === cost.costDetailId}
+                      editedValues={editedValues[cost.costDetailId] || {}}
+                      onEdit={() => handleEdit(cost)}
+                      onChange={handleChange}
+                      onSave={() => handleSave(cost.costDetailId)}
+                      onCancel={handleCancel}
                     />
                   ))}
 
-                  {/* 🧮 Totals */}
                   <div
                     style={{
                       marginTop: "8px",
