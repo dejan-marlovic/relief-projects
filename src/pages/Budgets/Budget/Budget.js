@@ -214,7 +214,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                 onChange={handleChange}
               />
             </div>
-            {budget?.id && <CostDetails costDetails={costDetails} />}
+
             <div className={styles.saveButtonContainer}>
               <button
                 type="button"
@@ -385,6 +385,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
           </div>
         </form>
       </div>
+      {budget?.id && <CostDetails costDetails={costDetails} />}
     </div>
   );
 };
