@@ -153,7 +153,7 @@ const CostDetails = ({ costDetails: initialCostDetails = [] }) => {
           <div key={typeId} style={{ marginBottom: "24px" }}>
             <h5
               style={{
-                fontSize: "20px", // Slightly larger for stronger emphasis
+                fontSize: "22px", // Slightly larger for stronger emphasis
                 fontWeight: 800, // Equivalent to 'bold', but clearer numerically
                 color: "#222", // A bit darker for sharper contrast
                 borderBottom: "2px solid #333",
@@ -186,7 +186,7 @@ const CostDetails = ({ costDetails: initialCostDetails = [] }) => {
                     style={{
                       borderBottom: "1px dashed #aaa",
                       paddingBottom: "2px",
-                      fontSize: "18px",
+                      fontSize: "20px",
                     }}
                   >
                     {category?.costName || "Unknown Category"}
@@ -212,7 +212,7 @@ const CostDetails = ({ costDetails: initialCostDetails = [] }) => {
                   <div
                     style={{
                       marginTop: "8px",
-                      fontWeight: "bold",
+                      fontWeight: 800,
                       fontSize: "16px",
                     }}
                   >

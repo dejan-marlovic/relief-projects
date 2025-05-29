@@ -34,7 +34,7 @@ const CostDetail = ({
         borderBottom: "1px solid #ccc",
         padding: "8px 0",
         gap: "14px",
-        fontSize: "18px",
+        fontSize: "16px",
       }}
     >
       <div style={{ flex: "1 1 150px" }}>
