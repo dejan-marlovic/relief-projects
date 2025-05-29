@@ -20,6 +20,8 @@ const CostDetails = ({ costDetails: initialCostDetails = [] }) => {
       [cost.costDetailId]: {
         noOfUnits: cost.noOfUnits,
         unitPrice: cost.unitPrice,
+        costTypeId: cost.costTypeId,
+        costId: cost.costId,
       },
     }));
   };
@@ -37,7 +39,13 @@ const CostDetails = ({ costDetails: initialCostDetails = [] }) => {
   const handleSave = (costId) => {
     console.log("Saving cost:", costId, editedValues[costId]);
     const values = editedValues[costId];
-    if (values && values.noOfUnits != null && values.unitPrice != null) {
+    if (
+      values &&
+      values.noOfUnits != null &&
+      values.unitPrice != null &&
+      values.costTypeId != null &&
+      values.costId != null
+    ) {
       setLocalCosts((prev) =>
         prev.map((cost) =>
           cost.costDetailId === costId ? { ...cost, ...values } : cost
@@ -182,6 +190,8 @@ const CostDetails = ({ costDetails: initialCostDetails = [] }) => {
                       cost={cost}
                       costType={type}
                       costCategory={category}
+                      costTypes={costTypes}
+                      costs={costs}
                       isEditing={editingId === cost.costDetailId}
                       editedValues={editedValues[cost.costDetailId] || {}}
                       onEdit={() => handleEdit(cost)}

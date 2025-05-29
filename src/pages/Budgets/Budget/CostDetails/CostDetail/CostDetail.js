@@ -4,6 +4,8 @@ const CostDetail = ({
   cost,
   costType,
   costCategory,
+  costTypes,
+  costs,
   isEditing,
   editedValues,
   onEdit,
@@ -40,11 +42,43 @@ const CostDetail = ({
       </div>
 
       <div style={{ flex: "1 1 120px", color: "#666" }}>
-        {costType?.costTypeName || "-"}
+        {isEditing ? (
+          <select
+            value={editedValues.costTypeId ?? cost.costTypeId}
+            onChange={(e) => onChange("costTypeId", Number(e.target.value))}
+            onBlur={handleSubmit}
+            style={{ width: "100px" }}
+          >
+            <option value="">Select Type</option>
+            {costTypes.map((type) => (
+              <option key={type.id} value={type.id}>
+                {type.costTypeName}
+              </option>
+            ))}
+          </select>
+        ) : (
+          costTypes.find((t) => t.id === cost.costTypeId)?.costTypeName || "-"
+        )}
       </div>
 
       <div style={{ flex: "1 1 150px", color: "#888" }}>
-        {costCategory ? `Category: ${costCategory.costName}` : "-"}
+        {isEditing ? (
+          <select
+            value={editedValues.costId ?? cost.costId}
+            onChange={(e) => onChange("costId", Number(e.target.value))}
+            onBlur={handleSubmit}
+            style={{ width: "120px" }}
+          >
+            <option value="">Select Category</option>
+            {costs.map((costItem) => (
+              <option key={costItem.id} value={costItem.id}>
+                {costItem.costName}
+              </option>
+            ))}
+          </select>
+        ) : (
+          costs.find((c) => c.id === cost.costId)?.costName || "-"
+        )}
       </div>
 
       <div style={{ flex: "1 1 100px" }}>
