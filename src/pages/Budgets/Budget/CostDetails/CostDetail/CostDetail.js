@@ -33,8 +33,8 @@ const CostDetail = ({
         alignItems: "center",
         borderBottom: "1px solid #ccc",
         padding: "8px 0",
-        gap: "16px",
-        fontSize: "14px",
+        gap: "14px",
+        fontSize: "18px",
       }}
     >
       <div style={{ flex: "1 1 150px" }}>

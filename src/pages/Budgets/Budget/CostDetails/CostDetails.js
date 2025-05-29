@@ -152,7 +152,14 @@ const CostDetails = ({ costDetails: initialCostDetails = [] }) => {
         return (
           <div key={typeId} style={{ marginBottom: "24px" }}>
             <h5
-              style={{ borderBottom: "2px solid #333", paddingBottom: "4px" }}
+              style={{
+                fontSize: "20px", // Slightly larger for stronger emphasis
+                fontWeight: 800, // Equivalent to 'bold', but clearer numerically
+                color: "#222", // A bit darker for sharper contrast
+                borderBottom: "2px solid #333",
+                paddingBottom: "6px", // Extra spacing for visual separation
+                marginBottom: "8px",
+              }}
             >
               {type?.costTypeName || "Unknown Type"}
             </h5>
@@ -179,6 +186,7 @@ const CostDetails = ({ costDetails: initialCostDetails = [] }) => {
                     style={{
                       borderBottom: "1px dashed #aaa",
                       paddingBottom: "2px",
+                      fontSize: "18px",
                     }}
                   >
                     {category?.costName || "Unknown Category"}
@@ -205,7 +213,7 @@ const CostDetails = ({ costDetails: initialCostDetails = [] }) => {
                     style={{
                       marginTop: "8px",
                       fontWeight: "bold",
-                      fontSize: "14px",
+                      fontSize: "16px",
                     }}
                   >
                     Total (Category): Local: {totals.local.toFixed(3)} | GBP:{" "}
