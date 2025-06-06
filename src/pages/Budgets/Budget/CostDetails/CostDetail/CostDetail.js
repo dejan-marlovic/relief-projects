@@ -12,6 +12,7 @@ const CostDetail = ({
   onChange,
   onSave,
   onCancel,
+  onDelete,
 }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -134,16 +135,32 @@ const CostDetail = ({
             </button>
           </>
         ) : (
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onEdit();
-            }}
-            style={{ padding: "4px 8px" }}
-          >
-            Edit
-          </button>
+          <>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onEdit();
+              }}
+              style={{ padding: "4px 8px" }}
+            >
+              Edit
+            </button>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onDelete(cost.costDetailId);
+              }}
+              style={{
+                padding: "4px 8px",
+                backgroundColor: "#e74c3c",
+                color: "#fff",
+              }}
+            >
+              Delete
+            </button>
+          </>
         )}
       </div>
     </div>

@@ -158,6 +158,39 @@ const CostDetails = ({ costDetails: initialCostDetails = [] }) => {
     console.log("Click event in CostDetails:", e.target);
   };
 
+  const handleDelete = async (costId) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this cost detail?"
+    );
+    if (!confirmDelete) return;
+
+    try {
+      const token = localStorage.getItem("authToken");
+
+      const response = await fetch(
+        `http://localhost:8080/api/cost-details/${costId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete cost detail with ID ${costId}`);
+      }
+
+      setLocalCosts((prev) =>
+        prev.filter((cost) => cost.costDetailId !== costId)
+      );
+      console.log(`Cost detail ${costId} deleted successfully.`);
+    } catch (error) {
+      console.error("Error deleting cost detail:", error);
+      alert("Failed to delete cost detail. Please try again.");
+    }
+  };
+
   return (
     <div onSubmit={handleFormSubmit} onClick={handleClick}>
       <div
@@ -236,6 +269,7 @@ const CostDetails = ({ costDetails: initialCostDetails = [] }) => {
                       onChange={handleChange}
                       onSave={() => handleSave(cost.costDetailId)}
                       onCancel={handleCancel}
+                      onDelete={handleDelete}
                     />
                   ))}
 
