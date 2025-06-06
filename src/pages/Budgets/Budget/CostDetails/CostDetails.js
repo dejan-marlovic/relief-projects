@@ -36,29 +36,59 @@ const CostDetails = ({ costDetails: initialCostDetails = [] }) => {
     }));
   };
 
-  const handleSave = (costId) => {
-    console.log("Saving cost:", costId, editedValues[costId]);
+  const handleSave = async (costId) => {
     const values = editedValues[costId];
-    if (
-      values &&
-      values.noOfUnits != null &&
-      values.unitPrice != null &&
-      values.costTypeId != null &&
-      values.costId != null
-    ) {
-      setLocalCosts((prev) =>
-        prev.map((cost) =>
-          cost.costDetailId === costId ? { ...cost, ...values } : cost
-        )
+    const original = localCosts.find((c) => c.costDetailId === costId);
+
+    if (!original || !values) return;
+
+    const fullPayload = {
+      ...original,
+      ...values, // overrides any edited fields
+    };
+
+    try {
+      const token = localStorage.getItem("authToken");
+
+      console.log("Sending full payload:", fullPayload);
+
+      const response = await fetch(
+        `http://localhost:8080/api/cost-details/${costId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(fullPayload),
+        }
       );
+
+      const text = await response.text();
+      console.log("Response status:", response.status);
+      console.log("Response body:", text);
+
+      if (!response.ok) {
+        throw new Error(`Failed to update cost detail with ID ${costId}`);
+      }
+
+      const updatedCost = JSON.parse(text);
+
+      setLocalCosts((prev) =>
+        prev.map((cost) => (cost.costDetailId === costId ? updatedCost : cost))
+      );
+
       setEditingId(null);
       setEditedValues((prev) => {
         const newValues = { ...prev };
         delete newValues[costId];
         return newValues;
       });
-    } else {
-      console.warn("Invalid values, not saving:", values);
+
+      console.log("Successfully updated:", updatedCost);
+    } catch (error) {
+      console.error("Error during save:", error);
+      alert("Failed to save cost detail. Please try again.");
     }
   };
 
