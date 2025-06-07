@@ -3,9 +3,11 @@ import React, { useEffect, useState } from "react";
 
 // Import scoped styles for this component
 import styles from "./Budget.module.scss";
+import CostDetails from "./CostDetails/CostDetails";
+import CreateCostDetail from "./CreateCostDetail.js";
 
 // Define the Budget component, accepting a prop called "budget" (initialBudget)
-const Budget = ({ budget: initialBudget }) => {
+const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
   // Helper function to format date/time input values for the form
   // Ensures we slice the date string to a "YYYY-MM-DDTHH:mm" format for datetime-local input
   const formatDate = (dateString) =>
@@ -17,6 +19,10 @@ const Budget = ({ budget: initialBudget }) => {
   // Lists of currencies and exchange rates for dropdown menus
   const [currencies, setCurrencies] = useState([]);
   const [exchangeRates, setExchangeRates] = useState([]);
+  const [refreshCostDetailsTrigger, setRefreshCostDetailsTrigger] = useState(0);
+
+  const triggerRefreshCostDetails = () =>
+    setRefreshCostDetailsTrigger((prev) => prev + 1);
 
   // 🔄 useEffect is a React Hook that runs side effects — like API calls — in function components
   // 🔁 In this case, it runs **only once when the component mounts** (due to the empty dependency array [])
@@ -80,6 +86,65 @@ const Budget = ({ budget: initialBudget }) => {
     }));
   };
 
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+
+      const response = await fetch(
+        `http://localhost:8080/api/budgets/${budget.id}`,
+
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(budget),
+        }
+      );
+      if (!response.ok) throw new Error("Failed to update budget");
+
+      alert("Budget updated successsfully!");
+
+      const updated = await response.json();
+
+      onUpdate?.(updated);
+    } catch (error) {
+      console.error("Error updating budget:", error);
+      alert("Error saving budget.");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm("Are you sure you want to delete this budget?")) return;
+
+    try {
+      const token = localStorage.getItem("authToken");
+
+      const response = await fetch(
+        `http://localhost:8080/api/budgets/${budget.id}`, // Adjust endpoint if needed
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to delete budget");
+
+      alert("Budget deleted successfully!");
+      onDelete?.(budget.id); //
+
+      // Optionally: reset budget state or navigate away
+      setBudget({});
+      // If using routing: navigate("/budgets") or call a callback prop
+    } catch (error) {
+      console.error("Error deleting budget:", error);
+      alert("Error deleting budget.");
+    }
+  };
+
   // Render the form UI
   return (
     <div className={styles.budgetContainer}>
@@ -123,6 +188,23 @@ const Budget = ({ budget: initialBudget }) => {
                 value={budget.totalAmount || ""}
                 onChange={handleChange}
               />
+            </div>
+
+            <div className={styles.saveButtonContainer}>
+              <button
+                type="button"
+                onClick={handleSave}
+                className={styles.saveButton}
+              >
+                Save
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                className={styles.deleteButton}
+              >
+                Delete this budget
+              </button>
             </div>
           </div>
 
@@ -278,6 +360,17 @@ const Budget = ({ budget: initialBudget }) => {
           </div>
         </form>
       </div>
+      <CreateCostDetail
+        budgetId={budget.id}
+        onCreated={triggerRefreshCostDetails}
+      />
+
+      {budget?.id && (
+        <CostDetails
+          budgetId={budget.id}
+          refreshTrigger={refreshCostDetailsTrigger}
+        />
+      )}
     </div>
   );
 };
