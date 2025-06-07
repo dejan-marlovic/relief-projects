@@ -5,7 +5,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { ProjectContext } from "../../context/ProjectContext";
 
 // Import child components used in this component
-import Budget from "../Budget/Budget"; // Displays a single budget item
+import Budget from "../Budgets/Budget/Budget"; // Displays a single budget item
 import CreateNewBudget from "../Budgets/CreateNewBudget/CreateNewBudget"; // Form to create a new budget
 
 // Import scoped CSS styles
@@ -67,6 +67,18 @@ const Budgets = () => {
     setBudgets((prev) => [...prev, newBudget]);
   };
 
+  const handleBudgetUpdate = (updatedBudget) => {
+    setBudgets((prevBudgets) =>
+      prevBudgets.map((b) => (b.id === updatedBudget.id ? updatedBudget : b))
+    );
+  };
+
+  const handleBudgetDelete = (deletedBudgetId) => {
+    setBudgets((prevBudgets) =>
+      prevBudgets.filter((b) => b.id !== deletedBudgetId)
+    );
+  };
+
   // 🖼 Render logic starts here
   return (
     <div className={styles.container}>
@@ -92,7 +104,12 @@ const Budgets = () => {
           <p>No budgets available for this project.</p>
         ) : (
           budgets.map((budget) => (
-            <Budget key={budget.id} budget={budget} /> // Pass each budget as a prop to the Budget component
+            <Budget
+              key={budget.id}
+              budget={budget}
+              onUpdate={handleBudgetUpdate}
+              onDelete={handleBudgetDelete}
+            />
           ))
         )}
       </div>
