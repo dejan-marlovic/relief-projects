@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 // Import scoped styles for this component
 import styles from "./Budget.module.scss";
 import CostDetails from "./CostDetails/CostDetails";
+import CreateCostDetail from "./CreateCostDetail.js";
 
 // Define the Budget component, accepting a prop called "budget" (initialBudget)
 const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
@@ -18,8 +19,10 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
   // Lists of currencies and exchange rates for dropdown menus
   const [currencies, setCurrencies] = useState([]);
   const [exchangeRates, setExchangeRates] = useState([]);
+  const [refreshCostDetailsTrigger, setRefreshCostDetailsTrigger] = useState(0);
 
-  const [costDetails, setCostDetails] = useState([]);
+  const triggerRefreshCostDetails = () =>
+    setRefreshCostDetailsTrigger((prev) => prev + 1);
 
   // 🔄 useEffect is a React Hook that runs side effects — like API calls — in function components
   // 🔁 In this case, it runs **only once when the component mounts** (due to the empty dependency array [])
@@ -71,34 +74,6 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
 
   // 🛠 If you wanted to re-run this effect when a certain variable changes (like `selectedProjectId`),
   // you could add it to the dependency array like: [selectedProjectId]
-
-  useEffect(() => {
-    const fetchCostDetails = async () => {
-      if (!budget.id) return;
-
-      const token = localStorage.getItem("authToken");
-
-      try {
-        const response = await fetch(
-          `http://localhost:8080/api/cost-details/by-budget/${budget.id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (!response.ok) throw new Error("Failed to fetch cost details");
-
-        const data = await response.json();
-        setCostDetails(data);
-      } catch (error) {
-        console.error("Error fetching cost details:", error);
-      }
-    };
-
-    fetchCostDetails();
-  }, [budget.id]);
 
   // Handle changes in any form input field
   const handleChange = (e) => {
@@ -385,7 +360,17 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
           </div>
         </form>
       </div>
-      {budget?.id && <CostDetails costDetails={costDetails} />}
+      <CreateCostDetail
+        budgetId={budget.id}
+        onCreated={triggerRefreshCostDetails}
+      />
+
+      {budget?.id && (
+        <CostDetails
+          budgetId={budget.id}
+          refreshTrigger={refreshCostDetailsTrigger}
+        />
+      )}
     </div>
   );
 };

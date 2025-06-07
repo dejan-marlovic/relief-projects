@@ -1,16 +1,70 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import CostDetail from "./CostDetail/CostDetail";
 
-const CostDetails = ({ costDetails: initialCostDetails = [] }) => {
+const CostDetails = ({ budgetId, refreshTrigger }) => {
   const [costTypes, setCostTypes] = useState([]);
   const [costs, setCosts] = useState([]);
-  const [localCosts, setLocalCosts] = useState([]);
+  const [costDetails, setCostDetails] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
 
+  const fetchCostDetails = useCallback(async () => {
+    if (!budgetId) return;
+
+    const token = localStorage.getItem("authToken");
+
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/cost-details/by-budget/${budgetId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (!response.ok) throw new Error("Failed to fetch cost details");
+      const data = await response.json();
+      setCostDetails(data);
+    } catch (error) {
+      console.error("Error fetching cost details:", error);
+    }
+  }, [budgetId]);
+
   useEffect(() => {
-    setLocalCosts(initialCostDetails || []);
-  }, [initialCostDetails]);
+    fetchCostDetails();
+  }, [fetchCostDetails, refreshTrigger]);
+
+  useEffect(() => {
+    const fetchCostTypes = async () => {
+      try {
+        const token = localStorage.getItem("authToken");
+        const response = await fetch(
+          "http://localhost:8080/api/cost-types/active",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        const data = await response.json();
+        setCostTypes(data);
+      } catch (err) {
+        console.error("Failed to fetch cost types", err);
+      }
+    };
+
+    const fetchCosts = async () => {
+      try {
+        const token = localStorage.getItem("authToken");
+        const response = await fetch("http://localhost:8080/api/costs/active", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        setCosts(data);
+      } catch (err) {
+        console.error("Failed to fetch costs", err);
+      }
+    };
+
+    fetchCostTypes();
+    fetchCosts();
+  }, []);
 
   const handleEdit = (cost) => {
     setEditingId(cost.costDetailId);
@@ -37,13 +91,13 @@ const CostDetails = ({ costDetails: initialCostDetails = [] }) => {
 
   const handleSave = async (costId) => {
     const values = editedValues[costId];
-    const original = localCosts.find((c) => c.costDetailId === costId);
+    const original = costDetails.find((c) => c.costDetailId === costId);
     if (!original || !values) return;
 
+    const token = localStorage.getItem("authToken");
     const fullPayload = { ...original, ...values };
 
     try {
-      const token = localStorage.getItem("authToken");
       const response = await fetch(
         `http://localhost:8080/api/cost-details/${costId}`,
         {
@@ -56,23 +110,18 @@ const CostDetails = ({ costDetails: initialCostDetails = [] }) => {
         }
       );
 
-      const text = await response.text();
-      if (!response.ok)
-        throw new Error(`Failed to update cost detail with ID ${costId}`);
+      if (!response.ok) throw new Error("Failed to update cost detail");
 
-      const updatedCost = JSON.parse(text);
-      setLocalCosts((prev) =>
-        prev.map((cost) => (cost.costDetailId === costId ? updatedCost : cost))
-      );
+      await fetchCostDetails();
       setEditingId(null);
       setEditedValues((prev) => {
         const newValues = { ...prev };
         delete newValues[costId];
         return newValues;
       });
-    } catch (error) {
-      console.error("Error during save:", error);
-      alert("Failed to save cost detail. Please try again.");
+    } catch (err) {
+      console.error("Error updating cost detail:", err);
+      alert("Failed to save cost detail.");
     }
   };
 
@@ -81,45 +130,34 @@ const CostDetails = ({ costDetails: initialCostDetails = [] }) => {
     setEditedValues({});
   };
 
-  useEffect(() => {
-    const fetchCostTypes = async () => {
-      try {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch(
-          "http://localhost:8080/api/cost-types/active",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        if (!response.ok) throw new Error("Failed to fetch cost types");
-        const data = await response.json();
-        setCostTypes(data);
-      } catch (error) {
-        console.error("Error fetching cost types:", error);
-      }
-    };
+  const handleDelete = async (costId) => {
+    if (!window.confirm("Are you sure you want to delete this cost detail?"))
+      return;
 
-    const fetchCosts = async () => {
-      try {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch("http://localhost:8080/api/costs/active", {
+    const token = localStorage.getItem("authToken");
+
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/cost-details/${costId}`,
+        {
+          method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!response.ok) throw new Error("Failed to fetch costs");
-        const data = await response.json();
-        setCosts(data);
-      } catch (error) {
-        console.error("Error fetching costs:", error);
-      }
-    };
+        }
+      );
 
-    fetchCostTypes();
-    fetchCosts();
-  }, []);
+      if (!response.ok)
+        throw new Error(`Failed to delete cost detail with ID ${costId}`);
+
+      await fetchCostDetails();
+    } catch (err) {
+      console.error("Error deleting cost detail:", err);
+      alert("Failed to delete cost detail.");
+    }
+  };
 
   const groupCosts = () => {
     const grouped = {};
-    localCosts.forEach((cost) => {
+    costDetails.forEach((cost) => {
       const typeId = cost.costTypeId;
       const costId = cost.costId;
       if (!grouped[typeId]) grouped[typeId] = {};
@@ -131,37 +169,9 @@ const CostDetails = ({ costDetails: initialCostDetails = [] }) => {
 
   const groupedData = groupCosts();
 
-  const handleFormSubmit = (e) => e.preventDefault();
-  const handleClick = (e) => e.stopPropagation();
-
-  const handleDelete = async (costId) => {
-    if (!window.confirm("Are you sure you want to delete this cost detail?"))
-      return;
-
-    try {
-      const token = localStorage.getItem("authToken");
-      const response = await fetch(
-        `http://localhost:8080/api/cost-details/${costId}`,
-        {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (!response.ok)
-        throw new Error(`Failed to delete cost detail with ID ${costId}`);
-      setLocalCosts((prev) =>
-        prev.filter((cost) => cost.costDetailId !== costId)
-      );
-    } catch (error) {
-      console.error("Error deleting cost detail:", error);
-      alert("Failed to delete cost detail. Please try again.");
-    }
-  };
-
   return (
-    <div onSubmit={handleFormSubmit} onClick={handleClick}>
-      {localCosts.length === 0 ? (
+    <div>
+      {costDetails.length === 0 ? (
         <p style={{ padding: "16px", fontStyle: "italic", color: "#555" }}>
           There are no cost details for this budget.
         </p>
@@ -203,7 +213,6 @@ const CostDetails = ({ costDetails: initialCostDetails = [] }) => {
 
                 {Object.entries(costGroups).map(([costId, items]) => {
                   const category = costs.find((c) => c.id === parseInt(costId));
-
                   const totals = items.reduce(
                     (acc, item) => {
                       acc.local += item.amountLocalCurrency || 0;
