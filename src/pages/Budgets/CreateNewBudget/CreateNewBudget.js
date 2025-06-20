@@ -2,6 +2,8 @@ import React, { useState, useEffect, useContext } from "react";
 import styles from "../Budgets.module.scss";
 import { ProjectContext } from "../../../context/ProjectContext";
 
+const BASE_URL = "http://localhost:8080";
+
 const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
   const { selectedProjectId } = useContext(ProjectContext);
 
@@ -22,22 +24,50 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
     localExchangeRateToGbpId: "",
   });
 
+  // 🔄 Fetch: Currencies
+  const fetchCurrencies = async (token) => {
+    const res = await fetch(`${BASE_URL}/api/currencies/active`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return await res.json();
+  };
+
+  // 🔄 Fetch: Exchange Rates
+  const fetchExchangeRates = async (token) => {
+    const res = await fetch(`${BASE_URL}/api/exchange-rates/active`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return await res.json();
+  };
+
+  // 💾 POST: Create new budget
+  const createBudget = async (payload, token) => {
+    const res = await fetch(`${BASE_URL}/api/budgets`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) throw new Error("Failed to create budget");
+
+    return await res.json();
+  };
+
+  // ⏳ On mount, fetch form dropdown data
   useEffect(() => {
     const token = localStorage.getItem("authToken");
 
     const fetchData = async () => {
       try {
-        const [currencyRes, rateRes] = await Promise.all([
-          fetch("http://localhost:8080/api/currencies/active", {
-            headers: { Authorization: `Bearer ${token}` },
-          }).then((res) => res.json()),
-          fetch("http://localhost:8080/api/exchange-rates/active", {
-            headers: { Authorization: `Bearer ${token}` },
-          }).then((res) => res.json()),
+        const [currenciesData, exchangeRatesData] = await Promise.all([
+          fetchCurrencies(token),
+          fetchExchangeRates(token),
         ]);
-
-        setCurrencies(currencyRes);
-        setExchangeRates(rateRes);
+        setCurrencies(currenciesData);
+        setExchangeRates(exchangeRatesData);
       } catch (err) {
         console.error("Error fetching form data", err);
       }
@@ -55,18 +85,10 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
     const token = localStorage.getItem("authToken");
 
     try {
-      const response = await fetch("http://localhost:8080/api/budgets", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ ...budget, projectId: selectedProjectId }),
-      });
-
-      if (!response.ok) throw new Error("Failed to create budget");
-
-      const created = await response.json();
+      const created = await createBudget(
+        { ...budget, projectId: selectedProjectId },
+        token
+      );
       onBudgetCreated(created);
       onClose();
     } catch (err) {
@@ -122,7 +144,6 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
 
           {/* Right Column */}
           <div className={styles.formColumnRight}>
-            {/* Currency + Rate Pairs */}
             {[
               {
                 currencyName: "Local Currency",
