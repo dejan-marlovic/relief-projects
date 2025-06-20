@@ -28,40 +28,40 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
     }
   }, [budgetId]);
 
+  const fetchCostTypes = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await fetch(
+        "http://localhost:8080/api/cost-types/active",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const data = await response.json();
+      setCostTypes(data);
+    } catch (err) {
+      console.error("Failed to fetch cost types", err);
+    }
+  };
+
+  const fetchCosts = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await fetch("http://localhost:8080/api/costs/active", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      setCosts(data);
+    } catch (err) {
+      console.error("Failed to fetch costs", err);
+    }
+  };
+
   useEffect(() => {
     fetchCostDetails();
   }, [fetchCostDetails, refreshTrigger]);
 
   useEffect(() => {
-    const fetchCostTypes = async () => {
-      try {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch(
-          "http://localhost:8080/api/cost-types/active",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        const data = await response.json();
-        setCostTypes(data);
-      } catch (err) {
-        console.error("Failed to fetch cost types", err);
-      }
-    };
-
-    const fetchCosts = async () => {
-      try {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch("http://localhost:8080/api/costs/active", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await response.json();
-        setCosts(data);
-      } catch (err) {
-        console.error("Failed to fetch costs", err);
-      }
-    };
-
     fetchCostTypes();
     fetchCosts();
   }, []);
