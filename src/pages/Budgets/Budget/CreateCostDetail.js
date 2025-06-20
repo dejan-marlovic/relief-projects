@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 
+const BASE_URL = "http://localhost:8080";
+
 const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
   const [costTypes, setCostTypes] = useState([]);
   const [costs, setCosts] = useState([]);
@@ -13,22 +15,47 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
     percentageCharging: 0,
   });
 
+  // 🔄 Fetch: Cost Types
+  const fetchCostTypes = async (token) => {
+    const res = await fetch(`${BASE_URL}/api/cost-types/active`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return await res.json();
+  };
+
+  // 🔄 Fetch: Costs
+  const fetchCosts = async (token) => {
+    const res = await fetch(`${BASE_URL}/api/costs/active`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return await res.json();
+  };
+
+  // 💾 POST: Create new cost detail
+  const createCostDetail = async (payload, token) => {
+    const res = await fetch(`${BASE_URL}/api/cost-details`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) throw new Error("Failed to create cost detail");
+    return await res.json();
+  };
+
+  // ⏳ On mount, fetch dropdown options
   useEffect(() => {
     const token = localStorage.getItem("authToken");
 
     const fetchOptions = async () => {
       try {
-        const [typesRes, costsRes] = await Promise.all([
-          fetch("http://localhost:8080/api/cost-types/active", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch("http://localhost:8080/api/costs/active", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
+        const [types, costList] = await Promise.all([
+          fetchCostTypes(token),
+          fetchCosts(token),
         ]);
-        const types = await typesRes.json();
-        const costList = await costsRes.json();
-
         setCostTypes(types);
         setCosts(costList);
       } catch (err) {
@@ -79,20 +106,8 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
     };
 
     try {
-      const response = await fetch("http://localhost:8080/api/cost-details", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(fullPayload),
-      });
-
-      if (!response.ok) throw new Error("Failed to create cost detail");
-
-      await response.json(); // You could remove this if you don't use it anymore
+      await createCostDetail(fullPayload, token);
       onCreated?.();
-      // Reset form
       setForm({
         costTypeId: "",
         costId: "",
