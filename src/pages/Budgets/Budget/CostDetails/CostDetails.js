@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import CostDetail from "./CostDetail/CostDetail";
 
+const BASE_URL = "http://localhost:8080";
+
 const CostDetails = ({ budgetId, refreshTrigger }) => {
   const [costTypes, setCostTypes] = useState([]);
   const [costs, setCosts] = useState([]);
@@ -15,7 +17,7 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
 
     try {
       const response = await fetch(
-        `http://localhost:8080/api/cost-details/by-budget/${budgetId}`,
+        `${BASE_URL}/api/cost-details/by-budget/${budgetId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -31,12 +33,9 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
   const fetchCostTypes = async () => {
     try {
       const token = localStorage.getItem("authToken");
-      const response = await fetch(
-        "http://localhost:8080/api/cost-types/active",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await fetch(`${BASE_URL}/api/cost-types/active`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await response.json();
       setCostTypes(data);
     } catch (err) {
@@ -47,7 +46,7 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
   const fetchCosts = async () => {
     try {
       const token = localStorage.getItem("authToken");
-      const response = await fetch("http://localhost:8080/api/costs/active", {
+      const response = await fetch(`${BASE_URL}/api/costs/active`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -98,17 +97,14 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
     const fullPayload = { ...original, ...values };
 
     try {
-      const response = await fetch(
-        `http://localhost:8080/api/cost-details/${costId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(fullPayload),
-        }
-      );
+      const response = await fetch(`${BASE_URL}/api/cost-details/${costId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(fullPayload),
+      });
 
       if (!response.ok) throw new Error("Failed to update cost detail");
 
@@ -137,13 +133,10 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
     const token = localStorage.getItem("authToken");
 
     try {
-      const response = await fetch(
-        `http://localhost:8080/api/cost-details/${costId}`,
-        {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await fetch(`${BASE_URL}/api/cost-details/${costId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (!response.ok)
         throw new Error(`Failed to delete cost detail with ID ${costId}`);
