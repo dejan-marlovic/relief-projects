@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import styles from "./Budget.module.scss";
 import CostDetails from "./CostDetails/CostDetails";
-import CreateCostDetail from "./CreateCostDetail.js";
+import CreateCostDetail from "./CreateCostDetail/CreateCostDetail.js";
 
 const BASE_URL = "http://localhost:8080";
 

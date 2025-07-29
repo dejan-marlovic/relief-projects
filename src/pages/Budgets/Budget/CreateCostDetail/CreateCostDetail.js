@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import styles from "./CreateCostDetail.module.scss";
 
 const BASE_URL = "http://localhost:8080";
 
@@ -15,7 +16,6 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
     percentageCharging: 0,
   });
 
-  // 🔄 Fetch: Cost Types
   const fetchCostTypes = async (token) => {
     const res = await fetch(`${BASE_URL}/api/cost-types/active`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -23,7 +23,6 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
     return await res.json();
   };
 
-  // 🔄 Fetch: Costs
   const fetchCosts = async (token) => {
     const res = await fetch(`${BASE_URL}/api/costs/active`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -31,7 +30,6 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
     return await res.json();
   };
 
-  // 💾 POST: Create new cost detail
   const createCostDetail = async (payload, token) => {
     const res = await fetch(`${BASE_URL}/api/cost-details`, {
       method: "POST",
@@ -46,7 +44,6 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
     return await res.json();
   };
 
-  // ⏳ On mount, fetch dropdown options
   useEffect(() => {
     const token = localStorage.getItem("authToken");
 
@@ -124,14 +121,15 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
-      <h4>Add New Cost Detail</h4>
+    <form onSubmit={handleSubmit} className={styles.formContainer}>
+      <h4 className={styles.formTitle}>Add New Cost Detail Row</h4>
 
-      <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+      <div className={styles.formRow}>
         <select
           name="costTypeId"
           value={form.costTypeId}
           onChange={handleNumberChange}
+          className={styles.select}
         >
           <option value="">Select Cost Type</option>
           {costTypes.map((t) => (
@@ -141,7 +139,12 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
           ))}
         </select>
 
-        <select name="costId" value={form.costId} onChange={handleNumberChange}>
+        <select
+          name="costId"
+          value={form.costId}
+          onChange={handleNumberChange}
+          className={styles.select}
+        >
           <option value="">Select Category</option>
           {costs.map((c) => (
             <option key={c.id} value={c.id}>
@@ -156,6 +159,7 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
           placeholder="Description"
           value={form.costDescription}
           onChange={handleChange}
+          className={styles.input}
         />
 
         <input
@@ -164,6 +168,7 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
           placeholder="Units"
           value={form.noOfUnits}
           onChange={handleNumberChange}
+          className={styles.input}
         />
 
         <input
@@ -172,6 +177,7 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
           placeholder="Unit Price"
           value={form.unitPrice}
           onChange={handleNumberChange}
+          className={styles.input}
         />
 
         <input
@@ -180,6 +186,7 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
           placeholder="Frequency (months)"
           value={form.frequencyMonths}
           onChange={handleNumberChange}
+          className={styles.input}
         />
 
         <input
@@ -188,9 +195,12 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
           placeholder="% Charging"
           value={form.percentageCharging}
           onChange={handleNumberChange}
+          className={styles.input}
         />
 
-        <button type="submit">Add Cost Detail</button>
+        <button type="submit" className={styles.button}>
+          Add Cost Detail
+        </button>
       </div>
     </form>
   );
