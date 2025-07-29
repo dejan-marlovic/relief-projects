@@ -1,6 +1,6 @@
 .costDetailContainer {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap; /* force row layout */
   align-items: center;
   border-bottom: 1px solid #ccc;
   padding: 8px 0;
@@ -54,14 +54,29 @@
 .buttonGroup {
   display: flex;
   gap: 8px;
+  flex: 0 0 auto;
 }
 
-.button {
-  padding: 4px 8px;
+/* New for icon buttons */
+.iconButton {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  color: #333;
 }
 
-.deleteButton {
-  padding: 4px 8px;
-  background-color: #e74c3c;
-  color: #fff;
+.iconButton:hover {
+  color: #007bff;
+}
+
+.deleteIcon {
+  color: #e74c3c;
+}
+
+.deleteIcon:hover {
+  color: #c0392b;
 }

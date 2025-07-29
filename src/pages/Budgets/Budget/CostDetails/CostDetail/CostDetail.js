@@ -1,5 +1,6 @@
 import React from "react";
 import styles from "./CostDetail.module.scss";
+import { FiEdit, FiTrash2 } from "react-icons/fi";
 
 const CostDetail = ({
   cost,
@@ -18,12 +19,10 @@ const CostDetail = ({
   const handleSubmit = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log("Submitting form for cost:", cost.costDetailId);
     onSave();
   };
 
   const handleCancel = () => {
-    console.log("Canceling edit for cost:", cost.costDetailId);
     onCancel();
   };
 
@@ -133,9 +132,10 @@ const CostDetail = ({
                 e.stopPropagation();
                 onEdit();
               }}
-              className={styles.button}
+              className={styles.iconButton}
+              title="Edit"
             >
-              Edit
+              <FiEdit />
             </button>
             <button
               onClick={(e) => {
@@ -143,9 +143,10 @@ const CostDetail = ({
                 e.stopPropagation();
                 onDelete(cost.costDetailId);
               }}
-              className={styles.deleteButton}
+              className={`${styles.iconButton} ${styles.deleteIcon}`}
+              title="Delete"
             >
-              Delete
+              <FiTrash2 />
             </button>
           </>
         )}
