@@ -125,82 +125,108 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
       <h4 className={styles.formTitle}>Add New Cost Detail Row</h4>
 
       <div className={styles.formRow}>
-        <select
-          name="costTypeId"
-          value={form.costTypeId}
-          onChange={handleNumberChange}
-          className={styles.select}
-        >
-          <option value="">Select Cost Type</option>
-          {costTypes.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.costTypeName}
-            </option>
-          ))}
-        </select>
+        <div className={styles.formGroup}>
+          <label htmlFor="costTypeId">Cost Type</label>
+          <select
+            id="costTypeId"
+            name="costTypeId"
+            value={form.costTypeId}
+            onChange={handleNumberChange}
+            className={styles.select}
+          >
+            <option value="">Select Cost Type</option>
+            {costTypes.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.costTypeName}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        <select
-          name="costId"
-          value={form.costId}
-          onChange={handleNumberChange}
-          className={styles.select}
-        >
-          <option value="">Select Category</option>
-          {costs.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.costName}
-            </option>
-          ))}
-        </select>
+        <div className={styles.formGroup}>
+          <label htmlFor="costId">Category</label>
+          <select
+            id="costId"
+            name="costId"
+            value={form.costId}
+            onChange={handleNumberChange}
+            className={styles.select}
+          >
+            <option value="">Select Category</option>
+            {costs.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.costName}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        <input
-          type="text"
-          name="costDescription"
-          placeholder="Description"
-          value={form.costDescription}
-          onChange={handleChange}
-          className={styles.input}
-        />
+        <div className={styles.formGroup}>
+          <label htmlFor="costDescription">Description</label>
+          <input
+            id="costDescription"
+            type="text"
+            name="costDescription"
+            value={form.costDescription}
+            onChange={handleChange}
+            className={styles.input}
+          />
+        </div>
 
-        <input
-          type="number"
-          name="noOfUnits"
-          placeholder="Units"
-          value={form.noOfUnits}
-          onChange={handleNumberChange}
-          className={styles.input}
-        />
+        <div className={styles.formGroup}>
+          <label htmlFor="noOfUnits">Units</label>
+          <input
+            id="noOfUnits"
+            type="number"
+            name="noOfUnits"
+            value={form.noOfUnits}
+            onChange={handleNumberChange}
+            className={styles.input}
+          />
+        </div>
 
-        <input
-          type="number"
-          name="unitPrice"
-          placeholder="Unit Price"
-          value={form.unitPrice}
-          onChange={handleNumberChange}
-          className={styles.input}
-        />
+        <div className={styles.formGroup}>
+          <label htmlFor="unitPrice">Unit Price</label>
+          <input
+            id="unitPrice"
+            type="number"
+            name="unitPrice"
+            value={form.unitPrice}
+            onChange={handleNumberChange}
+            className={styles.input}
+          />
+        </div>
 
-        <input
-          type="number"
-          name="frequencyMonths"
-          placeholder="Frequency (months)"
-          value={form.frequencyMonths}
-          onChange={handleNumberChange}
-          className={styles.input}
-        />
+        <div className={styles.formGroup}>
+          <label htmlFor="frequencyMonths">Frequency (months)</label>
+          <input
+            id="frequencyMonths"
+            type="number"
+            name="frequencyMonths"
+            value={form.frequencyMonths}
+            onChange={handleNumberChange}
+            className={styles.input}
+          />
+        </div>
 
-        <input
-          type="number"
-          name="percentageCharging"
-          placeholder="% Charging"
-          value={form.percentageCharging}
-          onChange={handleNumberChange}
-          className={styles.input}
-        />
+        <div className={styles.formGroup}>
+          <label htmlFor="percentageCharging">% Charging</label>
+          <input
+            id="percentageCharging"
+            type="number"
+            name="percentageCharging"
+            value={form.percentageCharging}
+            onChange={handleNumberChange}
+            className={styles.input}
+          />
+        </div>
 
-        <button type="submit" className={styles.button}>
-          Add Cost Detail
-        </button>
+        <div className={styles.formGroup}>
+          <label style={{ visibility: "hidden" }}>Submit</label>
+          <button type="submit" className={styles.button}>
+            Add Cost Detail
+          </button>
+        </div>
       </div>
     </form>
   );
