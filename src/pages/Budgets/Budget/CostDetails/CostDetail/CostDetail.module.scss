@@ -80,3 +80,45 @@
 .deleteIcon:hover {
   color: #c0392b;
 }
+
+.button {
+  padding: 6px 12px;
+  font-weight: bold;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.button:hover {
+  background-color: #0056b3;
+}
+
+/* Match CreateCostDetail form field look */
+.selectInput,
+.categorySelectInput,
+.numberInput,
+.priceInput {
+  padding: 4px 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Keep specific widths from existing rules */
+.selectInput {
+  width: 100px;
+}
+
+.categorySelectInput {
+  width: 120px;
+}
+
+.numberInput {
+  width: 40px;
+}
+
+.priceInput {
+  width: 60px;
+}
