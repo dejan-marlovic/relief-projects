@@ -1,5 +1,7 @@
+import Transaction from "./Transaction/Transaction";
+
 const Transactions = () => {
-  return <h1>Transactions</h1>;
+  return <Transaction></Transaction>;
 };
 
 export default Transactions;
