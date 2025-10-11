@@ -23,6 +23,26 @@ const blankTx = {
   okStatus: "",
 };
 
+const headerLabels = [
+  "Org",
+  "Project",
+  "Financier",
+  "Status",
+  "Applied Amt",
+  "Applied FX",
+  "1st SEK",
+  "1st Orig",
+  "Approved Amt",
+  "Approved Curr",
+  "Approved FX",
+  "2nd SEK",
+  "2nd Orig",
+  "Own Contrib",
+  "Date Planned",
+  "OK Status",
+  "Actions",
+];
+
 const Transactions = ({ refreshTrigger }) => {
   const [transactions, setTransactions] = useState([]);
   const [editingId, setEditingId] = useState(null); // number | "new" | null
@@ -37,7 +57,6 @@ const Transactions = ({ refreshTrigger }) => {
       });
       if (!res.ok) throw new Error("Failed to fetch transactions");
       const data = await res.json();
-      // Endpoint might return a single object or an array — normalize
       const list = Array.isArray(data) ? data : data ? [data] : [];
       setTransactions(list);
     } catch (err) {
@@ -96,10 +115,8 @@ const Transactions = ({ refreshTrigger }) => {
   const save = async () => {
     const id = editingId;
     const values = editedValues[id];
-
     if (!values) return;
 
-    // Build payload for POST/PUT
     const payload = {
       organizationId: values.organizationId
         ? Number(values.organizationId)
@@ -204,10 +221,12 @@ const Transactions = ({ refreshTrigger }) => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.headerRow}>
-        <div className={styles.headerCell}>IDs</div>
-        <div className={styles.headerCell}>Amounts</div>
-        <div className={styles.headerCell}>Flags & Date</div>
+      <div className={`${styles.row} ${styles.headerRow}`}>
+        {headerLabels.map((h) => (
+          <div key={h} className={styles.headerCell}>
+            {h}
+          </div>
+        ))}
       </div>
 
       {transactions.length === 0 ? (
@@ -234,7 +253,6 @@ const Transactions = ({ refreshTrigger }) => {
             tx={{ id: "new", ...blankTx }}
             isEditing
             editedValues={editedValues.new}
-            onEdit={() => {}}
             onChange={onChange}
             onSave={save}
             onCancel={cancel}

@@ -1,11 +1,17 @@
+/* Reuse the same grid for header and rows so columns align perfectly */
+$row-columns: repeat(17, minmax(120px, auto)); /* tweak widths as needed */
+
 .container {
   margin-top: 8px;
 }
 
-.headerRow {
+.row {
   display: grid;
-  grid-template-columns: 1.2fr 2fr 1.2fr;
-  gap: 16px;
+  grid-template-columns: $row-columns;
+  gap: 12px;
+}
+
+.headerRow {
   padding-bottom: 8px;
   border-bottom: 2px solid #000;
   font-weight: 800;
