@@ -1,0 +1,41 @@
+.container {
+  margin-top: 8px;
+}
+
+.headerRow {
+  display: grid;
+  grid-template-columns: 1.2fr 2fr 1.2fr;
+  gap: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #000;
+  font-weight: 800;
+}
+
+.headerCell {
+  font-size: 14px;
+}
+
+.noData {
+  padding: 12px 0;
+  color: #666;
+  font-style: italic;
+}
+
+.createBar {
+  margin-top: 14px;
+  display: flex;
+}
+
+.addBtn {
+  padding: 8px 12px;
+  border: none;
+  background: #007bff;
+  color: #fff;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    background: #0056b3;
+  }
+}

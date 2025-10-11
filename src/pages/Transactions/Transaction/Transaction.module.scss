@@ -1,0 +1,72 @@
+.row {
+  display: grid;
+  grid-template-columns: 1.2fr 2fr 1.2fr;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid #ddd;
+  font-size: 15px;
+}
+
+.block {
+  display: grid;
+  gap: 10px;
+}
+
+.field {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  align-items: center;
+  gap: 8px;
+
+  label {
+    font-weight: 600;
+    color: #333;
+  }
+
+  input,
+  select {
+    padding: 6px 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+  }
+}
+
+.inlinePair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-start;
+  margin-top: 6px;
+}
+
+.actionBtn {
+  background: transparent;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 6px 8px;
+  cursor: pointer;
+  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+
+  &:hover {
+    border-color: #007bff;
+    color: #007bff;
+  }
+}
+
+.danger {
+  border-color: #e74c3c;
+  color: #e74c3c;
+
+  &:hover {
+    color: #fff;
+    background: #e74c3c;
+  }
+}
