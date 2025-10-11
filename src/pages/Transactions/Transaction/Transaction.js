@@ -26,6 +26,8 @@ const Transaction = ({
   onDelete,
 }) => {
   const ev = editedValues || {};
+  const isCreate = (tx?.id ?? "") === "new";
+  const autoSave = isEditing && !isCreate; // only auto-save on blur for existing rows
 
   const submit = (e) => {
     e.preventDefault();
@@ -33,15 +35,15 @@ const Transaction = ({
     onSave();
   };
 
+  const toNum = (v) => (v === "" ? "" : Number(v));
+
   const inputNum = (field, step = "1") => (
     <input
       type="number"
       step={step}
       value={ev[field] ?? tx[field] ?? ""}
-      onChange={(e) =>
-        onChange(field, e.target.value === "" ? "" : Number(e.target.value))
-      }
-      onBlur={submit}
+      onChange={(e) => onChange(field, toNum(e.target.value))}
+      onBlur={autoSave ? submit : undefined}
       className={styles.input}
     />
   );
@@ -50,7 +52,7 @@ const Transaction = ({
     <select
       value={ev[field] ?? tx[field] ?? ""}
       onChange={(e) => onChange(field, e.target.value)}
-      onBlur={submit}
+      onBlur={autoSave ? submit : undefined}
       className={styles.input}
     >
       <option value="">Select</option>
@@ -69,7 +71,7 @@ const Transaction = ({
       onChange={(e) =>
         onChange("datePlanned", new Date(e.target.value).toISOString())
       }
-      onBlur={submit}
+      onBlur={autoSave ? submit : undefined}
       className={styles.input}
     />
   );

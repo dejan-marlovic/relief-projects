@@ -50,6 +50,13 @@ const headerLabels = [
   "Actions",
 ];
 
+// Minimal required fields for a new transaction (adjust if your backend requires more)
+const isValidNew = (v, selectedProjectId) =>
+  v &&
+  (v.projectId || selectedProjectId) &&
+  v.organizationId !== "" &&
+  v.transactionStatusId !== "";
+
 const Transactions = ({ refreshTrigger }) => {
   const { selectedProjectId } = useContext(ProjectContext);
 
@@ -142,11 +149,17 @@ const Transactions = ({ refreshTrigger }) => {
     const values = editedValues[id];
     if (!values) return;
 
+    const isCreate = id === "new";
+
     // Ensure projectId is set to the selected project on create
-    const effectiveProjectId =
-      id === "new"
-        ? values.projectId || selectedProjectId
-        : values.projectId ?? null;
+    const effectiveProjectId = isCreate
+      ? values.projectId || selectedProjectId
+      : values.projectId ?? null;
+
+    if (isCreate && !isValidNew(values, selectedProjectId)) {
+      alert("Please fill in Organization and Status (Project is prefilled).");
+      return;
+    }
 
     const payload = {
       organizationId: values.organizationId
@@ -190,8 +203,6 @@ const Transactions = ({ refreshTrigger }) => {
       datePlanned: values.datePlanned || null,
       okStatus: values.okStatus || null,
     };
-
-    const isCreate = id === "new";
 
     try {
       const res = await fetch(
