@@ -1,4 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { ProjectContext } from "../../context/ProjectContext";
 import Transaction from "./Transaction/Transaction";
 import styles from "./Transactions.module.scss";
 
@@ -44,30 +51,45 @@ const headerLabels = [
 ];
 
 const Transactions = ({ refreshTrigger }) => {
+  const { selectedProjectId } = useContext(ProjectContext);
+
   const [transactions, setTransactions] = useState([]);
   const [editingId, setEditingId] = useState(null); // number | "new" | null
   const [editedValues, setEditedValues] = useState({}); // { [id]: values }
 
   const token = useMemo(() => localStorage.getItem("authToken"), []);
 
-  const fetchActiveTransactions = useCallback(async () => {
-    try {
-      const res = await fetch(`${BASE_URL}/api/transactions/active`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      if (!res.ok) throw new Error("Failed to fetch transactions");
-      const data = await res.json();
-      const list = Array.isArray(data) ? data : data ? [data] : [];
-      setTransactions(list);
-    } catch (err) {
-      console.error("Error fetching transactions:", err);
-      setTransactions([]);
-    }
-  }, [token]);
+  const fetchTransactions = useCallback(
+    async (projectId) => {
+      if (!projectId) {
+        setTransactions([]);
+        return;
+      }
+      try {
+        const res = await fetch(
+          `${BASE_URL}/api/transactions/project/${projectId}`,
+          {
+            headers: {
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (!res.ok) throw new Error("Failed to fetch transactions");
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : data ? [data] : [];
+        setTransactions(list);
+      } catch (err) {
+        console.error("Error fetching transactions:", err);
+        setTransactions([]);
+      }
+    },
+    [token]
+  );
 
   useEffect(() => {
-    fetchActiveTransactions();
-  }, [fetchActiveTransactions, refreshTrigger]);
+    fetchTransactions(selectedProjectId);
+  }, [fetchTransactions, selectedProjectId, refreshTrigger]);
 
   const startEdit = (tx) => {
     setEditingId(tx?.id ?? null);
@@ -98,7 +120,10 @@ const Transactions = ({ refreshTrigger }) => {
     setEditingId("new");
     setEditedValues((prev) => ({
       ...prev,
-      new: { ...blankTx },
+      new: {
+        ...blankTx,
+        projectId: selectedProjectId || "", // prefill with current project
+      },
     }));
   };
 
@@ -117,11 +142,17 @@ const Transactions = ({ refreshTrigger }) => {
     const values = editedValues[id];
     if (!values) return;
 
+    // Ensure projectId is set to the selected project on create
+    const effectiveProjectId =
+      id === "new"
+        ? values.projectId || selectedProjectId
+        : values.projectId ?? null;
+
     const payload = {
       organizationId: values.organizationId
         ? Number(values.organizationId)
         : null,
-      projectId: values.projectId ? Number(values.projectId) : null,
+      projectId: effectiveProjectId ? Number(effectiveProjectId) : null,
       financierOrganizationId: values.financierOrganizationId
         ? Number(values.financierOrganizationId)
         : null,
@@ -184,7 +215,7 @@ const Transactions = ({ refreshTrigger }) => {
         );
       }
 
-      await fetchActiveTransactions();
+      await fetchTransactions(selectedProjectId);
       cancel();
     } catch (err) {
       console.error(err);
@@ -212,7 +243,7 @@ const Transactions = ({ refreshTrigger }) => {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!res.ok) throw new Error("Failed to delete transaction");
-      await fetchActiveTransactions();
+      await fetchTransactions(selectedProjectId);
     } catch (err) {
       console.error(err);
       alert("Failed to delete transaction.");
@@ -229,8 +260,12 @@ const Transactions = ({ refreshTrigger }) => {
         ))}
       </div>
 
-      {transactions.length === 0 ? (
-        <p className={styles.noData}>No active transactions.</p>
+      {!selectedProjectId ? (
+        <p className={styles.noData}>
+          Select a project to see its transactions.
+        </p>
+      ) : transactions.length === 0 ? (
+        <p className={styles.noData}>No transactions for this project.</p>
       ) : (
         transactions.map((tx) => (
           <Transaction
@@ -250,7 +285,7 @@ const Transactions = ({ refreshTrigger }) => {
       <div className={styles.createBar}>
         {editingId === "new" ? (
           <Transaction
-            tx={{ id: "new", ...blankTx }}
+            tx={{ id: "new", ...blankTx, projectId: selectedProjectId || "" }}
             isEditing
             editedValues={editedValues.new}
             onChange={onChange}
@@ -259,7 +294,16 @@ const Transactions = ({ refreshTrigger }) => {
             onDelete={() => {}}
           />
         ) : (
-          <button className={styles.addBtn} onClick={startCreate}>
+          <button
+            className={styles.addBtn}
+            onClick={startCreate}
+            disabled={!selectedProjectId}
+            title={
+              !selectedProjectId
+                ? "Select a project first"
+                : "Create new transaction"
+            }
+          >
             + New Transaction
           </button>
         )}
