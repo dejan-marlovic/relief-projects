@@ -1,0 +1,72 @@
+/* Must match Transactions.module.scss */
+$row-columns: repeat(17, minmax(120px, auto));
+
+.row {
+  display: grid;
+  grid-template-columns: $row-columns; /* same columns as header */
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #ddd;
+  font-size: 15px;
+  align-items: center;
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  min-width: 0; /* prevents overflow/truncation issues */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  background: #fff;
+  min-width: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+}
+
+.actionBtn {
+  background: transparent;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 6px 8px;
+  cursor: pointer;
+  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+
+  &:hover {
+    border-color: #007bff;
+    color: #007bff;
+  }
+}
+
+.danger {
+  border-color: #e74c3c;
+  color: #e74c3c;
+
+  &:hover {
+    color: #fff;
+    background: #e74c3c;
+  }
+}
+
+/* Neutralize any legacy 3-column layout classes if still present in markup */
+.block,
+.field,
+.inlinePair {
+  display: contents;
+}

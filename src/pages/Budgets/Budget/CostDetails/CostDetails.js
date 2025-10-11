@@ -1,5 +1,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import CostDetail from "./CostDetail/CostDetail";
+import styles from "./CostDetails.module.scss";
+
+const BASE_URL = "http://localhost:8080";
 
 const CostDetails = ({ budgetId, refreshTrigger }) => {
   const [costTypes, setCostTypes] = useState([]);
@@ -15,7 +18,7 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
 
     try {
       const response = await fetch(
-        `http://localhost:8080/api/cost-details/by-budget/${budgetId}`,
+        `${BASE_URL}/api/cost-details/by-budget/${budgetId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -28,40 +31,37 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
     }
   }, [budgetId]);
 
+  const fetchCostTypes = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await fetch(`${BASE_URL}/api/cost-types/active`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      setCostTypes(data);
+    } catch (err) {
+      console.error("Failed to fetch cost types", err);
+    }
+  };
+
+  const fetchCosts = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await fetch(`${BASE_URL}/api/costs/active`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      setCosts(data);
+    } catch (err) {
+      console.error("Failed to fetch costs", err);
+    }
+  };
+
   useEffect(() => {
     fetchCostDetails();
   }, [fetchCostDetails, refreshTrigger]);
 
   useEffect(() => {
-    const fetchCostTypes = async () => {
-      try {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch(
-          "http://localhost:8080/api/cost-types/active",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        const data = await response.json();
-        setCostTypes(data);
-      } catch (err) {
-        console.error("Failed to fetch cost types", err);
-      }
-    };
-
-    const fetchCosts = async () => {
-      try {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch("http://localhost:8080/api/costs/active", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await response.json();
-        setCosts(data);
-      } catch (err) {
-        console.error("Failed to fetch costs", err);
-      }
-    };
-
     fetchCostTypes();
     fetchCosts();
   }, []);
@@ -98,17 +98,14 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
     const fullPayload = { ...original, ...values };
 
     try {
-      const response = await fetch(
-        `http://localhost:8080/api/cost-details/${costId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(fullPayload),
-        }
-      );
+      const response = await fetch(`${BASE_URL}/api/cost-details/${costId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(fullPayload),
+      });
 
       if (!response.ok) throw new Error("Failed to update cost detail");
 
@@ -137,13 +134,10 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
     const token = localStorage.getItem("authToken");
 
     try {
-      const response = await fetch(
-        `http://localhost:8080/api/cost-details/${costId}`,
-        {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await fetch(`${BASE_URL}/api/cost-details/${costId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (!response.ok)
         throw new Error(`Failed to delete cost detail with ID ${costId}`);
@@ -172,42 +166,25 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
   return (
     <div>
       {costDetails.length === 0 ? (
-        <p style={{ padding: "16px", fontStyle: "italic", color: "#555" }}>
+        <p className={styles.noDataMessage}>
           There are no cost details for this budget.
         </p>
       ) : (
         <>
-          <div
-            style={{
-              fontWeight: "bold",
-              display: "flex",
-              gap: "16px",
-              paddingBottom: "8px",
-              borderBottom: "2px solid #000",
-            }}
-          >
-            <div style={{ flex: "1 1 150px" }}>Description</div>
-            <div style={{ flex: "1 1 120px" }}>Type</div>
-            <div style={{ flex: "1 1 150px" }}>Category</div>
-            <div style={{ flex: "1 1 100px" }}>Units × Price</div>
-            <div style={{ flex: "1 1 80px" }}>Charged</div>
-            <div style={{ flex: "1 1 200px" }}>Amounts</div>
+          <div className={styles.headerRow}>
+            <div className={styles.headerCellDescription}>Description</div>
+            <div className={styles.headerCellType}>Type</div>
+            <div className={styles.headerCellCategory}>Category</div>
+            <div className={styles.headerCellUnits}>Units × Price</div>
+            <div className={styles.headerCellCharged}>Charged</div>
+            <div className={styles.headerCellAmounts}>Amounts</div>
           </div>
 
           {Object.entries(groupedData).map(([typeId, costGroups]) => {
             const type = costTypes.find((t) => t.id === parseInt(typeId));
             return (
-              <div key={typeId} style={{ marginBottom: "24px" }}>
-                <h5
-                  style={{
-                    fontSize: "22px",
-                    fontWeight: 800,
-                    color: "#222",
-                    borderBottom: "2px solid #333",
-                    paddingBottom: "6px",
-                    marginBottom: "8px",
-                  }}
-                >
+              <div key={typeId} className={styles.typeSection}>
+                <h5 className={styles.typeTitle}>
                   {type?.costTypeName || "Unknown Type"}
                 </h5>
 
@@ -224,17 +201,8 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
                   );
 
                   return (
-                    <div
-                      key={costId}
-                      style={{ marginLeft: "16px", marginBottom: "16px" }}
-                    >
-                      <h6
-                        style={{
-                          borderBottom: "1px dashed #aaa",
-                          paddingBottom: "2px",
-                          fontSize: "20px",
-                        }}
-                      >
+                    <div key={costId} className={styles.categorySection}>
+                      <h6 className={styles.categoryTitle}>
                         {category?.costName || "Unknown Category"}
                       </h6>
 
@@ -256,13 +224,7 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
                         />
                       ))}
 
-                      <div
-                        style={{
-                          marginTop: "8px",
-                          fontWeight: 800,
-                          fontSize: "16px",
-                        }}
-                      >
+                      <div className={styles.categoryTotal}>
                         Total (Category): Local: {totals.local.toFixed(3)} |
                         GBP: {totals.gbp.toFixed(3)} | EUR:{" "}
                         {totals.eur.toFixed(3)}
