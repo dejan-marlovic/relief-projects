@@ -1,3 +1,4 @@
+/* ------ Row layout ------ */
 .costDetailContainer {
   display: flex;
   flex-wrap: nowrap; /* force row layout */
@@ -27,22 +28,6 @@
   flex: 1 1 100px;
 }
 
-.selectInput {
-  width: 100px;
-}
-
-.categorySelectInput {
-  width: 120px;
-}
-
-.numberInput {
-  width: 40px;
-}
-
-.priceInput {
-  width: 60px;
-}
-
 .percentage {
   flex: 1 1 80px;
 }
@@ -51,62 +36,19 @@
   flex: 1 1 200px;
 }
 
-.buttonGroup {
-  display: flex;
-  gap: 8px;
-  flex: 0 0 auto;
-}
-
-/* New for icon buttons */
-.iconButton {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  padding: 4px;
-  color: #333;
-}
-
-.iconButton:hover {
-  color: #007bff;
-}
-
-.deleteIcon {
-  color: #e74c3c;
-}
-
-.deleteIcon:hover {
-  color: #c0392b;
-}
-
-.button {
-  padding: 6px 12px;
-  font-weight: bold;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.button:hover {
-  background-color: #0056b3;
-}
-
-/* Match CreateCostDetail form field look */
+/* ------ Inputs ------ */
 .selectInput,
 .categorySelectInput,
 .numberInput,
-.priceInput {
+.priceInput,
+.textInput {
   padding: 4px 8px;
   font-size: 14px;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
 
-/* Keep specific widths from existing rules */
+/* Keep specific widths */
 .selectInput {
   width: 100px;
 }
@@ -121,4 +63,46 @@
 
 .priceInput {
   width: 60px;
+}
+
+/* Editable description input */
+.textInput {
+  width: 100%;
+  min-width: 0;
+  background: #fff;
+}
+
+/* ------ Actions (matches Transactions) ------ */
+.actions {
+  display: flex;
+  gap: 8px;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+.actionBtn {
+  background: transparent;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 6px 8px;
+  cursor: pointer;
+  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+
+  &:hover {
+    border-color: #007bff;
+    color: #007bff;
+  }
+}
+
+.danger {
+  border-color: #e74c3c;
+  color: #e74c3c;
+
+  &:hover {
+    color: #fff;
+    background: #e74c3c;
+  }
 }

@@ -1,6 +1,6 @@
 import React from "react";
 import styles from "./CostDetail.module.scss";
-import { FiEdit, FiTrash2 } from "react-icons/fi";
+import { FiEdit, FiTrash2, FiSave, FiX } from "react-icons/fi";
 
 const CostDetail = ({
   cost,
@@ -16,28 +16,45 @@ const CostDetail = ({
   onCancel,
   onDelete,
 }) => {
+  const ev = editedValues || {};
+  const isCreate = (cost.costDetailId ?? "") === "new";
+  const autoSave = isEditing && !isCreate; // only auto-save on blur for existing rows
+  const formId = `cost-detail-form-${cost.costDetailId || "new"}`;
+
   const handleSubmit = (e) => {
     e.preventDefault();
     e.stopPropagation();
     onSave();
   };
 
-  const handleCancel = () => {
-    onCancel();
-  };
+  // keep empty string as "" (not 0), otherwise cast to Number
+  const toNum = (v) => (v === "" ? "" : Number(v));
 
   return (
     <div className={styles.costDetailContainer}>
+      {/* Description */}
       <div className={styles.description}>
-        <strong>{cost.costDescription}</strong>
+        {isEditing ? (
+          <input
+            type="text"
+            value={ev.costDescription ?? cost.costDescription ?? ""}
+            onChange={(e) => onChange("costDescription", e.target.value)}
+            onBlur={autoSave ? handleSubmit : undefined}
+            className={styles.textInput}
+            placeholder="Description"
+          />
+        ) : (
+          <strong>{cost.costDescription}</strong>
+        )}
       </div>
 
+      {/* Type */}
       <div className={styles.costType}>
         {isEditing ? (
           <select
-            value={editedValues.costTypeId ?? cost.costTypeId}
-            onChange={(e) => onChange("costTypeId", Number(e.target.value))}
-            onBlur={handleSubmit}
+            value={ev.costTypeId ?? cost.costTypeId ?? ""}
+            onChange={(e) => onChange("costTypeId", toNum(e.target.value))}
+            onBlur={autoSave ? handleSubmit : undefined}
             className={styles.selectInput}
           >
             <option value="">Select Type</option>
@@ -52,12 +69,13 @@ const CostDetail = ({
         )}
       </div>
 
+      {/* Category */}
       <div className={styles.costCategory}>
         {isEditing ? (
           <select
-            value={editedValues.costId ?? cost.costId}
-            onChange={(e) => onChange("costId", Number(e.target.value))}
-            onBlur={handleSubmit}
+            value={ev.costId ?? cost.costId ?? ""}
+            onChange={(e) => onChange("costId", toNum(e.target.value))}
+            onBlur={autoSave ? handleSubmit : undefined}
             className={styles.categorySelectInput}
           >
             <option value="">Select Category</option>
@@ -72,26 +90,26 @@ const CostDetail = ({
         )}
       </div>
 
+      {/* Units × Price */}
       <div className={styles.costCalculation}>
         {isEditing ? (
-          <form
-            id={`cost-detail-form-${cost.costDetailId}`}
-            onSubmit={handleSubmit}
-          >
+          <form id={formId} onSubmit={handleSubmit}>
             <input
               type="number"
-              value={editedValues.noOfUnits ?? cost.noOfUnits}
-              onChange={(e) => onChange("noOfUnits", Number(e.target.value))}
-              onBlur={handleSubmit}
+              value={ev.noOfUnits ?? cost.noOfUnits ?? ""}
+              onChange={(e) => onChange("noOfUnits", toNum(e.target.value))}
+              onBlur={autoSave ? handleSubmit : undefined}
               className={styles.numberInput}
+              placeholder="Units"
             />
             ×
             <input
               type="number"
-              value={editedValues.unitPrice ?? cost.unitPrice}
-              onChange={(e) => onChange("unitPrice", Number(e.target.value))}
-              onBlur={handleSubmit}
+              value={ev.unitPrice ?? cost.unitPrice ?? ""}
+              onChange={(e) => onChange("unitPrice", toNum(e.target.value))}
+              onBlur={autoSave ? handleSubmit : undefined}
               className={styles.priceInput}
+              placeholder="Unit price"
             />
           </form>
         ) : (
@@ -99,29 +117,49 @@ const CostDetail = ({
         )}
       </div>
 
-      <div className={styles.percentage}>{cost.percentageCharging}%</div>
-
-      <div className={styles.amounts}>
-        Local: {cost.amountLocalCurrency} | GBP: {cost.amountGBP} | EUR:{" "}
-        {cost.amountEuro}
+      {/* % Charged */}
+      <div className={styles.percentage}>
+        {isEditing ? (
+          <input
+            type="number"
+            value={ev.percentageCharging ?? cost.percentageCharging ?? ""}
+            onChange={(e) =>
+              onChange("percentageCharging", toNum(e.target.value))
+            }
+            onBlur={autoSave ? handleSubmit : undefined}
+            className={styles.numberInput}
+            placeholder="%"
+          />
+        ) : (
+          `${cost.percentageCharging}%`
+        )}
       </div>
 
-      <div className={styles.buttonGroup}>
+      {/* Amounts (display-only) */}
+      <div className={styles.amounts}>
+        Local: {cost.amountLocalCurrency ?? "-"} | GBP: {cost.amountGBP ?? "-"}{" "}
+        | EUR: {cost.amountEuro ?? "-"}
+      </div>
+
+      {/* Actions (icons, same as Transactions) */}
+      <div className={styles.actions}>
         {isEditing ? (
           <>
             <button
               type="submit"
-              form={`cost-detail-form-${cost.costDetailId}`}
-              className={styles.button}
+              form={formId}
+              className={styles.actionBtn}
+              title="Save"
             >
-              Save
+              <FiSave />
             </button>
             <button
               type="button"
-              onClick={handleCancel}
-              className={styles.button}
+              onClick={onCancel}
+              className={`${styles.actionBtn} ${styles.danger}`}
+              title="Cancel"
             >
-              Cancel
+              <FiX />
             </button>
           </>
         ) : (
@@ -132,7 +170,7 @@ const CostDetail = ({
                 e.stopPropagation();
                 onEdit();
               }}
-              className={styles.iconButton}
+              className={styles.actionBtn}
               title="Edit"
             >
               <FiEdit />
@@ -143,7 +181,7 @@ const CostDetail = ({
                 e.stopPropagation();
                 onDelete(cost.costDetailId);
               }}
-              className={`${styles.iconButton} ${styles.deleteIcon}`}
+              className={`${styles.actionBtn} ${styles.danger}`}
               title="Delete"
             >
               <FiTrash2 />

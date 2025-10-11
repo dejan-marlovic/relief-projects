@@ -4,11 +4,29 @@ import styles from "./CostDetails.module.scss";
 
 const BASE_URL = "http://localhost:8080";
 
+const blankCostDetail = {
+  costDescription: "",
+  costTypeId: "",
+  costId: "",
+  noOfUnits: "",
+  unitPrice: "",
+  percentageCharging: "",
+};
+
+// helper: Required fields for creating a new cost detail
+const isValidNew = (v) =>
+  v &&
+  v.costDescription &&
+  v.costTypeId !== "" &&
+  v.costId !== "" &&
+  v.noOfUnits !== "" &&
+  v.unitPrice !== "";
+
 const CostDetails = ({ budgetId, refreshTrigger }) => {
   const [costTypes, setCostTypes] = useState([]);
   const [costs, setCosts] = useState([]);
   const [costDetails, setCostDetails] = useState([]);
-  const [editingId, setEditingId] = useState(null);
+  const [editingId, setEditingId] = useState(null); // number | "new" | null
   const [editedValues, setEditedValues] = useState({});
 
   const fetchCostDetails = useCallback(async () => {
@@ -19,9 +37,7 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
     try {
       const response = await fetch(
         `${BASE_URL}/api/cost-details/by-budget/${budgetId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       if (!response.ok) throw new Error("Failed to fetch cost details");
       const data = await response.json();
@@ -71,11 +87,21 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
     setEditedValues((prev) => ({
       ...prev,
       [cost.costDetailId]: {
+        costDescription: cost.costDescription,
         noOfUnits: cost.noOfUnits,
         unitPrice: cost.unitPrice,
+        percentageCharging: cost.percentageCharging,
         costTypeId: cost.costTypeId,
         costId: cost.costId,
       },
+    }));
+  };
+
+  const handleCreate = () => {
+    setEditingId("new");
+    setEditedValues((prev) => ({
+      ...prev,
+      new: { ...blankCostDetail },
     }));
   };
 
@@ -90,11 +116,67 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
   };
 
   const handleSave = async (costId) => {
+    const isCreate = costId === "new";
     const values = editedValues[costId];
-    const original = costDetails.find((c) => c.costDetailId === costId);
-    if (!original || !values) return;
+    if (!values) return;
 
     const token = localStorage.getItem("authToken");
+
+    if (isCreate) {
+      // Block save if required fields are missing to avoid backend "must not be null"
+      if (!isValidNew(values)) {
+        alert(
+          "Please fill in Description, Type, Category, Units and Unit price before saving."
+        );
+        return;
+      }
+
+      const payload = {
+        budgetId, // link to current budget
+        costDescription: values.costDescription,
+        costTypeId: Number(values.costTypeId),
+        costId: Number(values.costId),
+        noOfUnits: Number(values.noOfUnits),
+        unitPrice: Number(values.unitPrice),
+        percentageCharging:
+          values.percentageCharging === ""
+            ? null
+            : Number(values.percentageCharging),
+      };
+
+      try {
+        const response = await fetch(`${BASE_URL}/api/cost-details`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          const msg = await response.text().catch(() => "");
+          throw new Error(`Failed to create cost detail. ${msg}`);
+        }
+
+        await fetchCostDetails();
+        setEditingId(null);
+        setEditedValues((prev) => {
+          const next = { ...prev };
+          delete next.new;
+          return next;
+        });
+      } catch (err) {
+        console.error("Error creating cost detail:", err);
+        alert("Failed to create cost detail.");
+      }
+      return;
+    }
+
+    // UPDATE flow
+    const original = costDetails.find((c) => c.costDetailId === costId);
+    if (!original) return;
+
     const fullPayload = { ...original, ...values };
 
     try {
@@ -124,7 +206,12 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
 
   const handleCancel = () => {
     setEditingId(null);
-    setEditedValues({});
+    setEditedValues((prev) => {
+      const next = { ...prev };
+      delete next.new;
+      if (editingId && next[editingId]) delete next[editingId];
+      return next;
+    });
   };
 
   const handleDelete = async (costId) => {
@@ -181,7 +268,7 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
           </div>
 
           {Object.entries(groupedData).map(([typeId, costGroups]) => {
-            const type = costTypes.find((t) => t.id === parseInt(typeId));
+            const type = costTypes.find((t) => t.id === parseInt(typeId, 10));
             return (
               <div key={typeId} className={styles.typeSection}>
                 <h5 className={styles.typeTitle}>
@@ -189,7 +276,9 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
                 </h5>
 
                 {Object.entries(costGroups).map(([costId, items]) => {
-                  const category = costs.find((c) => c.id === parseInt(costId));
+                  const category = costs.find(
+                    (c) => c.id === parseInt(costId, 10)
+                  );
                   const totals = items.reduce(
                     (acc, item) => {
                       acc.local += item.amountLocalCurrency || 0;
@@ -237,6 +326,33 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
           })}
         </>
       )}
+
+      {/* Add New button / inline create row */}
+      <div className={styles.createBar}>
+        {editingId === "new" ? (
+          <CostDetail
+            cost={{ costDetailId: "new", ...blankCostDetail }}
+            isEditing
+            editedValues={editedValues.new}
+            costTypes={costTypes}
+            costs={costs}
+            onChange={handleChange}
+            onSave={() => handleSave("new")}
+            onCancel={handleCancel}
+            // Unused in create row:
+            onEdit={() => {}}
+            onDelete={() => {}}
+          />
+        ) : (
+          <button
+            className={styles.addBtn}
+            onClick={handleCreate}
+            disabled={!budgetId}
+          >
+            + New Cost Detail
+          </button>
+        )}
+      </div>
     </div>
   );
 };
