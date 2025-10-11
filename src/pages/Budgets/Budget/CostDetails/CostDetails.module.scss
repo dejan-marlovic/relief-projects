@@ -1,0 +1,67 @@
+.noDataMessage {
+  padding: 16px;
+  font-style: italic;
+  color: #555;
+}
+
+.headerRow {
+  font-weight: bold;
+  display: flex;
+  gap: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #000;
+}
+
+.headerCellDescription {
+  flex: 1 1 150px;
+}
+
+.headerCellType {
+  flex: 1 1 100px;
+}
+
+.headerCellCategory {
+  flex: 1 1 100px;
+}
+
+.headerCellUnits {
+  flex: 1 1 100px;
+}
+
+.headerCellCharged {
+  flex: 1 1 100px;
+}
+
+.headerCellAmounts {
+  flex: 1 1 250px;
+}
+
+.typeSection {
+  margin-bottom: 24px;
+}
+
+.typeTitle {
+  font-size: 22px;
+  font-weight: 800;
+  color: #222;
+  border-bottom: 2px solid #333;
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+}
+
+.categorySection {
+  margin-left: 16px;
+  margin-bottom: 16px;
+}
+
+.categoryTitle {
+  border-bottom: 1px dashed #aaa;
+  padding-bottom: 2px;
+  font-size: 20px;
+}
+
+.categoryTotal {
+  margin-top: 8px;
+  font-weight: 800;
+  font-size: 16px;
+}

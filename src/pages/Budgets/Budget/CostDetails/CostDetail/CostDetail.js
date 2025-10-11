@@ -1,4 +1,6 @@
 import React from "react";
+import styles from "./CostDetail.module.scss";
+import { FiEdit, FiTrash2 } from "react-icons/fi";
 
 const CostDetail = ({
   cost,
@@ -17,38 +19,26 @@ const CostDetail = ({
   const handleSubmit = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log("Submitting form for cost:", cost.costDetailId);
     onSave();
   };
 
   const handleCancel = () => {
-    console.log("Canceling edit for cost:", cost.costDetailId);
     onCancel();
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexWrap: "wrap",
-        alignItems: "center",
-        borderBottom: "1px solid #ccc",
-        padding: "8px 0",
-        gap: "14px",
-        fontSize: "16px",
-      }}
-    >
-      <div style={{ flex: "1 1 150px" }}>
-        <strong style={{ fontWeight: 650 }}>{cost.costDescription}</strong>
+    <div className={styles.costDetailContainer}>
+      <div className={styles.description}>
+        <strong>{cost.costDescription}</strong>
       </div>
 
-      <div style={{ flex: "1 1 120px", color: "#666" }}>
+      <div className={styles.costType}>
         {isEditing ? (
           <select
             value={editedValues.costTypeId ?? cost.costTypeId}
             onChange={(e) => onChange("costTypeId", Number(e.target.value))}
             onBlur={handleSubmit}
-            style={{ width: "100px" }}
+            className={styles.selectInput}
           >
             <option value="">Select Type</option>
             {costTypes.map((type) => (
@@ -62,13 +52,13 @@ const CostDetail = ({
         )}
       </div>
 
-      <div style={{ flex: "1 1 150px", color: "#888" }}>
+      <div className={styles.costCategory}>
         {isEditing ? (
           <select
             value={editedValues.costId ?? cost.costId}
             onChange={(e) => onChange("costId", Number(e.target.value))}
             onBlur={handleSubmit}
-            style={{ width: "120px" }}
+            className={styles.categorySelectInput}
           >
             <option value="">Select Category</option>
             {costs.map((costItem) => (
@@ -82,7 +72,7 @@ const CostDetail = ({
         )}
       </div>
 
-      <div style={{ flex: "1 1 100px" }}>
+      <div className={styles.costCalculation}>
         {isEditing ? (
           <form
             id={`cost-detail-form-${cost.costDetailId}`}
@@ -93,7 +83,7 @@ const CostDetail = ({
               value={editedValues.noOfUnits ?? cost.noOfUnits}
               onChange={(e) => onChange("noOfUnits", Number(e.target.value))}
               onBlur={handleSubmit}
-              style={{ width: "40px" }}
+              className={styles.numberInput}
             />
             ×
             <input
@@ -101,7 +91,7 @@ const CostDetail = ({
               value={editedValues.unitPrice ?? cost.unitPrice}
               onChange={(e) => onChange("unitPrice", Number(e.target.value))}
               onBlur={handleSubmit}
-              style={{ width: "60px" }}
+              className={styles.priceInput}
             />
           </form>
         ) : (
@@ -109,27 +99,27 @@ const CostDetail = ({
         )}
       </div>
 
-      <div style={{ flex: "1 1 80px" }}>{cost.percentageCharging}%</div>
+      <div className={styles.percentage}>{cost.percentageCharging}%</div>
 
-      <div style={{ flex: "1 1 200px" }}>
+      <div className={styles.amounts}>
         Local: {cost.amountLocalCurrency} | GBP: {cost.amountGBP} | EUR:{" "}
         {cost.amountEuro}
       </div>
 
-      <div style={{ display: "flex", gap: "8px" }}>
+      <div className={styles.buttonGroup}>
         {isEditing ? (
           <>
             <button
               type="submit"
               form={`cost-detail-form-${cost.costDetailId}`}
-              style={{ padding: "4px 8px" }}
+              className={styles.button}
             >
               Save
             </button>
             <button
               type="button"
               onClick={handleCancel}
-              style={{ padding: "4px 8px" }}
+              className={styles.button}
             >
               Cancel
             </button>
@@ -142,9 +132,10 @@ const CostDetail = ({
                 e.stopPropagation();
                 onEdit();
               }}
-              style={{ padding: "4px 8px" }}
+              className={styles.iconButton}
+              title="Edit"
             >
-              Edit
+              <FiEdit />
             </button>
             <button
               onClick={(e) => {
@@ -152,13 +143,10 @@ const CostDetail = ({
                 e.stopPropagation();
                 onDelete(cost.costDetailId);
               }}
-              style={{
-                padding: "4px 8px",
-                backgroundColor: "#e74c3c",
-                color: "#fff",
-              }}
+              className={`${styles.iconButton} ${styles.deleteIcon}`}
+              title="Delete"
             >
-              Delete
+              <FiTrash2 />
             </button>
           </>
         )}

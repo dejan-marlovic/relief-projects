@@ -1,0 +1,124 @@
+.costDetailContainer {
+  display: flex;
+  flex-wrap: nowrap; /* force row layout */
+  align-items: center;
+  border-bottom: 1px solid #ccc;
+  padding: 8px 0;
+  gap: 14px;
+  font-size: 16px;
+}
+
+.description {
+  flex: 1 1 150px;
+  font-weight: 650;
+}
+
+.costType,
+.costCategory {
+  flex: 1 1 120px;
+  color: #666;
+}
+
+.costCategory {
+  color: #888;
+}
+
+.costCalculation {
+  flex: 1 1 100px;
+}
+
+.selectInput {
+  width: 100px;
+}
+
+.categorySelectInput {
+  width: 120px;
+}
+
+.numberInput {
+  width: 40px;
+}
+
+.priceInput {
+  width: 60px;
+}
+
+.percentage {
+  flex: 1 1 80px;
+}
+
+.amounts {
+  flex: 1 1 200px;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+/* New for icon buttons */
+.iconButton {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  color: #333;
+}
+
+.iconButton:hover {
+  color: #007bff;
+}
+
+.deleteIcon {
+  color: #e74c3c;
+}
+
+.deleteIcon:hover {
+  color: #c0392b;
+}
+
+.button {
+  padding: 6px 12px;
+  font-weight: bold;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.button:hover {
+  background-color: #0056b3;
+}
+
+/* Match CreateCostDetail form field look */
+.selectInput,
+.categorySelectInput,
+.numberInput,
+.priceInput {
+  padding: 4px 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Keep specific widths from existing rules */
+.selectInput {
+  width: 100px;
+}
+
+.categorySelectInput {
+  width: 120px;
+}
+
+.numberInput {
+  width: 40px;
+}
+
+.priceInput {
+  width: 60px;
+}
