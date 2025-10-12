@@ -2,17 +2,82 @@
 .container {
 }
 
-/* Scrollable table container with one shared grid definition for header + rows */
-.table {
-  /* Column widths: Actions (first) + 16 data columns = 17 total */
-  --tx-grid-cols: 110px 160px 220px 180px 160px 120px 140px 120px 120px 140px
-    120px 140px 120px 120px 110px 170px 100px;
+/* Toolbar (compact + columns) */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 6px 0 10px;
+}
 
+.compactToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.92rem;
+}
+
+.columnsBox {
+  position: relative;
+}
+
+.columnsBtn {
+  background: #f5f6f8;
+  border: 1px solid #e6e6e6;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.columnsPanel {
+  position: absolute;
+  top: 36px;
+  left: 0;
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  padding: 8px 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  max-height: 320px;
   overflow: auto;
-  max-height: 60vh; /* sticky header sticks within this scroll area */
+  z-index: 10;
+  min-width: 220px;
+}
+
+.colItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 2px;
+  white-space: nowrap;
+}
+
+.lockNote {
+  font-style: normal;
+  color: #888;
+  font-size: 0.85em;
+}
+
+/* Scrollable table container; grid columns are injected via inline CSS var */
+.table {
+  overflow: auto;
+  max-height: 60vh;
   border: 1px solid #e6e6e6;
   border-radius: 8px;
   background: #fff;
+  --tx-grid-cols: 110px; /* default fallback; overwritten inline */
+}
+
+/* Compact mode tweaks */
+.compact .gridRow {
+  padding: 4px 8px !important;
+  font-size: 0.86rem !important;
+}
+
+.compact :global(input),
+.compact :global(select) {
+  padding: 4px 6px !important;
+  font-size: 0.86rem !important;
 }
 
 /* Grid row style shared by header + data rows */
@@ -51,8 +116,14 @@
   box-shadow: 2px 0 0 rgba(0, 0, 0, 0.04);
 }
 
-.actionsCol {
-  /* reserved for column-specific tweaks */
+/* When a column is hidden (width collapsed to 0), hide its content too */
+.hiddenCol {
+  width: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 /* Empty states + create bar */

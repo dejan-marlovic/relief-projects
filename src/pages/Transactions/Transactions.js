@@ -47,7 +47,28 @@ const headerLabels = [
   "2nd Orig",
   "Own Contrib",
   "Date Planned",
-  "OK Status",
+  "OK Status", // now NON-sticky (normal column)
+];
+
+// column widths (px) in the same order as headerLabels
+const BASE_COL_WIDTHS = [
+  110, // Actions
+  160, // Org
+  220, // Project
+  180, // Financier
+  160, // Status
+  120, // Applied Amt
+  140, // Applied FX
+  120, // 1st SEK
+  120, // 1st Orig
+  140, // Approved Amt
+  120, // Approved Curr
+  140, // Approved FX
+  120, // 2nd SEK
+  120, // 2nd Orig
+  110, // Own Contrib
+  170, // Date Planned
+  100, // OK Status
 ];
 
 // Minimal required fields for a new transaction
@@ -70,6 +91,24 @@ const Transactions = ({ refreshTrigger }) => {
   const [statusOptions, setStatusOptions] = useState([]);
   const [fxOptions, setFxOptions] = useState([]);
   const [currencies, setCurrencies] = useState([]);
+
+  // UI state
+  const [compact, setCompact] = useState(false);
+  const [columnsOpen, setColumnsOpen] = useState(false);
+  // visibility per column (default: all true)
+  const [visibleCols, setVisibleCols] = useState(() =>
+    Array(headerLabels.length).fill(true)
+  );
+
+  // Lock ONLY the first column (Actions) as always-visible
+  const toggleCol = (i) => {
+    if (i === 0) return;
+    setVisibleCols((prev) => {
+      const next = [...prev];
+      next[i] = !next[i];
+      return next;
+    });
+  };
 
   const token = useMemo(() => localStorage.getItem("authToken"), []);
   const authHeaders = useMemo(
@@ -311,17 +350,67 @@ const Transactions = ({ refreshTrigger }) => {
     }
   };
 
+  // Build the CSS variable for grid columns from visibility + base widths
+  const gridCols = useMemo(() => {
+    const parts = BASE_COL_WIDTHS.map((w, i) =>
+      visibleCols[i] ? `${w}px` : "0px"
+    );
+    return parts.join(" ");
+  }, [visibleCols]);
+
   return (
     <div className={styles.container}>
-      <div className={styles.table}>
+      {/* Toolbar */}
+      <div className={styles.toolbar}>
+        <label className={styles.compactToggle}>
+          <input
+            type="checkbox"
+            checked={compact}
+            onChange={(e) => setCompact(e.target.checked)}
+          />
+          <span>Compact mode</span>
+        </label>
+
+        <div className={styles.columnsBox}>
+          <button
+            className={styles.columnsBtn}
+            onClick={() => setColumnsOpen((v) => !v)}
+          >
+            Columns ▾
+          </button>
+          {columnsOpen && (
+            <div className={styles.columnsPanel}>
+              {headerLabels.map((h, i) => (
+                <label key={h} className={styles.colItem}>
+                  <input
+                    type="checkbox"
+                    checked={visibleCols[i]}
+                    disabled={i === 0} // only Actions is locked
+                    onChange={() => toggleCol(i)}
+                  />
+                  <span>{h}</span>
+                  {i === 0 && <em className={styles.lockNote}> (locked)</em>}
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Table */}
+      <div
+        className={`${styles.table} ${compact ? styles.compact : ""}`}
+        style={{ ["--tx-grid-cols"]: gridCols }}
+      >
         {/* Header */}
         <div className={`${styles.gridRow} ${styles.headerRow}`}>
           {headerLabels.map((h, i) => (
             <div
               key={h}
-              className={`${styles.headerCell} ${
-                i === 0 ? styles.stickyColHeader : ""
-              } ${i === 0 ? styles.actionsCol : ""}`}
+              className={`${styles.headerCell}
+                ${i === 0 ? styles.stickyColHeader : ""}
+                ${!visibleCols[i] ? styles.hiddenCol : ""}
+                ${i === 0 ? styles.actionsCol : ""}`}
             >
               {h}
             </div>
@@ -336,10 +425,12 @@ const Transactions = ({ refreshTrigger }) => {
         ) : transactions.length === 0 ? (
           <p className={styles.noData}>No transactions for this project.</p>
         ) : (
-          transactions.map((tx) => (
+          transactions.map((tx, idx) => (
             <Transaction
               key={tx.id}
               tx={tx}
+              rowIndex={idx}
+              isEven={idx % 2 === 0}
               isEditing={editingId === tx.id}
               editedValues={editedValues[tx.id]}
               onEdit={() => startEdit(tx)}
@@ -352,6 +443,7 @@ const Transactions = ({ refreshTrigger }) => {
               statuses={statusOptions}
               exchangeRates={fxOptions}
               currencies={currencies}
+              visibleCols={visibleCols}
             />
           ))
         )}
@@ -372,6 +464,8 @@ const Transactions = ({ refreshTrigger }) => {
             statuses={statusOptions}
             exchangeRates={fxOptions}
             currencies={currencies}
+            visibleCols={visibleCols}
+            isEven={false}
           />
         ) : (
           <button

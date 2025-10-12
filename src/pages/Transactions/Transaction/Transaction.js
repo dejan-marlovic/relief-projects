@@ -31,6 +31,8 @@ const Transaction = ({
   statuses = [],
   exchangeRates = [],
   currencies = [],
+  visibleCols = [],
+  isEven = false,
 }) => {
   const ev = editedValues || {};
   const isCreate = (tx?.id ?? "") === "new";
@@ -179,10 +181,17 @@ const Transaction = ({
     />
   );
 
+  // helper to apply hidden class when column is collapsed to 0px
+  const hc = (i) => (!visibleCols[i] ? styles.hiddenCol : "");
+
   return (
-    <div className={`${styles.row} ${styles.gridRow}`}>
-      {/* Sticky left actions column */}
-      <Cell className={`${styles.stickyCol} ${styles.actionsCol}`}>
+    <div
+      className={`${styles.row} ${styles.gridRow} ${
+        isEven ? styles.zebraEven : ""
+      } ${styles.hoverable}`}
+    >
+      {/* 0: Actions (sticky left) */}
+      <Cell className={`${styles.stickyCol} ${styles.actionsCol} ${hc(0)}`}>
         {isEditing ? (
           <div className={styles.actions}>
             <button className={styles.actionBtn} onClick={submit} title="Save">
@@ -224,79 +233,86 @@ const Transaction = ({
         )}
       </Cell>
 
-      <Cell>
+      {/* 1..15 normal columns */}
+      <Cell className={hc(1)}>
         {isEditing ? selectOrg("organizationId") : orgName(tx.organizationId)}
       </Cell>
-      <Cell>{isEditing ? selectProject() : projectName(tx.projectId)}</Cell>
-      <Cell>
+      <Cell className={hc(2)}>
+        {isEditing ? selectProject() : projectName(tx.projectId)}
+      </Cell>
+      <Cell className={hc(3)}>
         {isEditing
           ? selectOrg("financierOrganizationId")
           : orgName(tx.financierOrganizationId)}
       </Cell>
-      <Cell>
+      <Cell className={hc(4)}>
         {isEditing ? selectStatus() : statusName(tx.transactionStatusId)}
       </Cell>
 
-      <Cell>
+      <Cell className={hc(5)}>
         {isEditing
           ? inputNum("appliedForAmount", "0.01")
           : tx.appliedForAmount ?? "-"}
       </Cell>
-      <Cell>
+      <Cell className={hc(6)}>
         {isEditing
           ? selectFx("appliedForExchangeRateId")
           : fxLabelByFxId(tx.appliedForExchangeRateId)}
       </Cell>
 
-      <Cell>
+      <Cell className={hc(7)}>
         {isEditing
           ? inputNum("firstShareSEKAmount", "0.01")
           : tx.firstShareSEKAmount ?? "-"}
       </Cell>
-      <Cell>
+      <Cell className={hc(8)}>
         {isEditing
           ? inputNum("firstShareAmount", "0.01")
           : tx.firstShareAmount ?? "-"}
       </Cell>
 
-      <Cell>
+      <Cell className={hc(9)}>
         {isEditing
           ? inputNum("approvedAmount", "0.01")
           : tx.approvedAmount ?? "-"}
       </Cell>
-      <Cell>
+      <Cell className={hc(10)}>
         {isEditing
           ? inputNum("approvedAmountCurrencyId")
           : tx.approvedAmountCurrencyId ?? "-"}
       </Cell>
-      <Cell>
+      <Cell className={hc(11)}>
         {isEditing
           ? selectFx("approvedAmountExchangeRateId")
           : fxLabelByFxId(tx.approvedAmountExchangeRateId)}
       </Cell>
 
-      <Cell>
+      <Cell className={hc(12)}>
         {isEditing
           ? inputNum("secondShareAmountSEK", "0.01")
           : tx.secondShareAmountSEK ?? "-"}
       </Cell>
-      <Cell>
+      <Cell className={hc(13)}>
         {isEditing
           ? inputNum("secondShareAmount", "0.01")
           : tx.secondShareAmount ?? "-"}
       </Cell>
 
-      <Cell>
+      <Cell className={hc(14)}>
         {isEditing ? selectYesNo("ownContribution") : tx.ownContribution ?? "-"}
       </Cell>
-      <Cell>
+      <Cell className={hc(15)}>
         {isEditing
           ? inputDate
           : tx.datePlanned
           ? new Date(tx.datePlanned).toLocaleString()
           : "-"}
       </Cell>
-      <Cell>{isEditing ? selectYesNo("okStatus") : tx.okStatus ?? "-"}</Cell>
+
+      {/* 16: OK Status (normal, non-sticky) */}
+      <Cell className={hc(16)}>
+        {isEditing ? selectYesNo("okStatus") : tx.okStatus ?? "-"}
+      </Cell>
     </div>
   );
 };
