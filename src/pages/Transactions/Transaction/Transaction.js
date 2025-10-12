@@ -24,6 +24,7 @@ const Transaction = ({
   onSave,
   onCancel,
   onDelete,
+  organizations = [], // [{id, name}]
 }) => {
   const ev = editedValues || {};
   const isCreate = (tx?.id ?? "") === "new";
@@ -64,6 +65,25 @@ const Transaction = ({
     </select>
   );
 
+  const selectOrg = (field) => (
+    <select
+      value={ev[field] ?? tx[field] ?? ""}
+      onChange={(e) => onChange(field, toNum(e.target.value))}
+      onBlur={autoSave ? submit : undefined}
+      className={styles.input}
+    >
+      <option value="">Select organization</option>
+      {organizations.map((o) => (
+        <option key={o.id} value={o.id}>
+          {o.name}
+        </option>
+      ))}
+    </select>
+  );
+
+  const orgName = (id) =>
+    organizations.find((o) => o.id === id)?.name || id || "-";
+
   const inputDate = (
     <input
       type="datetime-local"
@@ -80,14 +100,17 @@ const Transaction = ({
     <div className={styles.row}>
       {/* Keep the order in sync with headerLabels */}
       <Cell>
-        {isEditing ? inputNum("organizationId") : tx.organizationId ?? "-"}
+        {isEditing ? selectOrg("organizationId") : orgName(tx.organizationId)}
       </Cell>
+
       <Cell>{isEditing ? inputNum("projectId") : tx.projectId ?? "-"}</Cell>
+
       <Cell>
         {isEditing
-          ? inputNum("financierOrganizationId")
-          : tx.financierOrganizationId ?? "-"}
+          ? selectOrg("financierOrganizationId")
+          : orgName(tx.financierOrganizationId)}
       </Cell>
+
       <Cell>
         {isEditing
           ? inputNum("transactionStatusId")

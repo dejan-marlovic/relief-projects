@@ -63,6 +63,7 @@ const Transactions = ({ refreshTrigger }) => {
   const [transactions, setTransactions] = useState([]);
   const [editingId, setEditingId] = useState(null); // number | "new" | null
   const [editedValues, setEditedValues] = useState({}); // { [id]: values }
+  const [orgOptions, setOrgOptions] = useState([]); // [{id, name}]
 
   const token = useMemo(() => localStorage.getItem("authToken"), []);
 
@@ -93,6 +94,29 @@ const Transactions = ({ refreshTrigger }) => {
     },
     [token]
   );
+
+  // Fetch organization options once
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(
+          `${BASE_URL}/api/organizations/active/options`,
+          {
+            headers: {
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (!res.ok) throw new Error("Failed to fetch organizations");
+        const data = await res.json();
+        setOrgOptions(Array.isArray(data) ? data : []);
+      } catch (e) {
+        console.error("Error fetching organization options:", e);
+        setOrgOptions([]);
+      }
+    })();
+  }, [token]);
 
   useEffect(() => {
     fetchTransactions(selectedProjectId);
@@ -289,6 +313,7 @@ const Transactions = ({ refreshTrigger }) => {
             onSave={save}
             onCancel={cancel}
             onDelete={remove}
+            organizations={orgOptions}
           />
         ))
       )}
@@ -303,6 +328,7 @@ const Transactions = ({ refreshTrigger }) => {
             onSave={save}
             onCancel={cancel}
             onDelete={() => {}}
+            organizations={orgOptions}
           />
         ) : (
           <button
