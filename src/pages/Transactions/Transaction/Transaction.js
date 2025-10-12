@@ -13,7 +13,9 @@ function toDateTimeLocal(iso) {
   )}:${pad(d.getMinutes())}`;
 }
 
-const Cell = ({ children }) => <div className={styles.cell}>{children}</div>;
+const Cell = ({ children, className }) => (
+  <div className={`${styles.cell} ${className || ""}`}>{children}</div>
+);
 
 const Transaction = ({
   tx,
@@ -179,18 +181,58 @@ const Transaction = ({
 
   return (
     <div className={`${styles.row} ${styles.gridRow}`}>
+      {/* Sticky left actions column */}
+      <Cell className={`${styles.stickyCol} ${styles.actionsCol}`}>
+        {isEditing ? (
+          <div className={styles.actions}>
+            <button className={styles.actionBtn} onClick={submit} title="Save">
+              <FiSave />
+            </button>
+            <button
+              className={`${styles.actionBtn} ${styles.danger}`}
+              onClick={onCancel}
+              title="Cancel"
+            >
+              <FiX />
+            </button>
+          </div>
+        ) : (
+          <div className={styles.actions}>
+            <button
+              className={styles.actionBtn}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onEdit();
+              }}
+              title="Edit"
+            >
+              <FiEdit />
+            </button>
+            <button
+              className={`${styles.actionBtn} ${styles.danger}`}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onDelete(tx.id);
+              }}
+              title="Delete"
+            >
+              <FiTrash2 />
+            </button>
+          </div>
+        )}
+      </Cell>
+
       <Cell>
         {isEditing ? selectOrg("organizationId") : orgName(tx.organizationId)}
       </Cell>
-
       <Cell>{isEditing ? selectProject() : projectName(tx.projectId)}</Cell>
-
       <Cell>
         {isEditing
           ? selectOrg("financierOrganizationId")
           : orgName(tx.financierOrganizationId)}
       </Cell>
-
       <Cell>
         {isEditing ? selectStatus() : statusName(tx.transactionStatusId)}
       </Cell>
@@ -255,48 +297,6 @@ const Transaction = ({
           : "-"}
       </Cell>
       <Cell>{isEditing ? selectYesNo("okStatus") : tx.okStatus ?? "-"}</Cell>
-
-      <Cell>
-        {isEditing ? (
-          <div className={styles.actions}>
-            <button className={styles.actionBtn} onClick={submit} title="Save">
-              <FiSave />
-            </button>
-            <button
-              className={`${styles.actionBtn} ${styles.danger}`}
-              onClick={onCancel}
-              title="Cancel"
-            >
-              <FiX />
-            </button>
-          </div>
-        ) : (
-          <div className={styles.actions}>
-            <button
-              className={styles.actionBtn}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onEdit();
-              }}
-              title="Edit"
-            >
-              <FiEdit />
-            </button>
-            <button
-              className={`${styles.actionBtn} ${styles.danger}`}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onDelete(tx.id);
-              }}
-              title="Delete"
-            >
-              <FiTrash2 />
-            </button>
-          </div>
-        )}
-      </Cell>
     </div>
   );
 };

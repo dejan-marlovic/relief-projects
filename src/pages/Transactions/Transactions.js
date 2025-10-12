@@ -31,6 +31,7 @@ const blankTx = {
 };
 
 const headerLabels = [
+  "Actions", // sticky left
   "Org",
   "Project",
   "Financier",
@@ -47,10 +48,9 @@ const headerLabels = [
   "Own Contrib",
   "Date Planned",
   "OK Status",
-  "Actions",
 ];
 
-// Minimal required fields for a new transaction (adjust to your backend rules)
+// Minimal required fields for a new transaction
 const isValidNew = (v, selectedProjectId) =>
   v &&
   (v.projectId || selectedProjectId) &&
@@ -314,14 +314,21 @@ const Transactions = ({ refreshTrigger }) => {
   return (
     <div className={styles.container}>
       <div className={styles.table}>
+        {/* Header */}
         <div className={`${styles.gridRow} ${styles.headerRow}`}>
-          {headerLabels.map((h) => (
-            <div key={h} className={styles.headerCell}>
+          {headerLabels.map((h, i) => (
+            <div
+              key={h}
+              className={`${styles.headerCell} ${
+                i === 0 ? styles.stickyColHeader : ""
+              } ${i === 0 ? styles.actionsCol : ""}`}
+            >
               {h}
             </div>
           ))}
         </div>
 
+        {/* Body */}
         {!selectedProjectId ? (
           <p className={styles.noData}>
             Select a project to see its transactions.
