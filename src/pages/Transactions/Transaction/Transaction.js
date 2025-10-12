@@ -24,11 +24,15 @@ const Transaction = ({
   onSave,
   onCancel,
   onDelete,
-  organizations = [], // [{id, name}]
+  organizations = [],
+  projects = [],
+  statuses = [],
+  exchangeRates = [],
+  currencies = [],
 }) => {
   const ev = editedValues || {};
   const isCreate = (tx?.id ?? "") === "new";
-  const autoSave = isEditing && !isCreate; // only auto-save on blur for existing rows
+  const autoSave = isEditing && !isCreate;
 
   const submit = (e) => {
     e.preventDefault();
@@ -81,8 +85,85 @@ const Transaction = ({
     </select>
   );
 
+  const selectProject = () => (
+    <select
+      value={ev.projectId ?? tx.projectId ?? ""}
+      onChange={(e) => onChange("projectId", toNum(e.target.value))}
+      onBlur={autoSave ? submit : undefined}
+      className={styles.input}
+    >
+      <option value="">Select project</option>
+      {projects.map((p) => (
+        <option key={p.id} value={p.id}>
+          {p.projectName}
+        </option>
+      ))}
+    </select>
+  );
+
+  const selectStatus = () => (
+    <select
+      value={ev.transactionStatusId ?? tx.transactionStatusId ?? ""}
+      onChange={(e) => onChange("transactionStatusId", toNum(e.target.value))}
+      onBlur={autoSave ? submit : undefined}
+      className={styles.input}
+    >
+      <option value="">Select status</option>
+      {statuses.map((s) => (
+        <option key={s.id} value={s.id}>
+          {s.transactionStatusName}
+        </option>
+      ))}
+    </select>
+  );
+
+  // Currency helpers
+  const findCurrency = (currencyId) =>
+    currencies.find((c) => c.id === currencyId);
+
+  const fxLabelByFxId = (fxId) => {
+    if (!fxId) return "-";
+    const r = exchangeRates.find((er) => er.id === fxId);
+    if (!r) return fxId;
+    const cur = findCurrency(r.currencyId);
+    const code = cur?.name || `CUR#${r.currencyId}`;
+    const rate =
+      typeof r.exchangeRate === "number"
+        ? r.exchangeRate
+        : Number(r.exchangeRate);
+    return `${code} @ ${rate}`;
+  };
+
+  const selectFx = (field) => (
+    <select
+      value={ev[field] ?? tx[field] ?? ""}
+      onChange={(e) => onChange(field, toNum(e.target.value))}
+      onBlur={autoSave ? submit : undefined}
+      className={styles.input}
+    >
+      <option value="">Select FX</option>
+      {exchangeRates.map((r) => {
+        const cur = findCurrency(r.currencyId);
+        const code = cur?.name || `CUR#${r.currencyId}`;
+        const rate =
+          typeof r.exchangeRate === "number"
+            ? r.exchangeRate
+            : Number(r.exchangeRate);
+        return (
+          <option key={r.id} value={r.id}>
+            {code} @ {rate}
+          </option>
+        );
+      })}
+    </select>
+  );
+
   const orgName = (id) =>
-    organizations.find((o) => o.id === id)?.name || id || "-";
+    organizations.find((o) => o.id === id)?.name || (id ?? "-");
+  const projectName = (id) =>
+    projects.find((p) => p.id === id)?.projectName || (id ?? "-");
+  const statusName = (id) =>
+    statuses.find((s) => s.id === id)?.transactionStatusName || (id ?? "-");
 
   const inputDate = (
     <input
@@ -97,13 +178,12 @@ const Transaction = ({
   );
 
   return (
-    <div className={styles.row}>
-      {/* Keep the order in sync with headerLabels */}
+    <div className={`${styles.row} ${styles.gridRow}`}>
       <Cell>
         {isEditing ? selectOrg("organizationId") : orgName(tx.organizationId)}
       </Cell>
 
-      <Cell>{isEditing ? inputNum("projectId") : tx.projectId ?? "-"}</Cell>
+      <Cell>{isEditing ? selectProject() : projectName(tx.projectId)}</Cell>
 
       <Cell>
         {isEditing
@@ -112,9 +192,7 @@ const Transaction = ({
       </Cell>
 
       <Cell>
-        {isEditing
-          ? inputNum("transactionStatusId")
-          : tx.transactionStatusId ?? "-"}
+        {isEditing ? selectStatus() : statusName(tx.transactionStatusId)}
       </Cell>
 
       <Cell>
@@ -124,8 +202,8 @@ const Transaction = ({
       </Cell>
       <Cell>
         {isEditing
-          ? inputNum("appliedForExchangeRateId")
-          : tx.appliedForExchangeRateId ?? "-"}
+          ? selectFx("appliedForExchangeRateId")
+          : fxLabelByFxId(tx.appliedForExchangeRateId)}
       </Cell>
 
       <Cell>
@@ -151,8 +229,8 @@ const Transaction = ({
       </Cell>
       <Cell>
         {isEditing
-          ? inputNum("approvedAmountExchangeRateId")
-          : tx.approvedAmountExchangeRateId ?? "-"}
+          ? selectFx("approvedAmountExchangeRateId")
+          : fxLabelByFxId(tx.approvedAmountExchangeRateId)}
       </Cell>
 
       <Cell>

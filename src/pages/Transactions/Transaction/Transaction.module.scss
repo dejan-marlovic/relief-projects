@@ -1,72 +1,54 @@
-/* Must match Transactions.module.scss */
-$row-columns: repeat(17, minmax(120px, auto));
-
+/* Each data row uses the same grid as the header via the CSS var */
 .row {
+  /* kept for compatibility if referenced elsewhere */
+}
+
+/* Use the same grid declaration as the header (pulled from parent’s CSS var) */
+.gridRow {
   display: grid;
-  grid-template-columns: $row-columns; /* same columns as header */
-  gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid #ddd;
-  font-size: 15px;
+  grid-template-columns: var(--tx-grid-cols);
   align-items: center;
+  column-gap: 8px;
+
+  padding: 8px 12px;
+  border-bottom: 1px solid #f1f1f1;
+  font-size: 0.92rem;
 }
 
 .cell {
-  display: flex;
-  align-items: center;
-  min-width: 0; /* prevents overflow/truncation issues */
+  min-width: 0; /* allow shrinking + ellipsis */
   overflow: hidden;
-  white-space: nowrap;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .input {
   width: 100%;
   padding: 6px 8px;
-  border: 1px solid #ccc;
+  border: 1px solid #ddd;
   border-radius: 6px;
-  font-size: 14px;
-  background: #fff;
-  min-width: 0;
+  font-size: 0.92rem;
+  min-width: 0; /* so inputs don’t overflow their grid cell */
 }
 
 .actions {
   display: flex;
   gap: 8px;
-  flex-wrap: nowrap;
   justify-content: flex-start;
 }
 
 .actionBtn {
-  background: transparent;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  background: #f5f6f8;
+  border: 1px solid #e6e6e6;
+  border-radius: 6px;
   padding: 6px 8px;
   cursor: pointer;
-  font-size: 16px;
-  display: inline-flex;
-  align-items: center;
-  line-height: 1;
+}
 
-  &:hover {
-    border-color: #007bff;
-    color: #007bff;
-  }
+.actionBtn:hover {
+  background: #eef2ff;
 }
 
 .danger {
-  border-color: #e74c3c;
-  color: #e74c3c;
-
-  &:hover {
-    color: #fff;
-    background: #e74c3c;
-  }
-}
-
-/* Neutralize any legacy 3-column layout classes if still present in markup */
-.block,
-.field,
-.inlinePair {
-  display: contents;
+  color: #d33;
 }

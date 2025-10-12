@@ -1,47 +1,67 @@
-/* Reuse the same grid for header and rows so columns align perfectly */
-$row-columns: repeat(17, minmax(120px, auto)); /* tweak widths as needed */
-
 .container {
-  margin-top: 8px;
+  /* outer wrapper for the Transactions page */
 }
 
-.row {
+/* Scrollable table container with one shared grid definition for header + rows */
+.table {
+  /* 👇 single source of truth for column widths (17 columns, match headerLabels) */
+  --tx-grid-cols: 160px 220px 180px 160px 120px 140px 120px 120px 140px 120px
+    140px 120px 120px 110px 170px 100px 110px;
+
+  overflow: auto; /* enable scrolling */
+  max-height: 60vh; /* header sticks within this scroll area */
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  background: #fff;
+}
+
+/* Reusable grid row style (header + data rows share this) */
+.gridRow {
   display: grid;
-  grid-template-columns: $row-columns;
-  gap: 12px;
+  grid-template-columns: var(--tx-grid-cols);
+  align-items: center;
+  column-gap: 8px;
+  min-width: 1200px; /* prevent over-squishing; allow horiz scroll */
 }
 
+/* Header row */
 .headerRow {
-  padding-bottom: 8px;
-  border-bottom: 2px solid #000;
-  font-weight: 800;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+  padding: 10px 12px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+  font-weight: 600;
+  font-size: 0.92rem;
 }
 
 .headerCell {
-  font-size: 14px;
+  padding-right: 4px;
+  white-space: nowrap;
 }
 
+/* Empty states + create bar */
 .noData {
-  padding: 12px 0;
+  padding: 12px;
   color: #666;
-  font-style: italic;
 }
 
 .createBar {
-  margin-top: 14px;
-  display: flex;
+  margin-top: 10px;
 }
 
 .addBtn {
-  padding: 8px 12px;
-  border: none;
-  background: #007bff;
+  background: #2f7bfd;
   color: #fff;
-  border-radius: 8px;
-  font-weight: 700;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
   cursor: pointer;
+}
 
-  &:hover {
-    background: #0056b3;
-  }
+.addBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

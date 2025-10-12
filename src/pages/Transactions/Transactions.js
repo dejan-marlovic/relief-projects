@@ -50,7 +50,7 @@ const headerLabels = [
   "Actions",
 ];
 
-// Minimal required fields for a new transaction (adjust if your backend requires more)
+// Minimal required fields for a new transaction (adjust to your backend rules)
 const isValidNew = (v, selectedProjectId) =>
   v &&
   (v.projectId || selectedProjectId) &&
@@ -61,11 +61,27 @@ const Transactions = ({ refreshTrigger }) => {
   const { selectedProjectId } = useContext(ProjectContext);
 
   const [transactions, setTransactions] = useState([]);
-  const [editingId, setEditingId] = useState(null); // number | "new" | null
-  const [editedValues, setEditedValues] = useState({}); // { [id]: values }
-  const [orgOptions, setOrgOptions] = useState([]); // [{id, name}]
+  const [editingId, setEditingId] = useState(null);
+  const [editedValues, setEditedValues] = useState({});
+
+  // Dropdown data
+  const [orgOptions, setOrgOptions] = useState([]);
+  const [projectOptions, setProjectOptions] = useState([]);
+  const [statusOptions, setStatusOptions] = useState([]);
+  const [fxOptions, setFxOptions] = useState([]);
+  const [currencies, setCurrencies] = useState([]);
 
   const token = useMemo(() => localStorage.getItem("authToken"), []);
+  const authHeaders = useMemo(
+    () =>
+      token
+        ? {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          }
+        : { "Content-Type": "application/json" },
+    [token]
+  );
 
   const fetchTransactions = useCallback(
     async (projectId) => {
@@ -76,14 +92,10 @@ const Transactions = ({ refreshTrigger }) => {
       try {
         const res = await fetch(
           `${BASE_URL}/api/transactions/project/${projectId}`,
-          {
-            headers: {
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
-              "Content-Type": "application/json",
-            },
-          }
+          { headers: authHeaders }
         );
-        if (!res.ok) throw new Error("Failed to fetch transactions");
+        if (!res.ok)
+          throw new Error(`Failed to fetch transactions (${res.status})`);
         const data = await res.json();
         const list = Array.isArray(data) ? data : data ? [data] : [];
         setTransactions(list);
@@ -92,31 +104,50 @@ const Transactions = ({ refreshTrigger }) => {
         setTransactions([]);
       }
     },
-    [token]
+    [authHeaders]
   );
 
-  // Fetch organization options once
+  // Fetch all dropdown options once per token change
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(
-          `${BASE_URL}/api/organizations/active/options`,
-          {
-            headers: {
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        if (!res.ok) throw new Error("Failed to fetch organizations");
-        const data = await res.json();
-        setOrgOptions(Array.isArray(data) ? data : []);
+        const [orgRes, projRes, statRes, fxRes, curRes] = await Promise.all([
+          fetch(`${BASE_URL}/api/organizations/active/options`, {
+            headers: authHeaders,
+          }),
+          fetch(`${BASE_URL}/api/projects/ids-names`, { headers: authHeaders }),
+          fetch(`${BASE_URL}/api/transaction-statuses/active`, {
+            headers: authHeaders,
+          }),
+          fetch(`${BASE_URL}/api/exchange-rates/active`, {
+            headers: authHeaders,
+          }),
+          fetch(`${BASE_URL}/api/currencies/active`, { headers: authHeaders }),
+        ]);
+
+        if (cancelled) return;
+
+        setOrgOptions(orgRes.ok ? await orgRes.json() : []);
+        setProjectOptions(projRes.ok ? await projRes.json() : []);
+        setStatusOptions(statRes.ok ? await statRes.json() : []);
+        setFxOptions(fxRes.ok ? await fxRes.json() : []);
+        setCurrencies(curRes.ok ? await curRes.json() : []);
       } catch (e) {
-        console.error("Error fetching organization options:", e);
-        setOrgOptions([]);
+        if (!cancelled) {
+          console.error("Error fetching dropdown options:", e);
+          setOrgOptions([]);
+          setProjectOptions([]);
+          setStatusOptions([]);
+          setFxOptions([]);
+          setCurrencies([]);
+        }
       }
     })();
-  }, [token]);
+    return () => {
+      cancelled = true;
+    };
+  }, [authHeaders]);
 
   useEffect(() => {
     fetchTransactions(selectedProjectId);
@@ -153,7 +184,7 @@ const Transactions = ({ refreshTrigger }) => {
       ...prev,
       new: {
         ...blankTx,
-        projectId: selectedProjectId || "", // prefill with current project
+        projectId: selectedProjectId || "",
       },
     }));
   };
@@ -174,8 +205,6 @@ const Transactions = ({ refreshTrigger }) => {
     if (!values) return;
 
     const isCreate = id === "new";
-
-    // Ensure projectId is set to the selected project on create
     const effectiveProjectId = isCreate
       ? values.projectId || selectedProjectId
       : values.projectId ?? null;
@@ -235,10 +264,7 @@ const Transactions = ({ refreshTrigger }) => {
           : `${BASE_URL}/api/transactions/${id}`,
         {
           method: isCreate ? "POST" : "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
+          headers: authHeaders,
           body: JSON.stringify(payload),
         }
       );
@@ -275,7 +301,7 @@ const Transactions = ({ refreshTrigger }) => {
     try {
       const res = await fetch(`${BASE_URL}/api/transactions/${id}`, {
         method: "DELETE",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        headers: authHeaders,
       });
       if (!res.ok) throw new Error("Failed to delete transaction");
       await fetchTransactions(selectedProjectId);
@@ -287,36 +313,42 @@ const Transactions = ({ refreshTrigger }) => {
 
   return (
     <div className={styles.container}>
-      <div className={`${styles.row} ${styles.headerRow}`}>
-        {headerLabels.map((h) => (
-          <div key={h} className={styles.headerCell}>
-            {h}
-          </div>
-        ))}
-      </div>
+      <div className={styles.table}>
+        <div className={`${styles.gridRow} ${styles.headerRow}`}>
+          {headerLabels.map((h) => (
+            <div key={h} className={styles.headerCell}>
+              {h}
+            </div>
+          ))}
+        </div>
 
-      {!selectedProjectId ? (
-        <p className={styles.noData}>
-          Select a project to see its transactions.
-        </p>
-      ) : transactions.length === 0 ? (
-        <p className={styles.noData}>No transactions for this project.</p>
-      ) : (
-        transactions.map((tx) => (
-          <Transaction
-            key={tx.id}
-            tx={tx}
-            isEditing={editingId === tx.id}
-            editedValues={editedValues[tx.id]}
-            onEdit={() => startEdit(tx)}
-            onChange={onChange}
-            onSave={save}
-            onCancel={cancel}
-            onDelete={remove}
-            organizations={orgOptions}
-          />
-        ))
-      )}
+        {!selectedProjectId ? (
+          <p className={styles.noData}>
+            Select a project to see its transactions.
+          </p>
+        ) : transactions.length === 0 ? (
+          <p className={styles.noData}>No transactions for this project.</p>
+        ) : (
+          transactions.map((tx) => (
+            <Transaction
+              key={tx.id}
+              tx={tx}
+              isEditing={editingId === tx.id}
+              editedValues={editedValues[tx.id]}
+              onEdit={() => startEdit(tx)}
+              onChange={onChange}
+              onSave={save}
+              onCancel={cancel}
+              onDelete={remove}
+              organizations={orgOptions}
+              projects={projectOptions}
+              statuses={statusOptions}
+              exchangeRates={fxOptions}
+              currencies={currencies}
+            />
+          ))
+        )}
+      </div>
 
       <div className={styles.createBar}>
         {editingId === "new" ? (
@@ -329,6 +361,10 @@ const Transactions = ({ refreshTrigger }) => {
             onCancel={cancel}
             onDelete={() => {}}
             organizations={orgOptions}
+            projects={projectOptions}
+            statuses={statusOptions}
+            exchangeRates={fxOptions}
+            currencies={currencies}
           />
         ) : (
           <button
