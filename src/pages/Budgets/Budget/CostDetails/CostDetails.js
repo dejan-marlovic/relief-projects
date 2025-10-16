@@ -11,6 +11,10 @@ const blankCostDetail = {
   noOfUnits: "",
   unitPrice: "",
   percentageCharging: "",
+  amountLocalCurrency: "",
+  amountReportingCurrency: "",
+  amountGBP: "",
+  amountEuro: "",
 };
 
 // helper: Required fields for creating a new cost detail
@@ -20,7 +24,12 @@ const isValidNew = (v) =>
   v.costTypeId !== "" &&
   v.costId !== "" &&
   v.noOfUnits !== "" &&
-  v.unitPrice !== "";
+  v.unitPrice !== "" &&
+  v.percentageCharging !== "" &&
+  v.amountLocalCurrency !== "" &&
+  v.amountReportingCurrency !== "" &&
+  v.amountGBP !== "" &&
+  v.amountEuro !== "";
 
 const CostDetails = ({ budgetId, refreshTrigger }) => {
   const [costTypes, setCostTypes] = useState([]);
@@ -93,6 +102,10 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
         percentageCharging: cost.percentageCharging,
         costTypeId: cost.costTypeId,
         costId: cost.costId,
+        amountLocalCurrency: cost.amountLocalCurrency,
+        amountReportingCurrency: cost.amountReportingCurrency,
+        amountGBP: cost.amountGBP,
+        amountEuro: cost.amountEuro,
       },
     }));
   };
@@ -106,11 +119,16 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
   };
 
   const handleChange = (field, value) => {
+    const toNumOrBlank = (v) =>
+      v === "" ? "" : Number.isNaN(Number(v)) ? v : Number(v);
+
     setEditedValues((prev) => ({
       ...prev,
       [editingId]: {
         ...prev[editingId],
-        [field]: value,
+        [field]: ["costDescription"].includes(field)
+          ? value
+          : toNumOrBlank(value),
       },
     }));
   };
@@ -126,7 +144,7 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
       // Block save if required fields are missing to avoid backend "must not be null"
       if (!isValidNew(values)) {
         alert(
-          "Please fill in Description, Type, Category, Units and Unit price before saving."
+          "Please fill in Description, Type, Category, Units, Unit price, % Charged and all Amounts before saving."
         );
         return;
       }
@@ -142,6 +160,10 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
           values.percentageCharging === ""
             ? null
             : Number(values.percentageCharging),
+        amountLocalCurrency: Number(values.amountLocalCurrency),
+        amountReportingCurrency: Number(values.amountReportingCurrency),
+        amountGBP: Number(values.amountGBP),
+        amountEuro: Number(values.amountEuro),
       };
 
       try {
@@ -173,11 +195,32 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
       return;
     }
 
-    // UPDATE flow
+    // UPDATE flow (send exactly what user set, no auto-compute)
     const original = costDetails.find((c) => c.costDetailId === costId);
     if (!original) return;
 
-    const fullPayload = { ...original, ...values };
+    const merged = { ...original, ...values };
+
+    const fullPayload = {
+      ...merged,
+      // ensure numbers for numeric fields
+      noOfUnits: Number(merged.noOfUnits),
+      unitPrice: Number(merged.unitPrice),
+      percentageCharging:
+        merged.percentageCharging === ""
+          ? null
+          : Number(merged.percentageCharging),
+      amountLocalCurrency:
+        merged.amountLocalCurrency === ""
+          ? null
+          : Number(merged.amountLocalCurrency),
+      amountReportingCurrency:
+        merged.amountReportingCurrency === ""
+          ? null
+          : Number(merged.amountReportingCurrency),
+      amountGBP: merged.amountGBP === "" ? null : Number(merged.amountGBP),
+      amountEuro: merged.amountEuro === "" ? null : Number(merged.amountEuro),
+    };
 
     try {
       const response = await fetch(`${BASE_URL}/api/cost-details/${costId}`, {
@@ -252,21 +295,24 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
 
   return (
     <div>
+      {/* Header */}
+      <div className={styles.headerRow}>
+        <div className={styles.headerCellDescription}>Description</div>
+        <div className={styles.headerCellType}>Type</div>
+        <div className={styles.headerCellCategory}>Category</div>
+        <div className={styles.headerCellUnits}>Units</div>
+        <div className={styles.headerCellCharged}>Price / %</div>
+        <div className={styles.headerCellAmounts}>Amounts</div>
+        <div className={styles.headerCellActions}></div>
+      </div>
+
+      {/* Existing data */}
       {costDetails.length === 0 ? (
         <p className={styles.noDataMessage}>
           There are no cost details for this budget.
         </p>
       ) : (
         <>
-          <div className={styles.headerRow}>
-            <div className={styles.headerCellDescription}>Description</div>
-            <div className={styles.headerCellType}>Type</div>
-            <div className={styles.headerCellCategory}>Category</div>
-            <div className={styles.headerCellUnits}>Units × Price</div>
-            <div className={styles.headerCellCharged}>Charged</div>
-            <div className={styles.headerCellAmounts}>Amounts</div>
-          </div>
-
           {Object.entries(groupedData).map(([typeId, costGroups]) => {
             const type = costTypes.find((t) => t.id === parseInt(typeId, 10));
             return (
@@ -327,31 +373,32 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
         </>
       )}
 
-      {/* Add New button / inline create row */}
+      {/* --- CREATE ROW placed ABOVE the button --- */}
+      {editingId === "new" && (
+        <CostDetail
+          cost={{ costDetailId: "new", ...blankCostDetail }}
+          isEditing
+          editedValues={editedValues.new}
+          costTypes={costTypes}
+          costs={costs}
+          onChange={handleChange}
+          onSave={() => handleSave("new")}
+          onCancel={handleCancel}
+          // unused in create row:
+          onEdit={() => {}}
+          onDelete={() => {}}
+        />
+      )}
+
+      {/* Add New button stays visible below; disabled while create row is open */}
       <div className={styles.createBar}>
-        {editingId === "new" ? (
-          <CostDetail
-            cost={{ costDetailId: "new", ...blankCostDetail }}
-            isEditing
-            editedValues={editedValues.new}
-            costTypes={costTypes}
-            costs={costs}
-            onChange={handleChange}
-            onSave={() => handleSave("new")}
-            onCancel={handleCancel}
-            // Unused in create row:
-            onEdit={() => {}}
-            onDelete={() => {}}
-          />
-        ) : (
-          <button
-            className={styles.addBtn}
-            onClick={handleCreate}
-            disabled={!budgetId}
-          >
-            + New Cost Detail
-          </button>
-        )}
+        <button
+          className={styles.addBtn}
+          onClick={handleCreate}
+          disabled={!budgetId || editingId === "new"}
+        >
+          + New Cost Detail
+        </button>
       </div>
     </div>
   );

@@ -1,85 +1,84 @@
-/* ------ Row layout ------ */
-.costDetailContainer {
+.rowForm,
+.viewRow {
   display: flex;
-  flex-wrap: nowrap; /* force row layout */
   align-items: center;
-  border-bottom: 1px solid #ccc;
+  gap: 10px;
   padding: 8px 0;
-  gap: 14px;
-  font-size: 16px;
+  border-bottom: 1px solid #e3e3e3;
+  flex-wrap: nowrap; /* keep single row */
+  overflow-x: auto; /* allow horizontal scroll if needed */
 }
 
-.description {
-  flex: 1 1 150px;
-  font-weight: 650;
+.cell,
+.vcell {
+  flex: 0 0 auto;
+  min-width: 0;
 }
 
-.costType,
-.costCategory {
-  flex: 1 1 120px;
-  color: #666;
+.cellDescription {
+  flex: 1 1 240px;
+  min-width: 200px;
+}
+.cellType {
+  width: 120px;
+}
+.cellCategory {
+  width: 160px;
+}
+.cellUnits {
+  width: 90px;
+}
+.cellPrice {
+  width: 100px;
+}
+.cellUnitsPrice {
+  width: 150px;
+}
+.cellPercent {
+  width: 80px;
+}
+.cellAmt {
+  width: 110px;
+}
+.cellAmounts {
+  flex: 1 1 360px;
+  min-width: 320px;
+}
+.cellActions {
+  width: 96px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
 }
 
-.costCategory {
-  color: #888;
-}
-
-.costCalculation {
-  flex: 1 1 100px;
-}
-
-.percentage {
-  flex: 1 1 80px;
-}
-
-.amounts {
-  flex: 1 1 200px;
-}
-
-/* ------ Inputs ------ */
-.selectInput,
-.categorySelectInput,
-.numberInput,
-.priceInput,
-.textInput {
+.input,
+.select {
   padding: 4px 8px;
   font-size: 14px;
   border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-/* Keep specific widths */
-.selectInput {
-  width: 100px;
-}
-
-.categorySelectInput {
-  width: 120px;
-}
-
-.numberInput {
-  width: 40px;
-}
-
-.priceInput {
-  width: 60px;
-}
-
-/* Editable description input */
-.textInput {
-  width: 100%;
-  min-width: 0;
+  border-radius: 6px;
+  height: 32px;
   background: #fff;
+  box-sizing: border-box;
 }
 
-/* ------ Actions (matches Transactions) ------ */
+.select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, #999 50%),
+    linear-gradient(135deg, #999 50%, transparent 50%),
+    linear-gradient(to right, #ddd, #ddd);
+  background-position: calc(100% - 16px) calc(50% + 1px),
+    calc(100% - 11px) calc(50% + 1px), calc(100% - 32px) 50%;
+  background-size: 5px 5px, 5px 5px, 1px 60%;
+  background-repeat: no-repeat;
+  padding-right: 28px;
+}
+
 .actions {
   display: flex;
   gap: 8px;
-  flex: 0 0 auto;
   align-items: center;
 }
-
 .actionBtn {
   background: transparent;
   border: 1px solid #ccc;
@@ -96,11 +95,9 @@
     color: #007bff;
   }
 }
-
 .danger {
   border-color: #e74c3c;
   color: #e74c3c;
-
   &:hover {
     color: #fff;
     background: #e74c3c;
