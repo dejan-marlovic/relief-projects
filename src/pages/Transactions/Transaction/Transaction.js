@@ -125,6 +125,28 @@ const Transaction = ({
   const findCurrency = (currencyId) =>
     currencies.find((c) => c.id === currencyId);
 
+  const currencyLabelById = (currencyId) => {
+    if (!currencyId) return "-";
+    const cur = findCurrency(currencyId);
+    return cur ? cur.name : currencyId;
+  };
+
+  const selectCurrency = (field) => (
+    <select
+      value={ev[field] ?? tx[field] ?? ""}
+      onChange={(e) => onChange(field, toNum(e.target.value))}
+      onBlur={autoSave ? submit : undefined}
+      className={styles.input}
+    >
+      <option value="">Select currency</option>
+      {currencies.map((c) => (
+        <option key={c.id} value={c.id}>
+          {c.name} — {c.description}
+        </option>
+      ))}
+    </select>
+  );
+
   const fxLabelByFxId = (fxId) => {
     if (!fxId) return "-";
     const r = exchangeRates.find((er) => er.id === fxId);
@@ -276,11 +298,14 @@ const Transaction = ({
           ? inputNum("approvedAmount", "0.01")
           : tx.approvedAmount ?? "-"}
       </Cell>
+
+      {/* 10: Approved Curr (changed to dropdown + label) */}
       <Cell className={hc(10)}>
         {isEditing
-          ? inputNum("approvedAmountCurrencyId")
-          : tx.approvedAmountCurrencyId ?? "-"}
+          ? selectCurrency("approvedAmountCurrencyId")
+          : currencyLabelById(tx.approvedAmountCurrencyId)}
       </Cell>
+
       <Cell className={hc(11)}>
         {isEditing
           ? selectFx("approvedAmountExchangeRateId")
