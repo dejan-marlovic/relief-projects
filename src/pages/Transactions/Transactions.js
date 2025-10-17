@@ -47,7 +47,7 @@ const headerLabels = [
   "2nd Orig",
   "Own Contrib",
   "Date Planned",
-  "OK Status", // now NON-sticky (normal column)
+  "OK Status", // non-sticky
 ];
 
 // column widths (px) in the same order as headerLabels
@@ -146,7 +146,7 @@ const Transactions = ({ refreshTrigger }) => {
     [authHeaders]
   );
 
-  // Fetch all dropdown options once per token change
+  // Fetch dropdown options
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -417,7 +417,7 @@ const Transactions = ({ refreshTrigger }) => {
           ))}
         </div>
 
-        {/* Body */}
+        {/* Body (existing transactions) */}
         {!selectedProjectId ? (
           <p className={styles.noData}>
             Select a project to see its transactions.
@@ -447,10 +447,9 @@ const Transactions = ({ refreshTrigger }) => {
             />
           ))
         )}
-      </div>
 
-      <div className={styles.createBar}>
-        {editingId === "new" ? (
+        {/* --- INLINE CREATE ROW (now rendered LAST in the list) --- */}
+        {editingId === "new" && (
           <Transaction
             tx={{ id: "new", ...blankTx, projectId: selectedProjectId || "" }}
             isEditing
@@ -467,20 +466,25 @@ const Transactions = ({ refreshTrigger }) => {
             visibleCols={visibleCols}
             isEven={false}
           />
-        ) : (
-          <button
-            className={styles.addBtn}
-            onClick={startCreate}
-            disabled={!selectedProjectId}
-            title={
-              !selectedProjectId
-                ? "Select a project first"
-                : "Create new transaction"
-            }
-          >
-            + New Transaction
-          </button>
         )}
+      </div>
+
+      {/* Add button below table; disabled while the create row is open */}
+      <div className={styles.createBar}>
+        <button
+          className={styles.addBtn}
+          onClick={startCreate}
+          disabled={!selectedProjectId || editingId === "new"}
+          title={
+            !selectedProjectId
+              ? "Select a project first"
+              : editingId === "new"
+              ? "Finish the current draft first"
+              : "Create new transaction"
+          }
+        >
+          + New Transaction
+        </button>
       </div>
     </div>
   );
