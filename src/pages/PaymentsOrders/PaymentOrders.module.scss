@@ -1,19 +1,39 @@
-.row {
+.container {
 }
 
+.table {
+  overflow: auto;
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  background: #fff;
+
+  /* CSS vars the row will read */
+  --po-grid-cols: 110px; /* fallback */
+  --po-header-bg: #f6f7fb;
+  --po-header-border: #e5e7eb;
+}
+
+/* Grid helpers for the header row ONLY (the body rows use the row module) */
 .gridRow {
   display: grid;
-  grid-template-columns: var(--po-grid-cols); /* set by the table later */
+  grid-template-columns: var(--po-grid-cols);
   align-items: center;
   column-gap: 8px;
-  padding: 8px 12px;
-  border-bottom: 1px solid #f1f1f1;
+  min-width: 1000px; /* let it scroll horizontally if needed */
+}
+
+.headerRow {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--po-header-bg);
+  border-bottom: 1px solid var(--po-header-border);
+  padding: 10px 12px;
+  font-weight: 600;
   font-size: 0.92rem;
 }
 
-.cell {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.headerCell {
   white-space: nowrap;
+  padding-right: 4px;
 }

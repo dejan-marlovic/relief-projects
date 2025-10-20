@@ -32,7 +32,11 @@ const fake = {
 
 export default function PaymentOrders() {
   // build the CSS variable string "110px 140px ..."
+  //const result = useMemo(() => someComputation(), [dependencies]);
+  //useMemo is a React hook that lets you cache the
+  // result of a calculation so it doesn’t get recomputed on every re-render.
   const gridCols = useMemo(
+    //"110px 140px 180px 90px 300px 140px 160px 200px 140px"
     () => BASE_COL_WIDTHS.map((w) => `${w}px`).join(" "),
     []
   );
