@@ -1,7 +1,8 @@
-// src/components/PaymentOrders/PaymentOrders.jsx
-import { useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import PaymentOrder from "./PaymentOrder/PaymentOrder";
 import styles from "./PaymentOrders.module.scss";
+
+const BASE_URL = "http://localhost:8080";
 
 const headerLabels = [
   "Actions",
@@ -14,40 +15,45 @@ const headerLabels = [
   "Message",
   "Pin Code",
 ];
-
-// widths must match headers
 const BASE_COL_WIDTHS = [110, 140, 180, 90, 300, 140, 160, 200, 140];
 
-const fake = {
-  id: 1,
-  transactionId: null,
-  paymentOrderDate: "2025-01-01T12:00:00Z",
-  numberOfTransactions: 2,
-  paymentOrderDescription: "Seed PO",
-  amount: 100,
-  totalAmount: 100,
-  message: "Hello",
-  pinCode: "1234",
-};
+const PaymentOrders = () => {
+  const [orders, setOrders] = useState([]);
 
-export default function PaymentOrders() {
-  // build the CSS variable string "110px 140px ..."
-  //const result = useMemo(() => someComputation(), [dependencies]);
-  //useMemo is a React hook that lets you cache the
-  // result of a calculation so it doesn’t get recomputed on every re-render.
-  const gridCols = useMemo(
-    //"110px 140px 180px 90px 300px 140px 160px 200px 140px"
-    () => BASE_COL_WIDTHS.map((w) => `${w}px`).join(" "),
-    []
+  const token = useMemo(() => localStorage.getItem("authToken"), []);
+  const authHeaders = useMemo(
+    () =>
+      token
+        ? {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          }
+        : { "Content-Type": "application/json" },
+    [token]
   );
+
+  const fetchOrders = useCallback(async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/payment-orders/active`, {
+        headers: authHeaders,
+      });
+      if (!res.ok) throw new Error(`Failed ${res.status}`);
+      setOrders(await res.json());
+    } catch (e) {
+      console.error(e);
+      setOrders([]);
+    }
+  }, [authHeaders]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
+
+  const gridCols = BASE_COL_WIDTHS.map((w) => `${w}px`).join(" ");
 
   return (
     <div className={styles.container}>
-      <div
-        className={styles.table}
-        style={{ ["--po-grid-cols"]: gridCols }} // custom CSS var for the row grid
-      >
-        {/* Header */}
+      <div className={styles.table} style={{ ["--po-grid-cols"]: gridCols }}>
         <div className={`${styles.gridRow} ${styles.headerRow}`}>
           {headerLabels.map((h) => (
             <div key={h} className={styles.headerCell}>
@@ -56,9 +62,14 @@ export default function PaymentOrders() {
           ))}
         </div>
 
-        {/* Smoke row */}
-        <PaymentOrder po={fake} />
+        {orders.length === 0 ? (
+          <p style={{ padding: 12, color: "#666" }}>No payment orders.</p>
+        ) : (
+          orders.map((po) => <PaymentOrder key={po.id} po={po} />)
+        )}
       </div>
     </div>
   );
-}
+};
+
+export default PaymentOrders;
