@@ -1,3 +1,38 @@
+// src/components/PaymentOrders/PaymentOrders.jsx
+
+/*
+//useState: Store component state. Adds local, reactive state to a function component.
+Store things like input values, toggles, counters, fetched data, etc.
+Whenever you call the setter, React re-renders with the new value.
+
+example:
+const [count, setCount] = useState(0);
+
+return (
+  <button onClick={() => setCount(count + 1)}>
+    You clicked {count} times
+  </button>
+);
+
+/*
+useEffect: Runs side effects after render (things that affect the outside world). Fetch data, set up listeners
+
+Fetching data
+Setting up event listeners or timers
+Syncing with browser APIs
+Cleaning up when the component unmounts
+
+useEffect(() => {
+  const timer = setInterval(() => console.log("tick"), 1000);
+  return () => clearInterval(timer); // cleanup
+}, []); // [] means r
+
+useCallback: Caches a function so that it keeps the same identity between renders — unless dependencies change.
+
+const handleClick = useCallback(() => {
+  console.log("Clicked!");
+}, []); /
+*/
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import PaymentOrder from "./PaymentOrder/PaymentOrder";
 import styles from "./PaymentOrders.module.scss";
