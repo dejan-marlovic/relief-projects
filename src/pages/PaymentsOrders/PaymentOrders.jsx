@@ -69,6 +69,7 @@ const PaymentOrders = () => {
 
   const fetchOrders = useCallback(async () => {
     try {
+      //standard fetch with deafult get. Takes API call as string and object headers: authHeaders
       const res = await fetch(`${BASE_URL}/api/payment-orders/active`, {
         headers: authHeaders,
       });
@@ -80,10 +81,12 @@ const PaymentOrders = () => {
     }
   }, [authHeaders]);
 
+  //we call save useCallbeck fetchOrders in useEffect hook
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
 
+  //gridCols for SCSS variable
   const gridCols = BASE_COL_WIDTHS.map((w) => `${w}px`).join(" ");
 
   return (
