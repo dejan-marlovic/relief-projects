@@ -8,7 +8,7 @@
 import styles from "./PaymentOrder.module.scss";
 //react-icons library popular package /fi = the Feather Icons pack
 //FiEdit, FiTrash2, FiSave, FiX = specific icons from that pack, exposed as React components
-import { FiEdit, FiTrash2, FiSave, Fix } from "react-icons/fi";
+import { FiEdit, FiTrash2, FiSave, FiX } from "react-icons/fi";
 
 //The component returns a <div> with a composed className and renders whatever you put between
 //<Cell> ... </Cell> as its children
@@ -50,23 +50,188 @@ function toDateTimeLocal(iso) {
   );
 }
 
-function PaymentOrder({ po }) {
-  // shows 9 columns, plain text for now
-  //?? is the nullish coalescing operator in JavaScript.
-  //?? returns the left value unless that value is null or undefined.
+const PaymentOrder = ({
+  po,
+  isEditing = false,
+  editedValues,
+  onEdit,
+  onChange,
+  onSave,
+  onCancel,
+  onDelete,
+}) => {
+  //alias ev with fallback
+  //Provides a fallback: If editedValues is undefined/null (i.e., not in edit mode yet),
+  // ev becomes an empty object {}.
+
+  /*
+  Avoids crashes when reading fields
+  Later you do ev[field]. If editedValues were undefined, editedValues[field] would throw. With ev = {}
+  you can safely do ev[field] (it’s just undefined), and then your chain ev[field] ?? po[field] ?? "" works.
+
+  Keeps inputs controlled
+  Your inputs use value={ev[field] ?? po[field] ?? ""}. The final "" ensures React sees a string/number, not undefined, avoiding the “changing an uncontrolled input to controlled” warning.
+
+  Less repetition & cleaner code
+  You reference ev[...] many times. Having the alias keeps the code compact and readable.
+  */
+  const ev = editedValues || {};
+  const submit = (e) => {
+    //Cancels the browser’s default action for the event
+    //Typical defaults you might prevent: a form submit (which would reload/navigate), a link click (navigation), etc.
+    //Save button isn’t inside a <form> (at least in the snippet), so there’s no default submit to stop right now.
+    // But adding preventDefault() is a safe guard in case this row later ends up
+    // inside a form, or you switch to a form onSubmit={submit} pattern. It prevents unexpected page reloads.
+    e.preventDefault();
+
+    //Why it matters here: your row or a parent container may have its own onClick (e.g., “select row”,
+    // “toggle expand”, “navigate to detail”). Without stopPropagation(),
+    // clicking Save could also trigger that parent handler—causing
+    // weird side effects like leaving edit mode, navigating away, etc.
+    e.stopPropagation();
+    onSave();
+  };
+  //Empty stays empty, everything else becomes a Number.
+
+  //Why not just Number(v) always?
+
+  //Because when the field is empty,
+  // Number("") becomes 0 (surprising!),
+  // or if it’s a partial like "-" or ".", it becomes NaN. Either result breaks UX:
+  //Users can’t temporarily clear/half-type values.
+  //You might render NaN back into the input or lose control of it.
+  /*
+  You render with:
+
+  value={ev[field] ?? po[field] ?? ""}
+  Thanks to toNum, ev[field] is either "" or a number. That keeps the input controlled and predictable.
+  */
+  const toNum = (v) => (v === "" ? "" : Number(v));
+
+  const inputNum = (field, step = "1") => (
+    <input
+      type="number"
+      step={step}
+      value={ev[field] ?? po[field] ?? ""}
+      onChange={(e) => onChange(field, toNum(e.target.value))}
+      className={styles.input}
+    />
+  );
+
+  const inputText = (field) => (
+    <input
+      type="text"
+      value={ev[field] ?? po[field] ?? ""}
+      onChange={(e) => onChange(field, e.target.value)}
+      className={styles.input}
+    />
+  );
+
+  const inputDate = (
+    <input
+      type="datetime-local"
+      value={toDateTimeLocal(ev.paymentOrderDate ?? po.paymentOrderDate)}
+      onChange={(e) =>
+        onChange("paymentOrderDate", new Date(e.target.value).toISOString())
+      }
+      className={styles.input}
+    />
+  );
+
   return (
     <div className={`${styles.row} ${styles.gridRow}`}>
-      <Cell>—</Cell> {/* actions placeholder */}
+      <Cell>
+        {isEditing ? (
+          // FIX: className should use the CSS module (was "styles.actions")
+          <div className={styles.actions}>
+            <button
+              type="button"
+              className={styles.actionBtn}
+              onClick={submit}
+              title="Save"
+            >
+              <FiSave />
+            </button>
+            <button
+              type="button"
+              className={`${styles.actionBtn} ${styles.danger}`}
+              onClick={onCancel}
+              title="Cancel"
+            >
+              <FiX />
+            </button>
+          </div>
+        ) : (
+          // FIX: add actions container and restore Edit button
+          <div className={styles.actions}>
+            <button
+              type="button"
+              className={styles.actionBtn}
+              onClick={(e) => {
+                // keep clicks from triggering parent row handlers
+                e.preventDefault();
+                e.stopPropagation();
+                onEdit();
+              }}
+              title="Edit"
+            >
+              <FiEdit />
+            </button>
+            <button
+              type="button"
+              className={`${styles.actionBtn} ${styles.danger}`}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onDelete(po.id);
+              }}
+              title="Delete"
+            >
+              <FiTrash2 />
+            </button>
+          </div>
+        )}
+      </Cell>
+
       <Cell>{po.transactionId ?? "-"}</Cell>
-      <Cell>{po.paymentOrderDate ?? "-"}</Cell>
-      <Cell>{po.numberOfTransactions ?? "-"}</Cell>
-      <Cell>{po.paymentOrderDescription ?? "-"}</Cell>
-      <Cell>{po.amount ?? "-"}</Cell>
-      <Cell>{po.totalAmount ?? "-"}</Cell>
-      <Cell>{po.message ?? "-"}</Cell>
-      <Cell>{po.pinCode ?? "-"}</Cell>
+      {
+        //Editing? show the input.
+        //Not editing + have a date? show a formatted date/time.
+        //Not editing + no date? show a dash placeholder.
+      }
+      <Cell>
+        {isEditing
+          ? inputDate
+          : po.paymentOrderDate
+          ? new Date(po.paymentOrderDate).toLocaleString()
+          : "-"}
+      </Cell>
+      <Cell>
+        {
+          //inputNum is a tiny factory that can render a number input for any field.
+          //It needs to know which key in your data it should read/write.
+        }
+        {isEditing
+          ? inputNum("numberOfTransactions", "1")
+          : po.numberOfTransactions ?? "-"}
+      </Cell>
+      <Cell>
+        {isEditing
+          ? inputText("paymentOrderDescription")
+          : po.paymentOrderDescription ?? "-"}
+      </Cell>
+      <Cell>
+        {isEditing ? inputNum("amount", "0.000001") : po.amount ?? "-"}
+      </Cell>
+      <Cell>
+        {isEditing
+          ? inputNum("totalAmount", "0.000001")
+          : po.totalAmount ?? "-"}
+      </Cell>
+      <Cell>{isEditing ? inputText("message") : po.message ?? "-"}</Cell>
+      <Cell>{isEditing ? inputText("pinCode") : po.pinCode ?? "-"}</Cell>
     </div>
   );
-}
+};
 
 export default PaymentOrder;
