@@ -1,19 +1,83 @@
+/* Each data row uses the same grid as the header via the CSS var */
 .row {
 }
 
+/* Use the same grid declaration as the header (pulled from parent’s CSS var) */
 .gridRow {
   display: grid;
-  grid-template-columns: var(--po-grid-cols); /* set by the table later */
+  grid-template-columns: var(--po-grid-cols);
   align-items: center;
   column-gap: 8px;
+
   padding: 8px 12px;
   border-bottom: 1px solid #f1f1f1;
   font-size: 0.92rem;
 }
 
+/* Zebra striping + hover */
+.zebraEven {
+  background: #fafafa;
+}
+.hoverable:hover {
+  background: #f5faff;
+}
+
+/* Data cells */
 .cell {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.92rem;
+  min-width: 0;
+}
+
+/* Actions area */
+.actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-start;
+}
+.actionBtn {
+  background: #f5f6f8;
+  border: 1px solid #e6e6e6;
+  border-radius: 6px;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+.actionBtn:hover {
+  background: #eef2ff;
+}
+.danger {
+  color: #d33;
+}
+
+/* Sticky first column (Actions) – data rows */
+.stickyCol {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: #fff;
+  box-shadow: 2px 0 0 rgba(0, 0, 0, 0.04);
+}
+
+/* When a column is hidden (width collapsed to 0), hide its content too */
+.hiddenCol {
+  width: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Optional hook for column-specific tweaks if needed */
+.actionsCol {
 }

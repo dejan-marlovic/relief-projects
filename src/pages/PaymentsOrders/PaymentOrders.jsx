@@ -1,29 +1,136 @@
 // src/components/PaymentOrders/PaymentOrders.jsx
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { ProjectContext } from "../../context/ProjectContext";
 import PaymentOrder from "./PaymentOrder/PaymentOrder";
 import styles from "./PaymentOrders.module.scss";
 
 const BASE_URL = "http://localhost:8080";
 
 const headerLabels = [
-  "Actions",
-  "Transaction",
-  "Date",
-  "#Tx",
-  "Description",
-  "Amount",
-  "Total Amount",
-  "Message",
-  "Pin Code",
+  "Actions", // sticky left
+  "Transaction", // transactionId
+  "Date", // paymentOrderDate
+  "#Tx", // numberOfTransactions
+  "Description", // paymentOrderDescription
+  "Amount", // amount
+  "Total Amount", // totalAmount
+  "Message", // message
+  "Pin Code", // pinCode
 ];
 
-const BASE_COL_WIDTHS = [110, 140, 180, 90, 300, 140, 160, 200, 140];
+// column widths (px) in the same order as headerLabels
+const BASE_COL_WIDTHS = [
+  110, // Actions
+  160, // Transaction
+  180, // Date
+  90, // #Tx
+  300, // Description
+  140, // Amount
+  160, // Total Amount
+  200, // Message
+  140, // Pin Code
+];
 
 function PaymentOrders() {
+  // ← get the current project like in Transactions
+  const { selectedProjectId } = useContext(ProjectContext);
+
   const [orders, setOrders] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
+  const [txOptions, setTxOptions] = useState([]);
+
+  // UI state for column toggles & compact mode (same pattern as Transactions)
+  const [compact, setCompact] = useState(false);
+  const [columnsOpen, setColumnsOpen] = useState(false);
+  const [visibleCols, setVisibleCols] = useState(() =>
+    Array(headerLabels.length).fill(true)
+  );
+
+  // Only column 0 (Actions) is locked visible
+  const toggleCol = (i) => {
+    if (i === 0) return;
+    setVisibleCols((prev) => {
+      const next = [...prev];
+      next[i] = !next[i];
+      return next;
+    });
+  };
+
+  // Auth headers (memoized)
+  const token = useMemo(() => localStorage.getItem("authToken"), []);
+  const authHeaders = useMemo(
+    () =>
+      token
+        ? {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          }
+        : { "Content-Type": "application/json" },
+    [token]
+  );
+
+  // Fetch list of payment orders (FILTERED BY PROJECT)
+  const fetchOrders = useCallback(
+    async (projectId) => {
+      if (!projectId) {
+        setOrders([]);
+        return;
+      }
+      try {
+        const res = await fetch(
+          `${BASE_URL}/api/payment-orders/project/${projectId}`,
+          { headers: authHeaders }
+        );
+        if (!res.ok) throw new Error(`Failed ${res.status}`);
+        setOrders(await res.json());
+      } catch (e) {
+        console.error(e);
+        setOrders([]);
+      }
+    },
+    [authHeaders]
+  );
+
+  // Fetch transaction options for Transaction dropdown (also filtered by project)
+  const fetchTxOptions = useCallback(
+    async (projectId) => {
+      if (!projectId) {
+        setTxOptions([]);
+        return;
+      }
+      try {
+        // same per-project scope as Transactions
+        const res = await fetch(
+          `${BASE_URL}/api/transactions/project/${projectId}`,
+          { headers: authHeaders }
+        );
+        if (!res.ok) throw new Error(`Failed ${res.status}`);
+        const data = await res.json();
+        setTxOptions(Array.isArray(data) ? data : data ? [data] : []);
+      } catch (e) {
+        console.error(e);
+        setTxOptions([]);
+      }
+    },
+    [authHeaders]
+  );
+
+  // Load lists whenever project (or headers) change
+  useEffect(() => {
+    fetchOrders(selectedProjectId);
+    fetchTxOptions(selectedProjectId);
+    // Optional: cancel any in-progress edit when project changes
+    setEditingId(null);
+    setEditedValues({});
+  }, [fetchOrders, fetchTxOptions, selectedProjectId]);
 
   // Begin editing a row: seed the draft with current values
   const startEdit = (po) => {
@@ -41,6 +148,24 @@ function PaymentOrders() {
         pinCode: po.pinCode ?? "",
       },
     }));
+  };
+
+  // Start create (inline new row)
+  const blankPO = {
+    transactionId: "",
+    paymentOrderDate: "",
+    numberOfTransactions: "",
+    paymentOrderDescription: "",
+    amount: "",
+    totalAmount: "",
+    message: "",
+    pinCode: "",
+  };
+
+  const startCreate = () => {
+    setEditingId("new");
+    // Functional updater avoids stale state; clone the blank template
+    setEditedValues((prev) => ({ ...prev, new: { ...blankPO } }));
   };
 
   // Update a single field in the current draft
@@ -65,37 +190,6 @@ function PaymentOrders() {
     });
   };
 
-  // Auth headers (memoized)
-  const token = useMemo(() => localStorage.getItem("authToken"), []);
-  const authHeaders = useMemo(
-    () =>
-      token
-        ? {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          }
-        : { "Content-Type": "application/json" },
-    [token]
-  );
-
-  // Fetch list
-  const fetchOrders = useCallback(async () => {
-    try {
-      const res = await fetch(`${BASE_URL}/api/payment-orders/active`, {
-        headers: authHeaders,
-      });
-      if (!res.ok) throw new Error(`Failed ${res.status}`);
-      setOrders(await res.json());
-    } catch (e) {
-      console.error(e);
-      setOrders([]);
-    }
-  }, [authHeaders]);
-
-  useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
-
   // Save current draft (POST for create, PUT for update)
   const save = async () => {
     const id = editingId;
@@ -106,12 +200,8 @@ function PaymentOrders() {
 
     /*
     convert strings from inputs into the right types (numbers/strings),
-
     turn “empty” values into null or "" consistently,
-
     avoid sending undefined.
-
-    Type safety: Inputs give you strings; API likely expects numbers/strings/nulls. Converting here
     */
     const payload = {
       transactionId: v.transactionId !== "" ? Number(v.transactionId) : null,
@@ -121,7 +211,6 @@ function PaymentOrders() {
       paymentOrderDescription: v.paymentOrderDescription || "",
       amount: v.amount !== "" ? Number(v.amount) : null,
       totalAmount: v.totalAmount !== "" ? Number(v.totalAmount) : null,
-      //This guarantees the backend always gets a string (never undefined).
       message: v.message || "",
       pinCode: v.pinCode || "",
     };
@@ -134,7 +223,7 @@ function PaymentOrders() {
         {
           method: isCreate ? "POST" : "PUT",
           headers: authHeaders,
-          body: JSON.stringify(payload), // ← ensure payload is sent
+          body: JSON.stringify(payload),
         }
       );
       if (!res.ok)
@@ -142,12 +231,7 @@ function PaymentOrders() {
           `${isCreate ? "Create" : "Update"} failed ${res.status}`
         );
 
-      //Re-fetch the list from the server after a successful create/update.
-      await fetchOrders();
-
-      //Exit edit mode and clear the draft edits for the row you just saved.
-      //This collapses the inline editor back to read-only and
-      //removes editedValues[id], so the next time you edit it, you re-seed from the fresh server data you just fetched.
+      await fetchOrders(selectedProjectId); // ← refresh list for current project
       cancel();
     } catch (e) {
       console.error(e);
@@ -165,123 +249,93 @@ function PaymentOrders() {
         headers: authHeaders,
       });
       if (!res.ok) throw new Error("Delete failed");
-      await fetchOrders();
+      await fetchOrders(selectedProjectId); // ← refresh list for current project
     } catch (e) {
       console.error(e);
       alert("Delete failed.");
     }
   };
 
-  // Build CSS var for the grid columns
-  const gridCols = BASE_COL_WIDTHS.map((w) => `${w}px`).join(" ");
-
-  const blankPO = {
-    transactionId: "",
-    paymentOrderDate: "",
-    numberOfTransactions: "",
-    paymentOrderDescription: "",
-    amount: "",
-    totalAmount: "",
-    message: "",
-    pinCode: "",
-  };
-
-  const startCreate = () => {
-    setEditingId("new");
-    //Updates the edited drafts map using the functional updater form.
-    //prev is the latest state value that React passes into updater (prevents stale state bugs).
-    //({ ...prev, new: { ...blankPO } }) builds the next state.
-    //...prev copies all existing drafts (immutably).
-    //new: { ...blankPO } adds (or replaces) the draft under the key "new" with a fresh clone of
-    //...prev (object spread)
-    //Creates a new object that contains all keys from the previous editedValues
-    //This is immutable—we don’t mutate prev; we return a brand new object so React can detect the change and re-render.
-    //{ ...blankPO }
-    //Clones the template object for your empty form (e.g., { amount: "", message: "", ... }).
-    //Cloning avoids sharing the same object reference across multiple “new” attempts. If you didn’t clone,
-    // changing one field would mutate the shared blankPO everywhere.
-
-    //Spread is shallow: it copies the top level. That’s perfect here because blankPO is a flat form object.
-    // If it had nested objects you wanted to isolate, you’d also spread those, or use a deep clone strategy.
-    setEditedValues((prev) => ({ ...prev, new: { ...blankPO } }));
-
-    /*
-
-    Why pass a function to setEditedValues?
-
-    Avoid stale state: React batches state updates. If you did:
-
-    setEditedValues({ ...editedValues, new: { ...blankPO } }); // ❌ can be stale
-
-
-    editedValues here could be an old snapshot captured by closure. With the functional form:
-
-    setEditedValues(prev => ({ ...prev, new: { ...blankPO } })); // ✅ fresh
-
-
-    React guarantees prev is the current state at the moment of the update, so you never lose existing drafts.
-
-    Next state depends on previous: You are literally building the next object from prev. 
-    That’s exactly when the functional updater is recommended.
-
-    Mental model
-
-    After these two lines, your state looks like:
-
-    editingId = "new";
-    editedValues = {
-      // ...whatever drafts existed before,
-      new: {  a fresh copy of blankPO fields  }
-    };
-
-
-    List renders a “new row” in editing mode. Inputs read from editedValues["new"], 
-    and as the user types, your onChange updates that draft.
-
-    Common pitfalls (and why your version is right)
-
-    Mutating state (don’t do this):
-
-    setEditedValues(prev => {
-      prev.new = { ...blankPO }; // ❌ mutates prev
-      return prev;               // ❌ returns same object reference
-    });
-
-
-    This can prevent React from re-rendering because the reference didn’t change.
-
-    Using non-functional form when combining updates in quick succession:
-
-    // ❌ Could drop other pending changes if `editedValues` is stale
-    setEditedValues({ ...editedValues, new: { ...blankPO } });
-
-
-    Current version—functional updater + spread cloning—is the safe, idiomatic React way.
-
-
-    */
-  };
+  // Build the CSS variable for grid columns from visibility + base widths
+  const gridCols = useMemo(() => {
+    const parts = BASE_COL_WIDTHS.map((w, i) =>
+      visibleCols[i] ? `${w}px` : "0px"
+    );
+    return parts.join(" ");
+  }, [visibleCols]);
 
   return (
     <div className={styles.container}>
-      <div className={styles.table} style={{ ["--po-grid-cols"]: gridCols }}>
+      {/* Toolbar (compact + columns) */}
+      <div className={styles.toolbar}>
+        <label className={styles.compactToggle}>
+          <input
+            type="checkbox"
+            checked={compact}
+            onChange={(e) => setCompact(e.target.checked)}
+          />
+          <span>Compact mode</span>
+        </label>
+
+        <div className={styles.columnsBox}>
+          <button
+            className={styles.columnsBtn}
+            onClick={() => setColumnsOpen((v) => !v)}
+          >
+            Columns ▾
+          </button>
+          {columnsOpen && (
+            <div className={styles.columnsPanel}>
+              {headerLabels.map((h, i) => (
+                <label key={h} className={styles.colItem}>
+                  <input
+                    type="checkbox"
+                    checked={visibleCols[i]}
+                    disabled={i === 0} // Actions locked
+                    onChange={() => toggleCol(i)}
+                  />
+                  <span>{h}</span>
+                  {i === 0 && <em className={styles.lockNote}> (locked)</em>}
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Table */}
+      <div
+        className={`${styles.table} ${compact ? styles.compact : ""}`}
+        style={{ ["--po-grid-cols"]: gridCols }}
+      >
         {/* Header */}
         <div className={`${styles.gridRow} ${styles.headerRow}`}>
-          {headerLabels.map((h) => (
-            <div key={h} className={styles.headerCell}>
+          {headerLabels.map((h, i) => (
+            <div
+              key={h}
+              className={`${styles.headerCell}
+                ${i === 0 ? styles.stickyColHeader : ""}
+                ${!visibleCols[i] ? styles.hiddenCol : ""}
+                ${i === 0 ? styles.actionsCol : ""}`}
+            >
               {h}
             </div>
           ))}
         </div>
 
         {/* Body */}
-        {orders.length === 0 ? (
-          <p style={{ padding: 12, color: "#666" }}>No payment orders.</p>
+        {!selectedProjectId ? (
+          <p className={styles.noData}>
+            Select a project to see its payment orders.
+          </p>
+        ) : orders.length === 0 ? (
+          <p className={styles.noData}>No payment orders for this project.</p>
         ) : (
-          orders.map((po) => (
+          orders.map((po, idx) => (
             <PaymentOrder
               key={po.id}
               po={po}
+              isEven={idx % 2 === 0}
               isEditing={editingId === po.id}
               editedValues={editedValues[po.id]}
               onEdit={() => startEdit(po)}
@@ -289,11 +343,13 @@ function PaymentOrders() {
               onSave={save}
               onCancel={cancel}
               onDelete={remove}
+              transactions={txOptions}
+              visibleCols={visibleCols}
             />
           ))
         )}
 
-        {/* --- INLINE CREATE ROW --- */}
+        {/* Inline create row (rendered last) */}
         {editingId === "new" && (
           <PaymentOrder
             po={{ id: "new", ...blankPO }}
@@ -303,17 +359,23 @@ function PaymentOrders() {
             onSave={save}
             onCancel={cancel}
             onDelete={() => {}}
+            transactions={txOptions}
+            visibleCols={visibleCols}
+            isEven={false}
           />
         )}
       </div>
 
-      {/* Add button below the table */}
-      <div style={{ marginTop: 10 }}>
+      {/* Create button */}
+      <div className={styles.createBar}>
         <button
+          className={styles.addBtn}
           onClick={startCreate}
-          disabled={editingId === "new"}
+          disabled={!selectedProjectId || editingId === "new"}
           title={
-            editingId === "new"
+            !selectedProjectId
+              ? "Select a project first"
+              : editingId === "new"
               ? "Finish the current draft first"
               : "Create new payment order"
           }
@@ -326,69 +388,3 @@ function PaymentOrders() {
 }
 
 export default PaymentOrders;
-
-/*
-The parent (PaymentOrders) owns all state: orders, editingId, editedValues.
-
-The child (PaymentOrder) is mostly dumb: it just renders one row and fires events when the user clicks/edits.
-
-To let the child change parent state, the parent passes functions as props:
-
-onEdit, onChange, onSave, onCancel, onDelete
-
-The child calls those props → the parent updates its state → React re-renders → the child sees new props.
-
-So: data flows down, events bubble up.
-
-
-
-Why this pattern is good
-
-Single source of truth
-All edits are in one place (parent). No risk of the row going “out of sync” with the list.
-
-Predictable data flow
-Parent updates → children re-render. Debugging is easier.
-
-Easier side-effects
-Networking (save/delete), auth headers, and error handling stay in the parent.
-
-Simple children
-PaymentOrder is reusable and easy to test; it renders whatever props say.
-
-What it’s called
-
-Lifting state up (official React docs term)
-
-Unidirectional data flow
-
-Container (smart) / Presentational (dumb) components
-
-Controlled inputs (the input’s value is derived from parent state; changes go through onChange)
-
-Mental model (tiny diagram)
-Parent: PaymentOrders (stateful)
-   ├── state: orders, editingId, editedValues
-   ├── handlers: startEdit, onChange, save, cancel, remove
-   └── render row(s) with props ↓
-
-Child: PaymentOrder (stateless-ish)
-   ↑ calls props.onEdit / onChange / onSave / onCancel / onDelete
-
-
-Down: data (po, isEditing, editedValues)
-
-Up: events (callbacks)
-
-Why not keep state in the row?
-
-You could give each row its own local state. But then:
-
-The parent needs to know when any row changed to enable Save All, refresh, etc.
-
-Deleting/refreshing the list might discard the row’s local state.
-
-Coordination between rows (e.g., “only one row can be in edit mode”) is tricky.
-
-Keeping state up (in the parent) solves these.
-*/
