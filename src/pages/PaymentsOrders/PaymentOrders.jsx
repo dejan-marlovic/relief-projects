@@ -149,6 +149,92 @@ function PaymentOrders() {
   // Build CSS var for the grid columns
   const gridCols = BASE_COL_WIDTHS.map((w) => `${w}px`).join(" ");
 
+  const blankPO = {
+    transactionId: "",
+    paymentOrderDate: "",
+    numberOfTransactions: "",
+    paymentOrderDescription: "",
+    amount: "",
+    totalAmount: "",
+    message: "",
+    pinCode: "",
+  };
+
+  const startCreate = () => {
+    setEditingId("new");
+    //Updates the edited drafts map using the functional updater form.
+    //prev is the latest state value that React passes into updater (prevents stale state bugs).
+    //({ ...prev, new: { ...blankPO } }) builds the next state.
+    //...prev copies all existing drafts (immutably).
+    //new: { ...blankPO } adds (or replaces) the draft under the key "new" with a fresh clone of
+    //...prev (object spread)
+    //Creates a new object that contains all keys from the previous editedValues
+    //This is immutable—we don’t mutate prev; we return a brand new object so React can detect the change and re-render.
+    //{ ...blankPO }
+    //Clones the template object for your empty form (e.g., { amount: "", message: "", ... }).
+    //Cloning avoids sharing the same object reference across multiple “new” attempts. If you didn’t clone,
+    // changing one field would mutate the shared blankPO everywhere.
+
+    //Spread is shallow: it copies the top level. That’s perfect here because blankPO is a flat form object.
+    // If it had nested objects you wanted to isolate, you’d also spread those, or use a deep clone strategy.
+    setEditedValues((prev) => ({ ...prev, new: { ...blankPO } }));
+
+    /*
+
+    Why pass a function to setEditedValues?
+
+    Avoid stale state: React batches state updates. If you did:
+
+    setEditedValues({ ...editedValues, new: { ...blankPO } }); // ❌ can be stale
+
+
+    editedValues here could be an old snapshot captured by closure. With the functional form:
+
+    setEditedValues(prev => ({ ...prev, new: { ...blankPO } })); // ✅ fresh
+
+
+    React guarantees prev is the current state at the moment of the update, so you never lose existing drafts.
+
+    Next state depends on previous: You are literally building the next object from prev. 
+    That’s exactly when the functional updater is recommended.
+
+    Mental model
+
+    After these two lines, your state looks like:
+
+    editingId = "new";
+    editedValues = {
+      // ...whatever drafts existed before,
+      new: {  a fresh copy of blankPO fields  }
+    };
+
+
+    Your list renders a “new row” in editing mode. Inputs read from editedValues["new"], and as the user types, your onChange updates that draft.
+
+    Common pitfalls (and why your version is right)
+
+    Mutating state (don’t do this):
+
+    setEditedValues(prev => {
+      prev.new = { ...blankPO }; // ❌ mutates prev
+      return prev;               // ❌ returns same object reference
+    });
+
+
+    This can prevent React from re-rendering because the reference didn’t change.
+
+    Using non-functional form when combining updates in quick succession:
+
+    // ❌ Could drop other pending changes if `editedValues` is stale
+    setEditedValues({ ...editedValues, new: { ...blankPO } });
+
+
+    Current version—functional updater + spread cloning—is the safe, idiomatic React way.
+
+
+    */
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.table} style={{ ["--po-grid-cols"]: gridCols }}>
