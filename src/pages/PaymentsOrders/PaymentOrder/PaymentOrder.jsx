@@ -1,9 +1,4 @@
-//ES module syntax: import <defaultName> from "<package-or-file>";
-//react is a package name. Bundler resolves it from node_modules/react
-//The line imports the default export from the react package and binds it to the local name React.
-//comes from the npm package named "react"
-//The bundler reads the package’s package.json and loads its entry file (e.g., index.js) which exports
-//import React from "react";
+// src/components/PaymentOrders/PaymentOrder/PaymentOrder.jsx
 
 import styles from "./PaymentOrder.module.scss";
 //react-icons library popular package /fi = the Feather Icons pack
@@ -76,6 +71,7 @@ const PaymentOrder = ({
   You reference ev[...] many times. Having the alias keeps the code compact and readable.
   */
   const ev = editedValues || {};
+
   const submit = (e) => {
     //Cancels the browser’s default action for the event
     //Typical defaults you might prevent: a form submit (which would reload/navigate), a link click (navigation), etc.
@@ -91,10 +87,9 @@ const PaymentOrder = ({
     e.stopPropagation();
     onSave();
   };
+
   //Empty stays empty, everything else becomes a Number.
-
   //Why not just Number(v) always?
-
   //Because when the field is empty,
   // Number("") becomes 0 (surprising!),
   // or if it’s a partial like "-" or ".", it becomes NaN. Either result breaks UX:

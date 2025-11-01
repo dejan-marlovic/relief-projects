@@ -96,12 +96,23 @@ function PaymentOrders() {
     fetchOrders();
   }, [fetchOrders]);
 
-  // Save current draft (PUT)
+  // Save current draft (POST for create, PUT for update)
   const save = async () => {
     const id = editingId;
     const v = editedValues[id];
     if (!v) return;
 
+    const isCreate = id === "new";
+
+    /*
+    convert strings from inputs into the right types (numbers/strings),
+
+    turn “empty” values into null or "" consistently,
+
+    avoid sending undefined.
+
+    Type safety: Inputs give you strings; API likely expects numbers/strings/nulls. Converting here
+    */
     const payload = {
       transactionId: v.transactionId !== "" ? Number(v.transactionId) : null,
       paymentOrderDate: v.paymentOrderDate || null,
@@ -110,22 +121,37 @@ function PaymentOrders() {
       paymentOrderDescription: v.paymentOrderDescription || "",
       amount: v.amount !== "" ? Number(v.amount) : null,
       totalAmount: v.totalAmount !== "" ? Number(v.totalAmount) : null,
+      //This guarantees the backend always gets a string (never undefined).
       message: v.message || "",
       pinCode: v.pinCode || "",
     };
 
     try {
-      const res = await fetch(`${BASE_URL}/api/payment-orders/${id}`, {
-        method: "PUT",
-        headers: authHeaders,
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error(`Update failed ${res.status}`);
+      const res = await fetch(
+        isCreate
+          ? `${BASE_URL}/api/payment-orders`
+          : `${BASE_URL}/api/payment-orders/${id}`,
+        {
+          method: isCreate ? "POST" : "PUT",
+          headers: authHeaders,
+          body: JSON.stringify(payload), // ← ensure payload is sent
+        }
+      );
+      if (!res.ok)
+        throw new Error(
+          `${isCreate ? "Create" : "Update"} failed ${res.status}`
+        );
+
+      //Re-fetch the list from the server after a successful create/update.
       await fetchOrders();
+
+      //Exit edit mode and clear the draft edits for the row you just saved.
+      //This collapses the inline editor back to read-only and
+      //removes editedValues[id], so the next time you edit it, you re-seed from the fresh server data you just fetched.
       cancel();
     } catch (e) {
       console.error(e);
-      alert("Save failed.");
+      alert(`${isCreate ? "Create" : "Save"} failed.`);
     }
   };
 
@@ -209,7 +235,8 @@ function PaymentOrders() {
     };
 
 
-    Your list renders a “new row” in editing mode. Inputs read from editedValues["new"], and as the user types, your onChange updates that draft.
+    List renders a “new row” in editing mode. Inputs read from editedValues["new"], 
+    and as the user types, your onChange updates that draft.
 
     Common pitfalls (and why your version is right)
 
@@ -265,6 +292,34 @@ function PaymentOrders() {
             />
           ))
         )}
+
+        {/* --- INLINE CREATE ROW --- */}
+        {editingId === "new" && (
+          <PaymentOrder
+            po={{ id: "new", ...blankPO }}
+            isEditing
+            editedValues={editedValues.new}
+            onChange={onChange}
+            onSave={save}
+            onCancel={cancel}
+            onDelete={() => {}}
+          />
+        )}
+      </div>
+
+      {/* Add button below the table */}
+      <div style={{ marginTop: 10 }}>
+        <button
+          onClick={startCreate}
+          disabled={editingId === "new"}
+          title={
+            editingId === "new"
+              ? "Finish the current draft first"
+              : "Create new payment order"
+          }
+        >
+          + New Payment Order
+        </button>
       </div>
     </div>
   );
