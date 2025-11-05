@@ -1,4 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { ProjectContext } from "../../context/ProjectContext";
 import Transaction from "./Transaction/Transaction";
 import styles from "./Transactions.module.scss";
 
@@ -24,6 +31,7 @@ const blankTx = {
 };
 
 const headerLabels = [
+  "Actions", // sticky left
   "Org",
   "Project",
   "Financier",
@@ -39,35 +47,150 @@ const headerLabels = [
   "2nd Orig",
   "Own Contrib",
   "Date Planned",
-  "OK Status",
-  "Actions",
+  "OK Status", // non-sticky
 ];
 
+// column widths (px) in the same order as headerLabels
+const BASE_COL_WIDTHS = [
+  110, // Actions
+  160, // Org
+  220, // Project
+  180, // Financier
+  160, // Status
+  120, // Applied Amt
+  140, // Applied FX
+  120, // 1st SEK
+  120, // 1st Orig
+  140, // Approved Amt
+  120, // Approved Curr
+  140, // Approved FX
+  120, // 2nd SEK
+  120, // 2nd Orig
+  110, // Own Contrib
+  170, // Date Planned
+  100, // OK Status
+];
+
+// Minimal required fields for a new transaction
+const isValidNew = (v, selectedProjectId) =>
+  v &&
+  (v.projectId || selectedProjectId) &&
+  v.organizationId !== "" &&
+  v.transactionStatusId !== "";
+
 const Transactions = ({ refreshTrigger }) => {
+  const { selectedProjectId } = useContext(ProjectContext);
+
   const [transactions, setTransactions] = useState([]);
-  const [editingId, setEditingId] = useState(null); // number | "new" | null
-  const [editedValues, setEditedValues] = useState({}); // { [id]: values }
+  const [editingId, setEditingId] = useState(null);
+  const [editedValues, setEditedValues] = useState({});
+
+  // Dropdown data
+  const [orgOptions, setOrgOptions] = useState([]);
+  const [projectOptions, setProjectOptions] = useState([]);
+  const [statusOptions, setStatusOptions] = useState([]);
+  const [fxOptions, setFxOptions] = useState([]);
+  const [currencies, setCurrencies] = useState([]);
+
+  // UI state
+  const [compact, setCompact] = useState(false);
+  const [columnsOpen, setColumnsOpen] = useState(false);
+  // visibility per column (default: all true)
+  const [visibleCols, setVisibleCols] = useState(() =>
+    Array(headerLabels.length).fill(true)
+  );
+
+  // Lock ONLY the first column (Actions) as always-visible
+  const toggleCol = (i) => {
+    if (i === 0) return;
+    setVisibleCols((prev) => {
+      const next = [...prev];
+      next[i] = !next[i];
+      return next;
+    });
+  };
 
   const token = useMemo(() => localStorage.getItem("authToken"), []);
+  const authHeaders = useMemo(
+    () =>
+      token
+        ? {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          }
+        : { "Content-Type": "application/json" },
+    [token]
+  );
 
-  const fetchActiveTransactions = useCallback(async () => {
-    try {
-      const res = await fetch(`${BASE_URL}/api/transactions/active`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      if (!res.ok) throw new Error("Failed to fetch transactions");
-      const data = await res.json();
-      const list = Array.isArray(data) ? data : data ? [data] : [];
-      setTransactions(list);
-    } catch (err) {
-      console.error("Error fetching transactions:", err);
-      setTransactions([]);
-    }
-  }, [token]);
+  const fetchTransactions = useCallback(
+    async (projectId) => {
+      if (!projectId) {
+        setTransactions([]);
+        return;
+      }
+      try {
+        const res = await fetch(
+          `${BASE_URL}/api/transactions/project/${projectId}`,
+          { headers: authHeaders }
+        );
+        if (!res.ok)
+          throw new Error(`Failed to fetch transactions (${res.status})`);
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : data ? [data] : [];
+        setTransactions(list);
+      } catch (err) {
+        console.error("Error fetching transactions:", err);
+        setTransactions([]);
+      }
+    },
+    [authHeaders]
+  );
+
+  // Fetch dropdown options
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [orgRes, projRes, statRes, fxRes, curRes] = await Promise.all([
+          fetch(`${BASE_URL}/api/organizations/active/options`, {
+            headers: authHeaders,
+          }),
+          fetch(`${BASE_URL}/api/projects/ids-names`, { headers: authHeaders }),
+          fetch(`${BASE_URL}/api/transaction-statuses/active`, {
+            headers: authHeaders,
+          }),
+          fetch(`${BASE_URL}/api/exchange-rates/active`, {
+            headers: authHeaders,
+          }),
+          fetch(`${BASE_URL}/api/currencies/active`, { headers: authHeaders }),
+        ]);
+
+        if (cancelled) return;
+
+        setOrgOptions(orgRes.ok ? await orgRes.json() : []);
+        setProjectOptions(projRes.ok ? await projRes.json() : []);
+        setStatusOptions(statRes.ok ? await statRes.json() : []);
+        setFxOptions(fxRes.ok ? await fxRes.json() : []);
+        setCurrencies(curRes.ok ? await curRes.json() : []);
+      } catch (e) {
+        if (!cancelled) {
+          console.error("Error fetching dropdown options:", e);
+          setOrgOptions([]);
+          setProjectOptions([]);
+          setStatusOptions([]);
+          setFxOptions([]);
+          setCurrencies([]);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authHeaders]);
 
   useEffect(() => {
-    fetchActiveTransactions();
-  }, [fetchActiveTransactions, refreshTrigger]);
+    fetchTransactions(selectedProjectId);
+  }, [fetchTransactions, selectedProjectId, refreshTrigger]);
 
   const startEdit = (tx) => {
     setEditingId(tx?.id ?? null);
@@ -98,7 +221,10 @@ const Transactions = ({ refreshTrigger }) => {
     setEditingId("new");
     setEditedValues((prev) => ({
       ...prev,
-      new: { ...blankTx },
+      new: {
+        ...blankTx,
+        projectId: selectedProjectId || "",
+      },
     }));
   };
 
@@ -117,11 +243,21 @@ const Transactions = ({ refreshTrigger }) => {
     const values = editedValues[id];
     if (!values) return;
 
+    const isCreate = id === "new";
+    const effectiveProjectId = isCreate
+      ? values.projectId || selectedProjectId
+      : values.projectId ?? null;
+
+    if (isCreate && !isValidNew(values, selectedProjectId)) {
+      alert("Please fill in Organization and Status (Project is prefilled).");
+      return;
+    }
+
     const payload = {
       organizationId: values.organizationId
         ? Number(values.organizationId)
         : null,
-      projectId: values.projectId ? Number(values.projectId) : null,
+      projectId: effectiveProjectId ? Number(effectiveProjectId) : null,
       financierOrganizationId: values.financierOrganizationId
         ? Number(values.financierOrganizationId)
         : null,
@@ -160,8 +296,6 @@ const Transactions = ({ refreshTrigger }) => {
       okStatus: values.okStatus || null,
     };
 
-    const isCreate = id === "new";
-
     try {
       const res = await fetch(
         isCreate
@@ -169,10 +303,7 @@ const Transactions = ({ refreshTrigger }) => {
           : `${BASE_URL}/api/transactions/${id}`,
         {
           method: isCreate ? "POST" : "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
+          headers: authHeaders,
           body: JSON.stringify(payload),
         }
       );
@@ -184,7 +315,7 @@ const Transactions = ({ refreshTrigger }) => {
         );
       }
 
-      await fetchActiveTransactions();
+      await fetchTransactions(selectedProjectId);
       cancel();
     } catch (err) {
       console.error(err);
@@ -209,60 +340,151 @@ const Transactions = ({ refreshTrigger }) => {
     try {
       const res = await fetch(`${BASE_URL}/api/transactions/${id}`, {
         method: "DELETE",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        headers: authHeaders,
       });
       if (!res.ok) throw new Error("Failed to delete transaction");
-      await fetchActiveTransactions();
+      await fetchTransactions(selectedProjectId);
     } catch (err) {
       console.error(err);
       alert("Failed to delete transaction.");
     }
   };
 
+  // Build the CSS variable for grid columns from visibility + base widths
+  const gridCols = useMemo(() => {
+    const parts = BASE_COL_WIDTHS.map((w, i) =>
+      visibleCols[i] ? `${w}px` : "0px"
+    );
+    return parts.join(" ");
+  }, [visibleCols]);
+
   return (
     <div className={styles.container}>
-      <div className={`${styles.row} ${styles.headerRow}`}>
-        {headerLabels.map((h) => (
-          <div key={h} className={styles.headerCell}>
-            {h}
-          </div>
-        ))}
+      {/* Toolbar */}
+      <div className={styles.toolbar}>
+        <label className={styles.compactToggle}>
+          <input
+            type="checkbox"
+            checked={compact}
+            onChange={(e) => setCompact(e.target.checked)}
+          />
+          <span>Compact mode</span>
+        </label>
+
+        <div className={styles.columnsBox}>
+          <button
+            className={styles.columnsBtn}
+            onClick={() => setColumnsOpen((v) => !v)}
+          >
+            Columns ▾
+          </button>
+          {columnsOpen && (
+            <div className={styles.columnsPanel}>
+              {headerLabels.map((h, i) => (
+                <label key={h} className={styles.colItem}>
+                  <input
+                    type="checkbox"
+                    checked={visibleCols[i]}
+                    disabled={i === 0} // only Actions is locked
+                    onChange={() => toggleCol(i)}
+                  />
+                  <span>{h}</span>
+                  {i === 0 && <em className={styles.lockNote}> (locked)</em>}
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      {transactions.length === 0 ? (
-        <p className={styles.noData}>No active transactions.</p>
-      ) : (
-        transactions.map((tx) => (
-          <Transaction
-            key={tx.id}
-            tx={tx}
-            isEditing={editingId === tx.id}
-            editedValues={editedValues[tx.id]}
-            onEdit={() => startEdit(tx)}
-            onChange={onChange}
-            onSave={save}
-            onCancel={cancel}
-            onDelete={remove}
-          />
-        ))
-      )}
+      {/* Table */}
+      <div
+        className={`${styles.table} ${compact ? styles.compact : ""}`}
+        style={{ ["--tx-grid-cols"]: gridCols }}
+      >
+        {/* Header */}
+        <div className={`${styles.gridRow} ${styles.headerRow}`}>
+          {headerLabels.map((h, i) => (
+            <div
+              key={h}
+              className={`${styles.headerCell}
+                ${i === 0 ? styles.stickyColHeader : ""}
+                ${!visibleCols[i] ? styles.hiddenCol : ""}
+                ${i === 0 ? styles.actionsCol : ""}`}
+            >
+              {h}
+            </div>
+          ))}
+        </div>
 
-      <div className={styles.createBar}>
-        {editingId === "new" ? (
+        {/* Body (existing transactions) */}
+        {!selectedProjectId ? (
+          <p className={styles.noData}>
+            Select a project to see its transactions.
+          </p>
+        ) : transactions.length === 0 ? (
+          <p className={styles.noData}>No transactions for this project.</p>
+        ) : (
+          transactions.map((tx, idx) => (
+            <Transaction
+              key={tx.id}
+              tx={tx}
+              rowIndex={idx}
+              isEven={idx % 2 === 0}
+              isEditing={editingId === tx.id}
+              editedValues={editedValues[tx.id]}
+              onEdit={() => startEdit(tx)}
+              onChange={onChange}
+              onSave={save}
+              onCancel={cancel}
+              onDelete={remove}
+              organizations={orgOptions}
+              projects={projectOptions}
+              statuses={statusOptions}
+              exchangeRates={fxOptions}
+              currencies={currencies}
+              visibleCols={visibleCols}
+            />
+          ))
+        )}
+
+        {/* --- INLINE CREATE ROW (now rendered LAST in the list) --- */}
+        {editingId === "new" && (
           <Transaction
-            tx={{ id: "new", ...blankTx }}
+            tx={{ id: "new", ...blankTx, projectId: selectedProjectId || "" }}
             isEditing
             editedValues={editedValues.new}
             onChange={onChange}
             onSave={save}
             onCancel={cancel}
             onDelete={() => {}}
+            organizations={orgOptions}
+            projects={projectOptions}
+            statuses={statusOptions}
+            exchangeRates={fxOptions}
+            currencies={currencies}
+            visibleCols={visibleCols}
+            isEven={false}
           />
-        ) : (
-          <button className={styles.addBtn} onClick={startCreate}>
-            + New Transaction
-          </button>
         )}
+      </div>
+
+      {/* Add button below table; disabled while the create row is open */}
+      <div className={styles.createBar}>
+        <button
+          className={styles.addBtn}
+          onClick={startCreate}
+          disabled={!selectedProjectId || editingId === "new"}
+          title={
+            !selectedProjectId
+              ? "Select a project first"
+              : editingId === "new"
+              ? "Finish the current draft first"
+              : "Create new transaction"
+          }
+        >
+          + New Transaction
+        </button>
       </div>
     </div>
   );

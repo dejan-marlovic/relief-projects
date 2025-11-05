@@ -10,7 +10,7 @@ import Login from "./pages/Login/Login";
 import Transactions from "./pages/Transactions/Transactions";
 import Budgets from "./pages/Budgets/Budgets";
 import Project from "./pages/Project/Project";
-import Payments from "./pages/Payments/Payments";
+import PaymentOrders from "./pages/PaymentsOrders/PaymentOrders";
 import Signatures from "./pages/Signatures/Signatures";
 import Recipients from "./pages/Recipients/Recipients";
 import Documents from "./pages/Documents/Documents";
@@ -41,7 +41,7 @@ export default function App() {
             <Route path="project" element={<Project />} />
             <Route path="budgets" element={<Budgets />} />
             <Route path="transactions" element={<Transactions />} />
-            <Route path="payments" element={<Payments />} />
+            <Route path="payments" element={<PaymentOrders />} />
             <Route path="signatures" element={<Signatures />} />
             <Route path="recipients" element={<Recipients />} />
             <Route path="documents" element={<Documents />} />

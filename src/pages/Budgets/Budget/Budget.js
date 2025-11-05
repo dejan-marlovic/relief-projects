@@ -316,11 +316,6 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
         </form>
       </div>
 
-      <CreateCostDetail
-        budgetId={budget.id}
-        onCreated={triggerRefreshCostDetails}
-      />
-
       {budget?.id && (
         <CostDetails
           budgetId={budget.id}
