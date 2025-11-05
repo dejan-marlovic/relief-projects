@@ -1,3 +1,5 @@
+// src/components/PaymentOrders/PaymentOrders.jsx
+
 import React, {
   useCallback,
   useContext,
@@ -6,43 +8,55 @@ import React, {
   useState,
 } from "react";
 import { ProjectContext } from "../../context/ProjectContext";
-import RecipientRow from "./Recipient/Recipient";
-import styles from "./Recipients.module.scss";
+import PaymentOrder from "./PaymentOrder/PaymentOrder";
+import styles from "./PaymentOrders.module.scss";
 
 const BASE_URL = "http://localhost:8080";
 
 const headerLabels = [
-  "Actions",
-  "Organization", // organizationId (project-aware dropdown)
-  "Payment Order", // paymentOrderId (dropdown, filtered by project)
+  "Actions", // sticky left
+  "Transaction", // transactionId
+  "Date", // paymentOrderDate
+  "#Tx", // numberOfTransactions
+  "Description", // paymentOrderDescription
+  "Amount", // amount
+  "Total Amount", // totalAmount
+  "Message", // message
+  "Pin Code", // pinCode
 ];
 
+// column widths (px) in the same order as headerLabels
 const BASE_COL_WIDTHS = [
   110, // Actions
-  260, // Organization
-  170, // Payment Order
+  160, // Transaction
+  180, // Date
+  90, // #Tx
+  300, // Description
+  140, // Amount
+  160, // Total Amount
+  200, // Message
+  140, // Pin Code
 ];
 
-function Recipients() {
+function PaymentOrders() {
+  // ← get the current project like in Transactions
   const { selectedProjectId } = useContext(ProjectContext);
 
-  const [items, setItems] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
+  const [txOptions, setTxOptions] = useState([]);
 
-  // dropdown data
-  const [poOptions, setPoOptions] = useState([]); // payment orders for project
-  const [orgOptions, setOrgOptions] = useState([]); // organizations for project
-
-  // UI
+  // UI state for column toggles & compact mode (same pattern as Transactions)
   const [compact, setCompact] = useState(false);
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [visibleCols, setVisibleCols] = useState(() =>
     Array(headerLabels.length).fill(true)
   );
 
+  // Only column 0 (Actions) is locked visible
   const toggleCol = (i) => {
-    if (i === 0) return; // keep Actions visible
+    if (i === 0) return;
     setVisibleCols((prev) => {
       const next = [...prev];
       next[i] = !next[i];
@@ -63,33 +77,11 @@ function Recipients() {
     [token]
   );
 
-  // FETCH: recipients filtered by project
-  const fetchRecipients = useCallback(
+  // Fetch list of payment orders (FILTERED BY PROJECT)
+  const fetchOrders = useCallback(
     async (projectId) => {
       if (!projectId) {
-        setItems([]);
-        return;
-      }
-      try {
-        const res = await fetch(
-          `${BASE_URL}/api/recipients/by-project/${projectId}`,
-          { headers: authHeaders }
-        );
-        if (!res.ok) throw new Error(`Failed ${res.status}`);
-        setItems(await res.json());
-      } catch (e) {
-        console.error(e);
-        setItems([]);
-      }
-    },
-    [authHeaders]
-  );
-
-  // FETCH: payment orders (dropdown) filtered by project
-  const fetchPaymentOrders = useCallback(
-    async (projectId) => {
-      if (!projectId) {
-        setPoOptions([]);
+        setOrders([]);
         return;
       }
       try {
@@ -98,91 +90,85 @@ function Recipients() {
           { headers: authHeaders }
         );
         if (!res.ok) throw new Error(`Failed ${res.status}`);
-        const data = await res.json();
-        setPoOptions(Array.isArray(data) ? data : data ? [data] : []);
+        setOrders(await res.json());
       } catch (e) {
         console.error(e);
-        setPoOptions([]);
+        setOrders([]);
       }
     },
     [authHeaders]
   );
 
-  // FETCH: organizations (project-aware options)
-  const fetchOrganizations = useCallback(
+  // Fetch transaction options for Transaction dropdown (also filtered by project)
+  const fetchTxOptions = useCallback(
     async (projectId) => {
       if (!projectId) {
-        setOrgOptions([]);
+        setTxOptions([]);
         return;
       }
       try {
+        // same per-project scope as Transactions
         const res = await fetch(
-          `${BASE_URL}/api/organizations/by-project/${projectId}/options`,
+          `${BASE_URL}/api/transactions/project/${projectId}`,
           { headers: authHeaders }
         );
         if (!res.ok) throw new Error(`Failed ${res.status}`);
         const data = await res.json();
-
-        // Tolerate {id,label} OR {id,name} OR {id,organizationName}
-        const normalized = (Array.isArray(data) ? data : []).map((o) => ({
-          id:
-            o.id ??
-            o.organizationId ??
-            (typeof o.value === "number" ? o.value : null),
-          label:
-            o.label ??
-            o.name ??
-            o.organizationName ??
-            (o.id != null ? `Org #${o.id}` : ""),
-        }));
-
-        setOrgOptions(normalized.filter((x) => x.id != null));
+        setTxOptions(Array.isArray(data) ? data : data ? [data] : []);
       } catch (e) {
         console.error(e);
-        setOrgOptions([]);
+        setTxOptions([]);
       }
     },
     [authHeaders]
   );
 
-  // Load lists whenever project changes
+  // Load lists whenever project (or headers) change
   useEffect(() => {
-    fetchRecipients(selectedProjectId);
-    fetchPaymentOrders(selectedProjectId);
-    fetchOrganizations(selectedProjectId);
+    fetchOrders(selectedProjectId);
+    fetchTxOptions(selectedProjectId);
+    // Optional: cancel any in-progress edit when project changes
     setEditingId(null);
     setEditedValues({});
-  }, [
-    fetchRecipients,
-    fetchPaymentOrders,
-    fetchOrganizations,
-    selectedProjectId,
-  ]);
+  }, [fetchOrders, fetchTxOptions, selectedProjectId]);
 
-  // Begin edit
-  const startEdit = (row) => {
-    setEditingId(row?.id ?? null);
+  // Begin editing a row: seed the draft with current values
+  const startEdit = (po) => {
+    setEditingId(po?.id ?? null);
     setEditedValues((prev) => ({
       ...prev,
-      [row.id]: {
-        organizationId: row.organizationId ?? "",
-        paymentOrderId: row.paymentOrderId ?? "",
+      [po.id]: {
+        transactionId: po.transactionId ?? "",
+        paymentOrderDate: po.paymentOrderDate ?? "",
+        numberOfTransactions: po.numberOfTransactions ?? "",
+        paymentOrderDescription: po.paymentOrderDescription ?? "",
+        amount: po.amount ?? "",
+        totalAmount: po.totalAmount ?? "",
+        message: po.message ?? "",
+        pinCode: po.pinCode ?? "",
       },
     }));
   };
 
-  // Begin create
-  const blankRecipient = {
-    organizationId: "",
-    paymentOrderId: "",
+  // Start create (inline new row)
+  const blankPO = {
+    transactionId: "",
+    paymentOrderDate: "",
+    numberOfTransactions: "",
+    paymentOrderDescription: "",
+    amount: "",
+    totalAmount: "",
+    message: "",
+    pinCode: "",
   };
 
   const startCreate = () => {
     setEditingId("new");
-    setEditedValues((prev) => ({ ...prev, new: { ...blankRecipient } }));
+    // Functional updater avoids stale state; clone the blank template
+    setEditedValues((prev) => ({ ...prev, new: { ...blankPO } }));
   };
 
-  // Change handler
+  // Update a single field in the current draft
   const onChange = (field, value) => {
     setEditedValues((prev) => ({
       ...prev,
@@ -193,9 +179,9 @@ function Recipients() {
     }));
   };
 
-  // Cancel edit/create
+  // Cancel editing: clear current id and remove its draft
   const cancel = () => {
-    const id = editingId;
+    const id = editingId; // capture before we clear it
     setEditingId(null);
     setEditedValues((prev) => {
       const next = { ...prev };
@@ -204,7 +190,7 @@ function Recipients() {
     });
   };
 
-  // Save (create/update)
+  // Save current draft (POST for create, PUT for update)
   const save = async () => {
     const id = editingId;
     const v = editedValues[id];
@@ -212,24 +198,40 @@ function Recipients() {
 
     const isCreate = id === "new";
 
+    /*
+    convert strings from inputs into the right types (numbers/strings),
+    turn “empty” values into null or "" consistently,
+    avoid sending undefined.
+    */
     const payload = {
-      organizationId: v.organizationId !== "" ? Number(v.organizationId) : null,
-      paymentOrderId: v.paymentOrderId !== "" ? Number(v.paymentOrderId) : null,
+      transactionId: v.transactionId !== "" ? Number(v.transactionId) : null,
+      paymentOrderDate: v.paymentOrderDate || null,
+      numberOfTransactions:
+        v.numberOfTransactions !== "" ? Number(v.numberOfTransactions) : null,
+      paymentOrderDescription: v.paymentOrderDescription || "",
+      amount: v.amount !== "" ? Number(v.amount) : null,
+      totalAmount: v.totalAmount !== "" ? Number(v.totalAmount) : null,
+      message: v.message || "",
+      pinCode: v.pinCode || "",
     };
 
     try {
       const res = await fetch(
         isCreate
-          ? `${BASE_URL}/api/recipients`
-          : `${BASE_URL}/api/recipients/${id}`,
+          ? `${BASE_URL}/api/payment-orders`
+          : `${BASE_URL}/api/payment-orders/${id}`,
         {
           method: isCreate ? "POST" : "PUT",
           headers: authHeaders,
           body: JSON.stringify(payload),
         }
       );
-      if (!res.ok) throw new Error(`${isCreate ? "Create" : "Update"} failed`);
-      await fetchRecipients(selectedProjectId);
+      if (!res.ok)
+        throw new Error(
+          `${isCreate ? "Create" : "Update"} failed ${res.status}`
+        );
+
+      await fetchOrders(selectedProjectId); // ← refresh list for current project
       cancel();
     } catch (e) {
       console.error(e);
@@ -237,24 +239,24 @@ function Recipients() {
     }
   };
 
-  // Delete
+  // Delete a row
   const remove = async (id) => {
     if (!id) return;
-    if (!window.confirm("Delete this recipient?")) return;
+    if (!window.confirm("Delete this payment order?")) return;
     try {
-      const res = await fetch(`${BASE_URL}/api/recipients/${id}`, {
+      const res = await fetch(`${BASE_URL}/api/payment-orders/${id}`, {
         method: "DELETE",
         headers: authHeaders,
       });
       if (!res.ok) throw new Error("Delete failed");
-      await fetchRecipients(selectedProjectId);
+      await fetchOrders(selectedProjectId); // ← refresh list for current project
     } catch (e) {
       console.error(e);
       alert("Delete failed.");
     }
   };
 
-  // Grid columns CSS var
+  // Build the CSS variable for grid columns from visibility + base widths
   const gridCols = useMemo(() => {
     const parts = BASE_COL_WIDTHS.map((w, i) =>
       visibleCols[i] ? `${w}px` : "0px"
@@ -264,7 +266,7 @@ function Recipients() {
 
   return (
     <div className={styles.container}>
-      {/* Toolbar */}
+      {/* Toolbar (compact + columns) */}
       <div className={styles.toolbar}>
         <label className={styles.compactToggle}>
           <input
@@ -289,7 +291,7 @@ function Recipients() {
                   <input
                     type="checkbox"
                     checked={visibleCols[i]}
-                    disabled={i === 0}
+                    disabled={i === 0} // Actions locked
                     onChange={() => toggleCol(i)}
                   />
                   <span>{h}</span>
@@ -304,7 +306,7 @@ function Recipients() {
       {/* Table */}
       <div
         className={`${styles.table} ${compact ? styles.compact : ""}`}
-        style={{ ["--rec-grid-cols"]: gridCols }}
+        style={{ ["--po-grid-cols"]: gridCols }}
       >
         {/* Header */}
         <div className={`${styles.gridRow} ${styles.headerRow}`}>
@@ -313,7 +315,8 @@ function Recipients() {
               key={h}
               className={`${styles.headerCell}
                 ${i === 0 ? styles.stickyColHeader : ""}
-                ${!visibleCols[i] ? styles.hiddenCol : ""}`}
+                ${!visibleCols[i] ? styles.hiddenCol : ""}
+                ${i === 0 ? styles.actionsCol : ""}`}
             >
               {h}
             </div>
@@ -323,49 +326,47 @@ function Recipients() {
         {/* Body */}
         {!selectedProjectId ? (
           <p className={styles.noData}>
-            Select a project to see its recipients.
+            Select a project to see its payment orders.
           </p>
-        ) : items.length === 0 ? (
-          <p className={styles.noData}>No recipients for this project.</p>
+        ) : orders.length === 0 ? (
+          <p className={styles.noData}>No payment orders for this project.</p>
         ) : (
-          items.map((r, idx) => (
-            <RecipientRow
-              key={r.id}
-              row={r}
+          orders.map((po, idx) => (
+            <PaymentOrder
+              key={po.id}
+              po={po}
               isEven={idx % 2 === 0}
-              isEditing={editingId === r.id}
-              editedValues={editedValues[r.id]}
-              onEdit={() => startEdit(r)}
+              isEditing={editingId === po.id}
+              editedValues={editedValues[po.id]}
+              onEdit={() => startEdit(po)}
               onChange={onChange}
               onSave={save}
               onCancel={cancel}
               onDelete={remove}
-              poOptions={poOptions}
-              orgOptions={orgOptions}
+              transactions={txOptions}
               visibleCols={visibleCols}
             />
           ))
         )}
 
-        {/* Inline create row */}
+        {/* Inline create row (rendered last) */}
         {editingId === "new" && (
-          <RecipientRow
-            row={{ id: "new", organizationId: "", paymentOrderId: "" }}
+          <PaymentOrder
+            po={{ id: "new", ...blankPO }}
             isEditing
             editedValues={editedValues.new}
             onChange={onChange}
             onSave={save}
             onCancel={cancel}
             onDelete={() => {}}
-            poOptions={poOptions}
-            orgOptions={orgOptions}
+            transactions={txOptions}
             visibleCols={visibleCols}
             isEven={false}
           />
         )}
       </div>
 
-      {/* Create */}
+      {/* Create button */}
       <div className={styles.createBar}>
         <button
           className={styles.addBtn}
@@ -376,14 +377,14 @@ function Recipients() {
               ? "Select a project first"
               : editingId === "new"
               ? "Finish the current draft first"
-              : "Create new recipient"
+              : "Create new payment order"
           }
         >
-          + New Recipient
+          + New Payment Order
         </button>
       </div>
     </div>
   );
 }
 
-export default Recipients;
+export default PaymentOrders;

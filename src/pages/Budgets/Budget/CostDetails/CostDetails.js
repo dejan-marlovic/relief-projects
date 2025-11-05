@@ -4,11 +4,38 @@ import styles from "./CostDetails.module.scss";
 
 const BASE_URL = "http://localhost:8080";
 
+const blankCostDetail = {
+  costDescription: "",
+  costTypeId: "",
+  costId: "",
+  noOfUnits: "",
+  unitPrice: "",
+  percentageCharging: "",
+  amountLocalCurrency: "",
+  amountReportingCurrency: "",
+  amountGBP: "",
+  amountEuro: "",
+};
+
+// helper: Required fields for creating a new cost detail
+const isValidNew = (v) =>
+  v &&
+  v.costDescription &&
+  v.costTypeId !== "" &&
+  v.costId !== "" &&
+  v.noOfUnits !== "" &&
+  v.unitPrice !== "" &&
+  v.percentageCharging !== "" &&
+  v.amountLocalCurrency !== "" &&
+  v.amountReportingCurrency !== "" &&
+  v.amountGBP !== "" &&
+  v.amountEuro !== "";
+
 const CostDetails = ({ budgetId, refreshTrigger }) => {
   const [costTypes, setCostTypes] = useState([]);
   const [costs, setCosts] = useState([]);
   const [costDetails, setCostDetails] = useState([]);
-  const [editingId, setEditingId] = useState(null);
+  const [editingId, setEditingId] = useState(null); // number | "new" | null
   const [editedValues, setEditedValues] = useState({});
 
   const fetchCostDetails = useCallback(async () => {
@@ -19,9 +46,7 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
     try {
       const response = await fetch(
         `${BASE_URL}/api/cost-details/by-budget/${budgetId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       if (!response.ok) throw new Error("Failed to fetch cost details");
       const data = await response.json();
@@ -71,31 +96,131 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
     setEditedValues((prev) => ({
       ...prev,
       [cost.costDetailId]: {
+        costDescription: cost.costDescription,
         noOfUnits: cost.noOfUnits,
         unitPrice: cost.unitPrice,
+        percentageCharging: cost.percentageCharging,
         costTypeId: cost.costTypeId,
         costId: cost.costId,
+        amountLocalCurrency: cost.amountLocalCurrency,
+        amountReportingCurrency: cost.amountReportingCurrency,
+        amountGBP: cost.amountGBP,
+        amountEuro: cost.amountEuro,
       },
     }));
   };
 
+  const handleCreate = () => {
+    setEditingId("new");
+    setEditedValues((prev) => ({
+      ...prev,
+      new: { ...blankCostDetail },
+    }));
+  };
+
   const handleChange = (field, value) => {
+    const toNumOrBlank = (v) =>
+      v === "" ? "" : Number.isNaN(Number(v)) ? v : Number(v);
+
     setEditedValues((prev) => ({
       ...prev,
       [editingId]: {
         ...prev[editingId],
-        [field]: value,
+        [field]: ["costDescription"].includes(field)
+          ? value
+          : toNumOrBlank(value),
       },
     }));
   };
 
   const handleSave = async (costId) => {
+    const isCreate = costId === "new";
     const values = editedValues[costId];
-    const original = costDetails.find((c) => c.costDetailId === costId);
-    if (!original || !values) return;
+    if (!values) return;
 
     const token = localStorage.getItem("authToken");
-    const fullPayload = { ...original, ...values };
+
+    if (isCreate) {
+      // Block save if required fields are missing to avoid backend "must not be null"
+      if (!isValidNew(values)) {
+        alert(
+          "Please fill in Description, Type, Category, Units, Unit price, % Charged and all Amounts before saving."
+        );
+        return;
+      }
+
+      const payload = {
+        budgetId, // link to current budget
+        costDescription: values.costDescription,
+        costTypeId: Number(values.costTypeId),
+        costId: Number(values.costId),
+        noOfUnits: Number(values.noOfUnits),
+        unitPrice: Number(values.unitPrice),
+        percentageCharging:
+          values.percentageCharging === ""
+            ? null
+            : Number(values.percentageCharging),
+        amountLocalCurrency: Number(values.amountLocalCurrency),
+        amountReportingCurrency: Number(values.amountReportingCurrency),
+        amountGBP: Number(values.amountGBP),
+        amountEuro: Number(values.amountEuro),
+      };
+
+      try {
+        const response = await fetch(`${BASE_URL}/api/cost-details`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          const msg = await response.text().catch(() => "");
+          throw new Error(`Failed to create cost detail. ${msg}`);
+        }
+
+        await fetchCostDetails();
+        setEditingId(null);
+        setEditedValues((prev) => {
+          const next = { ...prev };
+          delete next.new;
+          return next;
+        });
+      } catch (err) {
+        console.error("Error creating cost detail:", err);
+        alert("Failed to create cost detail.");
+      }
+      return;
+    }
+
+    // UPDATE flow (send exactly what user set, no auto-compute)
+    const original = costDetails.find((c) => c.costDetailId === costId);
+    if (!original) return;
+
+    const merged = { ...original, ...values };
+
+    const fullPayload = {
+      ...merged,
+      // ensure numbers for numeric fields
+      noOfUnits: Number(merged.noOfUnits),
+      unitPrice: Number(merged.unitPrice),
+      percentageCharging:
+        merged.percentageCharging === ""
+          ? null
+          : Number(merged.percentageCharging),
+      amountLocalCurrency:
+        merged.amountLocalCurrency === ""
+          ? null
+          : Number(merged.amountLocalCurrency),
+      amountReportingCurrency:
+        merged.amountReportingCurrency === ""
+          ? null
+          : Number(merged.amountReportingCurrency),
+      amountGBP: merged.amountGBP === "" ? null : Number(merged.amountGBP),
+      amountEuro: merged.amountEuro === "" ? null : Number(merged.amountEuro),
+    };
 
     try {
       const response = await fetch(`${BASE_URL}/api/cost-details/${costId}`, {
@@ -124,7 +249,12 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
 
   const handleCancel = () => {
     setEditingId(null);
-    setEditedValues({});
+    setEditedValues((prev) => {
+      const next = { ...prev };
+      delete next.new;
+      if (editingId && next[editingId]) delete next[editingId];
+      return next;
+    });
   };
 
   const handleDelete = async (costId) => {
@@ -165,23 +295,26 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
 
   return (
     <div>
+      {/* Header */}
+      <div className={styles.headerRow}>
+        <div className={styles.headerCellDescription}>Description</div>
+        <div className={styles.headerCellType}>Type</div>
+        <div className={styles.headerCellCategory}>Category</div>
+        <div className={styles.headerCellUnits}>Units</div>
+        <div className={styles.headerCellCharged}>Price / %</div>
+        <div className={styles.headerCellAmounts}>Amounts</div>
+        <div className={styles.headerCellActions}></div>
+      </div>
+
+      {/* Existing data */}
       {costDetails.length === 0 ? (
         <p className={styles.noDataMessage}>
           There are no cost details for this budget.
         </p>
       ) : (
         <>
-          <div className={styles.headerRow}>
-            <div className={styles.headerCellDescription}>Description</div>
-            <div className={styles.headerCellType}>Type</div>
-            <div className={styles.headerCellCategory}>Category</div>
-            <div className={styles.headerCellUnits}>Units × Price</div>
-            <div className={styles.headerCellCharged}>Charged</div>
-            <div className={styles.headerCellAmounts}>Amounts</div>
-          </div>
-
           {Object.entries(groupedData).map(([typeId, costGroups]) => {
-            const type = costTypes.find((t) => t.id === parseInt(typeId));
+            const type = costTypes.find((t) => t.id === parseInt(typeId, 10));
             return (
               <div key={typeId} className={styles.typeSection}>
                 <h5 className={styles.typeTitle}>
@@ -189,7 +322,9 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
                 </h5>
 
                 {Object.entries(costGroups).map(([costId, items]) => {
-                  const category = costs.find((c) => c.id === parseInt(costId));
+                  const category = costs.find(
+                    (c) => c.id === parseInt(costId, 10)
+                  );
                   const totals = items.reduce(
                     (acc, item) => {
                       acc.local += item.amountLocalCurrency || 0;
@@ -237,6 +372,34 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
           })}
         </>
       )}
+
+      {/* --- CREATE ROW placed ABOVE the button --- */}
+      {editingId === "new" && (
+        <CostDetail
+          cost={{ costDetailId: "new", ...blankCostDetail }}
+          isEditing
+          editedValues={editedValues.new}
+          costTypes={costTypes}
+          costs={costs}
+          onChange={handleChange}
+          onSave={() => handleSave("new")}
+          onCancel={handleCancel}
+          // unused in create row:
+          onEdit={() => {}}
+          onDelete={() => {}}
+        />
+      )}
+
+      {/* Add New button stays visible below; disabled while create row is open */}
+      <div className={styles.createBar}>
+        <button
+          className={styles.addBtn}
+          onClick={handleCreate}
+          disabled={!budgetId || editingId === "new"}
+        >
+          + New Cost Detail
+        </button>
+      </div>
     </div>
   );
 };

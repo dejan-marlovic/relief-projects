@@ -1,124 +1,105 @@
-.costDetailContainer {
+.rowForm,
+.viewRow {
   display: flex;
-  flex-wrap: nowrap; /* force row layout */
   align-items: center;
-  border-bottom: 1px solid #ccc;
+  gap: 10px;
   padding: 8px 0;
-  gap: 14px;
-  font-size: 16px;
+  border-bottom: 1px solid #e3e3e3;
+  flex-wrap: nowrap; /* keep single row */
+  overflow-x: auto; /* allow horizontal scroll if needed */
 }
 
-.description {
-  flex: 1 1 150px;
-  font-weight: 650;
+.cell,
+.vcell {
+  flex: 0 0 auto;
+  min-width: 0;
 }
 
-.costType,
-.costCategory {
-  flex: 1 1 120px;
-  color: #666;
+.cellDescription {
+  flex: 1 1 240px;
+  min-width: 200px;
 }
-
-.costCategory {
-  color: #888;
-}
-
-.costCalculation {
-  flex: 1 1 100px;
-}
-
-.selectInput {
-  width: 100px;
-}
-
-.categorySelectInput {
+.cellType {
   width: 120px;
 }
-
-.numberInput {
-  width: 40px;
+.cellCategory {
+  width: 160px;
 }
-
-.priceInput {
-  width: 60px;
+.cellUnits {
+  width: 90px;
 }
-
-.percentage {
-  flex: 1 1 80px;
+.cellPrice {
+  width: 100px;
 }
-
-.amounts {
-  flex: 1 1 200px;
+.cellUnitsPrice {
+  width: 150px;
 }
-
-.buttonGroup {
+.cellPercent {
+  width: 80px;
+}
+.cellAmt {
+  width: 110px;
+}
+.cellAmounts {
+  flex: 1 1 360px;
+  min-width: 320px;
+}
+.cellActions {
+  width: 96px;
   display: flex;
   gap: 8px;
-  flex: 0 0 auto;
+  justify-content: flex-end;
 }
 
-/* New for icon buttons */
-.iconButton {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  padding: 4px;
-  color: #333;
-}
-
-.iconButton:hover {
-  color: #007bff;
-}
-
-.deleteIcon {
-  color: #e74c3c;
-}
-
-.deleteIcon:hover {
-  color: #c0392b;
-}
-
-.button {
-  padding: 6px 12px;
-  font-weight: bold;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.button:hover {
-  background-color: #0056b3;
-}
-
-/* Match CreateCostDetail form field look */
-.selectInput,
-.categorySelectInput,
-.numberInput,
-.priceInput {
+.input,
+.select {
   padding: 4px 8px;
   font-size: 14px;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 6px;
+  height: 32px;
+  background: #fff;
+  box-sizing: border-box;
 }
 
-/* Keep specific widths from existing rules */
-.selectInput {
-  width: 100px;
+.select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, #999 50%),
+    linear-gradient(135deg, #999 50%, transparent 50%),
+    linear-gradient(to right, #ddd, #ddd);
+  background-position: calc(100% - 16px) calc(50% + 1px),
+    calc(100% - 11px) calc(50% + 1px), calc(100% - 32px) 50%;
+  background-size: 5px 5px, 5px 5px, 1px 60%;
+  background-repeat: no-repeat;
+  padding-right: 28px;
 }
 
-.categorySelectInput {
-  width: 120px;
+.actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
+.actionBtn {
+  background: transparent;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 6px 8px;
+  cursor: pointer;
+  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
 
-.numberInput {
-  width: 40px;
+  &:hover {
+    border-color: #007bff;
+    color: #007bff;
+  }
 }
-
-.priceInput {
-  width: 60px;
+.danger {
+  border-color: #e74c3c;
+  color: #e74c3c;
+  &:hover {
+    color: #fff;
+    background: #e74c3c;
+  }
 }

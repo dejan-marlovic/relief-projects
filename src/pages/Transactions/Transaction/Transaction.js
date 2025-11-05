@@ -13,7 +13,9 @@ function toDateTimeLocal(iso) {
   )}:${pad(d.getMinutes())}`;
 }
 
-const Cell = ({ children }) => <div className={styles.cell}>{children}</div>;
+const Cell = ({ children, className }) => (
+  <div className={`${styles.cell} ${className || ""}`}>{children}</div>
+);
 
 const Transaction = ({
   tx,
@@ -24,8 +26,17 @@ const Transaction = ({
   onSave,
   onCancel,
   onDelete,
+  organizations = [],
+  projects = [],
+  statuses = [],
+  exchangeRates = [],
+  currencies = [],
+  visibleCols = [],
+  isEven = false,
 }) => {
   const ev = editedValues || {};
+  const isCreate = (tx?.id ?? "") === "new";
+  const autoSave = isEditing && !isCreate;
 
   const submit = (e) => {
     e.preventDefault();
@@ -33,15 +44,15 @@ const Transaction = ({
     onSave();
   };
 
+  const toNum = (v) => (v === "" ? "" : Number(v));
+
   const inputNum = (field, step = "1") => (
     <input
       type="number"
       step={step}
       value={ev[field] ?? tx[field] ?? ""}
-      onChange={(e) =>
-        onChange(field, e.target.value === "" ? "" : Number(e.target.value))
-      }
-      onBlur={submit}
+      onChange={(e) => onChange(field, toNum(e.target.value))}
+      onBlur={autoSave ? submit : undefined}
       className={styles.input}
     />
   );
@@ -50,7 +61,7 @@ const Transaction = ({
     <select
       value={ev[field] ?? tx[field] ?? ""}
       onChange={(e) => onChange(field, e.target.value)}
-      onBlur={submit}
+      onBlur={autoSave ? submit : undefined}
       className={styles.input}
     >
       <option value="">Select</option>
@@ -62,6 +73,124 @@ const Transaction = ({
     </select>
   );
 
+  const selectOrg = (field) => (
+    <select
+      value={ev[field] ?? tx[field] ?? ""}
+      onChange={(e) => onChange(field, toNum(e.target.value))}
+      onBlur={autoSave ? submit : undefined}
+      className={styles.input}
+    >
+      <option value="">Select organization</option>
+      {organizations.map((o) => (
+        <option key={o.id} value={o.id}>
+          {o.name}
+        </option>
+      ))}
+    </select>
+  );
+
+  const selectProject = () => (
+    <select
+      value={ev.projectId ?? tx.projectId ?? ""}
+      onChange={(e) => onChange("projectId", toNum(e.target.value))}
+      onBlur={autoSave ? submit : undefined}
+      className={styles.input}
+    >
+      <option value="">Select project</option>
+      {projects.map((p) => (
+        <option key={p.id} value={p.id}>
+          {p.projectName}
+        </option>
+      ))}
+    </select>
+  );
+
+  const selectStatus = () => (
+    <select
+      value={ev.transactionStatusId ?? tx.transactionStatusId ?? ""}
+      onChange={(e) => onChange("transactionStatusId", toNum(e.target.value))}
+      onBlur={autoSave ? submit : undefined}
+      className={styles.input}
+    >
+      <option value="">Select status</option>
+      {statuses.map((s) => (
+        <option key={s.id} value={s.id}>
+          {s.transactionStatusName}
+        </option>
+      ))}
+    </select>
+  );
+
+  // Currency helpers
+  const findCurrency = (currencyId) =>
+    currencies.find((c) => c.id === currencyId);
+
+  const currencyLabelById = (currencyId) => {
+    if (!currencyId) return "-";
+    const cur = findCurrency(currencyId);
+    return cur ? cur.name : currencyId;
+  };
+
+  const selectCurrency = (field) => (
+    <select
+      value={ev[field] ?? tx[field] ?? ""}
+      onChange={(e) => onChange(field, toNum(e.target.value))}
+      onBlur={autoSave ? submit : undefined}
+      className={styles.input}
+    >
+      <option value="">Select currency</option>
+      {currencies.map((c) => (
+        <option key={c.id} value={c.id}>
+          {c.name} — {c.description}
+        </option>
+      ))}
+    </select>
+  );
+
+  const fxLabelByFxId = (fxId) => {
+    if (!fxId) return "-";
+    const r = exchangeRates.find((er) => er.id === fxId);
+    if (!r) return fxId;
+    const cur = findCurrency(r.currencyId);
+    const code = cur?.name || `CUR#${r.currencyId}`;
+    const rate =
+      typeof r.exchangeRate === "number"
+        ? r.exchangeRate
+        : Number(r.exchangeRate);
+    return `${code} @ ${rate}`;
+  };
+
+  const selectFx = (field) => (
+    <select
+      value={ev[field] ?? tx[field] ?? ""}
+      onChange={(e) => onChange(field, toNum(e.target.value))}
+      onBlur={autoSave ? submit : undefined}
+      className={styles.input}
+    >
+      <option value="">Select FX</option>
+      {exchangeRates.map((r) => {
+        const cur = findCurrency(r.currencyId);
+        const code = cur?.name || `CUR#${r.currencyId}`;
+        const rate =
+          typeof r.exchangeRate === "number"
+            ? r.exchangeRate
+            : Number(r.exchangeRate);
+        return (
+          <option key={r.id} value={r.id}>
+            {code} @ {rate}
+          </option>
+        );
+      })}
+    </select>
+  );
+
+  const orgName = (id) =>
+    organizations.find((o) => o.id === id)?.name || (id ?? "-");
+  const projectName = (id) =>
+    projects.find((p) => p.id === id)?.projectName || (id ?? "-");
+  const statusName = (id) =>
+    statuses.find((s) => s.id === id)?.transactionStatusName || (id ?? "-");
+
   const inputDate = (
     <input
       type="datetime-local"
@@ -69,91 +198,22 @@ const Transaction = ({
       onChange={(e) =>
         onChange("datePlanned", new Date(e.target.value).toISOString())
       }
-      onBlur={submit}
+      onBlur={autoSave ? submit : undefined}
       className={styles.input}
     />
   );
 
+  // helper to apply hidden class when column is collapsed to 0px
+  const hc = (i) => (!visibleCols[i] ? styles.hiddenCol : "");
+
   return (
-    <div className={styles.row}>
-      {/* Keep the order in sync with headerLabels */}
-      <Cell>
-        {isEditing ? inputNum("organizationId") : tx.organizationId ?? "-"}
-      </Cell>
-      <Cell>{isEditing ? inputNum("projectId") : tx.projectId ?? "-"}</Cell>
-      <Cell>
-        {isEditing
-          ? inputNum("financierOrganizationId")
-          : tx.financierOrganizationId ?? "-"}
-      </Cell>
-      <Cell>
-        {isEditing
-          ? inputNum("transactionStatusId")
-          : tx.transactionStatusId ?? "-"}
-      </Cell>
-
-      <Cell>
-        {isEditing
-          ? inputNum("appliedForAmount", "0.01")
-          : tx.appliedForAmount ?? "-"}
-      </Cell>
-      <Cell>
-        {isEditing
-          ? inputNum("appliedForExchangeRateId")
-          : tx.appliedForExchangeRateId ?? "-"}
-      </Cell>
-
-      <Cell>
-        {isEditing
-          ? inputNum("firstShareSEKAmount", "0.01")
-          : tx.firstShareSEKAmount ?? "-"}
-      </Cell>
-      <Cell>
-        {isEditing
-          ? inputNum("firstShareAmount", "0.01")
-          : tx.firstShareAmount ?? "-"}
-      </Cell>
-
-      <Cell>
-        {isEditing
-          ? inputNum("approvedAmount", "0.01")
-          : tx.approvedAmount ?? "-"}
-      </Cell>
-      <Cell>
-        {isEditing
-          ? inputNum("approvedAmountCurrencyId")
-          : tx.approvedAmountCurrencyId ?? "-"}
-      </Cell>
-      <Cell>
-        {isEditing
-          ? inputNum("approvedAmountExchangeRateId")
-          : tx.approvedAmountExchangeRateId ?? "-"}
-      </Cell>
-
-      <Cell>
-        {isEditing
-          ? inputNum("secondShareAmountSEK", "0.01")
-          : tx.secondShareAmountSEK ?? "-"}
-      </Cell>
-      <Cell>
-        {isEditing
-          ? inputNum("secondShareAmount", "0.01")
-          : tx.secondShareAmount ?? "-"}
-      </Cell>
-
-      <Cell>
-        {isEditing ? selectYesNo("ownContribution") : tx.ownContribution ?? "-"}
-      </Cell>
-      <Cell>
-        {isEditing
-          ? inputDate
-          : tx.datePlanned
-          ? new Date(tx.datePlanned).toLocaleString()
-          : "-"}
-      </Cell>
-      <Cell>{isEditing ? selectYesNo("okStatus") : tx.okStatus ?? "-"}</Cell>
-
-      <Cell>
+    <div
+      className={`${styles.row} ${styles.gridRow} ${
+        isEven ? styles.zebraEven : ""
+      } ${styles.hoverable}`}
+    >
+      {/* 0: Actions (sticky left) */}
+      <Cell className={`${styles.stickyCol} ${styles.actionsCol} ${hc(0)}`}>
         {isEditing ? (
           <div className={styles.actions}>
             <button className={styles.actionBtn} onClick={submit} title="Save">
@@ -193,6 +253,90 @@ const Transaction = ({
             </button>
           </div>
         )}
+      </Cell>
+
+      {/* 1..15 normal columns */}
+      <Cell className={hc(1)}>
+        {isEditing ? selectOrg("organizationId") : orgName(tx.organizationId)}
+      </Cell>
+      <Cell className={hc(2)}>
+        {isEditing ? selectProject() : projectName(tx.projectId)}
+      </Cell>
+      <Cell className={hc(3)}>
+        {isEditing
+          ? selectOrg("financierOrganizationId")
+          : orgName(tx.financierOrganizationId)}
+      </Cell>
+      <Cell className={hc(4)}>
+        {isEditing ? selectStatus() : statusName(tx.transactionStatusId)}
+      </Cell>
+
+      <Cell className={hc(5)}>
+        {isEditing
+          ? inputNum("appliedForAmount", "0.01")
+          : tx.appliedForAmount ?? "-"}
+      </Cell>
+      <Cell className={hc(6)}>
+        {isEditing
+          ? selectFx("appliedForExchangeRateId")
+          : fxLabelByFxId(tx.appliedForExchangeRateId)}
+      </Cell>
+
+      <Cell className={hc(7)}>
+        {isEditing
+          ? inputNum("firstShareSEKAmount", "0.01")
+          : tx.firstShareSEKAmount ?? "-"}
+      </Cell>
+      <Cell className={hc(8)}>
+        {isEditing
+          ? inputNum("firstShareAmount", "0.01")
+          : tx.firstShareAmount ?? "-"}
+      </Cell>
+
+      <Cell className={hc(9)}>
+        {isEditing
+          ? inputNum("approvedAmount", "0.01")
+          : tx.approvedAmount ?? "-"}
+      </Cell>
+
+      {/* 10: Approved Curr (changed to dropdown + label) */}
+      <Cell className={hc(10)}>
+        {isEditing
+          ? selectCurrency("approvedAmountCurrencyId")
+          : currencyLabelById(tx.approvedAmountCurrencyId)}
+      </Cell>
+
+      <Cell className={hc(11)}>
+        {isEditing
+          ? selectFx("approvedAmountExchangeRateId")
+          : fxLabelByFxId(tx.approvedAmountExchangeRateId)}
+      </Cell>
+
+      <Cell className={hc(12)}>
+        {isEditing
+          ? inputNum("secondShareAmountSEK", "0.01")
+          : tx.secondShareAmountSEK ?? "-"}
+      </Cell>
+      <Cell className={hc(13)}>
+        {isEditing
+          ? inputNum("secondShareAmount", "0.01")
+          : tx.secondShareAmount ?? "-"}
+      </Cell>
+
+      <Cell className={hc(14)}>
+        {isEditing ? selectYesNo("ownContribution") : tx.ownContribution ?? "-"}
+      </Cell>
+      <Cell className={hc(15)}>
+        {isEditing
+          ? inputDate
+          : tx.datePlanned
+          ? new Date(tx.datePlanned).toLocaleString()
+          : "-"}
+      </Cell>
+
+      {/* 16: OK Status (normal, non-sticky) */}
+      <Cell className={hc(16)}>
+        {isEditing ? selectYesNo("okStatus") : tx.okStatus ?? "-"}
       </Cell>
     </div>
   );
