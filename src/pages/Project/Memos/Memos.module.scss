@@ -1,0 +1,88 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.addBtn {
+  background: #2f7bfd;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.addBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.memoCard {
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  padding: 10px;
+  background: #fff;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 110px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.95rem;
+  resize: vertical;
+}
+
+.memoText {
+  white-space: pre-wrap;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell,
+    "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol";
+  font-size: 0.95rem;
+  color: #222;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.primary {
+  background: #2f7bfd;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.ghost {
+  background: #f5f6f8;
+  border: 1px solid #e6e6e6;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.danger {
+  background: #fff5f5;
+  color: #d33;
+  border: 1px solid #f3c0c0;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.note {
+  color: #666;
+}
+.error {
+  color: #b00020;
+}

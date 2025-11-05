@@ -3,6 +3,7 @@ import React, { useEffect, useState, useContext } from "react";
 
 // Import scoped CSS module for styling
 import styles from "./Project.module.scss";
+import Memos from "../Project/Memos/Memos.jsx";
 
 // Import ProjectContext to access the currently selected project ID
 import { ProjectContext } from "../../context/ProjectContext";
@@ -310,6 +311,8 @@ const Project = () => {
                   alt="Project Cover"
                   className={styles.coverImage}
                 />
+                {/* Memos live directly under the picture */}
+                <Memos />
               </div>
             )}
 
