@@ -1,10 +1,7 @@
 // Import core React functionality and hooks
 import React, { useContext } from "react";
 
-// Import routing utilities:
-// - Outlet: placeholder where child routes will render
-// - Link: navigational element (like <a>, but client-side)
-// - useLocation: lets us access the current route path
+// Import routing utilities
 import { Outlet, Link, useLocation } from "react-router-dom";
 
 // Import scoped CSS module styles
@@ -15,21 +12,22 @@ import { ProjectContext } from "../../context/ProjectContext";
 
 // Define the main layout component that wraps the app UI and navigation
 const Layout = () => {
-  // 📍 useLocation gives access to the current URL path
-  // We use it to highlight the active tab and hide the selector on certain routes
+  // 📍 Current URL path (used to highlight active tab and hide selector)
   const location = useLocation();
 
-  // Destructure global state provided by ProjectContext
+  // Global state from ProjectContext
   const { projects, selectedProjectId, setSelectedProjectId } =
     useContext(ProjectContext);
 
-  // Event handler for when a user selects a different project from the dropdown
+  // Handle project change
   const handleSelectChange = (e) => {
-    setSelectedProjectId(e.target.value); // Update context with selected project ID
+    setSelectedProjectId(e.target.value);
   };
 
-  // Boolean flag: used to hide the project selector only on the "Register Project" page
+  // Hide selector on register page AND statistics page
   const isRegisterPage = location.pathname === "/register-project";
+  const isStatisticsPage = location.pathname === "/statistics";
+  const hideSelector = isRegisterPage || isStatisticsPage;
 
   return (
     <>
@@ -38,22 +36,25 @@ const Layout = () => {
         <strong>Relief Projects</strong>
       </h1>
 
-      {/* Project selector section */}
-      {/* It will be hidden on the register-project route using a conditional class */}
+      {/* Project selector (hidden on register + statistics) */}
       <div
         className={`${styles.selectorContainer} ${
-          isRegisterPage ? styles.hiddenSelector : ""
+          hideSelector ? styles.hiddenSelector : ""
         }`}
       >
         <strong>Select a Project</strong>
         <br />
         <select
-          value={selectedProjectId} // Currently selected project from context
-          onChange={handleSelectChange} // Updates selected project in global context
-          className={styles.selectInput} // Apply styles to the dropdown
+          value={selectedProjectId}
+          onChange={handleSelectChange}
+          className={styles.selectInput}
+          disabled={!projects || projects.length === 0}
+          aria-label="Select a project"
         >
-          {/* Map through all projects and display them as options */}
-          {projects.map((project) => (
+          {(!projects || projects.length === 0) && (
+            <option value="">No projects available</option>
+          )}
+          {projects?.map((project) => (
             <option key={project.id} value={project.id}>
               {project.projectName}
             </option>
@@ -61,12 +62,9 @@ const Layout = () => {
         </select>
       </div>
 
-      {/* 📌 Navigation menu with links to each app section */}
+      {/* Navigation */}
       <nav className={styles.nav}>
         <ul>
-          {/* Each list item contains a Link that behaves like a <NavLink> but lighter */}
-          {/* The Link does NOT reload the page — it navigates internally using the history API */}
-          {/* We conditionally apply `styles.active` if the current path matches the link path */}
           <li>
             <Link
               to="/project"
@@ -148,18 +146,16 @@ const Layout = () => {
                 location.pathname === "/register-project" ? styles.active : ""
               }
             >
-              Register New Project
+              New Project
             </Link>
           </li>
         </ul>
       </nav>
 
-      {/* <Outlet /> is where child route components will be rendered */}
-      {/* For example, if you navigate to /budgets, the Budgets component will be rendered here */}
+      {/* Render child route here */}
       <Outlet />
     </>
   );
 };
 
-// Export Layout component so it can be used in the route configuration
 export default Layout;
