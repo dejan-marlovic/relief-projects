@@ -224,9 +224,9 @@ const Statistics = () => {
   );
 
   // ==== Chart sizing + tuned labels ====
-  const CHART_WIDTH = 900;
-  const CHART_HEIGHT = 480;
-  const OUTER_RADIUS = 145;
+  const CHART_WIDTH = 1500;
+  const CHART_HEIGHT = 680;
+  const OUTER_RADIUS = 345;
 
   // move labels a tad closer so they’re less likely to hit the card edge
   const LABEL_OFFSET = 50; // was 56
