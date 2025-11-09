@@ -1,45 +1,24 @@
-// src/pages/Statistics/Statistics.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { PieChart, Pie, Tooltip, Cell } from "recharts";
+import styles from "./Statistics.module.scss";
 
 const BASE_URL = "http://localhost:8080";
 const tokenFromStorage = () => localStorage.getItem("authToken");
 
-// Simple external legend below the chart
-const LegendBlock = ({ items }) => {
-  return (
-    <div
-      style={{
-        marginTop: 24,
-        paddingTop: 6,
-        display: "flex",
-        flexWrap: "wrap",
-        gap: 14,
-        justifyContent: "center",
-        lineHeight: 1.2,
-      }}
-    >
-      {items.map((it) => (
-        <div
-          key={it.key}
-          style={{ display: "flex", alignItems: "center", gap: 8 }}
-        >
-          <span
-            style={{
-              width: 12,
-              height: 12,
-              borderRadius: 2,
-              background: it.color,
-              display: "inline-block",
-              flex: "0 0 auto",
-            }}
-          />
-          <span style={{ fontSize: 14 }}>{it.label}</span>
-        </div>
-      ))}
-    </div>
-  );
-};
+// Legend (unstyled in JS, styled via CSS Module)
+const LegendBlock = ({ items }) => (
+  <div className={styles.legend}>
+    {items.map((it) => (
+      <div key={it.key} className={styles.legendItem}>
+        <span
+          className={styles.legendSwatch}
+          style={{ background: it.color }}
+        />
+        <span className={styles.legendLabel}>{it.label}</span>
+      </div>
+    ))}
+  </div>
+);
 
 // Custom tooltip that lists count + project names for a slice
 const SliceTooltip = ({ active, payload }) => {
@@ -48,49 +27,33 @@ const SliceTooltip = ({ active, payload }) => {
   if (!d) return null;
 
   const names = Array.isArray(d.projectNames) ? d.projectNames : [];
-  const MAX_SHOW = 10; // show up to 10 names, then "+N more"
+  const MAX_SHOW = 10;
   const more = Math.max(0, names.length - MAX_SHOW);
 
   return (
-    <div
-      style={{
-        background: "#fff",
-        border: "1px solid #e5e7eb",
-        borderRadius: 8,
-        padding: "10px 12px",
-        maxWidth: 360,
-        boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
-        lineHeight: 1.25,
-      }}
-    >
-      <div style={{ fontWeight: 600, marginBottom: 6 }}>{d.name}</div>
-      <div style={{ marginBottom: 6 }}>
+    <div className={styles.tooltipBox}>
+      <div className={styles.tooltipTitle}>{d.name}</div>
+      <div className={styles.tooltipCount}>
         <strong>{d.value}</strong> project{d.value === 1 ? "" : "s"}
       </div>
       {names.length > 0 ? (
-        <ul style={{ margin: 0, paddingLeft: 16 }}>
+        <ul className={styles.tooltipProjects}>
           {names.slice(0, MAX_SHOW).map((n) => (
-            <li key={n} style={{ fontSize: 13, marginBottom: 2 }}>
-              {n}
-            </li>
+            <li key={n}>{n}</li>
           ))}
         </ul>
       ) : (
-        <div style={{ fontSize: 13, color: "#666" }}>No projects listed.</div>
+        <div className={styles.tooltipEmpty}>No projects listed.</div>
       )}
-      {more > 0 && (
-        <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
-          +{more} more…
-        </div>
-      )}
+      {more > 0 && <div className={styles.tooltipMore}>+{more} more…</div>}
     </div>
   );
 };
 
 const Statistics = () => {
-  const [relations, setRelations] = useState([]); // expects { sectorId, projectId, ... }
-  const [sectors, setSectors] = useState([]); // SectorDTO[]
-  const [projects, setProjects] = useState([]); // ProjectIdsNamesDTO[]
+  const [relations, setRelations] = useState([]);
+  const [sectors, setSectors] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -164,7 +127,6 @@ const Statistics = () => {
     "#22AA99",
   ];
 
-  // Sector id -> "CODE — Description"
   const sectorNameMap = useMemo(() => {
     const map = new Map();
     for (const s of sectors) {
@@ -177,7 +139,6 @@ const Statistics = () => {
     return map;
   }, [sectors]);
 
-  // Project id -> name
   const projectNameMap = useMemo(() => {
     const map = new Map();
     for (const p of projects) {
@@ -188,9 +149,8 @@ const Statistics = () => {
     return map;
   }, [projects]);
 
-  // Build pie data with project names for each sector slice
   const pieData = useMemo(() => {
-    const bySector = new Map(); // sectorId -> { count, projectIds:Set }
+    const bySector = new Map();
     for (const row of relations) {
       const sectorId = row?.sectorId;
       const projectId = row?.projectId;
@@ -209,12 +169,7 @@ const Statistics = () => {
       const projectNames = Array.from(info.projectIds)
         .map((pid) => projectNameMap.get(pid) || `Project ${pid}`)
         .sort((a, b) => a.localeCompare(b));
-      return {
-        name,
-        sectorId,
-        value: info.count,
-        projectNames,
-      };
+      return { name, sectorId, value: info.count, projectNames };
     });
   }, [relations, sectorNameMap, projectNameMap]);
 
@@ -223,50 +178,60 @@ const Statistics = () => {
     [pieData]
   );
 
-  // ==== Chart sizing + tuned labels ====
-  const CHART_WIDTH = 1500;
-  const CHART_HEIGHT = 680;
-  const OUTER_RADIUS = 345;
+  // ===== Extra breathing room =====
+  const CHART_WIDTH = 1760; // wider canvas
+  const OUTER_RADIUS = 228; // slightly smaller pie to make room
+  const LABEL_OFFSET = 90; // push labels farther
+  const POLE_EXTRA = 36; // strong boost near top/bottom labels
 
-  // move labels a tad closer so they’re less likely to hit the card edge
-  const LABEL_OFFSET = 50; // was 56
-  const CONNECTOR_GAP = 10;
+  const TOP_GAP = LABEL_OFFSET + 32; // more room above
+  const BOTTOM_GAP = 140; // more room below before legend
+
+  const CHART_HEIGHT =
+    TOP_GAP + OUTER_RADIUS + (OUTER_RADIUS + LABEL_OFFSET) + BOTTOM_GAP;
+
+  const CY = TOP_GAP + OUTER_RADIUS;
+
+  const CONNECTOR_GAP = 14;
   const LABEL_DY = 12;
   const RADIAN = Math.PI / 180;
 
-  // simple word-wrap for long labels so they don't get visually cut
-  const LINE_LEN = 24; // characters per line before wrapping
-
+  const LINE_LEN = 22; // wrap a bit earlier
   const wrapLabel = (text) => {
     if (!text) return [""];
     if (text.length <= LINE_LEN) return [text];
-
-    // prefer breaking at an em-dash/normal dash/space near LINE_LEN
     const candidates = [" — ", " - ", " "];
     for (const sep of candidates) {
       const idx = text.lastIndexOf(sep, LINE_LEN);
-      if (idx > 10) {
-        return [text.slice(0, idx), text.slice(idx + sep.length)];
-      }
+      if (idx > 10) return [text.slice(0, idx), text.slice(idx + sep.length)];
     }
-    // fallback: hard break
     return [text.slice(0, LINE_LEN), text.slice(LINE_LEN)];
   };
 
   const renderLabel = ({ cx, cy, midAngle, outerRadius, name, value }) => {
+    const verticalFactor = Math.abs(Math.sin(midAngle * RADIAN)); // 0 @ sides, 1 @ top/bottom
+    const extra = POLE_EXTRA * verticalFactor;
+
     const sx =
-      cx + (outerRadius + CONNECTOR_GAP) * Math.cos(-midAngle * RADIAN);
+      cx +
+      (outerRadius + CONNECTOR_GAP + extra * 0.4) *
+        Math.cos(-midAngle * RADIAN);
     const sy =
-      cy + (outerRadius + CONNECTOR_GAP) * Math.sin(-midAngle * RADIAN);
-    const ex = cx + (outerRadius + LABEL_OFFSET) * Math.cos(-midAngle * RADIAN);
-    const ey = cy + (outerRadius + LABEL_OFFSET) * Math.sin(-midAngle * RADIAN);
+      cy +
+      (outerRadius + CONNECTOR_GAP + extra * 0.4) *
+        Math.sin(-midAngle * RADIAN);
+
+    const radiusWithLabel = outerRadius + LABEL_OFFSET + extra;
+    const ex = cx + radiusWithLabel * Math.cos(-midAngle * RADIAN);
+    const ey = cy + radiusWithLabel * Math.sin(-midAngle * RADIAN);
+
     const textAnchor = ex > cx ? "start" : "end";
     const percent =
       total > 0 ? ` (${((value / total) * 100).toFixed(1)}%)` : "";
 
     const lines = wrapLabel(name);
     const first = lines[0] ?? "";
-    const second = (lines[1] ?? "") + percent; // append % to last line
+    const second = (lines[1] ?? "") + percent;
 
     return (
       <>
@@ -293,71 +258,54 @@ const Statistics = () => {
     [pieData]
   );
 
-  // Wider outer card to give labels more breathing room
-  const CONTAINER_MAX = 1360;
+  // Container wider than chart so legend wraps comfortably
+  const CONTAINER_MAX = CHART_WIDTH + 240;
 
   return (
-    <div style={{ padding: 16, width: "100%" }}>
+    <div className={styles.page}>
       <div
-        style={{
-          maxWidth: CONTAINER_MAX,
-          margin: "0 auto",
-          background: "#fff",
-          borderRadius: 12,
-          boxShadow: "0 6px 22px rgba(0,0,0,0.08)",
-          padding: 28,
-          overflow: "visible", // allow SVG labels to spill if needed
-        }}
+        className={styles.card}
+        style={{ "--container-max": `${CONTAINER_MAX}px` }}
       >
-        <h2 style={{ fontSize: 28, margin: "4px 0 6px" }}>
-          Projects by Sector
-        </h2>
-        <p style={{ color: "#666", margin: "0 0 18px" }}>
+        <h2 className={styles.title}>Projects by Sector</h2>
+        <p className={styles.subtitle}>
           Distribution of projects across sectors (from Project–Sector
           relations).
         </p>
 
         {loading && (
           <div
-            style={{
-              height: CHART_HEIGHT,
-              background: "#f3f4f6",
-              borderRadius: 8,
-            }}
+            className={styles.loadingSkeleton}
+            style={{ "--chart-height": `${CHART_HEIGHT}px` }}
           />
         )}
 
         {!loading && error && (
-          <div style={{ color: "#b91c1c", marginBottom: 12 }}>{error}</div>
+          <div className={styles.subtitle} style={{ color: "#b91c1c" }}>
+            {error}
+          </div>
         )}
 
         {!loading && !error && pieData.length === 0 && (
-          <div style={{ color: "#555", marginBottom: 12 }}>
+          <div className={styles.subtitle} style={{ color: "#555" }}>
             No project–sector data found.
           </div>
         )}
 
         {!loading && !error && pieData.length > 0 && (
           <>
-            <div
-              style={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "center",
-                overflow: "visible",
-              }}
-            >
+            <div className={styles.chartRow}>
               <PieChart
                 width={CHART_WIDTH}
                 height={CHART_HEIGHT}
-                margin={{ top: 10, right: 20, bottom: 10, left: 20 }}
+                margin={{ top: 8, right: 28, bottom: 0, left: 28 }}
               >
                 <Pie
                   data={pieData}
                   dataKey="value"
                   nameKey="name"
-                  cx={CHART_WIDTH / 2 - 10}
-                  cy={CHART_HEIGHT / 2 - 6}
+                  cx={CHART_WIDTH / 2}
+                  cy={CY}
                   outerRadius={OUTER_RADIUS}
                   label={renderLabel}
                   labelLine={false}
@@ -371,26 +319,20 @@ const Statistics = () => {
                   ))}
                 </Pie>
 
-                {/* Custom tooltip shows project names as well */}
                 <Tooltip content={<SliceTooltip />} />
               </PieChart>
             </div>
+
+            <div
+              className={styles.chartLegendSpacer}
+              style={{ "--spacer-height": "32px" }}
+            />
 
             <LegendBlock items={legendItems} />
           </>
         )}
 
-        <div
-          style={{
-            marginTop: 14,
-            fontSize: 12,
-            color: "#777",
-            display: "flex",
-            gap: 16,
-            flexWrap: "wrap",
-            justifyContent: "center",
-          }}
-        >
+        <div className={styles.meta}>
           <span>relations: {relations.length}</span>
           <span>sectors: {sectors.length}</span>
           <span>slices: {pieData.length}</span>
