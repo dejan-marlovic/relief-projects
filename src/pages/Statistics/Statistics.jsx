@@ -177,11 +177,10 @@ const Statistics = () => {
     return map;
   }, [sectors]);
 
-  // Project id -> name (ProjectIdsNamesDTO likely { id, projectName })
+  // Project id -> name
   const projectNameMap = useMemo(() => {
     const map = new Map();
     for (const p of projects) {
-      // Try both common field names defensively
       const id = p?.id ?? p?.projectId;
       const name = p?.projectName ?? p?.name ?? `Project ${id ?? ""}`;
       if (id != null) map.set(Number(id), String(name));
@@ -209,7 +208,7 @@ const Statistics = () => {
       const name = sectorNameMap.get(sectorId) || `Sector ${sectorId}`;
       const projectNames = Array.from(info.projectIds)
         .map((pid) => projectNameMap.get(pid) || `Project ${pid}`)
-        .sort((a, b) => a.localeCompare(b)); // nice, stable order
+        .sort((a, b) => a.localeCompare(b));
       return {
         name,
         sectorId,
@@ -228,10 +227,31 @@ const Statistics = () => {
   const CHART_WIDTH = 900;
   const CHART_HEIGHT = 480;
   const OUTER_RADIUS = 145;
-  const LABEL_OFFSET = 56;
+
+  // move labels a tad closer so they’re less likely to hit the card edge
+  const LABEL_OFFSET = 50; // was 56
   const CONNECTOR_GAP = 10;
   const LABEL_DY = 12;
   const RADIAN = Math.PI / 180;
+
+  // simple word-wrap for long labels so they don't get visually cut
+  const LINE_LEN = 24; // characters per line before wrapping
+
+  const wrapLabel = (text) => {
+    if (!text) return [""];
+    if (text.length <= LINE_LEN) return [text];
+
+    // prefer breaking at an em-dash/normal dash/space near LINE_LEN
+    const candidates = [" — ", " - ", " "];
+    for (const sep of candidates) {
+      const idx = text.lastIndexOf(sep, LINE_LEN);
+      if (idx > 10) {
+        return [text.slice(0, idx), text.slice(idx + sep.length)];
+      }
+    }
+    // fallback: hard break
+    return [text.slice(0, LINE_LEN), text.slice(LINE_LEN)];
+  };
 
   const renderLabel = ({ cx, cy, midAngle, outerRadius, name, value }) => {
     const sx =
@@ -243,17 +263,21 @@ const Statistics = () => {
     const textAnchor = ex > cx ? "start" : "end";
     const percent =
       total > 0 ? ` (${((value / total) * 100).toFixed(1)}%)` : "";
+
+    const lines = wrapLabel(name);
+    const first = lines[0] ?? "";
+    const second = (lines[1] ?? "") + percent; // append % to last line
+
     return (
       <>
         <line x1={sx} y1={sy} x2={ex} y2={ey} stroke="#c7c7c7" />
-        <text
-          x={ex}
-          y={ey}
-          dy={LABEL_DY}
-          textAnchor={textAnchor}
-          style={{ fontSize: 12 }}
-        >
-          {`${name}: ${value}${percent}`}
+        <text x={ex} y={ey} textAnchor={textAnchor} style={{ fontSize: 12 }}>
+          <tspan dy={LABEL_DY}>{first}</tspan>
+          {second && (
+            <tspan x={ex} dy={14}>
+              {second}
+            </tspan>
+          )}
         </text>
       </>
     );
@@ -269,22 +293,26 @@ const Statistics = () => {
     [pieData]
   );
 
+  // Wider outer card to give labels more breathing room
+  const CONTAINER_MAX = 1360;
+
   return (
     <div style={{ padding: 16, width: "100%" }}>
       <div
         style={{
-          maxWidth: CHART_WIDTH + 60,
+          maxWidth: CONTAINER_MAX,
           margin: "0 auto",
           background: "#fff",
           borderRadius: 12,
-          boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
-          padding: 20,
+          boxShadow: "0 6px 22px rgba(0,0,0,0.08)",
+          padding: 28,
+          overflow: "visible", // allow SVG labels to spill if needed
         }}
       >
-        <h2 style={{ fontSize: 28, margin: "8px 0 4px" }}>
+        <h2 style={{ fontSize: 28, margin: "4px 0 6px" }}>
           Projects by Sector
         </h2>
-        <p style={{ color: "#666", margin: "0 0 16px" }}>
+        <p style={{ color: "#666", margin: "0 0 18px" }}>
           Distribution of projects across sectors (from Project–Sector
           relations).
         </p>
@@ -322,13 +350,13 @@ const Statistics = () => {
               <PieChart
                 width={CHART_WIDTH}
                 height={CHART_HEIGHT}
-                margin={{ top: 10, right: 20, bottom: 10, left: 10 }}
+                margin={{ top: 10, right: 20, bottom: 10, left: 20 }}
               >
                 <Pie
                   data={pieData}
                   dataKey="value"
                   nameKey="name"
-                  cx={CHART_WIDTH / 2 - 20}
+                  cx={CHART_WIDTH / 2 - 10}
                   cy={CHART_HEIGHT / 2 - 6}
                   outerRadius={OUTER_RADIUS}
                   label={renderLabel}
@@ -354,7 +382,7 @@ const Statistics = () => {
 
         <div
           style={{
-            marginTop: 12,
+            marginTop: 14,
             fontSize: 12,
             color: "#777",
             display: "flex",
