@@ -127,6 +127,7 @@ const Statistics = () => {
     "#22AA99",
   ];
 
+  // Sector id -> "CODE — Description"
   const sectorNameMap = useMemo(() => {
     const map = new Map();
     for (const s of sectors) {
@@ -139,6 +140,7 @@ const Statistics = () => {
     return map;
   }, [sectors]);
 
+  // Project id -> name
   const projectNameMap = useMemo(() => {
     const map = new Map();
     for (const p of projects) {
@@ -178,14 +180,14 @@ const Statistics = () => {
     [pieData]
   );
 
-  // ===== Extra breathing room =====
-  const CHART_WIDTH = 1760; // wider canvas
-  const OUTER_RADIUS = 228; // slightly smaller pie to make room
-  const LABEL_OFFSET = 90; // push labels farther
-  const POLE_EXTRA = 36; // strong boost near top/bottom labels
+  // ===== Smaller chart but same generous label spacing =====
+  const CHART_WIDTH = 1460; // was 1760
+  const OUTER_RADIUS = 185; // was 220
+  const LABEL_OFFSET = 110; // unchanged (keeps label room)
+  const POLE_EXTRA = 44; // unchanged for top/bottom breathing
 
-  const TOP_GAP = LABEL_OFFSET + 32; // more room above
-  const BOTTOM_GAP = 140; // more room below before legend
+  const TOP_GAP = LABEL_OFFSET + 36; // unchanged
+  const BOTTOM_GAP = 160; // unchanged
 
   const CHART_HEIGHT =
     TOP_GAP + OUTER_RADIUS + (OUTER_RADIUS + LABEL_OFFSET) + BOTTOM_GAP;
@@ -196,7 +198,7 @@ const Statistics = () => {
   const LABEL_DY = 12;
   const RADIAN = Math.PI / 180;
 
-  const LINE_LEN = 22; // wrap a bit earlier
+  const LINE_LEN = 22;
   const wrapLabel = (text) => {
     if (!text) return [""];
     if (text.length <= LINE_LEN) return [text];
@@ -298,7 +300,7 @@ const Statistics = () => {
               <PieChart
                 width={CHART_WIDTH}
                 height={CHART_HEIGHT}
-                margin={{ top: 8, right: 28, bottom: 0, left: 28 }}
+                margin={{ top: 8, right: 32, bottom: 0, left: 32 }}
               >
                 <Pie
                   data={pieData}
@@ -325,7 +327,7 @@ const Statistics = () => {
 
             <div
               className={styles.chartLegendSpacer}
-              style={{ "--spacer-height": "32px" }}
+              style={{ "--spacer-height": "40px" }}
             />
 
             <LegendBlock items={legendItems} />
