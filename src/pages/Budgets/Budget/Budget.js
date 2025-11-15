@@ -69,9 +69,20 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
 
       if (!response.ok) throw new Error("Failed to update budget");
 
-      alert("Budget updated successsfully!");
       const updated = await response.json();
+      console.log("🔁 Updated budget from server:", updated);
+      alert("Budget updated successsfully!");
+
+      // ✅ keep local state in sync
+      setBudget(updated);
       onUpdate?.(updated);
+
+      // 🔄 Refetch latest exchange rates (in case they changed on server)
+      const freshRates = await fetchExchangeRates(token);
+      setExchangeRates(freshRates);
+
+      // ✅ trigger cost details recalculation (CostDetails sees new budget + new exchangeRates)
+      triggerRefreshCostDetails();
     } catch (error) {
       console.error("Error updating budget:", error);
       alert("Error saving budget.");
@@ -169,6 +180,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
           </div>
 
           <div className={styles.formColumnRight}>
+            {/* Local currency (e.g. TRY) and Local -> GBP rate */}
             <div className={styles.formRowPair}>
               <div className={styles.formItem}>
                 <label>Local Currency:</label>
@@ -205,9 +217,10 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
               </div>
             </div>
 
+            {/* Reporting SEK + rate */}
             <div className={styles.formRowPair}>
               <div className={styles.formItem}>
-                <label>SEK Currency:</label>
+                <label>Reporting currency (SEK):</label>
                 <select
                   name="reportingCurrencySekId"
                   className={styles.textInput}
@@ -241,9 +254,10 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
               </div>
             </div>
 
+            {/* Reporting EUR + rate */}
             <div className={styles.formRowPair}>
               <div className={styles.formItem}>
-                <label>EUR Currency:</label>
+                <label>Reporting currency (EUR):</label>
                 <select
                   name="reportingCurrencyEurId"
                   className={styles.textInput}
@@ -276,42 +290,6 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                 </select>
               </div>
             </div>
-
-            <div className={styles.formRowPair}>
-              <div className={styles.formItem}>
-                <label>Local Exchange Rate:</label>
-                <select
-                  name="localExchangeRateId"
-                  className={styles.textInput}
-                  value={budget.localExchangeRateId || ""}
-                  onChange={handleChange}
-                >
-                  <option value="">Select rate</option>
-                  {exchangeRates.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.exchangeRate}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className={styles.formItem}>
-                <label>Local → GBP Exchange Rate (Alt):</label>
-                <select
-                  name="localExchangeRateToGbpId"
-                  className={styles.textInput}
-                  value={budget.localExchangeRateToGbpId || ""}
-                  onChange={handleChange}
-                >
-                  <option value="">Select rate</option>
-                  {exchangeRates.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.exchangeRate}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
           </div>
         </form>
       </div>
@@ -320,6 +298,8 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
         <CostDetails
           budgetId={budget.id}
           refreshTrigger={refreshCostDetailsTrigger}
+          budget={budget}
+          exchangeRates={exchangeRates}
         />
       )}
     </div>
