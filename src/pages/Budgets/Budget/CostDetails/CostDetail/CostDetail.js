@@ -102,14 +102,12 @@ const CostDetail = ({
           placeholder="%"
         />
 
+        {/* Local amount is calculated in CostDetails and shown as read-only */}
         <input
           type="number"
           step="0.001"
           value={ev.amountLocalCurrency ?? cost.amountLocalCurrency ?? ""}
-          onChange={(e) =>
-            onChange("amountLocalCurrency", toNum(e.target.value))
-          }
-          onBlur={autoSave ? handleSubmit : undefined}
+          readOnly
           className={`${styles.input} ${styles.cell} ${styles.cellAmt}`}
           placeholder="Local"
         />
@@ -165,28 +163,31 @@ const CostDetail = ({
     );
   }
 
-  // view mode
+  // view mode – just render whatever is in cost (already recalculated in CostDetails)
+  const displayCost = cost;
+
   return (
     <div className={styles.viewRow}>
       <div className={`${styles.vcell} ${styles.cellDescription}`}>
-        <strong>{cost.costDescription}</strong>
+        <strong>{displayCost.costDescription}</strong>
       </div>
       <div className={`${styles.vcell} ${styles.cellType}`}>
-        {costTypes.find((t) => t.id === cost.costTypeId)?.costTypeName || "-"}
+        {costTypes.find((t) => t.id === displayCost.costTypeId)?.costTypeName ||
+          "-"}
       </div>
       <div className={`${styles.vcell} ${styles.cellCategory}`}>
-        {costs.find((c) => c.id === cost.costId)?.costName || "-"}
+        {costs.find((c) => c.id === displayCost.costId)?.costName || "-"}
       </div>
       <div className={`${styles.vcell} ${styles.cellUnitsPrice}`}>
-        {`${cost.noOfUnits} × ${cost.unitPrice}`}
+        {`${displayCost.noOfUnits} × ${displayCost.unitPrice}`}
       </div>
       <div className={`${styles.vcell} ${styles.cellPercent}`}>
-        {`${cost.percentageCharging}%`}
+        {`${displayCost.percentageCharging}%`}
       </div>
       <div className={`${styles.vcell} ${styles.cellAmounts}`}>
-        Local: {cost.amountLocalCurrency ?? "-"} | Reporting:{" "}
-        {cost.amountReportingCurrency ?? "-"} | GBP: {cost.amountGBP ?? "-"} |
-        EUR: {cost.amountEuro ?? "-"}
+        Local: {displayCost.amountLocalCurrency ?? "-"} | Reporting:{" "}
+        {displayCost.amountReportingCurrency ?? "-"} | GBP:{" "}
+        {displayCost.amountGBP ?? "-"} | EUR: {displayCost.amountEuro ?? "-"}
       </div>
       <div className={`${styles.vcell} ${styles.cellActions}`}>
         <button
@@ -204,7 +205,7 @@ const CostDetail = ({
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            onDelete(cost.costDetailId);
+            onDelete(displayCost.costDetailId);
           }}
           className={`${styles.actionBtn} ${styles.danger}`}
           title="Delete"

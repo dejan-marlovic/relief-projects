@@ -14,6 +14,7 @@ import PaymentOrders from "./pages/PaymentsOrders/PaymentOrders";
 import Signatures from "./pages/Signatures/Signatures";
 import Recipients from "./pages/Recipients/Recipients";
 import Documents from "./pages/Documents/Documents";
+import Statistics from "./pages/Statistics/Statistics";
 import RegisterProject from "./pages/RegisterProject/RegisterProject"; // ✅ Register Project page
 import NoPage from "./pages/NoPage/NoPage"; // Catch-all for undefined routes (404)
 
@@ -45,6 +46,7 @@ export default function App() {
             <Route path="signatures" element={<Signatures />} />
             <Route path="recipients" element={<Recipients />} />
             <Route path="documents" element={<Documents />} />
+            <Route path="statistics" element={<Statistics />} />
             <Route path="register-project" element={<RegisterProject />} />{" "}
             {/* ✅ New page to register a project */}
             {/* Catch-all route (if user navigates to a non-existent route) */}

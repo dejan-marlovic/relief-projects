@@ -8,6 +8,9 @@ import Memos from "../Project/Memos/Memos.jsx";
 // Import ProjectContext to access the currently selected project ID
 import { ProjectContext } from "../../context/ProjectContext";
 
+// ✅ Base URL (same approach as Transactions)
+const BASE_URL = "http://localhost:8080";
+
 // Define the Project component
 const Project = () => {
   // Extract selected project ID from global context
@@ -26,23 +29,27 @@ const Project = () => {
   const [loading, setLoading] = useState(false);
 
   const [projectStatuses, setProjectStatuses] = useState([]);
-
   const [projectTypes, setProjectTypes] = useState([]);
-
   const [addresses, setAddresses] = useState([]);
-
   const [availableParentProjects, setAvailableParentProjects] = useState([]);
+
+  // ✅ Sector-related state
+  const [sectorOptions, setSectorOptions] = useState([]); // [{id, sectorCode, sectorDescription}]
+  const [selectedSectorIds, setSelectedSectorIds] = useState([]); // string[]
+  const [currentProjectSectorLinks, setCurrentProjectSectorLinks] = useState(
+    []
+  ); // [{id, projectId, sectorId}]
 
   // Fetch full project details from backend when selectedProjectId changes
   useEffect(() => {
-    if (!selectedProjectId) return; // Do nothing if no project selected
+    if (!selectedProjectId) return;
 
     const fetchProjectDetails = async () => {
       try {
-        setLoading(true); // Start loading
-        const token = localStorage.getItem("authToken"); // Get auth token
+        setLoading(true);
+        const token = localStorage.getItem("authToken");
         const response = await fetch(
-          `http://localhost:8080/api/projects/${selectedProjectId}`,
+          `${BASE_URL}/api/projects/${selectedProjectId}`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -53,24 +60,78 @@ const Project = () => {
 
         if (!response.ok) throw new Error("Failed to fetch project details");
 
-        const projectDetailsData = await response.json(); // Parse response
-        setProjectDetails(projectDetailsData); // Update state with data
+        const projectDetailsData = await response.json();
+        setProjectDetails(projectDetailsData);
       } catch (error) {
-        console.error("Error fetching project details:", error); // Log error
+        console.error("Error fetching project details:", error);
       } finally {
-        setLoading(false); // Stop loading
+        setLoading(false);
       }
     };
 
-    fetchProjectDetails(); // Trigger fetch
-  }, [selectedProjectId]); // Dependency: runs when selectedProjectId changes
+    fetchProjectDetails();
+  }, [selectedProjectId]);
+
+  // Fetch sectors list (for checkbox options)
+  useEffect(() => {
+    const fetchSectors = async () => {
+      try {
+        const token = localStorage.getItem("authToken");
+        const res = await fetch(`${BASE_URL}/api/sectors/active`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) throw new Error("Failed to fetch sectors");
+        const data = await res.json();
+        setSectorOptions(Array.isArray(data) ? data : []);
+      } catch (e) {
+        console.error("Error fetching sectors:", e);
+        setSectorOptions([]);
+      }
+    };
+    fetchSectors();
+  }, []);
+
+  // Fetch existing project-sector links and derive selected IDs
+  useEffect(() => {
+    if (!selectedProjectId) {
+      setCurrentProjectSectorLinks([]);
+      setSelectedSectorIds([]);
+      return;
+    }
+    const fetchProjectSectors = async () => {
+      try {
+        const token = localStorage.getItem("authToken");
+        const res = await fetch(`${BASE_URL}/api/project-sectors/active`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) throw new Error("Failed to fetch project-sector links");
+        const links = await res.json();
+        const byProject = (Array.isArray(links) ? links : []).filter(
+          (ps) => String(ps.projectId) === String(selectedProjectId)
+        );
+        setCurrentProjectSectorLinks(byProject);
+        setSelectedSectorIds(byProject.map((ps) => String(ps.sectorId)));
+      } catch (e) {
+        console.error("Error fetching project sectors:", e);
+        setCurrentProjectSectorLinks([]);
+        setSelectedSectorIds([]);
+      }
+    };
+    fetchProjectSectors();
+  }, [selectedProjectId]);
 
   useEffect(() => {
     const fetchProjectStatuses = async () => {
       try {
         const token = localStorage.getItem("authToken");
         const response = await fetch(
-          "http://localhost:8080/api/project-statuses/active",
+          `${BASE_URL}/api/project-statuses/active`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -95,15 +156,12 @@ const Project = () => {
     const fetchAvailableParentProjects = async () => {
       try {
         const token = localStorage.getItem("authToken");
-        const response = await fetch(
-          "http://localhost:8080/api/projects/ids-names",
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await fetch(`${BASE_URL}/api/projects/ids-names`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         if (!response.ok) throw new Error("Failed to fetch project list");
 
@@ -129,13 +187,13 @@ const Project = () => {
         const token = localStorage.getItem("authToken");
 
         const [typeRes, addressRes] = await Promise.all([
-          fetch("http://localhost:8080/api/project-types/active", {
+          fetch(`${BASE_URL}/api/project-types/active`, {
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
           }),
-          fetch("http://localhost:8080/api/addresses/active", {
+          fetch(`${BASE_URL}/api/addresses/active`, {
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
@@ -167,7 +225,7 @@ const Project = () => {
       try {
         const token = localStorage.getItem("authToken");
         const response = await fetch(
-          `http://localhost:8080/api/projects/${selectedProjectId}/cover-image`,
+          `${BASE_URL}/api/projects/${selectedProjectId}/cover-image`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -179,14 +237,14 @@ const Project = () => {
         if (!response.ok) throw new Error("Failed to fetch cover image");
 
         const imageData = await response.json();
-        setCoverImage(imageData.projectCoverImage); // Save image URL
+        setCoverImage(imageData.projectCoverImage);
       } catch (error) {
         console.error("Error fetching cover image:", error);
-        setCoverImage(null); // Reset if error occurs
+        setCoverImage(null);
       }
     };
 
-    fetchCoverImage(); // Trigger image fetch
+    fetchCoverImage();
   }, [selectedProjectId]);
 
   // Handle input field changes by updating local projectDetails state
@@ -198,11 +256,61 @@ const Project = () => {
     }));
   };
 
+  // ✅ Toggle a single sector on/off without affecting others
+  const handleToggleSector = (sectorIdStr, checked) => {
+    setSelectedSectorIds((prev) => {
+      if (checked) {
+        return prev.includes(sectorIdStr) ? prev : [...prev, sectorIdStr];
+      }
+      return prev.filter((id) => id !== sectorIdStr);
+    });
+  };
+
+  // ✅ Immediate removal by clicking a pill (DELETE right away)
+  const handleRemoveSectorClick = async (sectorId) => {
+    const link = currentProjectSectorLinks.find(
+      (l) => String(l.sectorId) === String(sectorId)
+    );
+
+    // If there's no backend link yet (e.g., user toggled in UI but not saved),
+    // just update UI selection.
+    if (!link) {
+      setSelectedSectorIds((prev) =>
+        prev.filter((id) => String(id) !== String(sectorId))
+      );
+      return;
+    }
+
+    if (!window.confirm("Remove this sector from the project?")) return;
+
+    try {
+      const token = localStorage.getItem("authToken");
+      const res = await fetch(`${BASE_URL}/api/project-sectors/${link.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!res.ok) throw new Error("Failed to delete sector link");
+
+      // Optimistic local updates
+      setCurrentProjectSectorLinks((prev) =>
+        prev.filter((l) => l.id !== link.id)
+      );
+      setSelectedSectorIds((prev) =>
+        prev.filter((id) => String(id) !== String(sectorId))
+      );
+    } catch (e) {
+      console.error(e);
+      alert("Failed to delete sector link.");
+    }
+  };
+
   // Automatically resize textarea to fit content
   const autoResize = (textarea) => {
     if (!textarea) return;
-    textarea.style.height = "auto"; // Reset height
-    textarea.style.height = `${textarea.scrollHeight}px`; // Set height to fit content
+    textarea.style.height = "auto";
+    textarea.style.height = `${textarea.scrollHeight}px`;
   };
 
   const handleDelete = async () => {
@@ -213,7 +321,7 @@ const Project = () => {
       const token = localStorage.getItem("authToken");
 
       const response = await fetch(
-        `http://localhost:8080/api/projects/${projectDetails.id}`,
+        `${BASE_URL}/api/projects/${projectDetails.id}`,
         {
           method: "DELETE",
           headers: {
@@ -239,12 +347,90 @@ const Project = () => {
         setSelectedProjectId("");
       }
 
-      // Optionally clear UI state
+      // Clear UI state
       setProjectDetails(null);
       setCoverImage(null);
+      setSelectedSectorIds([]);
+      setCurrentProjectSectorLinks([]);
     } catch (error) {
       console.error("Delete error:", error);
       alert("Error deleting project.");
+    }
+  };
+
+  // ✅ Reconcile selected sectors with backend links on Save (add/remove diffs)
+  const syncProjectSectors = async (projectId) => {
+    const token = localStorage.getItem("authToken");
+
+    const currentBySectorId = new Map(
+      currentProjectSectorLinks.map((l) => [String(l.sectorId), l])
+    );
+
+    const selectedSet = new Set(selectedSectorIds.map(String));
+
+    const toAdd = [...selectedSet].filter(
+      (sid) => !currentBySectorId.has(String(sid))
+    );
+    const toRemove = currentProjectSectorLinks.filter(
+      (l) => !selectedSet.has(String(l.sectorId))
+    );
+
+    // Create missing links
+    for (const sid of toAdd) {
+      try {
+        const res = await fetch(`${BASE_URL}/api/project-sectors`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            projectId: Number(projectId),
+            sectorId: Number(sid),
+          }),
+        });
+        if (!res.ok) {
+          const msg = await res.text().catch(() => "");
+          throw new Error(`Failed to link sector ${sid}. ${msg}`);
+        }
+      } catch (e) {
+        console.error(e);
+        alert(e.message || "Failed to add sector link.");
+      }
+    }
+
+    // Soft delete removed links
+    for (const link of toRemove) {
+      try {
+        const res = await fetch(`${BASE_URL}/api/project-sectors/${link.id}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) throw new Error("Failed to delete sector link");
+      } catch (e) {
+        console.error(e);
+        alert("Failed to delete sector link.");
+      }
+    }
+
+    // Refresh links
+    try {
+      const res = await fetch(`${BASE_URL}/api/project-sectors/active`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const links = res.ok ? await res.json() : [];
+      const byProject = (Array.isArray(links) ? links : []).filter(
+        (ps) => String(ps.projectId) === String(projectId)
+      );
+      setCurrentProjectSectorLinks(byProject);
+      setSelectedSectorIds(byProject.map((ps) => String(ps.sectorId)));
+    } catch (e) {
+      console.error("Failed to refresh project sectors after sync:", e);
     }
   };
 
@@ -252,8 +438,9 @@ const Project = () => {
     try {
       const token = localStorage.getItem("authToken");
 
+      // 1) Save project fields
       const response = await fetch(
-        `http://localhost:8080/api/projects/${projectDetails.id}`,
+        `${BASE_URL}/api/projects/${projectDetails.id}`,
         {
           method: "PUT",
           headers: {
@@ -267,31 +454,56 @@ const Project = () => {
       if (!response.ok) throw new Error("Failed to update project");
 
       // ✅ Update the project in the global context list
-      // We use the functional form of setProjects to ensure we're working with the latest state.
-      // React will call the function below and pass in the most current version of `projects`.
-      // The parameter name `prevProjects` is just a name — you could call it anything.
-      // What's important is that React gives us the actual current state.
       setProjects((prevProjects) =>
-        // Create a new array using .map() so React sees it as a fresh update
-        prevProjects.map(
-          (proj) =>
-            // Check if this is the project we just edited
-            proj.id === projectDetails.id
-              ? {
-                  // Copy all properties of the existing project object
-                  ...proj,
-                  // Overwrite just the projectName with the updated one
-                  projectName: projectDetails.projectName,
-                }
-              : proj // If it's not the edited project, return it unchanged
+        prevProjects.map((proj) =>
+          proj.id === projectDetails.id
+            ? { ...proj, projectName: projectDetails.projectName }
+            : proj
         )
       );
+
+      // 2) Sync sector checkbox selection with backend links
+      await syncProjectSectors(projectDetails.id);
 
       alert("Project updated successfully!");
     } catch (error) {
       console.error("Update error:", error);
       alert("Error updating project.");
     }
+  };
+
+  // Helper: get sector display text by id
+  const getSectorLabel = (id) => {
+    const s = sectorOptions.find(
+      (x) => String(x.id ?? x.sectorId ?? x.sector_id) === String(id)
+    );
+    return (
+      s?.sectorDescription ??
+      s?.sector_description ??
+      s?.sectorCode ??
+      s?.sector_code ??
+      `Sector ${id}`
+    );
+  };
+
+  // Simple pill styles (inline to avoid SCSS changes)
+  const pillStyle = {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "6px",
+    padding: "4px 8px",
+    margin: "4px 6px 0 0",
+    borderRadius: "999px",
+    border: "1px solid #ddd",
+    fontSize: "12px",
+    lineHeight: 1.6,
+    background: "#f7f7f7",
+  };
+  const pillBtnStyle = {
+    border: "none",
+    background: "transparent",
+    cursor: "pointer",
+    fontSize: "12px",
   };
 
   return (
@@ -319,11 +531,13 @@ const Project = () => {
             {/* Main form content */}
             <div className={styles.formContent}>
               {loading ? (
-                <p>Loading...</p> // Show loading indicator
+                <p>Loading...</p>
               ) : (
                 <form>
                   {/* Project Description */}
-                  <div className={(styles.fullWidthField, styles.textInput)}>
+                  <div
+                    className={`${styles.fullWidthField} ${styles.textInput}`}
+                  >
                     <label>Project Description:</label>
                     <textarea
                       name="projectDescription"
@@ -339,7 +553,6 @@ const Project = () => {
                   <div className={styles.formTwoColumn}>
                     {/* Left Column */}
                     <div className={styles.formColumnLeft}>
-                      {/* Place first half of fields here */}
                       {/* Project Name */}
                       <div>
                         <label>Project Name:</label>
@@ -452,6 +665,93 @@ const Project = () => {
                           <option value="No">No</option>
                         </select>
                       </div>
+
+                      {/* ✅ Sectors checkbox list (before buttons) */}
+                      <div>
+                        <label>Sectors:</label>
+
+                        {/* Checkbox list (click to add without unselecting others) */}
+                        <div
+                          style={{
+                            border: "1px solid #ddd",
+                            borderRadius: 8,
+                            padding: 8,
+                            maxHeight: 180,
+                            overflow: "auto",
+                          }}
+                        >
+                          {sectorOptions.length === 0 ? (
+                            <div style={{ fontSize: 12, color: "#666" }}>
+                              No sectors available
+                            </div>
+                          ) : (
+                            sectorOptions.map((s) => {
+                              const idStr = String(
+                                s.id ?? s.sectorId ?? s.sector_id
+                              );
+                              const label =
+                                s.sectorDescription ??
+                                s.sector_description ??
+                                s.sectorCode ??
+                                s.sector_code ??
+                                `Sector ${idStr}`;
+                              const checked = selectedSectorIds.includes(idStr);
+                              return (
+                                <label
+                                  key={idStr}
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 8,
+                                    padding: "4px 0",
+                                    cursor: "pointer",
+                                    userSelect: "none",
+                                  }}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    onChange={(e) =>
+                                      handleToggleSector(
+                                        idStr,
+                                        e.target.checked
+                                      )
+                                    }
+                                  />
+                                  <span>{label}</span>
+                                </label>
+                              );
+                            })
+                          )}
+                        </div>
+
+                        {/* Assigned sector pills with remove buttons */}
+                        <div style={{ marginTop: 6 }}>
+                          {selectedSectorIds.length > 0 ? (
+                            selectedSectorIds.map((sid) => (
+                              <span key={sid} style={pillStyle}>
+                                {getSectorLabel(sid)}
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveSectorClick(sid)}
+                                  aria-label={`Remove sector ${getSectorLabel(
+                                    sid
+                                  )}`}
+                                  title="Remove sector"
+                                  style={pillBtnStyle}
+                                >
+                                  ❌
+                                </button>
+                              </span>
+                            ))
+                          ) : (
+                            <span style={{ fontSize: 12, color: "#666" }}>
+                              No sectors assigned
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
                       <button
                         type="button"
                         onClick={handleSave}
@@ -584,7 +884,6 @@ const Project = () => {
                           className={styles.textInput}
                         />
                       </div>
-
                       {/* Project Start Revision */}
                       <div>
                         <label>Project Start (Revised):</label>
