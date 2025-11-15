@@ -24,6 +24,44 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
     return currencies.find((c) => c.id === numericId)?.name || "";
   };
 
+  const getCurrencyById = (id) => {
+    if (!id || !currencies || currencies.length === 0) return null;
+    const numericId = typeof id === "string" ? Number(id) : id;
+    return currencies.find((c) => c.id === numericId) || null;
+  };
+
+  const findCurrencyIdByName = (name) => {
+    if (!name || !currencies || currencies.length === 0) return null;
+    return currencies.find(
+      (c) => (c.name || "").toUpperCase() === name.toUpperCase()
+    )?.id;
+  };
+
+  // 💱 format: "1 USD → 10.50 SEK"
+  const formatRateLabel = (r) => {
+    const baseName = getCurrencyNameById(r.baseCurrencyId) || r.baseCurrencyId;
+    const quoteName =
+      getCurrencyNameById(r.quoteCurrencyId) || r.quoteCurrencyId;
+    return `1 ${baseName} → ${r.rate} ${quoteName}`;
+  };
+
+  // Filter rates for a specific currency pair
+  const filterRatesForPair = (baseCurrencyId, quoteCurrencyId) => {
+    if (!baseCurrencyId || !quoteCurrencyId || !exchangeRates.length) return [];
+    const baseNum =
+      typeof baseCurrencyId === "string"
+        ? Number(baseCurrencyId)
+        : baseCurrencyId;
+    const quoteNum =
+      typeof quoteCurrencyId === "string"
+        ? Number(quoteCurrencyId)
+        : quoteCurrencyId;
+
+    return exchangeRates.filter(
+      (r) => r.baseCurrencyId === baseNum && r.quoteCurrencyId === quoteNum
+    );
+  };
+
   // 🔄 Fetch: Currencies
   const fetchCurrencies = async (token) => {
     const response = await fetch(`${BASE_URL}/api/currencies/active`, {
@@ -65,30 +103,80 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
     try {
       const token = localStorage.getItem("authToken");
 
+      // 🧼 Build a clean payload explicitly – field names must match BudgetDTO
+      const payload = {
+        id: budget.id,
+        projectId: budget.projectId,
+
+        budgetDescription: budget.budgetDescription ?? "",
+        budgetPreparationDate: budget.budgetPreparationDate ?? null,
+        totalAmount:
+          budget.totalAmount === "" || budget.totalAmount == null
+            ? null
+            : Number(budget.totalAmount),
+
+        // currencies
+        localCurrencyId:
+          budget.localCurrencyId === "" || budget.localCurrencyId == null
+            ? null
+            : Number(budget.localCurrencyId),
+
+        reportingCurrencySekId:
+          budget.reportingCurrencySekId === "" ||
+          budget.reportingCurrencySekId == null
+            ? null
+            : Number(budget.reportingCurrencySekId),
+
+        reportingCurrencyEurId:
+          budget.reportingCurrencyEurId === "" ||
+          budget.reportingCurrencyEurId == null
+            ? null
+            : Number(budget.reportingCurrencyEurId),
+
+        // exchange rates (FK → exchange_rates)
+        localExchangeRateToGbpId:
+          budget.localExchangeRateToGbpId === "" ||
+          budget.localExchangeRateToGbpId == null
+            ? null
+            : Number(budget.localExchangeRateToGbpId),
+
+        reportingExchangeRateSekId:
+          budget.reportingExchangeRateSekId === "" ||
+          budget.reportingExchangeRateSekId == null
+            ? null
+            : Number(budget.reportingExchangeRateSekId),
+
+        reportingExchangeRateEurId:
+          budget.reportingExchangeRateEurId === "" ||
+          budget.reportingExchangeRateEurId == null
+            ? null
+            : Number(budget.reportingExchangeRateEurId),
+      };
+
       const response = await fetch(`${BASE_URL}/api/budgets/${budget.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(budget),
+        body: JSON.stringify(payload),
       });
 
-      if (!response.ok) throw new Error("Failed to update budget");
+      if (!response.ok) {
+        const text = await response.text().catch(() => "");
+        console.error("Budget update failed", response.status, text);
+        throw new Error("Failed to update budget");
+      }
 
       const updated = await response.json();
       console.log("🔁 Updated budget from server:", updated);
       alert("Budget updated successsfully!");
 
-      // ✅ keep local state in sync
       setBudget(updated);
       onUpdate?.(updated);
 
-      // 🔄 Refetch latest exchange rates (in case they changed on server)
       const freshRates = await fetchExchangeRates(token);
       setExchangeRates(freshRates);
-
-      // ✅ trigger cost details recalculation (CostDetails sees new budget + new exchangeRates)
       triggerRefreshCostDetails();
     } catch (error) {
       console.error("Error updating budget:", error);
@@ -123,15 +211,58 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    // Cast obvious numeric fields to numbers or ""
+    const numericFields = [
+      "totalAmount",
+      "localCurrencyId",
+      "localExchangeRateToGbpId",
+      "reportingCurrencySekId",
+      "reportingCurrencyEurId",
+      "reportingExchangeRateSekId",
+      "reportingExchangeRateEurId",
+    ];
+
+    const castValue = numericFields.includes(name)
+      ? value === ""
+        ? ""
+        : Number(value)
+      : value;
+
     setBudget((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: castValue,
     }));
   };
 
   // Names for fixed reporting currencies (for display only)
   const sekName = getCurrencyNameById(budget.reportingCurrencySekId) || "SEK";
   const eurName = getCurrencyNameById(budget.reportingCurrencyEurId) || "EUR";
+
+  // IDs of special currencies
+  const gbpCurrencyId = findCurrencyIdByName("GBP");
+
+  // Rate lists for each dropdown
+  const localToGbpRates =
+    budget.localCurrencyId && gbpCurrencyId
+      ? filterRatesForPair(budget.localCurrencyId, gbpCurrencyId)
+      : [];
+
+  const localToSekRates =
+    budget.localCurrencyId && budget.reportingCurrencySekId
+      ? filterRatesForPair(
+          budget.localCurrencyId,
+          budget.reportingCurrencySekId
+        )
+      : [];
+
+  const localToEurRates =
+    budget.localCurrencyId && budget.reportingCurrencyEurId
+      ? filterRatesForPair(
+          budget.localCurrencyId,
+          budget.reportingCurrencyEurId
+        )
+      : [];
 
   return (
     <div className={styles.budgetContainer}>
@@ -213,15 +344,15 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
               <div className={styles.formItem}>
                 <label>Local → GBP Rate:</label>
                 <select
-                  name="localCurrencyToGbpId"
+                  name="localExchangeRateToGbpId"
                   className={styles.textInput}
-                  value={budget.localCurrencyToGbpId || ""}
+                  value={budget.localExchangeRateToGbpId || ""}
                   onChange={handleChange}
                 >
                   <option value="">Select rate</option>
-                  {exchangeRates.map((r) => (
+                  {localToGbpRates.map((r) => (
                     <option key={r.id} value={r.id}>
-                      {r.exchangeRate}
+                      {formatRateLabel(r)}
                     </option>
                   ))}
                 </select>
@@ -241,7 +372,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
               </div>
 
               <div className={styles.formItem}>
-                <label>SEK Exchange Rate:</label>
+                <label>SEK Exchange Rate (Local → SEK):</label>
                 <select
                   name="reportingExchangeRateSekId"
                   className={styles.textInput}
@@ -249,9 +380,9 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                   onChange={handleChange}
                 >
                   <option value="">Select rate</option>
-                  {exchangeRates.map((r) => (
+                  {localToSekRates.map((r) => (
                     <option key={r.id} value={r.id}>
-                      {r.exchangeRate}
+                      {formatRateLabel(r)}
                     </option>
                   ))}
                 </select>
@@ -271,7 +402,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
               </div>
 
               <div className={styles.formItem}>
-                <label>EUR Exchange Rate:</label>
+                <label>EUR Exchange Rate (Local → EUR):</label>
                 <select
                   name="reportingExchangeRateEurId"
                   className={styles.textInput}
@@ -279,9 +410,9 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                   onChange={handleChange}
                 >
                   <option value="">Select rate</option>
-                  {exchangeRates.map((r) => (
+                  {localToEurRates.map((r) => (
                     <option key={r.id} value={r.id}>
-                      {r.exchangeRate}
+                      {formatRateLabel(r)}
                     </option>
                   ))}
                 </select>

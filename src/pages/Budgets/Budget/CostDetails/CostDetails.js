@@ -94,16 +94,16 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
     const numericId = typeof id === "string" ? Number(id) : id;
 
     const rateObj = exchangeRates.find((r) => r.id === numericId);
-    if (!rateObj || rateObj.exchangeRate == null) return null;
+    if (!rateObj || rateObj.rate == null) return null;
 
-    const rate = Number(rateObj.exchangeRate);
+    const rate = Number(rateObj.rate);
     return Number.isNaN(rate) ? null : rate;
   };
 
   // ---- SHARED AMOUNT CALCULATION ----
   // Implements:
   // - Local currency (e.g. TRY) base cost
-  // - Local -> GBP (budget.localCurrencyToGbpId)
+  // - Local -> GBP (budget.localExchangeRateToGbpId)
   // - Local -> SEK (budget.reportingExchangeRateSekId)
   // - Local -> EUR (budget.reportingExchangeRateEurId)
   const computeAmounts = (row) => {
@@ -127,7 +127,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
     // Rates from budget header
     const rateSek = getRateById(budget.reportingExchangeRateSekId);
     const rateEur = getRateById(budget.reportingExchangeRateEurId);
-    const rateGbp = getRateById(budget.localCurrencyToGbpId);
+    const rateGbp = getRateById(budget.localExchangeRateToGbpId);
 
     if (gross !== 0 && rateSek) {
       updated.amountReportingCurrency = Number((gross * rateSek).toFixed(3));
@@ -154,7 +154,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
       console.log("🔁 Recalculating all cost details with budget:", {
         sekRateId: budget.reportingExchangeRateSekId,
         eurRateId: budget.reportingExchangeRateEurId,
-        gbpRateId: budget.localCurrencyToGbpId,
+        gbpRateId: budget.localExchangeRateToGbpId,
       });
 
       const updatedList = await Promise.all(
