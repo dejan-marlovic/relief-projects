@@ -1,0 +1,128 @@
+.page {
+  padding: 16px;
+  width: 100%;
+}
+
+.card {
+  /* Use a CSS var for max-width so JS can set it dynamically */
+  max-width: var(--container-max, 1720px);
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.08);
+  padding: 0;
+  overflow: visible;
+}
+
+/* Titles */
+.title {
+  font-size: 28px;
+  margin: 12px 16px 6px;
+}
+
+.subtitle {
+  color: #666;
+  margin: 0 16px 12px;
+}
+
+/* Loading skeleton box inside the chart area */
+.loadingSkeleton {
+  background: #f3f4f6;
+  border-radius: 8px;
+  margin: 0 0 8px 0;
+  height: var(--chart-height, 560px);
+}
+
+/* Chart wrapper row */
+.chartRow {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  overflow: visible;
+}
+
+/* Spacer between chart (incl. labels) and legend */
+.chartLegendSpacer {
+  height: var(--spacer-height, 24px);
+}
+
+/* Legend */
+.legend {
+  margin-top: 12px;
+  padding-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+  line-height: 1.2;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legendSwatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  display: inline-block;
+  flex: 0 0 auto;
+}
+
+.legendLabel {
+  font-size: 14px;
+}
+
+/* Tooltip for slices */
+.tooltipBox {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 12px;
+  max-width: 360px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  line-height: 1.25;
+}
+
+.tooltipTitle {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.tooltipCount {
+  margin-bottom: 6px;
+}
+
+.tooltipProjects {
+  margin: 0;
+  padding-left: 16px;
+
+  li {
+    font-size: 13px;
+    margin-bottom: 2px;
+  }
+}
+
+.tooltipMore {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.tooltipEmpty {
+  font-size: 13px;
+  color: #666;
+}
+
+/* Meta counters row */
+.meta {
+  margin: 12px 16px 16px;
+  font-size: 12px;
+  color: #777;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}

@@ -31,7 +31,7 @@ const isValidNew = (v) =>
   v.amountGBP !== "" &&
   v.amountEuro !== "";
 
-const CostDetails = ({ budgetId, refreshTrigger }) => {
+const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
   const [costTypes, setCostTypes] = useState([]);
   const [costs, setCosts] = useState([]);
   const [costDetails, setCostDetails] = useState([]);
@@ -39,7 +39,7 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
   const [editedValues, setEditedValues] = useState({});
 
   const fetchCostDetails = useCallback(async () => {
-    if (!budgetId) return;
+    if (!budgetId) return [];
 
     const token = localStorage.getItem("authToken");
 
@@ -51,8 +51,10 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
       if (!response.ok) throw new Error("Failed to fetch cost details");
       const data = await response.json();
       setCostDetails(data);
+      return data;
     } catch (error) {
       console.error("Error fetching cost details:", error);
+      return [];
     }
   }, [budgetId]);
 
@@ -83,13 +85,174 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
   };
 
   useEffect(() => {
-    fetchCostDetails();
-  }, [fetchCostDetails, refreshTrigger]);
-
-  useEffect(() => {
     fetchCostTypes();
     fetchCosts();
   }, []);
+
+  const getRateById = (id) => {
+    if (!id || !exchangeRates || exchangeRates.length === 0) return null;
+    const numericId = typeof id === "string" ? Number(id) : id;
+
+    const rateObj = exchangeRates.find((r) => r.id === numericId);
+    if (!rateObj || rateObj.rate == null) return null;
+
+    const rate = Number(rateObj.rate);
+    return Number.isNaN(rate) ? null : rate;
+  };
+
+  // ---- SHARED AMOUNT CALCULATION ----
+  // Implements:
+  // - Local currency (e.g. TRY) base cost
+  // - Local -> GBP (budget.localExchangeRateToGbpId)
+  // - Local -> SEK (budget.reportingExchangeRateSekId)
+  // - Local -> EUR (budget.reportingExchangeRateEurId)
+  const computeAmounts = (row) => {
+    if (!budget) return row;
+
+    const noOfUnits = Number(row.noOfUnits) || 0;
+    const unitPrice = Number(row.unitPrice) || 0;
+    const pct =
+      row.percentageCharging === "" || row.percentageCharging == null
+        ? 0
+        : Number(row.percentageCharging) || 0;
+
+    const base = noOfUnits * unitPrice;
+    const gross = base * (1 + pct / 100);
+
+    const updated = { ...row };
+
+    // Local in budget's local currency
+    updated.amountLocalCurrency = gross === 0 ? "" : Number(gross.toFixed(3));
+
+    // Rates from budget header
+    const rateSek = getRateById(budget.reportingExchangeRateSekId);
+    const rateEur = getRateById(budget.reportingExchangeRateEurId);
+    const rateGbp = getRateById(budget.localExchangeRateToGbpId);
+
+    if (gross !== 0 && rateSek) {
+      updated.amountReportingCurrency = Number((gross * rateSek).toFixed(3));
+    }
+
+    if (gross !== 0 && rateEur) {
+      updated.amountEuro = Number((gross * rateEur).toFixed(3));
+    }
+
+    if (gross !== 0 && rateGbp) {
+      updated.amountGBP = Number((gross * rateGbp).toFixed(3));
+    }
+
+    return updated;
+  };
+
+  // 🔁 Recalc + persist all cost details when budget is saved
+  const recalcAllForBudget = useCallback(
+    async (list) => {
+      if (!budget || !Array.isArray(list) || list.length === 0) return;
+
+      const token = localStorage.getItem("authToken");
+
+      console.log("🔁 Recalculating all cost details with budget:", {
+        sekRateId: budget.reportingExchangeRateSekId,
+        eurRateId: budget.reportingExchangeRateEurId,
+        gbpRateId: budget.localExchangeRateToGbpId,
+      });
+
+      const updatedList = await Promise.all(
+        list.map(async (item) => {
+          const before = {
+            id: item.costDetailId,
+            local: item.amountLocalCurrency,
+            sek: item.amountReportingCurrency,
+            gbp: item.amountGBP,
+            eur: item.amountEuro,
+          };
+
+          const computed = computeAmounts(item);
+          const merged = { ...item, ...computed };
+
+          const after = {
+            id: merged.costDetailId,
+            local: merged.amountLocalCurrency,
+            sek: merged.amountReportingCurrency,
+            gbp: merged.amountGBP,
+            eur: merged.amountEuro,
+          };
+
+          console.log("➡️ Cost detail recalc", { before, after });
+
+          const payload = {
+            ...merged,
+            noOfUnits: Number(merged.noOfUnits),
+            unitPrice: Number(merged.unitPrice),
+            percentageCharging:
+              merged.percentageCharging === "" ||
+              merged.percentageCharging == null
+                ? null
+                : Number(merged.percentageCharging),
+            amountLocalCurrency:
+              merged.amountLocalCurrency === "" ||
+              merged.amountLocalCurrency == null
+                ? null
+                : Number(merged.amountLocalCurrency),
+            amountReportingCurrency:
+              merged.amountReportingCurrency === "" ||
+              merged.amountReportingCurrency == null
+                ? null
+                : Number(merged.amountReportingCurrency),
+            amountGBP:
+              merged.amountGBP === "" || merged.amountGBP == null
+                ? null
+                : Number(merged.amountGBP),
+            amountEuro:
+              merged.amountEuro === "" || merged.amountEuro == null
+                ? null
+                : Number(merged.amountEuro),
+          };
+
+          try {
+            await fetch(`${BASE_URL}/api/cost-details/${item.costDetailId}`, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify(payload),
+            });
+          } catch (err) {
+            console.error(
+              "Failed to recalculate cost detail",
+              item.costDetailId,
+              err
+            );
+          }
+
+          return merged;
+        })
+      );
+
+      console.log(
+        "✅ Finished recalculation, updated cost details:",
+        updatedList
+      );
+      setCostDetails(updatedList);
+    },
+    [budget, exchangeRates]
+  );
+
+  // 👉 fetch on mount + whenever refreshTrigger changes
+  useEffect(() => {
+    console.log("🔔 refreshTrigger is", refreshTrigger, "budget is", budget);
+    const run = async () => {
+      const data = await fetchCostDetails();
+
+      // Only recalc after an explicit refresh (i.e. after saving budget).
+      if (!budget || refreshTrigger === 0) return;
+
+      await recalcAllForBudget(data);
+    };
+
+    run();
+  }, [fetchCostDetails, recalcAllForBudget, refreshTrigger, budget]);
 
   const handleEdit = (cost) => {
     setEditingId(cost.costDetailId);
@@ -122,15 +285,38 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
     const toNumOrBlank = (v) =>
       v === "" ? "" : Number.isNaN(Number(v)) ? v : Number(v);
 
-    setEditedValues((prev) => ({
-      ...prev,
-      [editingId]: {
-        ...prev[editingId],
+    setEditedValues((prev) => {
+      const current = prev[editingId] || {};
+
+      // basic field update
+      const baseUpdated = {
+        ...current,
         [field]: ["costDescription"].includes(field)
           ? value
           : toNumOrBlank(value),
-      },
-    }));
+      };
+
+      // Only auto-recalculate when one of these fields change
+      const shouldRecalc = [
+        "noOfUnits",
+        "unitPrice",
+        "percentageCharging",
+      ].includes(field);
+
+      if (!shouldRecalc || !budget) {
+        return {
+          ...prev,
+          [editingId]: baseUpdated,
+        };
+      }
+
+      const recomputed = computeAmounts(baseUpdated);
+
+      return {
+        ...prev,
+        [editingId]: recomputed,
+      };
+    });
   };
 
   const handleSave = async (costId) => {
@@ -141,7 +327,6 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
     const token = localStorage.getItem("authToken");
 
     if (isCreate) {
-      // Block save if required fields are missing to avoid backend "must not be null"
       if (!isValidNew(values)) {
         alert(
           "Please fill in Description, Type, Category, Units, Unit price, % Charged and all Amounts before saving."
@@ -195,7 +380,7 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
       return;
     }
 
-    // UPDATE flow (send exactly what user set, no auto-compute)
+    // UPDATE flow
     const original = costDetails.find((c) => c.costDetailId === costId);
     if (!original) return;
 
@@ -203,7 +388,6 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
 
     const fullPayload = {
       ...merged,
-      // ensure numbers for numeric fields
       noOfUnits: Number(merged.noOfUnits),
       unitPrice: Number(merged.unitPrice),
       percentageCharging:
@@ -327,9 +511,10 @@ const CostDetails = ({ budgetId, refreshTrigger }) => {
                   );
                   const totals = items.reduce(
                     (acc, item) => {
-                      acc.local += item.amountLocalCurrency || 0;
-                      acc.gbp += item.amountGBP || 0;
-                      acc.eur += item.amountEuro || 0;
+                      const computed = computeAmounts(item);
+                      acc.local += computed.amountLocalCurrency || 0;
+                      acc.gbp += computed.amountGBP || 0;
+                      acc.eur += computed.amountEuro || 0;
                       return acc;
                     },
                     { local: 0, gbp: 0, eur: 0 }
