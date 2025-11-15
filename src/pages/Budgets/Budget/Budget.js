@@ -17,6 +17,13 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
   const triggerRefreshCostDetails = () =>
     setRefreshCostDetailsTrigger((prev) => prev + 1);
 
+  // 🔎 helper: find currency name by id
+  const getCurrencyNameById = (id) => {
+    if (!id || !currencies || currencies.length === 0) return "";
+    const numericId = typeof id === "string" ? Number(id) : id;
+    return currencies.find((c) => c.id === numericId)?.name || "";
+  };
+
   // 🔄 Fetch: Currencies
   const fetchCurrencies = async (token) => {
     const response = await fetch(`${BASE_URL}/api/currencies/active`, {
@@ -122,6 +129,10 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
     }));
   };
 
+  // Names for fixed reporting currencies (for display only)
+  const sekName = getCurrencyNameById(budget.reportingCurrencySekId) || "SEK";
+  const eurName = getCurrencyNameById(budget.reportingCurrencyEurId) || "EUR";
+
   return (
     <div className={styles.budgetContainer}>
       <div className={styles.formContainer}>
@@ -217,23 +228,16 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
               </div>
             </div>
 
-            {/* Reporting SEK + rate */}
+            {/* Reporting SEK (fixed, read-only) + rate */}
             <div className={styles.formRowPair}>
               <div className={styles.formItem}>
                 <label>Reporting currency (SEK):</label>
-                <select
-                  name="reportingCurrencySekId"
+                <input
+                  type="text"
                   className={styles.textInput}
-                  value={budget.reportingCurrencySekId || ""}
-                  onChange={handleChange}
-                >
-                  <option value="">Select currency</option>
-                  {currencies.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                  value={sekName}
+                  readOnly
+                />
               </div>
 
               <div className={styles.formItem}>
@@ -254,23 +258,16 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
               </div>
             </div>
 
-            {/* Reporting EUR + rate */}
+            {/* Reporting EUR (fixed, read-only) + rate */}
             <div className={styles.formRowPair}>
               <div className={styles.formItem}>
                 <label>Reporting currency (EUR):</label>
-                <select
-                  name="reportingCurrencyEurId"
+                <input
+                  type="text"
                   className={styles.textInput}
-                  value={budget.reportingCurrencyEurId || ""}
-                  onChange={handleChange}
-                >
-                  <option value="">Select currency</option>
-                  {currencies.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                  value={eurName}
+                  readOnly
+                />
               </div>
 
               <div className={styles.formItem}>
