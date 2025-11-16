@@ -102,47 +102,51 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
 
   // ---- SHARED AMOUNT CALCULATION ----
   // Implements:
-  // - Local currency (e.g. TRY) base cost
+  // - Local currency base cost
   // - Local -> GBP (budget.localExchangeRateToGbpId)
   // - Local -> SEK (budget.reportingExchangeRateSekId)
   // - Local -> EUR (budget.reportingExchangeRateEurId)
-  const computeAmounts = (row) => {
-    if (!budget) return row;
+  const computeAmounts = useCallback(
+    (row) => {
+      if (!budget) return row;
 
-    const noOfUnits = Number(row.noOfUnits) || 0;
-    const unitPrice = Number(row.unitPrice) || 0;
-    const pct =
-      row.percentageCharging === "" || row.percentageCharging == null
-        ? 0
-        : Number(row.percentageCharging) || 0;
+      const noOfUnits = Number(row.noOfUnits) || 0;
+      const unitPrice = Number(row.unitPrice) || 0;
+      const pct =
+        row.percentageCharging === "" || row.percentageCharging == null
+          ? 0
+          : Number(row.percentageCharging) || 0;
 
-    const base = noOfUnits * unitPrice;
-    const gross = base * (1 + pct / 100);
+      const base = noOfUnits * unitPrice;
+      const gross = base * (1 + pct / 100);
 
-    const updated = { ...row };
+      const updated = { ...row };
 
-    // Local in budget's local currency
-    updated.amountLocalCurrency = gross === 0 ? "" : Number(gross.toFixed(3));
+      // Local in budget's local currency
+      updated.amountLocalCurrency = gross === 0 ? "" : Number(gross.toFixed(3));
 
-    // Rates from budget header
-    const rateSek = getRateById(budget.reportingExchangeRateSekId);
-    const rateEur = getRateById(budget.reportingExchangeRateEurId);
-    const rateGbp = getRateById(budget.localExchangeRateToGbpId);
+      // Rates from budget header
+      const rateSek = getRateById(budget.reportingExchangeRateSekId);
+      const rateEur = getRateById(budget.reportingExchangeRateEurId);
+      const rateGbp = getRateById(budget.localExchangeRateToGbpId);
 
-    if (gross !== 0 && rateSek) {
-      updated.amountReportingCurrency = Number((gross * rateSek).toFixed(3));
-    }
+      // Reporting currency = SEK
+      if (gross !== 0 && rateSek) {
+        updated.amountReportingCurrency = Number((gross * rateSek).toFixed(3));
+      }
 
-    if (gross !== 0 && rateEur) {
-      updated.amountEuro = Number((gross * rateEur).toFixed(3));
-    }
+      if (gross !== 0 && rateEur) {
+        updated.amountEuro = Number((gross * rateEur).toFixed(3));
+      }
 
-    if (gross !== 0 && rateGbp) {
-      updated.amountGBP = Number((gross * rateGbp).toFixed(3));
-    }
+      if (gross !== 0 && rateGbp) {
+        updated.amountGBP = Number((gross * rateGbp).toFixed(3));
+      }
 
-    return updated;
-  };
+      return updated;
+    },
+    [budget, exchangeRates] // exchangeRates used indirectly via getRateById
+  );
 
   // 🔁 Recalc + persist all cost details when budget is saved
   const recalcAllForBudget = useCallback(
@@ -236,7 +240,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
       );
       setCostDetails(updatedList);
     },
-    [budget, exchangeRates]
+    [budget, exchangeRates, computeAmounts]
   );
 
   // 👉 fetch on mount + whenever refreshTrigger changes
@@ -513,11 +517,12 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
                     (acc, item) => {
                       const computed = computeAmounts(item);
                       acc.local += computed.amountLocalCurrency || 0;
+                      acc.sek += computed.amountReportingCurrency || 0;
                       acc.gbp += computed.amountGBP || 0;
                       acc.eur += computed.amountEuro || 0;
                       return acc;
                     },
-                    { local: 0, gbp: 0, eur: 0 }
+                    { local: 0, sek: 0, gbp: 0, eur: 0 }
                   );
 
                   return (
@@ -546,8 +551,8 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
 
                       <div className={styles.categoryTotal}>
                         Total (Category): Local: {totals.local.toFixed(3)} |
-                        GBP: {totals.gbp.toFixed(3)} | EUR:{" "}
-                        {totals.eur.toFixed(3)}
+                        SEK: {totals.sek.toFixed(3)} | GBP:{" "}
+                        {totals.gbp.toFixed(3)} | EUR: {totals.eur.toFixed(3)}
                       </div>
                     </div>
                   );
