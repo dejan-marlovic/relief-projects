@@ -112,6 +112,7 @@ const CostDetail = ({
           placeholder="Local"
         />
 
+        {/* SEK amount (reporting currency) */}
         <input
           type="number"
           step="0.001"
@@ -123,7 +124,7 @@ const CostDetail = ({
           }
           onBlur={autoSave ? handleSubmit : undefined}
           className={`${styles.input} ${styles.cell} ${styles.cellAmt}`}
-          placeholder="Reporting"
+          placeholder="SEK"
         />
 
         <input
@@ -185,7 +186,7 @@ const CostDetail = ({
         {`${displayCost.percentageCharging}%`}
       </div>
       <div className={`${styles.vcell} ${styles.cellAmounts}`}>
-        Local: {displayCost.amountLocalCurrency ?? "-"} | Reporting:{" "}
+        Local: {displayCost.amountLocalCurrency ?? "-"} | SEK:{" "}
         {displayCost.amountReportingCurrency ?? "-"} | GBP:{" "}
         {displayCost.amountGBP ?? "-"} | EUR: {displayCost.amountEuro ?? "-"}
       </div>
