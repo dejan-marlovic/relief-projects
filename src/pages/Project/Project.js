@@ -8,8 +8,9 @@ import Memos from "../Project/Memos/Memos.jsx";
 // Import ProjectContext to access the currently selected project ID
 import { ProjectContext } from "../../context/ProjectContext";
 
-// ✅ Base URL (same approach as Transactions)
+// ✅ Base URL (backend)
 const BASE_URL = "http://localhost:8080";
+const coverImagePath = `${BASE_URL}/images/projects/`;
 
 // Define the Project component
 const Project = () => {
@@ -19,11 +20,6 @@ const Project = () => {
 
   // Local state for full project details
   const [projectDetails, setProjectDetails] = useState(null);
-
-  // Local state for project cover image URL
-  const [coverImage, setCoverImage] = useState(null);
-
-  const coverImagePath = "/images/projects/";
 
   // State to track whether the data is being loaded
   const [loading, setLoading] = useState(false);
@@ -39,6 +35,10 @@ const Project = () => {
   const [currentProjectSectorLinks, setCurrentProjectSectorLinks] = useState(
     []
   ); // [{id, projectId, sectorId}]
+
+  // ✅ Cover image upload state
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
   // Fetch full project details from backend when selectedProjectId changes
   useEffect(() => {
@@ -217,36 +217,6 @@ const Project = () => {
     fetchTypesAndAddresses();
   }, []);
 
-  // Fetch project cover image from backend when selectedProjectId changes
-  useEffect(() => {
-    if (!selectedProjectId) return;
-
-    const fetchCoverImage = async () => {
-      try {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch(
-          `${BASE_URL}/api/projects/${selectedProjectId}/cover-image`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (!response.ok) throw new Error("Failed to fetch cover image");
-
-        const imageData = await response.json();
-        setCoverImage(imageData.projectCoverImage);
-      } catch (error) {
-        console.error("Error fetching cover image:", error);
-        setCoverImage(null);
-      }
-    };
-
-    fetchCoverImage();
-  }, [selectedProjectId]);
-
   // Handle input field changes by updating local projectDetails state
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -254,6 +224,73 @@ const Project = () => {
       ...prev,
       [name]: value,
     }));
+  };
+
+  // ✅ Upload cover image via FormData
+  const uploadCoverImage = async (file) => {
+    if (!file || !projectDetails?.id) return;
+
+    setUploadError("");
+    setUploadingCover(true);
+
+    try {
+      const token = localStorage.getItem("authToken");
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch(
+        `${BASE_URL}/api/projects/${projectDetails.id}/cover-image`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`, // don't set Content-Type manually
+          },
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        const text = await response.text().catch(() => "");
+        throw new Error(text || "Failed to upload cover image");
+      }
+
+      const updatedProject = await response.json();
+
+      setProjectDetails(updatedProject);
+
+      // Optionally keep the list in sync (at least the name)
+      setProjects((prev) =>
+        prev.map((p) =>
+          p.id === updatedProject.id
+            ? { ...p, projectName: updatedProject.projectName }
+            : p
+        )
+      );
+    } catch (err) {
+      console.error(err);
+      setUploadError(err.message || "Upload failed");
+    } finally {
+      setUploadingCover(false);
+    }
+  };
+
+  const handleCoverDrop = (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      uploadCoverImage(file);
+    }
+  };
+
+  const handleCoverDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleCoverFileInput = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      uploadCoverImage(file);
+    }
   };
 
   // ✅ Toggle a single sector on/off without affecting others
@@ -349,7 +386,6 @@ const Project = () => {
 
       // Clear UI state
       setProjectDetails(null);
-      setCoverImage(null);
       setSelectedSectorIds([]);
       setCurrentProjectSectorLinks([]);
     } catch (error) {
@@ -494,7 +530,7 @@ const Project = () => {
     padding: "4px 8px",
     margin: "4px 6px 0 0",
     borderRadius: "999px",
-    border: "1px solid #ddd",
+    border: "1px solid #ddd", // ✅ fixed
     fontSize: "12px",
     lineHeight: 1.6,
     background: "#f7f7f7",
@@ -506,6 +542,8 @@ const Project = () => {
     fontSize: "12px",
   };
 
+  const currentCoverImage = projectDetails?.projectCoverImage;
+
   return (
     <div className={styles.projectContainer}>
       {/* Render form only if project details are available */}
@@ -516,10 +554,10 @@ const Project = () => {
           {/* Wrapper for image and form side-by-side */}
           <div className={styles.imageAndFormWrapper}>
             {/* Show image if available */}
-            {coverImage && (
+            {currentCoverImage && (
               <div className={styles.imageContainer}>
                 <img
-                  src={`${coverImagePath}${coverImage}`}
+                  src={`${coverImagePath}${currentCoverImage}`}
                   alt="Project Cover"
                   className={styles.coverImage}
                 />
@@ -639,17 +677,51 @@ const Project = () => {
                         />
                       </div>
 
-                      {/* Project Cover Image Filename */}
+                      {/* Project Cover Image Upload */}
                       <div>
-                        <label>Project Cover Image Filename:</label>
-                        <input
-                          type="text"
-                          name="projectCoverImage"
-                          value={projectDetails.projectCoverImage || ""}
-                          onChange={handleInputChange}
+                        <label>Project Cover Image:</label>
+
+                        <div
+                          onDrop={handleCoverDrop}
+                          onDragOver={handleCoverDragOver}
                           className={styles.textInput}
-                          placeholder="e.g., flood_relief.jpg"
+                          style={{
+                            border: "2px dashed #ccc",
+                            borderRadius: "8px",
+                            padding: "16px",
+                            textAlign: "center",
+                            cursor: "pointer",
+                          }}
+                          onClick={() =>
+                            document
+                              .getElementById("coverImageFileInput")
+                              ?.click()
+                          }
+                        >
+                          {uploadingCover
+                            ? "Uploading..."
+                            : "Drag & drop an image here, or click to select"}
+                        </div>
+
+                        <input
+                          id="coverImageFileInput"
+                          type="file"
+                          accept="image/*"
+                          style={{ display: "none" }}
+                          onChange={handleCoverFileInput}
                         />
+
+                        {uploadError && (
+                          <div
+                            style={{
+                              color: "red",
+                              fontSize: "0.85rem",
+                              marginTop: "4px",
+                            }}
+                          >
+                            {uploadError}
+                          </div>
+                        )}
                       </div>
 
                       {/* Approved */}
@@ -884,6 +956,7 @@ const Project = () => {
                           className={styles.textInput}
                         />
                       </div>
+
                       {/* Project Start Revision */}
                       <div>
                         <label>Project Start (Revised):</label>

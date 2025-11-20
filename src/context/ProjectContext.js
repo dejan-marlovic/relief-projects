@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useCallback } from "react";
 
 const BASE_URL = "http://localhost:8080";
 
@@ -9,9 +9,14 @@ const ProjectProvider = ({ children }) => {
   const [selectedProjectId, setSelectedProjectId] = useState("");
 
   // 🔄 Fetch: Project IDs and names
-  const fetchProjects = async () => {
+  const fetchProjects = useCallback(async () => {
     try {
       const token = localStorage.getItem("authToken");
+
+      // ❗ If there's no token yet (user not logged in), don't call the API
+      if (!token) {
+        return;
+      }
 
       const response = await fetch(`${BASE_URL}/api/projects/ids-names`, {
         method: "GET",
@@ -25,19 +30,27 @@ const ProjectProvider = ({ children }) => {
 
       const projectNamesAndIds = await response.json();
 
-      setProjects(projectNamesAndIds);
+      const list = Array.isArray(projectNamesAndIds) ? projectNamesAndIds : [];
 
-      if (projectNamesAndIds.length > 0) {
-        setSelectedProjectId(projectNamesAndIds[0].id.toString());
-      }
+      setProjects(list);
+
+      // Only set a default selected project if we don't already have one
+      setSelectedProjectId((prev) => {
+        if (prev) return prev;
+        if (list.length > 0) {
+          return list[0].id.toString();
+        }
+        return "";
+      });
     } catch (error) {
       console.error("Error fetching project list:", error);
     }
-  };
+  }, []);
 
+  // Try to fetch on mount (works when user refreshes while already logged in)
   useEffect(() => {
     fetchProjects();
-  }, []);
+  }, [fetchProjects]);
 
   return (
     <ProjectContext.Provider
@@ -46,6 +59,8 @@ const ProjectProvider = ({ children }) => {
         setProjects,
         selectedProjectId,
         setSelectedProjectId,
+        // 👇 this is what Login will call after successful login
+        refreshProjects: fetchProjects,
       }}
     >
       {children}
