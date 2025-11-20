@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useContext } from "react";
 import { ProjectContext } from "../../context/ProjectContext";
+import { FiTrash2, FiDownload, FiUploadCloud } from "react-icons/fi";
 
 const BASE_URL = "http://localhost:8080";
 const DOCUMENTS_BASE_PATH = `${BASE_URL}/documents/`;
@@ -16,6 +17,9 @@ const Documents = () => {
 
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+
+  const [deletingId, setDeletingId] = useState(null);
+  const [deleteError, setDeleteError] = useState("");
 
   // Fetch documents for selected project
   useEffect(() => {
@@ -122,6 +126,39 @@ const Documents = () => {
     }
   };
 
+  // Delete a document (soft delete in backend)
+  const handleDeleteDocument = async (docId) => {
+    if (!window.confirm("Are you sure you want to delete this document?")) {
+      return;
+    }
+
+    setDeleteError("");
+    setDeletingId(docId);
+
+    try {
+      const token = localStorage.getItem("authToken");
+      const res = await fetch(`${BASE_URL}/api/documents/${docId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(text || "Failed to delete document");
+      }
+
+      // remove from local state
+      setDocuments((prev) => prev.filter((d) => d.id !== docId));
+    } catch (err) {
+      console.error(err);
+      setDeleteError(err.message || "Failed to delete document");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <div style={{ padding: "16px" }}>
       <h2>Documents</h2>
@@ -144,11 +181,18 @@ const Documents = () => {
               textAlign: "center",
               cursor: "pointer",
               marginBottom: "16px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "8px",
             }}
           >
-            {uploading
-              ? "Uploading..."
-              : "Drag & drop a document here, or click to select"}
+            <FiUploadCloud size={24} />
+            <span>
+              {uploading
+                ? "Uploading..."
+                : "Drag & drop a document here, or click to select"}
+            </span>
           </div>
 
           <input
@@ -161,6 +205,12 @@ const Documents = () => {
           {uploadError && (
             <div style={{ color: "red", marginBottom: "12px" }}>
               {uploadError}
+            </div>
+          )}
+
+          {deleteError && (
+            <div style={{ color: "red", marginBottom: "12px" }}>
+              {deleteError}
             </div>
           )}
 
@@ -186,17 +236,49 @@ const Documents = () => {
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
+                    gap: "12px",
                   }}
                 >
                   <span>{doc.documentName}</span>
-                  <a
-                    href={`${DOCUMENTS_BASE_PATH}${doc.documentPath}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ fontSize: "0.9rem" }}
-                  >
-                    Download
-                  </a>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <a
+                      href={`${DOCUMENTS_BASE_PATH}${doc.documentPath}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Download"
+                      style={{
+                        fontSize: "0.9rem",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "4px",
+                        textDecoration: "none",
+                      }}
+                    >
+                      <FiDownload />
+                      <span>Download</span>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteDocument(doc.id)}
+                      disabled={deletingId === doc.id}
+                      title="Delete"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        padding: "4px 8px",
+                        borderRadius: "4px",
+                        border: "1px solid #cc0000",
+                        background:
+                          deletingId === doc.id ? "#ffcccc" : "#ffe5e5",
+                        color: "#990000",
+                        cursor:
+                          deletingId === doc.id ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      <FiTrash2 />
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
