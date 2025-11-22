@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import { ProjectContext } from "../../context/ProjectContext";
 import { FiTrash2, FiDownload, FiUploadCloud } from "react-icons/fi";
+import styles from "./Documents.module.scss";
 
 const BASE_URL = "http://localhost:8080";
 const DOCUMENTS_BASE_PATH = `${BASE_URL}/documents/`;
@@ -160,11 +161,11 @@ const Documents = () => {
   };
 
   return (
-    <div style={{ padding: "16px" }}>
-      <h2>Documents</h2>
+    <div className={styles.container}>
+      <h2 className={styles.title}>Documents</h2>
 
       {!selectedProjectId && (
-        <p style={{ color: "#555" }}>Please select a project first.</p>
+        <p className={styles.infoText}>Please select a project first.</p>
       )}
 
       {selectedProjectId && (
@@ -174,20 +175,9 @@ const Documents = () => {
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onClick={handleClickPicker}
-            style={{
-              border: "2px dashed #ccc",
-              borderRadius: "8px",
-              padding: "20px",
-              textAlign: "center",
-              cursor: "pointer",
-              marginBottom: "16px",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "8px",
-            }}
+            className={styles.uploadArea}
           >
-            <FiUploadCloud size={24} />
+            <FiUploadCloud size={24} className={styles.uploadIcon} />
             <span>
               {uploading
                 ? "Uploading..."
@@ -198,61 +188,39 @@ const Documents = () => {
           <input
             id="documentFileInput"
             type="file"
-            style={{ display: "none" }}
+            className={styles.hiddenFileInput}
             onChange={handleFileInput}
           />
 
-          {uploadError && (
-            <div style={{ color: "red", marginBottom: "12px" }}>
-              {uploadError}
-            </div>
-          )}
+          {uploadError && <div className={styles.errorText}>{uploadError}</div>}
 
-          {deleteError && (
-            <div style={{ color: "red", marginBottom: "12px" }}>
-              {deleteError}
-            </div>
-          )}
+          {deleteError && <div className={styles.errorText}>{deleteError}</div>}
 
           {/* Documents list */}
-          <h3>Files for this project</h3>
+          <h3 className={styles.documentsHeading}>Files for this project</h3>
 
-          {loading && <p>Loading documents...</p>}
+          {loading && (
+            <p className={styles.loadingText}>Loading documents...</p>
+          )}
 
-          {listError && <p style={{ color: "red" }}>{listError}</p>}
+          {listError && <p className={styles.errorText}>{listError}</p>}
 
           {!loading && documents.length === 0 && !listError && (
-            <p style={{ color: "#555" }}>No documents uploaded yet.</p>
+            <p className={styles.emptyText}>No documents uploaded yet.</p>
           )}
 
           {documents.length > 0 && (
-            <ul style={{ listStyle: "none", paddingLeft: 0 }}>
+            <ul className={styles.documentsList}>
               {documents.map((doc) => (
-                <li
-                  key={doc.id}
-                  style={{
-                    padding: "8px 0",
-                    borderBottom: "1px solid #eee",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: "12px",
-                  }}
-                >
-                  <span>{doc.documentName}</span>
-                  <div style={{ display: "flex", gap: "8px" }}>
+                <li key={doc.id} className={styles.documentItem}>
+                  <span className={styles.docName}>{doc.documentName}</span>
+                  <div className={styles.docActions}>
                     <a
                       href={`${DOCUMENTS_BASE_PATH}${doc.documentPath}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       title="Download"
-                      style={{
-                        fontSize: "0.9rem",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "4px",
-                        textDecoration: "none",
-                      }}
+                      className={styles.downloadLink}
                     >
                       <FiDownload />
                       <span>Download</span>
@@ -262,19 +230,9 @@ const Documents = () => {
                       onClick={() => handleDeleteDocument(doc.id)}
                       disabled={deletingId === doc.id}
                       title="Delete"
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        padding: "4px 8px",
-                        borderRadius: "4px",
-                        border: "1px solid #cc0000",
-                        background:
-                          deletingId === doc.id ? "#ffcccc" : "#ffe5e5",
-                        color: "#990000",
-                        cursor:
-                          deletingId === doc.id ? "not-allowed" : "pointer",
-                      }}
+                      className={`${styles.deleteButton} ${
+                        deletingId === doc.id ? styles.deleteButtonDeleting : ""
+                      }`}
                     >
                       <FiTrash2 />
                     </button>
