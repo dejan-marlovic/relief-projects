@@ -9,7 +9,13 @@ import Memos from "../Project/Memos/Memos.jsx";
 import { ProjectContext } from "../../context/ProjectContext";
 
 // ✅ Icons (same library as Memos)
-import { FiTrash2, FiChevronLeft, FiChevronRight, FiX } from "react-icons/fi";
+import {
+  FiTrash2,
+  FiChevronLeft,
+  FiChevronRight,
+  FiX,
+  FiSave,
+} from "react-icons/fi";
 
 // ✅ Base URL (backend)
 const BASE_URL = "http://localhost:8080";
@@ -1007,6 +1013,7 @@ const Project = () => {
                         onClick={handleSave}
                         className={styles.saveButton}
                       >
+                        <FiSave style={{ marginRight: 6 }} />
                         Save
                       </button>
                       <button
