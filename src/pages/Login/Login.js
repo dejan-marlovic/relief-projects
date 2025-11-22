@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Login.module.scss";
+import { ProjectContext } from "../../context/ProjectContext";
 
 const BASE_URL = "http://localhost:8080";
 
@@ -10,8 +11,8 @@ function Login() {
   const [message, setMessage] = useState("");
 
   const navigate = useNavigate();
+  const { refreshProjects } = useContext(ProjectContext);
 
-  // 🔐 API: Login fetch call
   const loginUser = async (credentials) => {
     const response = await fetch(`${BASE_URL}/api/auth/login`, {
       method: "POST",
@@ -30,8 +31,16 @@ function Login() {
     try {
       const tokenJson = await loginUser({ username, password });
 
+      // 1️⃣ Store token
       localStorage.setItem("authToken", tokenJson.token);
       setMessage("Login successful!");
+
+      // 2️⃣ Now that token exists, fetch projects so context is populated
+      if (typeof refreshProjects === "function") {
+        await refreshProjects();
+      }
+
+      // 3️⃣ Navigate to project page
       navigate("/project");
     } catch (error) {
       console.error("Error:", error);

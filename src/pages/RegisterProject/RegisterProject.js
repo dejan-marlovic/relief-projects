@@ -7,42 +7,54 @@ import styles from "./RegisterProject.module.scss";
 // Import context to update the global list of projects
 import { ProjectContext } from "../../context/ProjectContext";
 
+// ✅ Base URL (backend) – same as in Project component
+const BASE_URL = "http://localhost:8080";
+
+// Optional: initial state helper to avoid resetting to {}
+const initialProjectDetails = {
+  projectCode: "",
+  refProjectNo: "",
+  projectName: "",
+  pinCode: "",
+  donorOrganizationId: "",
+  fundingSource: "",
+  implementingPartnerOrganizationId: "",
+  addressId: "",
+  foSupportCostPercent: "",
+  irwSupportCostPercent: "",
+  projectDescription: "",
+  projectCoverImage: "",
+  projectStatusId: "",
+  approved: "Yes", // Default value
+  projectPeriodMonths: "",
+  projectDate: "",
+  projectStart: "",
+  projectEnd: "",
+  projectStartRev: "",
+  projectEndRev: "",
+  partOfId: "",
+  projectTypeId: "",
+};
+
 // The main functional component to register a new project
 const RegisterProject = () => {
   // Extract the setProjects function from context to update the global project list
   const { setProjects } = useContext(ProjectContext);
 
   // Local state to hold all input values for the form (controlled component)
-  const [projectDetails, setProjectDetails] = useState({
-    projectCode: "",
-    refProjectNo: "",
-    projectName: "",
-    pinCode: "",
-    donorOrganizationId: "",
-    fundingSource: "",
-    implementingPartnerOrganizationId: "",
-    addressId: "",
-    foSupportCostPercent: "",
-    irwSupportCostPercent: "",
-    projectDescription: "",
-    projectCoverImage: "",
-    projectStatusId: "",
-    approved: "Yes", // Default value
-    projectPeriodMonths: "",
-    projectDate: "",
-    projectStart: "",
-    projectEnd: "",
-    projectStartRev: "",
-    projectEndRev: "",
-    partOfId: "",
-    projectTypeId: "",
-  });
+  const [projectDetails, setProjectDetails] = useState(initialProjectDetails);
 
   // Dropdown options fetched from backend
   const [projectStatuses, setProjectStatuses] = useState([]);
   const [projectTypes, setProjectTypes] = useState([]);
   const [addresses, setAddresses] = useState([]);
   const [availableParentProjects, setAvailableParentProjects] = useState([]);
+
+  // ✅ Cover image upload state (NEW – mirrors Project component behavior)
+  const [coverFile, setCoverFile] = useState(null);
+  const [coverPreview, setCoverPreview] = useState("");
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
   // Load form dropdown data from the server once when component mounts
   useEffect(() => {
@@ -51,19 +63,19 @@ const RegisterProject = () => {
     const fetchData = async () => {
       try {
         const [statuses, types, addresses, projects] = await Promise.all([
-          fetch("http://localhost:8080/api/project-statuses/active", {
+          fetch(`${BASE_URL}/api/project-statuses/active`, {
             headers: { Authorization: `Bearer ${token}` },
           }).then((res) => res.json()),
 
-          fetch("http://localhost:8080/api/project-types/active", {
+          fetch(`${BASE_URL}/api/project-types/active`, {
             headers: { Authorization: `Bearer ${token}` },
           }).then((res) => res.json()),
 
-          fetch("http://localhost:8080/api/addresses/active", {
+          fetch(`${BASE_URL}/api/addresses/active`, {
             headers: { Authorization: `Bearer ${token}` },
           }).then((res) => res.json()),
 
-          fetch("http://localhost:8080/api/projects/ids-names", {
+          fetch(`${BASE_URL}/api/projects/ids-names`, {
             headers: { Authorization: `Bearer ${token}` },
           }).then((res) => res.json()),
         ]);
@@ -82,50 +94,134 @@ const RegisterProject = () => {
 
   // 🧠 This function handles **all input field changes** in the form
   const handleInputChange = (e) => {
-    const { name, value } = e.target; // Destructure the name and value of the input that triggered the change
+    const { name, value } = e.target;
 
-    // Update the corresponding field in projectDetails state immutably
-    // React will re-render the component with the new value
     setProjectDetails((prev) => ({
-      ...prev, // Copy all existing values
-      [name]: value, // Dynamically update only the changed field using bracket notation
+      ...prev,
+      [name]: value,
     }));
   };
 
-  /*
-  📌 What handleInputChange does:
-  - Makes this a controlled form (state = single source of truth)
-  - Works generically for all inputs by using the input's `name` attribute as the key
-  - Allows real-time form updates and validations
-  */
+  // ✅ Helpers to handle selected cover file (NEW)
+  const handleCoverFileSelected = (file) => {
+    if (!file) return;
+
+    setCoverFile(file);
+    setUploadError("");
+
+    // Create local preview URL
+    if (coverPreview) {
+      URL.revokeObjectURL(coverPreview);
+    }
+    setCoverPreview(URL.createObjectURL(file));
+  };
+
+  const handleCoverDrop = (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      handleCoverFileSelected(file);
+    }
+  };
+
+  const handleCoverDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleCoverFileInput = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleCoverFileSelected(file);
+    }
+  };
+
+  // ✅ Upload cover image AFTER project is created (NEW)
+  const uploadCoverImage = async (projectId, file) => {
+    if (!projectId || !file) return null;
+
+    setUploadError("");
+    setUploadingCover(true);
+
+    try {
+      const token = localStorage.getItem("authToken");
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch(
+        `${BASE_URL}/api/projects/${projectId}/cover-image`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`, // don't set Content-Type manually
+          },
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        const text = await response.text().catch(() => "");
+        throw new Error(text || "Failed to upload cover image");
+      }
+
+      const updatedProject = await response.json();
+      return updatedProject;
+    } catch (err) {
+      console.error(err);
+      setUploadError(err.message || "Upload failed");
+      return null;
+    } finally {
+      setUploadingCover(false);
+    }
+  };
 
   // Submit handler for creating a new project
   const handleRegister = async () => {
     try {
       const token = localStorage.getItem("authToken");
 
-      const response = await fetch("http://localhost:8080/api/projects", {
+      const response = await fetch(`${BASE_URL}/api/projects`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(projectDetails), // Send entire form data to backend
+        body: JSON.stringify(projectDetails),
       });
 
-      if (!response.ok) throw new Error("Failed to create project");
+      // 🔴 Just changed this part to read raw text from backend
+      if (!response.ok) {
+        const backendError = await response.text(); // raw string from backend
+        throw new Error(backendError || "Failed to create project");
+      }
 
       const newProject = await response.json();
+      let finalProject = newProject;
+
+      // ✅ If user selected a cover file, upload it now using the same API as in Project
+      if (coverFile) {
+        const updated = await uploadCoverImage(newProject.id, coverFile);
+        if (updated) {
+          finalProject = updated;
+        }
+      }
+
       alert("Project created successfully!");
 
-      // Update global context with the new project
-      setProjects((prev) => [...prev, newProject]);
+      // Update global context with the new/updated project
+      setProjects((prev) => [...prev, finalProject]);
 
-      // Optionally reset the form (currently clears everything)
-      setProjectDetails({});
+      // Reset the form and cover image state
+      setProjectDetails(initialProjectDetails);
+      setCoverFile(null);
+      if (coverPreview) {
+        URL.revokeObjectURL(coverPreview);
+      }
+      setCoverPreview("");
+      setUploadError("");
     } catch (error) {
       console.error("Create error:", error);
-      alert("Error creating project.");
+      // 🔥 This now shows exactly what the backend returned (even if it's ugly)
+      alert(error.message || "Error creating project.");
     }
   };
 
@@ -138,7 +234,6 @@ const RegisterProject = () => {
         <form className={styles.formTwoColumn}>
           {/* LEFT COLUMN — general project info */}
           <div className={styles.formColumnLeft}>
-            {/* Each input is bound to projectDetails and updates it via handleInputChange */}
             <input
               className={styles.textInput}
               name="projectName"
@@ -193,20 +288,65 @@ const RegisterProject = () => {
               onChange={handleInputChange}
             />
 
-            {/* Cover Image Filename */}
-            <div className={styles.textInput}>
-              <label>Cover Image Filename:</label>
-              <input
-                type="text"
-                name="projectCoverImage"
+            {/* ✅ Project Cover Image drag & drop (NEW – mirrors Project component) */}
+            <div>
+              <label>Project Cover Image:</label>
+
+              <div
+                onDrop={handleCoverDrop}
+                onDragOver={handleCoverDragOver}
                 className={styles.textInput}
-                value={projectDetails.projectCoverImage}
-                onChange={handleInputChange}
-                placeholder="e.g., flood_relief.jpg"
+                style={{
+                  border: "2px dashed #ccc",
+                  borderRadius: "8px",
+                  padding: "16px",
+                  textAlign: "center",
+                  cursor: "pointer",
+                }}
+                onClick={() =>
+                  document.getElementById("registerCoverImageInput")?.click()
+                }
+              >
+                {uploadingCover
+                  ? "Uploading..."
+                  : "Drag & drop an image here, or click to select"}
+              </div>
+
+              <input
+                id="registerCoverImageInput"
+                type="file"
+                accept="image/*"
+                style={{ display: "none" }}
+                onChange={handleCoverFileInput}
               />
-              <small className={styles.helperText}>
-                Enter just the filename (no path)
-              </small>
+
+              {/* Preview selected image before project is created */}
+              {coverPreview && (
+                <div style={{ marginTop: "8px" }}>
+                  <img
+                    src={coverPreview}
+                    alt="Selected cover preview"
+                    style={{
+                      maxWidth: "100%",
+                      maxHeight: "150px",
+                      objectFit: "cover",
+                      borderRadius: "8px",
+                    }}
+                  />
+                </div>
+              )}
+
+              {uploadError && (
+                <div
+                  style={{
+                    color: "red",
+                    fontSize: "0.85rem",
+                    marginTop: "4px",
+                  }}
+                >
+                  {uploadError}
+                </div>
+              )}
             </div>
 
             {/* Date inputs */}
