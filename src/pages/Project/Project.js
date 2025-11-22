@@ -8,6 +8,9 @@ import Memos from "../Project/Memos/Memos.jsx";
 // Import ProjectContext to access the currently selected project ID
 import { ProjectContext } from "../../context/ProjectContext";
 
+// ✅ Icons (same library as Memos)
+import { FiTrash2, FiChevronLeft, FiChevronRight, FiX } from "react-icons/fi";
+
 // ✅ Base URL (backend)
 const BASE_URL = "http://localhost:8080";
 const coverImagePath = `${BASE_URL}/images/projects/`;
@@ -39,6 +42,22 @@ const Project = () => {
   // ✅ Cover image upload state
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadError, setUploadError] = useState("");
+
+  // ✅ Slideshow state (for multiple images)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // 🔍 Derive image list from comma-separated string
+  const imageNames = projectDetails?.projectCoverImage
+    ? projectDetails.projectCoverImage
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : [];
+
+  // Reset slideshow index when image list changes
+  useEffect(() => {
+    setCurrentImageIndex(0);
+  }, [projectDetails?.projectCoverImage]);
 
   // Fetch full project details from backend when selectedProjectId changes
   useEffect(() => {
@@ -226,7 +245,7 @@ const Project = () => {
     }));
   };
 
-  // ✅ Upload cover image via FormData
+  // ✅ Upload cover image via FormData (appends on backend)
   const uploadCoverImage = async (file) => {
     if (!file || !projectDetails?.id) return;
 
@@ -290,6 +309,47 @@ const Project = () => {
     const file = e.target.files?.[0];
     if (file) {
       uploadCoverImage(file);
+    }
+  };
+
+  // ✅ Delete a single image (calls backend delete)
+  const handleDeleteImage = async (filename) => {
+    if (!projectDetails?.id) return;
+    if (!window.confirm(`Delete image "${filename}" from this project?`))
+      return;
+
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await fetch(
+        `${BASE_URL}/api/projects/${
+          projectDetails.id
+        }/cover-image/${encodeURIComponent(filename)}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const text = await response.text().catch(() => "");
+        throw new Error(text || "Failed to delete image");
+      }
+
+      const updatedProject = await response.json();
+      setProjectDetails(updatedProject);
+
+      setProjects((prev) =>
+        prev.map((p) =>
+          p.id === updatedProject.id
+            ? { ...p, projectName: updatedProject.projectName }
+            : p
+        )
+      );
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Error deleting image.");
     }
   };
 
@@ -530,7 +590,7 @@ const Project = () => {
     padding: "4px 8px",
     margin: "4px 6px 0 0",
     borderRadius: "999px",
-    border: "1px solid #ddd", // ✅ fixed
+    border: "1px solid #ddd",
     fontSize: "12px",
     lineHeight: 1.6,
     background: "#f7f7f7",
@@ -539,10 +599,11 @@ const Project = () => {
     border: "none",
     background: "transparent",
     cursor: "pointer",
-    fontSize: "12px",
+    fontSize: "14px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   };
-
-  const currentCoverImage = projectDetails?.projectCoverImage;
 
   return (
     <div className={styles.projectContainer}>
@@ -553,14 +614,74 @@ const Project = () => {
 
           {/* Wrapper for image and form side-by-side */}
           <div className={styles.imageAndFormWrapper}>
-            {/* Show image if available */}
-            {currentCoverImage && (
+            {/* Show slideshow if images available */}
+            {imageNames.length > 0 && (
               <div className={styles.imageContainer}>
                 <img
-                  src={`${coverImagePath}${currentCoverImage}`}
+                  src={`${coverImagePath}${imageNames[currentImageIndex]}`}
                   alt="Project Cover"
                   className={styles.coverImage}
                 />
+
+                {imageNames.length > 1 && (
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginTop: "8px",
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setCurrentImageIndex((prev) =>
+                          prev === 0 ? imageNames.length - 1 : prev - 1
+                        )
+                      }
+                      aria-label="Previous image"
+                      style={{
+                        borderRadius: "50%",
+                        width: "32px",
+                        height: "32px",
+                        border: "1px solid #ccc",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        backgroundColor: "#fff",
+                      }}
+                    >
+                      <FiChevronLeft />
+                    </button>
+                    <span>
+                      {currentImageIndex + 1} / {imageNames.length}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setCurrentImageIndex((prev) =>
+                          prev === imageNames.length - 1 ? 0 : prev + 1
+                        )
+                      }
+                      aria-label="Next image"
+                      style={{
+                        borderRadius: "50%",
+                        width: "32px",
+                        height: "32px",
+                        border: "1px solid #ccc",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        backgroundColor: "#fff",
+                      }}
+                    >
+                      <FiChevronRight />
+                    </button>
+                  </div>
+                )}
+
                 {/* Memos live directly under the picture */}
                 <Memos />
               </div>
@@ -722,6 +843,63 @@ const Project = () => {
                             {uploadError}
                           </div>
                         )}
+
+                        {/* List of all images with delete buttons */}
+                        {imageNames.length > 0 && (
+                          <div style={{ marginTop: "8px" }}>
+                            <strong>Images for this project:</strong>
+                            <ul
+                              style={{
+                                listStyle: "none",
+                                paddingLeft: 0,
+                                marginTop: "4px",
+                              }}
+                            >
+                              {imageNames.map((name) => (
+                                <li
+                                  key={name}
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    gap: "8px",
+                                    marginBottom: "4px",
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      fontSize: "0.9rem",
+                                      wordBreak: "break-all",
+                                    }}
+                                  >
+                                    {name}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteImage(name)}
+                                    style={{
+                                      border: "none",
+                                      backgroundColor: "#e74c3c",
+                                      color: "#fff",
+                                      padding: "4px 8px",
+                                      borderRadius: "4px",
+                                      cursor: "pointer",
+                                      fontSize: "0.9rem",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      lineHeight: 1,
+                                    }}
+                                    aria-label={`Delete image ${name}`}
+                                    title={`Delete image ${name}`}
+                                  >
+                                    <FiTrash2 />
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                       </div>
 
                       {/* Approved */}
@@ -812,7 +990,7 @@ const Project = () => {
                                   title="Remove sector"
                                   style={pillBtnStyle}
                                 >
-                                  ❌
+                                  <FiX />
                                 </button>
                               </span>
                             ))
@@ -836,6 +1014,7 @@ const Project = () => {
                         onClick={handleDelete}
                         className={styles.deleteButton}
                       >
+                        <FiTrash2 style={{ marginRight: 6 }} />
                         Delete
                       </button>
                     </div>
