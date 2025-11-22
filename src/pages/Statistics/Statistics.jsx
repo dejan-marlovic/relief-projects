@@ -5,7 +5,7 @@ import styles from "./Statistics.module.scss";
 const BASE_URL = "http://localhost:8080";
 const tokenFromStorage = () => localStorage.getItem("authToken");
 
-// Legend (unstyled in JS, styled via CSS Module)
+// Legend (styled via CSS Module, only dynamic color stays inline)
 const LegendBlock = ({ items }) => (
   <div className={styles.legend}>
     {items.map((it) => (
@@ -180,14 +180,14 @@ const Statistics = () => {
     [pieData]
   );
 
-  // ===== Smaller chart but same generous label spacing =====
-  const CHART_WIDTH = 1460; // was 1760
-  const OUTER_RADIUS = 185; // was 220
-  const LABEL_OFFSET = 110; // unchanged (keeps label room)
-  const POLE_EXTRA = 44; // unchanged for top/bottom breathing
+  // ===== Chart geometry =====
+  const CHART_WIDTH = 1460;
+  const OUTER_RADIUS = 185;
+  const LABEL_OFFSET = 110;
+  const POLE_EXTRA = 44;
 
-  const TOP_GAP = LABEL_OFFSET + 36; // unchanged
-  const BOTTOM_GAP = 160; // unchanged
+  const TOP_GAP = LABEL_OFFSET + 36;
+  const BOTTOM_GAP = 160;
 
   const CHART_HEIGHT =
     TOP_GAP + OUTER_RADIUS + (OUTER_RADIUS + LABEL_OFFSET) + BOTTOM_GAP;
@@ -198,8 +198,8 @@ const Statistics = () => {
   const LABEL_DY = 12;
   const RADIAN = Math.PI / 180;
 
-  const LINE_LEN = 22;
   const wrapLabel = (text) => {
+    const LINE_LEN = 22;
     if (!text) return [""];
     if (text.length <= LINE_LEN) return [text];
     const candidates = [" — ", " - ", " "];
@@ -237,8 +237,19 @@ const Statistics = () => {
 
     return (
       <>
-        <line x1={sx} y1={sy} x2={ex} y2={ey} stroke="#c7c7c7" />
-        <text x={ex} y={ey} textAnchor={textAnchor} style={{ fontSize: 12 }}>
+        <line
+          x1={sx}
+          y1={sy}
+          x2={ex}
+          y2={ey}
+          className={styles.sliceConnector}
+        />
+        <text
+          x={ex}
+          y={ey}
+          textAnchor={textAnchor}
+          className={styles.sliceLabel}
+        >
           <tspan dy={LABEL_DY}>{first}</tspan>
           {second && (
             <tspan x={ex} dy={14}>
@@ -260,38 +271,21 @@ const Statistics = () => {
     [pieData]
   );
 
-  // Container wider than chart so legend wraps comfortably
-  const CONTAINER_MAX = CHART_WIDTH + 240;
-
   return (
     <div className={styles.page}>
-      <div
-        className={styles.card}
-        style={{ "--container-max": `${CONTAINER_MAX}px` }}
-      >
+      <div className={styles.card}>
         <h2 className={styles.title}>Projects by Sector</h2>
         <p className={styles.subtitle}>
           Distribution of projects across sectors (from Project–Sector
           relations).
         </p>
 
-        {loading && (
-          <div
-            className={styles.loadingSkeleton}
-            style={{ "--chart-height": `${CHART_HEIGHT}px` }}
-          />
-        )}
+        {loading && <div className={styles.loadingSkeleton} />}
 
-        {!loading && error && (
-          <div className={styles.subtitle} style={{ color: "#b91c1c" }}>
-            {error}
-          </div>
-        )}
+        {!loading && error && <div className={styles.errorText}>{error}</div>}
 
         {!loading && !error && pieData.length === 0 && (
-          <div className={styles.subtitle} style={{ color: "#555" }}>
-            No project–sector data found.
-          </div>
+          <div className={styles.emptyText}>No project–sector data found.</div>
         )}
 
         {!loading && !error && pieData.length > 0 && (
@@ -325,10 +319,7 @@ const Statistics = () => {
               </PieChart>
             </div>
 
-            <div
-              className={styles.chartLegendSpacer}
-              style={{ "--spacer-height": "40px" }}
-            />
+            <div className={styles.chartLegendSpacer} />
 
             <LegendBlock items={legendItems} />
           </>
