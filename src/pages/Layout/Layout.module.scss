@@ -27,21 +27,35 @@ $tab-active-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 h1 {
   color: #4a90e2;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0; // keeps alignment tight with logo
+}
+
+/* Header row for title + logo (logo is absolutely positioned) */
+.headerBar {
+  position: relative;
+  display: flex;
+  align-items: flex-start; // align tops of text and logo
+  justify-content: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+
+  // reserve space so text doesn't flow under the logo
+  padding-right: 220px; // tweak if you change logo width
 }
 
 nav {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background-color: $nav-bg-color;
   border-radius: $border-radius;
-  margin: 1.5rem 0; // removed auto-centering
-  max-width: none; // unrestricted width
-  width: fit-content; // only as wide as content
-  margin-left: 0; // force alignment to the left
+  margin: 1.5rem 0;
+  max-width: none;
+  width: fit-content;
+  margin-left: 0;
 
   ul {
     list-style: none;
     display: flex;
-    justify-content: flex-start; // align tabs to the left
+    justify-content: flex-start;
     flex-wrap: nowrap;
     gap: 0;
     margin: 0;
@@ -90,4 +104,27 @@ nav {
 
 .hiddenSelector {
   visibility: hidden;
+}
+
+/* Selector row (just the selector) */
+.selectorBar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Logo styling */
+.logo {
+  position: absolute;
+  top: 0;
+  right: 0;
+
+  height: 150px; // adjust to taste
+  width: auto;
+  object-fit: contain;
+
+  background-color: #ffffff;
+  border-radius: 10px;
 }
