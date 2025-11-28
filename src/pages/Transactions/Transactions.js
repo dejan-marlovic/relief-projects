@@ -71,6 +71,30 @@ const BASE_COL_WIDTHS = [
   100, // OK Status
 ];
 
+// ==== SHARED-LIKE HELPERS (same style as in Budget.jsx) ====
+
+// 🔄 Fetch: Currencies
+const fetchCurrencies = async (token) => {
+  const response = await fetch(`${BASE_URL}/api/currencies/active`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    throw new Error("Failed to fetch currencies");
+  }
+  return await response.json();
+};
+
+// 🔄 Fetch: Exchange Rates
+const fetchExchangeRates = async (token) => {
+  const response = await fetch(`${BASE_URL}/api/exchange-rates/active`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    throw new Error("Failed to fetch exchange rates");
+  }
+  return await response.json();
+};
+
 // Minimal required fields for a new transaction
 const isValidNew = (v, selectedProjectId) =>
   v &&
@@ -146,32 +170,36 @@ const Transactions = ({ refreshTrigger }) => {
     [authHeaders]
   );
 
-  // Fetch dropdown options
+  // Fetch dropdown options (orgs, projects, statuses + currencies/exchangeRates)
+  // ⬇️ currencies + FX are fetched with the same helpers as in Budget.jsx
   useEffect(() => {
     let cancelled = false;
+    const token = localStorage.getItem("authToken");
+
     (async () => {
       try {
-        const [orgRes, projRes, statRes, fxRes, curRes] = await Promise.all([
-          fetch(`${BASE_URL}/api/organizations/active/options`, {
-            headers: authHeaders,
-          }),
-          fetch(`${BASE_URL}/api/projects/ids-names`, { headers: authHeaders }),
-          fetch(`${BASE_URL}/api/transaction-statuses/active`, {
-            headers: authHeaders,
-          }),
-          fetch(`${BASE_URL}/api/exchange-rates/active`, {
-            headers: authHeaders,
-          }),
-          fetch(`${BASE_URL}/api/currencies/active`, { headers: authHeaders }),
-        ]);
+        const [orgRes, projRes, statRes, currenciesData, fxData] =
+          await Promise.all([
+            fetch(`${BASE_URL}/api/organizations/active/options`, {
+              headers: authHeaders,
+            }),
+            fetch(`${BASE_URL}/api/projects/ids-names`, {
+              headers: authHeaders,
+            }),
+            fetch(`${BASE_URL}/api/transaction-statuses/active`, {
+              headers: authHeaders,
+            }),
+            fetchCurrencies(token),
+            fetchExchangeRates(token),
+          ]);
 
         if (cancelled) return;
 
         setOrgOptions(orgRes.ok ? await orgRes.json() : []);
         setProjectOptions(projRes.ok ? await projRes.json() : []);
         setStatusOptions(statRes.ok ? await statRes.json() : []);
-        setFxOptions(fxRes.ok ? await fxRes.json() : []);
-        setCurrencies(curRes.ok ? await curRes.json() : []);
+        setCurrencies(Array.isArray(currenciesData) ? currenciesData : []);
+        setFxOptions(Array.isArray(fxData) ? fxData : []);
       } catch (e) {
         if (!cancelled) {
           console.error("Error fetching dropdown options:", e);
@@ -183,6 +211,7 @@ const Transactions = ({ refreshTrigger }) => {
         }
       }
     })();
+
     return () => {
       cancelled = true;
     };
@@ -409,7 +438,7 @@ const Transactions = ({ refreshTrigger }) => {
               key={h}
               className={`${styles.headerCell}
                 ${i === 0 ? styles.stickyColHeader : ""}
-                ${!visibleCols[i] ? styles.hiddenCol : ""}
+                {!visibleCols[i] ? styles.hiddenCol : ""}
                 ${i === 0 ? styles.actionsCol : ""}`}
             >
               {h}
