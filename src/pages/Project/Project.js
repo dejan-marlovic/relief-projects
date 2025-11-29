@@ -1045,18 +1045,6 @@ const Project = () => {
                         />
                       </div>
 
-                      {/* Funding Source */}
-                      <div>
-                        <label>Funding Source:</label>
-                        <input
-                          type="text"
-                          name="fundingSource"
-                          value={projectDetails.fundingSource || ""}
-                          onChange={handleInputChange}
-                          className={styles.textInput}
-                        />
-                      </div>
-
                       {/* FO Support Cost % */}
                       <div>
                         <label>FO Support Cost (%):</label>
