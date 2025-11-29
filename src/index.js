@@ -16,6 +16,7 @@ import Recipients from "./pages/Recipients/Recipients";
 import Documents from "./pages/Documents/Documents";
 import Statistics from "./pages/Statistics/Statistics";
 import RegisterProject from "./pages/RegisterProject/RegisterProject"; // ✅ Register Project page
+import Organizations from "./pages/Organizations/Organizations";
 import NoPage from "./pages/NoPage/NoPage"; // Catch-all for undefined routes (404)
 
 // Import the context provider to share state across all components
@@ -47,6 +48,7 @@ export default function App() {
             <Route path="recipients" element={<Recipients />} />
             <Route path="documents" element={<Documents />} />
             <Route path="statistics" element={<Statistics />} />
+            <Route path="organizations" element={<Organizations />} />
             <Route path="register-project" element={<RegisterProject />} />{" "}
             {/* ✅ New page to register a project */}
             {/* Catch-all route (if user navigates to a non-existent route) */}

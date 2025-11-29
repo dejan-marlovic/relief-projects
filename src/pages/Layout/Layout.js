@@ -136,6 +136,16 @@ const Layout = () => {
           </li>
           <li>
             <Link
+              to="/organizations"
+              className={
+                location.pathname === "/organizations" ? styles.active : ""
+              }
+            >
+              Related Organizations
+            </Link>
+          </li>
+          <li>
+            <Link
               to="/statistics"
               className={
                 location.pathname === "/statistics" ? styles.active : ""
