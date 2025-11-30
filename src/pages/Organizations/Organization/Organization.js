@@ -1,6 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import styles from "./Organization.module.scss";
-import { FiEdit, FiTrash2, FiSave, FiX } from "react-icons/fi";
+import {
+  FiEdit,
+  FiTrash2,
+  FiSave,
+  FiX,
+  FiChevronDown,
+  FiChevronUp,
+} from "react-icons/fi";
+import BankDetails from "./BankDetails";
 
 const Cell = ({ children, className }) => (
   <div className={`${styles.cell} ${className || ""}`}>{children}</div>
@@ -24,6 +32,8 @@ const Organization = ({
   const ev = editedValues || {};
   const isCreate = (link?.id ?? "") === "new";
   const autoSave = isEditing && !isCreate;
+
+  const [showBankDetails, setShowBankDetails] = useState(false);
 
   const submit = (e) => {
     e.preventDefault();
@@ -94,65 +104,94 @@ const Organization = ({
   const hc = (i) => (!visibleCols[i] ? styles.hiddenCol : "");
 
   return (
-    <div
-      className={`${styles.row} ${styles.gridRow} ${
-        isEven ? styles.zebraEven : ""
-      } ${styles.hoverable}`}
-    >
-      {/* 0: Actions (sticky left) */}
-      <Cell className={`${styles.stickyCol} ${styles.actionsCol} ${hc(0)}`}>
-        {isEditing ? (
-          <div className={styles.actions}>
-            <button className={styles.actionBtn} onClick={submit} title="Save">
-              <FiSave />
-            </button>
-            <button
-              className={`${styles.actionBtn} ${styles.danger}`}
-              onClick={onCancel}
-              title="Cancel"
-            >
-              <FiX />
-            </button>
-          </div>
-        ) : (
-          <div className={styles.actions}>
-            <button
-              className={styles.actionBtn}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onEdit();
-              }}
-              title="Edit"
-            >
-              <FiEdit />
-            </button>
-            <button
-              className={`${styles.actionBtn} ${styles.danger}`}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onDelete(link.id);
-              }}
-              title="Delete"
-            >
-              <FiTrash2 />
-            </button>
-          </div>
-        )}
-      </Cell>
+    <>
+      {/* main row */}
+      <div
+        className={`${styles.row} ${styles.gridRow} ${
+          isEven ? styles.zebraEven : ""
+        } ${styles.hoverable}`}
+      >
+        {/* 0: Actions (sticky left) */}
+        <Cell className={`${styles.stickyCol} ${styles.actionsCol} ${hc(0)}`}>
+          {isEditing ? (
+            <div className={styles.actions}>
+              <button
+                className={styles.actionBtn}
+                onClick={submit}
+                title="Save"
+              >
+                <FiSave />
+              </button>
+              <button
+                className={`${styles.actionBtn} ${styles.danger}`}
+                onClick={onCancel}
+                title="Cancel"
+              >
+                <FiX />
+              </button>
+            </div>
+          ) : (
+            <div className={styles.actions}>
+              <button
+                className={styles.actionBtn}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onEdit();
+                }}
+                title="Edit"
+              >
+                <FiEdit />
+              </button>
+              <button
+                className={`${styles.actionBtn} ${styles.danger}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onDelete(link.id);
+                }}
+                title="Delete"
+              >
+                <FiTrash2 />
+              </button>
 
-      {/* 1..3 normal columns */}
-      <Cell className={hc(1)}>
-        {isEditing ? selectProject() : projectName(link.projectId)}
-      </Cell>
-      <Cell className={hc(2)}>
-        {isEditing ? selectOrg() : orgName(link.organizationId)}
-      </Cell>
-      <Cell className={hc(3)}>
-        {isEditing ? selectStatus() : statusName(link.organizationStatusId)}
-      </Cell>
-    </div>
+              {/* toggle bank details, only if org selected */}
+              {link.organizationId && (
+                <button
+                  className={styles.actionBtn}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowBankDetails((v) => !v);
+                  }}
+                  title="Toggle bank details"
+                >
+                  {showBankDetails ? <FiChevronUp /> : <FiChevronDown />}
+                </button>
+              )}
+            </div>
+          )}
+        </Cell>
+
+        {/* 1..3 normal columns */}
+        <Cell className={hc(1)}>
+          {isEditing ? selectProject() : projectName(link.projectId)}
+        </Cell>
+        <Cell className={hc(2)}>
+          {isEditing ? selectOrg() : orgName(link.organizationId)}
+        </Cell>
+        <Cell className={hc(3)}>
+          {isEditing ? selectStatus() : statusName(link.organizationStatusId)}
+        </Cell>
+      </div>
+
+      {/* inline bank details panel */}
+      {showBankDetails && link.organizationId && (
+        <div className={styles.bankDetailsWrapperRow}>
+          <BankDetails organizationId={link.organizationId} />
+        </div>
+      )}
+    </>
   );
 };
 

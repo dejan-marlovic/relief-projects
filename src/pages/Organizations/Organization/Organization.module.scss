@@ -76,3 +76,54 @@
 
 .actionsCol {
 }
+
+/* wrapper row for the inline bank details panel under an organization row */
+.bankDetailsWrapperRow {
+  padding: 8px 12px;
+  border-left: 2px solid #e5e7eb;
+  border-right: 2px solid #e5e7eb;
+  border-bottom: 2px solid #e5e7eb;
+  background: #fafafa;
+}
+
+.bankDetailsContainer {
+  margin-top: 4px;
+}
+
+.bankDetailsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.bankDetailsTitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.bankDetailsTable {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.bankDetailsRow {
+  display: grid;
+  grid-template-columns: 130px 1.4fr 1.4fr 1fr 1fr;
+  column-gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+.bankDetailsCell {
+  font-size: 0.88rem;
+  min-width: 0;
+}
+
+/* simple no-data style for the bank details panel */
+.noData {
+  font-size: 0.86rem;
+  color: #666;
+  margin: 4px 0 8px;
+}

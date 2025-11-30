@@ -323,7 +323,7 @@ const Organizations = () => {
               key={h}
               className={`${styles.headerCell}
                 ${i === 0 ? styles.stickyColHeader : ""}
-                {!visibleCols[i] ? styles.hiddenCol : ""}
+                ${!visibleCols[i] ? styles.hiddenCol : ""}
                 ${i === 0 ? styles.actionsCol : ""}`}
             >
               {h}
