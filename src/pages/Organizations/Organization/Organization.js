@@ -24,7 +24,7 @@ const Organization = ({
   onCancel,
   onDelete,
   organizations = [], // [{id, name}]
-  projects = [], // [{id, projectName}]
+  projects = [], // still comes in, but not used in UI now
   statuses = [], // [{id, organizationStatusName}]
   visibleCols = [],
   isEven = false,
@@ -42,22 +42,6 @@ const Organization = ({
   };
 
   const toNum = (v) => (v === "" ? "" : Number(v));
-
-  const selectProject = () => (
-    <select
-      value={ev.projectId ?? link.projectId ?? ""}
-      onChange={(e) => onChange("projectId", toNum(e.target.value))}
-      onBlur={autoSave ? submit : undefined}
-      className={styles.input}
-    >
-      <option value="">Select project</option>
-      {projects.map((p) => (
-        <option key={p.id} value={p.id}>
-          {p.projectName}
-        </option>
-      ))}
-    </select>
-  );
 
   const selectOrg = () => (
     <select
@@ -90,9 +74,6 @@ const Organization = ({
       ))}
     </select>
   );
-
-  const projectName = (id) =>
-    projects.find((p) => p.id === id)?.projectName || (id ?? "-");
 
   const orgName = (id) =>
     organizations.find((o) => o.id === id)?.name || (id ?? "-");
@@ -173,14 +154,13 @@ const Organization = ({
           )}
         </Cell>
 
-        {/* 1..3 normal columns */}
+        {/* 1: Organization */}
         <Cell className={hc(1)}>
-          {isEditing ? selectProject() : projectName(link.projectId)}
-        </Cell>
-        <Cell className={hc(2)}>
           {isEditing ? selectOrg() : orgName(link.organizationId)}
         </Cell>
-        <Cell className={hc(3)}>
+
+        {/* 2: Status */}
+        <Cell className={hc(2)}>
           {isEditing ? selectStatus() : statusName(link.organizationStatusId)}
         </Cell>
       </div>

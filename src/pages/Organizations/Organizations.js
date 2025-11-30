@@ -17,17 +17,16 @@ const blankLink = {
   organizationStatusId: "",
 };
 
+// 🔄 Now only 3 columns: Actions, Organization, Status
 const headerLabels = [
   "Actions", // sticky left
-  "Project",
   "Organization",
   "Status",
 ];
 
-// column widths (px)
+// column widths (px) – matches 3 columns
 const BASE_COL_WIDTHS = [
   110, // Actions
-  220, // Project
   220, // Organization
   160, // Status
 ];
@@ -48,7 +47,7 @@ const Organizations = () => {
 
   // dropdown data
   const [orgOptions, setOrgOptions] = useState([]); // /organizations/active/options
-  const [projectOptions, setProjectOptions] = useState([]); // /projects/ids-names
+  const [projectOptions, setProjectOptions] = useState([]); // /projects/ids-names (still used for internal projectId, even if not shown)
   const [statusOptions, setStatusOptions] = useState([]); // /organization-statuses/active
 
   // UI state
@@ -353,6 +352,7 @@ const Organizations = () => {
               onCancel={cancel}
               onDelete={remove}
               organizations={orgOptions}
+              // ⬇️ no longer used in the row UI, but kept for internal ids
               projects={projectOptions}
               statuses={statusOptions}
               visibleCols={visibleCols}
