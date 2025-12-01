@@ -1,0 +1,35 @@
+/* src/styles/global.scss */
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f3f4f6; // or whatever your page bg is
+}
+
+/* generic headings */
+h1,
+h2,
+h3 {
+  color: #4a90e2;
+}
+
+/* generic buttons (if you want app-wide classnames) */
+.btn-primary {
+  padding: 0.75rem 1.5rem;
+  background-color: #4a90e2;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-danger {
+  padding: 0.75rem 1.5rem;
+  background-color: #e74c3c;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
