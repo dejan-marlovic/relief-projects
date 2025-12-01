@@ -313,7 +313,7 @@ const Organizations = () => {
       {/* Table */}
       <div
         className={`${styles.table} ${compact ? styles.compact : ""}`}
-        style={{ ["--org-grid-cols"]: gridCols }}
+        style={{ "--org-grid-cols": gridCols }}
       >
         {/* Header */}
         <div className={`${styles.gridRow} ${styles.headerRow}`}>

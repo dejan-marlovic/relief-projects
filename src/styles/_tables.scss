@@ -1,0 +1,82 @@
+/* src/styles/_tables.scss */
+
+// Base grid row used by table-like components
+@mixin table-grid-row {
+  display: grid;
+  align-items: center;
+  column-gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #f1f1f1;
+  font-size: 0.92rem;
+}
+
+// Zebra + hover
+@mixin table-zebra-even {
+  background: #fafafa;
+}
+
+@mixin table-hoverable {
+  &:hover {
+    background: #f5faff;
+  }
+}
+
+// Data cell
+@mixin table-cell {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Input inside rows
+@mixin table-input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.92rem;
+  min-width: 0;
+}
+
+// Actions row
+@mixin table-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+@mixin table-action-btn {
+  background: #f5f6f8;
+  border: 1px solid #e6e6e6;
+  border-radius: 6px;
+  padding: 6px 8px;
+  cursor: pointer;
+
+  &:hover {
+    background: #eef2ff;
+  }
+}
+
+@mixin table-danger {
+  color: #d33;
+}
+
+// Sticky first column
+@mixin table-sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: #fff;
+  box-shadow: 2px 0 0 rgba(0, 0, 0, 0.04);
+}
+
+// Hidden col utility
+@mixin table-hidden-col {
+  width: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  visibility: hidden;
+  pointer-events: none;
+}

@@ -1,83 +1,62 @@
+/* Organization.module.scss */
+@use "../../../styles/tables" as tables;
+
 .row {
 }
 
+/* Data row: same grid as header, using the CSS var from parent */
 .gridRow {
-  display: grid;
+  @include tables.table-grid-row;
   grid-template-columns: var(--org-grid-cols);
-  align-items: center;
-  column-gap: 8px;
-  padding: 8px 12px;
-  border-bottom: 1px solid #f1f1f1;
-  font-size: 0.92rem;
 }
 
+/* Zebra striping + hover */
 .zebraEven {
-  background: #fafafa;
+  @include tables.table-zebra-even;
 }
 
-.hoverable:hover {
-  background: #f5faff;
+.hoverable {
+  @include tables.table-hoverable;
 }
 
+/* Data cells */
 .cell {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  @include tables.table-cell;
 }
 
+/* Inputs */
 .input {
-  width: 100%;
-  padding: 6px 8px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 0.92rem;
-  min-width: 0;
+  @include tables.table-input;
 }
 
+/* Actions area */
 .actions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-start;
+  @include tables.table-actions;
 }
 
 .actionBtn {
-  background: #f5f6f8;
-  border: 1px solid #e6e6e6;
-  border-radius: 6px;
-  padding: 6px 8px;
-  cursor: pointer;
-}
-
-.actionBtn:hover {
-  background: #eef2ff;
+  @include tables.table-action-btn;
 }
 
 .danger {
-  color: #d33;
+  @include tables.table-danger;
 }
 
+/* Sticky first column (Actions) – data rows */
 .stickyCol {
-  position: sticky;
-  left: 0;
-  z-index: 2;
-  background: #fff;
-  box-shadow: 2px 0 0 rgba(0, 0, 0, 0.04);
+  @include tables.table-sticky-col;
 }
 
+/* Hidden column utility */
 .hiddenCol {
-  width: 0 !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  border: 0 !important;
-  visibility: hidden;
-  pointer-events: none;
+  @include tables.table-hidden-col;
 }
 
 .actionsCol {
 }
 
-/* wrapper row for the inline bank details panel under an organization row */
+/* --- Inline bank details panel under an organization row --- */
+
 .bankDetailsWrapperRow {
   padding: 8px 12px;
   border-left: 2px solid #e5e7eb;
