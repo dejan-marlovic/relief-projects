@@ -121,9 +121,13 @@ const Transaction = ({
     </select>
   );
 
-  // Currency helpers
-  const findCurrency = (currencyId) =>
-    currencies.find((c) => c.id === currencyId);
+  // ===== Currency helpers =====
+  const findCurrency = (currencyId) => {
+    if (currencyId == null) return undefined;
+    const numericId =
+      typeof currencyId === "string" ? Number(currencyId) : currencyId;
+    return currencies.find((c) => c.id === numericId);
+  };
 
   const currencyLabelById = (currencyId) => {
     if (!currencyId) return "-";
@@ -147,17 +151,37 @@ const Transaction = ({
     </select>
   );
 
+  // ===== FX helpers (aligned with Budget: baseCurrencyId, quoteCurrencyId, rate) =====
+  const formatRateLabel = (r) => {
+    if (!r) return "-";
+
+    const baseCur = findCurrency(r.baseCurrencyId);
+    const quoteCur = findCurrency(r.quoteCurrencyId);
+
+    const baseName = baseCur?.name || `CUR#${r.baseCurrencyId}`;
+    const quoteName = quoteCur?.name || `CUR#${r.quoteCurrencyId}`;
+
+    const rate = typeof r.rate === "number" ? r.rate : Number(r.rate);
+
+    if (!Number.isFinite(rate)) {
+      return `1 ${baseName} → ? ${quoteName}`;
+    }
+
+    return `1 ${baseName} → ${rate} ${quoteName}`;
+  };
+
   const fxLabelByFxId = (fxId) => {
     if (!fxId) return "-";
-    const r = exchangeRates.find((er) => er.id === fxId);
+
+    const numericId = typeof fxId === "string" ? Number(fxId) : fxId;
+
+    const r = exchangeRates.find((er) => {
+      const erId = typeof er.id === "string" ? Number(er.id) : er.id;
+      return erId === numericId;
+    });
+
     if (!r) return fxId;
-    const cur = findCurrency(r.currencyId);
-    const code = cur?.name || `CUR#${r.currencyId}`;
-    const rate =
-      typeof r.exchangeRate === "number"
-        ? r.exchangeRate
-        : Number(r.exchangeRate);
-    return `${code} @ ${rate}`;
+    return formatRateLabel(r);
   };
 
   const selectFx = (field) => (
@@ -168,19 +192,11 @@ const Transaction = ({
       className={styles.input}
     >
       <option value="">Select FX</option>
-      {exchangeRates.map((r) => {
-        const cur = findCurrency(r.currencyId);
-        const code = cur?.name || `CUR#${r.currencyId}`;
-        const rate =
-          typeof r.exchangeRate === "number"
-            ? r.exchangeRate
-            : Number(r.exchangeRate);
-        return (
-          <option key={r.id} value={r.id}>
-            {code} @ {rate}
-          </option>
-        );
-      })}
+      {exchangeRates.map((r) => (
+        <option key={r.id} value={r.id}>
+          {formatRateLabel(r)}
+        </option>
+      ))}
     </select>
   );
 
@@ -299,7 +315,7 @@ const Transaction = ({
           : tx.approvedAmount ?? "-"}
       </Cell>
 
-      {/* 10: Approved Curr (changed to dropdown + label) */}
+      {/* 10: Approved Curr (dropdown + label) */}
       <Cell className={hc(10)}>
         {isEditing
           ? selectCurrency("approvedAmountCurrencyId")
