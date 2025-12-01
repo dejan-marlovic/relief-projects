@@ -1,4 +1,5 @@
 /* Budget.module.scss */
+@use "../../../styles/forms" as forms;
 
 .budgetContainer {
   display: flex;
@@ -37,15 +38,10 @@
   width: 100%;
 }
 
+/* Inputs */
 .textInput,
 input[type="datetime-local"] {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-family: inherit;
-  box-sizing: border-box;
+  @include forms.text-input;
 }
 
 .textInput[type="select"] {
@@ -54,19 +50,13 @@ input[type="datetime-local"] {
 }
 
 .textareaInput {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 1rem;
-  resize: vertical;
+  @include forms.textarea-input;
   min-height: 100px;
 }
 
+/* Labels & headings */
 label {
-  font-weight: 600;
-  margin-bottom: 0.4rem;
-  color: #333;
+  @include forms.form-label;
 }
 
 h3 {
@@ -74,6 +64,7 @@ h3 {
   color: #4a90e2;
 }
 
+/* Layout */
 .formRowPair {
   display: flex;
   gap: 2rem;
@@ -110,33 +101,15 @@ h3 {
 }
 
 .saveButton {
-  padding: 0.75rem 1.5rem;
-  background-color: #4a90e2;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
+  @include forms.primary-button;
 }
 
 .deleteButton {
-  padding: 0.75rem 1.5rem;
-  background-color: #e74c3c;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
+  @include forms.danger-button;
 }
 
 .cancelButton {
-  padding: 0.75rem 1.5rem;
-  background-color: #e74c3c;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
+  @include forms.danger-button;
 }
 
 /* Optional helper text under inputs */
@@ -147,7 +120,6 @@ h3 {
 }
 
 /* Optional: container + list styling, if used elsewhere */
-
 .container {
   display: flex;
   flex-direction: column;
@@ -156,13 +128,7 @@ h3 {
 
 .createButton {
   align-self: flex-start;
-  padding: 0.75rem 1.5rem;
-  background-color: #4a90e2;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
+  @include forms.primary-button;
 }
 
 .budgetList {

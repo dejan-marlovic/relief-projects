@@ -1,56 +1,46 @@
-/*RegisterProject.module.scss*/
+/* RegisterProject.module.scss */
+@use "../../styles/forms" as forms;
 
 .registerContainer {
   display: flex;
   gap: 2rem;
   padding: 2rem;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background-color: #fff;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   margin-top: 1rem;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .formContainer {
   flex: 2;
 }
 
+/* Inputs */
 .textInput,
 input[type="datetime-local"] {
-  width: 100%;
-  padding: 0.75rem;
+  @include forms.text-input;
   margin-bottom: 1.25rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-family: inherit;
-  box-sizing: border-box;
-  appearance: none;
-  -webkit-appearance: none;
 }
 
 .textareaInput {
-  width: 100%;
-  padding: 0.75rem;
+  @include forms.textarea-input;
   margin-bottom: 1.25rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 1rem;
-  resize: vertical;
 }
 
+/* Labels */
 label {
-  font-weight: 600;
+  @include forms.form-label;
   display: block;
-  margin-bottom: 0.4rem;
-  color: #333;
 }
 
+/* Headings */
 h3 {
   margin-bottom: 1rem;
   color: #4a90e2;
 }
 
+/* Two column layout */
 .formTwoColumn {
   display: flex;
   gap: 2rem;
@@ -63,35 +53,27 @@ h3 {
   min-width: 300px;
 }
 
+/* Buttons */
 .saveButton {
+  @include forms.primary-button;
   margin-top: 1rem;
-  padding: 0.75rem 1.5rem;
-  background-color: #4a90e2;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
   align-self: flex-start;
 }
 
 .cancelButton {
+  @include forms.danger-button;
+  background-color: #999; /* override danger red if you want grey */
   margin-top: 1rem;
-  padding: 0.75rem 1.5rem;
-  background-color: #999;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  align-self: flex-start;
   margin-left: 1rem;
+  align-self: flex-start;
 }
 
+/* Field group wrapper */
 .fieldGroup {
   margin-bottom: 1.5rem;
 }
 
+/* Helper text */
 .helperText {
   font-size: 0.85rem;
   color: #666;
