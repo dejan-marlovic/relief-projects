@@ -50,7 +50,17 @@ function Login() {
 
   return (
     <div className={styles.container}>
+      {/* Centered logo above input fields */}
+      <div className={styles.logoWrapper}>
+        <img
+          src="/images/logo/logo.png"
+          alt="Relief Projects logo"
+          className={styles.logo}
+        />
+      </div>
+
       <h2>Login</h2>
+
       <form onSubmit={handleSubmit}>
         <div>
           <label>Username:</label>

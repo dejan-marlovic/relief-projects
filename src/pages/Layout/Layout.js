@@ -10,56 +10,61 @@ import styles from "./Layout.module.scss";
 // Import context for accessing the selected project and project list
 import { ProjectContext } from "../../context/ProjectContext";
 
-// Define the main layout component that wraps the app UI and navigation
 const Layout = () => {
-  // 📍 Current URL path (used to highlight active tab and hide selector)
   const location = useLocation();
 
-  // Global state from ProjectContext
   const { projects, selectedProjectId, setSelectedProjectId } =
     useContext(ProjectContext);
 
-  // Handle project change
   const handleSelectChange = (e) => {
     setSelectedProjectId(e.target.value);
   };
 
-  // Hide selector on register page AND statistics page
   const isRegisterPage = location.pathname === "/register-project";
   const isStatisticsPage = location.pathname === "/statistics";
   const hideSelector = isRegisterPage || isStatisticsPage;
 
   return (
     <>
-      {/* App heading */}
-      <h1>
-        <strong>Relief Projects</strong>
-      </h1>
+      {/* Header row: title + logo (logo absolutely positioned) */}
+      <div className={styles.headerBar}>
+        <h1>
+          <strong>Relief Projects</strong>
+        </h1>
 
-      {/* Project selector (hidden on register + statistics) */}
-      <div
-        className={`${styles.selectorContainer} ${
-          hideSelector ? styles.hiddenSelector : ""
-        }`}
-      >
-        <strong>Select a Project</strong>
-        <br />
-        <select
-          value={selectedProjectId}
-          onChange={handleSelectChange}
-          className={styles.selectInput}
-          disabled={!projects || projects.length === 0}
-          aria-label="Select a project"
+        <img
+          src="/images/logo/logo.png"
+          alt="Relief Projects logo"
+          className={styles.logo}
+        />
+      </div>
+
+      {/* Project selector row (hidden on register + statistics) */}
+      <div className={styles.selectorBar}>
+        <div
+          className={`${styles.selectorContainer} ${
+            hideSelector ? styles.hiddenSelector : ""
+          }`}
         >
-          {(!projects || projects.length === 0) && (
-            <option value="">No projects available</option>
-          )}
-          {projects?.map((project) => (
-            <option key={project.id} value={project.id}>
-              {project.projectName}
-            </option>
-          ))}
-        </select>
+          <strong>Select a Project</strong>
+          <br />
+          <select
+            value={selectedProjectId}
+            onChange={handleSelectChange}
+            className={styles.selectInput}
+            disabled={!projects || projects.length === 0}
+            aria-label="Select a project"
+          >
+            {(!projects || projects.length === 0) && (
+              <option value="">No projects available</option>
+            )}
+            {projects?.map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.projectName}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Navigation */}
@@ -127,6 +132,16 @@ const Layout = () => {
               }
             >
               Documents
+            </Link>
+          </li>
+          <li>
+            <Link
+              to="/organizations"
+              className={
+                location.pathname === "/organizations" ? styles.active : ""
+              }
+            >
+              Related Organizations
             </Link>
           </li>
           <li>

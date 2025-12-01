@@ -1,9 +1,6 @@
-/*Transactions.module.scss*/
-/* Outer wrapper */
 .container {
 }
 
-/* Toolbar (compact + columns) */
 .toolbar {
   display: flex;
   align-items: center;
@@ -59,9 +56,8 @@
   font-size: 0.85em;
 }
 
-/* Scrollable table container; grid columns are injected via inline CSS var */
 .table {
-  position: relative; /* stacking context for sticky/z-index correctness */
+  position: relative;
   isolation: isolate;
   overflow: auto;
   max-height: 60vh;
@@ -69,12 +65,11 @@
   border-radius: 8px;
   background: #fff;
 
-  --tx-header-bg: #f6f7fb; /* subtle grayish */
-  --tx-header-border: #e5e7eb; /* thin divider */
-  --tx-grid-cols: 110px; /* default fallback; overwritten inline */
+  --org-header-bg: #f6f7fb;
+  --org-header-border: #e5e7eb;
+  --org-grid-cols: 110px;
 }
 
-/* Compact mode tweaks */
 .compact .gridRow {
   padding: 4px 8px !important;
   font-size: 0.86rem !important;
@@ -86,22 +81,20 @@
   font-size: 0.86rem !important;
 }
 
-/* Grid row style shared by header + data rows */
 .gridRow {
   display: grid;
-  grid-template-columns: var(--tx-grid-cols);
+  grid-template-columns: var(--org-grid-cols);
   align-items: center;
   column-gap: 8px;
-  min-width: 1200px; /* allow horiz scroll instead of over-squishing */
+  min-width: 600px;
 }
 
-/* Header row */
 .headerRow {
   position: sticky;
   top: 0;
-  z-index: 5; /* above data rows */
-  background: var(--tx-header-bg); /* solid row backdrop */
-  border-bottom: 1px solid var(--tx-header-border);
+  z-index: 5;
+  background: var(--org-header-bg);
+  border-bottom: 1px solid var(--org-header-border);
   padding: 10px 12px;
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
   font-weight: 600;
@@ -112,21 +105,17 @@
   padding-right: 4px;
   white-space: nowrap;
   color: #30323a;
-  background: var(--tx-header-bg); /* ← NEW: keep each cell opaque */
+  background: var(--org-header-bg);
 }
 
-/* Sticky first column (Actions) – header */
 .stickyColHeader {
   position: sticky;
   left: 0;
-  z-index: 6; /* above the header row itself */
-  background: var(
-    --tx-header-bg
-  ); /* ensure solid color while horizontal scrolling */
+  z-index: 6;
+  background: var(--org-header-bg);
   box-shadow: 2px 0 0 rgba(0, 0, 0, 0.04);
 }
 
-/* When a column is hidden (width collapsed to 0), hide its content too */
 .hiddenCol {
   width: 0 !important;
   padding: 0 !important;
@@ -136,7 +125,6 @@
   pointer-events: none;
 }
 
-/* Empty states + create bar */
 .noData {
   padding: 12px;
   color: #666;
@@ -158,4 +146,7 @@
 .addBtn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.actionsCol {
 }

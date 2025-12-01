@@ -15,6 +15,7 @@ import {
   FiChevronRight,
   FiX,
   FiSave,
+  FiPlus, // ✅ NEW
 } from "react-icons/fi";
 
 // ✅ Base URL (backend)
@@ -51,6 +52,14 @@ const Project = () => {
 
   // ✅ Slideshow state (for multiple images)
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // ✅ NEW: Related organizations state
+  const [allOrganizationOptions, setAllOrganizationOptions] = useState([]); // all active orgs: /api/organizations/active/options
+  const [projectOrgOptions, setProjectOrgOptions] = useState([]); // project-aware options: /by-project/{projectId}/options
+  const [orgStatusOptions, setOrgStatusOptions] = useState([]); // /api/organization-statuses/active
+  const [projectOrganizations, setProjectOrganizations] = useState([]); // project_organization rows for this project
+  const [selectedOrgId, setSelectedOrgId] = useState("");
+  const [selectedOrgStatusId, setSelectedOrgStatusId] = useState("");
 
   // 🔍 Derive image list from comma-separated string
   const imageNames = projectDetails?.projectCoverImage
@@ -242,6 +251,126 @@ const Project = () => {
     fetchTypesAndAddresses();
   }, []);
 
+  // ✅ NEW: fetch all org options (for displaying labels)
+  useEffect(() => {
+    const fetchAllOrgOptions = async () => {
+      try {
+        const token = localStorage.getItem("authToken");
+        const res = await fetch(
+          `${BASE_URL}/api/organizations/active/options`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (!res.ok) throw new Error("Failed to fetch organization options");
+        const data = await res.json();
+        setAllOrganizationOptions(Array.isArray(data) ? data : []);
+      } catch (e) {
+        console.error("Error fetching all organization options:", e);
+        setAllOrganizationOptions([]);
+      }
+    };
+    fetchAllOrgOptions();
+  }, []);
+
+  // ✅ NEW: fetch organization statuses
+  useEffect(() => {
+    const fetchOrgStatuses = async () => {
+      try {
+        const token = localStorage.getItem("authToken");
+        const res = await fetch(
+          `${BASE_URL}/api/organization-statuses/active`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (!res.ok) throw new Error("Failed to fetch organization statuses");
+        const data = await res.json();
+        setOrgStatusOptions(Array.isArray(data) ? data : []);
+      } catch (e) {
+        console.error("Error fetching org statuses:", e);
+        setOrgStatusOptions([]);
+      }
+    };
+    fetchOrgStatuses();
+  }, []);
+
+  // ✅ NEW: project-aware org options + project_organization rows
+  useEffect(() => {
+    if (!selectedProjectId) {
+      setProjectOrgOptions([]);
+      setProjectOrganizations([]);
+      setSelectedOrgId("");
+      setSelectedOrgStatusId("");
+      return;
+    }
+
+    const token = localStorage.getItem("authToken");
+
+    const loadProjectOrgOptions = async (projectId) => {
+      try {
+        const res = await fetch(
+          `${BASE_URL}/api/organizations/by-project/${projectId}/options`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!res.ok) {
+          // Fallback: if this endpoint isn't available/returns 404, use all active options
+          console.warn(
+            "Falling back to all active organization options for dropdown."
+          );
+          setProjectOrgOptions(allOrganizationOptions);
+          return;
+        }
+
+        const data = await res.json();
+        setProjectOrgOptions(Array.isArray(data) ? data : []);
+      } catch (e) {
+        console.error("Error fetching project-aware org options:", e);
+        setProjectOrgOptions([]);
+      }
+    };
+
+    const loadProjectOrganizations = async (projectId) => {
+      try {
+        const res = await fetch(
+          `${BASE_URL}/api/project-organizations/active`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (!res.ok) throw new Error("Failed to fetch project organizations");
+        const data = await res.json();
+        const byProject = (Array.isArray(data) ? data : []).filter(
+          (po) => String(po.projectId) === String(projectId)
+        );
+        setProjectOrganizations(byProject);
+      } catch (e) {
+        console.error("Error fetching project organizations:", e);
+        setProjectOrganizations([]);
+      }
+    };
+
+    loadProjectOrgOptions(selectedProjectId);
+    loadProjectOrganizations(selectedProjectId);
+    setSelectedOrgId("");
+    setSelectedOrgStatusId("");
+  }, [selectedProjectId, allOrganizationOptions]);
+
   // Handle input field changes by updating local projectDetails state
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -409,6 +538,127 @@ const Project = () => {
     }
   };
 
+  // ✅ NEW: add related organization to project_organization
+  const handleAddProjectOrganization = async () => {
+    if (!projectDetails?.id) {
+      alert("No project is selected.");
+      return;
+    }
+    if (!selectedOrgId || !selectedOrgStatusId) {
+      alert("Please select both organization and status.");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("authToken");
+      const res = await fetch(`${BASE_URL}/api/project-organizations`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          projectId: Number(projectDetails.id),
+          organizationId: Number(selectedOrgId),
+          organizationStatusId: Number(selectedOrgStatusId),
+        }),
+      });
+
+      if (!res.ok) {
+        const msg = await res.text().catch(() => "");
+        throw new Error(msg || "Failed to add organization to project.");
+      }
+
+      // Refresh current project organizations and project-aware dropdown
+      const projectId = projectDetails.id;
+      const token2 = localStorage.getItem("authToken");
+
+      // reload project organizations
+      const reloadPO = await fetch(
+        `${BASE_URL}/api/project-organizations/active`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token2}`,
+          },
+        }
+      );
+      if (reloadPO.ok) {
+        const data = await reloadPO.json();
+        const byProject = (Array.isArray(data) ? data : []).filter(
+          (po) => String(po.projectId) === String(projectId)
+        );
+        setProjectOrganizations(byProject);
+      }
+
+      // reload project-aware org options
+      const reloadOpts = await fetch(
+        `${BASE_URL}/api/organizations/by-project/${projectId}/options`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token2}`,
+          },
+        }
+      );
+      if (reloadOpts.ok) {
+        const data = await reloadOpts.json();
+        setProjectOrgOptions(Array.isArray(data) ? data : []);
+      }
+
+      setSelectedOrgId("");
+      setSelectedOrgStatusId("");
+    } catch (e) {
+      console.error(e);
+      alert(e.message || "Error adding organization to project.");
+    }
+  };
+
+  // ✅ NEW: delete related organization from project_organization
+  const handleDeleteProjectOrganization = async (projectOrgId) => {
+    if (!window.confirm("Remove this organization from the project?")) return;
+
+    try {
+      const token = localStorage.getItem("authToken");
+      const res = await fetch(
+        `${BASE_URL}/api/project-organizations/${projectOrgId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!res.ok) throw new Error("Failed to delete project organization.");
+
+      // Optimistic update
+      setProjectOrganizations((prev) =>
+        prev.filter((po) => po.id !== projectOrgId)
+      );
+
+      // Also reload project-aware org options so it becomes selectable again
+      if (projectDetails?.id) {
+        const token2 = localStorage.getItem("authToken");
+        const reload = await fetch(
+          `${BASE_URL}/api/organizations/by-project/${projectDetails.id}/options`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token2}`,
+            },
+          }
+        );
+        if (reload.ok) {
+          const data = await reload.json();
+          setProjectOrgOptions(Array.isArray(data) ? data : []);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      alert(e.message || "Error deleting project organization.");
+    }
+  };
+
   // Automatically resize textarea to fit content
   const autoResize = (textarea) => {
     if (!textarea) return;
@@ -454,6 +704,7 @@ const Project = () => {
       setProjectDetails(null);
       setSelectedSectorIds([]);
       setCurrentProjectSectorLinks([]);
+      setProjectOrganizations([]);
     } catch (error) {
       console.error("Delete error:", error);
       alert("Error deleting project.");
@@ -585,6 +836,34 @@ const Project = () => {
       s?.sectorCode ??
       s?.sector_code ??
       `Sector ${id}`
+    );
+  };
+
+  // ✅ NEW: org + org status label helpers
+  const getOrgLabel = (id) => {
+    const o = allOrganizationOptions.find(
+      (opt) => String(opt.id ?? opt.organizationId) === String(id)
+    );
+    return (
+      o?.name ??
+      o?.organizationName ??
+      o?.organization_name ??
+      `Organization ${id}`
+    );
+  };
+
+  const getOrgStatusLabel = (id) => {
+    const s = orgStatusOptions.find(
+      (opt) =>
+        String(
+          opt.id ?? opt.organizationStatusId ?? opt.organization_status_id
+        ) === String(id)
+    );
+    return (
+      s?.organizationStatusName ??
+      s?.organization_status_name ??
+      s?.statusName ??
+      `Status ${id}`
     );
   };
 
@@ -761,18 +1040,6 @@ const Project = () => {
                           type="text"
                           name="pinCode"
                           value={projectDetails.pinCode || ""}
-                          onChange={handleInputChange}
-                          className={styles.textInput}
-                        />
-                      </div>
-
-                      {/* Funding Source */}
-                      <div>
-                        <label>Funding Source:</label>
-                        <input
-                          type="text"
-                          name="fundingSource"
-                          value={projectDetails.fundingSource || ""}
                           onChange={handleInputChange}
                           className={styles.textInput}
                         />
@@ -1005,6 +1272,173 @@ const Project = () => {
                               No sectors assigned
                             </span>
                           )}
+                        </div>
+                      </div>
+
+                      {/* ✅ NEW: Related organizations */}
+                      <div style={{ marginTop: "1rem" }}>
+                        <label>Related Organizations:</label>
+
+                        {/* Existing relations */}
+                        <div
+                          style={{
+                            border: "1px solid #ddd",
+                            borderRadius: 8,
+                            padding: 8,
+                            marginBottom: 8,
+                            maxHeight: 180,
+                            overflow: "auto",
+                          }}
+                        >
+                          {projectOrganizations.length === 0 ? (
+                            <span style={{ fontSize: 12, color: "#666" }}>
+                              No related organizations
+                            </span>
+                          ) : (
+                            <ul
+                              style={{
+                                listStyle: "none",
+                                padding: 0,
+                                margin: 0,
+                              }}
+                            >
+                              {projectOrganizations.map((po) => (
+                                <li
+                                  key={po.id}
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    gap: 8,
+                                    padding: "4px 0",
+                                  }}
+                                >
+                                  <span style={{ fontSize: 13 }}>
+                                    {getOrgLabel(po.organizationId)}{" "}
+                                    <span style={{ color: "#888" }}>
+                                      (
+                                      {getOrgStatusLabel(
+                                        po.organizationStatusId
+                                      )}
+                                      )
+                                    </span>
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleDeleteProjectOrganization(po.id)
+                                    }
+                                    style={{
+                                      border: "none",
+                                      backgroundColor: "#e74c3c",
+                                      color: "#fff",
+                                      padding: "4px 8px",
+                                      borderRadius: "4px",
+                                      cursor: "pointer",
+                                      fontSize: "0.9rem",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      lineHeight: 1,
+                                    }}
+                                    aria-label="Remove organization from project"
+                                  >
+                                    <FiTrash2 />
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+
+                        {/* Add new relation */}
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: 8,
+                            alignItems: "center",
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <select
+                            value={selectedOrgId}
+                            onChange={(e) => setSelectedOrgId(e.target.value)}
+                            className={styles.textInput}
+                            style={{ flex: 1, marginBottom: 0 }}
+                          >
+                            <option value="">Select organization</option>
+                            {projectOrgOptions.map((o) => (
+                              <option
+                                key={o.id ?? o.organizationId}
+                                value={o.id ?? o.organizationId}
+                              >
+                                {o.name ??
+                                  o.organizationName ??
+                                  o.organization_name}
+                              </option>
+                            ))}
+                          </select>
+
+                          <select
+                            value={selectedOrgStatusId}
+                            onChange={(e) =>
+                              setSelectedOrgStatusId(e.target.value)
+                            }
+                            className={styles.textInput}
+                            style={{ flex: 1, marginBottom: 0 }}
+                          >
+                            <option value="">Select status</option>
+                            {orgStatusOptions.map((s) => (
+                              <option
+                                key={
+                                  s.id ??
+                                  s.organizationStatusId ??
+                                  s.organization_status_id
+                                }
+                                value={
+                                  s.id ??
+                                  s.organizationStatusId ??
+                                  s.organization_status_id
+                                }
+                              >
+                                {s.organizationStatusName ??
+                                  s.organization_status_name ??
+                                  s.statusName}
+                              </option>
+                            ))}
+                          </select>
+
+                          <button
+                            type="button"
+                            onClick={handleAddProjectOrganization}
+                            style={{
+                              padding: "0.55rem 1rem",
+                              borderRadius: 8,
+                              border: "none",
+                              cursor: "pointer",
+                              backgroundColor: "#4a90e2",
+                              color: "#fff",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 4,
+                              fontWeight: 600,
+                              marginBottom: 0,
+                            }}
+                          >
+                            <FiPlus />
+                            Add
+                          </button>
+                        </div>
+
+                        <div
+                          style={{
+                            fontSize: 11,
+                            color: "#888",
+                            marginTop: 4,
+                          }}
+                        >
+                          Only organizations not already linked to this project
+                          are shown in the dropdown.
                         </div>
                       </div>
 
