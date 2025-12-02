@@ -14,7 +14,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
   const [exchangeRates, setExchangeRates] = useState([]);
   const [refreshCostDetailsTrigger, setRefreshCostDetailsTrigger] = useState(0);
 
-  // 🔴 New: form level + field level errors
+  // 🔴 form-level + field-level errors
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({}); // { fieldName: "Message" }
 
@@ -109,16 +109,115 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
   const inputClass = (fieldName) =>
     `${styles.textInput} ${hasError(fieldName) ? styles.inputError : ""}`;
 
+  // Names for fixed reporting currencies (for display only)
+  const sekName = getCurrencyNameById(budget.reportingCurrencySekId) || "SEK";
+  const eurName = getCurrencyNameById(budget.reportingCurrencyEurId) || "EUR";
+
+  // IDs of special currencies
+  const gbpCurrencyId = findCurrencyIdByName("GBP");
+
+  // Rate lists for each dropdown
+  const localToGbpRates =
+    budget.localCurrencyId && gbpCurrencyId
+      ? filterRatesForPair(budget.localCurrencyId, gbpCurrencyId)
+      : [];
+
+  const localToSekRates =
+    budget.localCurrencyId && budget.reportingCurrencySekId
+      ? filterRatesForPair(
+          budget.localCurrencyId,
+          budget.reportingCurrencySekId
+        )
+      : [];
+
+  const localToEurRates =
+    budget.localCurrencyId && budget.reportingCurrencyEurId
+      ? filterRatesForPair(
+          budget.localCurrencyId,
+          budget.reportingCurrencyEurId
+        )
+      : [];
+
   // 💾 Save/Update Budget
   const handleSave = async () => {
     try {
       const token = localStorage.getItem("authToken");
 
-      // clear previous errors before new request
+      // ❗ 1) FRONTEND VALIDATION BEFORE SENDING ANYTHING
+      const newFieldErrors = {};
+
+      // total amount
+      if (
+        budget.totalAmount === "" ||
+        budget.totalAmount == null ||
+        Number(budget.totalAmount) <= 0
+      ) {
+        newFieldErrors.totalAmount = "Total amount must be greater than zero.";
+      }
+
+      // base required fields
+      if (!budget.localCurrencyId) {
+        newFieldErrors.localCurrencyId = "Local currency is required.";
+      }
+
+      // valid ID helpers
+      const validLocalToGbpIds = new Set(
+        localToGbpRates.map((r) => Number(r.id))
+      );
+      const validLocalToSekIds = new Set(
+        localToSekRates.map((r) => Number(r.id))
+      );
+      const validLocalToEurIds = new Set(
+        localToEurRates.map((r) => Number(r.id))
+      );
+
+      const localToGbpIdNum =
+        budget.localExchangeRateToGbpId == null ||
+        budget.localExchangeRateToGbpId === ""
+          ? null
+          : Number(budget.localExchangeRateToGbpId);
+
+      const sekRateIdNum =
+        budget.reportingExchangeRateSekId == null ||
+        budget.reportingExchangeRateSekId === ""
+          ? null
+          : Number(budget.reportingExchangeRateSekId);
+
+      const eurRateIdNum =
+        budget.reportingExchangeRateEurId == null ||
+        budget.reportingExchangeRateEurId === ""
+          ? null
+          : Number(budget.reportingExchangeRateEurId);
+
+      // Local → GBP
+      if (!localToGbpIdNum || !validLocalToGbpIds.has(localToGbpIdNum)) {
+        newFieldErrors.localExchangeRateToGbpId =
+          "Local → GBP exchange rate is required for the selected local currency.";
+      }
+
+      // Local → SEK
+      if (!sekRateIdNum || !validLocalToSekIds.has(sekRateIdNum)) {
+        newFieldErrors.reportingExchangeRateSekId =
+          "SEK exchange rate is required for the selected local currency.";
+      }
+
+      // Local → EUR
+      if (!eurRateIdNum || !validLocalToEurIds.has(eurRateIdNum)) {
+        newFieldErrors.reportingExchangeRateEurId =
+          "EUR exchange rate is required for the selected local currency.";
+      }
+
+      if (Object.keys(newFieldErrors).length > 0) {
+        setFieldErrors(newFieldErrors);
+        setFormError("Please correct the highlighted fields and try again.");
+        return; // ⛔ don't call backend
+      }
+
+      // 2) clear previous backend errors before new request
       setFormError("");
       setFieldErrors({});
 
-      // 🧼 Build a clean payload explicitly – field names must match BudgetDTO
+      // 3) Build a clean payload explicitly – field names must match BudgetDTO
       const payload = {
         id: budget.id,
         projectId: budget.projectId,
@@ -149,24 +248,12 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
             : Number(budget.reportingCurrencyEurId),
 
         // exchange rates (FK → exchange_rates)
-        localExchangeRateToGbpId:
-          budget.localExchangeRateToGbpId === "" ||
-          budget.localExchangeRateToGbpId == null
-            ? null
-            : Number(budget.localExchangeRateToGbpId),
-
-        reportingExchangeRateSekId:
-          budget.reportingExchangeRateSekId === "" ||
-          budget.reportingExchangeRateSekId == null
-            ? null
-            : Number(budget.reportingExchangeRateSekId),
-
-        reportingExchangeRateEurId:
-          budget.reportingExchangeRateEurId === "" ||
-          budget.reportingExchangeRateEurId == null
-            ? null
-            : Number(budget.reportingExchangeRateEurId),
+        localExchangeRateToGbpId: localToGbpIdNum,
+        reportingExchangeRateSekId: sekRateIdNum,
+        reportingExchangeRateEurId: eurRateIdNum,
       };
+
+      console.log("🔵 Budget PUT payload:", payload);
 
       const response = await fetch(`${BASE_URL}/api/budgets/${budget.id}`, {
         method: "PUT",
@@ -269,40 +356,32 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
         : Number(value)
       : value;
 
+    // 🔁 When local currency changes, force user to pick new rates by clearing them
+    if (name === "localCurrencyId") {
+      setBudget((prev) => ({
+        ...prev,
+        localCurrencyId: castValue,
+        localExchangeRateToGbpId: "",
+        reportingExchangeRateSekId: "",
+        reportingExchangeRateEurId: "",
+      }));
+
+      // also clear related field errors so user starts fresh
+      setFieldErrors((prev) => ({
+        ...prev,
+        localExchangeRateToGbpId: undefined,
+        reportingExchangeRateSekId: undefined,
+        reportingExchangeRateEurId: undefined,
+      }));
+
+      return;
+    }
+
     setBudget((prev) => ({
       ...prev,
       [name]: castValue,
     }));
   };
-
-  // Names for fixed reporting currencies (for display only)
-  const sekName = getCurrencyNameById(budget.reportingCurrencySekId) || "SEK";
-  const eurName = getCurrencyNameById(budget.reportingCurrencyEurId) || "EUR";
-
-  // IDs of special currencies
-  const gbpCurrencyId = findCurrencyIdByName("GBP");
-
-  // Rate lists for each dropdown
-  const localToGbpRates =
-    budget.localCurrencyId && gbpCurrencyId
-      ? filterRatesForPair(budget.localCurrencyId, gbpCurrencyId)
-      : [];
-
-  const localToSekRates =
-    budget.localCurrencyId && budget.reportingCurrencySekId
-      ? filterRatesForPair(
-          budget.localCurrencyId,
-          budget.reportingCurrencySekId
-        )
-      : [];
-
-  const localToEurRates =
-    budget.localCurrencyId && budget.reportingCurrencyEurId
-      ? filterRatesForPair(
-          budget.localCurrencyId,
-          budget.reportingCurrencyEurId
-        )
-      : [];
 
   return (
     <div className={styles.budgetContainer}>
