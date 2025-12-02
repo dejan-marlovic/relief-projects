@@ -93,3 +93,58 @@ h3 {
   margin-left: 1rem;
   align-self: flex-start;
 }
+
+.errorBanner {
+  background-color: #ffe6e6;
+  color: #b00000;
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+  border: 1px solid #ffb3b3;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.errorList {
+  background-color: #fff7f0;
+  border: 1px solid #ffd5a3;
+  border-radius: 6px;
+  padding: 8px 14px;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+  animation: fadeIn 0.2s ease-in-out;
+
+  ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+
+  li {
+    margin: 2px 0;
+  }
+}
+
+.fieldError {
+  color: #b00000;
+  font-size: 0.8rem;
+  margin: 4px 0 8px;
+  font-weight: 500;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.inputError {
+  border-color: #b00000 !important;
+  box-shadow: 0 0 4px rgba(176, 0, 0, 0.6);
+  outline: none;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

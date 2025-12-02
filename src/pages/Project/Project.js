@@ -61,6 +61,16 @@ const Project = () => {
   const [selectedOrgId, setSelectedOrgId] = useState("");
   const [selectedOrgStatusId, setSelectedOrgStatusId] = useState("");
 
+  // ✅ NEW: form-level + field-level error state (like RegisterProject)
+  const [formError, setFormError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({}); // { fieldName: "Message" }
+
+  const getFieldError = (fieldName) => fieldErrors?.[fieldName];
+  const hasError = (fieldName) => Boolean(fieldErrors?.[fieldName]);
+
+  const inputClass = (fieldName) =>
+    `${styles.textInput} ${hasError(fieldName) ? styles.inputError : ""}`;
+
   // 🔍 Derive image list from comma-separated string
   const imageNames = projectDetails?.projectCoverImage
     ? projectDetails.projectCoverImage
@@ -81,6 +91,8 @@ const Project = () => {
     const fetchProjectDetails = async () => {
       try {
         setLoading(true);
+        setFormError("");
+        setFieldErrors({});
         const token = localStorage.getItem("authToken");
         const response = await fetch(
           `${BASE_URL}/api/projects/${selectedProjectId}`,
@@ -98,6 +110,7 @@ const Project = () => {
         setProjectDetails(projectDetailsData);
       } catch (error) {
         console.error("Error fetching project details:", error);
+        setFormError("Failed to load project details.");
       } finally {
         setLoading(false);
       }
@@ -372,7 +385,7 @@ const Project = () => {
   }, [selectedProjectId, allOrganizationOptions]);
 
   // Handle input field changes by updating local projectDetails state
-  const handleInputChange = (e) => {
+  const handleProjectInputChange = (e) => {
     const { name, value } = e.target;
     setProjectDetails((prev) => ({
       ...prev,
@@ -705,6 +718,8 @@ const Project = () => {
       setSelectedSectorIds([]);
       setCurrentProjectSectorLinks([]);
       setProjectOrganizations([]);
+      setFormError("");
+      setFieldErrors({});
     } catch (error) {
       console.error("Delete error:", error);
       alert("Error deleting project.");
@@ -791,7 +806,10 @@ const Project = () => {
     try {
       const token = localStorage.getItem("authToken");
 
-      // 1) Save project fields
+      // Clear previous errors
+      setFormError("");
+      setFieldErrors({});
+
       const response = await fetch(
         `${BASE_URL}/api/projects/${projectDetails.id}`,
         {
@@ -804,24 +822,57 @@ const Project = () => {
         }
       );
 
-      if (!response.ok) throw new Error("Failed to update project");
+      const text = await response.text();
 
-      // ✅ Update the project in the global context list
-      setProjects((prevProjects) =>
-        prevProjects.map((proj) =>
-          proj.id === projectDetails.id
-            ? { ...proj, projectName: projectDetails.projectName }
-            : proj
-        )
-      );
+      if (!response.ok) {
+        // Try to parse ApiError JSON from backend
+        let data = null;
+        try {
+          data = text ? JSON.parse(text) : null;
+        } catch (parseErr) {
+          console.warn("Failed to parse backend error JSON:", parseErr);
+        }
+
+        console.log("🔴 Update error payload:", data);
+
+        if (data) {
+          if (data.fieldErrors) {
+            setFieldErrors(data.fieldErrors);
+          }
+          setFormError(
+            data.message || "There was a problem updating the project."
+          );
+        } else {
+          setFormError("There was a problem updating the project.");
+        }
+
+        return;
+      }
+
+      // Success: parse updated project DTO
+      const updatedProject = text ? JSON.parse(text) : null;
+
+      if (updatedProject) {
+        setProjectDetails(updatedProject);
+
+        setProjects((prevProjects) =>
+          prevProjects.map((proj) =>
+            proj.id === updatedProject.id
+              ? { ...proj, projectName: updatedProject.projectName }
+              : proj
+          )
+        );
+      }
 
       // 2) Sync sector checkbox selection with backend links
       await syncProjectSectors(projectDetails.id);
 
+      setFormError("");
+      setFieldErrors({});
       alert("Project updated successfully!");
     } catch (error) {
       console.error("Update error:", error);
-      alert("Error updating project.");
+      setFormError("Unexpected error while updating project.");
     }
   };
 
@@ -896,6 +947,20 @@ const Project = () => {
       {projectDetails && (
         <div className={styles.formContainer}>
           <h3>Project Details</h3>
+
+          {formError && <div className={styles.errorBanner}>{formError}</div>}
+
+          {Object.keys(fieldErrors).length > 0 && (
+            <div className={styles.errorList}>
+              <ul>
+                {Object.entries(fieldErrors).map(([field, message]) => (
+                  <li key={field}>
+                    <strong>{field}</strong>: {message}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Wrapper for image and form side-by-side */}
           <div className={styles.imageAndFormWrapper}>
@@ -987,7 +1052,7 @@ const Project = () => {
                       name="projectDescription"
                       value={projectDetails.projectDescription || ""}
                       onChange={(e) => {
-                        handleInputChange(e);
+                        handleProjectInputChange(e);
                         autoResize(e.target);
                       }}
                       ref={(el) => el && autoResize(el)}
@@ -1004,9 +1069,14 @@ const Project = () => {
                           type="text"
                           name="projectName"
                           value={projectDetails.projectName || ""}
-                          onChange={handleInputChange}
-                          className={styles.textInput}
+                          onChange={handleProjectInputChange}
+                          className={inputClass("projectName")}
                         />
+                        {getFieldError("projectName") && (
+                          <div className={styles.fieldError}>
+                            {getFieldError("projectName")}
+                          </div>
+                        )}
                       </div>
 
                       {/* Project Code */}
@@ -1016,9 +1086,14 @@ const Project = () => {
                           type="text"
                           name="projectCode"
                           value={projectDetails.projectCode || ""}
-                          onChange={handleInputChange}
-                          className={styles.textInput}
+                          onChange={handleProjectInputChange}
+                          className={inputClass("projectCode")}
                         />
+                        {getFieldError("projectCode") && (
+                          <div className={styles.fieldError}>
+                            {getFieldError("projectCode")}
+                          </div>
+                        )}
                       </div>
 
                       {/* Reference Number */}
@@ -1028,7 +1103,7 @@ const Project = () => {
                           type="text"
                           name="refProjectNo"
                           value={projectDetails.refProjectNo || ""}
-                          onChange={handleInputChange}
+                          onChange={handleProjectInputChange}
                           className={styles.textInput}
                         />
                       </div>
@@ -1040,7 +1115,7 @@ const Project = () => {
                           type="text"
                           name="pinCode"
                           value={projectDetails.pinCode || ""}
-                          onChange={handleInputChange}
+                          onChange={handleProjectInputChange}
                           className={styles.textInput}
                         />
                       </div>
@@ -1053,7 +1128,7 @@ const Project = () => {
                           step="0.01"
                           name="foSupportCostPercent"
                           value={projectDetails.foSupportCostPercent || ""}
-                          onChange={handleInputChange}
+                          onChange={handleProjectInputChange}
                           className={styles.textInput}
                         />
                       </div>
@@ -1066,7 +1141,7 @@ const Project = () => {
                           step="0.01"
                           name="irwSupportCostPercent"
                           value={projectDetails.irwSupportCostPercent || ""}
-                          onChange={handleInputChange}
+                          onChange={handleProjectInputChange}
                           className={styles.textInput}
                         />
                       </div>
@@ -1181,12 +1256,18 @@ const Project = () => {
                         <select
                           name="approved"
                           value={projectDetails.approved || ""}
-                          onChange={handleInputChange}
-                          className={styles.textInput}
+                          onChange={handleProjectInputChange}
+                          className={inputClass("approved")}
                         >
+                          <option value="">Select...</option>
                           <option value="Yes">Yes</option>
                           <option value="No">No</option>
                         </select>
+                        {getFieldError("approved") && (
+                          <div className={styles.fieldError}>
+                            {getFieldError("approved")}
+                          </div>
+                        )}
                       </div>
 
                       {/* ✅ Sectors checkbox list (before buttons) */}
@@ -1468,8 +1549,8 @@ const Project = () => {
                         <select
                           name="projectStatusId"
                           value={projectDetails.projectStatusId || ""}
-                          onChange={handleInputChange}
-                          className={styles.textInput}
+                          onChange={handleProjectInputChange}
+                          className={inputClass("projectStatusId")}
                         >
                           <option value="">Select status</option>
                           {projectStatuses.map((status) => (
@@ -1478,6 +1559,11 @@ const Project = () => {
                             </option>
                           ))}
                         </select>
+                        {getFieldError("projectStatusId") && (
+                          <div className={styles.fieldError}>
+                            {getFieldError("projectStatusId")}
+                          </div>
+                        )}
                       </div>
 
                       {/* Project Type ID */}
@@ -1486,8 +1572,8 @@ const Project = () => {
                         <select
                           name="projectTypeId"
                           value={projectDetails.projectTypeId || ""}
-                          onChange={handleInputChange}
-                          className={styles.textInput}
+                          onChange={handleProjectInputChange}
+                          className={inputClass("projectTypeId")}
                         >
                           <option value="">Select type</option>
                           {projectTypes.map((type) => (
@@ -1496,6 +1582,11 @@ const Project = () => {
                             </option>
                           ))}
                         </select>
+                        {getFieldError("projectTypeId") && (
+                          <div className={styles.fieldError}>
+                            {getFieldError("projectTypeId")}
+                          </div>
+                        )}
                       </div>
 
                       {/* Address ID */}
@@ -1504,7 +1595,7 @@ const Project = () => {
                         <select
                           name="addressId"
                           value={projectDetails.addressId || ""}
-                          onChange={handleInputChange}
+                          onChange={handleProjectInputChange}
                           className={styles.textInput}
                         >
                           <option value="">Select address</option>
@@ -1524,7 +1615,7 @@ const Project = () => {
                           type="number"
                           name="projectPeriodMonths"
                           value={projectDetails.projectPeriodMonths || ""}
-                          onChange={handleInputChange}
+                          onChange={handleProjectInputChange}
                           className={styles.textInput}
                         />
                       </div>
@@ -1540,9 +1631,14 @@ const Project = () => {
                               ? projectDetails.projectDate.slice(0, 16)
                               : ""
                           }
-                          onChange={handleInputChange}
-                          className={styles.textInput}
+                          onChange={handleProjectInputChange}
+                          className={inputClass("projectDate")}
                         />
+                        {getFieldError("projectDate") && (
+                          <div className={styles.fieldError}>
+                            {getFieldError("projectDate")}
+                          </div>
+                        )}
                       </div>
 
                       {/* Project Start */}
@@ -1556,9 +1652,14 @@ const Project = () => {
                               ? projectDetails.projectStart.slice(0, 16)
                               : ""
                           }
-                          onChange={handleInputChange}
-                          className={styles.textInput}
+                          onChange={handleProjectInputChange}
+                          className={inputClass("projectStart")}
                         />
+                        {getFieldError("projectStart") && (
+                          <div className={styles.fieldError}>
+                            {getFieldError("projectStart")}
+                          </div>
+                        )}
                       </div>
 
                       {/* Project End */}
@@ -1572,9 +1673,14 @@ const Project = () => {
                               ? projectDetails.projectEnd.slice(0, 16)
                               : ""
                           }
-                          onChange={handleInputChange}
-                          className={styles.textInput}
+                          onChange={handleProjectInputChange}
+                          className={inputClass("projectEnd")}
                         />
+                        {getFieldError("projectEnd") && (
+                          <div className={styles.fieldError}>
+                            {getFieldError("projectEnd")}
+                          </div>
+                        )}
                       </div>
 
                       {/* Project Start Revision */}
@@ -1588,7 +1694,7 @@ const Project = () => {
                               ? projectDetails.projectStartRev.slice(0, 16)
                               : ""
                           }
-                          onChange={handleInputChange}
+                          onChange={handleProjectInputChange}
                           className={styles.textInput}
                         />
                       </div>
@@ -1604,7 +1710,7 @@ const Project = () => {
                               ? projectDetails.projectEndRev.slice(0, 16)
                               : ""
                           }
-                          onChange={handleInputChange}
+                          onChange={handleProjectInputChange}
                           className={styles.textInput}
                         />
                       </div>
@@ -1615,7 +1721,7 @@ const Project = () => {
                         <select
                           name="partOfId"
                           value={projectDetails.partOfId || ""}
-                          onChange={handleInputChange}
+                          onChange={handleProjectInputChange}
                           className={styles.textInput}
                         >
                           <option value="">Select parent project</option>
