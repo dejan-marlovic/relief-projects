@@ -14,6 +14,10 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
   const [exchangeRates, setExchangeRates] = useState([]);
   const [refreshCostDetailsTrigger, setRefreshCostDetailsTrigger] = useState(0);
 
+  // 🔴 New: form level + field level errors
+  const [formError, setFormError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({}); // { fieldName: "Message" }
+
   const triggerRefreshCostDetails = () =>
     setRefreshCostDetailsTrigger((prev) => prev + 1);
 
@@ -98,10 +102,21 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
     fetchFormData();
   }, []);
 
+  // 🔧 Field error helpers
+  const getFieldError = (fieldName) => fieldErrors?.[fieldName];
+  const hasError = (fieldName) => Boolean(fieldErrors?.[fieldName]);
+
+  const inputClass = (fieldName) =>
+    `${styles.textInput} ${hasError(fieldName) ? styles.inputError : ""}`;
+
   // 💾 Save/Update Budget
   const handleSave = async () => {
     try {
       const token = localStorage.getItem("authToken");
+
+      // clear previous errors before new request
+      setFormError("");
+      setFieldErrors({});
 
       // 🧼 Build a clean payload explicitly – field names must match BudgetDTO
       const payload = {
@@ -163,14 +178,35 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
       });
 
       if (!response.ok) {
+        // 🔍 Try to read nice ApiError from backend
+        let data = null;
         const text = await response.text().catch(() => "");
-        console.error("Budget update failed", response.status, text);
-        throw new Error("Failed to update budget");
+
+        console.log("🔴 Budget update error raw:", text);
+
+        try {
+          data = text ? JSON.parse(text) : null;
+        } catch (parseErr) {
+          console.warn("Failed to parse budget error JSON:", parseErr);
+        }
+
+        if (data) {
+          if (data.fieldErrors) {
+            setFieldErrors(data.fieldErrors);
+          }
+          setFormError(
+            data.message || "There was a problem updating the budget."
+          );
+        } else {
+          setFormError("There was a problem updating the budget.");
+        }
+
+        return; // stop success flow
       }
 
       const updated = await response.json();
-      console.log("🔁 Updated budget from server:", updated);
-      alert("Budget updated successsfully!");
+      console.log("✅ Updated budget from server:", updated);
+      alert("Budget updated successfully!");
 
       setBudget(updated);
       onUpdate?.(updated);
@@ -178,9 +214,13 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
       const freshRates = await fetchExchangeRates(token);
       setExchangeRates(freshRates);
       triggerRefreshCostDetails();
+
+      // clear errors after success
+      setFormError("");
+      setFieldErrors({});
     } catch (error) {
       console.error("Error updating budget:", error);
-      alert("Error saving budget.");
+      setFormError("Unexpected error while saving budget.");
     }
   };
 
@@ -269,6 +309,9 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
       <div className={styles.formContainer}>
         <h3>Budget Details</h3>
 
+        {/* 🔴 Top error banner */}
+        {formError && <div className={styles.errorBanner}>{formError}</div>}
+
         <form className={styles.formTwoColumn}>
           <div className={styles.formColumnLeft}>
             <div>
@@ -297,10 +340,15 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
               <input
                 type="number"
                 name="totalAmount"
-                className={styles.textInput}
+                className={inputClass("totalAmount")}
                 value={budget.totalAmount || ""}
                 onChange={handleChange}
               />
+              {getFieldError("totalAmount") && (
+                <div className={styles.fieldError}>
+                  {getFieldError("totalAmount")}
+                </div>
+              )}
             </div>
 
             <div className={styles.saveButtonContainer}>
@@ -328,7 +376,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                 <label>Local Currency:</label>
                 <select
                   name="localCurrencyId"
-                  className={styles.textInput}
+                  className={inputClass("localCurrencyId")}
                   value={budget.localCurrencyId || ""}
                   onChange={handleChange}
                 >
@@ -339,13 +387,18 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                     </option>
                   ))}
                 </select>
+                {getFieldError("localCurrencyId") && (
+                  <div className={styles.fieldError}>
+                    {getFieldError("localCurrencyId")}
+                  </div>
+                )}
               </div>
 
               <div className={styles.formItem}>
                 <label>Local → GBP Rate:</label>
                 <select
                   name="localExchangeRateToGbpId"
-                  className={styles.textInput}
+                  className={inputClass("localExchangeRateToGbpId")}
                   value={budget.localExchangeRateToGbpId || ""}
                   onChange={handleChange}
                 >
@@ -356,6 +409,11 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                     </option>
                   ))}
                 </select>
+                {getFieldError("localExchangeRateToGbpId") && (
+                  <div className={styles.fieldError}>
+                    {getFieldError("localExchangeRateToGbpId")}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -375,7 +433,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                 <label>SEK Exchange Rate (Local → SEK):</label>
                 <select
                   name="reportingExchangeRateSekId"
-                  className={styles.textInput}
+                  className={inputClass("reportingExchangeRateSekId")}
                   value={budget.reportingExchangeRateSekId || ""}
                   onChange={handleChange}
                 >
@@ -386,6 +444,11 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                     </option>
                   ))}
                 </select>
+                {getFieldError("reportingExchangeRateSekId") && (
+                  <div className={styles.fieldError}>
+                    {getFieldError("reportingExchangeRateSekId")}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -405,7 +468,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                 <label>EUR Exchange Rate (Local → EUR):</label>
                 <select
                   name="reportingExchangeRateEurId"
-                  className={styles.textInput}
+                  className={inputClass("reportingExchangeRateEurId")}
                   value={budget.reportingExchangeRateEurId || ""}
                   onChange={handleChange}
                 >
@@ -416,6 +479,11 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                     </option>
                   ))}
                 </select>
+                {getFieldError("reportingExchangeRateEurId") && (
+                  <div className={styles.fieldError}>
+                    {getFieldError("reportingExchangeRateEurId")}
+                  </div>
+                )}
               </div>
             </div>
           </div>
