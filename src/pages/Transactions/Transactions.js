@@ -31,7 +31,7 @@ const blankTx = {
 };
 
 const headerLabels = [
-  "Actions", // sticky left
+  "Actions",
   "Org",
   "Project",
   "Financier",
@@ -47,31 +47,13 @@ const headerLabels = [
   "2nd Orig",
   "Own Contrib",
   "Date Planned",
-  "OK Status", // non-sticky
+  "OK Status",
 ];
 
-// column widths (px) in the same order as headerLabels
 const BASE_COL_WIDTHS = [
-  110, // Actions
-  160, // Org
-  220, // Project
-  180, // Financier
-  160, // Status
-  120, // Applied Amt
-  140, // Applied FX
-  120, // 1st SEK
-  120, // 1st Orig
-  140, // Approved Amt
-  120, // Approved Curr
-  140, // Approved FX
-  120, // 2nd SEK
-  120, // 2nd Orig
-  110, // Own Contrib
-  170, // Date Planned
-  100, // OK Status
+  110, 160, 220, 180, 160, 120, 140, 120, 120, 140, 120, 140, 120, 120, 110,
+  170, 100,
 ];
-
-// ==== SHARED-LIKE HELPERS (same style as in Budget.jsx) ====
 
 // 🔄 Fetch: Currencies
 const fetchCurrencies = async (token) => {
@@ -109,22 +91,24 @@ const Transactions = ({ refreshTrigger }) => {
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
 
-  // Dropdown data
+  // dropdown data
   const [orgOptions, setOrgOptions] = useState([]);
   const [projectOptions, setProjectOptions] = useState([]);
   const [statusOptions, setStatusOptions] = useState([]);
   const [fxOptions, setFxOptions] = useState([]);
   const [currencies, setCurrencies] = useState([]);
 
-  // UI state
+  // UI
   const [compact, setCompact] = useState(false);
   const [columnsOpen, setColumnsOpen] = useState(false);
-  // visibility per column (default: all true)
   const [visibleCols, setVisibleCols] = useState(() =>
     Array(headerLabels.length).fill(true)
   );
 
-  // Lock ONLY the first column (Actions) as always-visible
+  // 🔴 form-level & field-level errors
+  const [formError, setFormError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({}); // { [rowId]: { fieldName: message } }
+
   const toggleCol = (i) => {
     if (i === 0) return;
     setVisibleCols((prev) => {
@@ -170,8 +154,7 @@ const Transactions = ({ refreshTrigger }) => {
     [authHeaders]
   );
 
-  // Fetch dropdown options (orgs, projects, statuses + currencies/exchangeRates)
-  // ⬇️ currencies + FX are fetched with the same helpers as in Budget.jsx
+  // Dropdowns
   useEffect(() => {
     let cancelled = false;
     const token = localStorage.getItem("authToken");
@@ -244,6 +227,14 @@ const Transactions = ({ refreshTrigger }) => {
         okStatus: tx.okStatus,
       },
     }));
+
+    // clear previous errors for this row
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next[tx.id];
+      return next;
+    });
+    setFormError("");
   };
 
   const startCreate = () => {
@@ -255,6 +246,13 @@ const Transactions = ({ refreshTrigger }) => {
         projectId: selectedProjectId || "",
       },
     }));
+
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.new;
+      return next;
+    });
+    setFormError("");
   };
 
   const onChange = (field, value) => {
@@ -278,9 +276,18 @@ const Transactions = ({ refreshTrigger }) => {
       : values.projectId ?? null;
 
     if (isCreate && !isValidNew(values, selectedProjectId)) {
-      alert("Please fill in Organization and Status (Project is prefilled).");
+      setFormError(
+        "Please fill in at least Organization, Status and Project before saving."
+      );
       return;
     }
+
+    // clear previous errors
+    setFormError("");
+    setFieldErrors((prev) => ({
+      ...prev,
+      [id]: {},
+    }));
 
     const payload = {
       organizationId: values.organizationId
@@ -338,28 +345,58 @@ const Transactions = ({ refreshTrigger }) => {
       );
 
       if (!res.ok) {
-        const msg = await res.text().catch(() => "");
-        throw new Error(
-          `Failed to ${isCreate ? "create" : "update"} transaction. ${msg}`
+        const raw = await res.text().catch(() => "");
+        let data = null;
+        try {
+          data = raw ? JSON.parse(raw) : null;
+        } catch (e) {
+          console.warn("Failed to parse transaction error JSON:", e);
+        }
+
+        if (data && data.fieldErrors) {
+          setFieldErrors((prev) => ({
+            ...prev,
+            [id]: data.fieldErrors,
+          }));
+        }
+
+        setFormError(
+          data?.message ||
+            `Failed to ${isCreate ? "create" : "update"} transaction.`
         );
+        return;
       }
 
       await fetchTransactions(selectedProjectId);
       cancel();
     } catch (err) {
       console.error(err);
-      alert(err.message || "Save failed.");
+      setFormError(
+        err.message ||
+          `Failed to ${isCreate ? "create" : "update"} transaction.`
+      );
     }
   };
 
   const cancel = () => {
+    const id = editingId;
+
     setEditingId(null);
     setEditedValues((prev) => {
       const next = { ...prev };
       delete next.new;
-      if (editingId && next[editingId]) delete next[editingId];
+      if (id && next[id]) delete next[id];
       return next;
     });
+
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.new;
+      if (id && next[id]) delete next[id];
+      return next;
+    });
+
+    setFormError("");
   };
 
   const remove = async (id) => {
@@ -379,7 +416,6 @@ const Transactions = ({ refreshTrigger }) => {
     }
   };
 
-  // Build the CSS variable for grid columns from visibility + base widths
   const gridCols = useMemo(() => {
     const parts = BASE_COL_WIDTHS.map((w, i) =>
       visibleCols[i] ? `${w}px` : "0px"
@@ -414,7 +450,7 @@ const Transactions = ({ refreshTrigger }) => {
                   <input
                     type="checkbox"
                     checked={visibleCols[i]}
-                    disabled={i === 0} // only Actions is locked
+                    disabled={i === 0}
                     onChange={() => toggleCol(i)}
                   />
                   <span>{h}</span>
@@ -426,6 +462,9 @@ const Transactions = ({ refreshTrigger }) => {
         </div>
       </div>
 
+      {/* 🔴 Global error banner */}
+      {formError && <div className={styles.errorBanner}>{formError}</div>}
+
       {/* Table */}
       <div
         className={`${styles.table} ${compact ? styles.compact : ""}`}
@@ -436,17 +475,18 @@ const Transactions = ({ refreshTrigger }) => {
           {headerLabels.map((h, i) => (
             <div
               key={h}
-              className={`${styles.headerCell}
-                ${i === 0 ? styles.stickyColHeader : ""}
-                {!visibleCols[i] ? styles.hiddenCol : ""}
-                ${i === 0 ? styles.actionsCol : ""}`}
+              className={`${styles.headerCell} ${
+                i === 0 ? styles.stickyColHeader : ""
+              } ${!visibleCols[i] ? styles.hiddenCol : ""} ${
+                i === 0 ? styles.actionsCol : ""
+              }`}
             >
               {h}
             </div>
           ))}
         </div>
 
-        {/* Body (existing transactions) */}
+        {/* Body */}
         {!selectedProjectId ? (
           <p className={styles.noData}>
             Select a project to see its transactions.
@@ -473,11 +513,12 @@ const Transactions = ({ refreshTrigger }) => {
               exchangeRates={fxOptions}
               currencies={currencies}
               visibleCols={visibleCols}
+              fieldErrors={fieldErrors[tx.id] || {}}
             />
           ))
         )}
 
-        {/* --- INLINE CREATE ROW (now rendered LAST in the list) --- */}
+        {/* Inline create row */}
         {editingId === "new" && (
           <Transaction
             tx={{ id: "new", ...blankTx, projectId: selectedProjectId || "" }}
@@ -494,11 +535,11 @@ const Transactions = ({ refreshTrigger }) => {
             currencies={currencies}
             visibleCols={visibleCols}
             isEven={false}
+            fieldErrors={fieldErrors.new || {}}
           />
         )}
       </div>
 
-      {/* Add button below table; disabled while the create row is open */}
       <div className={styles.createBar}>
         <button
           className={styles.addBtn}

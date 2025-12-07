@@ -33,6 +33,7 @@ const Transaction = ({
   currencies = [],
   visibleCols = [],
   isEven = false,
+  fieldErrors = {}, // NEW
 }) => {
   const ev = editedValues || {};
   const isCreate = (tx?.id ?? "") === "new";
@@ -46,79 +47,105 @@ const Transaction = ({
 
   const toNum = (v) => (v === "" ? "" : Number(v));
 
+  // error helpers
+  const getFieldError = (name) => fieldErrors?.[name];
+  const hasError = (name) => Boolean(getFieldError(name));
+  const inputClass = (name) =>
+    `${styles.input} ${hasError(name) ? styles.inputError : ""}`;
+
+  const FieldError = ({ name }) =>
+    hasError(name) ? (
+      <div className={styles.fieldError}>{getFieldError(name)}</div>
+    ) : null;
+
   const inputNum = (field, step = "1") => (
-    <input
-      type="number"
-      step={step}
-      value={ev[field] ?? tx[field] ?? ""}
-      onChange={(e) => onChange(field, toNum(e.target.value))}
-      onBlur={autoSave ? submit : undefined}
-      className={styles.input}
-    />
+    <>
+      <input
+        type="number"
+        step={step}
+        value={ev[field] ?? tx[field] ?? ""}
+        onChange={(e) => onChange(field, toNum(e.target.value))}
+        onBlur={autoSave ? submit : undefined}
+        className={inputClass(field)}
+      />
+      <FieldError name={field} />
+    </>
   );
 
   const selectYesNo = (field) => (
-    <select
-      value={ev[field] ?? tx[field] ?? ""}
-      onChange={(e) => onChange(field, e.target.value)}
-      onBlur={autoSave ? submit : undefined}
-      className={styles.input}
-    >
-      <option value="">Select</option>
-      {yesNo.map((v) => (
-        <option key={v} value={v}>
-          {v}
-        </option>
-      ))}
-    </select>
+    <>
+      <select
+        value={ev[field] ?? tx[field] ?? ""}
+        onChange={(e) => onChange(field, e.target.value)}
+        onBlur={autoSave ? submit : undefined}
+        className={inputClass(field)}
+      >
+        <option value="">Select</option>
+        {yesNo.map((v) => (
+          <option key={v} value={v}>
+            {v}
+          </option>
+        ))}
+      </select>
+      <FieldError name={field} />
+    </>
   );
 
   const selectOrg = (field) => (
-    <select
-      value={ev[field] ?? tx[field] ?? ""}
-      onChange={(e) => onChange(field, toNum(e.target.value))}
-      onBlur={autoSave ? submit : undefined}
-      className={styles.input}
-    >
-      <option value="">Select organization</option>
-      {organizations.map((o) => (
-        <option key={o.id} value={o.id}>
-          {o.name}
-        </option>
-      ))}
-    </select>
+    <>
+      <select
+        value={ev[field] ?? tx[field] ?? ""}
+        onChange={(e) => onChange(field, toNum(e.target.value))}
+        onBlur={autoSave ? submit : undefined}
+        className={inputClass(field)}
+      >
+        <option value="">Select organization</option>
+        {organizations.map((o) => (
+          <option key={o.id} value={o.id}>
+            {o.name}
+          </option>
+        ))}
+      </select>
+      <FieldError name={field} />
+    </>
   );
 
   const selectProject = () => (
-    <select
-      value={ev.projectId ?? tx.projectId ?? ""}
-      onChange={(e) => onChange("projectId", toNum(e.target.value))}
-      onBlur={autoSave ? submit : undefined}
-      className={styles.input}
-    >
-      <option value="">Select project</option>
-      {projects.map((p) => (
-        <option key={p.id} value={p.id}>
-          {p.projectName}
-        </option>
-      ))}
-    </select>
+    <>
+      <select
+        value={ev.projectId ?? tx.projectId ?? ""}
+        onChange={(e) => onChange("projectId", toNum(e.target.value))}
+        onBlur={autoSave ? submit : undefined}
+        className={inputClass("projectId")}
+      >
+        <option value="">Select project</option>
+        {projects.map((p) => (
+          <option key={p.id} value={p.id}>
+            {p.projectName}
+          </option>
+        ))}
+      </select>
+      <FieldError name="projectId" />
+    </>
   );
 
   const selectStatus = () => (
-    <select
-      value={ev.transactionStatusId ?? tx.transactionStatusId ?? ""}
-      onChange={(e) => onChange("transactionStatusId", toNum(e.target.value))}
-      onBlur={autoSave ? submit : undefined}
-      className={styles.input}
-    >
-      <option value="">Select status</option>
-      {statuses.map((s) => (
-        <option key={s.id} value={s.id}>
-          {s.transactionStatusName}
-        </option>
-      ))}
-    </select>
+    <>
+      <select
+        value={ev.transactionStatusId ?? tx.transactionStatusId ?? ""}
+        onChange={(e) => onChange("transactionStatusId", toNum(e.target.value))}
+        onBlur={autoSave ? submit : undefined}
+        className={inputClass("transactionStatusId")}
+      >
+        <option value="">Select status</option>
+        {statuses.map((s) => (
+          <option key={s.id} value={s.id}>
+            {s.transactionStatusName}
+          </option>
+        ))}
+      </select>
+      <FieldError name="transactionStatusId" />
+    </>
   );
 
   // ===== Currency helpers =====
@@ -136,22 +163,25 @@ const Transaction = ({
   };
 
   const selectCurrency = (field) => (
-    <select
-      value={ev[field] ?? tx[field] ?? ""}
-      onChange={(e) => onChange(field, toNum(e.target.value))}
-      onBlur={autoSave ? submit : undefined}
-      className={styles.input}
-    >
-      <option value="">Select currency</option>
-      {currencies.map((c) => (
-        <option key={c.id} value={c.id}>
-          {c.name} — {c.description}
-        </option>
-      ))}
-    </select>
+    <>
+      <select
+        value={ev[field] ?? tx[field] ?? ""}
+        onChange={(e) => onChange(field, toNum(e.target.value))}
+        onBlur={autoSave ? submit : undefined}
+        className={inputClass(field)}
+      >
+        <option value="">Select currency</option>
+        {currencies.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.name} — {c.description}
+          </option>
+        ))}
+      </select>
+      <FieldError name={field} />
+    </>
   );
 
-  // ===== FX helpers (aligned with Budget: baseCurrencyId, quoteCurrencyId, rate) =====
+  // ===== FX helpers =====
   const formatRateLabel = (r) => {
     if (!r) return "-";
 
@@ -185,19 +215,22 @@ const Transaction = ({
   };
 
   const selectFx = (field) => (
-    <select
-      value={ev[field] ?? tx[field] ?? ""}
-      onChange={(e) => onChange(field, toNum(e.target.value))}
-      onBlur={autoSave ? submit : undefined}
-      className={styles.input}
-    >
-      <option value="">Select FX</option>
-      {exchangeRates.map((r) => (
-        <option key={r.id} value={r.id}>
-          {formatRateLabel(r)}
-        </option>
-      ))}
-    </select>
+    <>
+      <select
+        value={ev[field] ?? tx[field] ?? ""}
+        onChange={(e) => onChange(field, toNum(e.target.value))}
+        onBlur={autoSave ? submit : undefined}
+        className={inputClass(field)}
+      >
+        <option value="">Select FX</option>
+        {exchangeRates.map((r) => (
+          <option key={r.id} value={r.id}>
+            {formatRateLabel(r)}
+          </option>
+        ))}
+      </select>
+      <FieldError name={field} />
+    </>
   );
 
   const orgName = (id) =>
@@ -208,18 +241,20 @@ const Transaction = ({
     statuses.find((s) => s.id === id)?.transactionStatusName || (id ?? "-");
 
   const inputDate = (
-    <input
-      type="datetime-local"
-      value={toDateTimeLocal(ev.datePlanned ?? tx.datePlanned)}
-      onChange={(e) =>
-        onChange("datePlanned", new Date(e.target.value).toISOString())
-      }
-      onBlur={autoSave ? submit : undefined}
-      className={styles.input}
-    />
+    <>
+      <input
+        type="datetime-local"
+        value={toDateTimeLocal(ev.datePlanned ?? tx.datePlanned)}
+        onChange={(e) =>
+          onChange("datePlanned", new Date(e.target.value).toISOString())
+        }
+        onBlur={autoSave ? submit : undefined}
+        className={inputClass("datePlanned")}
+      />
+      <FieldError name="datePlanned" />
+    </>
   );
 
-  // helper to apply hidden class when column is collapsed to 0px
   const hc = (i) => (!visibleCols[i] ? styles.hiddenCol : "");
 
   return (
@@ -271,7 +306,7 @@ const Transaction = ({
         )}
       </Cell>
 
-      {/* 1..15 normal columns */}
+      {/* Data columns */}
       <Cell className={hc(1)}>
         {isEditing ? selectOrg("organizationId") : orgName(tx.organizationId)}
       </Cell>
@@ -315,7 +350,6 @@ const Transaction = ({
           : tx.approvedAmount ?? "-"}
       </Cell>
 
-      {/* 10: Approved Curr (dropdown + label) */}
       <Cell className={hc(10)}>
         {isEditing
           ? selectCurrency("approvedAmountCurrencyId")
@@ -350,7 +384,6 @@ const Transaction = ({
           : "-"}
       </Cell>
 
-      {/* 16: OK Status (normal, non-sticky) */}
       <Cell className={hc(16)}>
         {isEditing ? selectYesNo("okStatus") : tx.okStatus ?? "-"}
       </Cell>

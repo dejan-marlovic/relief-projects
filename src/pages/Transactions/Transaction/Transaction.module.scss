@@ -1,4 +1,3 @@
-/* Transaction.module.scss */
 @use "../../../styles/tables" as tables;
 
 /* Each data row uses the same grid as the header via the CSS var */
@@ -54,4 +53,16 @@
 
 /* Optional hook for column-specific tweaks if needed */
 .actionsCol {
+}
+
+/* 🔴 Validation styles */
+.inputError {
+  border-color: #e11d48 !important;
+  box-shadow: 0 0 0 1px rgba(225, 29, 72, 0.2);
+}
+
+.fieldError {
+  margin-top: 2px;
+  font-size: 0.78rem;
+  color: #e11d48;
 }
