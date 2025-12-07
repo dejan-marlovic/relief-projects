@@ -1,4 +1,3 @@
-/* Signature.module.scss */
 @use "../../../styles/tables" as tables;
 
 .row {
@@ -26,6 +25,18 @@
 
 .input {
   @include tables.table-input;
+}
+
+/* Error styles */
+.inputError {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+}
+
+.fieldError {
+  margin-top: 2px;
+  font-size: 0.75rem;
+  color: #b91c1c;
 }
 
 /* Actions area */
