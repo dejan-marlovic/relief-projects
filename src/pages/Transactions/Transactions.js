@@ -3,6 +3,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { ProjectContext } from "../../context/ProjectContext";
@@ -51,8 +52,23 @@ const headerLabels = [
 ];
 
 const BASE_COL_WIDTHS = [
-  110, 160, 220, 180, 160, 120, 140, 120, 120, 140, 120, 140, 120, 120, 110,
-  170, 100,
+  110, // Actions
+  160, // Org
+  220, // Project
+  180, // Financier
+  160, // Status
+  120, // Applied Amt
+  140, // Applied FX
+  120, // 1st SEK
+  120, // 1st Orig
+  140, // Approved Amt
+  120, // Approved Curr
+  140, // Approved FX
+  120, // 2nd SEK
+  120, // 2nd Orig
+  110, // Own Contrib
+  170, // Date Planned
+  100, // OK Status
 ];
 
 // 🔄 Fetch: Currencies
@@ -76,13 +92,6 @@ const fetchExchangeRates = async (token) => {
   }
   return await response.json();
 };
-
-// Minimal required fields for a new transaction
-const isValidNew = (v, selectedProjectId) =>
-  v &&
-  (v.projectId || selectedProjectId) &&
-  v.organizationId !== "" &&
-  v.transactionStatusId !== "";
 
 const Transactions = ({ refreshTrigger }) => {
   const { selectedProjectId } = useContext(ProjectContext);
@@ -109,8 +118,12 @@ const Transactions = ({ refreshTrigger }) => {
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({}); // { [rowId]: { fieldName: message } }
 
+  // refs for scrolling
+  const tableRef = useRef(null);
+  const newRowRef = useRef(null);
+
   const toggleCol = (i) => {
-    if (i === 0) return;
+    if (i === 0) return; // keep "Actions" always visible
     setVisibleCols((prev) => {
       const next = [...prev];
       next[i] = !next[i];
@@ -204,6 +217,16 @@ const Transactions = ({ refreshTrigger }) => {
     fetchTransactions(selectedProjectId);
   }, [fetchTransactions, selectedProjectId, refreshTrigger]);
 
+  // when editingId becomes "new", scroll to the create row
+  useEffect(() => {
+    if (editingId === "new" && newRowRef.current) {
+      newRowRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }
+  }, [editingId]);
+
   const startEdit = (tx) => {
     setEditingId(tx?.id ?? null);
     setEditedValues((prev) => ({
@@ -274,13 +297,6 @@ const Transactions = ({ refreshTrigger }) => {
     const effectiveProjectId = isCreate
       ? values.projectId || selectedProjectId
       : values.projectId ?? null;
-
-    if (isCreate && !isValidNew(values, selectedProjectId)) {
-      setFormError(
-        "Please fill in at least Organization, Status and Project before saving."
-      );
-      return;
-    }
 
     // clear previous errors
     setFormError("");
@@ -469,6 +485,7 @@ const Transactions = ({ refreshTrigger }) => {
       <div
         className={`${styles.table} ${compact ? styles.compact : ""}`}
         style={{ ["--tx-grid-cols"]: gridCols }}
+        ref={tableRef}
       >
         {/* Header */}
         <div className={`${styles.gridRow} ${styles.headerRow}`}>
@@ -536,6 +553,7 @@ const Transactions = ({ refreshTrigger }) => {
             visibleCols={visibleCols}
             isEven={false}
             fieldErrors={fieldErrors.new || {}}
+            rowRef={newRowRef}
           />
         )}
       </div>

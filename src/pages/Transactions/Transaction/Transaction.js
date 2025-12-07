@@ -33,7 +33,8 @@ const Transaction = ({
   currencies = [],
   visibleCols = [],
   isEven = false,
-  fieldErrors = {}, // NEW
+  fieldErrors = {}, // per-row field errors
+  rowRef = null, // NEW: for scrolling the "new" row into view
 }) => {
   const ev = editedValues || {};
   const isCreate = (tx?.id ?? "") === "new";
@@ -259,6 +260,7 @@ const Transaction = ({
 
   return (
     <div
+      ref={rowRef || undefined}
       className={`${styles.row} ${styles.gridRow} ${
         isEven ? styles.zebraEven : ""
       } ${styles.hoverable}`}
