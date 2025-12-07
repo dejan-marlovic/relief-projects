@@ -1,8 +1,10 @@
+// src/components/Recipients/Recipients.jsx
 import React, {
   useCallback,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { ProjectContext } from "../../context/ProjectContext";
@@ -11,11 +13,7 @@ import styles from "./Recipients.module.scss";
 
 const BASE_URL = "http://localhost:8080";
 
-const headerLabels = [
-  "Actions",
-  "Organization", // organizationId (project-aware dropdown)
-  "Payment Order", // paymentOrderId (dropdown, filtered by project)
-];
+const headerLabels = ["Actions", "Organization", "Payment Order"];
 
 const BASE_COL_WIDTHS = [
   110, // Actions
@@ -31,8 +29,8 @@ function Recipients() {
   const [editedValues, setEditedValues] = useState({});
 
   // dropdown data
-  const [poOptions, setPoOptions] = useState([]); // payment orders for project
-  const [orgOptions, setOrgOptions] = useState([]); // organizations for project
+  const [poOptions, setPoOptions] = useState([]);
+  const [orgOptions, setOrgOptions] = useState([]);
 
   // UI
   const [compact, setCompact] = useState(false);
@@ -40,6 +38,13 @@ function Recipients() {
   const [visibleCols, setVisibleCols] = useState(() =>
     Array(headerLabels.length).fill(true)
   );
+
+  // errors
+  const [formError, setFormError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({}); // { [rowId]: { fieldName: message } }
+
+  // ref for potential auto-scroll of new row
+  const newRowRef = useRef(null);
 
   const toggleCol = (i) => {
     if (i === 0) return; // keep Actions visible
@@ -50,7 +55,6 @@ function Recipients() {
     });
   };
 
-  // Auth headers (memoized)
   const token = useMemo(() => localStorage.getItem("authToken"), []);
   const authHeaders = useMemo(
     () =>
@@ -123,7 +127,6 @@ function Recipients() {
         if (!res.ok) throw new Error(`Failed ${res.status}`);
         const data = await res.json();
 
-        // Tolerate {id,label} OR {id,name} OR {id,organizationName}
         const normalized = (Array.isArray(data) ? data : []).map((o) => ({
           id:
             o.id ??
@@ -150,14 +153,27 @@ function Recipients() {
     fetchRecipients(selectedProjectId);
     fetchPaymentOrders(selectedProjectId);
     fetchOrganizations(selectedProjectId);
+
     setEditingId(null);
     setEditedValues({});
+    setFieldErrors({});
+    setFormError("");
   }, [
     fetchRecipients,
     fetchPaymentOrders,
     fetchOrganizations,
     selectedProjectId,
   ]);
+
+  // Optional: smooth scroll when new row opens
+  useEffect(() => {
+    if (editingId === "new" && newRowRef.current) {
+      newRowRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }
+  }, [editingId]);
 
   // Begin edit
   const startEdit = (row) => {
@@ -169,6 +185,13 @@ function Recipients() {
         paymentOrderId: row.paymentOrderId ?? "",
       },
     }));
+
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next[row.id];
+      return next;
+    });
+    setFormError("");
   };
 
   // Begin create
@@ -180,6 +203,13 @@ function Recipients() {
   const startCreate = () => {
     setEditingId("new");
     setEditedValues((prev) => ({ ...prev, new: { ...blankRecipient } }));
+
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.new;
+      return next;
+    });
+    setFormError("");
   };
 
   // Change handler
@@ -199,12 +229,22 @@ function Recipients() {
     setEditingId(null);
     setEditedValues((prev) => {
       const next = { ...prev };
+      delete next.new;
       if (id && next[id]) delete next[id];
       return next;
     });
+
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.new;
+      if (id && next[id]) delete next[id];
+      return next;
+    });
+
+    setFormError("");
   };
 
-  // Save (create/update)
+  // Save (create/update) with ApiError handling
   const save = async () => {
     const id = editingId;
     const v = editedValues[id];
@@ -217,6 +257,12 @@ function Recipients() {
       paymentOrderId: v.paymentOrderId !== "" ? Number(v.paymentOrderId) : null,
     };
 
+    setFormError("");
+    setFieldErrors((prev) => ({
+      ...prev,
+      [id]: {},
+    }));
+
     try {
       const res = await fetch(
         isCreate
@@ -228,12 +274,37 @@ function Recipients() {
           body: JSON.stringify(payload),
         }
       );
-      if (!res.ok) throw new Error(`${isCreate ? "Create" : "Update"} failed`);
+
+      if (!res.ok) {
+        const raw = await res.text().catch(() => "");
+        let data = null;
+        try {
+          data = raw ? JSON.parse(raw) : null;
+        } catch (e) {
+          console.warn("Failed to parse recipient error JSON:", e);
+        }
+
+        if (data && data.fieldErrors) {
+          setFieldErrors((prev) => ({
+            ...prev,
+            [id]: data.fieldErrors,
+          }));
+        }
+
+        setFormError(
+          data?.message ||
+            `Failed to ${isCreate ? "create" : "update"} recipient.`
+        );
+        return;
+      }
+
       await fetchRecipients(selectedProjectId);
       cancel();
     } catch (e) {
       console.error(e);
-      alert(`${isCreate ? "Create" : "Save"} failed.`);
+      setFormError(
+        e.message || `Failed to ${isCreate ? "create" : "update"} recipient.`
+      );
     }
   };
 
@@ -301,6 +372,9 @@ function Recipients() {
         </div>
       </div>
 
+      {/* 🔴 Global error banner */}
+      {formError && <div className={styles.errorBanner}>{formError}</div>}
+
       {/* Table */}
       <div
         className={`${styles.table} ${compact ? styles.compact : ""}`}
@@ -343,6 +417,7 @@ function Recipients() {
               poOptions={poOptions}
               orgOptions={orgOptions}
               visibleCols={visibleCols}
+              fieldErrors={fieldErrors[r.id] || {}}
             />
           ))
         )}
@@ -361,6 +436,8 @@ function Recipients() {
             orgOptions={orgOptions}
             visibleCols={visibleCols}
             isEven={false}
+            fieldErrors={fieldErrors.new || {}}
+            rowRef={newRowRef}
           />
         )}
       </div>

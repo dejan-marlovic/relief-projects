@@ -1,12 +1,13 @@
 /* Recipient.module.scss */
 @use "../../../styles/tables" as tables;
 
+/* Each data row uses the same grid as the header via the CSS var */
 .row {
 }
 
 /* Use the same grid declaration as the header (pulled from parent’s CSS var) */
 .gridRow {
-  @include tables.table-grid-row;
+  @include tables.table-grid-row; // shared base row styles
   grid-template-columns: var(--rec-grid-cols);
 }
 
@@ -28,6 +29,18 @@
   @include tables.table-input;
 }
 
+/* 🔴 Validation styles (local, like Transactions) */
+.inputError {
+  border-color: #e11d48 !important;
+  box-shadow: 0 0 0 1px rgba(225, 29, 72, 0.2);
+}
+
+.fieldError {
+  margin-top: 2px;
+  font-size: 0.78rem;
+  color: #e11d48;
+}
+
 /* Actions area */
 .actions {
   @include tables.table-actions;
@@ -41,12 +54,16 @@
   @include tables.table-danger;
 }
 
-/* Sticky first column */
+/* Sticky first column (Actions) – data rows */
 .stickyCol {
   @include tables.table-sticky-col;
 }
 
-/* Hidden column utility */
+/* When a column is hidden (width collapsed to 0), hide its content too */
 .hiddenCol {
   @include tables.table-hidden-col;
+}
+
+/* Optional hook if you ever want to style the first col specially */
+.actionsCol {
 }

@@ -53,7 +53,7 @@ function Signatures() {
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({}); // { [rowId]: { fieldName: message } }
 
-  // ref for new row
+  // ref for new row (scroll-into-view)
   const newRowRef = useRef(null);
 
   const toggleCol = (i) => {
@@ -176,7 +176,7 @@ function Signatures() {
     fetchEmployees();
   }, [fetchSignatureStatuses, fetchEmployees]);
 
-  // auto-scroll for new row
+  // auto-scroll when "new" row appears
   useEffect(() => {
     if (editingId === "new" && newRowRef.current) {
       newRowRef.current.scrollIntoView({
@@ -199,9 +199,11 @@ function Signatures() {
     setEditedValues((prev) => ({
       ...prev,
       [row.id]: {
-        signatureStatusId: row.signatureStatusId ?? "",
-        employeeId: row.employeeId ?? "",
-        paymentOrderId: row.paymentOrderId ?? "",
+        signatureStatusId:
+          row.signatureStatusId != null ? String(row.signatureStatusId) : "",
+        employeeId: row.employeeId != null ? String(row.employeeId) : "",
+        paymentOrderId:
+          row.paymentOrderId != null ? String(row.paymentOrderId) : "",
         signature: row.signature ?? "",
         signatureDate: row.signatureDate ?? "",
       },

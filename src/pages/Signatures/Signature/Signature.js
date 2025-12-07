@@ -32,8 +32,8 @@ const SignatureRow = ({
   employeeOptions = [],
   visibleCols = [],
   isEven = false,
-  fieldErrors = {}, // NEW: per-row field errors
-  rowRef = null, // NEW: for auto-scroll on create
+  fieldErrors = {}, // per-row field errors
+  rowRef = null, // for auto-scroll on create
 }) => {
   const ev = editedValues || {};
   const isCreate = (row?.id ?? "") === "new";
@@ -45,9 +45,7 @@ const SignatureRow = ({
     onSave();
   };
 
-  const toNum = (v) => (v === "" ? "" : Number(v));
-
-  // ==== error helpers (same pattern as Transactions/PaymentOrders) ====
+  // ==== error helpers ====
   const getFieldError = (name) => fieldErrors?.[name];
   const hasError = (name) => Boolean(getFieldError(name));
   const inputClass = (name) =>
@@ -71,22 +69,23 @@ const SignatureRow = ({
     </>
   );
 
+  // NOTE: for selects we now store "" (string) for "none" instead of null.
   const selectPO = (
     <>
       <select
-        value={ev.paymentOrderId ?? row.paymentOrderId ?? ""}
-        onChange={(e) =>
-          onChange(
-            "paymentOrderId",
-            e.target.value ? Number(e.target.value) : null
-          )
+        value={
+          ev.paymentOrderId ??
+          (row.paymentOrderId != null ? String(row.paymentOrderId) : "")
         }
+        onChange={(e) => onChange("paymentOrderId", e.target.value)}
         onBlur={autoSave ? submit : undefined}
         className={inputClass("paymentOrderId")}
       >
         <option value="">(none)</option>
         {poOptions.map((po) => (
-          <option key={po.id} value={po.id}>{`PO#${po.id}`}</option>
+          <option key={po.id} value={String(po.id)}>
+            {`PO#${po.id}`}
+          </option>
         ))}
       </select>
       <FieldError name="paymentOrderId" />
@@ -96,19 +95,17 @@ const SignatureRow = ({
   const selectStatus = (
     <>
       <select
-        value={ev.signatureStatusId ?? row.signatureStatusId ?? ""}
-        onChange={(e) =>
-          onChange(
-            "signatureStatusId",
-            e.target.value ? Number(e.target.value) : null
-          )
+        value={
+          ev.signatureStatusId ??
+          (row.signatureStatusId != null ? String(row.signatureStatusId) : "")
         }
+        onChange={(e) => onChange("signatureStatusId", e.target.value)}
         onBlur={autoSave ? submit : undefined}
         className={inputClass("signatureStatusId")}
       >
         <option value="">(none)</option>
         {statusOptions.map((s) => (
-          <option key={s.id} value={s.id}>
+          <option key={s.id} value={String(s.id)}>
             {s.label}
           </option>
         ))}
@@ -120,16 +117,17 @@ const SignatureRow = ({
   const selectEmployee = (
     <>
       <select
-        value={ev.employeeId ?? row.employeeId ?? ""}
-        onChange={(e) =>
-          onChange("employeeId", e.target.value ? Number(e.target.value) : null)
+        value={
+          ev.employeeId ??
+          (row.employeeId != null ? String(row.employeeId) : "")
         }
+        onChange={(e) => onChange("employeeId", e.target.value)}
         onBlur={autoSave ? submit : undefined}
         className={inputClass("employeeId")}
       >
         <option value="">(none)</option>
         {employeeOptions.map((e) => (
-          <option key={e.id} value={e.id}>
+          <option key={e.id} value={String(e.id)}>
             {e.label}
           </option>
         ))}
