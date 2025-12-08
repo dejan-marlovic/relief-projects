@@ -1,5 +1,4 @@
-// src/components/PaymentOrders/PaymentOrder/PaymentOrder.jsx
-
+import React from "react";
 import styles from "./PaymentOrder.module.scss";
 import { FiEdit, FiTrash2, FiSave, FiX } from "react-icons/fi";
 
@@ -31,6 +30,8 @@ const PaymentOrder = ({
   transactions = [],
   visibleCols = [],
   isEven = false,
+  fieldErrors = {}, // NEW: per-row field errors
+  rowRef = null, // NEW: for scrolling to the "new" row
 }) => {
   const ev = editedValues || {};
 
@@ -45,56 +46,82 @@ const PaymentOrder = ({
 
   const toNum = (v) => (v === "" ? "" : Number(v));
 
+  // ==== error helpers (same pattern as Transactions) ====
+  const getFieldError = (name) => fieldErrors?.[name];
+  const hasError = (name) => Boolean(getFieldError(name));
+  const inputClass = (name) =>
+    `${styles.input} ${hasError(name) ? styles.inputError : ""}`;
+
+  const FieldError = ({ name }) =>
+    hasError(name) ? (
+      <div className={styles.fieldError}>{getFieldError(name)}</div>
+    ) : null;
+
   const inputNum = (field, step = "1") => (
-    <input
-      type="number"
-      step={step}
-      value={ev[field] ?? po[field] ?? ""}
-      onChange={(e) => onChange(field, toNum(e.target.value))}
-      onBlur={autoSave ? submit : undefined}
-      className={styles.input}
-    />
+    <>
+      <input
+        type="number"
+        step={step}
+        value={ev[field] ?? po[field] ?? ""}
+        onChange={(e) => onChange(field, toNum(e.target.value))}
+        onBlur={autoSave ? submit : undefined}
+        className={inputClass(field)}
+      />
+      <FieldError name={field} />
+    </>
   );
 
   const inputText = (field) => (
-    <input
-      type="text"
-      value={ev[field] ?? po[field] ?? ""}
-      onChange={(e) => onChange(field, e.target.value)}
-      onBlur={autoSave ? submit : undefined}
-      className={styles.input}
-    />
+    <>
+      <input
+        type="text"
+        value={ev[field] ?? po[field] ?? ""}
+        onChange={(e) => onChange(field, e.target.value)}
+        onBlur={autoSave ? submit : undefined}
+        className={inputClass(field)}
+      />
+      <FieldError name={field} />
+    </>
   );
 
   const selectTransaction = (
-    <select
-      value={ev.transactionId ?? po.transactionId ?? ""}
-      onChange={(e) =>
-        onChange(
-          "transactionId",
-          e.target.value ? Number(e.target.value) : null
-        )
-      }
-      onBlur={autoSave ? submit : undefined}
-      className={styles.input}
-    >
-      <option value="">(none)</option>
-      {transactions.map((t) => (
-        <option key={t.id} value={t.id}>{`TX#${t.id}`}</option>
-      ))}
-    </select>
+    <>
+      <select
+        value={ev.transactionId ?? po.transactionId ?? ""}
+        onChange={(e) =>
+          onChange(
+            "transactionId",
+            e.target.value ? Number(e.target.value) : null
+          )
+        }
+        onBlur={autoSave ? submit : undefined}
+        className={inputClass("transactionId")}
+      >
+        <option value="">(none)</option>
+        {transactions.map((t) => (
+          <option key={t.id} value={t.id}>{`TX#${t.id}`}</option>
+        ))}
+      </select>
+      <FieldError name="transactionId" />
+    </>
   );
 
   const inputDate = (
-    <input
-      type="datetime-local"
-      value={toDateTimeLocal(ev.paymentOrderDate ?? po.paymentOrderDate)}
-      onChange={(e) =>
-        onChange("paymentOrderDate", new Date(e.target.value).toISOString())
-      }
-      onBlur={autoSave ? submit : undefined}
-      className={styles.input}
-    />
+    <>
+      <input
+        type="datetime-local"
+        value={toDateTimeLocal(ev.paymentOrderDate ?? po.paymentOrderDate)}
+        onChange={(e) =>
+          onChange(
+            "paymentOrderDate",
+            e.target.value ? new Date(e.target.value).toISOString() : ""
+          )
+        }
+        onBlur={autoSave ? submit : undefined}
+        className={inputClass("paymentOrderDate")}
+      />
+      <FieldError name="paymentOrderDate" />
+    </>
   );
 
   // hidden column helper (aligns with header visibility)
@@ -102,6 +129,7 @@ const PaymentOrder = ({
 
   return (
     <div
+      ref={rowRef || undefined}
       className={`${styles.row} ${styles.gridRow} ${
         isEven ? styles.zebraEven : ""
       } ${styles.hoverable}`}

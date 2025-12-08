@@ -1,3 +1,4 @@
+/* src/pages/Organizations/Organizations.module.scss */
 .container {
 }
 
@@ -68,6 +69,17 @@
   --org-header-bg: #f6f7fb;
   --org-header-border: #e5e7eb;
   --org-grid-cols: 110px;
+}
+
+/* 🔴 Global error banner */
+.errorBanner {
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  font-size: 0.9rem;
 }
 
 .compact .gridRow {

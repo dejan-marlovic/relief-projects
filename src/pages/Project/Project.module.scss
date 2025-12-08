@@ -1,14 +1,15 @@
-/*Project.module.scss*/
+/* Project.module.scss */
+@use "../../styles/forms" as forms;
 
 .projectContainer {
   display: flex;
   gap: 2rem;
   padding: 2rem;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background-color: #fff;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   margin-top: 1rem;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .selectorContainer {
@@ -19,78 +20,58 @@
   flex: 2;
 }
 
+/* Inputs */
 .textInput,
 input[type="datetime-local"] {
-  width: 100%;
-  padding: 0.75rem;
+  @include forms.text-input;
   margin-bottom: 1.25rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-family: inherit;
-  box-sizing: border-box;
-  appearance: none;
-  -webkit-appearance: none; /* Safari */
 }
 
 .textareaInput {
-  width: 100%;
-  padding: 0.75rem;
+  @include forms.textarea-input;
   margin-bottom: 1.25rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 1rem;
-  resize: vertical;
 }
 
+/* Labels */
 label {
-  font-weight: 600;
+  @include forms.form-label;
   display: block;
-  margin-bottom: 0.4rem;
-  color: #333;
 }
 
+/* Headings */
 h3 {
   margin-bottom: 1rem;
   color: #4a90e2;
 }
 
+/* Image + form layout */
 .imageAndFormWrapper {
   display: flex;
-  flex-direction: row-reverse; /* ⬅️ This moves the image to the right */
+  flex-direction: row-reverse;
   align-items: flex-start;
   gap: 2rem;
 }
 
-/*
-
-✅ What this does:
-.imageContainer is now exactly 30% of the .imageAndFormWrapper's width.
-
-The image fills that space, scales responsively, and looks clean.
-
-.formContent will naturally take the remaining 70% thanks to flex: 1.
-*/
-
 .imageContainer {
-  flex: 0 0 35%; /* Fixed to 30% of the parent container */
+  flex: 0 0 35%;
 }
 
 .coverImage {
-  width: 100%; /* Fill the container */
+  width: 100%;
   height: auto;
   border-radius: 8px;
   object-fit: cover;
 }
 
 .formContent {
-  flex: 1; /* 💡 This lets it fill remaining space */
+  flex: 1;
 }
 
+/* Two column layout */
 .formTwoColumn {
   display: flex;
   gap: 2rem;
-  flex-wrap: wrap; /* Helps on smaller screens */
+  flex-wrap: wrap;
 }
 
 .formColumnLeft,
@@ -99,27 +80,71 @@ The image fills that space, scales responsively, and looks clean.
   min-width: 300px;
 }
 
+/* Buttons */
 .saveButton {
+  @include forms.primary-button;
   margin-top: 1rem;
-  padding: 0.75rem 1.5rem;
-  background-color: #4a90e2;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
   align-self: flex-start;
 }
 
 .deleteButton {
+  @include forms.danger-button;
   margin-top: 1rem;
-  padding: 0.75rem 1.5rem;
-  background-color: #e74c3c;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
+  margin-left: 1rem;
   align-self: flex-start;
-  margin-left: 1rem; /* adds spacing if it's next to the Save button */
+}
+
+.errorBanner {
+  background-color: #ffe6e6;
+  color: #b00000;
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+  border: 1px solid #ffb3b3;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.errorList {
+  background-color: #fff7f0;
+  border: 1px solid #ffd5a3;
+  border-radius: 6px;
+  padding: 8px 14px;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+  animation: fadeIn 0.2s ease-in-out;
+
+  ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+
+  li {
+    margin: 2px 0;
+  }
+}
+
+.fieldError {
+  color: #b00000;
+  font-size: 0.8rem;
+  margin: 4px 0 8px;
+  font-weight: 500;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.inputError {
+  border-color: #b00000 !important;
+  box-shadow: 0 0 4px rgba(176, 0, 0, 0.6);
+  outline: none;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

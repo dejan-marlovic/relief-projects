@@ -1,3 +1,4 @@
+import React from "react";
 import styles from "./Signature.module.scss";
 import { FiEdit, FiTrash2, FiSave, FiX } from "react-icons/fi";
 
@@ -31,6 +32,8 @@ const SignatureRow = ({
   employeeOptions = [],
   visibleCols = [],
   isEven = false,
+  fieldErrors = {}, // per-row field errors
+  rowRef = null, // for auto-scroll on create
 }) => {
   const ev = editedValues || {};
   const isCreate = (row?.id ?? "") === "new";
@@ -42,86 +45,113 @@ const SignatureRow = ({
     onSave();
   };
 
-  const toNum = (v) => (v === "" ? "" : Number(v));
+  // ==== error helpers ====
+  const getFieldError = (name) => fieldErrors?.[name];
+  const hasError = (name) => Boolean(getFieldError(name));
+  const inputClass = (name) =>
+    `${styles.input} ${hasError(name) ? styles.inputError : ""}`;
+
+  const FieldError = ({ name }) =>
+    hasError(name) ? (
+      <div className={styles.fieldError}>{getFieldError(name)}</div>
+    ) : null;
 
   const inputText = (field) => (
-    <input
-      type="text"
-      value={ev[field] ?? row[field] ?? ""}
-      onChange={(e) => onChange(field, e.target.value)}
-      onBlur={autoSave ? submit : undefined}
-      className={styles.input}
-    />
+    <>
+      <input
+        type="text"
+        value={ev[field] ?? row[field] ?? ""}
+        onChange={(e) => onChange(field, e.target.value)}
+        onBlur={autoSave ? submit : undefined}
+        className={inputClass(field)}
+      />
+      <FieldError name={field} />
+    </>
   );
 
+  // NOTE: for selects we now store "" (string) for "none" instead of null.
   const selectPO = (
-    <select
-      value={ev.paymentOrderId ?? row.paymentOrderId ?? ""}
-      onChange={(e) =>
-        onChange(
-          "paymentOrderId",
-          e.target.value ? Number(e.target.value) : null
-        )
-      }
-      onBlur={autoSave ? submit : undefined}
-      className={styles.input}
-    >
-      <option value="">(none)</option>
-      {poOptions.map((po) => (
-        <option key={po.id} value={po.id}>{`PO#${po.id}`}</option>
-      ))}
-    </select>
+    <>
+      <select
+        value={
+          ev.paymentOrderId ??
+          (row.paymentOrderId != null ? String(row.paymentOrderId) : "")
+        }
+        onChange={(e) => onChange("paymentOrderId", e.target.value)}
+        onBlur={autoSave ? submit : undefined}
+        className={inputClass("paymentOrderId")}
+      >
+        <option value="">(none)</option>
+        {poOptions.map((po) => (
+          <option key={po.id} value={String(po.id)}>
+            {`PO#${po.id}`}
+          </option>
+        ))}
+      </select>
+      <FieldError name="paymentOrderId" />
+    </>
   );
 
   const selectStatus = (
-    <select
-      value={ev.signatureStatusId ?? row.signatureStatusId ?? ""}
-      onChange={(e) =>
-        onChange(
-          "signatureStatusId",
-          e.target.value ? Number(e.target.value) : null
-        )
-      }
-      onBlur={autoSave ? submit : undefined}
-      className={styles.input}
-    >
-      <option value="">(none)</option>
-      {statusOptions.map((s) => (
-        <option key={s.id} value={s.id}>
-          {s.label}
-        </option>
-      ))}
-    </select>
+    <>
+      <select
+        value={
+          ev.signatureStatusId ??
+          (row.signatureStatusId != null ? String(row.signatureStatusId) : "")
+        }
+        onChange={(e) => onChange("signatureStatusId", e.target.value)}
+        onBlur={autoSave ? submit : undefined}
+        className={inputClass("signatureStatusId")}
+      >
+        <option value="">(none)</option>
+        {statusOptions.map((s) => (
+          <option key={s.id} value={String(s.id)}>
+            {s.label}
+          </option>
+        ))}
+      </select>
+      <FieldError name="signatureStatusId" />
+    </>
   );
 
   const selectEmployee = (
-    <select
-      value={ev.employeeId ?? row.employeeId ?? ""}
-      onChange={(e) =>
-        onChange("employeeId", e.target.value ? Number(e.target.value) : null)
-      }
-      onBlur={autoSave ? submit : undefined}
-      className={styles.input}
-    >
-      <option value="">(none)</option>
-      {employeeOptions.map((e) => (
-        <option key={e.id} value={e.id}>
-          {e.label}
-        </option>
-      ))}
-    </select>
+    <>
+      <select
+        value={
+          ev.employeeId ??
+          (row.employeeId != null ? String(row.employeeId) : "")
+        }
+        onChange={(e) => onChange("employeeId", e.target.value)}
+        onBlur={autoSave ? submit : undefined}
+        className={inputClass("employeeId")}
+      >
+        <option value="">(none)</option>
+        {employeeOptions.map((e) => (
+          <option key={e.id} value={String(e.id)}>
+            {e.label}
+          </option>
+        ))}
+      </select>
+      <FieldError name="employeeId" />
+    </>
   );
 
   const inputDate = (
-    <input
-      type="datetime-local"
-      value={toDateTimeLocal(ev.signatureDate ?? row.signatureDate)}
-      onChange={(e) =>
-        onChange("signatureDate", new Date(e.target.value).toISOString())
-      }
-      onBlur={autoSave ? submit : undefined}
-      className={styles.input}
-    />
+    <>
+      <input
+        type="datetime-local"
+        value={toDateTimeLocal(ev.signatureDate ?? row.signatureDate)}
+        onChange={(e) =>
+          onChange(
+            "signatureDate",
+            e.target.value ? new Date(e.target.value).toISOString() : ""
+          )
+        }
+        onBlur={autoSave ? submit : undefined}
+        className={inputClass("signatureDate")}
+      />
+      <FieldError name="signatureDate" />
+    </>
   );
 
   const statusLabelById = (id) => {
@@ -138,6 +168,7 @@ const SignatureRow = ({
 
   return (
     <div
+      ref={rowRef || undefined}
       className={`${styles.row} ${styles.gridRow} ${
         isEven ? styles.zebraEven : ""
       } ${styles.hoverable}`}

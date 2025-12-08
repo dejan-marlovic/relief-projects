@@ -112,7 +112,7 @@
   padding-right: 4px;
   white-space: nowrap;
   color: #30323a;
-  background: var(--tx-header-bg); /* ← NEW: keep each cell opaque */
+  background: var(--tx-header-bg); /* keep each cell opaque */
 }
 
 /* Sticky first column (Actions) – header */
@@ -120,9 +120,7 @@
   position: sticky;
   left: 0;
   z-index: 6; /* above the header row itself */
-  background: var(
-    --tx-header-bg
-  ); /* ensure solid color while horizontal scrolling */
+  background: var(--tx-header-bg);
   box-shadow: 2px 0 0 rgba(0, 0, 0, 0.04);
 }
 
@@ -158,4 +156,15 @@
 .addBtn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* 🔴 Top error banner (like Budget) */
+.errorBanner {
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: 0.9rem;
 }
