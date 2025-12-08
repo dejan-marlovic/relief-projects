@@ -3,6 +3,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { ProjectContext } from "../../context/ProjectContext";
@@ -13,11 +14,11 @@ const BASE_URL = "http://localhost:8080";
 
 const headerLabels = [
   "Actions",
-  "Status", // signatureStatusId (dropdown)
-  "Employee", // employeeId (dropdown)
-  "Payment Order", // paymentOrderId (dropdown)
-  "Signature", // signature
-  "Date", // signatureDate
+  "Status",
+  "Employee",
+  "Payment Order",
+  "Signature",
+  "Date",
 ];
 
 const BASE_COL_WIDTHS = [
@@ -37,9 +38,9 @@ function Signatures() {
   const [editedValues, setEditedValues] = useState({});
 
   // dropdown data
-  const [poOptions, setPoOptions] = useState([]); // payment orders by project
-  const [statusOptions, setStatusOptions] = useState([]); // signature statuses (active)
-  const [employeeOptions, setEmployeeOptions] = useState([]); // employees (active)
+  const [poOptions, setPoOptions] = useState([]);
+  const [statusOptions, setStatusOptions] = useState([]);
+  const [employeeOptions, setEmployeeOptions] = useState([]);
 
   // UI
   const [compact, setCompact] = useState(false);
@@ -48,8 +49,15 @@ function Signatures() {
     Array(headerLabels.length).fill(true)
   );
 
+  // errors
+  const [formError, setFormError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({}); // { [rowId]: { fieldName: message } }
+
+  // ref for new row (scroll-into-view)
+  const newRowRef = useRef(null);
+
   const toggleCol = (i) => {
-    if (i === 0) return; // keep Actions visible
+    if (i === 0) return;
     setVisibleCols((prev) => {
       const next = [...prev];
       next[i] = !next[i];
@@ -57,7 +65,6 @@ function Signatures() {
     });
   };
 
-  // Auth headers (memoized)
   const token = useMemo(() => localStorage.getItem("authToken"), []);
   const authHeaders = useMemo(
     () =>
@@ -70,7 +77,6 @@ function Signatures() {
     [token]
   );
 
-  // FETCH: signatures filtered by project
   const fetchSignatures = useCallback(
     async (projectId) => {
       if (!projectId) {
@@ -92,7 +98,6 @@ function Signatures() {
     [authHeaders]
   );
 
-  // FETCH: payment orders for dropdown (filtered by project)
   const fetchPaymentOrders = useCallback(
     async (projectId) => {
       if (!projectId) {
@@ -115,7 +120,6 @@ function Signatures() {
     [authHeaders]
   );
 
-  // FETCH: signature statuses for dropdown
   const fetchSignatureStatuses = useCallback(async () => {
     try {
       const res = await fetch(`${BASE_URL}/api/signature-statuses/active`, {
@@ -138,7 +142,6 @@ function Signatures() {
     }
   }, [authHeaders]);
 
-  // FETCH: employees (active) for dropdown
   const fetchEmployees = useCallback(async () => {
     try {
       const res = await fetch(`${BASE_URL}/api/employees/active`, {
@@ -146,7 +149,6 @@ function Signatures() {
       });
       if (!res.ok) throw new Error(`Failed ${res.status}`);
       const data = await res.json();
-      // Normalize to [{id, label}]
       const normalized = (Array.isArray(data) ? data : []).map((e) => ({
         id: e.id ?? e.employeeId,
         label:
@@ -160,12 +162,13 @@ function Signatures() {
     }
   }, [authHeaders]);
 
-  // Load data whenever project changes (lists) and once for global dropdowns
   useEffect(() => {
     fetchSignatures(selectedProjectId);
     fetchPaymentOrders(selectedProjectId);
     setEditingId(null);
     setEditedValues({});
+    setFieldErrors({});
+    setFormError("");
   }, [fetchSignatures, fetchPaymentOrders, selectedProjectId]);
 
   useEffect(() => {
@@ -173,22 +176,16 @@ function Signatures() {
     fetchEmployees();
   }, [fetchSignatureStatuses, fetchEmployees]);
 
-  // Begin edit
-  const startEdit = (row) => {
-    setEditingId(row?.id ?? null);
-    setEditedValues((prev) => ({
-      ...prev,
-      [row.id]: {
-        signatureStatusId: row.signatureStatusId ?? "",
-        employeeId: row.employeeId ?? "",
-        paymentOrderId: row.paymentOrderId ?? "",
-        signature: row.signature ?? "",
-        signatureDate: row.signatureDate ?? "",
-      },
-    }));
-  };
+  // auto-scroll when "new" row appears
+  useEffect(() => {
+    if (editingId === "new" && newRowRef.current) {
+      newRowRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }
+  }, [editingId]);
 
-  // Begin create
   const blankSignature = {
     signatureStatusId: "",
     employeeId: "",
@@ -197,12 +194,41 @@ function Signatures() {
     signatureDate: "",
   };
 
+  const startEdit = (row) => {
+    setEditingId(row?.id ?? null);
+    setEditedValues((prev) => ({
+      ...prev,
+      [row.id]: {
+        signatureStatusId:
+          row.signatureStatusId != null ? String(row.signatureStatusId) : "",
+        employeeId: row.employeeId != null ? String(row.employeeId) : "",
+        paymentOrderId:
+          row.paymentOrderId != null ? String(row.paymentOrderId) : "",
+        signature: row.signature ?? "",
+        signatureDate: row.signatureDate ?? "",
+      },
+    }));
+
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next[row.id];
+      return next;
+    });
+    setFormError("");
+  };
+
   const startCreate = () => {
     setEditingId("new");
     setEditedValues((prev) => ({ ...prev, new: { ...blankSignature } }));
+
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.new;
+      return next;
+    });
+    setFormError("");
   };
 
-  // Change handler
   const onChange = (field, value) => {
     setEditedValues((prev) => ({
       ...prev,
@@ -213,18 +239,27 @@ function Signatures() {
     }));
   };
 
-  // Cancel edit/create
   const cancel = () => {
     const id = editingId;
     setEditingId(null);
+
     setEditedValues((prev) => {
       const next = { ...prev };
+      delete next.new;
       if (id && next[id]) delete next[id];
       return next;
     });
+
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.new;
+      if (id && next[id]) delete next[id];
+      return next;
+    });
+
+    setFormError("");
   };
 
-  // Save (create/update)
   const save = async () => {
     const id = editingId;
     const v = editedValues[id];
@@ -238,8 +273,14 @@ function Signatures() {
       employeeId: v.employeeId !== "" ? Number(v.employeeId) : null,
       paymentOrderId: v.paymentOrderId !== "" ? Number(v.paymentOrderId) : null,
       signature: v.signature || "",
-      signatureDate: v.signatureDate || null, // ISO string
+      signatureDate: v.signatureDate || null,
     };
+
+    setFormError("");
+    setFieldErrors((prev) => ({
+      ...prev,
+      [id]: {},
+    }));
 
     try {
       const res = await fetch(
@@ -252,16 +293,40 @@ function Signatures() {
           body: JSON.stringify(payload),
         }
       );
-      if (!res.ok) throw new Error(`${isCreate ? "Create" : "Update"} failed`);
+
+      if (!res.ok) {
+        const raw = await res.text().catch(() => "");
+        let data = null;
+        try {
+          data = raw ? JSON.parse(raw) : null;
+        } catch (e) {
+          console.warn("Failed to parse signature error JSON:", e);
+        }
+
+        if (data && data.fieldErrors) {
+          setFieldErrors((prev) => ({
+            ...prev,
+            [id]: data.fieldErrors,
+          }));
+        }
+
+        setFormError(
+          data?.message ||
+            `Failed to ${isCreate ? "create" : "update"} signature.`
+        );
+        return;
+      }
+
       await fetchSignatures(selectedProjectId);
       cancel();
     } catch (e) {
       console.error(e);
-      alert(`${isCreate ? "Create" : "Save"} failed.`);
+      setFormError(
+        e.message || `Failed to ${isCreate ? "create" : "update"} signature.`
+      );
     }
   };
 
-  // Delete
   const remove = async (id) => {
     if (!id) return;
     if (!window.confirm("Delete this signature?")) return;
@@ -278,7 +343,6 @@ function Signatures() {
     }
   };
 
-  // Grid columns CSS var
   const gridCols = useMemo(() => {
     const parts = BASE_COL_WIDTHS.map((w, i) =>
       visibleCols[i] ? `${w}px` : "0px"
@@ -325,6 +389,9 @@ function Signatures() {
         </div>
       </div>
 
+      {/* Global error banner */}
+      {formError && <div className={styles.errorBanner}>{formError}</div>}
+
       {/* Table */}
       <div
         className={`${styles.table} ${compact ? styles.compact : ""}`}
@@ -368,6 +435,7 @@ function Signatures() {
               statusOptions={statusOptions}
               employeeOptions={employeeOptions}
               visibleCols={visibleCols}
+              fieldErrors={fieldErrors[s.id] || {}}
             />
           ))
         )}
@@ -394,6 +462,8 @@ function Signatures() {
             employeeOptions={employeeOptions}
             visibleCols={visibleCols}
             isEven={false}
+            fieldErrors={fieldErrors.new || {}}
+            rowRef={newRowRef}
           />
         )}
       </div>

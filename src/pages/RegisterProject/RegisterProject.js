@@ -38,6 +38,9 @@ const initialProjectDetails = {
 
 // The main functional component to register a new project
 const RegisterProject = () => {
+  const [formError, setFormError] = useState(""); // general error message
+  const [fieldErrors, setFieldErrors] = useState({}); // { fieldName: "Message" }
+
   // Extract the setProjects function from context to update the global project list
   const { setProjects } = useContext(ProjectContext);
 
@@ -50,11 +53,17 @@ const RegisterProject = () => {
   const [addresses, setAddresses] = useState([]);
   const [availableParentProjects, setAvailableParentProjects] = useState([]);
 
-  // ✅ Cover image upload state (NEW – mirrors Project component behavior)
+  // ✅ Cover image upload state
   const [coverFile, setCoverFile] = useState(null);
   const [coverPreview, setCoverPreview] = useState("");
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadError, setUploadError] = useState("");
+
+  const getFieldError = (fieldName) => fieldErrors?.[fieldName];
+  const hasError = (fieldName) => Boolean(fieldErrors?.[fieldName]);
+
+  const inputClass = (fieldName) =>
+    `${styles.textInput} ${hasError(fieldName) ? styles.inputError : ""}`;
 
   // Load form dropdown data from the server once when component mounts
   useEffect(() => {
@@ -102,7 +111,7 @@ const RegisterProject = () => {
     }));
   };
 
-  // ✅ Helpers to handle selected cover file (NEW)
+  // ✅ Helpers to handle selected cover file
   const handleCoverFileSelected = (file) => {
     if (!file) return;
 
@@ -135,7 +144,7 @@ const RegisterProject = () => {
     }
   };
 
-  // ✅ Upload cover image AFTER project is created (NEW)
+  // ✅ Upload cover image AFTER project is created
   const uploadCoverImage = async (projectId, file) => {
     if (!projectId || !file) return null;
 
@@ -174,10 +183,13 @@ const RegisterProject = () => {
     }
   };
 
-  // Submit handler for creating a new project
   const handleRegister = async () => {
     try {
       const token = localStorage.getItem("authToken");
+
+      // Clear previous errors
+      setFormError("");
+      setFieldErrors({});
 
       const response = await fetch(`${BASE_URL}/api/projects`, {
         method: "POST",
@@ -188,16 +200,41 @@ const RegisterProject = () => {
         body: JSON.stringify(projectDetails),
       });
 
-      // 🔴 Just changed this part to read raw text from backend
       if (!response.ok) {
-        const backendError = await response.text(); // raw string from backend
-        throw new Error(backendError || "Failed to create project");
+        // Try to parse JSON error from backend (ApiError)
+        let data = null;
+        const text = await response.text();
+
+        console.log("🔴 Backend error raw text:", text);
+
+        try {
+          data = text ? JSON.parse(text) : null;
+        } catch (parseErr) {
+          console.warn("Failed to parse backend error JSON:", parseErr);
+        }
+
+        console.log("🔴 Parsed backend error object:", data);
+
+        if (data) {
+          if (data.fieldErrors) {
+            setFieldErrors(data.fieldErrors);
+          }
+
+          setFormError(
+            data.message || "There was a problem creating the project."
+          );
+        } else {
+          setFormError("There was a problem creating the project.");
+        }
+
+        // Stop here – don't continue with success flow
+        return;
       }
 
       const newProject = await response.json();
       let finalProject = newProject;
 
-      // ✅ If user selected a cover file, upload it now using the same API as in Project
+      // ✅ If user selected a cover file, upload it now
       if (coverFile) {
         const updated = await uploadCoverImage(newProject.id, coverFile);
         if (updated) {
@@ -207,10 +244,9 @@ const RegisterProject = () => {
 
       alert("Project created successfully!");
 
-      // Update global context with the new/updated project
       setProjects((prev) => [...prev, finalProject]);
 
-      // Reset the form and cover image state
+      // Reset form + cover image + errors
       setProjectDetails(initialProjectDetails);
       setCoverFile(null);
       if (coverPreview) {
@@ -218,10 +254,11 @@ const RegisterProject = () => {
       }
       setCoverPreview("");
       setUploadError("");
+      setFormError("");
+      setFieldErrors({});
     } catch (error) {
       console.error("Create error:", error);
-      // 🔥 This now shows exactly what the backend returned (even if it's ugly)
-      alert(error.message || "Error creating project.");
+      setFormError("Unexpected error while creating project.");
     }
   };
 
@@ -230,24 +267,53 @@ const RegisterProject = () => {
       <div className={styles.formContainer}>
         <h3>Register New Project</h3>
 
+        {formError && <div className={styles.errorBanner}>{formError}</div>}
+
+        {Object.keys(fieldErrors).length > 0 && (
+          <div className={styles.errorList}>
+            <ul>
+              {Object.entries(fieldErrors).map(([field, message]) => (
+                <li key={field}>
+                  <strong>{field}</strong>: {message}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {/* Begin Form Layout */}
         <form className={styles.formTwoColumn}>
           {/* LEFT COLUMN — general project info */}
           <div className={styles.formColumnLeft}>
+            {/* Project Name */}
             <input
-              className={styles.textInput}
+              className={inputClass("projectName")}
               name="projectName"
               placeholder="Project Name"
               value={projectDetails.projectName}
               onChange={handleInputChange}
             />
+            {getFieldError("projectName") && (
+              <div className={styles.fieldError}>
+                {getFieldError("projectName")}
+              </div>
+            )}
+
+            {/* Project Code */}
             <input
-              className={styles.textInput}
+              className={inputClass("projectCode")}
               name="projectCode"
               placeholder="Project Code"
               value={projectDetails.projectCode}
               onChange={handleInputChange}
             />
+            {getFieldError("projectCode") && (
+              <div className={styles.fieldError}>
+                {getFieldError("projectCode")}
+              </div>
+            )}
+
+            {/* Reference No */}
             <input
               className={styles.textInput}
               name="refProjectNo"
@@ -255,6 +321,8 @@ const RegisterProject = () => {
               value={projectDetails.refProjectNo}
               onChange={handleInputChange}
             />
+
+            {/* Pin Code */}
             <input
               className={styles.textInput}
               name="pinCode"
@@ -262,6 +330,8 @@ const RegisterProject = () => {
               value={projectDetails.pinCode}
               onChange={handleInputChange}
             />
+
+            {/* Funding Source */}
             <input
               className={styles.textInput}
               name="fundingSource"
@@ -269,6 +339,8 @@ const RegisterProject = () => {
               value={projectDetails.fundingSource}
               onChange={handleInputChange}
             />
+
+            {/* FO Support Cost % */}
             <input
               className={styles.textInput}
               type="number"
@@ -278,6 +350,8 @@ const RegisterProject = () => {
               value={projectDetails.foSupportCostPercent}
               onChange={handleInputChange}
             />
+
+            {/* IRW Support Cost % */}
             <input
               className={styles.textInput}
               type="number"
@@ -288,7 +362,7 @@ const RegisterProject = () => {
               onChange={handleInputChange}
             />
 
-            {/* ✅ Project Cover Image drag & drop (NEW – mirrors Project component) */}
+            {/* Project Cover Image */}
             <div>
               <label>Project Cover Image:</label>
 
@@ -320,7 +394,6 @@ const RegisterProject = () => {
                 onChange={handleCoverFileInput}
               />
 
-              {/* Preview selected image before project is created */}
               {coverPreview && (
                 <div style={{ marginTop: "8px" }}>
                   <img
@@ -355,38 +428,55 @@ const RegisterProject = () => {
               <input
                 type="datetime-local"
                 name="projectDate"
-                className={styles.textInput}
+                className={inputClass("projectDate")}
                 value={projectDetails.projectDate}
                 onChange={handleInputChange}
               />
             </div>
+            {getFieldError("projectDate") && (
+              <div className={styles.fieldError}>
+                {getFieldError("projectDate")}
+              </div>
+            )}
+
             <div className={styles.textInput}>
               <label>Project Start:</label>
               <input
                 type="datetime-local"
                 name="projectStart"
-                className={styles.textInput}
+                className={inputClass("projectStart")}
                 value={projectDetails.projectStart}
                 onChange={handleInputChange}
               />
             </div>
+            {getFieldError("projectStart") && (
+              <div className={styles.fieldError}>
+                {getFieldError("projectStart")}
+              </div>
+            )}
+
             <div className={styles.textInput}>
               <label>Project End:</label>
               <input
                 type="datetime-local"
                 name="projectEnd"
-                className={styles.textInput}
+                className={inputClass("projectEnd")}
                 value={projectDetails.projectEnd}
                 onChange={handleInputChange}
               />
             </div>
+            {getFieldError("projectEnd") && (
+              <div className={styles.fieldError}>
+                {getFieldError("projectEnd")}
+              </div>
+            )}
           </div>
 
           {/* RIGHT COLUMN — dropdowns and additional info */}
           <div className={styles.formColumnRight}>
             {/* Project Status */}
             <select
-              className={styles.textInput}
+              className={inputClass("projectStatusId")}
               name="projectStatusId"
               value={projectDetails.projectStatusId}
               onChange={handleInputChange}
@@ -398,10 +488,15 @@ const RegisterProject = () => {
                 </option>
               ))}
             </select>
+            {getFieldError("projectStatusId") && (
+              <div className={styles.fieldError}>
+                {getFieldError("projectStatusId")}
+              </div>
+            )}
 
             {/* Project Type */}
             <select
-              className={styles.textInput}
+              className={inputClass("projectTypeId")}
               name="projectTypeId"
               value={projectDetails.projectTypeId}
               onChange={handleInputChange}
@@ -413,6 +508,11 @@ const RegisterProject = () => {
                 </option>
               ))}
             </select>
+            {getFieldError("projectTypeId") && (
+              <div className={styles.fieldError}>
+                {getFieldError("projectTypeId")}
+              </div>
+            )}
 
             {/* Address */}
             <select

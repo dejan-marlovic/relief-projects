@@ -1,3 +1,4 @@
+// src/pages/Organizations/Organization/Organization.jsx
 import React, { useState } from "react";
 import styles from "./Organization.module.scss";
 import {
@@ -28,6 +29,7 @@ const Organization = ({
   statuses = [], // [{id, organizationStatusName}]
   visibleCols = [],
   isEven = false,
+  fieldErrors = {}, // NEW: per-row field errors
 }) => {
   const ev = editedValues || {};
   const isCreate = (link?.id ?? "") === "new";
@@ -43,36 +45,55 @@ const Organization = ({
 
   const toNum = (v) => (v === "" ? "" : Number(v));
 
+  // === validation helpers ===
+  const getFieldError = (name) => fieldErrors?.[name];
+  const hasError = (name) => Boolean(getFieldError(name));
+  const inputClass = (name) =>
+    `${styles.input} ${hasError(name) ? styles.inputError : ""}`;
+
+  const FieldError = ({ name }) =>
+    hasError(name) ? (
+      <div className={styles.fieldError}>{getFieldError(name)}</div>
+    ) : null;
+
   const selectOrg = () => (
-    <select
-      value={ev.organizationId ?? link.organizationId ?? ""}
-      onChange={(e) => onChange("organizationId", toNum(e.target.value))}
-      onBlur={autoSave ? submit : undefined}
-      className={styles.input}
-    >
-      <option value="">Select organization</option>
-      {organizations.map((o) => (
-        <option key={o.id} value={o.id}>
-          {o.name}
-        </option>
-      ))}
-    </select>
+    <>
+      <select
+        value={ev.organizationId ?? link.organizationId ?? ""}
+        onChange={(e) => onChange("organizationId", toNum(e.target.value))}
+        onBlur={autoSave ? submit : undefined}
+        className={inputClass("organizationId")}
+      >
+        <option value="">Select organization</option>
+        {organizations.map((o) => (
+          <option key={o.id} value={o.id}>
+            {o.name}
+          </option>
+        ))}
+      </select>
+      <FieldError name="organizationId" />
+    </>
   );
 
   const selectStatus = () => (
-    <select
-      value={ev.organizationStatusId ?? link.organizationStatusId ?? ""}
-      onChange={(e) => onChange("organizationStatusId", toNum(e.target.value))}
-      onBlur={autoSave ? submit : undefined}
-      className={styles.input}
-    >
-      <option value="">Select status</option>
-      {statuses.map((s) => (
-        <option key={s.id} value={s.id}>
-          {s.organizationStatusName}
-        </option>
-      ))}
-    </select>
+    <>
+      <select
+        value={ev.organizationStatusId ?? link.organizationStatusId ?? ""}
+        onChange={(e) =>
+          onChange("organizationStatusId", toNum(e.target.value))
+        }
+        onBlur={autoSave ? submit : undefined}
+        className={inputClass("organizationStatusId")}
+      >
+        <option value="">Select status</option>
+        {statuses.map((s) => (
+          <option key={s.id} value={s.id}>
+            {s.organizationStatusName}
+          </option>
+        ))}
+      </select>
+      <FieldError name="organizationStatusId" />
+    </>
   );
 
   const orgName = (id) =>

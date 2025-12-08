@@ -1,0 +1,46 @@
+/* src/styles/_forms.scss */
+
+@mixin text-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+@mixin textarea-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  resize: vertical;
+}
+
+@mixin form-label {
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  color: #333;
+}
+
+@mixin primary-button {
+  padding: 0.75rem 1.5rem;
+  background-color: #4a90e2;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@mixin danger-button {
+  padding: 0.75rem 1.5rem;
+  background-color: #e74c3c;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}

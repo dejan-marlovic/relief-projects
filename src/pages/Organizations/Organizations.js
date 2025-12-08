@@ -1,3 +1,4 @@
+// src/pages/Organizations/Organizations.jsx
 import React, {
   useCallback,
   useContext,
@@ -17,26 +18,14 @@ const blankLink = {
   organizationStatusId: "",
 };
 
-// 🔄 Now only 3 columns: Actions, Organization, Status
-const headerLabels = [
-  "Actions", // sticky left
-  "Organization",
-  "Status",
-];
+// Only 3 columns: Actions, Organization, Status
+const headerLabels = ["Actions", "Organization", "Status"];
 
-// column widths (px) – matches 3 columns
 const BASE_COL_WIDTHS = [
   110, // Actions
   220, // Organization
   160, // Status
 ];
-
-// minimal validation for new row
-const isValidNew = (v, selectedProjectId) =>
-  v &&
-  (v.projectId || selectedProjectId) &&
-  v.organizationId !== "" &&
-  v.organizationStatusId !== "";
 
 const Organizations = () => {
   const { selectedProjectId } = useContext(ProjectContext);
@@ -47,7 +36,7 @@ const Organizations = () => {
 
   // dropdown data
   const [orgOptions, setOrgOptions] = useState([]); // /organizations/active/options
-  const [projectOptions, setProjectOptions] = useState([]); // /projects/ids-names (still used for internal projectId, even if not shown)
+  const [projectOptions, setProjectOptions] = useState([]); // /projects/ids-names
   const [statusOptions, setStatusOptions] = useState([]); // /organization-statuses/active
 
   // UI state
@@ -56,6 +45,10 @@ const Organizations = () => {
   const [visibleCols, setVisibleCols] = useState(() =>
     Array(headerLabels.length).fill(true)
   );
+
+  // errors
+  const [formError, setFormError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({}); // { [rowId]: { fieldName: message } }
 
   const toggleCol = (i) => {
     if (i === 0) return; // lock Actions
@@ -147,6 +140,10 @@ const Organizations = () => {
 
   useEffect(() => {
     fetchProjectOrganizations(selectedProjectId);
+    setEditingId(null);
+    setEditedValues({});
+    setFieldErrors({});
+    setFormError("");
   }, [fetchProjectOrganizations, selectedProjectId]);
 
   const startEdit = (link) => {
@@ -159,6 +156,13 @@ const Organizations = () => {
         organizationStatusId: link.organizationStatusId,
       },
     }));
+
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next[link.id];
+      return next;
+    });
+    setFormError("");
   };
 
   const startCreate = () => {
@@ -170,6 +174,13 @@ const Organizations = () => {
         projectId: selectedProjectId || "",
       },
     }));
+
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.new;
+      return next;
+    });
+    setFormError("");
   };
 
   const onChange = (field, value) => {
@@ -192,11 +203,6 @@ const Organizations = () => {
       ? values.projectId || selectedProjectId
       : values.projectId ?? null;
 
-    if (isCreate && !isValidNew(values, selectedProjectId)) {
-      alert("Please select Organization and Status (Project is prefilled).");
-      return;
-    }
-
     const payload = {
       projectId: effectiveProjectId ? Number(effectiveProjectId) : null,
       organizationId: values.organizationId
@@ -206,6 +212,12 @@ const Organizations = () => {
         ? Number(values.organizationStatusId)
         : null,
     };
+
+    setFormError("");
+    setFieldErrors((prev) => ({
+      ...prev,
+      [id]: {},
+    }));
 
     try {
       const res = await fetch(
@@ -220,30 +232,58 @@ const Organizations = () => {
       );
 
       if (!res.ok) {
-        const msg = await res.text().catch(() => "");
-        throw new Error(
-          `Failed to ${
-            isCreate ? "create" : "update"
-          } project organization. ${msg}`
+        const raw = await res.text().catch(() => "");
+        let data = null;
+        try {
+          data = raw ? JSON.parse(raw) : null;
+        } catch (e) {
+          console.warn("Failed to parse project-organization error JSON:", e);
+        }
+
+        if (data && data.fieldErrors) {
+          setFieldErrors((prev) => ({
+            ...prev,
+            [id]: data.fieldErrors,
+          }));
+        }
+
+        setFormError(
+          data?.message ||
+            `Failed to ${isCreate ? "create" : "update"} organization link.`
         );
+        return;
       }
 
       await fetchProjectOrganizations(selectedProjectId);
       cancel();
     } catch (err) {
       console.error(err);
-      alert(err.message || "Save failed.");
+      setFormError(
+        err.message ||
+          `Failed to ${isCreate ? "create" : "update"} organization link.`
+      );
     }
   };
 
   const cancel = () => {
+    const id = editingId;
     setEditingId(null);
+
     setEditedValues((prev) => {
       const next = { ...prev };
       delete next.new;
-      if (editingId && next[editingId]) delete next[editingId];
+      if (id && next[id]) delete next[id];
       return next;
     });
+
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.new;
+      if (id && next[id]) delete next[id];
+      return next;
+    });
+
+    setFormError("");
   };
 
   const remove = async (id) => {
@@ -281,8 +321,8 @@ const Organizations = () => {
             checked={compact}
             onChange={(e) => setCompact(e.target.checked)}
           />
+          <span>Compact mode</span>
         </label>
-        <span>Compact mode</span>
 
         <div className={styles.columnsBox}>
           <button
@@ -310,10 +350,13 @@ const Organizations = () => {
         </div>
       </div>
 
+      {/* 🔴 Global error banner */}
+      {formError && <div className={styles.errorBanner}>{formError}</div>}
+
       {/* Table */}
       <div
         className={`${styles.table} ${compact ? styles.compact : ""}`}
-        style={{ ["--org-grid-cols"]: gridCols }}
+        style={{ "--org-grid-cols": gridCols }}
       >
         {/* Header */}
         <div className={`${styles.gridRow} ${styles.headerRow}`}>
@@ -352,11 +395,11 @@ const Organizations = () => {
               onCancel={cancel}
               onDelete={remove}
               organizations={orgOptions}
-              // ⬇️ no longer used in the row UI, but kept for internal ids
               projects={projectOptions}
               statuses={statusOptions}
               visibleCols={visibleCols}
               isEven={idx % 2 === 0}
+              fieldErrors={fieldErrors[link.id] || {}}
             />
           ))
         )}
@@ -380,6 +423,7 @@ const Organizations = () => {
             statuses={statusOptions}
             visibleCols={visibleCols}
             isEven={false}
+            fieldErrors={fieldErrors.new || {}}
           />
         )}
       </div>

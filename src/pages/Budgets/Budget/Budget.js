@@ -14,6 +14,10 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
   const [exchangeRates, setExchangeRates] = useState([]);
   const [refreshCostDetailsTrigger, setRefreshCostDetailsTrigger] = useState(0);
 
+  // 🔴 form-level + field-level errors
+  const [formError, setFormError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({}); // { fieldName: "Message" }
+
   const triggerRefreshCostDetails = () =>
     setRefreshCostDetailsTrigger((prev) => prev + 1);
 
@@ -98,12 +102,122 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
     fetchFormData();
   }, []);
 
+  // 🔧 Field error helpers
+  const getFieldError = (fieldName) => fieldErrors?.[fieldName];
+  const hasError = (fieldName) => Boolean(fieldErrors?.[fieldName]);
+
+  const inputClass = (fieldName) =>
+    `${styles.textInput} ${hasError(fieldName) ? styles.inputError : ""}`;
+
+  // Names for fixed reporting currencies (for display only)
+  const sekName = getCurrencyNameById(budget.reportingCurrencySekId) || "SEK";
+  const eurName = getCurrencyNameById(budget.reportingCurrencyEurId) || "EUR";
+
+  // IDs of special currencies
+  const gbpCurrencyId = findCurrencyIdByName("GBP");
+
+  // Rate lists for each dropdown
+  const localToGbpRates =
+    budget.localCurrencyId && gbpCurrencyId
+      ? filterRatesForPair(budget.localCurrencyId, gbpCurrencyId)
+      : [];
+
+  const localToSekRates =
+    budget.localCurrencyId && budget.reportingCurrencySekId
+      ? filterRatesForPair(
+          budget.localCurrencyId,
+          budget.reportingCurrencySekId
+        )
+      : [];
+
+  const localToEurRates =
+    budget.localCurrencyId && budget.reportingCurrencyEurId
+      ? filterRatesForPair(
+          budget.localCurrencyId,
+          budget.reportingCurrencyEurId
+        )
+      : [];
+
   // 💾 Save/Update Budget
   const handleSave = async () => {
     try {
       const token = localStorage.getItem("authToken");
 
-      // 🧼 Build a clean payload explicitly – field names must match BudgetDTO
+      // ❗ 1) FRONTEND VALIDATION BEFORE SENDING ANYTHING
+      const newFieldErrors = {};
+
+      // total amount
+      if (
+        budget.totalAmount === "" ||
+        budget.totalAmount == null ||
+        Number(budget.totalAmount) <= 0
+      ) {
+        newFieldErrors.totalAmount = "Total amount must be greater than zero.";
+      }
+
+      // base required fields
+      if (!budget.localCurrencyId) {
+        newFieldErrors.localCurrencyId = "Local currency is required.";
+      }
+
+      // valid ID helpers
+      const validLocalToGbpIds = new Set(
+        localToGbpRates.map((r) => Number(r.id))
+      );
+      const validLocalToSekIds = new Set(
+        localToSekRates.map((r) => Number(r.id))
+      );
+      const validLocalToEurIds = new Set(
+        localToEurRates.map((r) => Number(r.id))
+      );
+
+      const localToGbpIdNum =
+        budget.localExchangeRateToGbpId == null ||
+        budget.localExchangeRateToGbpId === ""
+          ? null
+          : Number(budget.localExchangeRateToGbpId);
+
+      const sekRateIdNum =
+        budget.reportingExchangeRateSekId == null ||
+        budget.reportingExchangeRateSekId === ""
+          ? null
+          : Number(budget.reportingExchangeRateSekId);
+
+      const eurRateIdNum =
+        budget.reportingExchangeRateEurId == null ||
+        budget.reportingExchangeRateEurId === ""
+          ? null
+          : Number(budget.reportingExchangeRateEurId);
+
+      // Local → GBP
+      if (!localToGbpIdNum || !validLocalToGbpIds.has(localToGbpIdNum)) {
+        newFieldErrors.localExchangeRateToGbpId =
+          "Local → GBP exchange rate is required for the selected local currency.";
+      }
+
+      // Local → SEK
+      if (!sekRateIdNum || !validLocalToSekIds.has(sekRateIdNum)) {
+        newFieldErrors.reportingExchangeRateSekId =
+          "SEK exchange rate is required for the selected local currency.";
+      }
+
+      // Local → EUR
+      if (!eurRateIdNum || !validLocalToEurIds.has(eurRateIdNum)) {
+        newFieldErrors.reportingExchangeRateEurId =
+          "EUR exchange rate is required for the selected local currency.";
+      }
+
+      if (Object.keys(newFieldErrors).length > 0) {
+        setFieldErrors(newFieldErrors);
+        setFormError("Please correct the highlighted fields and try again.");
+        return; // ⛔ don't call backend
+      }
+
+      // 2) clear previous backend errors before new request
+      setFormError("");
+      setFieldErrors({});
+
+      // 3) Build a clean payload explicitly – field names must match BudgetDTO
       const payload = {
         id: budget.id,
         projectId: budget.projectId,
@@ -134,24 +248,12 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
             : Number(budget.reportingCurrencyEurId),
 
         // exchange rates (FK → exchange_rates)
-        localExchangeRateToGbpId:
-          budget.localExchangeRateToGbpId === "" ||
-          budget.localExchangeRateToGbpId == null
-            ? null
-            : Number(budget.localExchangeRateToGbpId),
-
-        reportingExchangeRateSekId:
-          budget.reportingExchangeRateSekId === "" ||
-          budget.reportingExchangeRateSekId == null
-            ? null
-            : Number(budget.reportingExchangeRateSekId),
-
-        reportingExchangeRateEurId:
-          budget.reportingExchangeRateEurId === "" ||
-          budget.reportingExchangeRateEurId == null
-            ? null
-            : Number(budget.reportingExchangeRateEurId),
+        localExchangeRateToGbpId: localToGbpIdNum,
+        reportingExchangeRateSekId: sekRateIdNum,
+        reportingExchangeRateEurId: eurRateIdNum,
       };
+
+      console.log("🔵 Budget PUT payload:", payload);
 
       const response = await fetch(`${BASE_URL}/api/budgets/${budget.id}`, {
         method: "PUT",
@@ -163,14 +265,35 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
       });
 
       if (!response.ok) {
+        // 🔍 Try to read nice ApiError from backend
+        let data = null;
         const text = await response.text().catch(() => "");
-        console.error("Budget update failed", response.status, text);
-        throw new Error("Failed to update budget");
+
+        console.log("🔴 Budget update error raw:", text);
+
+        try {
+          data = text ? JSON.parse(text) : null;
+        } catch (parseErr) {
+          console.warn("Failed to parse budget error JSON:", parseErr);
+        }
+
+        if (data) {
+          if (data.fieldErrors) {
+            setFieldErrors(data.fieldErrors);
+          }
+          setFormError(
+            data.message || "There was a problem updating the budget."
+          );
+        } else {
+          setFormError("There was a problem updating the budget.");
+        }
+
+        return; // stop success flow
       }
 
       const updated = await response.json();
-      console.log("🔁 Updated budget from server:", updated);
-      alert("Budget updated successsfully!");
+      console.log("✅ Updated budget from server:", updated);
+      alert("Budget updated successfully!");
 
       setBudget(updated);
       onUpdate?.(updated);
@@ -178,9 +301,13 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
       const freshRates = await fetchExchangeRates(token);
       setExchangeRates(freshRates);
       triggerRefreshCostDetails();
+
+      // clear errors after success
+      setFormError("");
+      setFieldErrors({});
     } catch (error) {
       console.error("Error updating budget:", error);
-      alert("Error saving budget.");
+      setFormError("Unexpected error while saving budget.");
     }
   };
 
@@ -229,45 +356,40 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
         : Number(value)
       : value;
 
+    // 🔁 When local currency changes, force user to pick new rates by clearing them
+    if (name === "localCurrencyId") {
+      setBudget((prev) => ({
+        ...prev,
+        localCurrencyId: castValue,
+        localExchangeRateToGbpId: "",
+        reportingExchangeRateSekId: "",
+        reportingExchangeRateEurId: "",
+      }));
+
+      // also clear related field errors so user starts fresh
+      setFieldErrors((prev) => ({
+        ...prev,
+        localExchangeRateToGbpId: undefined,
+        reportingExchangeRateSekId: undefined,
+        reportingExchangeRateEurId: undefined,
+      }));
+
+      return;
+    }
+
     setBudget((prev) => ({
       ...prev,
       [name]: castValue,
     }));
   };
 
-  // Names for fixed reporting currencies (for display only)
-  const sekName = getCurrencyNameById(budget.reportingCurrencySekId) || "SEK";
-  const eurName = getCurrencyNameById(budget.reportingCurrencyEurId) || "EUR";
-
-  // IDs of special currencies
-  const gbpCurrencyId = findCurrencyIdByName("GBP");
-
-  // Rate lists for each dropdown
-  const localToGbpRates =
-    budget.localCurrencyId && gbpCurrencyId
-      ? filterRatesForPair(budget.localCurrencyId, gbpCurrencyId)
-      : [];
-
-  const localToSekRates =
-    budget.localCurrencyId && budget.reportingCurrencySekId
-      ? filterRatesForPair(
-          budget.localCurrencyId,
-          budget.reportingCurrencySekId
-        )
-      : [];
-
-  const localToEurRates =
-    budget.localCurrencyId && budget.reportingCurrencyEurId
-      ? filterRatesForPair(
-          budget.localCurrencyId,
-          budget.reportingCurrencyEurId
-        )
-      : [];
-
   return (
     <div className={styles.budgetContainer}>
       <div className={styles.formContainer}>
         <h3>Budget Details</h3>
+
+        {/* 🔴 Top error banner */}
+        {formError && <div className={styles.errorBanner}>{formError}</div>}
 
         <form className={styles.formTwoColumn}>
           <div className={styles.formColumnLeft}>
@@ -297,10 +419,15 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
               <input
                 type="number"
                 name="totalAmount"
-                className={styles.textInput}
+                className={inputClass("totalAmount")}
                 value={budget.totalAmount || ""}
                 onChange={handleChange}
               />
+              {getFieldError("totalAmount") && (
+                <div className={styles.fieldError}>
+                  {getFieldError("totalAmount")}
+                </div>
+              )}
             </div>
 
             <div className={styles.saveButtonContainer}>
@@ -328,7 +455,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                 <label>Local Currency:</label>
                 <select
                   name="localCurrencyId"
-                  className={styles.textInput}
+                  className={inputClass("localCurrencyId")}
                   value={budget.localCurrencyId || ""}
                   onChange={handleChange}
                 >
@@ -339,13 +466,18 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                     </option>
                   ))}
                 </select>
+                {getFieldError("localCurrencyId") && (
+                  <div className={styles.fieldError}>
+                    {getFieldError("localCurrencyId")}
+                  </div>
+                )}
               </div>
 
               <div className={styles.formItem}>
                 <label>Local → GBP Rate:</label>
                 <select
                   name="localExchangeRateToGbpId"
-                  className={styles.textInput}
+                  className={inputClass("localExchangeRateToGbpId")}
                   value={budget.localExchangeRateToGbpId || ""}
                   onChange={handleChange}
                 >
@@ -356,6 +488,11 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                     </option>
                   ))}
                 </select>
+                {getFieldError("localExchangeRateToGbpId") && (
+                  <div className={styles.fieldError}>
+                    {getFieldError("localExchangeRateToGbpId")}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -375,7 +512,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                 <label>SEK Exchange Rate (Local → SEK):</label>
                 <select
                   name="reportingExchangeRateSekId"
-                  className={styles.textInput}
+                  className={inputClass("reportingExchangeRateSekId")}
                   value={budget.reportingExchangeRateSekId || ""}
                   onChange={handleChange}
                 >
@@ -386,6 +523,11 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                     </option>
                   ))}
                 </select>
+                {getFieldError("reportingExchangeRateSekId") && (
+                  <div className={styles.fieldError}>
+                    {getFieldError("reportingExchangeRateSekId")}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -405,7 +547,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                 <label>EUR Exchange Rate (Local → EUR):</label>
                 <select
                   name="reportingExchangeRateEurId"
-                  className={styles.textInput}
+                  className={inputClass("reportingExchangeRateEurId")}
                   value={budget.reportingExchangeRateEurId || ""}
                   onChange={handleChange}
                 >
@@ -416,6 +558,11 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                     </option>
                   ))}
                 </select>
+                {getFieldError("reportingExchangeRateEurId") && (
+                  <div className={styles.fieldError}>
+                    {getFieldError("reportingExchangeRateEurId")}
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -1,10 +1,9 @@
-// src/components/PaymentOrders/PaymentOrders.jsx
-
 import React, {
   useCallback,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { ProjectContext } from "../../context/ProjectContext";
@@ -38,8 +37,18 @@ const BASE_COL_WIDTHS = [
   140, // Pin Code
 ];
 
+const blankPO = {
+  transactionId: "",
+  paymentOrderDate: "",
+  numberOfTransactions: "",
+  paymentOrderDescription: "",
+  amount: "",
+  totalAmount: "",
+  message: "",
+  pinCode: "",
+};
+
 function PaymentOrders() {
-  // ← get the current project like in Transactions
   const { selectedProjectId } = useContext(ProjectContext);
 
   const [orders, setOrders] = useState([]);
@@ -47,14 +56,20 @@ function PaymentOrders() {
   const [editedValues, setEditedValues] = useState({});
   const [txOptions, setTxOptions] = useState([]);
 
-  // UI state for column toggles & compact mode (same pattern as Transactions)
+  // UI state for column toggles & compact mode
   const [compact, setCompact] = useState(false);
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [visibleCols, setVisibleCols] = useState(() =>
     Array(headerLabels.length).fill(true)
   );
 
-  // Only column 0 (Actions) is locked visible
+  // 🔴 form-level & field-level errors (same pattern as Transactions)
+  const [formError, setFormError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({}); // { [rowId]: { fieldName: message } }
+
+  // ref for "new" row to auto-scroll
+  const newRowRef = useRef(null);
+
   const toggleCol = (i) => {
     if (i === 0) return;
     setVisibleCols((prev) => {
@@ -107,7 +122,6 @@ function PaymentOrders() {
         return;
       }
       try {
-        // same per-project scope as Transactions
         const res = await fetch(
           `${BASE_URL}/api/transactions/project/${projectId}`,
           { headers: authHeaders }
@@ -123,14 +137,25 @@ function PaymentOrders() {
     [authHeaders]
   );
 
-  // Load lists whenever project (or headers) change
+  // Load lists whenever project changes
   useEffect(() => {
     fetchOrders(selectedProjectId);
     fetchTxOptions(selectedProjectId);
-    // Optional: cancel any in-progress edit when project changes
     setEditingId(null);
     setEditedValues({});
+    setFieldErrors({});
+    setFormError("");
   }, [fetchOrders, fetchTxOptions, selectedProjectId]);
+
+  // Auto-scroll when entering "new" mode
+  useEffect(() => {
+    if (editingId === "new" && newRowRef.current) {
+      newRowRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }
+  }, [editingId]);
 
   // Begin editing a row: seed the draft with current values
   const startEdit = (po) => {
@@ -148,24 +173,27 @@ function PaymentOrders() {
         pinCode: po.pinCode ?? "",
       },
     }));
+
+    // clear previous errors for this row
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next[po.id];
+      return next;
+    });
+    setFormError("");
   };
 
   // Start create (inline new row)
-  const blankPO = {
-    transactionId: "",
-    paymentOrderDate: "",
-    numberOfTransactions: "",
-    paymentOrderDescription: "",
-    amount: "",
-    totalAmount: "",
-    message: "",
-    pinCode: "",
-  };
-
   const startCreate = () => {
     setEditingId("new");
-    // Functional updater avoids stale state; clone the blank template
     setEditedValues((prev) => ({ ...prev, new: { ...blankPO } }));
+
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.new;
+      return next;
+    });
+    setFormError("");
   };
 
   // Update a single field in the current draft
@@ -179,18 +207,29 @@ function PaymentOrders() {
     }));
   };
 
-  // Cancel editing: clear current id and remove its draft
+  // Cancel editing: clear current id and remove its draft + its errors
   const cancel = () => {
-    const id = editingId; // capture before we clear it
+    const id = editingId;
+
     setEditingId(null);
     setEditedValues((prev) => {
       const next = { ...prev };
+      delete next.new;
       if (id && next[id]) delete next[id];
       return next;
     });
+
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.new;
+      if (id && next[id]) delete next[id];
+      return next;
+    });
+
+    setFormError("");
   };
 
-  // Save current draft (POST for create, PUT for update)
+  // Save current draft (POST for create, PUT for update) with ApiError handling
   const save = async () => {
     const id = editingId;
     const v = editedValues[id];
@@ -198,11 +237,6 @@ function PaymentOrders() {
 
     const isCreate = id === "new";
 
-    /*
-    convert strings from inputs into the right types (numbers/strings),
-    turn “empty” values into null or "" consistently,
-    avoid sending undefined.
-    */
     const payload = {
       transactionId: v.transactionId !== "" ? Number(v.transactionId) : null,
       paymentOrderDate: v.paymentOrderDate || null,
@@ -215,6 +249,13 @@ function PaymentOrders() {
       pinCode: v.pinCode || "",
     };
 
+    // clear previous errors
+    setFormError("");
+    setFieldErrors((prev) => ({
+      ...prev,
+      [id]: {},
+    }));
+
     try {
       const res = await fetch(
         isCreate
@@ -226,16 +267,39 @@ function PaymentOrders() {
           body: JSON.stringify(payload),
         }
       );
-      if (!res.ok)
-        throw new Error(
-          `${isCreate ? "Create" : "Update"} failed ${res.status}`
-        );
 
-      await fetchOrders(selectedProjectId); // ← refresh list for current project
+      if (!res.ok) {
+        // Try to parse ApiError
+        const raw = await res.text().catch(() => "");
+        let data = null;
+        try {
+          data = raw ? JSON.parse(raw) : null;
+        } catch (e) {
+          console.warn("Failed to parse payment order error JSON:", e);
+        }
+
+        if (data && data.fieldErrors) {
+          setFieldErrors((prev) => ({
+            ...prev,
+            [id]: data.fieldErrors,
+          }));
+        }
+
+        setFormError(
+          data?.message ||
+            `Failed to ${isCreate ? "create" : "update"} payment order.`
+        );
+        return;
+      }
+
+      await fetchOrders(selectedProjectId);
       cancel();
     } catch (e) {
       console.error(e);
-      alert(`${isCreate ? "Create" : "Save"} failed.`);
+      setFormError(
+        e.message ||
+          `Failed to ${isCreate ? "create" : "update"} payment order.`
+      );
     }
   };
 
@@ -249,14 +313,14 @@ function PaymentOrders() {
         headers: authHeaders,
       });
       if (!res.ok) throw new Error("Delete failed");
-      await fetchOrders(selectedProjectId); // ← refresh list for current project
+      await fetchOrders(selectedProjectId);
     } catch (e) {
       console.error(e);
       alert("Delete failed.");
     }
   };
 
-  // Build the CSS variable for grid columns from visibility + base widths
+  // Build CSS variable for grid columns
   const gridCols = useMemo(() => {
     const parts = BASE_COL_WIDTHS.map((w, i) =>
       visibleCols[i] ? `${w}px` : "0px"
@@ -303,6 +367,9 @@ function PaymentOrders() {
         </div>
       </div>
 
+      {/* 🔴 Global error banner */}
+      {formError && <div className={styles.errorBanner}>{formError}</div>}
+
       {/* Table */}
       <div
         className={`${styles.table} ${compact ? styles.compact : ""}`}
@@ -345,6 +412,7 @@ function PaymentOrders() {
               onDelete={remove}
               transactions={txOptions}
               visibleCols={visibleCols}
+              fieldErrors={fieldErrors[po.id] || {}}
             />
           ))
         )}
@@ -362,6 +430,8 @@ function PaymentOrders() {
             transactions={txOptions}
             visibleCols={visibleCols}
             isEven={false}
+            fieldErrors={fieldErrors.new || {}}
+            rowRef={newRowRef}
           />
         )}
       </div>

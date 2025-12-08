@@ -1,56 +1,46 @@
-/*RegisterProject.module.scss*/
+/* RegisterProject.module.scss */
+@use "../../styles/forms" as forms;
 
 .registerContainer {
   display: flex;
   gap: 2rem;
   padding: 2rem;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background-color: #fff;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   margin-top: 1rem;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .formContainer {
   flex: 2;
 }
 
+/* Inputs */
 .textInput,
 input[type="datetime-local"] {
-  width: 100%;
-  padding: 0.75rem;
+  @include forms.text-input;
   margin-bottom: 1.25rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-family: inherit;
-  box-sizing: border-box;
-  appearance: none;
-  -webkit-appearance: none;
 }
 
 .textareaInput {
-  width: 100%;
-  padding: 0.75rem;
+  @include forms.textarea-input;
   margin-bottom: 1.25rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 1rem;
-  resize: vertical;
 }
 
+/* Labels */
 label {
-  font-weight: 600;
+  @include forms.form-label;
   display: block;
-  margin-bottom: 0.4rem;
-  color: #333;
 }
 
+/* Headings */
 h3 {
   margin-bottom: 1rem;
   color: #4a90e2;
 }
 
+/* Two column layout */
 .formTwoColumn {
   display: flex;
   gap: 2rem;
@@ -63,38 +53,95 @@ h3 {
   min-width: 300px;
 }
 
+/* Buttons */
 .saveButton {
+  @include forms.primary-button;
   margin-top: 1rem;
-  padding: 0.75rem 1.5rem;
-  background-color: #4a90e2;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
   align-self: flex-start;
 }
 
 .cancelButton {
+  @include forms.danger-button;
+  background-color: #999; /* override danger red if you want grey */
   margin-top: 1rem;
-  padding: 0.75rem 1.5rem;
-  background-color: #999;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  align-self: flex-start;
   margin-left: 1rem;
+  align-self: flex-start;
 }
 
+/* Field group wrapper */
 .fieldGroup {
   margin-bottom: 1.5rem;
 }
 
+/* Helper text */
 .helperText {
   font-size: 0.85rem;
   color: #666;
   margin-top: 0.25rem;
   display: block;
+}
+
+/* Top error banner */
+.errorBanner {
+  background-color: #ffe6e6;
+  color: #b00000;
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+  border: 1px solid #ffb3b3;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+/* Global list of field errors */
+.errorList {
+  background-color: #fff7f0;
+  border: 1px solid #ffd5a3;
+  border-radius: 6px;
+  padding: 8px 14px;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+  animation: fadeIn 0.2s ease-in-out;
+
+  ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+
+  li {
+    margin: 2px 0;
+  }
+}
+
+/* Single field error text */
+.fieldError {
+  color: #b00000;
+  font-size: 0.8rem;
+  margin: 4px 0 8px;
+  font-weight: 500;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+/* Red border + subtle glow for invalid fields */
+.inputError {
+  border-color: #b00000 !important;
+  box-shadow: 0 0 4px rgba(176, 0, 0, 0.6);
+  outline: none;
+}
+
+/* Simple fade-in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Full-width area for description etc. */
+.fullWidthField {
+  margin-top: 1rem;
 }

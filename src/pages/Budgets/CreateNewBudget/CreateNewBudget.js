@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import styles from "../Budget/Budget.module.scss"; // 🔧 use SAME styles as Budget
+import styles from "../Budget/Budget.module.scss"; // use SAME styles as Budget
 import { ProjectContext } from "../../../context/ProjectContext";
 
 const BASE_URL = "http://localhost:8080";
@@ -21,6 +21,16 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
     reportingExchangeRateSekId: "",
     reportingExchangeRateEurId: "",
   });
+
+  // 🔴 Error state
+  const [formError, setFormError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  const getFieldError = (fieldName) => fieldErrors?.[fieldName];
+  const hasError = (fieldName) => Boolean(fieldErrors?.[fieldName]);
+
+  const inputClass = (fieldName) =>
+    `${styles.textInput} ${hasError(fieldName) ? styles.inputError : ""}`;
 
   // 🔎 helper: find currency name by id
   const getCurrencyNameById = (id) => {
@@ -74,26 +84,6 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
     const res = await fetch(`${BASE_URL}/api/exchange-rates/active`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    return await res.json();
-  };
-
-  // 💾 POST: Create new budget
-  const createBudget = async (payload, token) => {
-    const res = await fetch(`${BASE_URL}/api/budgets`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      console.error("Create budget failed", res.status, text);
-      throw new Error("Failed to create budget");
-    }
-
     return await res.json();
   };
 
@@ -158,10 +148,14 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
   const handleSave = async () => {
     const token = localStorage.getItem("authToken");
 
+    // Clear previous errors
+    setFormError("");
+    setFieldErrors({});
+
     try {
       const payload = {
         // required by backend
-        projectId: selectedProjectId,
+        projectId: selectedProjectId ? Number(selectedProjectId) : null,
 
         budgetDescription: budget.budgetDescription ?? "",
         budgetPreparationDate: budget.budgetPreparationDate || null,
@@ -188,23 +182,12 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
             ? null
             : Number(budget.reportingCurrencyEurId),
 
-        // exchange rates – match backend JSON shape
-        localCurrencyToGbpId:
-          budget.localExchangeRateToGbpId === "" ||
-          budget.localExchangeRateToGbpId == null
-            ? null
-            : Number(budget.localExchangeRateToGbpId),
-
+        // exchange rates – match BudgetDTO
         localExchangeRateToGbpId:
           budget.localExchangeRateToGbpId === "" ||
           budget.localExchangeRateToGbpId == null
             ? null
             : Number(budget.localExchangeRateToGbpId),
-
-        localExchangeRateId:
-          budget.localCurrencyId === "" || budget.localCurrencyId == null
-            ? null
-            : Number(budget.localCurrencyId),
 
         reportingExchangeRateSekId:
           budget.reportingExchangeRateSekId === "" ||
@@ -219,12 +202,49 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
             : Number(budget.reportingExchangeRateEurId),
       };
 
-      const created = await createBudget(payload, token);
+      const res = await fetch(`${BASE_URL}/api/budgets`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        let data = null;
+        const text = await res.text();
+
+        try {
+          data = text ? JSON.parse(text) : null;
+        } catch (parseErr) {
+          console.warn("Failed to parse backend error JSON:", parseErr);
+        }
+
+        if (data) {
+          if (data.fieldErrors) {
+            setFieldErrors(data.fieldErrors);
+          }
+          setFormError(
+            data.message || "There was a problem creating the budget."
+          );
+        } else {
+          setFormError("There was a problem creating the budget.");
+        }
+
+        return; // stop success flow
+      }
+
+      const created = await res.json();
       onBudgetCreated(created);
+
+      // Reset form + errors, then close
+      setFormError("");
+      setFieldErrors({});
       onClose();
     } catch (err) {
       console.error("Create budget error:", err);
-      alert("Error creating budget.");
+      setFormError("Unexpected error while creating budget.");
     }
   };
 
@@ -260,6 +280,9 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
     <div className={styles.budgetContainer}>
       <div className={styles.formContainer}>
         <h3>Create New Budget</h3>
+
+        {formError && <div className={styles.errorBanner}>{formError}</div>}
+
         <form className={styles.formTwoColumn}>
           {/* Left Column */}
           <div className={styles.formColumnLeft}>
@@ -267,11 +290,18 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
               <label>Budget Description:</label>
               <textarea
                 name="budgetDescription"
-                className={styles.textareaInput}
+                className={`${styles.textareaInput} ${
+                  hasError("budgetDescription") ? styles.inputError : ""
+                }`}
                 placeholder="Enter a brief description of the budget purpose"
                 value={budget.budgetDescription}
                 onChange={handleChange}
               />
+              {getFieldError("budgetDescription") && (
+                <div className={styles.fieldError}>
+                  {getFieldError("budgetDescription")}
+                </div>
+              )}
             </div>
 
             <div className={styles.formItem}>
@@ -279,10 +309,15 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
               <input
                 type="datetime-local"
                 name="budgetPreparationDate"
-                className={styles.textInput}
+                className={inputClass("budgetPreparationDate")}
                 value={budget.budgetPreparationDate}
                 onChange={handleChange}
               />
+              {getFieldError("budgetPreparationDate") && (
+                <div className={styles.fieldError}>
+                  {getFieldError("budgetPreparationDate")}
+                </div>
+              )}
               <small className={styles.helperText}>
                 Date the budget was prepared.
               </small>
@@ -293,11 +328,16 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
               <input
                 type="number"
                 name="totalAmount"
-                className={styles.textInput}
+                className={inputClass("totalAmount")}
                 placeholder="Enter total budget amount"
                 value={budget.totalAmount}
                 onChange={handleChange}
               />
+              {getFieldError("totalAmount") && (
+                <div className={styles.fieldError}>
+                  {getFieldError("totalAmount")}
+                </div>
+              )}
             </div>
           </div>
 
@@ -309,7 +349,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
                 <label>Local Currency:</label>
                 <select
                   name="localCurrencyId"
-                  className={styles.textInput}
+                  className={inputClass("localCurrencyId")}
                   value={budget.localCurrencyId || ""}
                   onChange={handleChange}
                 >
@@ -320,13 +360,18 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
                     </option>
                   ))}
                 </select>
+                {getFieldError("localCurrencyId") && (
+                  <div className={styles.fieldError}>
+                    {getFieldError("localCurrencyId")}
+                  </div>
+                )}
               </div>
 
               <div className={styles.formItem}>
                 <label>Local → GBP Rate:</label>
                 <select
                   name="localExchangeRateToGbpId"
-                  className={styles.textInput}
+                  className={inputClass("localExchangeRateToGbpId")}
                   value={budget.localExchangeRateToGbpId || ""}
                   onChange={handleChange}
                 >
@@ -337,6 +382,11 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
                     </option>
                   ))}
                 </select>
+                {getFieldError("localExchangeRateToGbpId") && (
+                  <div className={styles.fieldError}>
+                    {getFieldError("localExchangeRateToGbpId")}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -356,7 +406,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
                 <label>SEK Exchange Rate (Local → SEK):</label>
                 <select
                   name="reportingExchangeRateSekId"
-                  className={styles.textInput}
+                  className={inputClass("reportingExchangeRateSekId")}
                   value={budget.reportingExchangeRateSekId || ""}
                   onChange={handleChange}
                 >
@@ -367,6 +417,11 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
                     </option>
                   ))}
                 </select>
+                {getFieldError("reportingExchangeRateSekId") && (
+                  <div className={styles.fieldError}>
+                    {getFieldError("reportingExchangeRateSekId")}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -386,7 +441,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
                 <label>EUR Exchange Rate (Local → EUR):</label>
                 <select
                   name="reportingExchangeRateEurId"
-                  className={styles.textInput}
+                  className={inputClass("reportingExchangeRateEurId")}
                   value={budget.reportingExchangeRateEurId || ""}
                   onChange={handleChange}
                 >
@@ -397,12 +452,17 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
                     </option>
                   ))}
                 </select>
+                {getFieldError("reportingExchangeRateEurId") && (
+                  <div className={styles.fieldError}>
+                    {getFieldError("reportingExchangeRateEurId")}
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </form>
 
-        {/* ✅ same button styling as Budget component */}
+        {/* same button styling as Budget component */}
         <div className={styles.saveButtonContainer}>
           <button onClick={handleSave} className={styles.saveButton}>
             Save

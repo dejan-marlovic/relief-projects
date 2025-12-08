@@ -67,6 +67,17 @@
   --rec-grid-cols: 110px; /* fallback; overwritten inline */
 }
 
+/* 🔴 Global error banner */
+.errorBanner {
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  font-size: 0.9rem;
+}
+
 /* Compact mode tweaks */
 .compact .gridRow {
   padding: 4px 8px !important;
