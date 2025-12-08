@@ -16,6 +16,10 @@ const BankDetails = ({ organizationId }) => {
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
 
+  // 🔴 error state
+  const [formError, setFormError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({}); // { [rowId]: { fieldName: message } }
+
   const token = useMemo(() => localStorage.getItem("authToken"), []);
   const authHeaders = useMemo(
     () =>
@@ -48,10 +52,17 @@ const BankDetails = ({ organizationId }) => {
     } catch (e) {
       console.error("Error fetching bank details:", e);
       setRows([]);
+      setFormError(
+        e.message || "Failed to load bank details for this organization."
+      );
     }
   };
 
   useEffect(() => {
+    setEditingId(null);
+    setEditedValues({});
+    setFieldErrors({});
+    setFormError("");
     loadForOrg();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [organizationId]);
@@ -68,6 +79,13 @@ const BankDetails = ({ organizationId }) => {
         swiftCode: row.swiftCode || "",
       },
     }));
+
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    setFormError("");
   };
 
   const startCreate = () => {
@@ -76,6 +94,13 @@ const BankDetails = ({ organizationId }) => {
       ...prev,
       new: { ...blankBank },
     }));
+
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.new;
+      return next;
+    });
+    setFormError("");
   };
 
   const onChange = (field, value) => {
@@ -89,13 +114,24 @@ const BankDetails = ({ organizationId }) => {
   };
 
   const cancel = () => {
+    const id = editingId;
     setEditingId(null);
+
     setEditedValues((prev) => {
       const next = { ...prev };
       delete next.new;
-      if (editingId && next[editingId]) delete next[editingId];
+      if (id && next[id]) delete next[id];
       return next;
     });
+
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next.new;
+      if (id && next[id]) delete next[id];
+      return next;
+    });
+
+    setFormError("");
   };
 
   const save = async () => {
@@ -105,20 +141,20 @@ const BankDetails = ({ organizationId }) => {
 
     const isCreate = id === "new";
 
-    if (!values.bankName || !values.accountNumber) {
-      alert("Please fill in at least Bank name and Account number.");
-      return;
-    }
-
     const payload = {
-      bankName: values.bankName,
-      accountNumber: values.accountNumber,
+      bankName: values.bankName || "",
+      accountNumber: values.accountNumber || "",
       branchName: values.branchName || null,
       swiftCode: values.swiftCode || null,
       organizationId: Number(organizationId),
-      // optional, for update: bankId
       bankId: isCreate ? undefined : id,
     };
+
+    setFormError("");
+    setFieldErrors((prev) => ({
+      ...prev,
+      [id]: {},
+    }));
 
     try {
       const res = await fetch(
@@ -133,17 +169,35 @@ const BankDetails = ({ organizationId }) => {
       );
 
       if (!res.ok) {
-        const msg = await res.text().catch(() => "");
-        throw new Error(
-          `Failed to ${isCreate ? "create" : "update"} bank detail. ${msg}`
+        const raw = await res.text().catch(() => "");
+        let data = null;
+        try {
+          data = raw ? JSON.parse(raw) : null;
+        } catch (e) {
+          console.warn("Failed to parse bank detail error JSON:", e);
+        }
+
+        if (data && data.fieldErrors) {
+          setFieldErrors((prev) => ({
+            ...prev,
+            [id]: data.fieldErrors,
+          }));
+        }
+
+        setFormError(
+          data?.message ||
+            `Failed to ${isCreate ? "create" : "update"} bank detail.`
         );
+        return;
       }
 
       await loadForOrg();
       cancel();
     } catch (e) {
       console.error(e);
-      alert(e.message || "Save failed.");
+      setFormError(
+        e.message || `Failed to ${isCreate ? "create" : "update"} bank detail.`
+      );
     }
   };
 
@@ -167,6 +221,20 @@ const BankDetails = ({ organizationId }) => {
   const editingRowId = (row) => (row.bankId ?? row.id ?? null) === editingId;
   const evForRow = (row) => editedValues[row.bankId ?? row.id] || {};
 
+  // === validation helpers for per-row errors ===
+  const getRowFieldError = (rowKey, name) =>
+    fieldErrors?.[rowKey] ? fieldErrors[rowKey][name] : undefined;
+
+  const hasRowError = (rowKey, name) => Boolean(getRowFieldError(rowKey, name));
+
+  const inputClassFor = (rowKey, name) =>
+    `${styles.input} ${hasRowError(rowKey, name) ? styles.inputError : ""}`;
+
+  const FieldError = ({ rowKey, name }) => {
+    const msg = getRowFieldError(rowKey, name);
+    return msg ? <div className={styles.fieldError}>{msg}</div> : null;
+  };
+
   return (
     <div className={styles.bankDetailsContainer}>
       <div className={styles.bankDetailsHeader}>
@@ -175,13 +243,16 @@ const BankDetails = ({ organizationId }) => {
         </span>
         <button
           type="button"
-          className={styles.addBtn}
+          className={styles.bankAddBtn || styles.addBtn}
           onClick={startCreate}
           disabled={editingId === "new"}
         >
           <FiPlus /> New Bank Detail
         </button>
       </div>
+
+      {/* 🔴 local error banner */}
+      {formError && <div className={styles.bankErrorBanner}>{formError}</div>}
 
       {rows.length === 0 && editingId !== "new" && (
         <p className={styles.noData}>No bank details for this organization.</p>
@@ -252,12 +323,15 @@ const BankDetails = ({ organizationId }) => {
               {/* bank name */}
               <div className={styles.bankDetailsCell}>
                 {isRowEditing ? (
-                  <input
-                    className={styles.input}
-                    type="text"
-                    value={ev.bankName ?? row.bankName ?? ""}
-                    onChange={(e) => onChange("bankName", e.target.value)}
-                  />
+                  <>
+                    <input
+                      className={inputClassFor(rowId, "bankName")}
+                      type="text"
+                      value={ev.bankName ?? row.bankName ?? ""}
+                      onChange={(e) => onChange("bankName", e.target.value)}
+                    />
+                    <FieldError rowKey={rowId} name="bankName" />
+                  </>
                 ) : (
                   row.bankName || "-"
                 )}
@@ -266,12 +340,17 @@ const BankDetails = ({ organizationId }) => {
               {/* account number */}
               <div className={styles.bankDetailsCell}>
                 {isRowEditing ? (
-                  <input
-                    className={styles.input}
-                    type="text"
-                    value={ev.accountNumber ?? row.accountNumber ?? ""}
-                    onChange={(e) => onChange("accountNumber", e.target.value)}
-                  />
+                  <>
+                    <input
+                      className={inputClassFor(rowId, "accountNumber")}
+                      type="text"
+                      value={ev.accountNumber ?? row.accountNumber ?? ""}
+                      onChange={(e) =>
+                        onChange("accountNumber", e.target.value)
+                      }
+                    />
+                    <FieldError rowKey={rowId} name="accountNumber" />
+                  </>
                 ) : (
                   row.accountNumber || "-"
                 )}
@@ -280,12 +359,15 @@ const BankDetails = ({ organizationId }) => {
               {/* branch */}
               <div className={styles.bankDetailsCell}>
                 {isRowEditing ? (
-                  <input
-                    className={styles.input}
-                    type="text"
-                    value={ev.branchName ?? row.branchName ?? ""}
-                    onChange={(e) => onChange("branchName", e.target.value)}
-                  />
+                  <>
+                    <input
+                      className={inputClassFor(rowId, "branchName")}
+                      type="text"
+                      value={ev.branchName ?? row.branchName ?? ""}
+                      onChange={(e) => onChange("branchName", e.target.value)}
+                    />
+                    <FieldError rowKey={rowId} name="branchName" />
+                  </>
                 ) : (
                   row.branchName || "-"
                 )}
@@ -294,12 +376,15 @@ const BankDetails = ({ organizationId }) => {
               {/* swift */}
               <div className={styles.bankDetailsCell}>
                 {isRowEditing ? (
-                  <input
-                    className={styles.input}
-                    type="text"
-                    value={ev.swiftCode ?? row.swiftCode ?? ""}
-                    onChange={(e) => onChange("swiftCode", e.target.value)}
-                  />
+                  <>
+                    <input
+                      className={inputClassFor(rowId, "swiftCode")}
+                      type="text"
+                      value={ev.swiftCode ?? row.swiftCode ?? ""}
+                      onChange={(e) => onChange("swiftCode", e.target.value)}
+                    />
+                    <FieldError rowKey={rowId} name="swiftCode" />
+                  </>
                 ) : (
                   row.swiftCode || "-"
                 )}
@@ -333,40 +418,52 @@ const BankDetails = ({ organizationId }) => {
             </div>
 
             <div className={styles.bankDetailsCell}>
-              <input
-                className={styles.input}
-                type="text"
-                value={editedValues.new?.bankName ?? ""}
-                onChange={(e) => onChange("bankName", e.target.value)}
-                placeholder="Bank name"
-              />
+              <>
+                <input
+                  className={inputClassFor("new", "bankName")}
+                  type="text"
+                  value={editedValues.new?.bankName ?? ""}
+                  onChange={(e) => onChange("bankName", e.target.value)}
+                  placeholder="Bank name"
+                />
+                <FieldError rowKey="new" name="bankName" />
+              </>
             </div>
             <div className={styles.bankDetailsCell}>
-              <input
-                className={styles.input}
-                type="text"
-                value={editedValues.new?.accountNumber ?? ""}
-                onChange={(e) => onChange("accountNumber", e.target.value)}
-                placeholder="Account number"
-              />
+              <>
+                <input
+                  className={inputClassFor("new", "accountNumber")}
+                  type="text"
+                  value={editedValues.new?.accountNumber ?? ""}
+                  onChange={(e) => onChange("accountNumber", e.target.value)}
+                  placeholder="Account number"
+                />
+                <FieldError rowKey="new" name="accountNumber" />
+              </>
             </div>
             <div className={styles.bankDetailsCell}>
-              <input
-                className={styles.input}
-                type="text"
-                value={editedValues.new?.branchName ?? ""}
-                onChange={(e) => onChange("branchName", e.target.value)}
-                placeholder="Branch"
-              />
+              <>
+                <input
+                  className={inputClassFor("new", "branchName")}
+                  type="text"
+                  value={editedValues.new?.branchName ?? ""}
+                  onChange={(e) => onChange("branchName", e.target.value)}
+                  placeholder="Branch"
+                />
+                <FieldError rowKey="new" name="branchName" />
+              </>
             </div>
             <div className={styles.bankDetailsCell}>
-              <input
-                className={styles.input}
-                type="text"
-                value={editedValues.new?.swiftCode ?? ""}
-                onChange={(e) => onChange("swiftCode", e.target.value)}
-                placeholder="SWIFT"
-              />
+              <>
+                <input
+                  className={inputClassFor("new", "swiftCode")}
+                  type="text"
+                  value={editedValues.new?.swiftCode ?? ""}
+                  onChange={(e) => onChange("swiftCode", e.target.value)}
+                  placeholder="SWIFT"
+                />
+                <FieldError rowKey="new" name="swiftCode" />
+              </>
             </div>
           </div>
         )}

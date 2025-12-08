@@ -1,4 +1,4 @@
-/* Organization.module.scss */
+/* src/pages/Organizations/Organization/Organization.module.scss */
 @use "../../../styles/tables" as tables;
 
 .row {
@@ -27,6 +27,18 @@
 /* Inputs */
 .input {
   @include tables.table-input;
+}
+
+/* Validation variants */
+.inputError {
+  border-color: #e11d48 !important;
+  box-shadow: 0 0 0 1px rgba(225, 29, 72, 0.2);
+}
+
+.fieldError {
+  margin-top: 2px;
+  font-size: 0.78rem;
+  color: #e11d48;
 }
 
 /* Actions area */
