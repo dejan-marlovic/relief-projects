@@ -33,6 +33,38 @@ $tab-active-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* Right side of header: logout (top) + logo (below) */
+.headerRight {
+  display: flex;
+  flex-direction: column; // stack vertically
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+/* Logout button – primary blue, above logo */
+.logoutBtn {
+  background-color: $primary-color;
+  color: #ffffff;
+  border: none;
+  border-radius: 999px;
+  padding: 0.4rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease,
+    box-shadow 0.2s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+
+  &:hover {
+    background-color: darken($primary-color, 8%);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12);
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
 /* 🔵 Make the main header bigger & bolder */
 .headerTitle {
   margin: 0;

@@ -2,7 +2,7 @@
 import React, { useContext } from "react";
 
 // Import routing utilities
-import { Outlet, Link, useLocation } from "react-router-dom";
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 
 // Import scoped CSS module styles
 import styles from "./Layout.module.scss";
@@ -12,6 +12,7 @@ import { ProjectContext } from "../../context/ProjectContext";
 
 const Layout = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const { projects, selectedProjectId, setSelectedProjectId } =
     useContext(ProjectContext);
@@ -20,13 +21,19 @@ const Layout = () => {
     setSelectedProjectId(e.target.value);
   };
 
+  const handleLogout = () => {
+    // Remove token and redirect to login
+    localStorage.removeItem("authToken");
+    navigate("/login");
+  };
+
   const isRegisterPage = location.pathname === "/register-project";
   const isStatisticsPage = location.pathname === "/statistics";
   const hideSelector = isRegisterPage || isStatisticsPage;
 
   return (
     <>
-      {/* Header row: title + logo card */}
+      {/* Header row: title + logout + logo card */}
       <div className={styles.headerBar}>
         <div className={styles.headerTitleBlock}>
           <h1 className={styles.headerTitle}>
@@ -37,12 +44,18 @@ const Layout = () => {
           </p>
         </div>
 
-        <div className={styles.logoWrap}>
-          <img
-            src="/images/logo/logo.png"
-            alt="Relief Projects logo"
-            className={styles.logo}
-          />
+        <div className={styles.headerRight}>
+          <button className={styles.logoutBtn} onClick={handleLogout}>
+            Logout
+          </button>
+
+          <div className={styles.logoWrap}>
+            <img
+              src="/images/logo/logo.png"
+              alt="Relief Projects logo"
+              className={styles.logo}
+            />
+          </div>
         </div>
       </div>
 
