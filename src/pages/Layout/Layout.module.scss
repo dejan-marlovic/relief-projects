@@ -1,5 +1,6 @@
 // Design tokens
 $primary-color: #4a90e2;
+$secondary-color: #e74c3c;
 $nav-bg-color: #ffffff;
 $nav-text-color: #333;
 $tab-bg: #f5f7fa;
@@ -13,6 +14,7 @@ $tab-active-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 /* === Header styling === */
 
 .headerBar {
+  position: relative; // so the logout icon can be absolutely positioned
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -33,35 +35,33 @@ $tab-active-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Right side of header: logout (top) + logo (below) */
-.headerRight {
-  display: flex;
-  flex-direction: column; // stack vertically
-  align-items: flex-end;
-  gap: 0.5rem;
-}
+/* 🔵 Logout icon – top-right, slightly beyond the logo */
+.logoutIcon {
+  position: absolute;
+  // Align roughly with top of logo container
+  top: 1.1rem;
+  right: 1.4rem;
 
-/* Logout button – primary blue, above logo */
-.logoutBtn {
-  background-color: $primary-color;
-  color: #ffffff;
+  background: none;
   border: none;
-  border-radius: 999px;
-  padding: 0.4rem 1rem;
-  font-size: 0.9rem;
-  font-weight: 600;
+  color: $secondary-color;
+  font-size: 1.6rem;
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.1s ease,
-    box-shadow 0.2s ease;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  padding: 0;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: color 0.2s ease, transform 0.1s ease;
 
   &:hover {
-    background-color: darken($primary-color, 8%);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12);
+    color: darken($primary-color, 10%);
+    transform: translateY(-1px);
   }
 
   &:active {
-    transform: scale(0.97);
+    transform: scale(0.95);
   }
 }
 

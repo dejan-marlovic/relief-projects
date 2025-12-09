@@ -10,6 +10,9 @@ import styles from "./Layout.module.scss";
 // Import context for accessing the selected project and project list
 import { ProjectContext } from "../../context/ProjectContext";
 
+// Logout icon
+import { FiLogOut } from "react-icons/fi";
+
 const Layout = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -33,7 +36,7 @@ const Layout = () => {
 
   return (
     <>
-      {/* Header row: title + logout + logo card */}
+      {/* Header row: title + logo card + logout icon (top-right) */}
       <div className={styles.headerBar}>
         <div className={styles.headerTitleBlock}>
           <h1 className={styles.headerTitle}>
@@ -44,19 +47,24 @@ const Layout = () => {
           </p>
         </div>
 
-        <div className={styles.headerRight}>
-          <button className={styles.logoutBtn} onClick={handleLogout}>
-            Logout
-          </button>
-
-          <div className={styles.logoWrap}>
-            <img
-              src="/images/logo/logo.png"
-              alt="Relief Projects logo"
-              className={styles.logo}
-            />
-          </div>
+        <div className={styles.logoWrap}>
+          <img
+            src="/images/logo/logo.png"
+            alt="Relief Projects logo"
+            className={styles.logo}
+          />
         </div>
+
+        {/* Logout icon in the top-right corner */}
+        <button
+          type="button"
+          className={styles.logoutIcon}
+          onClick={handleLogout}
+          aria-label="Logout"
+          title="Logout"
+        >
+          <FiLogOut />
+        </button>
       </div>
 
       {/* Project selector row (hidden on register + statistics) */}
