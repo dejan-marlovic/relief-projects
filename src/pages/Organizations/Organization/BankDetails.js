@@ -243,7 +243,7 @@ const BankDetails = ({ organizationId }) => {
         </span>
         <button
           type="button"
-          className={styles.bankAddBtn || styles.addBtn}
+          className={styles.bankAddBtn}
           onClick={startCreate}
           disabled={editingId === "new"}
         >
