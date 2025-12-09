@@ -26,17 +26,24 @@ const Layout = () => {
 
   return (
     <>
-      {/* Header row: title + logo (logo absolutely positioned) */}
+      {/* Header row: title + logo card */}
       <div className={styles.headerBar}>
-        <h1>
-          <strong>Relief Projects</strong>
-        </h1>
+        <div className={styles.headerTitleBlock}>
+          <h1 className={styles.headerTitle}>
+            <span className={styles.headerTitleAccent}>Relief</span> Projects
+          </h1>
+          <p className={styles.headerSubtitle}>
+            Manage budgets, transactions & beneficiaries in one place
+          </p>
+        </div>
 
-        <img
-          src="/images/logo/logo.png"
-          alt="Relief Projects logo"
-          className={styles.logo}
-        />
+        <div className={styles.logoWrap}>
+          <img
+            src="/images/logo/logo.png"
+            alt="Relief Projects logo"
+            className={styles.logo}
+          />
+        </div>
       </div>
 
       {/* Project selector row (hidden on register + statistics) */}
