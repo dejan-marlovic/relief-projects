@@ -1,5 +1,5 @@
 // Import core React functionality and hooks
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 
 // Import routing utilities
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
@@ -29,6 +29,14 @@ const Layout = () => {
     localStorage.removeItem("authToken");
     navigate("/login");
   };
+
+  // 🔐 Simple auth guard: if there's no token, go to /login
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      navigate("/login");
+    }
+  }, [navigate]);
 
   const isRegisterPage = location.pathname === "/register-project";
   const isStatisticsPage = location.pathname === "/statistics";
