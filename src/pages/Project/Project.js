@@ -1,5 +1,6 @@
 // Import necessary React hooks and modules
 import React, { useEffect, useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 
 // Import scoped CSS module for styling
 import styles from "./Project.module.scss";
@@ -24,6 +25,32 @@ const coverImagePath = `${BASE_URL}/images/projects/`;
 
 // Define the Project component
 const Project = () => {
+  const navigate = useNavigate();
+
+  // 🔐 Helper: fetch with auth + automatic 401 handling
+  const authFetch = async (url, options = {}) => {
+    const token = localStorage.getItem("authToken");
+
+    const mergedOptions = {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    };
+
+    const res = await fetch(url, mergedOptions);
+
+    if (res.status === 401) {
+      // Token expired/invalid – clear it and go to login
+      localStorage.removeItem("authToken");
+      navigate("/login");
+      throw new Error("Unauthorized - redirecting to login");
+    }
+
+    return res;
+  };
+
   // Extract selected project ID from global context
   const { selectedProjectId, setSelectedProjectId, projects, setProjects } =
     useContext(ProjectContext);
@@ -93,13 +120,11 @@ const Project = () => {
         setLoading(true);
         setFormError("");
         setFieldErrors({});
-        const token = localStorage.getItem("authToken");
-        const response = await fetch(
+        const response = await authFetch(
           `${BASE_URL}/api/projects/${selectedProjectId}`,
           {
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
             },
           }
         );
@@ -117,17 +142,15 @@ const Project = () => {
     };
 
     fetchProjectDetails();
-  }, [selectedProjectId]);
+  }, [selectedProjectId]); // authFetch uses navigate from closure
 
   // Fetch sectors list (for checkbox options)
   useEffect(() => {
     const fetchSectors = async () => {
       try {
-        const token = localStorage.getItem("authToken");
-        const res = await fetch(`${BASE_URL}/api/sectors/active`, {
+        const res = await authFetch(`${BASE_URL}/api/sectors/active`, {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
         });
         if (!res.ok) throw new Error("Failed to fetch sectors");
@@ -139,7 +162,7 @@ const Project = () => {
       }
     };
     fetchSectors();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch existing project-sector links and derive selected IDs
   useEffect(() => {
@@ -150,11 +173,9 @@ const Project = () => {
     }
     const fetchProjectSectors = async () => {
       try {
-        const token = localStorage.getItem("authToken");
-        const res = await fetch(`${BASE_URL}/api/project-sectors/active`, {
+        const res = await authFetch(`${BASE_URL}/api/project-sectors/active`, {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
         });
         if (!res.ok) throw new Error("Failed to fetch project-sector links");
@@ -171,18 +192,16 @@ const Project = () => {
       }
     };
     fetchProjectSectors();
-  }, [selectedProjectId]);
+  }, [selectedProjectId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const fetchProjectStatuses = async () => {
       try {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch(
+        const response = await authFetch(
           `${BASE_URL}/api/project-statuses/active`,
           {
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
             },
           }
         );
@@ -197,16 +216,14 @@ const Project = () => {
     };
 
     fetchProjectStatuses();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const fetchAvailableParentProjects = async () => {
       try {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch(`${BASE_URL}/api/projects/ids-names`, {
+        const response = await authFetch(`${BASE_URL}/api/projects/ids-names`, {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -226,24 +243,20 @@ const Project = () => {
     };
 
     fetchAvailableParentProjects();
-  }, [selectedProjectId]);
+  }, [selectedProjectId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const fetchTypesAndAddresses = async () => {
       try {
-        const token = localStorage.getItem("authToken");
-
         const [typeRes, addressRes] = await Promise.all([
-          fetch(`${BASE_URL}/api/project-types/active`, {
+          authFetch(`${BASE_URL}/api/project-types/active`, {
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
             },
           }),
-          fetch(`${BASE_URL}/api/addresses/active`, {
+          authFetch(`${BASE_URL}/api/addresses/active`, {
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
             },
           }),
         ]);
@@ -262,19 +275,17 @@ const Project = () => {
     };
 
     fetchTypesAndAddresses();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ✅ NEW: fetch all org options (for displaying labels)
   useEffect(() => {
     const fetchAllOrgOptions = async () => {
       try {
-        const token = localStorage.getItem("authToken");
-        const res = await fetch(
+        const res = await authFetch(
           `${BASE_URL}/api/organizations/active/options`,
           {
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
             },
           }
         );
@@ -287,19 +298,17 @@ const Project = () => {
       }
     };
     fetchAllOrgOptions();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ✅ NEW: fetch organization statuses
   useEffect(() => {
     const fetchOrgStatuses = async () => {
       try {
-        const token = localStorage.getItem("authToken");
-        const res = await fetch(
+        const res = await authFetch(
           `${BASE_URL}/api/organization-statuses/active`,
           {
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
             },
           }
         );
@@ -312,7 +321,7 @@ const Project = () => {
       }
     };
     fetchOrgStatuses();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ✅ NEW: project-aware org options + project_organization rows
   useEffect(() => {
@@ -324,16 +333,13 @@ const Project = () => {
       return;
     }
 
-    const token = localStorage.getItem("authToken");
-
     const loadProjectOrgOptions = async (projectId) => {
       try {
-        const res = await fetch(
+        const res = await authFetch(
           `${BASE_URL}/api/organizations/by-project/${projectId}/options`,
           {
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
             },
           }
         );
@@ -357,12 +363,11 @@ const Project = () => {
 
     const loadProjectOrganizations = async (projectId) => {
       try {
-        const res = await fetch(
+        const res = await authFetch(
           `${BASE_URL}/api/project-organizations/active`,
           {
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
             },
           }
         );
@@ -382,7 +387,7 @@ const Project = () => {
     loadProjectOrganizations(selectedProjectId);
     setSelectedOrgId("");
     setSelectedOrgStatusId("");
-  }, [selectedProjectId, allOrganizationOptions]);
+  }, [selectedProjectId, allOrganizationOptions]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle input field changes by updating local projectDetails state
   const handleProjectInputChange = (e) => {
@@ -410,11 +415,18 @@ const Project = () => {
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${token}`, // don't set Content-Type manually
+            // don't set Content-Type manually for FormData
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: formData,
         }
       );
+
+      if (response.status === 401) {
+        localStorage.removeItem("authToken");
+        navigate("/login");
+        throw new Error("Unauthorized - redirecting to login");
+      }
 
       if (!response.ok) {
         const text = await response.text().catch(() => "");
@@ -467,16 +479,12 @@ const Project = () => {
       return;
 
     try {
-      const token = localStorage.getItem("authToken");
-      const response = await fetch(
+      const response = await authFetch(
         `${BASE_URL}/api/projects/${
           projectDetails.id
         }/cover-image/${encodeURIComponent(filename)}`,
         {
           method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
         }
       );
 
@@ -529,13 +537,12 @@ const Project = () => {
     if (!window.confirm("Remove this sector from the project?")) return;
 
     try {
-      const token = localStorage.getItem("authToken");
-      const res = await fetch(`${BASE_URL}/api/project-sectors/${link.id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await authFetch(
+        `${BASE_URL}/api/project-sectors/${link.id}`,
+        {
+          method: "DELETE",
+        }
+      );
       if (!res.ok) throw new Error("Failed to delete sector link");
 
       // Optimistic local updates
@@ -563,12 +570,10 @@ const Project = () => {
     }
 
     try {
-      const token = localStorage.getItem("authToken");
-      const res = await fetch(`${BASE_URL}/api/project-organizations`, {
+      const res = await authFetch(`${BASE_URL}/api/project-organizations`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           projectId: Number(projectDetails.id),
@@ -584,15 +589,13 @@ const Project = () => {
 
       // Refresh current project organizations and project-aware dropdown
       const projectId = projectDetails.id;
-      const token2 = localStorage.getItem("authToken");
 
       // reload project organizations
-      const reloadPO = await fetch(
+      const reloadPO = await authFetch(
         `${BASE_URL}/api/project-organizations/active`,
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token2}`,
           },
         }
       );
@@ -605,12 +608,11 @@ const Project = () => {
       }
 
       // reload project-aware org options
-      const reloadOpts = await fetch(
+      const reloadOpts = await authFetch(
         `${BASE_URL}/api/organizations/by-project/${projectId}/options`,
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token2}`,
           },
         }
       );
@@ -632,14 +634,10 @@ const Project = () => {
     if (!window.confirm("Remove this organization from the project?")) return;
 
     try {
-      const token = localStorage.getItem("authToken");
-      const res = await fetch(
+      const res = await authFetch(
         `${BASE_URL}/api/project-organizations/${projectOrgId}`,
         {
           method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
         }
       );
       if (!res.ok) throw new Error("Failed to delete project organization.");
@@ -651,13 +649,11 @@ const Project = () => {
 
       // Also reload project-aware org options so it becomes selectable again
       if (projectDetails?.id) {
-        const token2 = localStorage.getItem("authToken");
-        const reload = await fetch(
+        const reload = await authFetch(
           `${BASE_URL}/api/organizations/by-project/${projectDetails.id}/options`,
           {
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token2}`,
             },
           }
         );
@@ -684,15 +680,10 @@ const Project = () => {
       return;
 
     try {
-      const token = localStorage.getItem("authToken");
-
-      const response = await fetch(
+      const response = await authFetch(
         `${BASE_URL}/api/projects/${projectDetails.id}`,
         {
           method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
         }
       );
 
@@ -728,8 +719,6 @@ const Project = () => {
 
   // ✅ Reconcile selected sectors with backend links on Save (add/remove diffs)
   const syncProjectSectors = async (projectId) => {
-    const token = localStorage.getItem("authToken");
-
     const currentBySectorId = new Map(
       currentProjectSectorLinks.map((l) => [String(l.sectorId), l])
     );
@@ -746,11 +735,10 @@ const Project = () => {
     // Create missing links
     for (const sid of toAdd) {
       try {
-        const res = await fetch(`${BASE_URL}/api/project-sectors`, {
+        const res = await authFetch(`${BASE_URL}/api/project-sectors`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             projectId: Number(projectId),
@@ -770,12 +758,12 @@ const Project = () => {
     // Soft delete removed links
     for (const link of toRemove) {
       try {
-        const res = await fetch(`${BASE_URL}/api/project-sectors/${link.id}`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await authFetch(
+          `${BASE_URL}/api/project-sectors/${link.id}`,
+          {
+            method: "DELETE",
+          }
+        );
         if (!res.ok) throw new Error("Failed to delete sector link");
       } catch (e) {
         console.error(e);
@@ -785,10 +773,9 @@ const Project = () => {
 
     // Refresh links
     try {
-      const res = await fetch(`${BASE_URL}/api/project-sectors/active`, {
+      const res = await authFetch(`${BASE_URL}/api/project-sectors/active`, {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
       });
       const links = res.ok ? await res.json() : [];
@@ -804,19 +791,16 @@ const Project = () => {
 
   const handleSave = async () => {
     try {
-      const token = localStorage.getItem("authToken");
-
       // Clear previous errors
       setFormError("");
       setFieldErrors({});
 
-      const response = await fetch(
+      const response = await authFetch(
         `${BASE_URL}/api/projects/${projectDetails.id}`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(projectDetails),
         }

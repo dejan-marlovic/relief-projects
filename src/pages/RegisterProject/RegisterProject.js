@@ -36,6 +36,42 @@ const initialProjectDetails = {
   projectTypeId: "",
 };
 
+// 🔍 Simple client-side validation for required fields (UX only)
+// Backend still validates with @NotNull / @NotBlank
+const validateProjectDetails = (values) => {
+  const errors = {};
+
+  if (!values.projectName?.trim()) {
+    errors.projectName = "Project name is required.";
+  }
+
+  if (!values.projectCode?.trim()) {
+    errors.projectCode = "Project code is required.";
+  }
+
+  if (!values.projectStatusId) {
+    errors.projectStatusId = "Project status is required.";
+  }
+
+  if (!values.projectTypeId) {
+    errors.projectTypeId = "Project type is required.";
+  }
+
+  if (!values.projectDate) {
+    errors.projectDate = "Project date is required.";
+  }
+
+  if (!values.projectStart) {
+    errors.projectStart = "Project start date is required.";
+  }
+
+  if (!values.projectEnd) {
+    errors.projectEnd = "Project end date is required.";
+  }
+
+  return errors;
+};
+
 // The main functional component to register a new project
 const RegisterProject = () => {
   const [formError, setFormError] = useState(""); // general error message
@@ -191,6 +227,15 @@ const RegisterProject = () => {
       setFormError("");
       setFieldErrors({});
 
+      // ✅ FRONTEND REQUIRED-FIELD VALIDATION (UX)
+      const errors = validateProjectDetails(projectDetails);
+      if (Object.keys(errors).length > 0) {
+        setFieldErrors(errors);
+        setFormError("Please fix the highlighted fields.");
+        // ⛔ Don't call backend if basic validation fails
+        return;
+      }
+
       const response = await fetch(`${BASE_URL}/api/projects`, {
         method: "POST",
         headers: {
@@ -201,11 +246,8 @@ const RegisterProject = () => {
       });
 
       if (!response.ok) {
-        // Try to parse JSON error from backend (ApiError)
-        let data = null;
         const text = await response.text();
-
-        console.log("🔴 Backend error raw text:", text);
+        let data = null;
 
         try {
           data = text ? JSON.parse(text) : null;
@@ -216,6 +258,9 @@ const RegisterProject = () => {
         console.log("🔴 Parsed backend error object:", data);
 
         if (data) {
+          // fieldErrors from:
+          // - @Valid bean validation (missing required, format, etc.)
+          // - CustomUniqueConstraintException (duplicates)
           if (data.fieldErrors) {
             setFieldErrors(data.fieldErrors);
           }

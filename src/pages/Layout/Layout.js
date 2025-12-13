@@ -1,8 +1,8 @@
 // Import core React functionality and hooks
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 
 // Import routing utilities
-import { Outlet, Link, useLocation } from "react-router-dom";
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 
 // Import scoped CSS module styles
 import styles from "./Layout.module.scss";
@@ -10,8 +10,12 @@ import styles from "./Layout.module.scss";
 // Import context for accessing the selected project and project list
 import { ProjectContext } from "../../context/ProjectContext";
 
+// Logout icon
+import { FiLogOut } from "react-icons/fi";
+
 const Layout = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const { projects, selectedProjectId, setSelectedProjectId } =
     useContext(ProjectContext);
@@ -20,23 +24,55 @@ const Layout = () => {
     setSelectedProjectId(e.target.value);
   };
 
+  const handleLogout = () => {
+    // Remove token and redirect to login
+    localStorage.removeItem("authToken");
+    navigate("/login");
+  };
+
+  // 🔐 Simple auth guard: if there's no token, go to /login
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      navigate("/login");
+    }
+  }, [navigate]);
+
   const isRegisterPage = location.pathname === "/register-project";
   const isStatisticsPage = location.pathname === "/statistics";
   const hideSelector = isRegisterPage || isStatisticsPage;
 
   return (
     <>
-      {/* Header row: title + logo (logo absolutely positioned) */}
+      {/* Header row: title + logo card + logout icon (top-right) */}
       <div className={styles.headerBar}>
-        <h1>
-          <strong>Relief Projects</strong>
-        </h1>
+        <div className={styles.headerTitleBlock}>
+          <h1 className={styles.headerTitle}>
+            <span className={styles.headerTitleAccent}>Relief</span> Projects
+          </h1>
+          <p className={styles.headerSubtitle}>
+            Manage budgets, transactions & beneficiaries in one place
+          </p>
+        </div>
 
-        <img
-          src="/images/logo/logo.png"
-          alt="Relief Projects logo"
-          className={styles.logo}
-        />
+        <div className={styles.logoWrap}>
+          <img
+            src="/images/logo/logo.png"
+            alt="Relief Projects logo"
+            className={styles.logo}
+          />
+        </div>
+
+        {/* Logout icon in the top-right corner */}
+        <button
+          type="button"
+          className={styles.logoutIcon}
+          onClick={handleLogout}
+          aria-label="Logout"
+          title="Logout"
+        >
+          <FiLogOut />
+        </button>
       </div>
 
       {/* Project selector row (hidden on register + statistics) */}
