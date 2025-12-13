@@ -36,11 +36,11 @@ const initialProjectDetails = {
   projectTypeId: "",
 };
 
-// 🔍 Simple client-side validation for required fields
+// 🔍 Simple client-side validation for required fields (UX only)
+// Backend still validates with @NotNull / @NotBlank
 const validateProjectDetails = (values) => {
   const errors = {};
 
-  // 👉 tweak this list based on what you consider required
   if (!values.projectName?.trim()) {
     errors.projectName = "Project name is required.";
   }
@@ -227,7 +227,7 @@ const RegisterProject = () => {
       setFormError("");
       setFieldErrors({});
 
-      // ✅ FRONTEND REQUIRED-FIELD VALIDATION
+      // ✅ FRONTEND REQUIRED-FIELD VALIDATION (UX)
       const errors = validateProjectDetails(projectDetails);
       if (Object.keys(errors).length > 0) {
         setFieldErrors(errors);
@@ -246,11 +246,8 @@ const RegisterProject = () => {
       });
 
       if (!response.ok) {
-        // Try to parse JSON error from backend (ApiError)
-        let data = null;
         const text = await response.text();
-
-        console.log("🔴 Backend error raw text:", text);
+        let data = null;
 
         try {
           data = text ? JSON.parse(text) : null;
@@ -261,6 +258,9 @@ const RegisterProject = () => {
         console.log("🔴 Parsed backend error object:", data);
 
         if (data) {
+          // fieldErrors from:
+          // - @Valid bean validation (missing required, format, etc.)
+          // - CustomUniqueConstraintException (duplicates)
           if (data.fieldErrors) {
             setFieldErrors(data.fieldErrors);
           }
