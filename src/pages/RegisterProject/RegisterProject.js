@@ -36,6 +36,42 @@ const initialProjectDetails = {
   projectTypeId: "",
 };
 
+// 🔍 Simple client-side validation for required fields
+const validateProjectDetails = (values) => {
+  const errors = {};
+
+  // 👉 tweak this list based on what you consider required
+  if (!values.projectName?.trim()) {
+    errors.projectName = "Project name is required.";
+  }
+
+  if (!values.projectCode?.trim()) {
+    errors.projectCode = "Project code is required.";
+  }
+
+  if (!values.projectStatusId) {
+    errors.projectStatusId = "Project status is required.";
+  }
+
+  if (!values.projectTypeId) {
+    errors.projectTypeId = "Project type is required.";
+  }
+
+  if (!values.projectDate) {
+    errors.projectDate = "Project date is required.";
+  }
+
+  if (!values.projectStart) {
+    errors.projectStart = "Project start date is required.";
+  }
+
+  if (!values.projectEnd) {
+    errors.projectEnd = "Project end date is required.";
+  }
+
+  return errors;
+};
+
 // The main functional component to register a new project
 const RegisterProject = () => {
   const [formError, setFormError] = useState(""); // general error message
@@ -190,6 +226,15 @@ const RegisterProject = () => {
       // Clear previous errors
       setFormError("");
       setFieldErrors({});
+
+      // ✅ FRONTEND REQUIRED-FIELD VALIDATION
+      const errors = validateProjectDetails(projectDetails);
+      if (Object.keys(errors).length > 0) {
+        setFieldErrors(errors);
+        setFormError("Please fix the highlighted fields.");
+        // ⛔ Don't call backend if basic validation fails
+        return;
+      }
 
       const response = await fetch(`${BASE_URL}/api/projects`, {
         method: "POST",
