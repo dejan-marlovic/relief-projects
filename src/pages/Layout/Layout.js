@@ -1,17 +1,8 @@
-// Import core React functionality and hooks
 import React, { useContext, useEffect } from "react";
-
-// Import routing utilities
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-
-// Import scoped CSS module styles
 import styles from "./Layout.module.scss";
-
-// Import context for accessing the selected project and project list
 import { ProjectContext } from "../../context/ProjectContext";
-
-// Logout icon
-import { FiLogOut } from "react-icons/fi";
+import { FiLogOut, FiLayers } from "react-icons/fi";
 
 const Layout = () => {
   const location = useLocation();
@@ -25,17 +16,13 @@ const Layout = () => {
   };
 
   const handleLogout = () => {
-    // Remove token and redirect to login
     localStorage.removeItem("authToken");
     navigate("/login");
   };
 
-  // 🔐 Simple auth guard: if there's no token, go to /login
   useEffect(() => {
     const token = localStorage.getItem("authToken");
-    if (!token) {
-      navigate("/login");
-    }
+    if (!token) navigate("/login");
   }, [navigate]);
 
   const isRegisterPage = location.pathname === "/register-project";
@@ -43,67 +30,63 @@ const Layout = () => {
   const hideSelector = isRegisterPage || isStatisticsPage;
 
   return (
-    <>
-      {/* Header row: title + logo card + logout icon (top-right) */}
-      <div className={styles.headerBar}>
+    <div className={styles.layoutShell}>
+      <header className={styles.headerBar}>
         <div className={styles.headerTitleBlock}>
-          <h1 className={styles.headerTitle}>
-            <span className={styles.headerTitleAccent}>Relief</span> Projects
-          </h1>
+          <div className={styles.brandRow}>
+            <FiLayers className={styles.brandIcon} />
+            <h1 className={styles.headerTitle}>
+              <span className={styles.headerTitleAccent}>Relief</span> Projects
+            </h1>
+          </div>
           <p className={styles.headerSubtitle}>
             Manage budgets, transactions & beneficiaries in one place
           </p>
         </div>
 
-        <div className={styles.logoWrap}>
-          <img
-            src="/images/logo/logo.png"
-            alt="Relief Projects logo"
-            className={styles.logo}
-          />
-        </div>
+        <div className={styles.headerRight}>
+          {!hideSelector && (
+            <div className={styles.selectorInline}>
+              <span className={styles.selectorLabel}>Project</span>
+              <select
+                value={selectedProjectId}
+                onChange={handleSelectChange}
+                className={styles.selectInput}
+                disabled={!projects || projects.length === 0}
+                aria-label="Select a project"
+              >
+                {(!projects || projects.length === 0) && (
+                  <option value="">No projects available</option>
+                )}
+                {projects?.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.projectName}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
-        {/* Logout icon in the top-right corner */}
-        <button
-          type="button"
-          className={styles.logoutIcon}
-          onClick={handleLogout}
-          aria-label="Logout"
-          title="Logout"
-        >
-          <FiLogOut />
-        </button>
-      </div>
+          <div className={styles.logoWrap}>
+            <img
+              src="/images/logo/logo.png"
+              alt="Relief Projects logo"
+              className={styles.logo}
+            />
+          </div>
 
-      {/* Project selector row (hidden on register + statistics) */}
-      <div className={styles.selectorBar}>
-        <div
-          className={`${styles.selectorContainer} ${
-            hideSelector ? styles.hiddenSelector : ""
-          }`}
-        >
-          <strong>Select a Project</strong>
-          <br />
-          <select
-            value={selectedProjectId}
-            onChange={handleSelectChange}
-            className={styles.selectInput}
-            disabled={!projects || projects.length === 0}
-            aria-label="Select a project"
+          <button
+            type="button"
+            className={styles.logoutIcon}
+            onClick={handleLogout}
+            aria-label="Logout"
+            title="Logout"
           >
-            {(!projects || projects.length === 0) && (
-              <option value="">No projects available</option>
-            )}
-            {projects?.map((project) => (
-              <option key={project.id} value={project.id}>
-                {project.projectName}
-              </option>
-            ))}
-          </select>
+            <FiLogOut />
+          </button>
         </div>
-      </div>
+      </header>
 
-      {/* Navigation */}
       <nav className={styles.nav}>
         <ul>
           <li>
@@ -203,9 +186,10 @@ const Layout = () => {
         </ul>
       </nav>
 
-      {/* Render child route here */}
-      <Outlet />
-    </>
+      <main className={styles.content}>
+        <Outlet />
+      </main>
+    </div>
   );
 };
 

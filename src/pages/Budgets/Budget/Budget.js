@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import styles from "./Budget.module.scss";
 import CostDetails from "./CostDetails/CostDetails";
-import CreateCostDetail from "./CreateCostDetail/CreateCostDetail.js";
+
+// ✅ Icons (same style as Project)
+import { FiSave, FiTrash2, FiAlertCircle } from "react-icons/fi";
 
 const BASE_URL = "http://localhost:8080";
 
@@ -13,6 +15,8 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
   const [currencies, setCurrencies] = useState([]);
   const [exchangeRates, setExchangeRates] = useState([]);
   const [refreshCostDetailsTrigger, setRefreshCostDetailsTrigger] = useState(0);
+
+  const [loading, setLoading] = useState(false);
 
   // 🔴 form-level + field-level errors
   const [formError, setFormError] = useState("");
@@ -26,12 +30,6 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
     if (!id || !currencies || currencies.length === 0) return "";
     const numericId = typeof id === "string" ? Number(id) : id;
     return currencies.find((c) => c.id === numericId)?.name || "";
-  };
-
-  const getCurrencyById = (id) => {
-    if (!id || !currencies || currencies.length === 0) return null;
-    const numericId = typeof id === "string" ? Number(id) : id;
-    return currencies.find((c) => c.id === numericId) || null;
   };
 
   const findCurrencyIdByName = (name) => {
@@ -92,10 +90,14 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
           fetchCurrencies(token),
           fetchExchangeRates(token),
         ]);
-        setCurrencies(currenciesData);
-        setExchangeRates(exchangeRatesData);
+        setCurrencies(Array.isArray(currenciesData) ? currenciesData : []);
+        setExchangeRates(
+          Array.isArray(exchangeRatesData) ? exchangeRatesData : []
+        );
       } catch (error) {
         console.error("Failed to fetch currency or exchange rate data", error);
+        setCurrencies([]);
+        setExchangeRates([]);
       }
     };
 
@@ -141,12 +143,12 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
   // 💾 Save/Update Budget
   const handleSave = async () => {
     try {
+      setLoading(true);
       const token = localStorage.getItem("authToken");
 
-      // ❗ 1) FRONTEND VALIDATION BEFORE SENDING ANYTHING
+      // ❗ Frontend validation
       const newFieldErrors = {};
 
-      // total amount
       if (
         budget.totalAmount === "" ||
         budget.totalAmount == null ||
@@ -155,12 +157,10 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
         newFieldErrors.totalAmount = "Total amount must be greater than zero.";
       }
 
-      // base required fields
       if (!budget.localCurrencyId) {
         newFieldErrors.localCurrencyId = "Local currency is required.";
       }
 
-      // valid ID helpers
       const validLocalToGbpIds = new Set(
         localToGbpRates.map((r) => Number(r.id))
       );
@@ -189,19 +189,16 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
           ? null
           : Number(budget.reportingExchangeRateEurId);
 
-      // Local → GBP
       if (!localToGbpIdNum || !validLocalToGbpIds.has(localToGbpIdNum)) {
         newFieldErrors.localExchangeRateToGbpId =
           "Local → GBP exchange rate is required for the selected local currency.";
       }
 
-      // Local → SEK
       if (!sekRateIdNum || !validLocalToSekIds.has(sekRateIdNum)) {
         newFieldErrors.reportingExchangeRateSekId =
           "SEK exchange rate is required for the selected local currency.";
       }
 
-      // Local → EUR
       if (!eurRateIdNum || !validLocalToEurIds.has(eurRateIdNum)) {
         newFieldErrors.reportingExchangeRateEurId =
           "EUR exchange rate is required for the selected local currency.";
@@ -210,18 +207,15 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
       if (Object.keys(newFieldErrors).length > 0) {
         setFieldErrors(newFieldErrors);
         setFormError("Please correct the highlighted fields and try again.");
-        return; // ⛔ don't call backend
+        return;
       }
 
-      // 2) clear previous backend errors before new request
       setFormError("");
       setFieldErrors({});
 
-      // 3) Build a clean payload explicitly – field names must match BudgetDTO
       const payload = {
         id: budget.id,
         projectId: budget.projectId,
-
         budgetDescription: budget.budgetDescription ?? "",
         budgetPreparationDate: budget.budgetPreparationDate ?? null,
         totalAmount:
@@ -229,7 +223,6 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
             ? null
             : Number(budget.totalAmount),
 
-        // currencies
         localCurrencyId:
           budget.localCurrencyId === "" || budget.localCurrencyId == null
             ? null
@@ -247,13 +240,10 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
             ? null
             : Number(budget.reportingCurrencyEurId),
 
-        // exchange rates (FK → exchange_rates)
         localExchangeRateToGbpId: localToGbpIdNum,
         reportingExchangeRateSekId: sekRateIdNum,
         reportingExchangeRateEurId: eurRateIdNum,
       };
-
-      console.log("🔵 Budget PUT payload:", payload);
 
       const response = await fetch(`${BASE_URL}/api/budgets/${budget.id}`, {
         method: "PUT",
@@ -265,11 +255,8 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
       });
 
       if (!response.ok) {
-        // 🔍 Try to read nice ApiError from backend
         let data = null;
         const text = await response.text().catch(() => "");
-
-        console.log("🔴 Budget update error raw:", text);
 
         try {
           data = text ? JSON.parse(text) : null;
@@ -278,36 +265,32 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
         }
 
         if (data) {
-          if (data.fieldErrors) {
-            setFieldErrors(data.fieldErrors);
-          }
+          if (data.fieldErrors) setFieldErrors(data.fieldErrors);
           setFormError(
             data.message || "There was a problem updating the budget."
           );
         } else {
           setFormError("There was a problem updating the budget.");
         }
-
-        return; // stop success flow
+        return;
       }
 
       const updated = await response.json();
-      console.log("✅ Updated budget from server:", updated);
-      alert("Budget updated successfully!");
-
       setBudget(updated);
       onUpdate?.(updated);
 
       const freshRates = await fetchExchangeRates(token);
-      setExchangeRates(freshRates);
+      setExchangeRates(Array.isArray(freshRates) ? freshRates : []);
       triggerRefreshCostDetails();
 
-      // clear errors after success
       setFormError("");
       setFieldErrors({});
+      alert("Budget updated successfully!");
     } catch (error) {
       console.error("Error updating budget:", error);
       setFormError("Unexpected error while saving budget.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -316,13 +299,12 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
     if (!window.confirm("Are you sure you want to delete this budget?")) return;
 
     try {
+      setLoading(true);
       const token = localStorage.getItem("authToken");
 
       const response = await fetch(`${BASE_URL}/api/budgets/${budget.id}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!response.ok) throw new Error("Failed to delete budget");
@@ -333,13 +315,14 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
     } catch (error) {
       console.error("Error deleting budget:", error);
       alert("Error deleting budget.");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // Cast obvious numeric fields to numbers or ""
     const numericFields = [
       "totalAmount",
       "localCurrencyId",
@@ -356,7 +339,6 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
         : Number(value)
       : value;
 
-    // 🔁 When local currency changes, force user to pick new rates by clearing them
     if (name === "localCurrencyId") {
       setBudget((prev) => ({
         ...prev,
@@ -366,216 +348,292 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
         reportingExchangeRateEurId: "",
       }));
 
-      // also clear related field errors so user starts fresh
       setFieldErrors((prev) => ({
         ...prev,
         localExchangeRateToGbpId: undefined,
         reportingExchangeRateSekId: undefined,
         reportingExchangeRateEurId: undefined,
       }));
-
       return;
     }
 
-    setBudget((prev) => ({
-      ...prev,
-      [name]: castValue,
-    }));
+    setBudget((prev) => ({ ...prev, [name]: castValue }));
   };
+
+  const hasBudget = Boolean(budget?.id);
 
   return (
     <div className={styles.budgetContainer}>
-      <div className={styles.formContainer}>
-        <h3>Budget Details</h3>
+      {!hasBudget && (
+        <div className={styles.emptyState}>
+          <FiAlertCircle />
+          <div>
+            <h3 style={{ margin: 0 }}>No budget selected</h3>
+            <p style={{ margin: 0, color: "#666" }}>
+              Create a budget to manage currencies and exchange rates.
+            </p>
+          </div>
+        </div>
+      )}
 
-        {/* 🔴 Top error banner */}
-        {formError && <div className={styles.errorBanner}>{formError}</div>}
-
-        <form className={styles.formTwoColumn}>
-          <div className={styles.formColumnLeft}>
-            <div>
-              <label>Description:</label>
-              <textarea
-                name="budgetDescription"
-                className={styles.textareaInput}
-                value={budget.budgetDescription || ""}
-                onChange={handleChange}
-              />
+      {hasBudget && (
+        <div className={styles.formContainer}>
+          <div className={styles.pageHeader}>
+            <div className={styles.pageHeaderText}>
+              <h3 className={styles.pageTitle}>Budget Details</h3>
+              <p className={styles.pageSubtitle}>
+                Update description, totals, currencies, and exchange rates.
+              </p>
             </div>
 
-            <div>
-              <label>Preparation Date:</label>
-              <input
-                type="datetime-local"
-                name="budgetPreparationDate"
-                className={styles.textInput}
-                value={formatDate(budget.budgetPreparationDate)}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div>
-              <label>Total Amount:</label>
-              <input
-                type="number"
-                name="totalAmount"
-                className={inputClass("totalAmount")}
-                value={budget.totalAmount || ""}
-                onChange={handleChange}
-              />
-              {getFieldError("totalAmount") && (
-                <div className={styles.fieldError}>
-                  {getFieldError("totalAmount")}
-                </div>
-              )}
-            </div>
-
-            <div className={styles.saveButtonContainer}>
+            <div className={styles.headerActions}>
               <button
                 type="button"
                 onClick={handleSave}
                 className={styles.saveButton}
+                disabled={loading}
               >
+                <FiSave />
                 Save
               </button>
               <button
                 type="button"
                 onClick={handleDelete}
                 className={styles.deleteButton}
+                disabled={loading}
               >
-                Delete this budget
+                <FiTrash2 />
+                Delete
               </button>
             </div>
           </div>
 
-          <div className={styles.formColumnRight}>
-            {/* Local currency (e.g. TRY) and Local -> GBP rate */}
-            <div className={styles.formRowPair}>
-              <div className={styles.formItem}>
-                <label>Local Currency:</label>
-                <select
-                  name="localCurrencyId"
-                  className={inputClass("localCurrencyId")}
-                  value={budget.localCurrencyId || ""}
-                  onChange={handleChange}
-                >
-                  <option value="">Select currency</option>
-                  {currencies.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-                {getFieldError("localCurrencyId") && (
-                  <div className={styles.fieldError}>
-                    {getFieldError("localCurrencyId")}
-                  </div>
-                )}
-              </div>
-
-              <div className={styles.formItem}>
-                <label>Local → GBP Rate:</label>
-                <select
-                  name="localExchangeRateToGbpId"
-                  className={inputClass("localExchangeRateToGbpId")}
-                  value={budget.localExchangeRateToGbpId || ""}
-                  onChange={handleChange}
-                >
-                  <option value="">Select rate</option>
-                  {localToGbpRates.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {formatRateLabel(r)}
-                    </option>
-                  ))}
-                </select>
-                {getFieldError("localExchangeRateToGbpId") && (
-                  <div className={styles.fieldError}>
-                    {getFieldError("localExchangeRateToGbpId")}
-                  </div>
-                )}
-              </div>
+          {formError && (
+            <div className={styles.errorBanner}>
+              <FiAlertCircle />
+              <span>{formError}</span>
             </div>
+          )}
 
-            {/* Reporting SEK (fixed, read-only) + rate */}
-            <div className={styles.formRowPair}>
-              <div className={styles.formItem}>
-                <label>Reporting currency (SEK):</label>
-                <input
-                  type="text"
-                  className={styles.textInput}
-                  value={sekName}
-                  readOnly
-                />
-              </div>
-
-              <div className={styles.formItem}>
-                <label>SEK Exchange Rate (Local → SEK):</label>
-                <select
-                  name="reportingExchangeRateSekId"
-                  className={inputClass("reportingExchangeRateSekId")}
-                  value={budget.reportingExchangeRateSekId || ""}
-                  onChange={handleChange}
-                >
-                  <option value="">Select rate</option>
-                  {localToSekRates.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {formatRateLabel(r)}
-                    </option>
-                  ))}
-                </select>
-                {getFieldError("reportingExchangeRateSekId") && (
-                  <div className={styles.fieldError}>
-                    {getFieldError("reportingExchangeRateSekId")}
-                  </div>
-                )}
-              </div>
+          {loading ? (
+            <div className={styles.skeletonWrap}>
+              <div className={styles.skeletonLine} />
+              <div className={styles.skeletonLine} />
+              <div className={styles.skeletonLineShort} />
             </div>
-
-            {/* Reporting EUR (fixed, read-only) + rate */}
-            <div className={styles.formRowPair}>
-              <div className={styles.formItem}>
-                <label>Reporting currency (EUR):</label>
-                <input
-                  type="text"
-                  className={styles.textInput}
-                  value={eurName}
-                  readOnly
-                />
-              </div>
-
-              <div className={styles.formItem}>
-                <label>EUR Exchange Rate (Local → EUR):</label>
-                <select
-                  name="reportingExchangeRateEurId"
-                  className={inputClass("reportingExchangeRateEurId")}
-                  value={budget.reportingExchangeRateEurId || ""}
-                  onChange={handleChange}
-                >
-                  <option value="">Select rate</option>
-                  {localToEurRates.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {formatRateLabel(r)}
-                    </option>
-                  ))}
-                </select>
-                {getFieldError("reportingExchangeRateEurId") && (
-                  <div className={styles.fieldError}>
-                    {getFieldError("reportingExchangeRateEurId")}
+          ) : (
+            <>
+              <div className={styles.grid}>
+                {/* Left card */}
+                <div className={styles.card}>
+                  <div className={styles.cardHeader}>
+                    <div className={styles.cardTitle}>Summary</div>
+                    <div className={styles.cardMeta}>Description & totals</div>
                   </div>
-                )}
+
+                  <div className={styles.formGroup}>
+                    <label>Description:</label>
+                    <textarea
+                      name="budgetDescription"
+                      className={styles.textareaInput}
+                      value={budget.budgetDescription || ""}
+                      onChange={handleChange}
+                      placeholder="Write a short note about this budget..."
+                    />
+                  </div>
+
+                  <div className={styles.row2}>
+                    <div className={styles.formGroup}>
+                      <label>Preparation Date:</label>
+                      <input
+                        type="datetime-local"
+                        name="budgetPreparationDate"
+                        className={styles.textInput}
+                        value={formatDate(budget.budgetPreparationDate)}
+                        onChange={handleChange}
+                      />
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label>Total Amount:</label>
+                      <input
+                        type="number"
+                        name="totalAmount"
+                        className={inputClass("totalAmount")}
+                        value={budget.totalAmount || ""}
+                        onChange={handleChange}
+                      />
+                      {getFieldError("totalAmount") && (
+                        <div className={styles.fieldError}>
+                          {getFieldError("totalAmount")}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right card */}
+                <div className={styles.card}>
+                  <div className={styles.cardHeader}>
+                    <div className={styles.cardTitle}>Currencies & rates</div>
+                    <div className={styles.cardMeta}>Local + reporting</div>
+                  </div>
+
+                  <div className={styles.row2}>
+                    <div className={styles.formGroup}>
+                      <label>Local Currency:</label>
+                      <select
+                        name="localCurrencyId"
+                        className={inputClass("localCurrencyId")}
+                        value={budget.localCurrencyId || ""}
+                        onChange={handleChange}
+                      >
+                        <option value="">Select currency</option>
+                        {currencies.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name}
+                          </option>
+                        ))}
+                      </select>
+                      {getFieldError("localCurrencyId") && (
+                        <div className={styles.fieldError}>
+                          {getFieldError("localCurrencyId")}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label>Local → GBP Rate:</label>
+                      <select
+                        name="localExchangeRateToGbpId"
+                        className={inputClass("localExchangeRateToGbpId")}
+                        value={budget.localExchangeRateToGbpId || ""}
+                        onChange={handleChange}
+                      >
+                        <option value="">Select rate</option>
+                        {localToGbpRates.map((r) => (
+                          <option key={r.id} value={r.id}>
+                            {formatRateLabel(r)}
+                          </option>
+                        ))}
+                      </select>
+                      {getFieldError("localExchangeRateToGbpId") && (
+                        <div className={styles.fieldError}>
+                          {getFieldError("localExchangeRateToGbpId")}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className={styles.row2}>
+                    <div className={styles.formGroup}>
+                      <label>Reporting currency (SEK):</label>
+                      <input
+                        type="text"
+                        className={styles.textInput}
+                        value={sekName}
+                        readOnly
+                      />
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label>SEK Exchange Rate (Local → SEK):</label>
+                      <select
+                        name="reportingExchangeRateSekId"
+                        className={inputClass("reportingExchangeRateSekId")}
+                        value={budget.reportingExchangeRateSekId || ""}
+                        onChange={handleChange}
+                      >
+                        <option value="">Select rate</option>
+                        {localToSekRates.map((r) => (
+                          <option key={r.id} value={r.id}>
+                            {formatRateLabel(r)}
+                          </option>
+                        ))}
+                      </select>
+                      {getFieldError("reportingExchangeRateSekId") && (
+                        <div className={styles.fieldError}>
+                          {getFieldError("reportingExchangeRateSekId")}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className={styles.row2}>
+                    <div className={styles.formGroup}>
+                      <label>Reporting currency (EUR):</label>
+                      <input
+                        type="text"
+                        className={styles.textInput}
+                        value={eurName}
+                        readOnly
+                      />
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label>EUR Exchange Rate (Local → EUR):</label>
+                      <select
+                        name="reportingExchangeRateEurId"
+                        className={inputClass("reportingExchangeRateEurId")}
+                        value={budget.reportingExchangeRateEurId || ""}
+                        onChange={handleChange}
+                      >
+                        <option value="">Select rate</option>
+                        {localToEurRates.map((r) => (
+                          <option key={r.id} value={r.id}>
+                            {formatRateLabel(r)}
+                          </option>
+                        ))}
+                      </select>
+                      {getFieldError("reportingExchangeRateEurId") && (
+                        <div className={styles.fieldError}>
+                          {getFieldError("reportingExchangeRateEurId")}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </form>
-      </div>
+
+              <div className={styles.bottomActions}>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  className={styles.saveButton}
+                  disabled={loading}
+                >
+                  <FiSave />
+                  Save changes
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className={styles.deleteButton}
+                  disabled={loading}
+                >
+                  <FiTrash2 />
+                  Delete budget
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {budget?.id && (
-        <CostDetails
-          budgetId={budget.id}
-          refreshTrigger={refreshCostDetailsTrigger}
-          budget={budget}
-          exchangeRates={exchangeRates}
-        />
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <div className={styles.cardTitle}>Cost details</div>
+            <div className={styles.cardMeta}>Breakdown</div>
+          </div>
+
+          <CostDetails
+            budgetId={budget.id}
+            refreshTrigger={refreshCostDetailsTrigger}
+            budget={budget}
+            exchangeRates={exchangeRates}
+          />
+        </div>
       )}
     </div>
   );

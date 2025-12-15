@@ -3,6 +3,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef, // ✅ NEW
   useState,
 } from "react";
 import { ProjectContext } from "../../../context/ProjectContext";
@@ -52,6 +53,9 @@ export default function Memos() {
   const [error, setError] = useState("");
   const [drafts, setDrafts] = useState({}); // { [id|'new']: { text, positionId, employeeId, memoDate } }
   const [editingId, setEditingId] = useState(null);
+
+  // ✅ NEW: ref for new memo textarea
+  const newMemoTextareaRef = useRef(null);
 
   // dropdown data
   const [employees, setEmployees] = useState([]);
@@ -137,6 +141,26 @@ export default function Memos() {
     fetchDropdowns();
   }, [fetchMemos, fetchDropdowns]);
 
+  // ✅ NEW: focus the new memo textarea when creating
+  useEffect(() => {
+    if (editingId === "new") {
+      // wait until the textarea renders
+      requestAnimationFrame(() => {
+        const el = newMemoTextareaRef.current;
+        if (el) {
+          el.focus();
+          // Optional: ensure cursor at end
+          const len = el.value?.length ?? 0;
+          try {
+            el.setSelectionRange(len, len);
+          } catch {
+            // ignore (some browsers may throw)
+          }
+        }
+      });
+    }
+  }, [editingId]);
+
   // UI handlers
   const startCreate = () => {
     if (!selectedProjectId) return;
@@ -205,7 +229,7 @@ export default function Memos() {
     const payload = {
       message,
       positionId: firstDefined(draft.positionId, found?.positionId, null),
-      projectId: projectIdNum, // from ProjectContext
+      projectId: projectIdNum,
       employeeId: firstDefined(draft.employeeId, found?.employeeId, null),
       memoDate: firstDefined(draft.memoDate, found?.memoDate, todayStr()),
     };
@@ -393,6 +417,7 @@ export default function Memos() {
       {editingId === "new" && (
         <div className={styles.memoCard}>
           <textarea
+            ref={newMemoTextareaRef} // ✅ NEW: focus target
             className={styles.textarea}
             value={drafts["new"]?.text ?? ""}
             onChange={(e) => handleChange(e.target.value)}
