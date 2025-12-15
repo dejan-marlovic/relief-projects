@@ -1,58 +1,171 @@
-/*Layout.module.scss*/
-
-// Design tokens
 $primary-color: #4a90e2;
+$secondary-color: #e74c3c;
+
 $nav-bg-color: #ffffff;
 $nav-text-color: #333;
 $tab-bg: #f5f7fa;
 $tab-active-bg: $nav-bg-color;
 $tab-active-text: $primary-color;
-$border-radius: 8px 8px 0 0;
 $nav-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 $tab-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 $tab-active-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 
-.selectorContainer {
-  flex: 1;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+.layoutShell {
+  padding: 1rem;
 }
 
-.selectInput {
-  padding: 0.75rem;
-  width: 30%;
-  margin-top: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 1rem;
+.content {
+  padding: 0.25rem;
 }
 
-h1 {
-  color: #4a90e2;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  margin: 0; // keeps alignment tight with logo
-}
-
-/* Header row for title + logo (logo is absolutely positioned) */
+/* === Header styling === */
 .headerBar {
-  position: relative;
   display: flex;
-  align-items: flex-start; // align tops of text and logo
-  justify-content: flex-start;
+  align-items: center;
+  justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 0.75rem;
 
-  // reserve space so text doesn't flow under the logo
-  padding-right: 220px; // tweak if you change logo width
+  padding: 1.2rem 1.3rem;
+  margin-bottom: 1.1rem;
+
+  background: linear-gradient(135deg, #ffffff 0%, #f5f7fa 100%);
+  border-radius: 14px;
+  border: 1px solid lighten($primary-color, 40%);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.06);
 }
 
-nav {
+.headerTitleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  min-width: 260px;
+}
+
+.brandRow {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.brandIcon {
+  font-size: 1.35rem;
+  color: $primary-color;
+}
+
+.headerTitle {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: $primary-color;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3rem;
+}
+
+.headerTitleAccent {
+  font-weight: 800;
+}
+
+.headerSubtitle {
+  margin: 0;
+  font-size: 1rem;
+  color: #6b7280;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Selector inline in header */
+.selectorInline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 260px;
+}
+
+.selectorLabel {
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+/* Keep your existing input look, just nicer sizing */
+.selectInput {
+  padding: 0.7rem 0.75rem;
+  width: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  background: #fff;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: rgba(74, 144, 226, 0.55);
+    box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.12);
+  }
+}
+
+/* Logo card on the right */
+.logoWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1rem;
+  background-color: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.06);
+}
+
+.logo {
+  height: 86px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+}
+
+/* Logout icon */
+.logoutIcon {
+  background: #fff;
+  border: 1px solid rgba(231, 76, 60, 0.25);
+  color: $secondary-color;
+  font-size: 1.35rem;
+  cursor: pointer;
+  border-radius: 12px;
+  width: 44px;
+  height: 44px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: transform 0.12s ease, box-shadow 0.2s ease, color 0.2s ease;
+
+  &:hover {
+    color: darken($primary-color, 10%);
+    box-shadow: 0 10px 18px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+/* === Navigation / tabs === */
+.nav {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background-color: $nav-bg-color;
-  border-radius: $border-radius;
-  margin: 1.5rem 0;
-  max-width: none;
+  border-radius: 12px;
+  margin: 1.1rem 0 1.25rem 0;
   width: fit-content;
-  margin-left: 0;
+  box-shadow: $nav-shadow;
 
   ul {
     list-style: none;
@@ -71,14 +184,14 @@ nav {
       text-decoration: none;
       color: $nav-text-color;
       background-color: $tab-bg;
-      padding: 1rem 2rem;
-      font-size: 1.1rem;
-      font-weight: 500;
+      padding: 0.85rem 1.5rem;
+      font-size: 1.02rem;
+      font-weight: 600;
       border-top-left-radius: 12px;
       border-top-right-radius: 12px;
       border: 1px solid lighten($primary-color, 40%);
       border-bottom: none;
-      transition: all 0.3s ease;
+      transition: all 0.25s ease;
       display: inline-block;
       position: relative;
       top: 0;
@@ -90,43 +203,36 @@ nav {
         color: $nav-text-color;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
       }
-
-      &.active {
-        background-color: $tab-active-bg;
-        color: $tab-active-text;
-        font-weight: 600;
-        top: 2px;
-        border-color: $primary-color $primary-color transparent;
-        z-index: 2;
-        box-shadow: $tab-active-shadow;
-      }
     }
   }
 }
 
-.hiddenSelector {
-  visibility: hidden;
+/* active tab class applied from React */
+.active {
+  background-color: $tab-active-bg !important;
+  color: $tab-active-text !important;
+  font-weight: 800 !important;
+  top: 2px;
+  border-color: $primary-color $primary-color transparent !important;
+  z-index: 2;
+  box-shadow: $tab-active-shadow;
 }
 
-/* Selector row (just the selector) */
-.selectorBar {
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
+/* Responsive */
+@media (max-width: 1100px) {
+  .headerBar {
+    flex-direction: column;
+    align-items: stretch;
+  }
 
-/* Logo styling */
-.logo {
-  position: absolute;
-  top: 10px;
-  right: 0;
+  .headerRight {
+    width: 100%;
+    justify-content: space-between;
+  }
 
-  height: 150px; // adjust to taste
-  width: auto;
-  object-fit: contain;
-
-  background-color: #ffffff;
-  border-radius: 10px;
+  .selectorInline {
+    min-width: 0;
+    flex: 1;
+    margin-right: 0.75rem;
+  }
 }

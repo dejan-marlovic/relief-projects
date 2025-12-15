@@ -1,37 +1,73 @@
-// Import necessary React hooks and modules
-import React, { useEffect, useState, useContext } from "react";
+// Project.jsx
+import React, { useEffect, useState, useContext, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 
-// Import scoped CSS module for styling
 import styles from "./Project.module.scss";
 import Memos from "../Project/Memos/Memos.jsx";
 
-// Import ProjectContext to access the currently selected project ID
 import { ProjectContext } from "../../context/ProjectContext";
 
-// ✅ Icons (same library as Memos)
 import {
   FiTrash2,
   FiChevronLeft,
   FiChevronRight,
   FiX,
   FiSave,
-  FiPlus, // ✅ NEW
+  FiPlus,
+  FiUploadCloud,
+  FiImage,
+  FiAlertCircle,
 } from "react-icons/fi";
 
-// ✅ Base URL (backend)
 const BASE_URL = "http://localhost:8080";
 const coverImagePath = `${BASE_URL}/images/projects/`;
 
-// Define the Project component
 const Project = () => {
-  // Extract selected project ID from global context
+  const navigate = useNavigate();
+
+  // 🔐 Helper: fetch with auth + automatic 401 handling
+  const authFetch = async (url, options = {}) => {
+    const token = localStorage.getItem("authToken");
+
+    const mergedOptions = {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    };
+
+    const res = await fetch(url, mergedOptions);
+
+    if (res.status === 401) {
+      localStorage.removeItem("authToken");
+      navigate("/login");
+      throw new Error("Unauthorized - redirecting to login");
+    }
+
+    return res;
+  };
+
+  // ✅ Safe JSON reader: handles 204 / empty body without crashing
+  const safeReadJson = async (res) => {
+    if (!res) return null;
+    if (res.status === 204) return null;
+
+    const text = await res.text().catch(() => "");
+    if (!text || !text.trim()) return null;
+
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      console.warn("safeReadJson: failed to parse JSON:", e);
+      return null;
+    }
+  };
+
   const { selectedProjectId, setSelectedProjectId, projects, setProjects } =
     useContext(ProjectContext);
 
-  // Local state for full project details
   const [projectDetails, setProjectDetails] = useState(null);
-
-  // State to track whether the data is being loaded
   const [loading, setLoading] = useState(false);
 
   const [projectStatuses, setProjectStatuses] = useState([]);
@@ -40,11 +76,11 @@ const Project = () => {
   const [availableParentProjects, setAvailableParentProjects] = useState([]);
 
   // ✅ Sector-related state
-  const [sectorOptions, setSectorOptions] = useState([]); // [{id, sectorCode, sectorDescription}]
-  const [selectedSectorIds, setSelectedSectorIds] = useState([]); // string[]
+  const [sectorOptions, setSectorOptions] = useState([]);
+  const [selectedSectorIds, setSelectedSectorIds] = useState([]);
   const [currentProjectSectorLinks, setCurrentProjectSectorLinks] = useState(
     []
-  ); // [{id, projectId, sectorId}]
+  );
 
   // ✅ Cover image upload state
   const [uploadingCover, setUploadingCover] = useState(false);
@@ -53,17 +89,24 @@ const Project = () => {
   // ✅ Slideshow state (for multiple images)
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // ✅ NEW: Related organizations state
-  const [allOrganizationOptions, setAllOrganizationOptions] = useState([]); // all active orgs: /api/organizations/active/options
-  const [projectOrgOptions, setProjectOrgOptions] = useState([]); // project-aware options: /by-project/{projectId}/options
-  const [orgStatusOptions, setOrgStatusOptions] = useState([]); // /api/organization-statuses/active
-  const [projectOrganizations, setProjectOrganizations] = useState([]); // project_organization rows for this project
+  // ✅ Related organizations state
+  const [allOrganizationOptions, setAllOrganizationOptions] = useState([]);
+  const [projectOrgOptions, setProjectOrgOptions] = useState([]);
+  const [orgStatusOptions, setOrgStatusOptions] = useState([]);
+  const [projectOrganizations, setProjectOrganizations] = useState([]);
   const [selectedOrgId, setSelectedOrgId] = useState("");
   const [selectedOrgStatusId, setSelectedOrgStatusId] = useState("");
 
-  // ✅ NEW: form-level + field-level error state (like RegisterProject)
+  // ✅ Participants (employee_project) state
+  const [employeeOptions, setEmployeeOptions] = useState([]);
+  const [positionOptions, setPositionOptions] = useState([]); // for displaying labels only
+  const [projectParticipants, setProjectParticipants] = useState([]);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
+  const [participantError, setParticipantError] = useState("");
+
+  // ✅ form-level + field-level error state
   const [formError, setFormError] = useState("");
-  const [fieldErrors, setFieldErrors] = useState({}); // { fieldName: "Message" }
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const getFieldError = (fieldName) => fieldErrors?.[fieldName];
   const hasError = (fieldName) => Boolean(fieldErrors?.[fieldName]);
@@ -72,12 +115,14 @@ const Project = () => {
     `${styles.textInput} ${hasError(fieldName) ? styles.inputError : ""}`;
 
   // 🔍 Derive image list from comma-separated string
-  const imageNames = projectDetails?.projectCoverImage
-    ? projectDetails.projectCoverImage
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean)
-    : [];
+  const imageNames = useMemo(() => {
+    return projectDetails?.projectCoverImage
+      ? projectDetails.projectCoverImage
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
+  }, [projectDetails?.projectCoverImage]);
 
   // Reset slideshow index when image list changes
   useEffect(() => {
@@ -93,19 +138,13 @@ const Project = () => {
         setLoading(true);
         setFormError("");
         setFieldErrors({});
-        const token = localStorage.getItem("authToken");
-        const response = await fetch(
+
+        const response = await authFetch(
           `${BASE_URL}/api/projects/${selectedProjectId}`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          { headers: { "Content-Type": "application/json" } }
         );
 
         if (!response.ok) throw new Error("Failed to fetch project details");
-
         const projectDetailsData = await response.json();
         setProjectDetails(projectDetailsData);
       } catch (error) {
@@ -117,18 +156,15 @@ const Project = () => {
     };
 
     fetchProjectDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProjectId]);
 
-  // Fetch sectors list (for checkbox options)
+  // Fetch sectors list
   useEffect(() => {
     const fetchSectors = async () => {
       try {
-        const token = localStorage.getItem("authToken");
-        const res = await fetch(`${BASE_URL}/api/sectors/active`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+        const res = await authFetch(`${BASE_URL}/api/sectors/active`, {
+          headers: { "Content-Type": "application/json" },
         });
         if (!res.ok) throw new Error("Failed to fetch sectors");
         const data = await res.json();
@@ -139,9 +175,10 @@ const Project = () => {
       }
     };
     fetchSectors();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Fetch existing project-sector links and derive selected IDs
+  // Fetch existing project-sector links
   useEffect(() => {
     if (!selectedProjectId) {
       setCurrentProjectSectorLinks([]);
@@ -150,12 +187,8 @@ const Project = () => {
     }
     const fetchProjectSectors = async () => {
       try {
-        const token = localStorage.getItem("authToken");
-        const res = await fetch(`${BASE_URL}/api/project-sectors/active`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+        const res = await authFetch(`${BASE_URL}/api/project-sectors/active`, {
+          headers: { "Content-Type": "application/json" },
         });
         if (!res.ok) throw new Error("Failed to fetch project-sector links");
         const links = await res.json();
@@ -171,24 +204,18 @@ const Project = () => {
       }
     };
     fetchProjectSectors();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProjectId]);
 
   useEffect(() => {
     const fetchProjectStatuses = async () => {
       try {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch(
+        const response = await authFetch(
           `${BASE_URL}/api/project-statuses/active`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          { headers: { "Content-Type": "application/json" } }
         );
 
         if (!response.ok) throw new Error("Failed to fetch project statuses");
-
         const statuses = await response.json();
         setProjectStatuses(statuses);
       } catch (error) {
@@ -197,24 +224,19 @@ const Project = () => {
     };
 
     fetchProjectStatuses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     const fetchAvailableParentProjects = async () => {
       try {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch(`${BASE_URL}/api/projects/ids-names`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+        const response = await authFetch(`${BASE_URL}/api/projects/ids-names`, {
+          headers: { "Content-Type": "application/json" },
         });
 
         if (!response.ok) throw new Error("Failed to fetch project list");
-
         const allProjects = await response.json();
 
-        // Exclude the currently selected project from the dropdown
         const filteredProjects = allProjects.filter(
           (p) => p.id.toString() !== selectedProjectId
         );
@@ -226,25 +248,18 @@ const Project = () => {
     };
 
     fetchAvailableParentProjects();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProjectId]);
 
   useEffect(() => {
     const fetchTypesAndAddresses = async () => {
       try {
-        const token = localStorage.getItem("authToken");
-
         const [typeRes, addressRes] = await Promise.all([
-          fetch(`${BASE_URL}/api/project-types/active`, {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
+          authFetch(`${BASE_URL}/api/project-types/active`, {
+            headers: { "Content-Type": "application/json" },
           }),
-          fetch(`${BASE_URL}/api/addresses/active`, {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
+          authFetch(`${BASE_URL}/api/addresses/active`, {
+            headers: { "Content-Type": "application/json" },
           }),
         ]);
 
@@ -262,24 +277,19 @@ const Project = () => {
     };
 
     fetchTypesAndAddresses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ✅ NEW: fetch all org options (for displaying labels)
+  // ✅ fetch all org options (safe for 204 too)
   useEffect(() => {
     const fetchAllOrgOptions = async () => {
       try {
-        const token = localStorage.getItem("authToken");
-        const res = await fetch(
+        const res = await authFetch(
           `${BASE_URL}/api/organizations/active/options`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          { headers: { "Content-Type": "application/json" } }
         );
-        if (!res.ok) throw new Error("Failed to fetch organization options");
-        const data = await res.json();
+
+        const data = await safeReadJson(res);
         setAllOrganizationOptions(Array.isArray(data) ? data : []);
       } catch (e) {
         console.error("Error fetching all organization options:", e);
@@ -287,21 +297,16 @@ const Project = () => {
       }
     };
     fetchAllOrgOptions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ✅ NEW: fetch organization statuses
+  // ✅ fetch organization statuses
   useEffect(() => {
     const fetchOrgStatuses = async () => {
       try {
-        const token = localStorage.getItem("authToken");
-        const res = await fetch(
+        const res = await authFetch(
           `${BASE_URL}/api/organization-statuses/active`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          { headers: { "Content-Type": "application/json" } }
         );
         if (!res.ok) throw new Error("Failed to fetch organization statuses");
         const data = await res.json();
@@ -312,9 +317,10 @@ const Project = () => {
       }
     };
     fetchOrgStatuses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ✅ NEW: project-aware org options + project_organization rows
+  // ✅ project-aware org options + project_organization rows
   useEffect(() => {
     if (!selectedProjectId) {
       setProjectOrgOptions([]);
@@ -324,47 +330,32 @@ const Project = () => {
       return;
     }
 
-    const token = localStorage.getItem("authToken");
-
     const loadProjectOrgOptions = async (projectId) => {
       try {
-        const res = await fetch(
+        const res = await authFetch(
           `${BASE_URL}/api/organizations/by-project/${projectId}/options`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          { headers: { "Content-Type": "application/json" } }
         );
 
         if (!res.ok) {
-          // Fallback: if this endpoint isn't available/returns 404, use all active options
-          console.warn(
-            "Falling back to all active organization options for dropdown."
-          );
           setProjectOrgOptions(allOrganizationOptions);
           return;
         }
 
-        const data = await res.json();
-        setProjectOrgOptions(Array.isArray(data) ? data : []);
+        const data = await safeReadJson(res);
+        const arr = Array.isArray(data) ? data : [];
+        setProjectOrgOptions(arr.length > 0 ? arr : allOrganizationOptions);
       } catch (e) {
         console.error("Error fetching project-aware org options:", e);
-        setProjectOrgOptions([]);
+        setProjectOrgOptions(allOrganizationOptions);
       }
     };
 
     const loadProjectOrganizations = async (projectId) => {
       try {
-        const res = await fetch(
+        const res = await authFetch(
           `${BASE_URL}/api/project-organizations/active`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          { headers: { "Content-Type": "application/json" } }
         );
         if (!res.ok) throw new Error("Failed to fetch project organizations");
         const data = await res.json();
@@ -382,9 +373,73 @@ const Project = () => {
     loadProjectOrganizations(selectedProjectId);
     setSelectedOrgId("");
     setSelectedOrgStatusId("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProjectId, allOrganizationOptions]);
 
-  // Handle input field changes by updating local projectDetails state
+  // ✅ Participants: load employees + positions once (positions only used for label)
+  useEffect(() => {
+    const loadEmployeesAndPositions = async () => {
+      try {
+        const [empRes, posRes] = await Promise.all([
+          authFetch(`${BASE_URL}/api/employees/active`, {
+            headers: { "Content-Type": "application/json" },
+          }),
+          authFetch(`${BASE_URL}/api/positions/active`, {
+            headers: { "Content-Type": "application/json" },
+          }),
+        ]);
+
+        const empData = await safeReadJson(empRes);
+        const posData = await safeReadJson(posRes);
+
+        setEmployeeOptions(Array.isArray(empData) ? empData : []);
+        setPositionOptions(Array.isArray(posData) ? posData : []);
+      } catch (e) {
+        console.error("Error fetching employees/positions:", e);
+        setEmployeeOptions([]);
+        setPositionOptions([]);
+      }
+    };
+
+    loadEmployeesAndPositions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ✅ Participants: load project participants whenever project changes
+  useEffect(() => {
+    if (!selectedProjectId) {
+      setProjectParticipants([]);
+      setSelectedEmployeeId("");
+      setParticipantError("");
+      return;
+    }
+
+    const loadParticipants = async (projectId) => {
+      try {
+        setParticipantError("");
+        const res = await authFetch(
+          `${BASE_URL}/api/employee-projects/active`,
+          {
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+
+        const data = await safeReadJson(res);
+        const all = Array.isArray(data) ? data : [];
+        const byProject = all.filter(
+          (ep) => String(ep.projectId) === String(projectId)
+        );
+        setProjectParticipants(byProject);
+      } catch (e) {
+        console.error("Error loading project participants:", e);
+        setProjectParticipants([]);
+      }
+    };
+
+    loadParticipants(selectedProjectId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProjectId]);
+
   const handleProjectInputChange = (e) => {
     const { name, value } = e.target;
     setProjectDetails((prev) => ({
@@ -410,11 +465,17 @@ const Project = () => {
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${token}`, // don't set Content-Type manually
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: formData,
         }
       );
+
+      if (response.status === 401) {
+        localStorage.removeItem("authToken");
+        navigate("/login");
+        throw new Error("Unauthorized - redirecting to login");
+      }
 
       if (!response.ok) {
         const text = await response.text().catch(() => "");
@@ -422,10 +483,8 @@ const Project = () => {
       }
 
       const updatedProject = await response.json();
-
       setProjectDetails(updatedProject);
 
-      // Optionally keep the list in sync (at least the name)
       setProjects((prev) =>
         prev.map((p) =>
           p.id === updatedProject.id
@@ -444,40 +503,27 @@ const Project = () => {
   const handleCoverDrop = (e) => {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0];
-    if (file) {
-      uploadCoverImage(file);
-    }
+    if (file) uploadCoverImage(file);
   };
 
-  const handleCoverDragOver = (e) => {
-    e.preventDefault();
-  };
+  const handleCoverDragOver = (e) => e.preventDefault();
 
   const handleCoverFileInput = (e) => {
     const file = e.target.files?.[0];
-    if (file) {
-      uploadCoverImage(file);
-    }
+    if (file) uploadCoverImage(file);
   };
 
-  // ✅ Delete a single image (calls backend delete)
   const handleDeleteImage = async (filename) => {
     if (!projectDetails?.id) return;
     if (!window.confirm(`Delete image "${filename}" from this project?`))
       return;
 
     try {
-      const token = localStorage.getItem("authToken");
-      const response = await fetch(
+      const response = await authFetch(
         `${BASE_URL}/api/projects/${
           projectDetails.id
         }/cover-image/${encodeURIComponent(filename)}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { method: "DELETE" }
       );
 
       if (!response.ok) {
@@ -501,24 +547,19 @@ const Project = () => {
     }
   };
 
-  // ✅ Toggle a single sector on/off without affecting others
   const handleToggleSector = (sectorIdStr, checked) => {
     setSelectedSectorIds((prev) => {
-      if (checked) {
+      if (checked)
         return prev.includes(sectorIdStr) ? prev : [...prev, sectorIdStr];
-      }
       return prev.filter((id) => id !== sectorIdStr);
     });
   };
 
-  // ✅ Immediate removal by clicking a pill (DELETE right away)
   const handleRemoveSectorClick = async (sectorId) => {
     const link = currentProjectSectorLinks.find(
       (l) => String(l.sectorId) === String(sectorId)
     );
 
-    // If there's no backend link yet (e.g., user toggled in UI but not saved),
-    // just update UI selection.
     if (!link) {
       setSelectedSectorIds((prev) =>
         prev.filter((id) => String(id) !== String(sectorId))
@@ -529,16 +570,14 @@ const Project = () => {
     if (!window.confirm("Remove this sector from the project?")) return;
 
     try {
-      const token = localStorage.getItem("authToken");
-      const res = await fetch(`${BASE_URL}/api/project-sectors/${link.id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await authFetch(
+        `${BASE_URL}/api/project-sectors/${link.id}`,
+        {
+          method: "DELETE",
+        }
+      );
       if (!res.ok) throw new Error("Failed to delete sector link");
 
-      // Optimistic local updates
       setCurrentProjectSectorLinks((prev) =>
         prev.filter((l) => l.id !== link.id)
       );
@@ -551,25 +590,15 @@ const Project = () => {
     }
   };
 
-  // ✅ NEW: add related organization to project_organization
   const handleAddProjectOrganization = async () => {
-    if (!projectDetails?.id) {
-      alert("No project is selected.");
-      return;
-    }
-    if (!selectedOrgId || !selectedOrgStatusId) {
-      alert("Please select both organization and status.");
-      return;
-    }
+    if (!projectDetails?.id) return alert("No project is selected.");
+    if (!selectedOrgId || !selectedOrgStatusId)
+      return alert("Please select both organization and status.");
 
     try {
-      const token = localStorage.getItem("authToken");
-      const res = await fetch(`${BASE_URL}/api/project-organizations`, {
+      const res = await authFetch(`${BASE_URL}/api/project-organizations`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           projectId: Number(projectDetails.id),
           organizationId: Number(selectedOrgId),
@@ -582,19 +611,11 @@ const Project = () => {
         throw new Error(msg || "Failed to add organization to project.");
       }
 
-      // Refresh current project organizations and project-aware dropdown
       const projectId = projectDetails.id;
-      const token2 = localStorage.getItem("authToken");
 
-      // reload project organizations
-      const reloadPO = await fetch(
+      const reloadPO = await authFetch(
         `${BASE_URL}/api/project-organizations/active`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token2}`,
-          },
-        }
+        { headers: { "Content-Type": "application/json" } }
       );
       if (reloadPO.ok) {
         const data = await reloadPO.json();
@@ -602,21 +623,6 @@ const Project = () => {
           (po) => String(po.projectId) === String(projectId)
         );
         setProjectOrganizations(byProject);
-      }
-
-      // reload project-aware org options
-      const reloadOpts = await fetch(
-        `${BASE_URL}/api/organizations/by-project/${projectId}/options`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token2}`,
-          },
-        }
-      );
-      if (reloadOpts.ok) {
-        const data = await reloadOpts.json();
-        setProjectOrgOptions(Array.isArray(data) ? data : []);
       }
 
       setSelectedOrgId("");
@@ -627,52 +633,119 @@ const Project = () => {
     }
   };
 
-  // ✅ NEW: delete related organization from project_organization
   const handleDeleteProjectOrganization = async (projectOrgId) => {
     if (!window.confirm("Remove this organization from the project?")) return;
 
     try {
-      const token = localStorage.getItem("authToken");
-      const res = await fetch(
+      const res = await authFetch(
         `${BASE_URL}/api/project-organizations/${projectOrgId}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { method: "DELETE" }
       );
       if (!res.ok) throw new Error("Failed to delete project organization.");
 
-      // Optimistic update
       setProjectOrganizations((prev) =>
         prev.filter((po) => po.id !== projectOrgId)
       );
-
-      // Also reload project-aware org options so it becomes selectable again
-      if (projectDetails?.id) {
-        const token2 = localStorage.getItem("authToken");
-        const reload = await fetch(
-          `${BASE_URL}/api/organizations/by-project/${projectDetails.id}/options`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token2}`,
-            },
-          }
-        );
-        if (reload.ok) {
-          const data = await reload.json();
-          setProjectOrgOptions(Array.isArray(data) ? data : []);
-        }
-      }
     } catch (e) {
       console.error(e);
       alert(e.message || "Error deleting project organization.");
     }
   };
 
-  // Automatically resize textarea to fit content
+  // ✅ Participants: helper to get employee's position id from EmployeeDTO
+  const getEmployeePositionId = (employeeId) => {
+    const e = (employeeOptions || []).find(
+      (x) => String(x.id) === String(employeeId)
+    );
+    if (!e) return null;
+
+    // supports either "positionId" OR "position: { id }"
+    const pid =
+      e.positionId || (e.position && e.position.id) || e.position_id || null;
+
+    return pid ? Number(pid) : null;
+  };
+
+  // ✅ Participants: add / delete (role auto from employee)
+  const handleAddParticipant = async () => {
+    if (!projectDetails?.id) {
+      setParticipantError("No project is selected.");
+      return;
+    }
+    if (!selectedEmployeeId) {
+      setParticipantError("Please select an employee.");
+      return;
+    }
+
+    const positionId = getEmployeePositionId(selectedEmployeeId);
+    if (!positionId) {
+      setParticipantError(
+        "Could not find this employee's positionId. Make sure EmployeeDTO includes positionId (or position.id)."
+      );
+      return;
+    }
+
+    try {
+      setParticipantError("");
+
+      const res = await authFetch(`${BASE_URL}/api/employee-projects`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectId: Number(projectDetails.id),
+          employeeId: Number(selectedEmployeeId),
+          positionId: Number(positionId),
+        }),
+      });
+
+      if (!res.ok) {
+        const msg = await res.text().catch(() => "");
+        throw new Error(msg || "Failed to add participant.");
+      }
+
+      // reload participants for this project
+      const reload = await authFetch(
+        `${BASE_URL}/api/employee-projects/active`,
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      const data = await safeReadJson(reload);
+      const all = Array.isArray(data) ? data : [];
+      const byProject = all.filter(
+        (ep) => String(ep.projectId) === String(projectDetails.id)
+      );
+      setProjectParticipants(byProject);
+
+      setSelectedEmployeeId("");
+    } catch (e) {
+      console.error(e);
+      setParticipantError(e.message || "Error adding participant.");
+    }
+  };
+
+  const handleDeleteParticipant = async (participantId) => {
+    if (!window.confirm("Remove this participant from the project?")) return;
+
+    try {
+      const res = await authFetch(
+        `${BASE_URL}/api/employee-projects/${participantId}`,
+        { method: "DELETE" }
+      );
+      if (!res.ok) {
+        const msg = await res.text().catch(() => "");
+        throw new Error(msg || "Failed to remove participant.");
+      }
+
+      setProjectParticipants((prev) =>
+        prev.filter((p) => p.id !== participantId)
+      );
+    } catch (e) {
+      console.error(e);
+      alert(e.message || "Error deleting participant.");
+    }
+  };
+
   const autoResize = (textarea) => {
     if (!textarea) return;
     textarea.style.height = "auto";
@@ -684,40 +757,31 @@ const Project = () => {
       return;
 
     try {
-      const token = localStorage.getItem("authToken");
-
-      const response = await fetch(
+      const response = await authFetch(
         `${BASE_URL}/api/projects/${projectDetails.id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { method: "DELETE" }
       );
 
       if (!response.ok) throw new Error("Failed to delete project");
 
       alert("Project deleted successfully!");
 
-      // Filter it out from context
       const updatedProjects = projects.filter(
         (p) => p.id !== projectDetails.id
       );
       setProjects(updatedProjects);
 
-      // Reset to another project if available
       if (updatedProjects.length > 0) {
         setSelectedProjectId(updatedProjects[0].id.toString());
       } else {
         setSelectedProjectId("");
       }
 
-      // Clear UI state
       setProjectDetails(null);
       setSelectedSectorIds([]);
       setCurrentProjectSectorLinks([]);
       setProjectOrganizations([]);
+      setProjectParticipants([]);
       setFormError("");
       setFieldErrors({});
     } catch (error) {
@@ -726,10 +790,7 @@ const Project = () => {
     }
   };
 
-  // ✅ Reconcile selected sectors with backend links on Save (add/remove diffs)
   const syncProjectSectors = async (projectId) => {
-    const token = localStorage.getItem("authToken");
-
     const currentBySectorId = new Map(
       currentProjectSectorLinks.map((l) => [String(l.sectorId), l])
     );
@@ -743,15 +804,11 @@ const Project = () => {
       (l) => !selectedSet.has(String(l.sectorId))
     );
 
-    // Create missing links
     for (const sid of toAdd) {
       try {
-        const res = await fetch(`${BASE_URL}/api/project-sectors`, {
+        const res = await authFetch(`${BASE_URL}/api/project-sectors`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             projectId: Number(projectId),
             sectorId: Number(sid),
@@ -767,15 +824,12 @@ const Project = () => {
       }
     }
 
-    // Soft delete removed links
     for (const link of toRemove) {
       try {
-        const res = await fetch(`${BASE_URL}/api/project-sectors/${link.id}`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await authFetch(
+          `${BASE_URL}/api/project-sectors/${link.id}`,
+          { method: "DELETE" }
+        );
         if (!res.ok) throw new Error("Failed to delete sector link");
       } catch (e) {
         console.error(e);
@@ -783,13 +837,9 @@ const Project = () => {
       }
     }
 
-    // Refresh links
     try {
-      const res = await fetch(`${BASE_URL}/api/project-sectors/active`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+      const res = await authFetch(`${BASE_URL}/api/project-sectors/active`, {
+        headers: { "Content-Type": "application/json" },
       });
       const links = res.ok ? await res.json() : [];
       const byProject = (Array.isArray(links) ? links : []).filter(
@@ -804,20 +854,14 @@ const Project = () => {
 
   const handleSave = async () => {
     try {
-      const token = localStorage.getItem("authToken");
-
-      // Clear previous errors
       setFormError("");
       setFieldErrors({});
 
-      const response = await fetch(
+      const response = await authFetch(
         `${BASE_URL}/api/projects/${projectDetails.id}`,
         {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(projectDetails),
         }
       );
@@ -825,7 +869,6 @@ const Project = () => {
       const text = await response.text();
 
       if (!response.ok) {
-        // Try to parse ApiError JSON from backend
         let data = null;
         try {
           data = text ? JSON.parse(text) : null;
@@ -833,23 +876,17 @@ const Project = () => {
           console.warn("Failed to parse backend error JSON:", parseErr);
         }
 
-        console.log("🔴 Update error payload:", data);
-
         if (data) {
-          if (data.fieldErrors) {
-            setFieldErrors(data.fieldErrors);
-          }
+          if (data.fieldErrors) setFieldErrors(data.fieldErrors);
           setFormError(
             data.message || "There was a problem updating the project."
           );
         } else {
           setFormError("There was a problem updating the project.");
         }
-
         return;
       }
 
-      // Success: parse updated project DTO
       const updatedProject = text ? JSON.parse(text) : null;
 
       if (updatedProject) {
@@ -864,7 +901,6 @@ const Project = () => {
         );
       }
 
-      // 2) Sync sector checkbox selection with backend links
       await syncProjectSectors(projectDetails.id);
 
       setFormError("");
@@ -876,29 +912,27 @@ const Project = () => {
     }
   };
 
-  // Helper: get sector display text by id
   const getSectorLabel = (id) => {
     const s = sectorOptions.find(
       (x) => String(x.id ?? x.sectorId ?? x.sector_id) === String(id)
     );
     return (
-      s?.sectorDescription ??
-      s?.sector_description ??
-      s?.sectorCode ??
-      s?.sector_code ??
+      s?.sectorDescription ||
+      s?.sector_description ||
+      s?.sectorCode ||
+      s?.sector_code ||
       `Sector ${id}`
     );
   };
 
-  // ✅ NEW: org + org status label helpers
   const getOrgLabel = (id) => {
     const o = allOrganizationOptions.find(
       (opt) => String(opt.id ?? opt.organizationId) === String(id)
     );
     return (
-      o?.name ??
-      o?.organizationName ??
-      o?.organization_name ??
+      o?.name ||
+      o?.organizationName ||
+      o?.organization_name ||
       `Organization ${id}`
     );
   };
@@ -911,26 +945,102 @@ const Project = () => {
         ) === String(id)
     );
     return (
-      s?.organizationStatusName ??
-      s?.organization_status_name ??
-      s?.statusName ??
+      s?.organizationStatusName ||
+      s?.organization_status_name ||
+      s?.statusName ||
       `Status ${id}`
     );
   };
 
-  // Simple pill styles (inline to avoid SCSS changes)
+  // ✅ Babel-safe label builder
+  const getEmployeeLabel = (id) => {
+    const e = (employeeOptions || []).find((x) => String(x.id) === String(id));
+    if (!e) return `Employee ${id}`;
+
+    const fullName = `${e.firstName || ""} ${e.lastName || ""}`.trim();
+
+    return (
+      e.employeeName ||
+      e.fullName ||
+      e.name ||
+      (fullName ? fullName : "") ||
+      e.email ||
+      `Employee ${id}`
+    );
+  };
+
+  const getPositionLabel = (id) => {
+    const p = (positionOptions || []).find((x) => String(x.id) === String(id));
+    if (!p) return `Role ${id}`;
+    return p.positionName || p.name || p.title || `Role ${id}`;
+  };
+
+  // ✅ org dropdown options based on "only hide when ALL statuses are used"
+  const selectableOrgOptions = useMemo(() => {
+    const allOrgs = Array.isArray(allOrganizationOptions)
+      ? allOrganizationOptions
+      : [];
+
+    const allStatusIds = (
+      Array.isArray(orgStatusOptions) ? orgStatusOptions : []
+    )
+      .map((s) =>
+        String(s.id ?? s.organizationStatusId ?? s.organization_status_id)
+      )
+      .filter(Boolean);
+
+    if (allStatusIds.length === 0) return allOrgs;
+
+    const allStatusSet = new Set(allStatusIds);
+
+    const usedByOrg = new Map();
+    (Array.isArray(projectOrganizations) ? projectOrganizations : []).forEach(
+      (po) => {
+        const orgId = String(po.organizationId);
+        const statusId = String(po.organizationStatusId);
+        if (!orgId || !statusId) return;
+
+        if (!usedByOrg.has(orgId)) usedByOrg.set(orgId, new Set());
+        usedByOrg.get(orgId).add(statusId);
+      }
+    );
+
+    return allOrgs.filter((o) => {
+      const orgId = String(o.id ?? o.organizationId);
+      const usedSet = usedByOrg.get(orgId);
+      if (!usedSet) return true;
+
+      for (const sid of allStatusSet) {
+        if (!usedSet.has(sid)) return true;
+      }
+      return false;
+    });
+  }, [allOrganizationOptions, orgStatusOptions, projectOrganizations]);
+
+  // ✅ employee dropdown options — remove already-added employees
+  const selectableEmployeeOptions = useMemo(() => {
+    const all = Array.isArray(employeeOptions) ? employeeOptions : [];
+    const used = new Set(
+      (Array.isArray(projectParticipants) ? projectParticipants : []).map((p) =>
+        String(p.employeeId)
+      )
+    );
+    return all.filter((e) => !used.has(String(e.id)));
+  }, [employeeOptions, projectParticipants]);
+
   const pillStyle = {
     display: "inline-flex",
     alignItems: "center",
     gap: "6px",
-    padding: "4px 8px",
-    margin: "4px 6px 0 0",
+    padding: "4px 10px",
+    margin: "6px 6px 0 0",
     borderRadius: "999px",
-    border: "1px solid #ddd",
+    border: "1px solid rgba(74,144,226,0.25)",
     fontSize: "12px",
     lineHeight: 1.6,
-    background: "#f7f7f7",
+    background: "rgba(74,144,226,0.08)",
   };
+
   const pillBtnStyle = {
     border: "none",
     background: "transparent",
@@ -939,16 +1049,72 @@ const Project = () => {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    padding: 0,
   };
+
+  const hasProject = Boolean(projectDetails);
+
+  // compute selected employee’s role label for UI hint
+  const selectedEmployeeRoleLabel = useMemo(() => {
+    if (!selectedEmployeeId) return "";
+    const pid = getEmployeePositionId(selectedEmployeeId);
+    return pid ? getPositionLabel(pid) : "";
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedEmployeeId, positionOptions]);
 
   return (
     <div className={styles.projectContainer}>
-      {/* Render form only if project details are available */}
+      {!hasProject && (
+        <div className={styles.emptyState}>
+          <FiImage />
+          <div>
+            <h3 style={{ margin: 0 }}>No project selected</h3>
+            <p style={{ margin: 0, color: "#666" }}>
+              Select a project from the dropdown to view details.
+            </p>
+          </div>
+        </div>
+      )}
+
       {projectDetails && (
         <div className={styles.formContainer}>
-          <h3>Project Details</h3>
+          <div className={styles.pageHeader}>
+            <div className={styles.pageHeaderText}>
+              <h3 className={styles.pageTitle}>Project Details</h3>
+              <p className={styles.pageSubtitle}>
+                Update project info, sectors, images, organizations, and
+                participants.
+              </p>
+            </div>
 
-          {formError && <div className={styles.errorBanner}>{formError}</div>}
+            <div className={styles.headerActions}>
+              <button
+                type="button"
+                onClick={handleSave}
+                className={styles.saveButton}
+                disabled={loading}
+              >
+                <FiSave />
+                Save
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                className={styles.deleteButton}
+                disabled={loading}
+              >
+                <FiTrash2 />
+                Delete
+              </button>
+            </div>
+          </div>
+
+          {formError && (
+            <div className={styles.errorBanner}>
+              <FiAlertCircle />
+              <span>{formError}</span>
+            </div>
+          )}
 
           {Object.keys(fieldErrors).length > 0 && (
             <div className={styles.errorList}>
@@ -962,108 +1128,149 @@ const Project = () => {
             </div>
           )}
 
-          {/* Wrapper for image and form side-by-side */}
           <div className={styles.imageAndFormWrapper}>
-            {/* Show slideshow if images available */}
-            {imageNames.length > 0 && (
-              <div className={styles.imageContainer}>
-                <img
-                  src={`${coverImagePath}${imageNames[currentImageIndex]}`}
-                  alt="Project Cover"
-                  className={styles.coverImage}
-                />
+            {/* Left: media card */}
+            <aside className={styles.mediaColumn}>
+              <div className={styles.card}>
+                <div className={styles.cardHeader}>
+                  <div className={styles.cardTitle}>Cover & Notes</div>
+                  <div className={styles.cardMeta}>
+                    {imageNames.length > 0
+                      ? `${imageNames.length} image(s)`
+                      : "No images"}
+                  </div>
+                </div>
 
-                {imageNames.length > 1 && (
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginTop: "8px",
-                    }}
-                  >
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setCurrentImageIndex((prev) =>
-                          prev === 0 ? imageNames.length - 1 : prev - 1
-                        )
-                      }
-                      aria-label="Previous image"
-                      style={{
-                        borderRadius: "50%",
-                        width: "32px",
-                        height: "32px",
-                        border: "1px solid #ccc",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        cursor: "pointer",
-                        backgroundColor: "#fff",
-                      }}
-                    >
-                      <FiChevronLeft />
-                    </button>
-                    <span>
-                      {currentImageIndex + 1} / {imageNames.length}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setCurrentImageIndex((prev) =>
-                          prev === imageNames.length - 1 ? 0 : prev + 1
-                        )
-                      }
-                      aria-label="Next image"
-                      style={{
-                        borderRadius: "50%",
-                        width: "32px",
-                        height: "32px",
-                        border: "1px solid #ccc",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        cursor: "pointer",
-                        backgroundColor: "#fff",
-                      }}
-                    >
-                      <FiChevronRight />
-                    </button>
+                {imageNames.length > 0 ? (
+                  <>
+                    <div className={styles.imageShell}>
+                      <img
+                        src={`${coverImagePath}${imageNames[currentImageIndex]}`}
+                        alt="Project Cover"
+                        className={styles.coverImage}
+                      />
+
+                      {imageNames.length > 1 && (
+                        <div className={styles.galleryControls}>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setCurrentImageIndex((prev) =>
+                                prev === 0 ? imageNames.length - 1 : prev - 1
+                              )
+                            }
+                            aria-label="Previous image"
+                            className={styles.iconCircleBtn}
+                          >
+                            <FiChevronLeft />
+                          </button>
+
+                          <span className={styles.galleryCount}>
+                            {currentImageIndex + 1} / {imageNames.length}
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setCurrentImageIndex((prev) =>
+                                prev === imageNames.length - 1 ? 0 : prev + 1
+                              )
+                            }
+                            aria-label="Next image"
+                            className={styles.iconCircleBtn}
+                          >
+                            <FiChevronRight />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className={styles.imageList}>
+                      <div className={styles.imageListTitle}>
+                        <strong>Images</strong>
+                      </div>
+                      <ul className={styles.cleanList}>
+                        {imageNames.map((name) => (
+                          <li key={name} className={styles.imageRow}>
+                            <span className={styles.filename}>{name}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteImage(name)}
+                              className={styles.dangerIconBtn}
+                              aria-label={`Delete image ${name}`}
+                              title={`Delete image ${name}`}
+                            >
+                              <FiTrash2 />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </>
+                ) : (
+                  <div className={styles.noMedia}>
+                    <FiImage />
+                    <div>
+                      <div style={{ fontWeight: 600 }}>No cover image yet</div>
+                      <div style={{ fontSize: 12, color: "#666" }}>
+                        Upload one below to show a slideshow here.
+                      </div>
+                    </div>
                   </div>
                 )}
 
-                {/* Memos live directly under the picture */}
-                <Memos />
-              </div>
-            )}
+                <div className={styles.divider} />
 
-            {/* Main form content */}
-            <div className={styles.formContent}>
+                <div className={styles.memosWrap}>
+                  <Memos />
+                </div>
+              </div>
+            </aside>
+
+            {/* Right: form */}
+            <section className={styles.formContent}>
               {loading ? (
-                <p>Loading...</p>
+                <div className={styles.skeletonWrap}>
+                  <div className={styles.skeletonLine} />
+                  <div className={styles.skeletonLine} />
+                  <div className={styles.skeletonLineShort} />
+                </div>
               ) : (
                 <form>
-                  {/* Project Description */}
-                  <div
-                    className={`${styles.fullWidthField} ${styles.textInput}`}
-                  >
-                    <label>Project Description:</label>
-                    <textarea
-                      name="projectDescription"
-                      value={projectDetails.projectDescription || ""}
-                      onChange={(e) => {
-                        handleProjectInputChange(e);
-                        autoResize(e.target);
-                      }}
-                      ref={(el) => el && autoResize(el)}
-                      className={styles.textareaInput}
-                    />
+                  {/* Description */}
+                  <div className={styles.card}>
+                    <div className={styles.cardHeader}>
+                      <div className={styles.cardTitle}>Description</div>
+                      <div className={styles.cardMeta}>Overview</div>
+                    </div>
+
+                    <div className={styles.fullWidthField}>
+                      <label>Project Description:</label>
+                      <textarea
+                        name="projectDescription"
+                        value={projectDetails.projectDescription || ""}
+                        onChange={(e) => {
+                          handleProjectInputChange(e);
+                          autoResize(e.target);
+                        }}
+                        ref={(el) => el && autoResize(el)}
+                        className={styles.textareaInput}
+                        placeholder="Write a short summary of the project..."
+                      />
+                    </div>
                   </div>
-                  <div className={styles.formTwoColumn}>
-                    {/* Left Column */}
-                    <div className={styles.formColumnLeft}>
-                      {/* Project Name */}
-                      <div>
+
+                  <div className={styles.grid}>
+                    {/* Left column card */}
+                    <div className={styles.card}>
+                      <div className={styles.cardHeader}>
+                        <div className={styles.cardTitle}>Core details</div>
+                        <div className={styles.cardMeta}>
+                          Name, codes & costs
+                        </div>
+                      </div>
+
+                      <div className={styles.formGroup}>
                         <label>Project Name:</label>
                         <input
                           type="text"
@@ -1079,8 +1286,7 @@ const Project = () => {
                         )}
                       </div>
 
-                      {/* Project Code */}
-                      <div>
+                      <div className={styles.formGroup}>
                         <label>Project Code:</label>
                         <input
                           type="text"
@@ -1096,8 +1302,7 @@ const Project = () => {
                         )}
                       </div>
 
-                      {/* Reference Number */}
-                      <div>
+                      <div className={styles.formGroup}>
                         <label>Reference No:</label>
                         <input
                           type="text"
@@ -1108,8 +1313,7 @@ const Project = () => {
                         />
                       </div>
 
-                      {/* Pin Code */}
-                      <div>
+                      <div className={styles.formGroup}>
                         <label>Pin Code:</label>
                         <input
                           type="text"
@@ -1120,138 +1324,33 @@ const Project = () => {
                         />
                       </div>
 
-                      {/* FO Support Cost % */}
-                      <div>
-                        <label>FO Support Cost (%):</label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          name="foSupportCostPercent"
-                          value={projectDetails.foSupportCostPercent || ""}
-                          onChange={handleProjectInputChange}
-                          className={styles.textInput}
-                        />
-                      </div>
-
-                      {/* IRW Support Cost % */}
-                      <div>
-                        <label>IRW Support Cost (%):</label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          name="irwSupportCostPercent"
-                          value={projectDetails.irwSupportCostPercent || ""}
-                          onChange={handleProjectInputChange}
-                          className={styles.textInput}
-                        />
-                      </div>
-
-                      {/* Project Cover Image Upload */}
-                      <div>
-                        <label>Project Cover Image:</label>
-
-                        <div
-                          onDrop={handleCoverDrop}
-                          onDragOver={handleCoverDragOver}
-                          className={styles.textInput}
-                          style={{
-                            border: "2px dashed #ccc",
-                            borderRadius: "8px",
-                            padding: "16px",
-                            textAlign: "center",
-                            cursor: "pointer",
-                          }}
-                          onClick={() =>
-                            document
-                              .getElementById("coverImageFileInput")
-                              ?.click()
-                          }
-                        >
-                          {uploadingCover
-                            ? "Uploading..."
-                            : "Drag & drop an image here, or click to select"}
+                      <div className={styles.row2}>
+                        <div className={styles.formGroup}>
+                          <label>FO Support Cost (%):</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            name="foSupportCostPercent"
+                            value={projectDetails.foSupportCostPercent || ""}
+                            onChange={handleProjectInputChange}
+                            className={styles.textInput}
+                          />
                         </div>
 
-                        <input
-                          id="coverImageFileInput"
-                          type="file"
-                          accept="image/*"
-                          style={{ display: "none" }}
-                          onChange={handleCoverFileInput}
-                        />
-
-                        {uploadError && (
-                          <div
-                            style={{
-                              color: "red",
-                              fontSize: "0.85rem",
-                              marginTop: "4px",
-                            }}
-                          >
-                            {uploadError}
-                          </div>
-                        )}
-
-                        {/* List of all images with delete buttons */}
-                        {imageNames.length > 0 && (
-                          <div style={{ marginTop: "8px" }}>
-                            <strong>Images for this project:</strong>
-                            <ul
-                              style={{
-                                listStyle: "none",
-                                paddingLeft: 0,
-                                marginTop: "4px",
-                              }}
-                            >
-                              {imageNames.map((name) => (
-                                <li
-                                  key={name}
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    gap: "8px",
-                                    marginBottom: "4px",
-                                  }}
-                                >
-                                  <span
-                                    style={{
-                                      fontSize: "0.9rem",
-                                      wordBreak: "break-all",
-                                    }}
-                                  >
-                                    {name}
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDeleteImage(name)}
-                                    style={{
-                                      border: "none",
-                                      backgroundColor: "#e74c3c",
-                                      color: "#fff",
-                                      padding: "4px 8px",
-                                      borderRadius: "4px",
-                                      cursor: "pointer",
-                                      fontSize: "0.9rem",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                      lineHeight: 1,
-                                    }}
-                                    aria-label={`Delete image ${name}`}
-                                    title={`Delete image ${name}`}
-                                  >
-                                    <FiTrash2 />
-                                  </button>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
+                        <div className={styles.formGroup}>
+                          <label>IRW Support Cost (%):</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            name="irwSupportCostPercent"
+                            value={projectDetails.irwSupportCostPercent || ""}
+                            onChange={handleProjectInputChange}
+                            className={styles.textInput}
+                          />
+                        </div>
                       </div>
 
-                      {/* Approved */}
-                      <div>
+                      <div className={styles.formGroup}>
                         <label>Approved:</label>
                         <select
                           name="approved"
@@ -1269,282 +1368,18 @@ const Project = () => {
                           </div>
                         )}
                       </div>
-
-                      {/* ✅ Sectors checkbox list (before buttons) */}
-                      <div>
-                        <label>Sectors:</label>
-
-                        {/* Checkbox list (click to add without unselecting others) */}
-                        <div
-                          style={{
-                            border: "1px solid #ddd",
-                            borderRadius: 8,
-                            padding: 8,
-                            maxHeight: 180,
-                            overflow: "auto",
-                          }}
-                        >
-                          {sectorOptions.length === 0 ? (
-                            <div style={{ fontSize: 12, color: "#666" }}>
-                              No sectors available
-                            </div>
-                          ) : (
-                            sectorOptions.map((s) => {
-                              const idStr = String(
-                                s.id ?? s.sectorId ?? s.sector_id
-                              );
-                              const label =
-                                s.sectorDescription ??
-                                s.sector_description ??
-                                s.sectorCode ??
-                                s.sector_code ??
-                                `Sector ${idStr}`;
-                              const checked = selectedSectorIds.includes(idStr);
-                              return (
-                                <label
-                                  key={idStr}
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 8,
-                                    padding: "4px 0",
-                                    cursor: "pointer",
-                                    userSelect: "none",
-                                  }}
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={checked}
-                                    onChange={(e) =>
-                                      handleToggleSector(
-                                        idStr,
-                                        e.target.checked
-                                      )
-                                    }
-                                  />
-                                  <span>{label}</span>
-                                </label>
-                              );
-                            })
-                          )}
-                        </div>
-
-                        {/* Assigned sector pills with remove buttons */}
-                        <div style={{ marginTop: 6 }}>
-                          {selectedSectorIds.length > 0 ? (
-                            selectedSectorIds.map((sid) => (
-                              <span key={sid} style={pillStyle}>
-                                {getSectorLabel(sid)}
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveSectorClick(sid)}
-                                  aria-label={`Remove sector ${getSectorLabel(
-                                    sid
-                                  )}`}
-                                  title="Remove sector"
-                                  style={pillBtnStyle}
-                                >
-                                  <FiX />
-                                </button>
-                              </span>
-                            ))
-                          ) : (
-                            <span style={{ fontSize: 12, color: "#666" }}>
-                              No sectors assigned
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* ✅ NEW: Related organizations */}
-                      <div style={{ marginTop: "1rem" }}>
-                        <label>Related Organizations:</label>
-
-                        {/* Existing relations */}
-                        <div
-                          style={{
-                            border: "1px solid #ddd",
-                            borderRadius: 8,
-                            padding: 8,
-                            marginBottom: 8,
-                            maxHeight: 180,
-                            overflow: "auto",
-                          }}
-                        >
-                          {projectOrganizations.length === 0 ? (
-                            <span style={{ fontSize: 12, color: "#666" }}>
-                              No related organizations
-                            </span>
-                          ) : (
-                            <ul
-                              style={{
-                                listStyle: "none",
-                                padding: 0,
-                                margin: 0,
-                              }}
-                            >
-                              {projectOrganizations.map((po) => (
-                                <li
-                                  key={po.id}
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    gap: 8,
-                                    padding: "4px 0",
-                                  }}
-                                >
-                                  <span style={{ fontSize: 13 }}>
-                                    {getOrgLabel(po.organizationId)}{" "}
-                                    <span style={{ color: "#888" }}>
-                                      (
-                                      {getOrgStatusLabel(
-                                        po.organizationStatusId
-                                      )}
-                                      )
-                                    </span>
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleDeleteProjectOrganization(po.id)
-                                    }
-                                    style={{
-                                      border: "none",
-                                      backgroundColor: "#e74c3c",
-                                      color: "#fff",
-                                      padding: "4px 8px",
-                                      borderRadius: "4px",
-                                      cursor: "pointer",
-                                      fontSize: "0.9rem",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                      lineHeight: 1,
-                                    }}
-                                    aria-label="Remove organization from project"
-                                  >
-                                    <FiTrash2 />
-                                  </button>
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-
-                        {/* Add new relation */}
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: 8,
-                            alignItems: "center",
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          <select
-                            value={selectedOrgId}
-                            onChange={(e) => setSelectedOrgId(e.target.value)}
-                            className={styles.textInput}
-                            style={{ flex: 1, marginBottom: 0 }}
-                          >
-                            <option value="">Select organization</option>
-                            {projectOrgOptions.map((o) => (
-                              <option
-                                key={o.id ?? o.organizationId}
-                                value={o.id ?? o.organizationId}
-                              >
-                                {o.name ??
-                                  o.organizationName ??
-                                  o.organization_name}
-                              </option>
-                            ))}
-                          </select>
-
-                          <select
-                            value={selectedOrgStatusId}
-                            onChange={(e) =>
-                              setSelectedOrgStatusId(e.target.value)
-                            }
-                            className={styles.textInput}
-                            style={{ flex: 1, marginBottom: 0 }}
-                          >
-                            <option value="">Select status</option>
-                            {orgStatusOptions.map((s) => (
-                              <option
-                                key={
-                                  s.id ??
-                                  s.organizationStatusId ??
-                                  s.organization_status_id
-                                }
-                                value={
-                                  s.id ??
-                                  s.organizationStatusId ??
-                                  s.organization_status_id
-                                }
-                              >
-                                {s.organizationStatusName ??
-                                  s.organization_status_name ??
-                                  s.statusName}
-                              </option>
-                            ))}
-                          </select>
-
-                          <button
-                            type="button"
-                            onClick={handleAddProjectOrganization}
-                            style={{
-                              padding: "0.55rem 1rem",
-                              borderRadius: 8,
-                              border: "none",
-                              cursor: "pointer",
-                              backgroundColor: "#4a90e2",
-                              color: "#fff",
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 4,
-                              fontWeight: 600,
-                              marginBottom: 0,
-                            }}
-                          >
-                            <FiPlus />
-                            Add
-                          </button>
-                        </div>
-
-                        <div
-                          style={{
-                            fontSize: 11,
-                            color: "#888",
-                            marginTop: 4,
-                          }}
-                        >
-                          Only organizations not already linked to this project
-                          are shown in the dropdown.
-                        </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={handleSave}
-                        className={styles.saveButton}
-                      >
-                        <FiSave style={{ marginRight: 6 }} />
-                        Save
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleDelete}
-                        className={styles.deleteButton}
-                      >
-                        <FiTrash2 style={{ marginRight: 6 }} />
-                        Delete
-                      </button>
                     </div>
 
-                    {/* Right Column */}
-                    <div className={styles.formColumnRight}>
-                      {/* Project Status ID */}
-                      <div>
+                    {/* Right column card */}
+                    <div className={styles.card}>
+                      <div className={styles.cardHeader}>
+                        <div className={styles.cardTitle}>Schedule & type</div>
+                        <div className={styles.cardMeta}>
+                          Status, dates, address
+                        </div>
+                      </div>
+
+                      <div className={styles.formGroup}>
                         <label>Project Status:</label>
                         <select
                           name="projectStatusId"
@@ -1566,8 +1401,7 @@ const Project = () => {
                         )}
                       </div>
 
-                      {/* Project Type ID */}
-                      <div>
+                      <div className={styles.formGroup}>
                         <label>Project Type:</label>
                         <select
                           name="projectTypeId"
@@ -1589,8 +1423,7 @@ const Project = () => {
                         )}
                       </div>
 
-                      {/* Address ID */}
-                      <div>
+                      <div className={styles.formGroup}>
                         <label>Address:</label>
                         <select
                           name="addressId"
@@ -1608,99 +1441,116 @@ const Project = () => {
                         </select>
                       </div>
 
-                      {/* Project Period (Months) */}
-                      <div>
-                        <label>Project Period (Months):</label>
-                        <input
-                          type="number"
-                          name="projectPeriodMonths"
-                          value={projectDetails.projectPeriodMonths || ""}
-                          onChange={handleProjectInputChange}
-                          className={styles.textInput}
-                        />
+                      <div className={styles.row2}>
+                        <div className={styles.formGroup}>
+                          <label>Project Period (Months):</label>
+                          <input
+                            type="number"
+                            name="projectPeriodMonths"
+                            value={projectDetails.projectPeriodMonths || ""}
+                            onChange={handleProjectInputChange}
+                            className={styles.textInput}
+                          />
+                        </div>
+
+                        <div className={styles.formGroup}>
+                          <label>Part Of Project:</label>
+                          <select
+                            name="partOfId"
+                            value={projectDetails.partOfId || ""}
+                            onChange={handleProjectInputChange}
+                            className={styles.textInput}
+                          >
+                            <option value="">Select parent project</option>
+                            {availableParentProjects.map((proj) => (
+                              <option key={proj.id} value={proj.id}>
+                                {proj.projectName}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
 
-                      {/* Project Date */}
-                      <div>
-                        <label>Project Date:</label>
-                        <input
-                          type="datetime-local"
-                          name="projectDate"
-                          value={
-                            projectDetails.projectDate
-                              ? projectDetails.projectDate.slice(0, 16)
-                              : ""
-                          }
-                          onChange={handleProjectInputChange}
-                          className={inputClass("projectDate")}
-                        />
-                        {getFieldError("projectDate") && (
-                          <div className={styles.fieldError}>
-                            {getFieldError("projectDate")}
-                          </div>
-                        )}
+                      <div className={styles.row2}>
+                        <div className={styles.formGroup}>
+                          <label>Project Date:</label>
+                          <input
+                            type="datetime-local"
+                            name="projectDate"
+                            value={
+                              projectDetails.projectDate
+                                ? projectDetails.projectDate.slice(0, 16)
+                                : ""
+                            }
+                            onChange={handleProjectInputChange}
+                            className={inputClass("projectDate")}
+                          />
+                          {getFieldError("projectDate") && (
+                            <div className={styles.fieldError}>
+                              {getFieldError("projectDate")}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className={styles.formGroup}>
+                          <label>Project Start:</label>
+                          <input
+                            type="datetime-local"
+                            name="projectStart"
+                            value={
+                              projectDetails.projectStart
+                                ? projectDetails.projectStart.slice(0, 16)
+                                : ""
+                            }
+                            onChange={handleProjectInputChange}
+                            className={inputClass("projectStart")}
+                          />
+                          {getFieldError("projectStart") && (
+                            <div className={styles.fieldError}>
+                              {getFieldError("projectStart")}
+                            </div>
+                          )}
+                        </div>
                       </div>
 
-                      {/* Project Start */}
-                      <div>
-                        <label>Project Start:</label>
-                        <input
-                          type="datetime-local"
-                          name="projectStart"
-                          value={
-                            projectDetails.projectStart
-                              ? projectDetails.projectStart.slice(0, 16)
-                              : ""
-                          }
-                          onChange={handleProjectInputChange}
-                          className={inputClass("projectStart")}
-                        />
-                        {getFieldError("projectStart") && (
-                          <div className={styles.fieldError}>
-                            {getFieldError("projectStart")}
-                          </div>
-                        )}
+                      <div className={styles.row2}>
+                        <div className={styles.formGroup}>
+                          <label>Project End:</label>
+                          <input
+                            type="datetime-local"
+                            name="projectEnd"
+                            value={
+                              projectDetails.projectEnd
+                                ? projectDetails.projectEnd.slice(0, 16)
+                                : ""
+                            }
+                            onChange={handleProjectInputChange}
+                            className={inputClass("projectEnd")}
+                          />
+                          {getFieldError("projectEnd") && (
+                            <div className={styles.fieldError}>
+                              {getFieldError("projectEnd")}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className={styles.formGroup}>
+                          <label>Project Start (Revised):</label>
+                          <input
+                            type="datetime-local"
+                            name="projectStartRev"
+                            value={
+                              projectDetails.projectStartRev
+                                ? projectDetails.projectStartRev.slice(0, 16)
+                                : ""
+                            }
+                            onChange={handleProjectInputChange}
+                            className={styles.textInput}
+                          />
+                        </div>
                       </div>
 
-                      {/* Project End */}
-                      <div>
-                        <label>Project End:</label>
-                        <input
-                          type="datetime-local"
-                          name="projectEnd"
-                          value={
-                            projectDetails.projectEnd
-                              ? projectDetails.projectEnd.slice(0, 16)
-                              : ""
-                          }
-                          onChange={handleProjectInputChange}
-                          className={inputClass("projectEnd")}
-                        />
-                        {getFieldError("projectEnd") && (
-                          <div className={styles.fieldError}>
-                            {getFieldError("projectEnd")}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Project Start Revision */}
-                      <div>
-                        <label>Project Start (Revised):</label>
-                        <input
-                          type="datetime-local"
-                          name="projectStartRev"
-                          value={
-                            projectDetails.projectStartRev
-                              ? projectDetails.projectStartRev.slice(0, 16)
-                              : ""
-                          }
-                          onChange={handleProjectInputChange}
-                          className={styles.textInput}
-                        />
-                      </div>
-
-                      {/* Project End Revision */}
-                      <div>
+                      <div className={styles.formGroup}>
                         <label>Project End (Revised):</label>
                         <input
                           type="datetime-local"
@@ -1714,29 +1564,396 @@ const Project = () => {
                           className={styles.textInput}
                         />
                       </div>
+                    </div>
 
-                      {/* Part Of Project ID */}
-                      <div>
-                        <label>Part Of Project:</label>
-                        <select
-                          name="partOfId"
-                          value={projectDetails.partOfId || ""}
-                          onChange={handleProjectInputChange}
-                          className={styles.textInput}
+                    {/* Links card (includes participants UI) */}
+                    <div
+                      className={styles.card}
+                      style={{ gridColumn: "1 / -1" }}
+                    >
+                      <div className={styles.cardHeader}>
+                        <div className={styles.cardTitle}>Links & media</div>
+                        <div className={styles.cardMeta}>
+                          Sectors, organizations, participants, upload
+                        </div>
+                      </div>
+
+                      {/* Upload */}
+                      <div className={styles.sectionRowStack}>
+                        <div className={styles.sectionTitle}>
+                          <FiUploadCloud />
+                          <span>Cover image upload</span>
+                        </div>
+
+                        <div
+                          onDrop={handleCoverDrop}
+                          onDragOver={handleCoverDragOver}
+                          className={styles.dropzone}
+                          onClick={() =>
+                            document
+                              .getElementById("coverImageFileInput")
+                              ?.click()
+                          }
+                          role="button"
+                          tabIndex={0}
                         >
-                          <option value="">Select parent project</option>
-                          {availableParentProjects.map((proj) => (
-                            <option key={proj.id} value={proj.id}>
-                              {proj.projectName}
-                            </option>
-                          ))}
-                        </select>
+                          <div className={styles.dropzoneText}>
+                            {uploadingCover ? (
+                              <strong>Uploading…</strong>
+                            ) : (
+                              <>
+                                <strong>Drag & drop</strong> or click to select
+                                an image
+                              </>
+                            )}
+                            <div className={styles.dropzoneHint}>
+                              PNG, JPG, WEBP • recommended wide image
+                            </div>
+                          </div>
+                        </div>
+
+                        <input
+                          id="coverImageFileInput"
+                          type="file"
+                          accept="image/*"
+                          style={{ display: "none" }}
+                          onChange={handleCoverFileInput}
+                        />
+
+                        {uploadError && (
+                          <div className={styles.inlineError}>
+                            {uploadError}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className={styles.split}>
+                        {/* Sectors */}
+                        <div>
+                          <div className={styles.sectionTitle}>
+                            <span style={{ fontWeight: 700 }}>Sectors</span>
+                            <span className={styles.sectionHint}>
+                              Click checkbox to add; click pill “x” to remove
+                              immediately
+                            </span>
+                          </div>
+
+                          <div className={styles.scrollBox}>
+                            {sectorOptions.length === 0 ? (
+                              <div className={styles.mutedText}>
+                                No sectors available
+                              </div>
+                            ) : (
+                              sectorOptions.map((s) => {
+                                const idStr = String(
+                                  s.id ?? s.sectorId ?? s.sector_id
+                                );
+                                const label =
+                                  s.sectorDescription ||
+                                  s.sector_description ||
+                                  s.sectorCode ||
+                                  s.sector_code ||
+                                  `Sector ${idStr}`;
+                                const checked =
+                                  selectedSectorIds.includes(idStr);
+
+                                return (
+                                  <label
+                                    key={idStr}
+                                    className={styles.checkboxRow}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={checked}
+                                      onChange={(e) =>
+                                        handleToggleSector(
+                                          idStr,
+                                          e.target.checked
+                                        )
+                                      }
+                                    />
+                                    <span>{label}</span>
+                                  </label>
+                                );
+                              })
+                            )}
+                          </div>
+
+                          <div style={{ marginTop: 8 }}>
+                            {selectedSectorIds.length > 0 ? (
+                              selectedSectorIds.map((sid) => (
+                                <span key={sid} style={pillStyle}>
+                                  {getSectorLabel(sid)}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveSectorClick(sid)}
+                                    aria-label={`Remove sector ${getSectorLabel(
+                                      sid
+                                    )}`}
+                                    title="Remove sector"
+                                    style={pillBtnStyle}
+                                  >
+                                    <FiX />
+                                  </button>
+                                </span>
+                              ))
+                            ) : (
+                              <span className={styles.mutedText}>
+                                No sectors assigned
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Organizations */}
+                        <div>
+                          <div className={styles.sectionTitle}>
+                            <span style={{ fontWeight: 700 }}>
+                              Related Organizations
+                            </span>
+                            <span className={styles.sectionHint}>
+                              Add an organization with a status
+                            </span>
+                          </div>
+
+                          <div className={styles.scrollBox}>
+                            {projectOrganizations.length === 0 ? (
+                              <span className={styles.mutedText}>
+                                No related organizations
+                              </span>
+                            ) : (
+                              <ul className={styles.cleanList}>
+                                {projectOrganizations.map((po) => (
+                                  <li key={po.id} className={styles.orgRow}>
+                                    <div className={styles.orgText}>
+                                      <div className={styles.orgName}>
+                                        {getOrgLabel(po.organizationId)}
+                                      </div>
+                                      <div className={styles.orgStatus}>
+                                        {getOrgStatusLabel(
+                                          po.organizationStatusId
+                                        )}
+                                      </div>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleDeleteProjectOrganization(po.id)
+                                      }
+                                      className={styles.dangerIconBtn}
+                                      aria-label="Remove organization from project"
+                                      title="Remove organization"
+                                    >
+                                      <FiTrash2 />
+                                    </button>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+
+                          <div className={styles.addRow}>
+                            <select
+                              value={selectedOrgId}
+                              onChange={(e) => setSelectedOrgId(e.target.value)}
+                              className={styles.textInput}
+                            >
+                              <option value="">Select organization</option>
+                              {selectableOrgOptions.map((o) => (
+                                <option
+                                  key={o.id ?? o.organizationId}
+                                  value={o.id ?? o.organizationId}
+                                >
+                                  {o.name ||
+                                    o.organizationName ||
+                                    o.organization_name}
+                                </option>
+                              ))}
+                            </select>
+
+                            <select
+                              value={selectedOrgStatusId}
+                              onChange={(e) =>
+                                setSelectedOrgStatusId(e.target.value)
+                              }
+                              className={styles.textInput}
+                            >
+                              <option value="">Select status</option>
+                              {orgStatusOptions.map((s) => (
+                                <option
+                                  key={
+                                    s.id ??
+                                    s.organizationStatusId ??
+                                    s.organization_status_id
+                                  }
+                                  value={
+                                    s.id ??
+                                    s.organizationStatusId ??
+                                    s.organization_status_id
+                                  }
+                                >
+                                  {s.organizationStatusName ||
+                                    s.organization_status_name ||
+                                    s.statusName}
+                                </option>
+                              ))}
+                            </select>
+
+                            <button
+                              type="button"
+                              onClick={handleAddProjectOrganization}
+                              className={styles.primaryInlineBtn}
+                            >
+                              <FiPlus />
+                              Add
+                            </button>
+                          </div>
+
+                          <div className={styles.mutedNote}>
+                            An organization stays available until it has been
+                            linked with every possible status for this project.
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Participants */}
+                      <div style={{ marginTop: "1rem" }}>
+                        <div className={styles.sectionTitle}>
+                          <span style={{ fontWeight: 700 }}>
+                            Project Participants
+                          </span>
+                          <span className={styles.sectionHint}>
+                            Select employee; role is fetched from employee
+                            record
+                          </span>
+                        </div>
+
+                        <div className={styles.scrollBox}>
+                          {projectParticipants.length === 0 ? (
+                            <span className={styles.mutedText}>
+                              No participants added
+                            </span>
+                          ) : (
+                            <ul className={styles.cleanList}>
+                              {projectParticipants.map((p) => (
+                                <li key={p.id} className={styles.orgRow}>
+                                  <div className={styles.orgText}>
+                                    <div className={styles.orgName}>
+                                      {getEmployeeLabel(p.employeeId)}
+                                    </div>
+                                    <div className={styles.orgStatus}>
+                                      {getPositionLabel(p.positionId)}
+                                    </div>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleDeleteParticipant(p.id)
+                                    }
+                                    className={styles.dangerIconBtn}
+                                    aria-label="Remove participant from project"
+                                    title="Remove participant"
+                                  >
+                                    <FiTrash2 />
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+
+                        <div
+                          className={styles.addRow}
+                          style={{ marginTop: 10 }}
+                        >
+                          <select
+                            value={selectedEmployeeId}
+                            onChange={(e) =>
+                              setSelectedEmployeeId(e.target.value)
+                            }
+                            className={styles.textInput}
+                          >
+                            <option value="">Select employee</option>
+                            {selectableEmployeeOptions.map((e) => {
+                              const fullName = `${e.firstName || ""} ${
+                                e.lastName || ""
+                              }`.trim();
+                              const label =
+                                e.employeeName ||
+                                e.fullName ||
+                                e.name ||
+                                (fullName ? fullName : "") ||
+                                e.email ||
+                                `Employee ${e.id}`;
+
+                              return (
+                                <option key={e.id} value={e.id}>
+                                  {label}
+                                </option>
+                              );
+                            })}
+                          </select>
+
+                          <div
+                            className={styles.textInput}
+                            style={{ display: "flex", alignItems: "center" }}
+                          >
+                            {selectedEmployeeId
+                              ? selectedEmployeeRoleLabel || "Role not found"
+                              : "Role: (select employee)"}
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={handleAddParticipant}
+                            className={styles.primaryInlineBtn}
+                          >
+                            <FiPlus />
+                            Add
+                          </button>
+                        </div>
+
+                        {participantError && (
+                          <div
+                            className={styles.inlineError}
+                            style={{ marginTop: 8 }}
+                          >
+                            {participantError}
+                          </div>
+                        )}
+
+                        <div className={styles.mutedNote}>
+                          Employees already added to this project are hidden
+                          from the dropdown.
+                        </div>
                       </div>
                     </div>
                   </div>
+
+                  {/* Bottom actions */}
+                  <div className={styles.bottomActions}>
+                    <button
+                      type="button"
+                      onClick={handleSave}
+                      className={styles.saveButton}
+                      disabled={loading}
+                    >
+                      <FiSave />
+                      Save changes
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDelete}
+                      className={styles.deleteButton}
+                      disabled={loading}
+                    >
+                      <FiTrash2 />
+                      Delete project
+                    </button>
+                  </div>
                 </form>
               )}
-            </div>
+            </section>
           </div>
         </div>
       )}
@@ -1744,5 +1961,4 @@ const Project = () => {
   );
 };
 
-// Export the component to be used in routes
 export default Project;
