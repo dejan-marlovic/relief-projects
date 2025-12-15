@@ -1,15 +1,12 @@
-// Import necessary React hooks and modules
+// Project.jsx
 import React, { useEffect, useState, useContext, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
-// Import scoped CSS module for styling
 import styles from "./Project.module.scss";
 import Memos from "../Project/Memos/Memos.jsx";
 
-// Import ProjectContext to access the currently selected project ID
 import { ProjectContext } from "../../context/ProjectContext";
 
-// ✅ Icons (same library as Memos)
 import {
   FiTrash2,
   FiChevronLeft,
@@ -22,7 +19,6 @@ import {
   FiAlertCircle,
 } from "react-icons/fi";
 
-// ✅ Base URL (backend)
 const BASE_URL = "http://localhost:8080";
 const coverImagePath = `${BASE_URL}/images/projects/`;
 
@@ -95,11 +91,19 @@ const Project = () => {
 
   // ✅ Related organizations state
   const [allOrganizationOptions, setAllOrganizationOptions] = useState([]);
-  const [projectOrgOptions, setProjectOrgOptions] = useState([]); // still loaded, but dropdown now uses computed selectable options
+  const [projectOrgOptions, setProjectOrgOptions] = useState([]);
   const [orgStatusOptions, setOrgStatusOptions] = useState([]);
   const [projectOrganizations, setProjectOrganizations] = useState([]);
   const [selectedOrgId, setSelectedOrgId] = useState("");
   const [selectedOrgStatusId, setSelectedOrgStatusId] = useState("");
+
+  // ✅ Participants (employee_project) state
+  const [employeeOptions, setEmployeeOptions] = useState([]);
+  const [positionOptions, setPositionOptions] = useState([]);
+  const [projectParticipants, setProjectParticipants] = useState([]);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
+  const [selectedPositionId, setSelectedPositionId] = useState("");
+  const [participantError, setParticipantError] = useState("");
 
   // ✅ form-level + field-level error state
   const [formError, setFormError] = useState("");
@@ -135,11 +139,10 @@ const Project = () => {
         setLoading(true);
         setFormError("");
         setFieldErrors({});
+
         const response = await authFetch(
           `${BASE_URL}/api/projects/${selectedProjectId}`,
-          {
-            headers: { "Content-Type": "application/json" },
-          }
+          { headers: { "Content-Type": "application/json" } }
         );
 
         if (!response.ok) throw new Error("Failed to fetch project details");
@@ -335,7 +338,6 @@ const Project = () => {
           { headers: { "Content-Type": "application/json" } }
         );
 
-        // If endpoint not ok → fallback to all active org options
         if (!res.ok) {
           setProjectOrgOptions(allOrganizationOptions);
           return;
@@ -343,8 +345,6 @@ const Project = () => {
 
         const data = await safeReadJson(res);
         const arr = Array.isArray(data) ? data : [];
-
-        // if empty, fallback to all (new project etc.)
         setProjectOrgOptions(arr.length > 0 ? arr : allOrganizationOptions);
       } catch (e) {
         console.error("Error fetching project-aware org options:", e);
@@ -356,7 +356,9 @@ const Project = () => {
       try {
         const res = await authFetch(
           `${BASE_URL}/api/project-organizations/active`,
-          { headers: { "Content-Type": "application/json" } }
+          {
+            headers: { "Content-Type": "application/json" },
+          }
         );
         if (!res.ok) throw new Error("Failed to fetch project organizations");
         const data = await res.json();
@@ -376,6 +378,70 @@ const Project = () => {
     setSelectedOrgStatusId("");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProjectId, allOrganizationOptions]);
+
+  // ✅ Participants: load employees + positions once
+  useEffect(() => {
+    const loadEmployeesAndPositions = async () => {
+      try {
+        const [empRes, posRes] = await Promise.all([
+          authFetch(`${BASE_URL}/api/employees/active`, {
+            headers: { "Content-Type": "application/json" },
+          }),
+          authFetch(`${BASE_URL}/api/positions/active`, {
+            headers: { "Content-Type": "application/json" },
+          }),
+        ]);
+
+        const empData = await safeReadJson(empRes);
+        const posData = await safeReadJson(posRes);
+
+        setEmployeeOptions(Array.isArray(empData) ? empData : []);
+        setPositionOptions(Array.isArray(posData) ? posData : []);
+      } catch (e) {
+        console.error("Error fetching employees/positions:", e);
+        setEmployeeOptions([]);
+        setPositionOptions([]);
+      }
+    };
+
+    loadEmployeesAndPositions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ✅ Participants: load project participants whenever project changes
+  useEffect(() => {
+    if (!selectedProjectId) {
+      setProjectParticipants([]);
+      setSelectedEmployeeId("");
+      setSelectedPositionId("");
+      setParticipantError("");
+      return;
+    }
+
+    const loadParticipants = async (projectId) => {
+      try {
+        setParticipantError("");
+        const res = await authFetch(
+          `${BASE_URL}/api/employee-projects/active`,
+          {
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+        const data = await safeReadJson(res);
+        const all = Array.isArray(data) ? data : [];
+        const byProject = all.filter(
+          (ep) => String(ep.projectId) === String(projectId)
+        );
+        setProjectParticipants(byProject);
+      } catch (e) {
+        console.error("Error loading project participants:", e);
+        setProjectParticipants([]);
+      }
+    };
+
+    loadParticipants(selectedProjectId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProjectId]);
 
   const handleProjectInputChange = (e) => {
     const { name, value } = e.target;
@@ -569,7 +635,6 @@ const Project = () => {
         setProjectOrganizations(byProject);
       }
 
-      // still reload project-aware options (not required for select anymore, but fine)
       const reloadOpts = await authFetch(
         `${BASE_URL}/api/organizations/by-project/${projectId}/options`,
         { headers: { "Content-Type": "application/json" } }
@@ -624,6 +689,79 @@ const Project = () => {
     }
   };
 
+  // ✅ Participants: add / delete
+  const handleAddParticipant = async () => {
+    if (!projectDetails?.id) {
+      setParticipantError("No project is selected.");
+      return;
+    }
+    if (!selectedEmployeeId || !selectedPositionId) {
+      setParticipantError("Please select both employee and role.");
+      return;
+    }
+
+    try {
+      setParticipantError("");
+
+      const res = await authFetch(`${BASE_URL}/api/employee-projects`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectId: Number(projectDetails.id),
+          employeeId: Number(selectedEmployeeId),
+          positionId: Number(selectedPositionId),
+        }),
+      });
+
+      if (!res.ok) {
+        const msg = await res.text().catch(() => "");
+        throw new Error(msg || "Failed to add participant.");
+      }
+
+      // reload participants for this project
+      const reload = await authFetch(
+        `${BASE_URL}/api/employee-projects/active`,
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      const data = await safeReadJson(reload);
+      const all = Array.isArray(data) ? data : [];
+      const byProject = all.filter(
+        (ep) => String(ep.projectId) === String(projectDetails.id)
+      );
+      setProjectParticipants(byProject);
+
+      setSelectedEmployeeId("");
+      setSelectedPositionId("");
+    } catch (e) {
+      console.error(e);
+      setParticipantError(e.message || "Error adding participant.");
+    }
+  };
+
+  const handleDeleteParticipant = async (participantId) => {
+    if (!window.confirm("Remove this participant from the project?")) return;
+
+    try {
+      const res = await authFetch(
+        `${BASE_URL}/api/employee-projects/${participantId}`,
+        { method: "DELETE" }
+      );
+      if (!res.ok) {
+        const msg = await res.text().catch(() => "");
+        throw new Error(msg || "Failed to remove participant.");
+      }
+
+      setProjectParticipants((prev) =>
+        prev.filter((p) => p.id !== participantId)
+      );
+    } catch (e) {
+      console.error(e);
+      alert(e.message || "Error deleting participant.");
+    }
+  };
+
   const autoResize = (textarea) => {
     if (!textarea) return;
     textarea.style.height = "auto";
@@ -659,6 +797,7 @@ const Project = () => {
       setSelectedSectorIds([]);
       setCurrentProjectSectorLinks([]);
       setProjectOrganizations([]);
+      setProjectParticipants([]);
       setFormError("");
       setFieldErrors({});
     } catch (error) {
@@ -797,10 +936,10 @@ const Project = () => {
       (x) => String(x.id ?? x.sectorId ?? x.sector_id) === String(id)
     );
     return (
-      s?.sectorDescription ??
-      s?.sector_description ??
-      s?.sectorCode ??
-      s?.sector_code ??
+      s?.sectorDescription ||
+      s?.sector_description ||
+      s?.sectorCode ||
+      s?.sector_code ||
       `Sector ${id}`
     );
   };
@@ -810,9 +949,9 @@ const Project = () => {
       (opt) => String(opt.id ?? opt.organizationId) === String(id)
     );
     return (
-      o?.name ??
-      o?.organizationName ??
-      o?.organization_name ??
+      o?.name ||
+      o?.organizationName ||
+      o?.organization_name ||
       `Organization ${id}`
     );
   };
@@ -825,11 +964,34 @@ const Project = () => {
         ) === String(id)
     );
     return (
-      s?.organizationStatusName ??
-      s?.organization_status_name ??
-      s?.statusName ??
+      s?.organizationStatusName ||
+      s?.organization_status_name ||
+      s?.statusName ||
       `Status ${id}`
     );
+  };
+
+  // ✅ Babel-safe: NO mixing ?? with ||.
+  const getEmployeeLabel = (id) => {
+    const e = (employeeOptions || []).find((x) => String(x.id) === String(id));
+    if (!e) return `Employee ${id}`;
+
+    const fullName = `${e.firstName || ""} ${e.lastName || ""}`.trim();
+
+    return (
+      e.employeeName ||
+      e.fullName ||
+      e.name ||
+      (fullName ? fullName : "") ||
+      e.email ||
+      `Employee ${id}`
+    );
+  };
+
+  const getPositionLabel = (id) => {
+    const p = (positionOptions || []).find((x) => String(x.id) === String(id));
+    if (!p) return `Role ${id}`;
+    return p.positionName || p.name || p.title || `Role ${id}`;
   };
 
   // ✅ NEW: org dropdown options based on "only hide when ALL statuses are used"
@@ -846,12 +1008,10 @@ const Project = () => {
       )
       .filter(Boolean);
 
-    // If we don't know statuses yet, safest is: show all orgs
     if (allStatusIds.length === 0) return allOrgs;
 
     const allStatusSet = new Set(allStatusIds);
 
-    // Map orgId -> Set(statusId) already linked on this project
     const usedByOrg = new Map();
     (Array.isArray(projectOrganizations) ? projectOrganizations : []).forEach(
       (po) => {
@@ -864,19 +1024,28 @@ const Project = () => {
       }
     );
 
-    // Hide org only if it has ALL statuses already used
     return allOrgs.filter((o) => {
       const orgId = String(o.id ?? o.organizationId);
       const usedSet = usedByOrg.get(orgId);
-      if (!usedSet) return true; // org not used at all => show
+      if (!usedSet) return true;
 
-      // org is fully used if every status in allStatusSet is in usedSet
       for (const sid of allStatusSet) {
-        if (!usedSet.has(sid)) return true; // missing a status => still show
+        if (!usedSet.has(sid)) return true;
       }
-      return false; // has all statuses => hide
+      return false;
     });
   }, [allOrganizationOptions, orgStatusOptions, projectOrganizations]);
+
+  // ✅ NEW: employee dropdown options — remove already-added employees
+  const selectableEmployeeOptions = useMemo(() => {
+    const all = Array.isArray(employeeOptions) ? employeeOptions : [];
+    const used = new Set(
+      (Array.isArray(projectParticipants) ? projectParticipants : []).map((p) =>
+        String(p.employeeId)
+      )
+    );
+    return all.filter((e) => !used.has(String(e.id)));
+  }, [employeeOptions, projectParticipants]);
 
   const pillStyle = {
     display: "inline-flex",
@@ -924,7 +1093,8 @@ const Project = () => {
             <div className={styles.pageHeaderText}>
               <h3 className={styles.pageTitle}>Project Details</h3>
               <p className={styles.pageSubtitle}>
-                Update project info, sectors, images, and related organizations.
+                Update project info, sectors, images, organizations, and
+                participants.
               </p>
             </div>
 
@@ -1407,7 +1577,7 @@ const Project = () => {
                       </div>
                     </div>
 
-                    {/* Upload + Sectors + Orgs card */}
+                    {/* Upload + Sectors + Orgs + Participants card */}
                     <div
                       className={styles.card}
                       style={{ gridColumn: "1 / -1" }}
@@ -1415,7 +1585,7 @@ const Project = () => {
                       <div className={styles.cardHeader}>
                         <div className={styles.cardTitle}>Links & media</div>
                         <div className={styles.cardMeta}>
-                          Sectors, organizations, upload
+                          Sectors, organizations, participants, upload
                         </div>
                       </div>
 
@@ -1490,10 +1660,10 @@ const Project = () => {
                                   s.id ?? s.sectorId ?? s.sector_id
                                 );
                                 const label =
-                                  s.sectorDescription ??
-                                  s.sector_description ??
-                                  s.sectorCode ??
-                                  s.sector_code ??
+                                  s.sectorDescription ||
+                                  s.sector_description ||
+                                  s.sectorCode ||
+                                  s.sector_code ||
                                   `Sector ${idStr}`;
                                 const checked =
                                   selectedSectorIds.includes(idStr);
@@ -1605,8 +1775,8 @@ const Project = () => {
                                   key={o.id ?? o.organizationId}
                                   value={o.id ?? o.organizationId}
                                 >
-                                  {o.name ??
-                                    o.organizationName ??
+                                  {o.name ||
+                                    o.organizationName ||
                                     o.organization_name}
                                 </option>
                               ))}
@@ -1633,8 +1803,8 @@ const Project = () => {
                                     s.organization_status_id
                                   }
                                 >
-                                  {s.organizationStatusName ??
-                                    s.organization_status_name ??
+                                  {s.organizationStatusName ||
+                                    s.organization_status_name ||
                                     s.statusName}
                                 </option>
                               ))}
@@ -1656,10 +1826,130 @@ const Project = () => {
                           </div>
                         </div>
                       </div>
+
+                      {/* Participants (full width below split) */}
+                      <div style={{ marginTop: "1rem" }}>
+                        <div className={styles.sectionTitle}>
+                          <span style={{ fontWeight: 700 }}>
+                            Project Participants
+                          </span>
+                          <span className={styles.sectionHint}>
+                            Select employee + role, then add
+                          </span>
+                        </div>
+
+                        <div className={styles.scrollBox}>
+                          {projectParticipants.length === 0 ? (
+                            <span className={styles.mutedText}>
+                              No participants added
+                            </span>
+                          ) : (
+                            <ul className={styles.cleanList}>
+                              {projectParticipants.map((p) => (
+                                <li key={p.id} className={styles.orgRow}>
+                                  <div className={styles.orgText}>
+                                    <div className={styles.orgName}>
+                                      {getEmployeeLabel(p.employeeId)}
+                                    </div>
+                                    <div className={styles.orgStatus}>
+                                      {getPositionLabel(p.positionId)}
+                                    </div>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleDeleteParticipant(p.id)
+                                    }
+                                    className={styles.dangerIconBtn}
+                                    aria-label="Remove participant from project"
+                                    title="Remove participant"
+                                  >
+                                    <FiTrash2 />
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+
+                        <div
+                          className={styles.addRow}
+                          style={{ marginTop: 10 }}
+                        >
+                          <select
+                            value={selectedEmployeeId}
+                            onChange={(e) =>
+                              setSelectedEmployeeId(e.target.value)
+                            }
+                            className={styles.textInput}
+                          >
+                            <option value="">Select employee</option>
+                            {selectableEmployeeOptions.map((e) => {
+                              const fullName = `${e.firstName || ""} ${
+                                e.lastName || ""
+                              }`.trim();
+                              const label =
+                                e.employeeName ||
+                                e.fullName ||
+                                e.name ||
+                                (fullName ? fullName : "") ||
+                                e.email ||
+                                `Employee ${e.id}`;
+
+                              return (
+                                <option key={e.id} value={e.id}>
+                                  {label}
+                                </option>
+                              );
+                            })}
+                          </select>
+
+                          <select
+                            value={selectedPositionId}
+                            onChange={(e) =>
+                              setSelectedPositionId(e.target.value)
+                            }
+                            className={styles.textInput}
+                          >
+                            <option value="">Select role</option>
+                            {positionOptions.map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {p.positionName ||
+                                  p.name ||
+                                  p.title ||
+                                  `Role ${p.id}`}
+                              </option>
+                            ))}
+                          </select>
+
+                          <button
+                            type="button"
+                            onClick={handleAddParticipant}
+                            className={styles.primaryInlineBtn}
+                          >
+                            <FiPlus />
+                            Add
+                          </button>
+                        </div>
+
+                        {participantError && (
+                          <div
+                            className={styles.inlineError}
+                            style={{ marginTop: 8 }}
+                          >
+                            {participantError}
+                          </div>
+                        )}
+
+                        <div className={styles.mutedNote}>
+                          Employees already added to this project are hidden
+                          from the dropdown.
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Bottom actions (sticky-ish feel) */}
+                  {/* Bottom actions */}
                   <div className={styles.bottomActions}>
                     <button
                       type="button"
