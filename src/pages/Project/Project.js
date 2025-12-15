@@ -99,10 +99,9 @@ const Project = () => {
 
   // ✅ Participants (employee_project) state
   const [employeeOptions, setEmployeeOptions] = useState([]);
-  const [positionOptions, setPositionOptions] = useState([]);
+  const [positionOptions, setPositionOptions] = useState([]); // for displaying labels only
   const [projectParticipants, setProjectParticipants] = useState([]);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
-  const [selectedPositionId, setSelectedPositionId] = useState("");
   const [participantError, setParticipantError] = useState("");
 
   // ✅ form-level + field-level error state
@@ -356,9 +355,7 @@ const Project = () => {
       try {
         const res = await authFetch(
           `${BASE_URL}/api/project-organizations/active`,
-          {
-            headers: { "Content-Type": "application/json" },
-          }
+          { headers: { "Content-Type": "application/json" } }
         );
         if (!res.ok) throw new Error("Failed to fetch project organizations");
         const data = await res.json();
@@ -379,7 +376,7 @@ const Project = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProjectId, allOrganizationOptions]);
 
-  // ✅ Participants: load employees + positions once
+  // ✅ Participants: load employees + positions once (positions only used for label)
   useEffect(() => {
     const loadEmployeesAndPositions = async () => {
       try {
@@ -413,7 +410,6 @@ const Project = () => {
     if (!selectedProjectId) {
       setProjectParticipants([]);
       setSelectedEmployeeId("");
-      setSelectedPositionId("");
       setParticipantError("");
       return;
     }
@@ -427,6 +423,7 @@ const Project = () => {
             headers: { "Content-Type": "application/json" },
           }
         );
+
         const data = await safeReadJson(res);
         const all = Array.isArray(data) ? data : [];
         const byProject = all.filter(
@@ -509,9 +506,7 @@ const Project = () => {
     if (file) uploadCoverImage(file);
   };
 
-  const handleCoverDragOver = (e) => {
-    e.preventDefault();
-  };
+  const handleCoverDragOver = (e) => e.preventDefault();
 
   const handleCoverFileInput = (e) => {
     const file = e.target.files?.[0];
@@ -596,14 +591,9 @@ const Project = () => {
   };
 
   const handleAddProjectOrganization = async () => {
-    if (!projectDetails?.id) {
-      alert("No project is selected.");
-      return;
-    }
-    if (!selectedOrgId || !selectedOrgStatusId) {
-      alert("Please select both organization and status.");
-      return;
-    }
+    if (!projectDetails?.id) return alert("No project is selected.");
+    if (!selectedOrgId || !selectedOrgStatusId)
+      return alert("Please select both organization and status.");
 
     try {
       const res = await authFetch(`${BASE_URL}/api/project-organizations`, {
@@ -635,19 +625,6 @@ const Project = () => {
         setProjectOrganizations(byProject);
       }
 
-      const reloadOpts = await authFetch(
-        `${BASE_URL}/api/organizations/by-project/${projectId}/options`,
-        { headers: { "Content-Type": "application/json" } }
-      );
-
-      if (reloadOpts.ok) {
-        const data = await safeReadJson(reloadOpts);
-        const arr = Array.isArray(data) ? data : [];
-        setProjectOrgOptions(arr.length > 0 ? arr : allOrganizationOptions);
-      } else {
-        setProjectOrgOptions(allOrganizationOptions);
-      }
-
       setSelectedOrgId("");
       setSelectedOrgStatusId("");
     } catch (e) {
@@ -669,34 +646,42 @@ const Project = () => {
       setProjectOrganizations((prev) =>
         prev.filter((po) => po.id !== projectOrgId)
       );
-
-      if (projectDetails?.id) {
-        const reload = await authFetch(
-          `${BASE_URL}/api/organizations/by-project/${projectDetails.id}/options`,
-          { headers: { "Content-Type": "application/json" } }
-        );
-        if (reload.ok) {
-          const data = await safeReadJson(reload);
-          const arr = Array.isArray(data) ? data : [];
-          setProjectOrgOptions(arr.length > 0 ? arr : allOrganizationOptions);
-        } else {
-          setProjectOrgOptions(allOrganizationOptions);
-        }
-      }
     } catch (e) {
       console.error(e);
       alert(e.message || "Error deleting project organization.");
     }
   };
 
-  // ✅ Participants: add / delete
+  // ✅ Participants: helper to get employee's position id from EmployeeDTO
+  const getEmployeePositionId = (employeeId) => {
+    const e = (employeeOptions || []).find(
+      (x) => String(x.id) === String(employeeId)
+    );
+    if (!e) return null;
+
+    // supports either "positionId" OR "position: { id }"
+    const pid =
+      e.positionId || (e.position && e.position.id) || e.position_id || null;
+
+    return pid ? Number(pid) : null;
+  };
+
+  // ✅ Participants: add / delete (role auto from employee)
   const handleAddParticipant = async () => {
     if (!projectDetails?.id) {
       setParticipantError("No project is selected.");
       return;
     }
-    if (!selectedEmployeeId || !selectedPositionId) {
-      setParticipantError("Please select both employee and role.");
+    if (!selectedEmployeeId) {
+      setParticipantError("Please select an employee.");
+      return;
+    }
+
+    const positionId = getEmployeePositionId(selectedEmployeeId);
+    if (!positionId) {
+      setParticipantError(
+        "Could not find this employee's positionId. Make sure EmployeeDTO includes positionId (or position.id)."
+      );
       return;
     }
 
@@ -709,7 +694,7 @@ const Project = () => {
         body: JSON.stringify({
           projectId: Number(projectDetails.id),
           employeeId: Number(selectedEmployeeId),
-          positionId: Number(selectedPositionId),
+          positionId: Number(positionId),
         }),
       });
 
@@ -733,7 +718,6 @@ const Project = () => {
       setProjectParticipants(byProject);
 
       setSelectedEmployeeId("");
-      setSelectedPositionId("");
     } catch (e) {
       console.error(e);
       setParticipantError(e.message || "Error adding participant.");
@@ -844,9 +828,7 @@ const Project = () => {
       try {
         const res = await authFetch(
           `${BASE_URL}/api/project-sectors/${link.id}`,
-          {
-            method: "DELETE",
-          }
+          { method: "DELETE" }
         );
         if (!res.ok) throw new Error("Failed to delete sector link");
       } catch (e) {
@@ -902,7 +884,6 @@ const Project = () => {
         } else {
           setFormError("There was a problem updating the project.");
         }
-
         return;
       }
 
@@ -971,7 +952,7 @@ const Project = () => {
     );
   };
 
-  // ✅ Babel-safe: NO mixing ?? with ||.
+  // ✅ Babel-safe label builder
   const getEmployeeLabel = (id) => {
     const e = (employeeOptions || []).find((x) => String(x.id) === String(id));
     if (!e) return `Employee ${id}`;
@@ -994,7 +975,7 @@ const Project = () => {
     return p.positionName || p.name || p.title || `Role ${id}`;
   };
 
-  // ✅ NEW: org dropdown options based on "only hide when ALL statuses are used"
+  // ✅ org dropdown options based on "only hide when ALL statuses are used"
   const selectableOrgOptions = useMemo(() => {
     const allOrgs = Array.isArray(allOrganizationOptions)
       ? allOrganizationOptions
@@ -1036,7 +1017,7 @@ const Project = () => {
     });
   }, [allOrganizationOptions, orgStatusOptions, projectOrganizations]);
 
-  // ✅ NEW: employee dropdown options — remove already-added employees
+  // ✅ employee dropdown options — remove already-added employees
   const selectableEmployeeOptions = useMemo(() => {
     const all = Array.isArray(employeeOptions) ? employeeOptions : [];
     const used = new Set(
@@ -1072,6 +1053,14 @@ const Project = () => {
   };
 
   const hasProject = Boolean(projectDetails);
+
+  // compute selected employee’s role label for UI hint
+  const selectedEmployeeRoleLabel = useMemo(() => {
+    if (!selectedEmployeeId) return "";
+    const pid = getEmployeePositionId(selectedEmployeeId);
+    return pid ? getPositionLabel(pid) : "";
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedEmployeeId, positionOptions]);
 
   return (
     <div className={styles.projectContainer}>
@@ -1577,7 +1566,7 @@ const Project = () => {
                       </div>
                     </div>
 
-                    {/* Upload + Sectors + Orgs + Participants card */}
+                    {/* Links card (includes participants UI) */}
                     <div
                       className={styles.card}
                       style={{ gridColumn: "1 / -1" }}
@@ -1827,14 +1816,15 @@ const Project = () => {
                         </div>
                       </div>
 
-                      {/* Participants (full width below split) */}
+                      {/* Participants */}
                       <div style={{ marginTop: "1rem" }}>
                         <div className={styles.sectionTitle}>
                           <span style={{ fontWeight: 700 }}>
                             Project Participants
                           </span>
                           <span className={styles.sectionHint}>
-                            Select employee + role, then add
+                            Select employee; role is fetched from employee
+                            record
                           </span>
                         </div>
 
@@ -1904,23 +1894,14 @@ const Project = () => {
                             })}
                           </select>
 
-                          <select
-                            value={selectedPositionId}
-                            onChange={(e) =>
-                              setSelectedPositionId(e.target.value)
-                            }
+                          <div
                             className={styles.textInput}
+                            style={{ display: "flex", alignItems: "center" }}
                           >
-                            <option value="">Select role</option>
-                            {positionOptions.map((p) => (
-                              <option key={p.id} value={p.id}>
-                                {p.positionName ||
-                                  p.name ||
-                                  p.title ||
-                                  `Role ${p.id}`}
-                              </option>
-                            ))}
-                          </select>
+                            {selectedEmployeeId
+                              ? selectedEmployeeRoleLabel || "Role not found"
+                              : "Role: (select employee)"}
+                          </div>
 
                           <button
                             type="button"
