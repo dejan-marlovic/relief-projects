@@ -29,6 +29,8 @@ const Layout = () => {
   const isStatisticsPage = location.pathname === "/statistics";
   const hideSelector = isRegisterPage || isStatisticsPage;
 
+  const isActive = (path) => location.pathname === path;
+
   return (
     <div className={styles.layoutShell}>
       <header className={styles.headerBar}>
@@ -52,12 +54,7 @@ const Layout = () => {
                 value={selectedProjectId}
                 onChange={handleSelectChange}
                 className={styles.selectInput}
-                disabled={!projects || projects.length === 0}
-                aria-label="Select a project"
               >
-                {(!projects || projects.length === 0) && (
-                  <option value="">No projects available</option>
-                )}
                 {projects?.map((project) => (
                   <option key={project.id} value={project.id}>
                     {project.projectName}
@@ -80,109 +77,38 @@ const Layout = () => {
             className={styles.logoutIcon}
             onClick={handleLogout}
             aria-label="Logout"
-            title="Logout"
           >
             <FiLogOut />
           </button>
         </div>
       </header>
 
+      {/* TAB BAR */}
       <nav className={styles.nav}>
-        <ul>
-          <li>
-            <Link
-              to="/project"
-              className={location.pathname === "/project" ? styles.active : ""}
-            >
-              Project
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/budgets"
-              className={location.pathname === "/budgets" ? styles.active : ""}
-            >
-              Budgets
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/transactions"
-              className={
-                location.pathname === "/transactions" ? styles.active : ""
-              }
-            >
-              Transactions
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/payments"
-              className={location.pathname === "/payments" ? styles.active : ""}
-            >
-              Payments
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/signatures"
-              className={
-                location.pathname === "/signatures" ? styles.active : ""
-              }
-            >
-              Signatures
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/recipients"
-              className={
-                location.pathname === "/recipients" ? styles.active : ""
-              }
-            >
-              Recipients
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/documents"
-              className={
-                location.pathname === "/documents" ? styles.active : ""
-              }
-            >
-              Documents
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/organizations"
-              className={
-                location.pathname === "/organizations" ? styles.active : ""
-              }
-            >
-              Related Organizations
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/statistics"
-              className={
-                location.pathname === "/statistics" ? styles.active : ""
-              }
-            >
-              Statistics
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/register-project"
-              className={
-                location.pathname === "/register-project" ? styles.active : ""
-              }
-            >
-              New Project
-            </Link>
-          </li>
+        <ul className={styles.tabList}>
+          {[
+            ["/project", "Project"],
+            ["/budgets", "Budgets"],
+            ["/transactions", "Transactions"],
+            ["/payments", "Payments"],
+            ["/signatures", "Signatures"],
+            ["/recipients", "Recipients"],
+            ["/documents", "Documents"],
+            ["/organizations", "Related Organizations"],
+            ["/statistics", "Statistics"],
+            ["/register-project", "New Project"],
+          ].map(([path, label]) => (
+            <li key={path} className={styles.tabItem}>
+              <Link
+                to={path}
+                className={`${styles.tabLink} ${
+                  isActive(path) ? styles.active : ""
+                }`}
+              >
+                {label}
+              </Link>
+            </li>
+          ))}
         </ul>
       </nav>
 
