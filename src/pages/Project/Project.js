@@ -52,6 +52,22 @@ const Project = () => {
     return res;
   };
 
+  // ✅ Safe JSON reader: handles 204 / empty body without crashing
+  const safeReadJson = async (res) => {
+    if (!res) return null;
+    if (res.status === 204) return null;
+
+    const text = await res.text().catch(() => "");
+    if (!text || !text.trim()) return null;
+
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      console.warn("safeReadJson: failed to parse JSON:", e);
+      return null;
+    }
+  };
+
   const { selectedProjectId, setSelectedProjectId, projects, setProjects } =
     useContext(ProjectContext);
 
@@ -79,7 +95,7 @@ const Project = () => {
 
   // ✅ Related organizations state
   const [allOrganizationOptions, setAllOrganizationOptions] = useState([]);
-  const [projectOrgOptions, setProjectOrgOptions] = useState([]);
+  const [projectOrgOptions, setProjectOrgOptions] = useState([]); // still loaded, but dropdown now uses computed selectable options
   const [orgStatusOptions, setOrgStatusOptions] = useState([]);
   const [projectOrganizations, setProjectOrganizations] = useState([]);
   const [selectedOrgId, setSelectedOrgId] = useState("");
@@ -262,7 +278,7 @@ const Project = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ✅ fetch all org options
+  // ✅ fetch all org options (safe for 204 too)
   useEffect(() => {
     const fetchAllOrgOptions = async () => {
       try {
@@ -270,8 +286,8 @@ const Project = () => {
           `${BASE_URL}/api/organizations/active/options`,
           { headers: { "Content-Type": "application/json" } }
         );
-        if (!res.ok) throw new Error("Failed to fetch organization options");
-        const data = await res.json();
+
+        const data = await safeReadJson(res);
         setAllOrganizationOptions(Array.isArray(data) ? data : []);
       } catch (e) {
         console.error("Error fetching all organization options:", e);
@@ -319,19 +335,20 @@ const Project = () => {
           { headers: { "Content-Type": "application/json" } }
         );
 
+        // If endpoint not ok → fallback to all active org options
         if (!res.ok) {
-          console.warn(
-            "Falling back to all active organization options for dropdown."
-          );
           setProjectOrgOptions(allOrganizationOptions);
           return;
         }
 
-        const data = await res.json();
-        setProjectOrgOptions(Array.isArray(data) ? data : []);
+        const data = await safeReadJson(res);
+        const arr = Array.isArray(data) ? data : [];
+
+        // if empty, fallback to all (new project etc.)
+        setProjectOrgOptions(arr.length > 0 ? arr : allOrganizationOptions);
       } catch (e) {
         console.error("Error fetching project-aware org options:", e);
-        setProjectOrgOptions([]);
+        setProjectOrgOptions(allOrganizationOptions);
       }
     };
 
@@ -552,13 +569,18 @@ const Project = () => {
         setProjectOrganizations(byProject);
       }
 
+      // still reload project-aware options (not required for select anymore, but fine)
       const reloadOpts = await authFetch(
         `${BASE_URL}/api/organizations/by-project/${projectId}/options`,
         { headers: { "Content-Type": "application/json" } }
       );
+
       if (reloadOpts.ok) {
-        const data = await reloadOpts.json();
-        setProjectOrgOptions(Array.isArray(data) ? data : []);
+        const data = await safeReadJson(reloadOpts);
+        const arr = Array.isArray(data) ? data : [];
+        setProjectOrgOptions(arr.length > 0 ? arr : allOrganizationOptions);
+      } else {
+        setProjectOrgOptions(allOrganizationOptions);
       }
 
       setSelectedOrgId("");
@@ -589,8 +611,11 @@ const Project = () => {
           { headers: { "Content-Type": "application/json" } }
         );
         if (reload.ok) {
-          const data = await reload.json();
-          setProjectOrgOptions(Array.isArray(data) ? data : []);
+          const data = await safeReadJson(reload);
+          const arr = Array.isArray(data) ? data : [];
+          setProjectOrgOptions(arr.length > 0 ? arr : allOrganizationOptions);
+        } else {
+          setProjectOrgOptions(allOrganizationOptions);
         }
       }
     } catch (e) {
@@ -806,6 +831,52 @@ const Project = () => {
       `Status ${id}`
     );
   };
+
+  // ✅ NEW: org dropdown options based on "only hide when ALL statuses are used"
+  const selectableOrgOptions = useMemo(() => {
+    const allOrgs = Array.isArray(allOrganizationOptions)
+      ? allOrganizationOptions
+      : [];
+
+    const allStatusIds = (
+      Array.isArray(orgStatusOptions) ? orgStatusOptions : []
+    )
+      .map((s) =>
+        String(s.id ?? s.organizationStatusId ?? s.organization_status_id)
+      )
+      .filter(Boolean);
+
+    // If we don't know statuses yet, safest is: show all orgs
+    if (allStatusIds.length === 0) return allOrgs;
+
+    const allStatusSet = new Set(allStatusIds);
+
+    // Map orgId -> Set(statusId) already linked on this project
+    const usedByOrg = new Map();
+    (Array.isArray(projectOrganizations) ? projectOrganizations : []).forEach(
+      (po) => {
+        const orgId = String(po.organizationId);
+        const statusId = String(po.organizationStatusId);
+        if (!orgId || !statusId) return;
+
+        if (!usedByOrg.has(orgId)) usedByOrg.set(orgId, new Set());
+        usedByOrg.get(orgId).add(statusId);
+      }
+    );
+
+    // Hide org only if it has ALL statuses already used
+    return allOrgs.filter((o) => {
+      const orgId = String(o.id ?? o.organizationId);
+      const usedSet = usedByOrg.get(orgId);
+      if (!usedSet) return true; // org not used at all => show
+
+      // org is fully used if every status in allStatusSet is in usedSet
+      for (const sid of allStatusSet) {
+        if (!usedSet.has(sid)) return true; // missing a status => still show
+      }
+      return false; // has all statuses => hide
+    });
+  }, [allOrganizationOptions, orgStatusOptions, projectOrganizations]);
 
   const pillStyle = {
     display: "inline-flex",
@@ -1349,7 +1420,7 @@ const Project = () => {
                       </div>
 
                       {/* Upload */}
-                      <div className={styles.sectionRow}>
+                      <div className={styles.sectionRowStack}>
                         <div className={styles.sectionTitle}>
                           <FiUploadCloud />
                           <span>Cover image upload</span>
@@ -1529,7 +1600,7 @@ const Project = () => {
                               className={styles.textInput}
                             >
                               <option value="">Select organization</option>
-                              {projectOrgOptions.map((o) => (
+                              {selectableOrgOptions.map((o) => (
                                 <option
                                   key={o.id ?? o.organizationId}
                                   value={o.id ?? o.organizationId}
@@ -1580,8 +1651,8 @@ const Project = () => {
                           </div>
 
                           <div className={styles.mutedNote}>
-                            Only organizations not already linked to this
-                            project are shown in the dropdown.
+                            An organization stays available until it has been
+                            linked with every possible status for this project.
                           </div>
                         </div>
                       </div>

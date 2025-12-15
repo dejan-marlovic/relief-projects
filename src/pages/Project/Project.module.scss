@@ -405,6 +405,15 @@ h3 {
   font-size: 0.8rem;
 }
 
+/* Upload / dropzone - stacked version (title above box) */
+.sectionRowStack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  align-items: stretch;
+  margin-bottom: 1rem;
+}
+
 .dropzone {
   border: 2px dashed rgba(74, 144, 226, 0.35);
   border-radius: 14px;
