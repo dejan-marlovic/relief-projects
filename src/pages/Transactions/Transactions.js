@@ -52,44 +52,23 @@ const headerLabels = [
 ];
 
 const BASE_COL_WIDTHS = [
-  110, // Actions
-  160, // Org
-  220, // Project
-  180, // Financier
-  160, // Status
-  120, // Applied Amt
-  140, // Applied FX
-  120, // 1st SEK
-  120, // 1st Orig
-  140, // Approved Amt
-  120, // Approved Curr
-  140, // Approved FX
-  120, // 2nd SEK
-  120, // 2nd Orig
-  110, // Own Contrib
-  170, // Date Planned
-  100, // OK Status
+  110, 160, 220, 180, 160, 120, 140, 120, 120, 140, 120, 140, 120, 120, 110,
+  170, 100,
 ];
 
-// 🔄 Fetch: Currencies
 const fetchCurrencies = async (token) => {
   const response = await fetch(`${BASE_URL}/api/currencies/active`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!response.ok) {
-    throw new Error("Failed to fetch currencies");
-  }
+  if (!response.ok) throw new Error("Failed to fetch currencies");
   return await response.json();
 };
 
-// 🔄 Fetch: Exchange Rates
 const fetchExchangeRates = async (token) => {
   const response = await fetch(`${BASE_URL}/api/exchange-rates/active`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!response.ok) {
-    throw new Error("Failed to fetch exchange rates");
-  }
+  if (!response.ok) throw new Error("Failed to fetch exchange rates");
   return await response.json();
 };
 
@@ -100,12 +79,16 @@ const Transactions = ({ refreshTrigger }) => {
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
 
+  // ✅ NEW: which tx row is expanded for allocations
+  const [expandedTxId, setExpandedTxId] = useState(null);
+
   // dropdown data
   const [orgOptions, setOrgOptions] = useState([]);
   const [projectOptions, setProjectOptions] = useState([]);
   const [statusOptions, setStatusOptions] = useState([]);
   const [fxOptions, setFxOptions] = useState([]);
   const [currencies, setCurrencies] = useState([]);
+  const [costDetailOptions, setCostDetailOptions] = useState([]);
 
   // UI
   const [compact, setCompact] = useState(false);
@@ -114,16 +97,16 @@ const Transactions = ({ refreshTrigger }) => {
     Array(headerLabels.length).fill(true)
   );
 
-  // 🔴 form-level & field-level errors
+  // errors
   const [formError, setFormError] = useState("");
-  const [fieldErrors, setFieldErrors] = useState({}); // { [rowId]: { fieldName: message } }
+  const [fieldErrors, setFieldErrors] = useState({});
 
   // refs for scrolling
   const tableRef = useRef(null);
   const newRowRef = useRef(null);
 
   const toggleCol = (i) => {
-    if (i === 0) return; // keep "Actions" always visible
+    if (i === 0) return;
     setVisibleCols((prev) => {
       const next = [...prev];
       next[i] = !next[i];
@@ -217,7 +200,6 @@ const Transactions = ({ refreshTrigger }) => {
     fetchTransactions(selectedProjectId);
   }, [fetchTransactions, selectedProjectId, refreshTrigger]);
 
-  // when editingId becomes "new", scroll to the create row
   useEffect(() => {
     if (editingId === "new" && newRowRef.current) {
       newRowRef.current.scrollIntoView({
@@ -227,8 +209,56 @@ const Transactions = ({ refreshTrigger }) => {
     }
   }, [editingId]);
 
+  // ✅ Load costDetailOptions (budgets -> cost details)
+  useEffect(() => {
+    let cancelled = false;
+
+    const run = async () => {
+      if (!selectedProjectId) {
+        setCostDetailOptions([]);
+        return;
+      }
+      try {
+        const token = localStorage.getItem("authToken");
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+        const bRes = await fetch(
+          `${BASE_URL}/api/budgets/project/${selectedProjectId}`,
+          { headers }
+        );
+        const budgets = bRes.ok ? await bRes.json() : [];
+        const budgetList = Array.isArray(budgets) ? budgets : [];
+
+        const all = [];
+        for (const b of budgetList) {
+          const cdRes = await fetch(
+            `${BASE_URL}/api/cost-details/by-budget/${b.id}`,
+            { headers }
+          );
+          if (!cdRes.ok) continue;
+          const cds = await cdRes.json();
+          if (Array.isArray(cds)) all.push(...cds);
+        }
+
+        if (!cancelled) setCostDetailOptions(all);
+      } catch (e) {
+        console.error("Failed to load cost detail options:", e);
+        if (!cancelled) setCostDetailOptions([]);
+      }
+    };
+
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedProjectId]);
+
   const startEdit = (tx) => {
     setEditingId(tx?.id ?? null);
+
+    // Optional: close allocations while editing to avoid weird UX
+    setExpandedTxId((cur) => (cur === tx.id ? null : cur));
+
     setEditedValues((prev) => ({
       ...prev,
       [tx.id]: {
@@ -251,7 +281,6 @@ const Transactions = ({ refreshTrigger }) => {
       },
     }));
 
-    // clear previous errors for this row
     setFieldErrors((prev) => {
       const next = { ...prev };
       delete next[tx.id];
@@ -262,6 +291,8 @@ const Transactions = ({ refreshTrigger }) => {
 
   const startCreate = () => {
     setEditingId("new");
+    setExpandedTxId(null); // ✅ no allocations for draft tx
+
     setEditedValues((prev) => ({
       ...prev,
       new: {
@@ -298,12 +329,8 @@ const Transactions = ({ refreshTrigger }) => {
       ? values.projectId || selectedProjectId
       : values.projectId ?? null;
 
-    // clear previous errors
     setFormError("");
-    setFieldErrors((prev) => ({
-      ...prev,
-      [id]: {},
-    }));
+    setFieldErrors((prev) => ({ ...prev, [id]: {} }));
 
     const payload = {
       organizationId: values.organizationId
@@ -365,15 +392,12 @@ const Transactions = ({ refreshTrigger }) => {
         let data = null;
         try {
           data = raw ? JSON.parse(raw) : null;
-        } catch (e) {
-          console.warn("Failed to parse transaction error JSON:", e);
+        } catch {
+          // ignore
         }
 
-        if (data && data.fieldErrors) {
-          setFieldErrors((prev) => ({
-            ...prev,
-            [id]: data.fieldErrors,
-          }));
+        if (data?.fieldErrors) {
+          setFieldErrors((prev) => ({ ...prev, [id]: data.fieldErrors }));
         }
 
         setFormError(
@@ -425,6 +449,10 @@ const Transactions = ({ refreshTrigger }) => {
         headers: authHeaders,
       });
       if (!res.ok) throw new Error("Failed to delete transaction");
+
+      // ✅ if the deleted tx was expanded, close it
+      setExpandedTxId((cur) => (cur === id ? null : cur));
+
       await fetchTransactions(selectedProjectId);
     } catch (err) {
       console.error(err);
@@ -441,7 +469,6 @@ const Transactions = ({ refreshTrigger }) => {
 
   return (
     <div className={styles.container}>
-      {/* Toolbar */}
       <div className={styles.toolbar}>
         <label className={styles.compactToggle}>
           <input
@@ -478,16 +505,13 @@ const Transactions = ({ refreshTrigger }) => {
         </div>
       </div>
 
-      {/* 🔴 Global error banner */}
       {formError && <div className={styles.errorBanner}>{formError}</div>}
 
-      {/* Table */}
       <div
         className={`${styles.table} ${compact ? styles.compact : ""}`}
         style={{ ["--tx-grid-cols"]: gridCols }}
         ref={tableRef}
       >
-        {/* Header */}
         <div className={`${styles.gridRow} ${styles.headerRow}`}>
           {headerLabels.map((h, i) => (
             <div
@@ -503,7 +527,6 @@ const Transactions = ({ refreshTrigger }) => {
           ))}
         </div>
 
-        {/* Body */}
         {!selectedProjectId ? (
           <p className={styles.noData}>
             Select a project to see its transactions.
@@ -531,11 +554,15 @@ const Transactions = ({ refreshTrigger }) => {
               currencies={currencies}
               visibleCols={visibleCols}
               fieldErrors={fieldErrors[tx.id] || {}}
+              expanded={expandedTxId === tx.id}
+              onToggleAllocations={() =>
+                setExpandedTxId((cur) => (cur === tx.id ? null : tx.id))
+              }
+              costDetailOptions={costDetailOptions}
             />
           ))
         )}
 
-        {/* Inline create row */}
         {editingId === "new" && (
           <Transaction
             tx={{ id: "new", ...blankTx, projectId: selectedProjectId || "" }}
@@ -563,13 +590,6 @@ const Transactions = ({ refreshTrigger }) => {
           className={styles.addBtn}
           onClick={startCreate}
           disabled={!selectedProjectId || editingId === "new"}
-          title={
-            !selectedProjectId
-              ? "Select a project first"
-              : editingId === "new"
-              ? "Finish the current draft first"
-              : "Create new transaction"
-          }
         >
           + New Transaction
         </button>

@@ -1,6 +1,7 @@
 import React from "react";
 import styles from "./Transaction.module.scss";
-import { FiEdit, FiTrash2, FiSave, FiX } from "react-icons/fi";
+import { FiEdit, FiTrash2, FiSave, FiX, FiSliders } from "react-icons/fi";
+import TransactionAllocations from "./TransactionAllocations/TransactionAllocations";
 
 const yesNo = ["Yes", "No"];
 
@@ -33,8 +34,13 @@ const Transaction = ({
   currencies = [],
   visibleCols = [],
   isEven = false,
-  fieldErrors = {}, // per-row field errors
-  rowRef = null, // NEW: for scrolling the "new" row into view
+  fieldErrors = {},
+  rowRef = null,
+
+  // ✅ allocations
+  expanded = false,
+  onToggleAllocations,
+  costDetailOptions = [],
 }) => {
   const ev = editedValues || {};
   const isCreate = (tx?.id ?? "") === "new";
@@ -48,7 +54,6 @@ const Transaction = ({
 
   const toNum = (v) => (v === "" ? "" : Number(v));
 
-  // error helpers
   const getFieldError = (name) => fieldErrors?.[name];
   const hasError = (name) => Boolean(getFieldError(name));
   const inputClass = (name) =>
@@ -149,7 +154,6 @@ const Transaction = ({
     </>
   );
 
-  // ===== Currency helpers =====
   const findCurrency = (currencyId) => {
     if (currencyId == null) return undefined;
     const numericId =
@@ -182,35 +186,24 @@ const Transaction = ({
     </>
   );
 
-  // ===== FX helpers =====
   const formatRateLabel = (r) => {
     if (!r) return "-";
-
     const baseCur = findCurrency(r.baseCurrencyId);
     const quoteCur = findCurrency(r.quoteCurrencyId);
-
     const baseName = baseCur?.name || `CUR#${r.baseCurrencyId}`;
     const quoteName = quoteCur?.name || `CUR#${r.quoteCurrencyId}`;
-
     const rate = typeof r.rate === "number" ? r.rate : Number(r.rate);
-
-    if (!Number.isFinite(rate)) {
-      return `1 ${baseName} → ? ${quoteName}`;
-    }
-
+    if (!Number.isFinite(rate)) return `1 ${baseName} → ? ${quoteName}`;
     return `1 ${baseName} → ${rate} ${quoteName}`;
   };
 
   const fxLabelByFxId = (fxId) => {
     if (!fxId) return "-";
-
     const numericId = typeof fxId === "string" ? Number(fxId) : fxId;
-
     const r = exchangeRates.find((er) => {
       const erId = typeof er.id === "string" ? Number(er.id) : er.id;
       return erId === numericId;
     });
-
     if (!r) return fxId;
     return formatRateLabel(r);
   };
@@ -259,137 +252,170 @@ const Transaction = ({
   const hc = (i) => (!visibleCols[i] ? styles.hiddenCol : "");
 
   return (
-    <div
-      ref={rowRef || undefined}
-      className={`${styles.row} ${styles.gridRow} ${
-        isEven ? styles.zebraEven : ""
-      } ${styles.hoverable}`}
-    >
-      {/* 0: Actions (sticky left) */}
-      <Cell className={`${styles.stickyCol} ${styles.actionsCol} ${hc(0)}`}>
-        {isEditing ? (
-          <div className={styles.actions}>
-            <button className={styles.actionBtn} onClick={submit} title="Save">
-              <FiSave />
-            </button>
-            <button
-              className={`${styles.actionBtn} ${styles.danger}`}
-              onClick={onCancel}
-              title="Cancel"
-            >
-              <FiX />
-            </button>
-          </div>
-        ) : (
-          <div className={styles.actions}>
-            <button
-              className={styles.actionBtn}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onEdit();
-              }}
-              title="Edit"
-            >
-              <FiEdit />
-            </button>
-            <button
-              className={`${styles.actionBtn} ${styles.danger}`}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onDelete(tx.id);
-              }}
-              title="Delete"
-            >
-              <FiTrash2 />
-            </button>
-          </div>
-        )}
-      </Cell>
+    <>
+      <div
+        ref={rowRef || undefined}
+        className={`${styles.row} ${styles.gridRow} ${
+          isEven ? styles.zebraEven : ""
+        } ${styles.hoverable}`}
+      >
+        {/* 0: Actions */}
+        <Cell className={`${styles.stickyCol} ${styles.actionsCol} ${hc(0)}`}>
+          {isEditing ? (
+            <div className={styles.actions}>
+              <button
+                className={styles.actionBtn}
+                onClick={submit}
+                title="Save"
+              >
+                <FiSave />
+              </button>
+              <button
+                className={`${styles.actionBtn} ${styles.danger}`}
+                onClick={onCancel}
+                title="Cancel"
+              >
+                <FiX />
+              </button>
+            </div>
+          ) : (
+            <div className={styles.actions}>
+              <button
+                className={styles.actionBtn}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onEdit();
+                }}
+                title="Edit"
+              >
+                <FiEdit />
+              </button>
 
-      {/* Data columns */}
-      <Cell className={hc(1)}>
-        {isEditing ? selectOrg("organizationId") : orgName(tx.organizationId)}
-      </Cell>
-      <Cell className={hc(2)}>
-        {isEditing ? selectProject() : projectName(tx.projectId)}
-      </Cell>
-      <Cell className={hc(3)}>
-        {isEditing
-          ? selectOrg("financierOrganizationId")
-          : orgName(tx.financierOrganizationId)}
-      </Cell>
-      <Cell className={hc(4)}>
-        {isEditing ? selectStatus() : statusName(tx.transactionStatusId)}
-      </Cell>
+              {/* ✅ Allocations toggle */}
+              {!isCreate && (
+                <button
+                  className={styles.actionBtn}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onToggleAllocations?.();
+                  }}
+                  title={expanded ? "Hide allocations" : "Show allocations"}
+                >
+                  <FiSliders />
+                </button>
+              )}
 
-      <Cell className={hc(5)}>
-        {isEditing
-          ? inputNum("appliedForAmount", "0.01")
-          : tx.appliedForAmount ?? "-"}
-      </Cell>
-      <Cell className={hc(6)}>
-        {isEditing
-          ? selectFx("appliedForExchangeRateId")
-          : fxLabelByFxId(tx.appliedForExchangeRateId)}
-      </Cell>
+              <button
+                className={`${styles.actionBtn} ${styles.danger}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onDelete(tx.id);
+                }}
+                title="Delete"
+              >
+                <FiTrash2 />
+              </button>
+            </div>
+          )}
+        </Cell>
 
-      <Cell className={hc(7)}>
-        {isEditing
-          ? inputNum("firstShareSEKAmount", "0.01")
-          : tx.firstShareSEKAmount ?? "-"}
-      </Cell>
-      <Cell className={hc(8)}>
-        {isEditing
-          ? inputNum("firstShareAmount", "0.01")
-          : tx.firstShareAmount ?? "-"}
-      </Cell>
+        <Cell className={hc(1)}>
+          {isEditing ? selectOrg("organizationId") : orgName(tx.organizationId)}
+        </Cell>
+        <Cell className={hc(2)}>
+          {isEditing ? selectProject() : projectName(tx.projectId)}
+        </Cell>
+        <Cell className={hc(3)}>
+          {isEditing
+            ? selectOrg("financierOrganizationId")
+            : orgName(tx.financierOrganizationId)}
+        </Cell>
+        <Cell className={hc(4)}>
+          {isEditing ? selectStatus() : statusName(tx.transactionStatusId)}
+        </Cell>
 
-      <Cell className={hc(9)}>
-        {isEditing
-          ? inputNum("approvedAmount", "0.01")
-          : tx.approvedAmount ?? "-"}
-      </Cell>
+        <Cell className={hc(5)}>
+          {isEditing
+            ? inputNum("appliedForAmount", "0.01")
+            : tx.appliedForAmount ?? "-"}
+        </Cell>
+        <Cell className={hc(6)}>
+          {isEditing
+            ? selectFx("appliedForExchangeRateId")
+            : fxLabelByFxId(tx.appliedForExchangeRateId)}
+        </Cell>
 
-      <Cell className={hc(10)}>
-        {isEditing
-          ? selectCurrency("approvedAmountCurrencyId")
-          : currencyLabelById(tx.approvedAmountCurrencyId)}
-      </Cell>
+        <Cell className={hc(7)}>
+          {isEditing
+            ? inputNum("firstShareSEKAmount", "0.01")
+            : tx.firstShareSEKAmount ?? "-"}
+        </Cell>
+        <Cell className={hc(8)}>
+          {isEditing
+            ? inputNum("firstShareAmount", "0.01")
+            : tx.firstShareAmount ?? "-"}
+        </Cell>
 
-      <Cell className={hc(11)}>
-        {isEditing
-          ? selectFx("approvedAmountExchangeRateId")
-          : fxLabelByFxId(tx.approvedAmountExchangeRateId)}
-      </Cell>
+        <Cell className={hc(9)}>
+          {isEditing
+            ? inputNum("approvedAmount", "0.01")
+            : tx.approvedAmount ?? "-"}
+        </Cell>
 
-      <Cell className={hc(12)}>
-        {isEditing
-          ? inputNum("secondShareAmountSEK", "0.01")
-          : tx.secondShareAmountSEK ?? "-"}
-      </Cell>
-      <Cell className={hc(13)}>
-        {isEditing
-          ? inputNum("secondShareAmount", "0.01")
-          : tx.secondShareAmount ?? "-"}
-      </Cell>
+        <Cell className={hc(10)}>
+          {isEditing
+            ? selectCurrency("approvedAmountCurrencyId")
+            : currencyLabelById(tx.approvedAmountCurrencyId)}
+        </Cell>
 
-      <Cell className={hc(14)}>
-        {isEditing ? selectYesNo("ownContribution") : tx.ownContribution ?? "-"}
-      </Cell>
-      <Cell className={hc(15)}>
-        {isEditing
-          ? inputDate
-          : tx.datePlanned
-          ? new Date(tx.datePlanned).toLocaleString()
-          : "-"}
-      </Cell>
+        <Cell className={hc(11)}>
+          {isEditing
+            ? selectFx("approvedAmountExchangeRateId")
+            : fxLabelByFxId(tx.approvedAmountExchangeRateId)}
+        </Cell>
 
-      <Cell className={hc(16)}>
-        {isEditing ? selectYesNo("okStatus") : tx.okStatus ?? "-"}
-      </Cell>
-    </div>
+        <Cell className={hc(12)}>
+          {isEditing
+            ? inputNum("secondShareAmountSEK", "0.01")
+            : tx.secondShareAmountSEK ?? "-"}
+        </Cell>
+        <Cell className={hc(13)}>
+          {isEditing
+            ? inputNum("secondShareAmount", "0.01")
+            : tx.secondShareAmount ?? "-"}
+        </Cell>
+
+        <Cell className={hc(14)}>
+          {isEditing
+            ? selectYesNo("ownContribution")
+            : tx.ownContribution ?? "-"}
+        </Cell>
+        <Cell className={hc(15)}>
+          {isEditing
+            ? inputDate
+            : tx.datePlanned
+            ? new Date(tx.datePlanned).toLocaleString()
+            : "-"}
+        </Cell>
+
+        <Cell className={hc(16)}>
+          {isEditing ? selectYesNo("okStatus") : tx.okStatus ?? "-"}
+        </Cell>
+      </div>
+
+      {/* ✅ Expanded allocations panel (full width under row) */}
+      {expanded && !isCreate && (
+        <div className={styles.expandedPanel}>
+          <TransactionAllocations
+            txId={tx.id}
+            costDetailOptions={costDetailOptions}
+          />
+        </div>
+      )}
+    </>
   );
 };
 
