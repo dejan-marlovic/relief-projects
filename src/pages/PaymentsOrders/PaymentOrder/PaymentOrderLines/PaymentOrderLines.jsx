@@ -1,5 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./PaymentOrderLines.module.scss";
+import {
+  FiRefreshCw,
+  FiSave,
+  FiTrash2,
+  FiPlus,
+  FiAlertCircle,
+} from "react-icons/fi";
 
 const BASE_URL = "http://localhost:8080";
 
@@ -20,9 +27,7 @@ async function safeParseJsonResponse(res) {
 }
 
 function isLockedResponse(res, data) {
-  // Prefer status code when available
   if (res?.status === 409) return true;
-
   const msg = (data?.message || "").toLowerCase();
   return (
     msg.includes("locked") || msg.includes("booked") || msg.includes("final")
@@ -82,13 +87,13 @@ const PaymentOrderLines = ({
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // ✅ NEW: lock state for the whole widget
+  // lock state
   const [isLocked, setIsLocked] = useState(false);
   const [lockMessage, setLockMessage] = useState("");
 
   // draft create row
   const [draft, setDraft] = useState({
-    transactionId: "", // optional override
+    transactionId: "",
     organizationId: "",
     costDetailId: "",
     currencyId: "",
@@ -97,14 +102,13 @@ const PaymentOrderLines = ({
   });
 
   const [formError, setFormError] = useState("");
-  const [fieldErrors, setFieldErrors] = useState({}); // { field: msg }
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const fetchRows = useCallback(async () => {
     if (!paymentOrderId) return;
     setLoading(true);
     setFormError("");
     setFieldErrors({});
-    // Important: do not clear lock state blindly until we know
     setIsLocked(false);
     setLockMessage("");
 
@@ -117,7 +121,6 @@ const PaymentOrderLines = ({
       if (!res.ok) {
         const data = await safeParseJsonResponse(res);
 
-        // If backend blocks even reading (unlikely), respect it.
         if (isLockedResponse(res, data)) {
           setIsLocked(true);
           setLockMessage(
@@ -241,10 +244,7 @@ const PaymentOrderLines = ({
 
     const payload = {
       paymentOrderId: Number(paymentOrderId),
-
-      // optional: line override tx. if null => header tx used in backend
       transactionId: draft.transactionId ? Number(draft.transactionId) : null,
-
       organizationId: toNumOrNull(draft.organizationId),
       costDetailId: draft.costDetailId ? Number(draft.costDetailId) : null,
       currencyId: draft.currencyId ? Number(draft.currencyId) : null,
@@ -293,15 +293,12 @@ const PaymentOrderLines = ({
 
     const payload = {
       paymentOrderId: Number(paymentOrderId),
-
-      // allow override or clear (null => header)
       transactionId:
         patch.transactionId === ""
           ? null
           : patch.transactionId
           ? Number(patch.transactionId)
           : null,
-
       organizationId: patch.organizationId
         ? Number(patch.organizationId)
         : null,
@@ -321,7 +318,6 @@ const PaymentOrderLines = ({
       memo: patch.memo ?? null,
     };
 
-    // minimal client checks
     if (
       payload.amount == null ||
       !Number.isFinite(payload.amount) ||
@@ -346,10 +342,11 @@ const PaymentOrderLines = ({
 
   const onDelete = async (id) => {
     if (isLocked) return;
-
     if (!window.confirm("Delete this payment order line?")) return;
+
     setFormError("");
     setFieldErrors({});
+
     try {
       await apiDelete(id);
       await fetchRows();
@@ -359,9 +356,7 @@ const PaymentOrderLines = ({
     }
   };
 
-  // quick totals (UI only)
   const total = rows.reduce((acc, r) => acc + (Number(r.amount) || 0), 0);
-
   const lockedBanner =
     isLocked && (lockMessage || "This payment order is Booked (locked).");
 
@@ -374,23 +369,31 @@ const PaymentOrderLines = ({
             PaymentOrder #{paymentOrderId} • Lines total: {total.toFixed(2)}
           </div>
         </div>
+
         <button
-          className={styles.refreshBtn}
+          className={styles.iconPillBtn}
           onClick={fetchRows}
           disabled={loading}
+          title="Refresh lines"
         >
+          <FiRefreshCw />
           Refresh
         </button>
       </div>
 
-      {/* ✅ Locked banner */}
       {lockedBanner && (
         <div className={styles.errorBanner}>
-          {lockedBanner} (Editing disabled)
+          <FiAlertCircle />
+          <span>{lockedBanner} (Editing disabled)</span>
         </div>
       )}
 
-      {formError && <div className={styles.errorBanner}>{formError}</div>}
+      {formError && (
+        <div className={styles.errorBanner}>
+          <FiAlertCircle />
+          <span>{formError}</span>
+        </div>
+      )}
 
       {/* Add row */}
       <div className={styles.addRow}>
@@ -402,6 +405,7 @@ const PaymentOrderLines = ({
             onChange={(e) =>
               setDraft((p) => ({ ...p, transactionId: e.target.value }))
             }
+            className={styles.input}
           >
             <option value="">(use header)</option>
             {txOptions.map((t) => (
@@ -420,6 +424,9 @@ const PaymentOrderLines = ({
             onChange={(e) =>
               setDraft((p) => ({ ...p, organizationId: e.target.value }))
             }
+            className={`${styles.input} ${
+              fieldErrors.organizationId ? styles.inputError : ""
+            }`}
           >
             <option value="">Select…</option>
             {orgOptions.map((o) => (
@@ -443,6 +450,7 @@ const PaymentOrderLines = ({
             onChange={(e) =>
               setDraft((p) => ({ ...p, costDetailId: e.target.value }))
             }
+            className={styles.input}
           >
             <option value="">(none)</option>
             {costDetailOptions.map((cd) => (
@@ -461,6 +469,7 @@ const PaymentOrderLines = ({
             onChange={(e) =>
               setDraft((p) => ({ ...p, currencyId: e.target.value }))
             }
+            className={styles.input}
           >
             <option value="">(none)</option>
             {currencyOptions.map((c) => (
@@ -481,6 +490,9 @@ const PaymentOrderLines = ({
             onChange={(e) =>
               setDraft((p) => ({ ...p, amount: e.target.value }))
             }
+            className={`${styles.input} ${
+              fieldErrors.amount ? styles.inputError : ""
+            }`}
           />
           {fieldErrors.amount && (
             <div className={styles.fieldError}>{fieldErrors.amount}</div>
@@ -495,19 +507,21 @@ const PaymentOrderLines = ({
             disabled={loading || isLocked}
             onChange={(e) => setDraft((p) => ({ ...p, memo: e.target.value }))}
             placeholder="Optional…"
+            className={styles.input}
           />
         </div>
 
         <div className={styles.fieldActions}>
           <button
-            className={styles.primary}
+            className={styles.primaryInlineBtn}
             onClick={onAdd}
             disabled={loading || isLocked}
             title={
               isLocked ? "This payment order is Booked (locked)." : "Add line"
             }
           >
-            + Add line
+            <FiPlus />
+            Add
           </button>
         </div>
       </div>
@@ -591,6 +605,7 @@ const LineRow = ({
           value={transactionId}
           disabled={locked}
           onChange={(e) => setTransactionId(e.target.value)}
+          className={styles.input}
         >
           <option value="">(header)</option>
           {txOptions.map((t) => (
@@ -606,6 +621,7 @@ const LineRow = ({
           value={organizationId}
           disabled={locked}
           onChange={(e) => setOrganizationId(e.target.value)}
+          className={styles.input}
         >
           <option value="">Select…</option>
           {orgOptions.map((o) => (
@@ -621,6 +637,7 @@ const LineRow = ({
           value={costDetailId}
           disabled={locked}
           onChange={(e) => setCostDetailId(e.target.value)}
+          className={styles.input}
         >
           <option value="">(none)</option>
           {costDetailOptions.map((cd) => (
@@ -636,6 +653,7 @@ const LineRow = ({
           value={currencyId}
           disabled={locked}
           onChange={(e) => setCurrencyId(e.target.value)}
+          className={styles.input}
         >
           <option value="">(none)</option>
           {currencyOptions.map((c) => (
@@ -653,6 +671,7 @@ const LineRow = ({
           value={amount}
           disabled={locked}
           onChange={(e) => setAmount(e.target.value)}
+          className={styles.input}
         />
       </div>
 
@@ -662,12 +681,13 @@ const LineRow = ({
           value={memo}
           disabled={locked}
           onChange={(e) => setMemo(e.target.value)}
+          className={styles.input}
         />
       </div>
 
       <div className={styles.rowActions}>
         <button
-          className={styles.secondary}
+          className={styles.iconCircleBtn}
           disabled={locked}
           title={
             locked ? "This payment order is Booked (locked)." : "Save line"
@@ -683,17 +703,18 @@ const LineRow = ({
             })
           }
         >
-          Save
+          <FiSave />
         </button>
+
         <button
-          className={styles.danger}
+          className={styles.dangerIconBtn}
           disabled={locked}
           title={
             locked ? "This payment order is Booked (locked)." : "Delete line"
           }
           onClick={onDelete}
         >
-          Delete
+          <FiTrash2 />
         </button>
       </div>
     </div>

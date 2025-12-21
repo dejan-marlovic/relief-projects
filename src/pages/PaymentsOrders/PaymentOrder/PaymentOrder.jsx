@@ -72,6 +72,7 @@ const PaymentOrder = ({
         onChange={(e) => onChange(field, toNum(e.target.value))}
         onBlur={autoSave ? submit : undefined}
         className={inputClass(field)}
+        disabled={locked}
       />
       <FieldError name={field} />
     </>
@@ -85,6 +86,7 @@ const PaymentOrder = ({
         onChange={(e) => onChange(field, e.target.value)}
         onBlur={autoSave ? submit : undefined}
         className={inputClass(field)}
+        disabled={locked}
       />
       <FieldError name={field} />
     </>
@@ -102,6 +104,7 @@ const PaymentOrder = ({
         }
         onBlur={autoSave ? submit : undefined}
         className={inputClass("transactionId")}
+        disabled={locked}
       >
         <option value="">(none)</option>
         {transactions.map((t) => (
@@ -125,6 +128,7 @@ const PaymentOrder = ({
         }
         onBlur={autoSave ? submit : undefined}
         className={inputClass("paymentOrderDate")}
+        disabled={locked}
       />
       <FieldError name="paymentOrderDate" />
     </>
@@ -139,17 +143,22 @@ const PaymentOrder = ({
         isEven ? styles.zebraEven : ""
       } ${styles.hoverable}`}
       title={locked ? "Locked by final (Booked) signature" : undefined}
-      style={locked ? { opacity: 0.9 } : undefined}
+      style={locked ? { opacity: 0.92 } : undefined}
     >
       {/* 0: Actions (sticky left) */}
       <Cell className={`${styles.stickyCol} ${styles.actionsCol} ${hc(0)}`}>
         {isEditing ? (
           <div className={styles.actions}>
-            <button className={styles.actionBtn} onClick={submit} title="Save">
+            <button
+              className={styles.iconCircleBtn}
+              onClick={submit}
+              title="Save"
+              disabled={locked}
+            >
               <FiSave />
             </button>
             <button
-              className={`${styles.actionBtn} ${styles.danger}`}
+              className={styles.dangerIconBtn}
               onClick={onCancel}
               title="Cancel"
             >
@@ -159,7 +168,7 @@ const PaymentOrder = ({
         ) : (
           <div className={styles.actions}>
             <button
-              className={styles.actionBtn}
+              className={styles.iconCircleBtn}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -174,7 +183,9 @@ const PaymentOrder = ({
             {/* Lines toggle */}
             {!isCreate && (
               <button
-                className={styles.actionBtn}
+                className={`${styles.iconCircleBtn} ${
+                  expanded ? styles.iconCircleBtnActive : ""
+                }`}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -187,7 +198,7 @@ const PaymentOrder = ({
             )}
 
             <button
-              className={`${styles.actionBtn} ${styles.danger}`}
+              className={styles.dangerIconBtn}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();

@@ -48,7 +48,6 @@ async function safeParseJsonResponse(res) {
   }
 }
 
-// Normalize in case backend returns paymentOrderId instead of id, etc.
 function normalizePO(po) {
   if (!po || typeof po !== "object") return null;
 
@@ -98,7 +97,6 @@ function PaymentOrders() {
   const [currencyOptions, setCurrencyOptions] = useState([]);
   const [costDetailOptions, setCostDetailOptions] = useState([]);
 
-  // Track which POs are known locked (based on a 409 response)
   const [lockedPoIds, setLockedPoIds] = useState(() => new Set());
 
   const newRowRef = useRef(null);
@@ -139,9 +137,7 @@ function PaymentOrders() {
 
         const data = await res.json();
         const arr = Array.isArray(data) ? data : data ? [data] : [];
-        const normalized = arr.map(normalizePO).filter(Boolean);
-
-        setOrders(normalized);
+        setOrders(arr.map(normalizePO).filter(Boolean));
       } catch (e) {
         console.error(e);
         setOrders([]);
@@ -530,7 +526,7 @@ function PaymentOrders() {
               />
 
               {expandedPoId === po.id && (
-                <div style={{ padding: "0 12px 12px 12px" }}>
+                <div className={styles.linesPanel}>
                   <PaymentOrderLines
                     paymentOrderId={po.id}
                     txOptions={txOptions}

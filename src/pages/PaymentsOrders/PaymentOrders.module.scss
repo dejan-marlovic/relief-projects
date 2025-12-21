@@ -1,47 +1,62 @@
-/*PaymentOrders.module.scss*/
+@use "../../styles/forms" as forms;
+
+$primary: #4a90e2;
 
 /* Outer wrapper */
 .container {
+  padding: 1.25rem;
+  margin-top: 1rem;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Toolbar (compact + columns) */
+/* Toolbar */
 .toolbar {
   display: flex;
   align-items: center;
   gap: 12px;
   margin: 6px 0 10px;
 }
+
 .compactToggle {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   font-size: 0.92rem;
+  color: #374151;
+
+  input {
+    transform: translateY(1px);
+  }
 }
 
 .columnsBox {
   position: relative;
 }
+
 .columnsBtn {
   background: #f5f6f8;
   border: 1px solid #e6e6e6;
-  border-radius: 6px;
-  padding: 6px 10px;
+  border-radius: 10px;
+  padding: 8px 12px;
   cursor: pointer;
+  font-weight: 700;
 }
+
 .columnsPanel {
   position: absolute;
-  top: 36px;
+  top: 44px;
   left: 0;
   background: #fff;
   border: 1px solid #e6e6e6;
-  border-radius: 8px;
-  padding: 8px 10px;
+  border-radius: 12px;
+  padding: 10px 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   max-height: 320px;
   overflow: auto;
   z-index: 10;
-  min-width: 220px;
+  min-width: 240px;
 }
+
 .colItem {
   display: flex;
   align-items: center;
@@ -49,36 +64,41 @@
   padding: 4px 2px;
   white-space: nowrap;
 }
+
 .lockNote {
   font-style: normal;
   color: #888;
   font-size: 0.85em;
 }
 
-/* Global error banner */
+/* Error banner like Project */
 .errorBanner {
-  margin-bottom: 10px;
-  padding: 8px 10px;
-  border-radius: 6px;
-  background-color: #fee2e2;
-  border: 1px solid #fecaca;
-  color: #b91c1c;
+  background-color: #ffe6e6;
+  color: #b00000;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin: 0.75rem 0 1rem;
   font-size: 0.9rem;
+  border: 1px solid #ffb3b3;
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
-/* Scrollable table container; grid columns are injected via inline CSS var */
+/* Table container */
 .table {
   position: relative;
   isolation: isolate;
   overflow: auto;
   max-height: 60vh;
-  border: 1px solid #e6e6e6;
-  border-radius: 8px;
+
+  border: 1px solid rgba(74, 144, 226, 0.14);
+  border-radius: 14px;
   background: #fff;
 
   --po-header-bg: #f6f7fb;
   --po-header-border: #e5e7eb;
-  --po-grid-cols: 110px; /* default fallback; overwritten inline */
+  --po-grid-cols: 110px;
 }
 
 /* Compact mode tweaks */
@@ -86,19 +106,20 @@
   padding: 4px 8px !important;
   font-size: 0.86rem !important;
 }
+
 .compact :global(input),
 .compact :global(select) {
   padding: 4px 6px !important;
   font-size: 0.86rem !important;
 }
 
-/* Grid row style shared by header + data rows */
+/* Shared grid row */
 .gridRow {
   display: grid;
   grid-template-columns: var(--po-grid-cols);
   align-items: center;
   column-gap: 8px;
-  min-width: 1000px; /* allow horiz scroll instead of over-squishing */
+  min-width: 1000px;
 }
 
 /* Header row */
@@ -110,9 +131,10 @@
   border-bottom: 1px solid var(--po-header-border);
   padding: 10px 12px;
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.92rem;
 }
+
 .headerCell {
   padding-right: 4px;
   white-space: nowrap;
@@ -120,7 +142,7 @@
   background: var(--po-header-bg);
 }
 
-/* Sticky first column (Actions) – header */
+/* Sticky actions header */
 .stickyColHeader {
   position: sticky;
   left: 0;
@@ -129,7 +151,7 @@
   box-shadow: 2px 0 0 rgba(0, 0, 0, 0.04);
 }
 
-/* When a column is hidden (width collapsed to 0), hide its content too */
+/* Hidden col */
 .hiddenCol {
   width: 0 !important;
   padding: 0 !important;
@@ -144,17 +166,26 @@
   padding: 12px;
   color: #666;
 }
+
+/* ✅ Nested panel wrapper for lines under an order */
+.linesPanel {
+  margin: 8px 12px 12px;
+  border: 1px solid rgba(74, 144, 226, 0.14);
+  border-radius: 14px;
+  background: rgba(74, 144, 226, 0.04);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
+  padding: 10px 12px 12px;
+}
+
 .createBar {
   margin-top: 10px;
 }
+
 .addBtn {
-  background: #2f7bfd;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 12px;
-  cursor: pointer;
+  @include forms.primary-button;
+  padding: 0.75rem 1rem;
 }
+
 .addBtn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
