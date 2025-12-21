@@ -1,16 +1,16 @@
 @use "../../../styles/tables" as tables;
+@use "../../../styles/forms" as forms;
 
-/* Each data row uses the same grid as the header via the CSS var */
-.row {
-}
+$primary: #4a90e2;
+$danger: #e74c3c;
 
-/* Use the same grid declaration as the header (pulled from parent’s CSS var) */
+/* grid row */
 .gridRow {
-  @include tables.table-grid-row; // shared base row styles
+  @include tables.table-grid-row;
   grid-template-columns: var(--tx-grid-cols);
 }
 
-/* Zebra striping + hover */
+/* zebra + hover */
 .zebraEven {
   @include tables.table-zebra-even;
 }
@@ -19,56 +19,117 @@
   @include tables.table-hoverable;
 }
 
-/* Data cells */
+/* cells */
 .cell {
   @include tables.table-cell;
 }
 
+/* ✅ make inputs/selects match Project focus/hover */
 .input {
-  @include tables.table-input;
+  @include forms.text-input;
+  padding: 0.45rem 0.6rem; /* slightly tighter for table rows */
+  font-size: 0.92rem;
 }
 
-/* Actions area */
+/* actions */
 .actions {
-  @include tables.table-actions;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.actionBtn {
-  @include tables.table-action-btn;
-}
-
-.danger {
-  @include tables.table-danger;
-}
-
-/* Sticky first column (Actions) – data rows */
+/* sticky first col */
 .stickyCol {
   @include tables.table-sticky-col;
+
+  /* ✅ Let sticky cell match zebra/hover background of its row */
+  background: inherit;
+
+  /* Keep the separation line */
+  box-shadow: 2px 0 0 rgba(0, 0, 0, 0.04);
 }
 
-/* When a column is hidden (width collapsed to 0), hide its content too */
+/* hidden col */
 .hiddenCol {
   @include tables.table-hidden-col;
 }
 
-/* Optional hook for column-specific tweaks if needed */
-.actionsCol {
-}
-
-/* 🔴 Validation styles */
+/* validation */
 .inputError {
-  border-color: #e11d48 !important;
-  box-shadow: 0 0 0 1px rgba(225, 29, 72, 0.2);
+  border-color: #b00000 !important;
+  box-shadow: 0 0 4px rgba(176, 0, 0, 0.35);
+  outline: none;
 }
 
 .fieldError {
   margin-top: 2px;
   font-size: 0.78rem;
-  color: #e11d48;
+  color: #b00000;
 }
 
+/* ✅ Project-like icon buttons */
+.iconCircleBtn {
+  border-radius: 999px;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(74, 144, 226, 0.25);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: #fff;
+  transition: transform 0.12s ease, box-shadow 0.2s ease;
+  color: #1f2937;
+
+  &:hover {
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  svg {
+    font-size: 16px;
+  }
+}
+
+.dangerIconBtn {
+  border: none;
+  background: $danger;
+  color: #fff;
+  border-radius: 10px;
+  padding: 0.45rem 0.55rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: filter 0.15s ease;
+
+  &:hover {
+    filter: brightness(0.95);
+  }
+
+  svg {
+    font-size: 16px;
+  }
+}
+
+/* ✅ allocations panel = nested "card" under the row */
 .expandedPanel {
   grid-column: 1 / -1;
-  padding: 10px 12px 12px;
+
+  /* keep alignment under non-sticky columns */
   padding-left: 110px; /* match Actions column width */
+  padding-right: 12px;
+  padding-top: 10px;
+  padding-bottom: 12px;
+
+  /* nested card look */
+  margin: 6px 0 10px 0;
+  border: 1px solid rgba(74, 144, 226, 0.14);
+  border-radius: 14px;
+  background: rgba(74, 144, 226, 0.04);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
 }

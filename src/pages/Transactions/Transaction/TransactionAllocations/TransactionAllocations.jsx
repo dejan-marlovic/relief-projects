@@ -1,5 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./TransactionAllocations.module.scss";
+import {
+  FiAlertCircle,
+  FiPlus,
+  FiRefreshCw,
+  FiSave,
+  FiTrash2,
+} from "react-icons/fi";
 
 const BASE_URL = "http://localhost:8080";
 
@@ -25,7 +32,6 @@ const TransactionAllocations = ({ txId, costDetailOptions = [] }) => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // New row draft
   const [draft, setDraft] = useState({
     costDetailId: "",
     plannedAmount: "",
@@ -33,7 +39,7 @@ const TransactionAllocations = ({ txId, costDetailOptions = [] }) => {
   });
 
   const [formError, setFormError] = useState("");
-  const [fieldErrors, setFieldErrors] = useState({}); // { plannedAmount: "...", costDetailId: "..." }
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const fetchRows = useCallback(async () => {
     if (!txId) return;
@@ -42,9 +48,7 @@ const TransactionAllocations = ({ txId, costDetailOptions = [] }) => {
     try {
       const res = await fetch(
         `${BASE_URL}/api/cost-allocations/transaction/${txId}`,
-        {
-          headers: authHeaders,
-        }
+        { headers: authHeaders }
       );
       if (!res.ok) {
         const txt = await res.text().catch(() => "");
@@ -65,21 +69,13 @@ const TransactionAllocations = ({ txId, costDetailOptions = [] }) => {
     fetchRows();
   }, [fetchRows]);
 
-  const costDetailLabel = (id) => {
-    const n = typeof id === "string" ? Number(id) : id;
-    const cd = costDetailOptions.find((x) => Number(x.costDetailId) === n);
-    if (!cd) return `CostDetail #${id}`;
-    // Pick a label that is human
-    return `${cd.costDescription || "No description"} (CD#${cd.costDetailId})`;
-  };
-
   const upsert = async ({ costDetailId, plannedAmount, note }) => {
     setFormError("");
     setFieldErrors({});
     const payload = {
       transactionId: Number(txId),
       costDetailId: Number(costDetailId),
-      plannedAmount: plannedAmount, // BigDecimal friendly
+      plannedAmount,
       note: note || null,
     };
 
@@ -134,7 +130,6 @@ const TransactionAllocations = ({ txId, costDetailOptions = [] }) => {
   };
 
   const onInlineUpdate = async (row, patch) => {
-    // upsert by (txId, costDetailId) – keep costDetailId stable for that row
     const planned =
       patch.plannedAmount === "" || patch.plannedAmount == null
         ? null
@@ -186,72 +181,98 @@ const TransactionAllocations = ({ txId, costDetailOptions = [] }) => {
             Transaction #{txId} → split planned amounts by cost line
           </div>
         </div>
+
         <button
-          className={styles.refreshBtn}
+          type="button"
+          className={styles.iconPillBtn}
           onClick={fetchRows}
           disabled={loading}
+          title="Refresh allocations"
         >
+          <FiRefreshCw />
           Refresh
         </button>
       </div>
 
-      {formError && <div className={styles.errorBanner}>{formError}</div>}
-
-      {/* Add new allocation */}
-      <div className={styles.addRow}>
-        <div className={styles.field}>
-          <label>Cost detail</label>
-          <select
-            value={draft.costDetailId}
-            onChange={(e) =>
-              setDraft((p) => ({ ...p, costDetailId: e.target.value }))
-            }
-          >
-            <option value="">Select…</option>
-            {costDetailOptions.map((cd) => (
-              <option key={cd.costDetailId} value={cd.costDetailId}>
-                {cd.costDescription || "No description"} (CD#{cd.costDetailId})
-              </option>
-            ))}
-          </select>
-          {fieldErrors.costDetailId && (
-            <div className={styles.fieldError}>{fieldErrors.costDetailId}</div>
-          )}
+      {formError && (
+        <div className={styles.errorBanner}>
+          <FiAlertCircle />
+          <span>{formError}</span>
         </div>
+      )}
 
-        <div className={styles.field}>
-          <label>Planned amount</label>
-          <input
-            type="number"
-            step="0.01"
-            value={draft.plannedAmount}
-            onChange={(e) =>
-              setDraft((p) => ({ ...p, plannedAmount: e.target.value }))
-            }
-          />
-          {fieldErrors.plannedAmount && (
-            <div className={styles.fieldError}>{fieldErrors.plannedAmount}</div>
-          )}
-        </div>
+      <div className={styles.addCard}>
+        <div className={styles.addGrid}>
+          <div className={styles.field}>
+            <label>Cost detail</label>
+            <select
+              value={draft.costDetailId}
+              onChange={(e) =>
+                setDraft((p) => ({ ...p, costDetailId: e.target.value }))
+              }
+              className={styles.textInput}
+            >
+              <option value="">Select…</option>
+              {costDetailOptions.map((cd) => (
+                <option key={cd.costDetailId} value={cd.costDetailId}>
+                  {cd.costDescription || "No description"} (CD#{cd.costDetailId}
+                  )
+                </option>
+              ))}
+            </select>
+            {fieldErrors.costDetailId && (
+              <div className={styles.fieldError}>
+                {fieldErrors.costDetailId}
+              </div>
+            )}
+          </div>
 
-        <div className={styles.field}>
-          <label>Note</label>
-          <input
-            type="text"
-            value={draft.note}
-            onChange={(e) => setDraft((p) => ({ ...p, note: e.target.value }))}
-            placeholder="Optional…"
-          />
-        </div>
+          <div className={styles.field}>
+            <label>Planned amount</label>
+            <input
+              type="number"
+              step="0.01"
+              value={draft.plannedAmount}
+              onChange={(e) =>
+                setDraft((p) => ({ ...p, plannedAmount: e.target.value }))
+              }
+              className={styles.textInput}
+            />
+            {fieldErrors.plannedAmount && (
+              <div className={styles.fieldError}>
+                {fieldErrors.plannedAmount}
+              </div>
+            )}
+          </div>
 
-        <div className={styles.fieldActions}>
-          <button className={styles.primary} onClick={onAdd} disabled={loading}>
-            + Add / Update
-          </button>
+          <div className={styles.field}>
+            <label>Note</label>
+            <input
+              type="text"
+              value={draft.note}
+              onChange={(e) =>
+                setDraft((p) => ({ ...p, note: e.target.value }))
+              }
+              placeholder="Optional…"
+              className={styles.textInput}
+            />
+          </div>
+
+          <div className={styles.fieldActions}>
+            <button
+              type="button"
+              className={styles.primaryInlineBtn}
+              onClick={onAdd}
+              disabled={loading}
+              title="Add or update allocation"
+            >
+              <FiPlus />
+              Add
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Existing allocations */}
       <div className={styles.table}>
         <div className={styles.thead}>
           <div>Cost detail</div>
@@ -271,7 +292,20 @@ const TransactionAllocations = ({ txId, costDetailOptions = [] }) => {
             <AllocationRow
               key={r.id}
               row={r}
-              label={costDetailLabel(r.costDetailId)}
+              label={(() => {
+                const n =
+                  typeof r.costDetailId === "string"
+                    ? Number(r.costDetailId)
+                    : r.costDetailId;
+                const cd = costDetailOptions.find(
+                  (x) => Number(x.costDetailId) === n
+                );
+                return cd
+                  ? `${cd.costDescription || "No description"} (CD#${
+                      cd.costDetailId
+                    })`
+                  : `CostDetail #${r.costDetailId}`;
+              })()}
               onSave={(patch) => onInlineUpdate(r, patch)}
               onDelete={() => onDelete(r.id)}
             />
@@ -297,6 +331,7 @@ const AllocationRow = ({ row, label, onSave, onDelete }) => {
 
       <div>
         <input
+          className={styles.textInput}
           type="number"
           step="0.01"
           value={plannedAmount}
@@ -306,6 +341,7 @@ const AllocationRow = ({ row, label, onSave, onDelete }) => {
 
       <div>
         <input
+          className={styles.textInput}
           type="text"
           value={note}
           onChange={(e) => setNote(e.target.value)}
@@ -314,13 +350,23 @@ const AllocationRow = ({ row, label, onSave, onDelete }) => {
 
       <div className={styles.rowActions}>
         <button
-          className={styles.secondary}
+          type="button"
+          className={styles.iconCircleBtn}
           onClick={() => onSave({ plannedAmount, note })}
+          title="Save allocation"
+          aria-label="Save allocation"
         >
-          Save
+          <FiSave />
         </button>
-        <button className={styles.danger} onClick={onDelete}>
-          Delete
+
+        <button
+          type="button"
+          className={styles.dangerIconBtn}
+          onClick={onDelete}
+          title="Delete allocation"
+          aria-label="Delete allocation"
+        >
+          <FiTrash2 />
         </button>
       </div>
     </div>

@@ -9,6 +9,7 @@ import React, {
 import { ProjectContext } from "../../context/ProjectContext";
 import Transaction from "./Transaction/Transaction";
 import styles from "./Transactions.module.scss";
+import { FiAlertCircle, FiPlus, FiColumns } from "react-icons/fi";
 
 const BASE_URL = "http://localhost:8080";
 
@@ -78,8 +79,6 @@ const Transactions = ({ refreshTrigger }) => {
   const [transactions, setTransactions] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
-
-  // ✅ NEW: which tx row is expanded for allocations
   const [expandedTxId, setExpandedTxId] = useState(null);
 
   // dropdown data
@@ -101,7 +100,7 @@ const Transactions = ({ refreshTrigger }) => {
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
 
-  // refs for scrolling
+  // refs
   const tableRef = useRef(null);
   const newRowRef = useRef(null);
 
@@ -150,7 +149,7 @@ const Transactions = ({ refreshTrigger }) => {
     [authHeaders]
   );
 
-  // Dropdowns
+  // dropdowns
   useEffect(() => {
     let cancelled = false;
     const token = localStorage.getItem("authToken");
@@ -209,7 +208,7 @@ const Transactions = ({ refreshTrigger }) => {
     }
   }, [editingId]);
 
-  // ✅ Load costDetailOptions (budgets -> cost details)
+  // cost detail options
   useEffect(() => {
     let cancelled = false;
 
@@ -255,8 +254,6 @@ const Transactions = ({ refreshTrigger }) => {
 
   const startEdit = (tx) => {
     setEditingId(tx?.id ?? null);
-
-    // Optional: close allocations while editing to avoid weird UX
     setExpandedTxId((cur) => (cur === tx.id ? null : cur));
 
     setEditedValues((prev) => ({
@@ -291,7 +288,7 @@ const Transactions = ({ refreshTrigger }) => {
 
   const startCreate = () => {
     setEditingId("new");
-    setExpandedTxId(null); // ✅ no allocations for draft tx
+    setExpandedTxId(null);
 
     setEditedValues((prev) => ({
       ...prev,
@@ -450,9 +447,7 @@ const Transactions = ({ refreshTrigger }) => {
       });
       if (!res.ok) throw new Error("Failed to delete transaction");
 
-      // ✅ if the deleted tx was expanded, close it
       setExpandedTxId((cur) => (cur === id ? null : cur));
-
       await fetchTransactions(selectedProjectId);
     } catch (err) {
       console.error(err);
@@ -469,130 +464,152 @@ const Transactions = ({ refreshTrigger }) => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.toolbar}>
-        <label className={styles.compactToggle}>
-          <input
-            type="checkbox"
-            checked={compact}
-            onChange={(e) => setCompact(e.target.checked)}
-          />
-          <span>Compact mode</span>
-        </label>
-
-        <div className={styles.columnsBox}>
-          <button
-            className={styles.columnsBtn}
-            onClick={() => setColumnsOpen((v) => !v)}
-          >
-            Columns ▾
-          </button>
-          {columnsOpen && (
-            <div className={styles.columnsPanel}>
-              {headerLabels.map((h, i) => (
-                <label key={h} className={styles.colItem}>
-                  <input
-                    type="checkbox"
-                    checked={visibleCols[i]}
-                    disabled={i === 0}
-                    onChange={() => toggleCol(i)}
-                  />
-                  <span>{h}</span>
-                  {i === 0 && <em className={styles.lockNote}> (locked)</em>}
-                </label>
-              ))}
+      <div className={styles.card}>
+        <div className={styles.cardHeader}>
+          <div className={styles.headerText}>
+            <div className={styles.cardTitle}>Transactions</div>
+            <div className={styles.cardMeta}>
+              View, edit and allocate planned amounts per transaction.
             </div>
-          )}
-        </div>
-      </div>
+          </div>
 
-      {formError && <div className={styles.errorBanner}>{formError}</div>}
+          <div className={styles.headerActions}>
+            <label className={styles.compactToggle}>
+              <input
+                type="checkbox"
+                checked={compact}
+                onChange={(e) => setCompact(e.target.checked)}
+              />
+              <span>Compact</span>
+            </label>
 
-      <div
-        className={`${styles.table} ${compact ? styles.compact : ""}`}
-        style={{ ["--tx-grid-cols"]: gridCols }}
-        ref={tableRef}
-      >
-        <div className={`${styles.gridRow} ${styles.headerRow}`}>
-          {headerLabels.map((h, i) => (
-            <div
-              key={h}
-              className={`${styles.headerCell} ${
-                i === 0 ? styles.stickyColHeader : ""
-              } ${!visibleCols[i] ? styles.hiddenCol : ""} ${
-                i === 0 ? styles.actionsCol : ""
-              }`}
+            <div className={styles.columnsBox}>
+              <button
+                type="button"
+                className={styles.iconPillBtn}
+                onClick={() => setColumnsOpen((v) => !v)}
+                aria-label="Toggle columns"
+                title="Columns"
+              >
+                <FiColumns />
+                Columns
+              </button>
+              {columnsOpen && (
+                <div className={styles.columnsPanel}>
+                  {headerLabels.map((h, i) => (
+                    <label key={h} className={styles.colItem}>
+                      <input
+                        type="checkbox"
+                        checked={visibleCols[i]}
+                        disabled={i === 0}
+                        onChange={() => toggleCol(i)}
+                      />
+                      <span>{h}</span>
+                      {i === 0 && (
+                        <em className={styles.lockNote}> (locked)</em>
+                      )}
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <button
+              type="button"
+              className={styles.primaryInlineBtn}
+              onClick={startCreate}
+              disabled={!selectedProjectId || editingId === "new"}
+              title="New Transaction"
             >
-              {h}
-            </div>
-          ))}
+              <FiPlus />
+              New
+            </button>
+          </div>
         </div>
 
-        {!selectedProjectId ? (
-          <p className={styles.noData}>
-            Select a project to see its transactions.
-          </p>
-        ) : transactions.length === 0 ? (
-          <p className={styles.noData}>No transactions for this project.</p>
-        ) : (
-          transactions.map((tx, idx) => (
+        {formError && (
+          <div className={styles.errorBanner}>
+            <FiAlertCircle />
+            <span>{formError}</span>
+          </div>
+        )}
+
+        <div
+          className={`${styles.table} ${compact ? styles.compact : ""}`}
+          style={{ ["--tx-grid-cols"]: gridCols }}
+          ref={tableRef}
+        >
+          <div className={`${styles.gridRow} ${styles.headerRow}`}>
+            {headerLabels.map((h, i) => (
+              <div
+                key={h}
+                className={`${styles.headerCell} ${
+                  i === 0 ? styles.stickyColHeader : ""
+                } ${!visibleCols[i] ? styles.hiddenCol : ""} ${
+                  i === 0 ? styles.actionsCol : ""
+                }`}
+              >
+                {h}
+              </div>
+            ))}
+          </div>
+
+          {!selectedProjectId ? (
+            <p className={styles.noData}>
+              Select a project to see transactions.
+            </p>
+          ) : transactions.length === 0 ? (
+            <p className={styles.noData}>No transactions for this project.</p>
+          ) : (
+            transactions.map((tx, idx) => (
+              <Transaction
+                key={tx.id}
+                tx={tx}
+                isEven={idx % 2 === 0}
+                isEditing={editingId === tx.id}
+                editedValues={editedValues[tx.id]}
+                onEdit={() => startEdit(tx)}
+                onChange={onChange}
+                onSave={save}
+                onCancel={cancel}
+                onDelete={remove}
+                organizations={orgOptions}
+                projects={projectOptions}
+                statuses={statusOptions}
+                exchangeRates={fxOptions}
+                currencies={currencies}
+                visibleCols={visibleCols}
+                fieldErrors={fieldErrors[tx.id] || {}}
+                expanded={expandedTxId === tx.id}
+                onToggleAllocations={() =>
+                  setExpandedTxId((cur) => (cur === tx.id ? null : tx.id))
+                }
+                costDetailOptions={costDetailOptions}
+              />
+            ))
+          )}
+
+          {editingId === "new" && (
             <Transaction
-              key={tx.id}
-              tx={tx}
-              rowIndex={idx}
-              isEven={idx % 2 === 0}
-              isEditing={editingId === tx.id}
-              editedValues={editedValues[tx.id]}
-              onEdit={() => startEdit(tx)}
+              tx={{ id: "new", ...blankTx, projectId: selectedProjectId || "" }}
+              isEditing
+              editedValues={editedValues.new}
               onChange={onChange}
               onSave={save}
               onCancel={cancel}
-              onDelete={remove}
+              onDelete={() => {}}
               organizations={orgOptions}
               projects={projectOptions}
               statuses={statusOptions}
               exchangeRates={fxOptions}
               currencies={currencies}
               visibleCols={visibleCols}
-              fieldErrors={fieldErrors[tx.id] || {}}
-              expanded={expandedTxId === tx.id}
-              onToggleAllocations={() =>
-                setExpandedTxId((cur) => (cur === tx.id ? null : tx.id))
-              }
-              costDetailOptions={costDetailOptions}
+              isEven={false}
+              fieldErrors={fieldErrors.new || {}}
+              rowRef={newRowRef}
             />
-          ))
-        )}
-
-        {editingId === "new" && (
-          <Transaction
-            tx={{ id: "new", ...blankTx, projectId: selectedProjectId || "" }}
-            isEditing
-            editedValues={editedValues.new}
-            onChange={onChange}
-            onSave={save}
-            onCancel={cancel}
-            onDelete={() => {}}
-            organizations={orgOptions}
-            projects={projectOptions}
-            statuses={statusOptions}
-            exchangeRates={fxOptions}
-            currencies={currencies}
-            visibleCols={visibleCols}
-            isEven={false}
-            fieldErrors={fieldErrors.new || {}}
-            rowRef={newRowRef}
-          />
-        )}
-      </div>
-
-      <div className={styles.createBar}>
-        <button
-          className={styles.addBtn}
-          onClick={startCreate}
-          disabled={!selectedProjectId || editingId === "new"}
-        >
-          + New Transaction
-        </button>
+          )}
+        </div>
       </div>
     </div>
   );

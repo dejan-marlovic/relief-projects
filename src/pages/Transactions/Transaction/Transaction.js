@@ -1,6 +1,13 @@
 import React from "react";
 import styles from "./Transaction.module.scss";
-import { FiEdit, FiTrash2, FiSave, FiX, FiSliders } from "react-icons/fi";
+import {
+  FiEdit,
+  FiTrash2,
+  FiSave,
+  FiX,
+  FiChevronDown,
+  FiChevronUp,
+} from "react-icons/fi";
 import TransactionAllocations from "./TransactionAllocations/TransactionAllocations";
 
 const yesNo = ["Yes", "No"];
@@ -37,7 +44,7 @@ const Transaction = ({
   fieldErrors = {},
   rowRef = null,
 
-  // ✅ allocations
+  // allocations
   expanded = false,
   onToggleAllocations,
   costDetailOptions = [],
@@ -259,21 +266,25 @@ const Transaction = ({
           isEven ? styles.zebraEven : ""
         } ${styles.hoverable}`}
       >
-        {/* 0: Actions */}
+        {/* Actions */}
         <Cell className={`${styles.stickyCol} ${styles.actionsCol} ${hc(0)}`}>
           {isEditing ? (
             <div className={styles.actions}>
               <button
-                className={styles.actionBtn}
+                type="button"
+                className={styles.iconCircleBtn}
                 onClick={submit}
                 title="Save"
+                aria-label="Save"
               >
                 <FiSave />
               </button>
               <button
-                className={`${styles.actionBtn} ${styles.danger}`}
+                type="button"
+                className={styles.iconCircleBtn}
                 onClick={onCancel}
                 title="Cancel"
+                aria-label="Cancel"
               >
                 <FiX />
               </button>
@@ -281,40 +292,47 @@ const Transaction = ({
           ) : (
             <div className={styles.actions}>
               <button
-                className={styles.actionBtn}
+                type="button"
+                className={styles.iconCircleBtn}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   onEdit();
                 }}
                 title="Edit"
+                aria-label="Edit"
               >
                 <FiEdit />
               </button>
 
-              {/* ✅ Allocations toggle */}
               {!isCreate && (
                 <button
-                  className={styles.actionBtn}
+                  type="button"
+                  className={styles.iconCircleBtn}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     onToggleAllocations?.();
                   }}
                   title={expanded ? "Hide allocations" : "Show allocations"}
+                  aria-label={
+                    expanded ? "Hide allocations" : "Show allocations"
+                  }
                 >
-                  <FiSliders />
+                  {expanded ? <FiChevronUp /> : <FiChevronDown />}
                 </button>
               )}
 
               <button
-                className={`${styles.actionBtn} ${styles.danger}`}
+                type="button"
+                className={styles.dangerIconBtn}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   onDelete(tx.id);
                 }}
                 title="Delete"
+                aria-label="Delete"
               >
                 <FiTrash2 />
               </button>
@@ -406,7 +424,6 @@ const Transaction = ({
         </Cell>
       </div>
 
-      {/* ✅ Expanded allocations panel (full width under row) */}
       {expanded && !isCreate && (
         <div className={styles.expandedPanel}>
           <TransactionAllocations
