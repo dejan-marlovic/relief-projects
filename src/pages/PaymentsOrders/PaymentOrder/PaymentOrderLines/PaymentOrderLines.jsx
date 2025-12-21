@@ -19,6 +19,16 @@ async function safeParseJsonResponse(res) {
   }
 }
 
+function isLockedResponse(res, data) {
+  // Prefer status code when available
+  if (res?.status === 409) return true;
+
+  const msg = (data?.message || "").toLowerCase();
+  return (
+    msg.includes("locked") || msg.includes("booked") || msg.includes("final")
+  );
+}
+
 function normalizeLine(r) {
   if (!r || typeof r !== "object") return null;
 
@@ -72,6 +82,10 @@ const PaymentOrderLines = ({
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // ✅ NEW: lock state for the whole widget
+  const [isLocked, setIsLocked] = useState(false);
+  const [lockMessage, setLockMessage] = useState("");
+
   // draft create row
   const [draft, setDraft] = useState({
     transactionId: "", // optional override
@@ -90,17 +104,33 @@ const PaymentOrderLines = ({
     setLoading(true);
     setFormError("");
     setFieldErrors({});
+    // Important: do not clear lock state blindly until we know
+    setIsLocked(false);
+    setLockMessage("");
+
     try {
       const res = await fetch(
         `${BASE_URL}/api/payment-order-lines/payment-order/${paymentOrderId}`,
         { headers: authHeaders }
       );
+
       if (!res.ok) {
         const data = await safeParseJsonResponse(res);
+
+        // If backend blocks even reading (unlikely), respect it.
+        if (isLockedResponse(res, data)) {
+          setIsLocked(true);
+          setLockMessage(
+            data?.message ||
+              "This payment order is Booked (locked). Lines cannot be changed."
+          );
+        }
+
         throw new Error(
           data?.message || `Failed to fetch payment order lines.`
         );
       }
+
       const data = await res.json();
       const arr = Array.isArray(data) ? data : data ? [data] : [];
       setRows(arr.map(normalizeLine).filter(Boolean));
@@ -128,6 +158,14 @@ const PaymentOrderLines = ({
       const data = await safeParseJsonResponse(res);
       if (data?.fieldErrors) setFieldErrors(data.fieldErrors);
 
+      if (isLockedResponse(res, data)) {
+        setIsLocked(true);
+        setLockMessage(
+          data?.message ||
+            "This payment order is Booked (locked). Lines cannot be changed."
+        );
+      }
+
       const msg =
         data?.message ||
         (res.status === 409 ? "Conflict: payment order is locked." : null) ||
@@ -150,6 +188,14 @@ const PaymentOrderLines = ({
       const data = await safeParseJsonResponse(res);
       if (data?.fieldErrors) setFieldErrors(data.fieldErrors);
 
+      if (isLockedResponse(res, data)) {
+        setIsLocked(true);
+        setLockMessage(
+          data?.message ||
+            "This payment order is Booked (locked). Lines cannot be changed."
+        );
+      }
+
       const msg =
         data?.message ||
         (res.status === 409 ? "Conflict: payment order is locked." : null) ||
@@ -166,17 +212,30 @@ const PaymentOrderLines = ({
       method: "DELETE",
       headers: authHeaders,
     });
+
     if (!res.ok) {
       const data = await safeParseJsonResponse(res);
+
+      if (isLockedResponse(res, data)) {
+        setIsLocked(true);
+        setLockMessage(
+          data?.message ||
+            "This payment order is Booked (locked). Lines cannot be changed."
+        );
+      }
+
       const msg =
         data?.message ||
         (res.status === 409 ? "Conflict: payment order is locked." : null) ||
         "Failed to delete line.";
+
       throw new Error(msg);
     }
   };
 
   const onAdd = async () => {
+    if (isLocked) return;
+
     setFormError("");
     setFieldErrors({});
 
@@ -227,6 +286,8 @@ const PaymentOrderLines = ({
   };
 
   const onInlineSave = async (rowId, patch) => {
+    if (isLocked) return;
+
     setFormError("");
     setFieldErrors({});
 
@@ -284,6 +345,8 @@ const PaymentOrderLines = ({
   };
 
   const onDelete = async (id) => {
+    if (isLocked) return;
+
     if (!window.confirm("Delete this payment order line?")) return;
     setFormError("");
     setFieldErrors({});
@@ -298,6 +361,9 @@ const PaymentOrderLines = ({
 
   // quick totals (UI only)
   const total = rows.reduce((acc, r) => acc + (Number(r.amount) || 0), 0);
+
+  const lockedBanner =
+    isLocked && (lockMessage || "This payment order is Booked (locked).");
 
   return (
     <div className={styles.wrap}>
@@ -317,6 +383,13 @@ const PaymentOrderLines = ({
         </button>
       </div>
 
+      {/* ✅ Locked banner */}
+      {lockedBanner && (
+        <div className={styles.errorBanner}>
+          {lockedBanner} (Editing disabled)
+        </div>
+      )}
+
       {formError && <div className={styles.errorBanner}>{formError}</div>}
 
       {/* Add row */}
@@ -325,6 +398,7 @@ const PaymentOrderLines = ({
           <label>Transaction override</label>
           <select
             value={draft.transactionId}
+            disabled={loading || isLocked}
             onChange={(e) =>
               setDraft((p) => ({ ...p, transactionId: e.target.value }))
             }
@@ -342,6 +416,7 @@ const PaymentOrderLines = ({
           <label>Organization *</label>
           <select
             value={draft.organizationId}
+            disabled={loading || isLocked}
             onChange={(e) =>
               setDraft((p) => ({ ...p, organizationId: e.target.value }))
             }
@@ -364,6 +439,7 @@ const PaymentOrderLines = ({
           <label>Cost detail</label>
           <select
             value={draft.costDetailId}
+            disabled={loading || isLocked}
             onChange={(e) =>
               setDraft((p) => ({ ...p, costDetailId: e.target.value }))
             }
@@ -381,6 +457,7 @@ const PaymentOrderLines = ({
           <label>Currency</label>
           <select
             value={draft.currencyId}
+            disabled={loading || isLocked}
             onChange={(e) =>
               setDraft((p) => ({ ...p, currencyId: e.target.value }))
             }
@@ -400,6 +477,7 @@ const PaymentOrderLines = ({
             type="number"
             step="0.01"
             value={draft.amount}
+            disabled={loading || isLocked}
             onChange={(e) =>
               setDraft((p) => ({ ...p, amount: e.target.value }))
             }
@@ -414,13 +492,21 @@ const PaymentOrderLines = ({
           <input
             type="text"
             value={draft.memo}
+            disabled={loading || isLocked}
             onChange={(e) => setDraft((p) => ({ ...p, memo: e.target.value }))}
             placeholder="Optional…"
           />
         </div>
 
         <div className={styles.fieldActions}>
-          <button className={styles.primary} onClick={onAdd} disabled={loading}>
+          <button
+            className={styles.primary}
+            onClick={onAdd}
+            disabled={loading || isLocked}
+            title={
+              isLocked ? "This payment order is Booked (locked)." : "Add line"
+            }
+          >
             + Add line
           </button>
         </div>
@@ -451,6 +537,7 @@ const PaymentOrderLines = ({
               orgOptions={orgOptions}
               currencyOptions={currencyOptions}
               costDetailOptions={costDetailOptions}
+              locked={isLocked}
               onSave={(patch) => onInlineSave(r.id, patch)}
               onDelete={() => onDelete(r.id)}
             />
@@ -467,6 +554,7 @@ const LineRow = ({
   orgOptions,
   currencyOptions,
   costDetailOptions,
+  locked = false,
   onSave,
   onDelete,
 }) => {
@@ -501,6 +589,7 @@ const LineRow = ({
       <div>
         <select
           value={transactionId}
+          disabled={locked}
           onChange={(e) => setTransactionId(e.target.value)}
         >
           <option value="">(header)</option>
@@ -515,6 +604,7 @@ const LineRow = ({
       <div>
         <select
           value={organizationId}
+          disabled={locked}
           onChange={(e) => setOrganizationId(e.target.value)}
         >
           <option value="">Select…</option>
@@ -529,6 +619,7 @@ const LineRow = ({
       <div>
         <select
           value={costDetailId}
+          disabled={locked}
           onChange={(e) => setCostDetailId(e.target.value)}
         >
           <option value="">(none)</option>
@@ -543,6 +634,7 @@ const LineRow = ({
       <div>
         <select
           value={currencyId}
+          disabled={locked}
           onChange={(e) => setCurrencyId(e.target.value)}
         >
           <option value="">(none)</option>
@@ -559,6 +651,7 @@ const LineRow = ({
           type="number"
           step="0.01"
           value={amount}
+          disabled={locked}
           onChange={(e) => setAmount(e.target.value)}
         />
       </div>
@@ -567,6 +660,7 @@ const LineRow = ({
         <input
           type="text"
           value={memo}
+          disabled={locked}
           onChange={(e) => setMemo(e.target.value)}
         />
       </div>
@@ -574,6 +668,10 @@ const LineRow = ({
       <div className={styles.rowActions}>
         <button
           className={styles.secondary}
+          disabled={locked}
+          title={
+            locked ? "This payment order is Booked (locked)." : "Save line"
+          }
           onClick={() =>
             onSave({
               transactionId,
@@ -587,7 +685,14 @@ const LineRow = ({
         >
           Save
         </button>
-        <button className={styles.danger} onClick={onDelete}>
+        <button
+          className={styles.danger}
+          disabled={locked}
+          title={
+            locked ? "This payment order is Booked (locked)." : "Delete line"
+          }
+          onClick={onDelete}
+        >
           Delete
         </button>
       </div>
