@@ -93,8 +93,11 @@ const Layout = () => {
             ["/payments", "Payments"],
             ["/signatures", "Signatures"],
             ["/recipients", "Recipients"],
-            ["/documents", "Documents"],
+
+            // ✅ swapped order
             ["/organizations", "Related Organizations"],
+            ["/documents", "Documents"],
+
             ["/statistics", "Statistics"],
             ["/register-project", "New Project"],
           ].map(([path, label]) => (
