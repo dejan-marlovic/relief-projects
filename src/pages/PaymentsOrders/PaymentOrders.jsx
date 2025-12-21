@@ -10,6 +10,7 @@ import { ProjectContext } from "../../context/ProjectContext";
 import PaymentOrder from "./PaymentOrder/PaymentOrder";
 import styles from "./PaymentOrders.module.scss";
 import PaymentOrderLines from "./PaymentOrder/PaymentOrderLines/PaymentOrderLines";
+import { FiPlus, FiColumns, FiMinimize2 } from "react-icons/fi";
 
 const BASE_URL = "http://localhost:8080";
 
@@ -48,6 +49,7 @@ async function safeParseJsonResponse(res) {
   }
 }
 
+// Normalize in case backend returns paymentOrderId instead of id, etc.
 function normalizePO(po) {
   if (!po || typeof po !== "object") return null;
 
@@ -97,6 +99,7 @@ function PaymentOrders() {
   const [currencyOptions, setCurrencyOptions] = useState([]);
   const [costDetailOptions, setCostDetailOptions] = useState([]);
 
+  // Track which POs are known locked (based on a 409 response)
   const [lockedPoIds, setLockedPoIds] = useState(() => new Set());
 
   const newRowRef = useRef(null);
@@ -137,7 +140,8 @@ function PaymentOrders() {
 
         const data = await res.json();
         const arr = Array.isArray(data) ? data : data ? [data] : [];
-        setOrders(arr.map(normalizePO).filter(Boolean));
+        const normalized = arr.map(normalizePO).filter(Boolean);
+        setOrders(normalized);
       } catch (e) {
         console.error(e);
         setOrders([]);
@@ -438,141 +442,163 @@ function PaymentOrders() {
     return parts.join(" ");
   }, [visibleCols]);
 
+  const subtitle = selectedProjectId
+    ? `Project #${selectedProjectId} • ${orders.length} order${
+        orders.length === 1 ? "" : "s"
+      }`
+    : "Select a project to see payment orders";
+
   return (
-    <div className={styles.container}>
-      <div className={styles.toolbar}>
-        <label className={styles.compactToggle}>
-          <input
-            type="checkbox"
-            checked={compact}
-            onChange={(e) => setCompact(e.target.checked)}
-          />
-          <span>Compact mode</span>
-        </label>
+    <div className={styles.page}>
+      <div className={styles.shell}>
+        {/* ✅ Blue header like Project/Transactions */}
+        <div className={styles.pageHeader}>
+          <div className={styles.pageHeaderText}>
+            <h3 className={styles.pageTitle}>Payment Orders</h3>
+            <p className={styles.pageSubtitle}>{subtitle}</p>
+          </div>
 
-        <div className={styles.columnsBox}>
-          <button
-            className={styles.columnsBtn}
-            onClick={() => setColumnsOpen((v) => !v)}
-          >
-            Columns ▾
-          </button>
-          {columnsOpen && (
-            <div className={styles.columnsPanel}>
-              {headerLabels.map((h, i) => (
-                <label key={h} className={styles.colItem}>
-                  <input
-                    type="checkbox"
-                    checked={visibleCols[i]}
-                    disabled={i === 0}
-                    onChange={() => toggleCol(i)}
-                  />
-                  <span>{h}</span>
-                  {i === 0 && <em className={styles.lockNote}> (locked)</em>}
-                </label>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {formError && <div className={styles.errorBanner}>{formError}</div>}
-
-      <div
-        className={`${styles.table} ${compact ? styles.compact : ""}`}
-        style={{ ["--po-grid-cols"]: gridCols }}
-      >
-        <div className={`${styles.gridRow} ${styles.headerRow}`}>
-          {headerLabels.map((h, i) => (
-            <div
-              key={h}
-              className={`${styles.headerCell}
-                ${i === 0 ? styles.stickyColHeader : ""}
-                ${!visibleCols[i] ? styles.hiddenCol : ""}
-                ${i === 0 ? styles.actionsCol : ""}`}
-            >
-              {h}
-            </div>
-          ))}
-        </div>
-
-        {!selectedProjectId ? (
-          <p className={styles.noData}>
-            Select a project to see its payment orders.
-          </p>
-        ) : orders.length === 0 ? (
-          <p className={styles.noData}>No payment orders for this project.</p>
-        ) : (
-          orders.map((po, idx) => (
-            <React.Fragment key={po.id}>
-              <PaymentOrder
-                po={po}
-                locked={lockedPoIds.has(po.id)}
-                isEven={idx % 2 === 0}
-                isEditing={editingId === po.id}
-                editedValues={editedValues[po.id]}
-                onEdit={() => startEdit(po)}
-                onChange={onChange}
-                onSave={save}
-                onCancel={cancel}
-                onDelete={remove}
-                transactions={txOptions}
-                visibleCols={visibleCols}
-                fieldErrors={fieldErrors[po.id] || {}}
-                expanded={expandedPoId === po.id}
-                onToggleLines={() =>
-                  setExpandedPoId((cur) => (cur === po.id ? null : po.id))
-                }
+          <div className={styles.headerActions}>
+            <label className={styles.compactToggle}>
+              <input
+                type="checkbox"
+                checked={compact}
+                onChange={(e) => setCompact(e.target.checked)}
               />
+              <FiMinimize2 />
+              <span>Compact</span>
+            </label>
 
-              {expandedPoId === po.id && (
-                <div className={styles.linesPanel}>
-                  <PaymentOrderLines
-                    paymentOrderId={po.id}
-                    txOptions={txOptions}
-                    orgOptions={orgOptions}
-                    currencyOptions={currencyOptions}
-                    costDetailOptions={costDetailOptions}
-                  />
+            <div className={styles.columnsBox}>
+              <button
+                className={styles.columnsBtn}
+                onClick={() => setColumnsOpen((v) => !v)}
+                title="Choose visible columns"
+              >
+                <FiColumns />
+                Columns
+              </button>
+
+              {columnsOpen && (
+                <div className={styles.columnsPanel}>
+                  {headerLabels.map((h, i) => (
+                    <label key={h} className={styles.colItem}>
+                      <input
+                        type="checkbox"
+                        checked={visibleCols[i]}
+                        disabled={i === 0}
+                        onChange={() => toggleCol(i)}
+                      />
+                      <span>{h}</span>
+                      {i === 0 && (
+                        <em className={styles.lockNote}> (locked)</em>
+                      )}
+                    </label>
+                  ))}
                 </div>
               )}
-            </React.Fragment>
-          ))
-        )}
+            </div>
 
-        {editingId === "new" && (
-          <PaymentOrder
-            po={{ id: "new", ...blankPO }}
-            isEditing
-            editedValues={editedValues.new}
-            onChange={onChange}
-            onSave={save}
-            onCancel={cancel}
-            onDelete={() => {}}
-            transactions={txOptions}
-            visibleCols={visibleCols}
-            isEven={false}
-            fieldErrors={fieldErrors.new || {}}
-            rowRef={newRowRef}
-          />
-        )}
-      </div>
+            <button
+              className={styles.primaryBtn}
+              onClick={startCreate}
+              disabled={!selectedProjectId || editingId === "new"}
+              title={
+                !selectedProjectId
+                  ? "Select a project first"
+                  : editingId === "new"
+                  ? "Finish the current draft first"
+                  : "Create new payment order"
+              }
+            >
+              <FiPlus />
+              New
+            </button>
+          </div>
+        </div>
 
-      <div className={styles.createBar}>
-        <button
-          className={styles.addBtn}
-          onClick={startCreate}
-          disabled={!selectedProjectId || editingId === "new"}
-          title={
-            !selectedProjectId
-              ? "Select a project first"
-              : editingId === "new"
-              ? "Finish the current draft first"
-              : "Create new payment order"
-          }
+        {formError && <div className={styles.errorBanner}>{formError}</div>}
+
+        {/* ✅ Table now lives INSIDE the same shell card */}
+        <div
+          className={`${styles.table} ${compact ? styles.compact : ""}`}
+          style={{ ["--po-grid-cols"]: gridCols }}
         >
-          + New Payment Order
-        </button>
+          <div className={`${styles.gridRow} ${styles.headerRow}`}>
+            {headerLabels.map((h, i) => (
+              <div
+                key={h}
+                className={`${styles.headerCell}
+                  ${i === 0 ? styles.stickyColHeader : ""}
+                  ${!visibleCols[i] ? styles.hiddenCol : ""}
+                  ${i === 0 ? styles.actionsCol : ""}`}
+              >
+                {h}
+              </div>
+            ))}
+          </div>
+
+          {!selectedProjectId ? (
+            <p className={styles.noData}>
+              Select a project to see its payment orders.
+            </p>
+          ) : orders.length === 0 ? (
+            <p className={styles.noData}>No payment orders for this project.</p>
+          ) : (
+            orders.map((po, idx) => (
+              <React.Fragment key={po.id}>
+                <PaymentOrder
+                  po={po}
+                  locked={lockedPoIds.has(po.id)}
+                  isEven={idx % 2 === 0}
+                  isEditing={editingId === po.id}
+                  editedValues={editedValues[po.id]}
+                  onEdit={() => startEdit(po)}
+                  onChange={onChange}
+                  onSave={save}
+                  onCancel={cancel}
+                  onDelete={remove}
+                  transactions={txOptions}
+                  visibleCols={visibleCols}
+                  fieldErrors={fieldErrors[po.id] || {}}
+                  expanded={expandedPoId === po.id}
+                  onToggleLines={() =>
+                    setExpandedPoId((cur) => (cur === po.id ? null : po.id))
+                  }
+                />
+
+                {expandedPoId === po.id && (
+                  <div className={styles.linesPanel}>
+                    <PaymentOrderLines
+                      paymentOrderId={po.id}
+                      txOptions={txOptions}
+                      orgOptions={orgOptions}
+                      currencyOptions={currencyOptions}
+                      costDetailOptions={costDetailOptions}
+                    />
+                  </div>
+                )}
+              </React.Fragment>
+            ))
+          )}
+
+          {editingId === "new" && (
+            <PaymentOrder
+              po={{ id: "new", ...blankPO }}
+              isEditing
+              editedValues={editedValues.new}
+              onChange={onChange}
+              onSave={save}
+              onCancel={cancel}
+              onDelete={() => {}}
+              transactions={txOptions}
+              visibleCols={visibleCols}
+              isEven={false}
+              fieldErrors={fieldErrors.new || {}}
+              rowRef={newRowRef}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

@@ -2,67 +2,123 @@
 
 $primary: #4a90e2;
 
-/* Outer wrapper */
-.container {
+/* Page padding like your other pages */
+.page {
   padding: 1.25rem;
   margin-top: 1rem;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Toolbar */
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 6px 0 10px;
+/* ✅ Big white "card shell" like Project / Transactions feel */
+.shell {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid rgba(74, 144, 226, 0.18);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+  padding: 1.25rem;
 }
 
+/* ✅ Blue header area like Project pageHeader */
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.pageHeaderText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: 1.2rem;
+  color: $primary; /* ✅ BLUE like Transactions/Project */
+  font-weight: 800;
+}
+
+.pageSubtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+/* Right side actions */
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* Compact toggle - subtle pill */
 .compactToggle {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   font-size: 0.92rem;
   color: #374151;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  background: #fff;
 
   input {
     transform: translateY(1px);
   }
 }
 
+/* Columns dropdown */
 .columnsBox {
   position: relative;
 }
 
 .columnsBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   background: #f5f6f8;
   border: 1px solid #e6e6e6;
-  border-radius: 10px;
-  padding: 8px 12px;
+  border-radius: 12px;
+  padding: 0.7rem 0.85rem;
   cursor: pointer;
   font-weight: 700;
+  color: #1f2937;
+
+  &:hover {
+    background: #eef2ff;
+  }
 }
 
 .columnsPanel {
   position: absolute;
-  top: 44px;
-  left: 0;
+  top: 52px;
+  right: 0;
   background: #fff;
   border: 1px solid #e6e6e6;
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 10px 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-  max-height: 320px;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.1);
+  max-height: 340px;
   overflow: auto;
   z-index: 10;
-  min-width: 240px;
+  min-width: 260px;
 }
 
 .colItem {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 2px;
+  padding: 6px 2px;
   white-space: nowrap;
+  font-size: 0.94rem;
 }
 
 .lockNote {
@@ -71,29 +127,31 @@ $primary: #4a90e2;
   font-size: 0.85em;
 }
 
+/* ✅ "New" button should match your primary buttons */
+.primaryBtn {
+  @include forms.primary-button;
+  padding: 0.78rem 1rem;
+}
+
 /* Error banner like Project */
 .errorBanner {
   background-color: #ffe6e6;
   color: #b00000;
   padding: 10px 14px;
   border-radius: 10px;
-  margin: 0.75rem 0 1rem;
+  margin: 0.75rem 0;
   font-size: 0.9rem;
   border: 1px solid #ffb3b3;
-  display: flex;
-  gap: 8px;
-  align-items: center;
 }
 
-/* Table container */
+/* ===== Table ===== */
 .table {
   position: relative;
   isolation: isolate;
   overflow: auto;
   max-height: 60vh;
-
-  border: 1px solid rgba(74, 144, 226, 0.14);
-  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
   background: #fff;
 
   --po-header-bg: #f6f7fb;
@@ -106,14 +164,13 @@ $primary: #4a90e2;
   padding: 4px 8px !important;
   font-size: 0.86rem !important;
 }
-
 .compact :global(input),
 .compact :global(select) {
   padding: 4px 6px !important;
   font-size: 0.86rem !important;
 }
 
-/* Shared grid row */
+/* Grid row style shared by header + data rows */
 .gridRow {
   display: grid;
   grid-template-columns: var(--po-grid-cols);
@@ -142,7 +199,7 @@ $primary: #4a90e2;
   background: var(--po-header-bg);
 }
 
-/* Sticky actions header */
+/* Sticky first column (Actions) – header */
 .stickyColHeader {
   position: sticky;
   left: 0;
@@ -151,7 +208,7 @@ $primary: #4a90e2;
   box-shadow: 2px 0 0 rgba(0, 0, 0, 0.04);
 }
 
-/* Hidden col */
+/* Hide column */
 .hiddenCol {
   width: 0 !important;
   padding: 0 !important;
@@ -161,32 +218,18 @@ $primary: #4a90e2;
   pointer-events: none;
 }
 
-/* Empty state + create bar */
+/* Empty state */
 .noData {
   padding: 12px;
   color: #666;
 }
 
-/* ✅ Nested panel wrapper for lines under an order */
+/* Lines panel wrapper (keep it cohesive inside the shell) */
 .linesPanel {
-  margin: 8px 12px 12px;
+  margin: 10px 12px 12px;
   border: 1px solid rgba(74, 144, 226, 0.14);
   border-radius: 14px;
   background: rgba(74, 144, 226, 0.04);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
   padding: 10px 12px 12px;
-}
-
-.createBar {
-  margin-top: 10px;
-}
-
-.addBtn {
-  @include forms.primary-button;
-  padding: 0.75rem 1rem;
-}
-
-.addBtn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
