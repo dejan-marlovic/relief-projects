@@ -25,11 +25,11 @@ const Organization = ({
   onCancel,
   onDelete,
   organizations = [], // [{id, name}]
-  projects = [], // still comes in, but not used in UI now
+  projects = [],
   statuses = [], // [{id, organizationStatusName}]
   visibleCols = [],
   isEven = false,
-  fieldErrors = {}, // NEW: per-row field errors
+  fieldErrors = {},
 }) => {
   const ev = editedValues || {};
   const isCreate = (link?.id ?? "") === "new";
@@ -45,7 +45,6 @@ const Organization = ({
 
   const toNum = (v) => (v === "" ? "" : Number(v));
 
-  // === validation helpers ===
   const getFieldError = (name) => fieldErrors?.[name];
   const hasError = (name) => Boolean(getFieldError(name));
   const inputClass = (name) =>
@@ -102,32 +101,34 @@ const Organization = ({
   const statusName = (id) =>
     statuses.find((s) => s.id === id)?.organizationStatusName || (id ?? "-");
 
-  // helper to apply hidden class when column is collapsed to 0px
   const hc = (i) => (!visibleCols[i] ? styles.hiddenCol : "");
 
   return (
     <>
-      {/* main row */}
       <div
         className={`${styles.row} ${styles.gridRow} ${
           isEven ? styles.zebraEven : ""
         } ${styles.hoverable}`}
       >
-        {/* 0: Actions (sticky left) */}
+        {/* 0: Actions */}
         <Cell className={`${styles.stickyCol} ${styles.actionsCol} ${hc(0)}`}>
           {isEditing ? (
             <div className={styles.actions}>
               <button
-                className={styles.actionBtn}
+                type="button"
+                className={styles.iconCircleBtn}
                 onClick={submit}
                 title="Save"
+                aria-label="Save"
               >
                 <FiSave />
               </button>
               <button
-                className={`${styles.actionBtn} ${styles.danger}`}
+                type="button"
+                className={styles.dangerIconBtn}
                 onClick={onCancel}
                 title="Cancel"
+                aria-label="Cancel"
               >
                 <FiX />
               </button>
@@ -135,38 +136,51 @@ const Organization = ({
           ) : (
             <div className={styles.actions}>
               <button
-                className={styles.actionBtn}
+                type="button"
+                className={styles.iconCircleBtn}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   onEdit();
                 }}
                 title="Edit"
+                aria-label="Edit"
               >
                 <FiEdit />
               </button>
+
               <button
-                className={`${styles.actionBtn} ${styles.danger}`}
+                type="button"
+                className={styles.dangerIconBtn}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   onDelete(link.id);
                 }}
                 title="Delete"
+                aria-label="Delete"
               >
                 <FiTrash2 />
               </button>
 
-              {/* toggle bank details, only if org selected */}
+              {/* toggle bank details */}
               {link.organizationId && (
                 <button
-                  className={styles.actionBtn}
+                  type="button"
+                  className={`${styles.iconCircleBtn} ${
+                    showBankDetails ? styles.iconCircleBtnActive : ""
+                  }`}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     setShowBankDetails((v) => !v);
                   }}
-                  title="Toggle bank details"
+                  title={
+                    showBankDetails ? "Hide bank details" : "Show bank details"
+                  }
+                  aria-label={
+                    showBankDetails ? "Hide bank details" : "Show bank details"
+                  }
                 >
                   {showBankDetails ? <FiChevronUp /> : <FiChevronDown />}
                 </button>
@@ -186,7 +200,7 @@ const Organization = ({
         </Cell>
       </div>
 
-      {/* inline bank details panel */}
+      {/* Inline bank details panel */}
       {showBankDetails && link.organizationId && (
         <div className={styles.bankDetailsWrapperRow}>
           <BankDetails organizationId={link.organizationId} />

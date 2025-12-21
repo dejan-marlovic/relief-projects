@@ -1,19 +1,77 @@
 /* src/pages/Organizations/Organizations.module.scss */
-.container {
+@use "../../styles/forms" as forms;
+
+$primary: #4a90e2;
+
+/* Page padding like Transactions */
+.page {
+  padding: 1.25rem;
+  margin-top: 1rem;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.toolbar {
+/* Card shell */
+.shell {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid rgba(74, 144, 226, 0.18);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+  padding: 1.25rem;
+}
+
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.pageHeaderText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: 1.2rem;
+  color: $primary;
+  font-weight: 700;
+}
+
+.pageSubtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.headerActions {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin: 6px 0 10px;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
+/* Compact toggle */
 .compactToggle {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   font-size: 0.92rem;
+  color: #374151;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  background: #fff;
+
+  input {
+    transform: translateY(1px);
+  }
 }
 
 .columnsBox {
@@ -21,34 +79,44 @@
 }
 
 .columnsBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   background: #f5f6f8;
   border: 1px solid #e6e6e6;
-  border-radius: 6px;
-  padding: 6px 10px;
+  border-radius: 12px;
+  padding: 0.7rem 0.85rem;
   cursor: pointer;
+  font-weight: 700;
+  color: #1f2937;
+
+  &:hover {
+    background: #eef2ff;
+  }
 }
 
 .columnsPanel {
   position: absolute;
-  top: 36px;
-  left: 0;
+  top: 52px;
+  right: 0;
   background: #fff;
   border: 1px solid #e6e6e6;
-  border-radius: 8px;
-  padding: 8px 10px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-  max-height: 320px;
+  border-radius: 14px;
+  padding: 10px 12px;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.1);
+  max-height: 340px;
   overflow: auto;
   z-index: 10;
-  min-width: 220px;
+  min-width: 260px;
 }
 
 .colItem {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 2px;
+  padding: 6px 2px;
   white-space: nowrap;
+  font-size: 0.94rem;
 }
 
 .lockNote {
@@ -57,29 +125,34 @@
   font-size: 0.85em;
 }
 
+.primaryBtn {
+  @include forms.primary-button;
+  padding: 0.78rem 1rem;
+}
+
+.errorBanner {
+  background-color: #ffe6e6;
+  color: #b00000;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin: 0.75rem 0;
+  font-size: 0.9rem;
+  border: 1px solid #ffb3b3;
+}
+
+/* Table container */
 .table {
   position: relative;
   isolation: isolate;
   overflow: auto;
   max-height: 60vh;
-  border: 1px solid #e6e6e6;
-  border-radius: 8px;
+  border: 1px solid rgba(74, 144, 226, 0.14);
+  border-radius: 14px;
   background: #fff;
 
   --org-header-bg: #f6f7fb;
   --org-header-border: #e5e7eb;
-  --org-grid-cols: 110px;
-}
-
-/* 🔴 Global error banner */
-.errorBanner {
-  margin-bottom: 8px;
-  padding: 8px 12px;
-  border-radius: 6px;
-  background: #fee2e2;
-  color: #b91c1c;
-  border: 1px solid #fecaca;
-  font-size: 0.9rem;
+  --org-grid-cols: 190px; /* fallback (Actions col) */
 }
 
 .compact .gridRow {
@@ -98,7 +171,7 @@
   grid-template-columns: var(--org-grid-cols);
   align-items: center;
   column-gap: 8px;
-  min-width: 600px;
+  min-width: 650px;
 }
 
 .headerRow {
@@ -109,7 +182,7 @@
   border-bottom: 1px solid var(--org-header-border);
   padding: 10px 12px;
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.92rem;
 }
 
@@ -140,25 +213,4 @@
 .noData {
   padding: 12px;
   color: #666;
-}
-
-.createBar {
-  margin-top: 10px;
-}
-
-.addBtn {
-  background: #2f7bfd;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 12px;
-  cursor: pointer;
-}
-
-.addBtn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.actionsCol {
 }

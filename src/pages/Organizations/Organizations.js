@@ -21,11 +21,22 @@ const blankLink = {
 // Only 3 columns: Actions, Organization, Status
 const headerLabels = ["Actions", "Organization", "Status"];
 
+// ✅ Actions a bit wider so 3 icons (edit/delete/expand) never clip
 const BASE_COL_WIDTHS = [
-  110, // Actions
-  220, // Organization
-  160, // Status
+  190, // Actions (was 110)
+  240, // Organization
+  180, // Status
 ];
+
+async function safeParseJsonResponse(res) {
+  const raw = await res.text().catch(() => "");
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
 
 const Organizations = () => {
   const { selectedProjectId } = useContext(ProjectContext);
@@ -80,7 +91,9 @@ const Organizations = () => {
       try {
         const res = await fetch(
           `${BASE_URL}/api/project-organizations/active`,
-          { headers: authHeaders }
+          {
+            headers: authHeaders,
+          }
         );
         if (!res.ok)
           throw new Error(
@@ -144,6 +157,7 @@ const Organizations = () => {
     setEditedValues({});
     setFieldErrors({});
     setFormError("");
+    setColumnsOpen(false);
   }, [fetchProjectOrganizations, selectedProjectId]);
 
   const startEdit = (link) => {
@@ -214,10 +228,7 @@ const Organizations = () => {
     };
 
     setFormError("");
-    setFieldErrors((prev) => ({
-      ...prev,
-      [id]: {},
-    }));
+    setFieldErrors((prev) => ({ ...prev, [id]: {} }));
 
     try {
       const res = await fetch(
@@ -232,19 +243,10 @@ const Organizations = () => {
       );
 
       if (!res.ok) {
-        const raw = await res.text().catch(() => "");
-        let data = null;
-        try {
-          data = raw ? JSON.parse(raw) : null;
-        } catch (e) {
-          console.warn("Failed to parse project-organization error JSON:", e);
-        }
+        const data = await safeParseJsonResponse(res);
 
-        if (data && data.fieldErrors) {
-          setFieldErrors((prev) => ({
-            ...prev,
-            [id]: data.fieldErrors,
-          }));
+        if (data?.fieldErrors) {
+          setFieldErrors((prev) => ({ ...prev, [id]: data.fieldErrors }));
         }
 
         setFormError(
@@ -290,20 +292,27 @@ const Organizations = () => {
     if (!id) return;
     if (!window.confirm("Remove this organization from the project?")) return;
 
+    setFormError("");
+
     try {
       const res = await fetch(`${BASE_URL}/api/project-organizations/${id}`, {
         method: "DELETE",
         headers: authHeaders,
       });
-      if (!res.ok) throw new Error("Failed to delete project organization");
+
+      if (!res.ok) {
+        const data = await safeParseJsonResponse(res);
+        setFormError(data?.message || "Failed to delete project organization.");
+        return;
+      }
+
       await fetchProjectOrganizations(selectedProjectId);
     } catch (err) {
       console.error(err);
-      alert("Failed to delete project organization.");
+      setFormError("Failed to delete project organization.");
     }
   };
 
-  // grid columns CSS var
   const gridCols = useMemo(() => {
     const parts = BASE_COL_WIDTHS.map((w, i) =>
       visibleCols[i] ? `${w}px` : "0px"
@@ -311,139 +320,149 @@ const Organizations = () => {
     return parts.join(" ");
   }, [visibleCols]);
 
+  const totalCount = links.length;
+
   return (
-    <div className={styles.container}>
-      {/* Toolbar */}
-      <div className={styles.toolbar}>
-        <label className={styles.compactToggle}>
-          <input
-            type="checkbox"
-            checked={compact}
-            onChange={(e) => setCompact(e.target.checked)}
-          />
-          <span>Compact mode</span>
-        </label>
+    <div className={styles.page}>
+      <div className={styles.shell}>
+        <div className={styles.pageHeader}>
+          <div className={styles.pageHeaderText}>
+            <h2 className={styles.pageTitle}>Organizations</h2>
+            <p className={styles.pageSubtitle}>
+              {selectedProjectId
+                ? `Project #${selectedProjectId} • ${totalCount} link${
+                    totalCount === 1 ? "" : "s"
+                  }`
+                : "Select a project to see linked organizations."}
+            </p>
+          </div>
 
-        <div className={styles.columnsBox}>
-          <button
-            className={styles.columnsBtn}
-            onClick={() => setColumnsOpen((v) => !v)}
-          >
-            Columns ▾
-          </button>
-          {columnsOpen && (
-            <div className={styles.columnsPanel}>
-              {headerLabels.map((h, i) => (
-                <label key={h} className={styles.colItem}>
-                  <input
-                    type="checkbox"
-                    checked={visibleCols[i]}
-                    disabled={i === 0}
-                    onChange={() => toggleCol(i)}
-                  />
-                  <span>{h}</span>
-                  {i === 0 && <em className={styles.lockNote}> (locked)</em>}
-                </label>
-              ))}
+          <div className={styles.headerActions}>
+            <label className={styles.compactToggle}>
+              <input
+                type="checkbox"
+                checked={compact}
+                onChange={(e) => setCompact(e.target.checked)}
+              />
+              <span>Compact mode</span>
+            </label>
+
+            <div className={styles.columnsBox}>
+              <button
+                className={styles.columnsBtn}
+                onClick={() => setColumnsOpen((v) => !v)}
+              >
+                Columns ▾
+              </button>
+
+              {columnsOpen && (
+                <div className={styles.columnsPanel}>
+                  {headerLabels.map((h, i) => (
+                    <label key={h} className={styles.colItem}>
+                      <input
+                        type="checkbox"
+                        checked={visibleCols[i]}
+                        disabled={i === 0}
+                        onChange={() => toggleCol(i)}
+                      />
+                      <span>{h}</span>
+                      {i === 0 && (
+                        <em className={styles.lockNote}> (locked)</em>
+                      )}
+                    </label>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
 
-      {/* 🔴 Global error banner */}
-      {formError && <div className={styles.errorBanner}>{formError}</div>}
-
-      {/* Table */}
-      <div
-        className={`${styles.table} ${compact ? styles.compact : ""}`}
-        style={{ "--org-grid-cols": gridCols }}
-      >
-        {/* Header */}
-        <div className={`${styles.gridRow} ${styles.headerRow}`}>
-          {headerLabels.map((h, i) => (
-            <div
-              key={h}
-              className={`${styles.headerCell}
-                ${i === 0 ? styles.stickyColHeader : ""}
-                ${!visibleCols[i] ? styles.hiddenCol : ""}
-                ${i === 0 ? styles.actionsCol : ""}`}
+            <button
+              className={styles.primaryBtn}
+              onClick={startCreate}
+              disabled={!selectedProjectId || editingId === "new"}
+              title={
+                !selectedProjectId
+                  ? "Select a project first"
+                  : editingId === "new"
+                  ? "Finish the current draft first"
+                  : "Create new organization link"
+              }
             >
-              {h}
-            </div>
-          ))}
+              + New Organization Link
+            </button>
+          </div>
         </div>
 
-        {/* Body */}
-        {!selectedProjectId ? (
-          <p className={styles.noData}>
-            Select a project to see its organizations.
-          </p>
-        ) : links.length === 0 ? (
-          <p className={styles.noData}>
-            No organizations linked to this project.
-          </p>
-        ) : (
-          links.map((link, idx) => (
+        {formError && <div className={styles.errorBanner}>{formError}</div>}
+
+        <div
+          className={`${styles.table} ${compact ? styles.compact : ""}`}
+          style={{ ["--org-grid-cols"]: gridCols }}
+        >
+          <div className={`${styles.gridRow} ${styles.headerRow}`}>
+            {headerLabels.map((h, i) => (
+              <div
+                key={h}
+                className={`${styles.headerCell}
+                  ${i === 0 ? styles.stickyColHeader : ""}
+                  ${!visibleCols[i] ? styles.hiddenCol : ""}`}
+              >
+                {h}
+              </div>
+            ))}
+          </div>
+
+          {!selectedProjectId ? (
+            <p className={styles.noData}>
+              Select a project to see its organizations.
+            </p>
+          ) : links.length === 0 ? (
+            <p className={styles.noData}>
+              No organizations linked to this project.
+            </p>
+          ) : (
+            links.map((link, idx) => (
+              <OrganizationRow
+                key={link.id}
+                link={link}
+                isEditing={editingId === link.id}
+                editedValues={editedValues[link.id]}
+                onEdit={() => startEdit(link)}
+                onChange={onChange}
+                onSave={save}
+                onCancel={cancel}
+                onDelete={remove}
+                organizations={orgOptions}
+                projects={projectOptions}
+                statuses={statusOptions}
+                visibleCols={visibleCols}
+                isEven={idx % 2 === 0}
+                fieldErrors={fieldErrors[link.id] || {}}
+              />
+            ))
+          )}
+
+          {editingId === "new" && (
             <OrganizationRow
-              key={link.id}
-              link={link}
-              isEditing={editingId === link.id}
-              editedValues={editedValues[link.id]}
-              onEdit={() => startEdit(link)}
+              link={{
+                id: "new",
+                ...blankLink,
+                projectId: selectedProjectId || "",
+              }}
+              isEditing
+              editedValues={editedValues.new}
               onChange={onChange}
               onSave={save}
               onCancel={cancel}
-              onDelete={remove}
+              onDelete={() => {}}
               organizations={orgOptions}
               projects={projectOptions}
               statuses={statusOptions}
               visibleCols={visibleCols}
-              isEven={idx % 2 === 0}
-              fieldErrors={fieldErrors[link.id] || {}}
+              isEven={false}
+              fieldErrors={fieldErrors.new || {}}
             />
-          ))
-        )}
-
-        {/* Inline create row */}
-        {editingId === "new" && (
-          <OrganizationRow
-            link={{
-              id: "new",
-              ...blankLink,
-              projectId: selectedProjectId || "",
-            }}
-            isEditing
-            editedValues={editedValues.new}
-            onChange={onChange}
-            onSave={save}
-            onCancel={cancel}
-            onDelete={() => {}}
-            organizations={orgOptions}
-            projects={projectOptions}
-            statuses={statusOptions}
-            visibleCols={visibleCols}
-            isEven={false}
-            fieldErrors={fieldErrors.new || {}}
-          />
-        )}
-      </div>
-
-      {/* Add button */}
-      <div className={styles.createBar}>
-        <button
-          className={styles.addBtn}
-          onClick={startCreate}
-          disabled={!selectedProjectId || editingId === "new"}
-          title={
-            !selectedProjectId
-              ? "Select a project first"
-              : editingId === "new"
-              ? "Finish the current draft first"
-              : "Create new organization link"
-          }
-        >
-          + New Organization Link
-        </button>
+          )}
+        </div>
       </div>
     </div>
   );
