@@ -1,3 +1,4 @@
+/* src/components/Transactions/Transaction/Transaction.module.scss */
 @use "../../../styles/tables" as tables;
 @use "../../../styles/forms" as forms;
 
@@ -36,6 +37,10 @@ $danger: #e74c3c;
   display: inline-flex;
   align-items: center;
   gap: 8px;
+
+  /* ✅ keep 3 buttons on one line */
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 /* sticky first col */
@@ -47,6 +52,14 @@ $danger: #e74c3c;
 
   /* Keep the separation line */
   box-shadow: 2px 0 0 rgba(0, 0, 0, 0.04);
+
+  /* ✅ prevent icon clipping */
+  overflow: visible;
+}
+
+/* Optional hook (if used) */
+.actionsCol {
+  padding-right: 10px;
 }
 
 /* hidden col */
@@ -90,6 +103,13 @@ $danger: #e74c3c;
     transform: scale(0.98);
   }
 
+  &:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
+
   svg {
     font-size: 16px;
   }
@@ -111,6 +131,12 @@ $danger: #e74c3c;
     filter: brightness(0.95);
   }
 
+  &:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    filter: none;
+  }
+
   svg {
     font-size: 16px;
   }
@@ -121,7 +147,7 @@ $danger: #e74c3c;
   grid-column: 1 / -1;
 
   /* keep alignment under non-sticky columns */
-  padding-left: 110px; /* match Actions column width */
+  padding-left: 140px; /* ✅ match widened Actions column */
   padding-right: 12px;
   padding-top: 10px;
   padding-bottom: 12px;

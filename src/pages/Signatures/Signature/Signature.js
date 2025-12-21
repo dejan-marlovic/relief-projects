@@ -2,6 +2,10 @@ import React from "react";
 import styles from "./Signature.module.scss";
 import { FiEdit, FiTrash2, FiSave, FiX } from "react-icons/fi";
 
+const Cell = ({ children, className }) => (
+  <div className={`${styles.cell} ${className || ""}`}>{children}</div>
+);
+
 // Format for <input type="datetime-local">
 function toDateTimeLocal(iso) {
   if (!iso) return "";
@@ -13,10 +17,6 @@ function toDateTimeLocal(iso) {
     `T${pad(d.getHours())}:${pad(d.getMinutes())}`
   );
 }
-
-const Cell = ({ children, className }) => (
-  <div className={`${styles.cell} ${className || ""}`}>{children}</div>
-);
 
 const SignatureRow = ({
   row,
@@ -32,8 +32,8 @@ const SignatureRow = ({
   employeeOptions = [],
   visibleCols = [],
   isEven = false,
-  fieldErrors = {}, // per-row field errors
-  rowRef = null, // for auto-scroll on create
+  fieldErrors = {},
+  rowRef = null,
 }) => {
   const ev = editedValues || {};
   const isCreate = (row?.id ?? "") === "new";
@@ -172,15 +172,19 @@ const SignatureRow = ({
         isEven ? styles.zebraEven : ""
       } ${styles.hoverable}`}
     >
-      {/* 0: Actions */}
+      {/* 0: Actions (sticky left) */}
       <Cell className={`${styles.stickyCol} ${hc(0)}`}>
         {isEditing ? (
           <div className={styles.actions}>
-            <button className={styles.actionBtn} onClick={submit} title="Save">
+            <button
+              className={styles.iconCircleBtn}
+              onClick={submit}
+              title="Save"
+            >
               <FiSave />
             </button>
             <button
-              className={`${styles.actionBtn} ${styles.danger}`}
+              className={styles.dangerIconBtn}
               onClick={onCancel}
               title="Cancel"
             >
@@ -190,7 +194,7 @@ const SignatureRow = ({
         ) : (
           <div className={styles.actions}>
             <button
-              className={styles.actionBtn}
+              className={styles.iconCircleBtn}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -200,8 +204,9 @@ const SignatureRow = ({
             >
               <FiEdit />
             </button>
+
             <button
-              className={`${styles.actionBtn} ${styles.danger}`}
+              className={styles.dangerIconBtn}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();

@@ -24,51 +24,63 @@ $danger: #e74c3c;
   @include tables.table-cell;
 }
 
-/* ✅ Inputs/selects: Project-like focus/hover */
+/* Inputs/selects */
 .input {
   @include forms.text-input;
   padding: 0.45rem 0.6rem;
   font-size: 0.92rem;
 }
 
-/* Invalid */
+/* Validation */
 .inputError {
   border-color: #b00000 !important;
   box-shadow: 0 0 4px rgba(176, 0, 0, 0.35);
   outline: none;
 }
 
-/* Field error */
 .fieldError {
   margin-top: 2px;
   font-size: 0.78rem;
   color: #b00000;
 }
 
-/* Actions area */
+/* Actions */
 .actions {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+
+  /* ✅ keep all icons visible */
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
-/* Sticky actions col: ✅ inherit zebra/hover background */
+/* Sticky actions column */
 .stickyCol {
   @include tables.table-sticky-col;
-  background: inherit;
-  box-shadow: 2px 0 0 rgba(0, 0, 0, 0.04);
-}
 
-/* Hidden col */
-.hiddenCol {
-  @include tables.table-hidden-col;
+  /* match zebra/hover row bg */
+  background: inherit;
+
+  /* keep separator */
+  box-shadow: 2px 0 0 rgba(0, 0, 0, 0.04);
+
+  /* ✅ critical: allow icon overflow */
+  overflow: visible;
 }
 
 /* Optional hook */
 .actionsCol {
+  padding-right: 10px;
 }
 
-/* ✅ Project-like icon buttons */
+/* Hidden column */
+.hiddenCol {
+  @include tables.table-hidden-col;
+}
+
+/* ===== Icon buttons (same as Transactions) ===== */
+
 .iconCircleBtn {
   border-radius: 999px;
   width: 34px;

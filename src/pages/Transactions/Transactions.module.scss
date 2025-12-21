@@ -1,3 +1,4 @@
+/* src/components/Transactions/Transactions.module.scss */
 @use "../../styles/forms" as forms;
 
 $primary: #4a90e2;
@@ -140,7 +141,9 @@ $primary: #4a90e2;
 
   --tx-header-bg: #f6f7fb;
   --tx-header-border: #e5e7eb;
-  --tx-grid-cols: 110px;
+
+  /* ✅ widened Actions column so the trash icon never clips */
+  --tx-grid-cols: 140px;
 }
 
 /* Compact */
@@ -191,6 +194,9 @@ $primary: #4a90e2;
   z-index: 6;
   background: var(--tx-header-bg);
   box-shadow: 2px 0 0 rgba(0, 0, 0, 0.04);
+
+  /* ✅ prevent edge clipping */
+  overflow: visible;
 }
 
 /* Hidden col */

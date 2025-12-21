@@ -15,11 +15,22 @@ const BASE_URL = "http://localhost:8080";
 
 const headerLabels = ["Actions", "Organization", "Payment Order"];
 
+// ✅ match Transactions: make Actions a bit wider to avoid clipping
 const BASE_COL_WIDTHS = [
-  110, // Actions
+  130, // Actions (was 110)
   260, // Organization
   170, // Payment Order
 ];
+
+async function safeParseJsonResponse(res) {
+  const raw = await res.text().catch(() => "");
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
 
 function Recipients() {
   const { selectedProjectId } = useContext(ProjectContext);
@@ -43,7 +54,6 @@ function Recipients() {
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({}); // { [rowId]: { fieldName: message } }
 
-  // ref for potential auto-scroll of new row
   const newRowRef = useRef(null);
 
   const toggleCol = (i) => {
@@ -80,7 +90,9 @@ function Recipients() {
           { headers: authHeaders }
         );
         if (!res.ok) throw new Error(`Failed ${res.status}`);
-        setItems(await res.json());
+        const data = await res.json();
+        const arr = Array.isArray(data) ? data : data ? [data] : [];
+        setItems(arr);
       } catch (e) {
         console.error(e);
         setItems([]);
@@ -148,7 +160,6 @@ function Recipients() {
     [authHeaders]
   );
 
-  // Load lists whenever project changes
   useEffect(() => {
     fetchRecipients(selectedProjectId);
     fetchPaymentOrders(selectedProjectId);
@@ -158,6 +169,7 @@ function Recipients() {
     setEditedValues({});
     setFieldErrors({});
     setFormError("");
+    setColumnsOpen(false);
   }, [
     fetchRecipients,
     fetchPaymentOrders,
@@ -165,7 +177,6 @@ function Recipients() {
     selectedProjectId,
   ]);
 
-  // Optional: smooth scroll when new row opens
   useEffect(() => {
     if (editingId === "new" && newRowRef.current) {
       newRowRef.current.scrollIntoView({
@@ -175,7 +186,11 @@ function Recipients() {
     }
   }, [editingId]);
 
-  // Begin edit
+  const blankRecipient = {
+    organizationId: "",
+    paymentOrderId: "",
+  };
+
   const startEdit = (row) => {
     setEditingId(row?.id ?? null);
     setEditedValues((prev) => ({
@@ -194,12 +209,6 @@ function Recipients() {
     setFormError("");
   };
 
-  // Begin create
-  const blankRecipient = {
-    organizationId: "",
-    paymentOrderId: "",
-  };
-
   const startCreate = () => {
     setEditingId("new");
     setEditedValues((prev) => ({ ...prev, new: { ...blankRecipient } }));
@@ -212,7 +221,6 @@ function Recipients() {
     setFormError("");
   };
 
-  // Change handler
   const onChange = (field, value) => {
     setEditedValues((prev) => ({
       ...prev,
@@ -223,10 +231,10 @@ function Recipients() {
     }));
   };
 
-  // Cancel edit/create
   const cancel = () => {
     const id = editingId;
     setEditingId(null);
+
     setEditedValues((prev) => {
       const next = { ...prev };
       delete next.new;
@@ -244,7 +252,6 @@ function Recipients() {
     setFormError("");
   };
 
-  // Save (create/update) with ApiError handling
   const save = async () => {
     const id = editingId;
     const v = editedValues[id];
@@ -258,10 +265,7 @@ function Recipients() {
     };
 
     setFormError("");
-    setFieldErrors((prev) => ({
-      ...prev,
-      [id]: {},
-    }));
+    setFieldErrors((prev) => ({ ...prev, [id]: {} }));
 
     try {
       const res = await fetch(
@@ -276,19 +280,10 @@ function Recipients() {
       );
 
       if (!res.ok) {
-        const raw = await res.text().catch(() => "");
-        let data = null;
-        try {
-          data = raw ? JSON.parse(raw) : null;
-        } catch (e) {
-          console.warn("Failed to parse recipient error JSON:", e);
-        }
+        const data = await safeParseJsonResponse(res);
 
-        if (data && data.fieldErrors) {
-          setFieldErrors((prev) => ({
-            ...prev,
-            [id]: data.fieldErrors,
-          }));
+        if (data?.fieldErrors) {
+          setFieldErrors((prev) => ({ ...prev, [id]: data.fieldErrors }));
         }
 
         setFormError(
@@ -308,24 +303,30 @@ function Recipients() {
     }
   };
 
-  // Delete
   const remove = async (id) => {
     if (!id) return;
     if (!window.confirm("Delete this recipient?")) return;
+
+    setFormError("");
     try {
       const res = await fetch(`${BASE_URL}/api/recipients/${id}`, {
         method: "DELETE",
         headers: authHeaders,
       });
-      if (!res.ok) throw new Error("Delete failed");
+
+      if (!res.ok) {
+        const data = await safeParseJsonResponse(res);
+        setFormError(data?.message || "Delete failed.");
+        return;
+      }
+
       await fetchRecipients(selectedProjectId);
     } catch (e) {
       console.error(e);
-      alert("Delete failed.");
+      setFormError("Delete failed.");
     }
   };
 
-  // Grid columns CSS var
   const gridCols = useMemo(() => {
     const parts = BASE_COL_WIDTHS.map((w, i) =>
       visibleCols[i] ? `${w}px` : "0px"
@@ -333,131 +334,142 @@ function Recipients() {
     return parts.join(" ");
   }, [visibleCols]);
 
+  const totalCount = items.length;
+
   return (
-    <div className={styles.container}>
-      {/* Toolbar */}
-      <div className={styles.toolbar}>
-        <label className={styles.compactToggle}>
-          <input
-            type="checkbox"
-            checked={compact}
-            onChange={(e) => setCompact(e.target.checked)}
-          />
-          <span>Compact mode</span>
-        </label>
+    <div className={styles.page}>
+      <div className={styles.shell}>
+        <div className={styles.pageHeader}>
+          <div className={styles.pageHeaderText}>
+            <h2 className={styles.pageTitle}>Recipients</h2>
+            <p className={styles.pageSubtitle}>
+              {selectedProjectId
+                ? `Project #${selectedProjectId} • ${totalCount} recipient${
+                    totalCount === 1 ? "" : "s"
+                  }`
+                : "Select a project to see recipients."}
+            </p>
+          </div>
 
-        <div className={styles.columnsBox}>
-          <button
-            className={styles.columnsBtn}
-            onClick={() => setColumnsOpen((v) => !v)}
-          >
-            Columns ▾
-          </button>
-          {columnsOpen && (
-            <div className={styles.columnsPanel}>
-              {headerLabels.map((h, i) => (
-                <label key={h} className={styles.colItem}>
-                  <input
-                    type="checkbox"
-                    checked={visibleCols[i]}
-                    disabled={i === 0}
-                    onChange={() => toggleCol(i)}
-                  />
-                  <span>{h}</span>
-                  {i === 0 && <em className={styles.lockNote}> (locked)</em>}
-                </label>
-              ))}
+          <div className={styles.headerActions}>
+            <label className={styles.compactToggle}>
+              <input
+                type="checkbox"
+                checked={compact}
+                onChange={(e) => setCompact(e.target.checked)}
+              />
+              <span>Compact mode</span>
+            </label>
+
+            <div className={styles.columnsBox}>
+              <button
+                className={styles.columnsBtn}
+                onClick={() => setColumnsOpen((v) => !v)}
+              >
+                Columns ▾
+              </button>
+
+              {columnsOpen && (
+                <div className={styles.columnsPanel}>
+                  {headerLabels.map((h, i) => (
+                    <label key={h} className={styles.colItem}>
+                      <input
+                        type="checkbox"
+                        checked={visibleCols[i]}
+                        disabled={i === 0}
+                        onChange={() => toggleCol(i)}
+                      />
+                      <span>{h}</span>
+                      {i === 0 && (
+                        <em className={styles.lockNote}> (locked)</em>
+                      )}
+                    </label>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
 
-      {/* 🔴 Global error banner */}
-      {formError && <div className={styles.errorBanner}>{formError}</div>}
-
-      {/* Table */}
-      <div
-        className={`${styles.table} ${compact ? styles.compact : ""}`}
-        style={{ ["--rec-grid-cols"]: gridCols }}
-      >
-        {/* Header */}
-        <div className={`${styles.gridRow} ${styles.headerRow}`}>
-          {headerLabels.map((h, i) => (
-            <div
-              key={h}
-              className={`${styles.headerCell}
-                ${i === 0 ? styles.stickyColHeader : ""}
-                ${!visibleCols[i] ? styles.hiddenCol : ""}`}
+            <button
+              className={styles.primaryBtn}
+              onClick={startCreate}
+              disabled={!selectedProjectId || editingId === "new"}
+              title={
+                !selectedProjectId
+                  ? "Select a project first"
+                  : editingId === "new"
+                  ? "Finish the current draft first"
+                  : "Create new recipient"
+              }
             >
-              {h}
-            </div>
-          ))}
+              + New Recipient
+            </button>
+          </div>
         </div>
 
-        {/* Body */}
-        {!selectedProjectId ? (
-          <p className={styles.noData}>
-            Select a project to see its recipients.
-          </p>
-        ) : items.length === 0 ? (
-          <p className={styles.noData}>No recipients for this project.</p>
-        ) : (
-          items.map((r, idx) => (
+        {formError && <div className={styles.errorBanner}>{formError}</div>}
+
+        <div
+          className={`${styles.table} ${compact ? styles.compact : ""}`}
+          style={{ ["--rec-grid-cols"]: gridCols }}
+        >
+          <div className={`${styles.gridRow} ${styles.headerRow}`}>
+            {headerLabels.map((h, i) => (
+              <div
+                key={h}
+                className={`${styles.headerCell}
+                  ${i === 0 ? styles.stickyColHeader : ""}
+                  ${!visibleCols[i] ? styles.hiddenCol : ""}`}
+              >
+                {h}
+              </div>
+            ))}
+          </div>
+
+          {!selectedProjectId ? (
+            <p className={styles.noData}>
+              Select a project to see its recipients.
+            </p>
+          ) : items.length === 0 ? (
+            <p className={styles.noData}>No recipients for this project.</p>
+          ) : (
+            items.map((r, idx) => (
+              <RecipientRow
+                key={r.id}
+                row={r}
+                isEven={idx % 2 === 0}
+                isEditing={editingId === r.id}
+                editedValues={editedValues[r.id]}
+                onEdit={() => startEdit(r)}
+                onChange={onChange}
+                onSave={save}
+                onCancel={cancel}
+                onDelete={remove}
+                poOptions={poOptions}
+                orgOptions={orgOptions}
+                visibleCols={visibleCols}
+                fieldErrors={fieldErrors[r.id] || {}}
+              />
+            ))
+          )}
+
+          {editingId === "new" && (
             <RecipientRow
-              key={r.id}
-              row={r}
-              isEven={idx % 2 === 0}
-              isEditing={editingId === r.id}
-              editedValues={editedValues[r.id]}
-              onEdit={() => startEdit(r)}
+              row={{ id: "new", organizationId: "", paymentOrderId: "" }}
+              isEditing
+              editedValues={editedValues.new}
               onChange={onChange}
               onSave={save}
               onCancel={cancel}
-              onDelete={remove}
+              onDelete={() => {}}
               poOptions={poOptions}
               orgOptions={orgOptions}
               visibleCols={visibleCols}
-              fieldErrors={fieldErrors[r.id] || {}}
+              isEven={false}
+              fieldErrors={fieldErrors.new || {}}
+              rowRef={newRowRef}
             />
-          ))
-        )}
-
-        {/* Inline create row */}
-        {editingId === "new" && (
-          <RecipientRow
-            row={{ id: "new", organizationId: "", paymentOrderId: "" }}
-            isEditing
-            editedValues={editedValues.new}
-            onChange={onChange}
-            onSave={save}
-            onCancel={cancel}
-            onDelete={() => {}}
-            poOptions={poOptions}
-            orgOptions={orgOptions}
-            visibleCols={visibleCols}
-            isEven={false}
-            fieldErrors={fieldErrors.new || {}}
-            rowRef={newRowRef}
-          />
-        )}
-      </div>
-
-      {/* Create */}
-      <div className={styles.createBar}>
-        <button
-          className={styles.addBtn}
-          onClick={startCreate}
-          disabled={!selectedProjectId || editingId === "new"}
-          title={
-            !selectedProjectId
-              ? "Select a project first"
-              : editingId === "new"
-              ? "Finish the current draft first"
-              : "Create new recipient"
-          }
-        >
-          + New Recipient
-        </button>
+          )}
+        </div>
       </div>
     </div>
   );

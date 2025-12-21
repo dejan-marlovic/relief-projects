@@ -26,7 +26,7 @@ const headerLabels = [
   "Pin Code",
 ];
 
-const BASE_COL_WIDTHS = [110, 160, 180, 90, 300, 140, 160, 200, 140];
+const BASE_COL_WIDTHS = [160, 160, 180, 90, 300, 140, 160, 200, 140];
 
 const blankPO = {
   transactionId: "",

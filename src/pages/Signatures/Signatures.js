@@ -9,6 +9,7 @@ import React, {
 import { ProjectContext } from "../../context/ProjectContext";
 import SignatureRow from "./Signature/Signature";
 import styles from "./Signatures.module.scss";
+import { FiPlus, FiColumns, FiMinimize2 } from "react-icons/fi";
 
 const BASE_URL = "http://localhost:8080";
 
@@ -50,7 +51,6 @@ function normalizeSignature(s) {
 
   const id = s.id ?? s.signatureId ?? s.signature_id ?? null;
 
-  // Support either flattened IDs OR nested objects
   const signatureStatusId =
     s.signatureStatusId ??
     s.signature_status_id ??
@@ -170,7 +170,6 @@ function Signatures() {
         const data = await res.json();
         const arr = Array.isArray(data) ? data : data ? [data] : [];
 
-        // normalize PO id too (id/paymentOrderId)
         const normalized = arr
           .map((po) => ({
             id: po.id ?? po.paymentOrderId ?? po.payment_order_id,
@@ -248,7 +247,6 @@ function Signatures() {
     fetchEmployees();
   }, [fetchSignatureStatuses, fetchEmployees]);
 
-  // auto-scroll when "new" row appears
   useEffect(() => {
     if (editingId === "new" && newRowRef.current) {
       newRowRef.current.scrollIntoView({
@@ -332,21 +330,13 @@ function Signatures() {
     setFormError("");
   };
 
-  /**
-   * Small client-side validation so we don't send obviously invalid payloads.
-   * Backend will still validate too.
-   */
   const validateClientSide = (rowId, v) => {
     const fe = {};
-
     if (!v.signatureStatusId) fe.signatureStatusId = "Status is required.";
     if (!v.employeeId) fe.employeeId = "Employee is required.";
     if (!v.paymentOrderId) fe.paymentOrderId = "Payment order is required.";
-
-    // signature column is NOT NULL in DB, so require non-empty
-    if (!v.signature || !String(v.signature).trim()) {
+    if (!v.signature || !String(v.signature).trim())
       fe.signature = "Signature is required.";
-    }
 
     if (Object.keys(fe).length > 0) {
       setFieldErrors((prev) => ({ ...prev, [rowId]: fe }));
@@ -391,12 +381,10 @@ function Signatures() {
       if (!res.ok) {
         const data = await safeParseJsonResponse(res);
 
-        // ApiError style: { status, message, fieldErrors }
         if (data?.fieldErrors) {
           setFieldErrors((prev) => ({ ...prev, [id]: data.fieldErrors }));
         }
 
-        // Show lock/conflict messages clearly
         const msg =
           data?.message ||
           (res.status === 409
@@ -454,140 +442,154 @@ function Signatures() {
     return parts.join(" ");
   }, [visibleCols]);
 
+  const subtitle = selectedProjectId
+    ? `Project #${selectedProjectId} • ${items.length} signature${
+        items.length === 1 ? "" : "s"
+      }`
+    : "Select a project to see signatures";
+
   return (
-    <div className={styles.container}>
-      {/* Toolbar */}
-      <div className={styles.toolbar}>
-        <label className={styles.compactToggle}>
-          <input
-            type="checkbox"
-            checked={compact}
-            onChange={(e) => setCompact(e.target.checked)}
-          />
-          <span>Compact mode</span>
-        </label>
+    <div className={styles.page}>
+      <div className={styles.shell}>
+        {/* ✅ Blue header like Transactions/PaymentOrders */}
+        <div className={styles.pageHeader}>
+          <div className={styles.pageHeaderText}>
+            <h3 className={styles.pageTitle}>Signatures</h3>
+            <p className={styles.pageSubtitle}>{subtitle}</p>
+          </div>
 
-        <div className={styles.columnsBox}>
-          <button
-            className={styles.columnsBtn}
-            onClick={() => setColumnsOpen((v) => !v)}
-          >
-            Columns ▾
-          </button>
-          {columnsOpen && (
-            <div className={styles.columnsPanel}>
-              {headerLabels.map((h, i) => (
-                <label key={h} className={styles.colItem}>
-                  <input
-                    type="checkbox"
-                    checked={visibleCols[i]}
-                    disabled={i === 0}
-                    onChange={() => toggleCol(i)}
-                  />
-                  <span>{h}</span>
-                  {i === 0 && <em className={styles.lockNote}> (locked)</em>}
-                </label>
-              ))}
+          <div className={styles.headerActions}>
+            <label className={styles.compactToggle}>
+              <input
+                type="checkbox"
+                checked={compact}
+                onChange={(e) => setCompact(e.target.checked)}
+              />
+              <FiMinimize2 />
+              <span>Compact</span>
+            </label>
+
+            <div className={styles.columnsBox}>
+              <button
+                className={styles.columnsBtn}
+                onClick={() => setColumnsOpen((v) => !v)}
+                title="Choose visible columns"
+              >
+                <FiColumns />
+                Columns
+              </button>
+              {columnsOpen && (
+                <div className={styles.columnsPanel}>
+                  {headerLabels.map((h, i) => (
+                    <label key={h} className={styles.colItem}>
+                      <input
+                        type="checkbox"
+                        checked={visibleCols[i]}
+                        disabled={i === 0}
+                        onChange={() => toggleCol(i)}
+                      />
+                      <span>{h}</span>
+                      {i === 0 && (
+                        <em className={styles.lockNote}> (locked)</em>
+                      )}
+                    </label>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
 
-      {/* Global error banner */}
-      {formError && <div className={styles.errorBanner}>{formError}</div>}
-
-      {/* Table */}
-      <div
-        className={`${styles.table} ${compact ? styles.compact : ""}`}
-        style={{ ["--sig-grid-cols"]: gridCols }}
-      >
-        {/* Header */}
-        <div className={`${styles.gridRow} ${styles.headerRow}`}>
-          {headerLabels.map((h, i) => (
-            <div
-              key={h}
-              className={`${styles.headerCell}
-                ${i === 0 ? styles.stickyColHeader : ""}
-                ${!visibleCols[i] ? styles.hiddenCol : ""}`}
+            <button
+              className={styles.primaryBtn}
+              onClick={startCreate}
+              disabled={!selectedProjectId || editingId === "new"}
+              title={
+                !selectedProjectId
+                  ? "Select a project first"
+                  : editingId === "new"
+                  ? "Finish the current draft first"
+                  : "Create new signature"
+              }
             >
-              {h}
-            </div>
-          ))}
+              <FiPlus />
+              New
+            </button>
+          </div>
         </div>
 
-        {/* Body */}
-        {!selectedProjectId ? (
-          <p className={styles.noData}>
-            Select a project to see its signatures.
-          </p>
-        ) : items.length === 0 ? (
-          <p className={styles.noData}>No signatures for this project.</p>
-        ) : (
-          items.map((s, idx) => (
+        {formError && <div className={styles.errorBanner}>{formError}</div>}
+
+        {/* ✅ Table inside shell */}
+        <div
+          className={`${styles.table} ${compact ? styles.compact : ""}`}
+          style={{ ["--sig-grid-cols"]: gridCols }}
+        >
+          <div className={`${styles.gridRow} ${styles.headerRow}`}>
+            {headerLabels.map((h, i) => (
+              <div
+                key={h}
+                className={`${styles.headerCell}
+                  ${i === 0 ? styles.stickyColHeader : ""}
+                  ${!visibleCols[i] ? styles.hiddenCol : ""}`}
+              >
+                {h}
+              </div>
+            ))}
+          </div>
+
+          {!selectedProjectId ? (
+            <p className={styles.noData}>
+              Select a project to see its signatures.
+            </p>
+          ) : items.length === 0 ? (
+            <p className={styles.noData}>No signatures for this project.</p>
+          ) : (
+            items.map((s, idx) => (
+              <SignatureRow
+                key={s.id}
+                row={s}
+                isEven={idx % 2 === 0}
+                isEditing={editingId === s.id}
+                editedValues={editedValues[s.id]}
+                onEdit={() => startEdit(s)}
+                onChange={onChange}
+                onSave={save}
+                onCancel={cancel}
+                onDelete={remove}
+                poOptions={poOptions}
+                statusOptions={statusOptions}
+                employeeOptions={employeeOptions}
+                visibleCols={visibleCols}
+                fieldErrors={fieldErrors[s.id] || {}}
+              />
+            ))
+          )}
+
+          {editingId === "new" && (
             <SignatureRow
-              key={s.id}
-              row={s}
-              isEven={idx % 2 === 0}
-              isEditing={editingId === s.id}
-              editedValues={editedValues[s.id]}
-              onEdit={() => startEdit(s)}
+              row={{
+                id: "new",
+                signatureStatusId: "",
+                employeeId: "",
+                paymentOrderId: "",
+                signature: "",
+                signatureDate: "",
+              }}
+              isEditing
+              editedValues={editedValues.new}
               onChange={onChange}
               onSave={save}
               onCancel={cancel}
-              onDelete={remove}
+              onDelete={() => {}}
               poOptions={poOptions}
               statusOptions={statusOptions}
               employeeOptions={employeeOptions}
               visibleCols={visibleCols}
-              fieldErrors={fieldErrors[s.id] || {}}
+              isEven={false}
+              fieldErrors={fieldErrors.new || {}}
+              rowRef={newRowRef}
             />
-          ))
-        )}
-
-        {/* Inline create row */}
-        {editingId === "new" && (
-          <SignatureRow
-            row={{
-              id: "new",
-              signatureStatusId: "",
-              employeeId: "",
-              paymentOrderId: "",
-              signature: "",
-              signatureDate: "",
-            }}
-            isEditing
-            editedValues={editedValues.new}
-            onChange={onChange}
-            onSave={save}
-            onCancel={cancel}
-            onDelete={() => {}}
-            poOptions={poOptions}
-            statusOptions={statusOptions}
-            employeeOptions={employeeOptions}
-            visibleCols={visibleCols}
-            isEven={false}
-            fieldErrors={fieldErrors.new || {}}
-            rowRef={newRowRef}
-          />
-        )}
-      </div>
-
-      {/* Create */}
-      <div className={styles.createBar}>
-        <button
-          className={styles.addBtn}
-          onClick={startCreate}
-          disabled={!selectedProjectId || editingId === "new"}
-          title={
-            !selectedProjectId
-              ? "Select a project first"
-              : editingId === "new"
-              ? "Finish the current draft first"
-              : "Create new signature"
-          }
-        >
-          + New Signature
-        </button>
+          )}
+        </div>
       </div>
     </div>
   );
