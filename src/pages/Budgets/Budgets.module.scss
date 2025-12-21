@@ -1,21 +1,78 @@
 @use "../../styles/forms" as forms;
 
-.container {
+$primary: #4a90e2;
+
+.page {
   padding: 1.25rem;
   margin-top: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.createButton {
-  align-self: flex-start;
-  @include forms.primary-button;
+/* Big white card shell like Transactions/Signatures */
+.shell {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid rgba(74, 144, 226, 0.18);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+  padding: 1.25rem;
 }
 
+/* Header like Signatures */
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.pageHeaderText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: 1.2rem;
+  color: $primary;
+  font-weight: 700;
+}
+
+.pageSubtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* New button matches Signatures */
+.primaryBtn {
+  @include forms.primary-button;
+  padding: 0.78rem 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Budget list */
 .budgetList {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.noData {
+  padding: 12px;
+  color: #666;
 }

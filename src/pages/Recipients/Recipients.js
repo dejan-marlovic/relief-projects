@@ -401,7 +401,7 @@ function Recipients() {
                   : "Create new recipient"
               }
             >
-              + New Recipient
+              + New
             </button>
           </div>
         </div>

@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useEffect, useMemo, useState, useContext } from "react";
 import { ProjectContext } from "../../context/ProjectContext";
 
 import Budget from "../Budgets/Budget/Budget";
 import CreateNewBudget from "../Budgets/CreateNewBudget/CreateNewBudget";
 
 import styles from "./Budgets.module.scss";
+import { FiPlus } from "react-icons/fi";
 
 const BASE_URL = "http://localhost:8080";
 
@@ -35,10 +36,8 @@ const Budgets = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
-
-    if (selectedProjectId) {
-      fetchBudgets(selectedProjectId, token);
-    }
+    if (selectedProjectId) fetchBudgets(selectedProjectId, token);
+    else setBudgets([]);
   }, [selectedProjectId]);
 
   const handleNewBudget = (newBudget) => {
@@ -57,35 +56,70 @@ const Budgets = () => {
     );
   };
 
+  const subtitle = useMemo(() => {
+    if (!selectedProjectId) return "Select a project to see budgets";
+    return `Project #${selectedProjectId} • ${budgets.length} budget${
+      budgets.length === 1 ? "" : "s"
+    }`;
+  }, [selectedProjectId, budgets.length]);
+
   return (
-    <div className={styles.container}>
-      <button
-        className={styles.createButton}
-        onClick={() => setShowCreateForm(true)}
-      >
-        Create Budget
-      </button>
+    <div className={styles.page}>
+      <div className={styles.shell}>
+        {/* Header (same feel as Signatures) */}
+        <div className={styles.pageHeader}>
+          <div className={styles.pageHeaderText}>
+            <h3 className={styles.pageTitle}>Budgets</h3>
+            <p className={styles.pageSubtitle}>{subtitle}</p>
+          </div>
 
-      {showCreateForm && (
-        <CreateNewBudget
-          onClose={() => setShowCreateForm(false)}
-          onBudgetCreated={handleNewBudget}
-        />
-      )}
+          <div className={styles.headerActions}>
+            <button
+              type="button"
+              className={styles.primaryBtn}
+              onClick={() => setShowCreateForm(true)}
+              disabled={!selectedProjectId || showCreateForm}
+              title={
+                !selectedProjectId
+                  ? "Select a project first"
+                  : showCreateForm
+                  ? "Finish the current draft first"
+                  : "Create new budget"
+              }
+            >
+              <FiPlus />
+              New
+            </button>
+          </div>
+        </div>
 
-      <div className={styles.budgetList}>
-        {budgets.length === 0 ? (
-          <p>No budgets available for this project.</p>
-        ) : (
-          budgets.map((budget) => (
-            <Budget
-              key={budget.id}
-              budget={budget}
-              onUpdate={handleBudgetUpdate}
-              onDelete={handleBudgetDelete}
-            />
-          ))
+        {showCreateForm && (
+          <CreateNewBudget
+            onClose={() => setShowCreateForm(false)}
+            onBudgetCreated={handleNewBudget}
+          />
         )}
+
+        <div className={styles.budgetList}>
+          {!selectedProjectId ? (
+            <p className={styles.noData}>
+              Select a project to see its budgets.
+            </p>
+          ) : budgets.length === 0 ? (
+            <p className={styles.noData}>
+              No budgets available for this project.
+            </p>
+          ) : (
+            budgets.map((budget) => (
+              <Budget
+                key={budget.id}
+                budget={budget}
+                onUpdate={handleBudgetUpdate}
+                onDelete={handleBudgetDelete}
+              />
+            ))
+          )}
+        </div>
       </div>
     </div>
   );

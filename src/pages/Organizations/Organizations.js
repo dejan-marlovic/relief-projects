@@ -387,7 +387,7 @@ const Organizations = () => {
                   : "Create new organization link"
               }
             >
-              + New Organization Link
+              + New
             </button>
           </div>
         </div>
