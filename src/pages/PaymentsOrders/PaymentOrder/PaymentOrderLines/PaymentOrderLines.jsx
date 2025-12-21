@@ -9,6 +9,47 @@ const toNumOrNull = (v) => {
   return Number.isFinite(n) ? n : null;
 };
 
+async function safeParseJsonResponse(res) {
+  const raw = await res.text().catch(() => "");
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function normalizeLine(r) {
+  if (!r || typeof r !== "object") return null;
+
+  const id = r.id ?? r.lineId ?? r.line_id ?? null;
+
+  const transactionId =
+    r.transactionId ?? r.transaction_id ?? r.transaction?.id ?? null;
+
+  const organizationId =
+    r.organizationId ?? r.organization_id ?? r.organization?.id ?? null;
+
+  const costDetailId =
+    r.costDetailId ??
+    r.cost_detail_id ??
+    r.costDetail?.costDetailId ??
+    r.costDetail?.id ??
+    null;
+
+  const currencyId = r.currencyId ?? r.currency_id ?? r.currency?.id ?? null;
+
+  return {
+    id,
+    transactionId,
+    organizationId,
+    costDetailId,
+    currencyId,
+    amount: r.amount ?? null,
+    memo: r.memo ?? "",
+  };
+}
+
 const PaymentOrderLines = ({
   paymentOrderId,
   txOptions = [],
@@ -48,17 +89,21 @@ const PaymentOrderLines = ({
     if (!paymentOrderId) return;
     setLoading(true);
     setFormError("");
+    setFieldErrors({});
     try {
       const res = await fetch(
         `${BASE_URL}/api/payment-order-lines/payment-order/${paymentOrderId}`,
         { headers: authHeaders }
       );
       if (!res.ok) {
-        const txt = await res.text().catch(() => "");
-        throw new Error(txt || `Failed to fetch payment order lines.`);
+        const data = await safeParseJsonResponse(res);
+        throw new Error(
+          data?.message || `Failed to fetch payment order lines.`
+        );
       }
       const data = await res.json();
-      setRows(Array.isArray(data) ? data : []);
+      const arr = Array.isArray(data) ? data : data ? [data] : [];
+      setRows(arr.map(normalizeLine).filter(Boolean));
     } catch (e) {
       console.error(e);
       setRows([]);
@@ -72,21 +117,6 @@ const PaymentOrderLines = ({
     fetchRows();
   }, [fetchRows]);
 
-  const labelTx = (id) => (id ? `TX#${id}` : "(header)");
-  const labelOrg = (id) =>
-    orgOptions.find((o) => o.id === id)?.name || `Org#${id}`;
-  const labelCur = (id) =>
-    currencyOptions.find((c) => c.id === id)?.name || `Cur#${id}`;
-  const labelCostDetail = (id) => {
-    if (!id) return "-";
-    const cd = costDetailOptions.find(
-      (x) => Number(x.costDetailId) === Number(id)
-    );
-    return cd
-      ? `${cd.costDescription || "No description"} (CD#${cd.costDetailId})`
-      : `CD#${id}`;
-  };
-
   const apiCreate = async (payload) => {
     const res = await fetch(`${BASE_URL}/api/payment-order-lines`, {
       method: "POST",
@@ -95,15 +125,15 @@ const PaymentOrderLines = ({
     });
 
     if (!res.ok) {
-      const raw = await res.text().catch(() => "");
-      let data = null;
-      try {
-        data = raw ? JSON.parse(raw) : null;
-      } catch {
-        // ignore
-      }
+      const data = await safeParseJsonResponse(res);
       if (data?.fieldErrors) setFieldErrors(data.fieldErrors);
-      throw new Error(data?.message || raw || "Failed to create line.");
+
+      const msg =
+        data?.message ||
+        (res.status === 409 ? "Conflict: payment order is locked." : null) ||
+        "Failed to create line.";
+
+      throw new Error(msg);
     }
 
     return await res.json();
@@ -117,15 +147,15 @@ const PaymentOrderLines = ({
     });
 
     if (!res.ok) {
-      const raw = await res.text().catch(() => "");
-      let data = null;
-      try {
-        data = raw ? JSON.parse(raw) : null;
-      } catch {
-        // ignore
-      }
+      const data = await safeParseJsonResponse(res);
       if (data?.fieldErrors) setFieldErrors(data.fieldErrors);
-      throw new Error(data?.message || raw || "Failed to update line.");
+
+      const msg =
+        data?.message ||
+        (res.status === 409 ? "Conflict: payment order is locked." : null) ||
+        "Failed to update line.";
+
+      throw new Error(msg);
     }
 
     return await res.json();
@@ -137,8 +167,12 @@ const PaymentOrderLines = ({
       headers: authHeaders,
     });
     if (!res.ok) {
-      const raw = await res.text().catch(() => "");
-      throw new Error(raw || "Failed to delete line.");
+      const data = await safeParseJsonResponse(res);
+      const msg =
+        data?.message ||
+        (res.status === 409 ? "Conflict: payment order is locked." : null) ||
+        "Failed to delete line.";
+      throw new Error(msg);
     }
   };
 
@@ -171,6 +205,7 @@ const PaymentOrderLines = ({
     }
     if (Object.keys(fe).length) {
       setFieldErrors(fe);
+      setFormError("Please fix the highlighted fields.");
       return;
     }
 
@@ -225,6 +260,7 @@ const PaymentOrderLines = ({
       memo: patch.memo ?? null,
     };
 
+    // minimal client checks
     if (
       payload.amount == null ||
       !Number.isFinite(payload.amount) ||
@@ -250,6 +286,7 @@ const PaymentOrderLines = ({
   const onDelete = async (id) => {
     if (!window.confirm("Delete this payment order line?")) return;
     setFormError("");
+    setFieldErrors({});
     try {
       await apiDelete(id);
       await fetchRows();
@@ -414,10 +451,6 @@ const PaymentOrderLines = ({
               orgOptions={orgOptions}
               currencyOptions={currencyOptions}
               costDetailOptions={costDetailOptions}
-              labelTx={labelTx}
-              labelOrg={labelOrg}
-              labelCur={labelCur}
-              labelCostDetail={labelCostDetail}
               onSave={(patch) => onInlineSave(r.id, patch)}
               onDelete={() => onDelete(r.id)}
             />
@@ -434,10 +467,6 @@ const LineRow = ({
   orgOptions,
   currencyOptions,
   costDetailOptions,
-  labelTx,
-  labelOrg,
-  labelCur,
-  labelCostDetail,
   onSave,
   onDelete,
 }) => {
@@ -474,10 +503,10 @@ const LineRow = ({
           value={transactionId}
           onChange={(e) => setTransactionId(e.target.value)}
         >
-          <option value="">{labelTx("")}</option>
+          <option value="">(header)</option>
           {txOptions.map((t) => (
             <option key={t.id} value={t.id}>
-              {labelTx(t.id)}
+              TX#{t.id}
             </option>
           ))}
         </select>
@@ -502,7 +531,7 @@ const LineRow = ({
           value={costDetailId}
           onChange={(e) => setCostDetailId(e.target.value)}
         >
-          <option value="">{labelCostDetail("")}</option>
+          <option value="">(none)</option>
           {costDetailOptions.map((cd) => (
             <option key={cd.costDetailId} value={cd.costDetailId}>
               {cd.costDescription || "No description"} (CD#{cd.costDetailId})
@@ -516,7 +545,7 @@ const LineRow = ({
           value={currencyId}
           onChange={(e) => setCurrencyId(e.target.value)}
         >
-          <option value="">{labelCur("")}</option>
+          <option value="">(none)</option>
           {currencyOptions.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}

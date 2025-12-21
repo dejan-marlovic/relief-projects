@@ -69,7 +69,6 @@ const SignatureRow = ({
     </>
   );
 
-  // NOTE: for selects we now store "" (string) for "none" instead of null.
   const selectPO = (
     <>
       <select
@@ -216,22 +215,22 @@ const SignatureRow = ({
         )}
       </Cell>
 
-      {/* 1: Status (dropdown) */}
+      {/* 1: Status */}
       <Cell className={hc(1)}>
         {isEditing ? selectStatus : statusLabelById(row.signatureStatusId)}
       </Cell>
 
-      {/* 2: Employee (dropdown) */}
+      {/* 2: Employee */}
       <Cell className={hc(2)}>
         {isEditing ? selectEmployee : employeeLabelById(row.employeeId)}
       </Cell>
 
-      {/* 3: Payment Order (dropdown filtered by project) */}
+      {/* 3: Payment Order */}
       <Cell className={hc(3)}>
         {isEditing ? selectPO : row.paymentOrderId ?? "-"}
       </Cell>
 
-      {/* 4: Signature (string) */}
+      {/* 4: Signature */}
       <Cell className={hc(4)}>
         {isEditing ? inputText("signature") : row.signature ?? "-"}
       </Cell>

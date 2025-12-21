@@ -38,6 +38,44 @@ const blankPO = {
   pinCode: "",
 };
 
+async function safeParseJsonResponse(res) {
+  const raw = await res.text().catch(() => "");
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+// Normalize in case backend returns paymentOrderId instead of id, etc.
+function normalizePO(po) {
+  if (!po || typeof po !== "object") return null;
+
+  const id = po.id ?? po.paymentOrderId ?? po.payment_order_id ?? null;
+
+  const transactionId =
+    po.transactionId ??
+    po.transaction_id ??
+    po.transaction?.id ??
+    po.transaction?.transactionId ??
+    null;
+
+  return {
+    id,
+    transactionId,
+    paymentOrderDate: po.paymentOrderDate ?? po.payment_order_date ?? null,
+    numberOfTransactions:
+      po.numberOfTransactions ?? po.number_of_transactions ?? null,
+    paymentOrderDescription:
+      po.paymentOrderDescription ?? po.payment_order_description ?? "",
+    amount: po.amount ?? null,
+    totalAmount: po.totalAmount ?? po.total_amount ?? null,
+    message: po.message ?? "",
+    pinCode: po.pinCode ?? po.pin_code ?? "",
+  };
+}
+
 function PaymentOrders() {
   const { selectedProjectId } = useContext(ProjectContext);
 
@@ -59,6 +97,9 @@ function PaymentOrders() {
   const [orgOptions, setOrgOptions] = useState([]);
   const [currencyOptions, setCurrencyOptions] = useState([]);
   const [costDetailOptions, setCostDetailOptions] = useState([]);
+
+  // Track which POs are known locked (based on a 409 response)
+  const [lockedPoIds, setLockedPoIds] = useState(() => new Set());
 
   const newRowRef = useRef(null);
 
@@ -95,7 +136,12 @@ function PaymentOrders() {
           { headers: authHeaders }
         );
         if (!res.ok) throw new Error(`Failed ${res.status}`);
-        setOrders(await res.json());
+
+        const data = await res.json();
+        const arr = Array.isArray(data) ? data : data ? [data] : [];
+        const normalized = arr.map(normalizePO).filter(Boolean);
+
+        setOrders(normalized);
       } catch (e) {
         console.error(e);
         setOrders([]);
@@ -117,7 +163,8 @@ function PaymentOrders() {
         );
         if (!res.ok) throw new Error(`Failed ${res.status}`);
         const data = await res.json();
-        setTxOptions(Array.isArray(data) ? data : data ? [data] : []);
+        const arr = Array.isArray(data) ? data : data ? [data] : [];
+        setTxOptions(arr);
       } catch (e) {
         console.error(e);
         setTxOptions([]);
@@ -193,6 +240,7 @@ function PaymentOrders() {
     setFieldErrors({});
     setFormError("");
     setExpandedPoId(null);
+    setLockedPoIds(new Set());
   }, [
     fetchOrders,
     fetchTxOptions,
@@ -278,6 +326,15 @@ function PaymentOrders() {
     setFormError("");
   };
 
+  const markLocked = (poId) => {
+    if (!poId) return;
+    setLockedPoIds((prev) => {
+      const next = new Set(prev);
+      next.add(poId);
+      return next;
+    });
+  };
+
   const save = async () => {
     const id = editingId;
     const v = editedValues[id];
@@ -313,20 +370,25 @@ function PaymentOrders() {
       );
 
       if (!res.ok) {
-        const raw = await res.text().catch(() => "");
-        let data = null;
-        try {
-          data = raw ? JSON.parse(raw) : null;
-        } catch {}
+        const data = await safeParseJsonResponse(res);
 
         if (data?.fieldErrors) {
           setFieldErrors((prev) => ({ ...prev, [id]: data.fieldErrors }));
         }
 
-        setFormError(
+        const msg =
           data?.message ||
-            `Failed to ${isCreate ? "create" : "update"} payment order.`
-        );
+          (res.status === 409
+            ? "Conflict: payment order is locked."
+            : `Failed to ${isCreate ? "create" : "update"} payment order.`);
+
+        setFormError(msg);
+
+        if (!isCreate && res.status === 409) {
+          markLocked(id);
+          cancel();
+        }
+
         return;
       }
 
@@ -344,16 +406,32 @@ function PaymentOrders() {
   const remove = async (id) => {
     if (!id) return;
     if (!window.confirm("Delete this payment order?")) return;
+
+    setFormError("");
+
     try {
       const res = await fetch(`${BASE_URL}/api/payment-orders/${id}`, {
         method: "DELETE",
         headers: authHeaders,
       });
-      if (!res.ok) throw new Error("Delete failed");
+
+      if (!res.ok) {
+        const data = await safeParseJsonResponse(res);
+        const msg =
+          data?.message ||
+          (res.status === 409
+            ? "Conflict: payment order is locked."
+            : "Delete failed.");
+        setFormError(msg);
+
+        if (res.status === 409) markLocked(id);
+        return;
+      }
+
       await fetchOrders(selectedProjectId);
     } catch (e) {
       console.error(e);
-      alert("Delete failed.");
+      setFormError("Delete failed.");
     }
   };
 
@@ -433,6 +511,7 @@ function PaymentOrders() {
             <React.Fragment key={po.id}>
               <PaymentOrder
                 po={po}
+                locked={lockedPoIds.has(po.id)}
                 isEven={idx % 2 === 0}
                 isEditing={editingId === po.id}
                 editedValues={editedValues[po.id]}

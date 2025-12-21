@@ -33,9 +33,12 @@ const PaymentOrder = ({
   fieldErrors = {},
   rowRef = null,
 
-  // ✅ lines expansion
+  // lines expansion
   expanded = false,
   onToggleLines,
+
+  // optional: lock UI (disable edit/delete if locked)
+  locked = false,
 }) => {
   const ev = editedValues || {};
   const isCreate = (po?.id ?? "") === "new";
@@ -135,6 +138,8 @@ const PaymentOrder = ({
       className={`${styles.row} ${styles.gridRow} ${
         isEven ? styles.zebraEven : ""
       } ${styles.hoverable}`}
+      title={locked ? "Locked by final (Booked) signature" : undefined}
+      style={locked ? { opacity: 0.9 } : undefined}
     >
       {/* 0: Actions (sticky left) */}
       <Cell className={`${styles.stickyCol} ${styles.actionsCol} ${hc(0)}`}>
@@ -160,12 +165,13 @@ const PaymentOrder = ({
                 e.stopPropagation();
                 onEdit();
               }}
-              title="Edit"
+              title={locked ? "Locked" : "Edit"}
+              disabled={locked}
             >
               <FiEdit />
             </button>
 
-            {/* ✅ Lines toggle (same pattern as transactions allocations) */}
+            {/* Lines toggle */}
             {!isCreate && (
               <button
                 className={styles.actionBtn}
@@ -187,7 +193,8 @@ const PaymentOrder = ({
                 e.stopPropagation();
                 onDelete(po.id);
               }}
-              title="Delete"
+              title={locked ? "Locked" : "Delete"}
+              disabled={locked}
             >
               <FiTrash2 />
             </button>

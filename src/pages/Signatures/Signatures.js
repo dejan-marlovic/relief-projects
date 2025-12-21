@@ -30,6 +30,58 @@ const BASE_COL_WIDTHS = [
   200, // Date
 ];
 
+// ---- helpers ----
+async function safeParseJsonResponse(res) {
+  const raw = await res.text().catch(() => "");
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Normalize signature DTO coming from backend.
+ * Handles common variations: id/signatureId, paymentOrderId/paymentOrder etc.
+ */
+function normalizeSignature(s) {
+  if (!s || typeof s !== "object") return null;
+
+  const id = s.id ?? s.signatureId ?? s.signature_id ?? null;
+
+  // Support either flattened IDs OR nested objects
+  const signatureStatusId =
+    s.signatureStatusId ??
+    s.signature_status_id ??
+    s.signatureStatus?.id ??
+    s.signatureStatus?.signatureStatusId ??
+    null;
+
+  const employeeId =
+    s.employeeId ??
+    s.employee_id ??
+    s.employee?.id ??
+    s.employee?.employeeId ??
+    null;
+
+  const paymentOrderId =
+    s.paymentOrderId ??
+    s.payment_order_id ??
+    s.paymentOrder?.id ??
+    s.paymentOrder?.paymentOrderId ??
+    null;
+
+  return {
+    id,
+    signatureStatusId,
+    employeeId,
+    paymentOrderId,
+    signature: s.signature ?? "",
+    signatureDate: s.signatureDate ?? s.signature_date ?? null,
+  };
+}
+
 function Signatures() {
   const { selectedProjectId } = useContext(ProjectContext);
 
@@ -89,7 +141,12 @@ function Signatures() {
           { headers: authHeaders }
         );
         if (!res.ok) throw new Error(`Failed ${res.status}`);
-        setItems(await res.json());
+
+        const data = await res.json();
+        const arr = Array.isArray(data) ? data : data ? [data] : [];
+        const normalized = arr.map(normalizeSignature).filter(Boolean);
+
+        setItems(normalized);
       } catch (e) {
         console.error(e);
         setItems([]);
@@ -111,7 +168,16 @@ function Signatures() {
         );
         if (!res.ok) throw new Error(`Failed ${res.status}`);
         const data = await res.json();
-        setPoOptions(Array.isArray(data) ? data : data ? [data] : []);
+        const arr = Array.isArray(data) ? data : data ? [data] : [];
+
+        // normalize PO id too (id/paymentOrderId)
+        const normalized = arr
+          .map((po) => ({
+            id: po.id ?? po.paymentOrderId ?? po.payment_order_id,
+          }))
+          .filter((x) => x.id != null);
+
+        setPoOptions(normalized);
       } catch (e) {
         console.error(e);
         setPoOptions([]);
@@ -127,14 +193,17 @@ function Signatures() {
       });
       if (!res.ok) throw new Error(`Failed ${res.status}`);
       const data = await res.json();
+
       const normalized = (Array.isArray(data) ? data : []).map((s) => ({
-        id: s.id ?? s.signatureStatusId ?? s.statusId,
+        id: s.id ?? s.signatureStatusId ?? s.signature_status_id,
         label:
           s.signatureStatusName ??
+          s.signature_status_name ??
           s.name ??
           s.statusName ??
-          `Status #${s.id ?? s.signatureStatusId ?? s.statusId}`,
+          `Status #${s.id ?? s.signatureStatusId ?? s.signature_status_id}`,
       }));
+
       setStatusOptions(normalized.filter((x) => x.id != null));
     } catch (e) {
       console.error(e);
@@ -149,12 +218,15 @@ function Signatures() {
       });
       if (!res.ok) throw new Error(`Failed ${res.status}`);
       const data = await res.json();
+
       const normalized = (Array.isArray(data) ? data : []).map((e) => ({
-        id: e.id ?? e.employeeId,
+        id: e.id ?? e.employeeId ?? e.employee_id,
         label:
-          [e.firstName, e.lastName].filter(Boolean).join(" ") ||
-          `Employee #${e.id ?? e.employeeId}`,
+          [e.firstName ?? e.first_name, e.lastName ?? e.last_name]
+            .filter(Boolean)
+            .join(" ") || `Employee #${e.id ?? e.employeeId ?? e.employee_id}`,
       }));
+
       setEmployeeOptions(normalized.filter((x) => x.id != null));
     } catch (e) {
       console.error(e);
@@ -260,6 +332,30 @@ function Signatures() {
     setFormError("");
   };
 
+  /**
+   * Small client-side validation so we don't send obviously invalid payloads.
+   * Backend will still validate too.
+   */
+  const validateClientSide = (rowId, v) => {
+    const fe = {};
+
+    if (!v.signatureStatusId) fe.signatureStatusId = "Status is required.";
+    if (!v.employeeId) fe.employeeId = "Employee is required.";
+    if (!v.paymentOrderId) fe.paymentOrderId = "Payment order is required.";
+
+    // signature column is NOT NULL in DB, so require non-empty
+    if (!v.signature || !String(v.signature).trim()) {
+      fe.signature = "Signature is required.";
+    }
+
+    if (Object.keys(fe).length > 0) {
+      setFieldErrors((prev) => ({ ...prev, [rowId]: fe }));
+      setFormError("Please fix the highlighted fields.");
+      return false;
+    }
+    return true;
+  };
+
   const save = async () => {
     const id = editingId;
     const v = editedValues[id];
@@ -267,20 +363,18 @@ function Signatures() {
 
     const isCreate = id === "new";
 
-    const payload = {
-      signatureStatusId:
-        v.signatureStatusId !== "" ? Number(v.signatureStatusId) : null,
-      employeeId: v.employeeId !== "" ? Number(v.employeeId) : null,
-      paymentOrderId: v.paymentOrderId !== "" ? Number(v.paymentOrderId) : null,
-      signature: v.signature || "",
-      signatureDate: v.signatureDate || null,
-    };
-
     setFormError("");
-    setFieldErrors((prev) => ({
-      ...prev,
-      [id]: {},
-    }));
+    setFieldErrors((prev) => ({ ...prev, [id]: {} }));
+
+    if (!validateClientSide(id, v)) return;
+
+    const payload = {
+      signatureStatusId: Number(v.signatureStatusId),
+      employeeId: Number(v.employeeId),
+      paymentOrderId: Number(v.paymentOrderId),
+      signature: String(v.signature || "").trim(),
+      signatureDate: v.signatureDate ? v.signatureDate : null,
+    };
 
     try {
       const res = await fetch(
@@ -295,25 +389,21 @@ function Signatures() {
       );
 
       if (!res.ok) {
-        const raw = await res.text().catch(() => "");
-        let data = null;
-        try {
-          data = raw ? JSON.parse(raw) : null;
-        } catch (e) {
-          console.warn("Failed to parse signature error JSON:", e);
+        const data = await safeParseJsonResponse(res);
+
+        // ApiError style: { status, message, fieldErrors }
+        if (data?.fieldErrors) {
+          setFieldErrors((prev) => ({ ...prev, [id]: data.fieldErrors }));
         }
 
-        if (data && data.fieldErrors) {
-          setFieldErrors((prev) => ({
-            ...prev,
-            [id]: data.fieldErrors,
-          }));
-        }
-
-        setFormError(
+        // Show lock/conflict messages clearly
+        const msg =
           data?.message ||
-            `Failed to ${isCreate ? "create" : "update"} signature.`
-        );
+          (res.status === 409
+            ? "Conflict: this item is locked."
+            : `Failed to ${isCreate ? "create" : "update"} signature.`);
+
+        setFormError(msg);
         return;
       }
 
@@ -330,16 +420,30 @@ function Signatures() {
   const remove = async (id) => {
     if (!id) return;
     if (!window.confirm("Delete this signature?")) return;
+
+    setFormError("");
+
     try {
       const res = await fetch(`${BASE_URL}/api/signatures/${id}`, {
         method: "DELETE",
         headers: authHeaders,
       });
-      if (!res.ok) throw new Error("Delete failed");
+
+      if (!res.ok) {
+        const data = await safeParseJsonResponse(res);
+        const msg =
+          data?.message ||
+          (res.status === 409
+            ? "Conflict: this item is locked."
+            : "Delete failed.");
+        setFormError(msg);
+        return;
+      }
+
       await fetchSignatures(selectedProjectId);
     } catch (e) {
       console.error(e);
-      alert("Delete failed.");
+      setFormError("Delete failed.");
     }
   };
 
