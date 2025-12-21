@@ -9,33 +9,23 @@ import React, {
 import { ProjectContext } from "../../context/ProjectContext";
 import PaymentOrder from "./PaymentOrder/PaymentOrder";
 import styles from "./PaymentOrders.module.scss";
+import PaymentOrderLines from "./PaymentOrder/PaymentOrderLines/PaymentOrderLines";
 
 const BASE_URL = "http://localhost:8080";
 
 const headerLabels = [
-  "Actions", // sticky left
-  "Transaction", // transactionId
-  "Date", // paymentOrderDate
-  "#Tx", // numberOfTransactions
-  "Description", // paymentOrderDescription
-  "Amount", // amount
-  "Total Amount", // totalAmount
-  "Message", // message
-  "Pin Code", // pinCode
+  "Actions",
+  "Transaction",
+  "Date",
+  "#Tx",
+  "Description",
+  "Amount",
+  "Total Amount",
+  "Message",
+  "Pin Code",
 ];
 
-// column widths (px) in the same order as headerLabels
-const BASE_COL_WIDTHS = [
-  110, // Actions
-  160, // Transaction
-  180, // Date
-  90, // #Tx
-  300, // Description
-  140, // Amount
-  160, // Total Amount
-  200, // Message
-  140, // Pin Code
-];
+const BASE_COL_WIDTHS = [110, 160, 180, 90, 300, 140, 160, 200, 140];
 
 const blankPO = {
   transactionId: "",
@@ -56,18 +46,20 @@ function PaymentOrders() {
   const [editedValues, setEditedValues] = useState({});
   const [txOptions, setTxOptions] = useState([]);
 
-  // UI state for column toggles & compact mode
   const [compact, setCompact] = useState(false);
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [visibleCols, setVisibleCols] = useState(() =>
     Array(headerLabels.length).fill(true)
   );
 
-  // 🔴 form-level & field-level errors (same pattern as Transactions)
   const [formError, setFormError] = useState("");
-  const [fieldErrors, setFieldErrors] = useState({}); // { [rowId]: { fieldName: message } }
+  const [fieldErrors, setFieldErrors] = useState({});
 
-  // ref for "new" row to auto-scroll
+  const [expandedPoId, setExpandedPoId] = useState(null);
+  const [orgOptions, setOrgOptions] = useState([]);
+  const [currencyOptions, setCurrencyOptions] = useState([]);
+  const [costDetailOptions, setCostDetailOptions] = useState([]);
+
   const newRowRef = useRef(null);
 
   const toggleCol = (i) => {
@@ -79,7 +71,6 @@ function PaymentOrders() {
     });
   };
 
-  // Auth headers (memoized)
   const token = useMemo(() => localStorage.getItem("authToken"), []);
   const authHeaders = useMemo(
     () =>
@@ -92,7 +83,6 @@ function PaymentOrders() {
     [token]
   );
 
-  // Fetch list of payment orders (FILTERED BY PROJECT)
   const fetchOrders = useCallback(
     async (projectId) => {
       if (!projectId) {
@@ -114,7 +104,6 @@ function PaymentOrders() {
     [authHeaders]
   );
 
-  // Fetch transaction options for Transaction dropdown (also filtered by project)
   const fetchTxOptions = useCallback(
     async (projectId) => {
       if (!projectId) {
@@ -137,17 +126,82 @@ function PaymentOrders() {
     [authHeaders]
   );
 
-  // Load lists whenever project changes
+  const fetchOrgOptions = useCallback(async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/organizations/active/options`, {
+        headers: authHeaders,
+      });
+      setOrgOptions(res.ok ? await res.json() : []);
+    } catch {
+      setOrgOptions([]);
+    }
+  }, [authHeaders]);
+
+  const fetchCurrencyOptions = useCallback(async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/currencies/active`, {
+        headers: authHeaders,
+      });
+      setCurrencyOptions(res.ok ? await res.json() : []);
+    } catch {
+      setCurrencyOptions([]);
+    }
+  }, [authHeaders]);
+
+  const fetchCostDetailsForProject = useCallback(
+    async (projectId) => {
+      if (!projectId) {
+        setCostDetailOptions([]);
+        return;
+      }
+      try {
+        const bRes = await fetch(
+          `${BASE_URL}/api/budgets/project/${projectId}`,
+          { headers: authHeaders }
+        );
+        const budgets = bRes.ok ? await bRes.json() : [];
+        const list = Array.isArray(budgets) ? budgets : [];
+
+        const all = [];
+        for (const b of list) {
+          const cdRes = await fetch(
+            `${BASE_URL}/api/cost-details/by-budget/${b.id}`,
+            { headers: authHeaders }
+          );
+          if (!cdRes.ok) continue;
+          const cds = await cdRes.json();
+          if (Array.isArray(cds)) all.push(...cds);
+        }
+        setCostDetailOptions(all);
+      } catch {
+        setCostDetailOptions([]);
+      }
+    },
+    [authHeaders]
+  );
+
   useEffect(() => {
     fetchOrders(selectedProjectId);
     fetchTxOptions(selectedProjectId);
+
+    fetchOrgOptions();
+    fetchCurrencyOptions();
+    fetchCostDetailsForProject(selectedProjectId);
+
     setEditingId(null);
     setEditedValues({});
     setFieldErrors({});
     setFormError("");
-  }, [fetchOrders, fetchTxOptions, selectedProjectId]);
+    setExpandedPoId(null);
+  }, [
+    fetchOrders,
+    fetchTxOptions,
+    fetchOrgOptions,
+    fetchCurrencyOptions,
+    fetchCostDetailsForProject,
+    selectedProjectId,
+  ]);
 
-  // Auto-scroll when entering "new" mode
   useEffect(() => {
     if (editingId === "new" && newRowRef.current) {
       newRowRef.current.scrollIntoView({
@@ -157,7 +211,6 @@ function PaymentOrders() {
     }
   }, [editingId]);
 
-  // Begin editing a row: seed the draft with current values
   const startEdit = (po) => {
     setEditingId(po?.id ?? null);
     setEditedValues((prev) => ({
@@ -174,7 +227,6 @@ function PaymentOrders() {
       },
     }));
 
-    // clear previous errors for this row
     setFieldErrors((prev) => {
       const next = { ...prev };
       delete next[po.id];
@@ -183,7 +235,6 @@ function PaymentOrders() {
     setFormError("");
   };
 
-  // Start create (inline new row)
   const startCreate = () => {
     setEditingId("new");
     setEditedValues((prev) => ({ ...prev, new: { ...blankPO } }));
@@ -196,7 +247,6 @@ function PaymentOrders() {
     setFormError("");
   };
 
-  // Update a single field in the current draft
   const onChange = (field, value) => {
     setEditedValues((prev) => ({
       ...prev,
@@ -207,7 +257,6 @@ function PaymentOrders() {
     }));
   };
 
-  // Cancel editing: clear current id and remove its draft + its errors
   const cancel = () => {
     const id = editingId;
 
@@ -229,7 +278,6 @@ function PaymentOrders() {
     setFormError("");
   };
 
-  // Save current draft (POST for create, PUT for update) with ApiError handling
   const save = async () => {
     const id = editingId;
     const v = editedValues[id];
@@ -249,12 +297,8 @@ function PaymentOrders() {
       pinCode: v.pinCode || "",
     };
 
-    // clear previous errors
     setFormError("");
-    setFieldErrors((prev) => ({
-      ...prev,
-      [id]: {},
-    }));
+    setFieldErrors((prev) => ({ ...prev, [id]: {} }));
 
     try {
       const res = await fetch(
@@ -269,20 +313,14 @@ function PaymentOrders() {
       );
 
       if (!res.ok) {
-        // Try to parse ApiError
         const raw = await res.text().catch(() => "");
         let data = null;
         try {
           data = raw ? JSON.parse(raw) : null;
-        } catch (e) {
-          console.warn("Failed to parse payment order error JSON:", e);
-        }
+        } catch {}
 
-        if (data && data.fieldErrors) {
-          setFieldErrors((prev) => ({
-            ...prev,
-            [id]: data.fieldErrors,
-          }));
+        if (data?.fieldErrors) {
+          setFieldErrors((prev) => ({ ...prev, [id]: data.fieldErrors }));
         }
 
         setFormError(
@@ -303,7 +341,6 @@ function PaymentOrders() {
     }
   };
 
-  // Delete a row
   const remove = async (id) => {
     if (!id) return;
     if (!window.confirm("Delete this payment order?")) return;
@@ -320,7 +357,6 @@ function PaymentOrders() {
     }
   };
 
-  // Build CSS variable for grid columns
   const gridCols = useMemo(() => {
     const parts = BASE_COL_WIDTHS.map((w, i) =>
       visibleCols[i] ? `${w}px` : "0px"
@@ -330,7 +366,6 @@ function PaymentOrders() {
 
   return (
     <div className={styles.container}>
-      {/* Toolbar (compact + columns) */}
       <div className={styles.toolbar}>
         <label className={styles.compactToggle}>
           <input
@@ -355,7 +390,7 @@ function PaymentOrders() {
                   <input
                     type="checkbox"
                     checked={visibleCols[i]}
-                    disabled={i === 0} // Actions locked
+                    disabled={i === 0}
                     onChange={() => toggleCol(i)}
                   />
                   <span>{h}</span>
@@ -367,15 +402,12 @@ function PaymentOrders() {
         </div>
       </div>
 
-      {/* 🔴 Global error banner */}
       {formError && <div className={styles.errorBanner}>{formError}</div>}
 
-      {/* Table */}
       <div
         className={`${styles.table} ${compact ? styles.compact : ""}`}
         style={{ ["--po-grid-cols"]: gridCols }}
       >
-        {/* Header */}
         <div className={`${styles.gridRow} ${styles.headerRow}`}>
           {headerLabels.map((h, i) => (
             <div
@@ -390,7 +422,6 @@ function PaymentOrders() {
           ))}
         </div>
 
-        {/* Body */}
         {!selectedProjectId ? (
           <p className={styles.noData}>
             Select a project to see its payment orders.
@@ -399,25 +430,41 @@ function PaymentOrders() {
           <p className={styles.noData}>No payment orders for this project.</p>
         ) : (
           orders.map((po, idx) => (
-            <PaymentOrder
-              key={po.id}
-              po={po}
-              isEven={idx % 2 === 0}
-              isEditing={editingId === po.id}
-              editedValues={editedValues[po.id]}
-              onEdit={() => startEdit(po)}
-              onChange={onChange}
-              onSave={save}
-              onCancel={cancel}
-              onDelete={remove}
-              transactions={txOptions}
-              visibleCols={visibleCols}
-              fieldErrors={fieldErrors[po.id] || {}}
-            />
+            <React.Fragment key={po.id}>
+              <PaymentOrder
+                po={po}
+                isEven={idx % 2 === 0}
+                isEditing={editingId === po.id}
+                editedValues={editedValues[po.id]}
+                onEdit={() => startEdit(po)}
+                onChange={onChange}
+                onSave={save}
+                onCancel={cancel}
+                onDelete={remove}
+                transactions={txOptions}
+                visibleCols={visibleCols}
+                fieldErrors={fieldErrors[po.id] || {}}
+                expanded={expandedPoId === po.id}
+                onToggleLines={() =>
+                  setExpandedPoId((cur) => (cur === po.id ? null : po.id))
+                }
+              />
+
+              {expandedPoId === po.id && (
+                <div style={{ padding: "0 12px 12px 12px" }}>
+                  <PaymentOrderLines
+                    paymentOrderId={po.id}
+                    txOptions={txOptions}
+                    orgOptions={orgOptions}
+                    currencyOptions={currencyOptions}
+                    costDetailOptions={costDetailOptions}
+                  />
+                </div>
+              )}
+            </React.Fragment>
           ))
         )}
 
-        {/* Inline create row (rendered last) */}
         {editingId === "new" && (
           <PaymentOrder
             po={{ id: "new", ...blankPO }}
@@ -436,7 +483,6 @@ function PaymentOrders() {
         )}
       </div>
 
-      {/* Create button */}
       <div className={styles.createBar}>
         <button
           className={styles.addBtn}

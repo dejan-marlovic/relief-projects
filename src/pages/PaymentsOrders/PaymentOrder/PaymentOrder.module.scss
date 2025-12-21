@@ -50,6 +50,17 @@
   @include tables.table-action-btn;
 }
 
+/* ✅ Optional: make the lines toggle look "active" when expanded */
+.actionBtnActive {
+  /* Keep it subtle and consistent */
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* ✅ Optional: if you want a slightly clearer icon button hover */
+.actionBtn:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
 .danger {
   @include tables.table-danger;
 }

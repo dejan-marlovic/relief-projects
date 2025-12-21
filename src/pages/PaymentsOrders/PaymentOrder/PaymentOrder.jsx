@@ -1,6 +1,6 @@
 import React from "react";
 import styles from "./PaymentOrder.module.scss";
-import { FiEdit, FiTrash2, FiSave, FiX } from "react-icons/fi";
+import { FiEdit, FiTrash2, FiSave, FiX, FiSliders } from "react-icons/fi";
 
 const Cell = ({ children, className }) => (
   <div className={`${styles.cell} ${className || ""}`}>{children}</div>
@@ -30,11 +30,14 @@ const PaymentOrder = ({
   transactions = [],
   visibleCols = [],
   isEven = false,
-  fieldErrors = {}, // NEW: per-row field errors
-  rowRef = null, // NEW: for scrolling to the "new" row
+  fieldErrors = {},
+  rowRef = null,
+
+  // ✅ lines expansion
+  expanded = false,
+  onToggleLines,
 }) => {
   const ev = editedValues || {};
-
   const isCreate = (po?.id ?? "") === "new";
   const autoSave = isEditing && !isCreate;
 
@@ -46,7 +49,7 @@ const PaymentOrder = ({
 
   const toNum = (v) => (v === "" ? "" : Number(v));
 
-  // ==== error helpers (same pattern as Transactions) ====
+  // ==== error helpers ====
   const getFieldError = (name) => fieldErrors?.[name];
   const hasError = (name) => Boolean(getFieldError(name));
   const inputClass = (name) =>
@@ -124,7 +127,6 @@ const PaymentOrder = ({
     </>
   );
 
-  // hidden column helper (aligns with header visibility)
   const hc = (i) => (!visibleCols[i] ? styles.hiddenCol : "");
 
   return (
@@ -162,6 +164,22 @@ const PaymentOrder = ({
             >
               <FiEdit />
             </button>
+
+            {/* ✅ Lines toggle (same pattern as transactions allocations) */}
+            {!isCreate && (
+              <button
+                className={styles.actionBtn}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onToggleLines?.();
+                }}
+                title={expanded ? "Hide lines" : "Show lines"}
+              >
+                <FiSliders />
+              </button>
+            )}
+
             <button
               className={`${styles.actionBtn} ${styles.danger}`}
               onClick={(e) => {
