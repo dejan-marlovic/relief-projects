@@ -1,6 +1,13 @@
 import React from "react";
 import styles from "./PaymentOrder.module.scss";
-import { FiEdit, FiTrash2, FiSave, FiX, FiSliders } from "react-icons/fi";
+import {
+  FiEdit,
+  FiTrash2,
+  FiSave,
+  FiX,
+  FiChevronDown,
+  FiChevronUp,
+} from "react-icons/fi";
 
 const Cell = ({ children, className }) => (
   <div className={`${styles.cell} ${className || ""}`}>{children}</div>
@@ -180,20 +187,20 @@ const PaymentOrder = ({
               <FiEdit />
             </button>
 
-            {/* Lines toggle */}
+            {/* Lines toggle (use same expand icon behavior as Transactions) */}
             {!isCreate && (
               <button
-                className={`${styles.iconCircleBtn} ${
-                  expanded ? styles.iconCircleBtnActive : ""
-                }`}
+                type="button"
+                className={styles.iconCircleBtn}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   onToggleLines?.();
                 }}
                 title={expanded ? "Hide lines" : "Show lines"}
+                aria-label={expanded ? "Hide lines" : "Show lines"}
               >
-                <FiSliders />
+                {expanded ? <FiChevronUp /> : <FiChevronDown />}
               </button>
             )}
 
