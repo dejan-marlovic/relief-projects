@@ -1,4 +1,3 @@
-// src/pages/Organizations/Organizations.jsx
 import React, {
   useCallback,
   useContext,
@@ -9,6 +8,7 @@ import React, {
 import { ProjectContext } from "../../context/ProjectContext";
 import OrganizationRow from "./Organization/Organization";
 import styles from "./Organizations.module.scss";
+import { FiColumns, FiPlus } from "react-icons/fi";
 
 const BASE_URL = "http://localhost:8080";
 
@@ -23,7 +23,7 @@ const headerLabels = ["Actions", "Organization", "Status"];
 
 // ✅ Actions a bit wider so 3 icons (edit/delete/expand) never clip
 const BASE_COL_WIDTHS = [
-  190, // Actions (was 110)
+  190, // Actions
   240, // Organization
   180, // Status
 ];
@@ -51,7 +51,6 @@ const Organizations = () => {
   const [statusOptions, setStatusOptions] = useState([]); // /organization-statuses/active
 
   // UI state
-  const [compact, setCompact] = useState(false);
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [visibleCols, setVisibleCols] = useState(() =>
     Array(headerLabels.length).fill(true)
@@ -99,11 +98,13 @@ const Organizations = () => {
           throw new Error(
             `Failed to fetch project organizations (${res.status})`
           );
+
         const data = await res.json();
         const list = Array.isArray(data) ? data : data ? [data] : [];
         const byProject = list.filter(
           (po) => String(po.projectId) === String(projectId)
         );
+
         setLinks(byProject);
       } catch (err) {
         console.error("Error fetching project organizations:", err);
@@ -322,37 +323,31 @@ const Organizations = () => {
 
   const totalCount = links.length;
 
+  const subtitle = selectedProjectId
+    ? `Project #${selectedProjectId} • ${totalCount} link${
+        totalCount === 1 ? "" : "s"
+      }`
+    : "Select a project to see linked organizations.";
+
   return (
     <div className={styles.page}>
       <div className={styles.shell}>
         <div className={styles.pageHeader}>
           <div className={styles.pageHeaderText}>
             <h2 className={styles.pageTitle}>Organizations</h2>
-            <p className={styles.pageSubtitle}>
-              {selectedProjectId
-                ? `Project #${selectedProjectId} • ${totalCount} link${
-                    totalCount === 1 ? "" : "s"
-                  }`
-                : "Select a project to see linked organizations."}
-            </p>
+            <p className={styles.pageSubtitle}>{subtitle}</p>
           </div>
 
           <div className={styles.headerActions}>
-            <label className={styles.compactToggle}>
-              <input
-                type="checkbox"
-                checked={compact}
-                onChange={(e) => setCompact(e.target.checked)}
-              />
-              <span>Compact mode</span>
-            </label>
-
             <div className={styles.columnsBox}>
               <button
                 className={styles.columnsBtn}
                 onClick={() => setColumnsOpen((v) => !v)}
+                title="Choose visible columns"
+                type="button"
               >
-                Columns ▾
+                <FiColumns />
+                Columns
               </button>
 
               {columnsOpen && (
@@ -386,18 +381,17 @@ const Organizations = () => {
                   ? "Finish the current draft first"
                   : "Create new organization link"
               }
+              type="button"
             >
-              + New
+              <FiPlus />
+              New
             </button>
           </div>
         </div>
 
         {formError && <div className={styles.errorBanner}>{formError}</div>}
 
-        <div
-          className={`${styles.table} ${compact ? styles.compact : ""}`}
-          style={{ ["--org-grid-cols"]: gridCols }}
-        >
+        <div className={styles.table} style={{ ["--org-grid-cols"]: gridCols }}>
           <div className={`${styles.gridRow} ${styles.headerRow}`}>
             {headerLabels.map((h, i) => (
               <div
