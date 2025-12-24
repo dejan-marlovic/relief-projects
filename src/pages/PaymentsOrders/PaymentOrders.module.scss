@@ -56,29 +56,32 @@ $primary: #4a90e2;
   justify-content: flex-end;
 }
 
-/* Toolbar */
-.compactToggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.92rem;
-  color: #374151;
-}
-
+/* Columns UI (match Transactions) */
 .columnsBox {
   position: relative;
 }
 
-.columnsBtn {
+.iconPillBtn {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   background: #f5f6f8;
   border: 1px solid #e6e6e6;
-  border-radius: 12px;
-  padding: 0.7rem 0.85rem;
+  border-radius: 999px;
+  padding: 0.7rem 0.9rem;
   cursor: pointer;
   font-weight: 700;
+  color: #1f2937;
+  line-height: 1;
+  user-select: none;
+}
+
+.iconPillBtn:hover {
+  background: #eef0f4;
+}
+
+.iconPillBtn:active {
+  transform: translateY(1px);
 }
 
 .columnsPanel {
@@ -140,20 +143,8 @@ $primary: #4a90e2;
   --po-header-bg: #f6f7fb;
   --po-header-border: #e5e7eb;
 
-  /* ✅ widened Actions column (same fix as Transactions) */
+  /* Default (overridden inline by --po-grid-cols) */
   --po-grid-cols: 160px;
-}
-
-/* Compact */
-.compact .gridRow {
-  padding: 4px 8px !important;
-  font-size: 0.86rem !important;
-}
-
-.compact :global(input),
-.compact :global(select) {
-  padding: 4px 6px !important;
-  font-size: 0.86rem !important;
 }
 
 /* Grid row */
@@ -192,8 +183,6 @@ $primary: #4a90e2;
   z-index: 6;
   background: var(--po-header-bg);
   box-shadow: 2px 0 0 rgba(0, 0, 0, 0.04);
-
-  /* ✅ prevent clipping */
   overflow: visible;
 }
 

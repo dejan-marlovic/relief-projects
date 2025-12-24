@@ -10,7 +10,7 @@ import { ProjectContext } from "../../context/ProjectContext";
 import PaymentOrder from "./PaymentOrder/PaymentOrder";
 import styles from "./PaymentOrders.module.scss";
 import PaymentOrderLines from "./PaymentOrder/PaymentOrderLines/PaymentOrderLines";
-import { FiPlus, FiColumns, FiMinimize2 } from "react-icons/fi";
+import { FiPlus, FiColumns } from "react-icons/fi";
 
 const BASE_URL = "http://localhost:8080";
 
@@ -85,7 +85,7 @@ function PaymentOrders() {
   const [editedValues, setEditedValues] = useState({});
   const [txOptions, setTxOptions] = useState([]);
 
-  const [compact, setCompact] = useState(false);
+  // UI (compact removed)
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [visibleCols, setVisibleCols] = useState(() =>
     Array(headerLabels.length).fill(true)
@@ -451,7 +451,6 @@ function PaymentOrders() {
   return (
     <div className={styles.page}>
       <div className={styles.shell}>
-        {/* ✅ Blue header like Project/Transactions */}
         <div className={styles.pageHeader}>
           <div className={styles.pageHeaderText}>
             <h3 className={styles.pageTitle}>Payment Orders</h3>
@@ -459,21 +458,13 @@ function PaymentOrders() {
           </div>
 
           <div className={styles.headerActions}>
-            <label className={styles.compactToggle}>
-              <input
-                type="checkbox"
-                checked={compact}
-                onChange={(e) => setCompact(e.target.checked)}
-              />
-              <FiMinimize2 />
-              <span>Compact</span>
-            </label>
-
             <div className={styles.columnsBox}>
               <button
-                className={styles.columnsBtn}
+                type="button"
+                className={styles.iconPillBtn}
                 onClick={() => setColumnsOpen((v) => !v)}
-                title="Choose visible columns"
+                aria-label="Toggle columns"
+                title="Columns"
               >
                 <FiColumns />
                 Columns
@@ -519,11 +510,7 @@ function PaymentOrders() {
 
         {formError && <div className={styles.errorBanner}>{formError}</div>}
 
-        {/* ✅ Table now lives INSIDE the same shell card */}
-        <div
-          className={`${styles.table} ${compact ? styles.compact : ""}`}
-          style={{ ["--po-grid-cols"]: gridCols }}
-        >
+        <div className={styles.table} style={{ ["--po-grid-cols"]: gridCols }}>
           <div className={`${styles.gridRow} ${styles.headerRow}`}>
             {headerLabels.map((h, i) => (
               <div
