@@ -1,4 +1,3 @@
-// src/components/Recipients/Recipients.jsx
 import React, {
   useCallback,
   useContext,
@@ -10,6 +9,7 @@ import React, {
 import { ProjectContext } from "../../context/ProjectContext";
 import RecipientRow from "./Recipient/Recipient";
 import styles from "./Recipients.module.scss";
+import { FiColumns, FiPlus } from "react-icons/fi";
 
 const BASE_URL = "http://localhost:8080";
 
@@ -44,7 +44,6 @@ function Recipients() {
   const [orgOptions, setOrgOptions] = useState([]);
 
   // UI
-  const [compact, setCompact] = useState(false);
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [visibleCols, setVisibleCols] = useState(() =>
     Array(headerLabels.length).fill(true)
@@ -336,37 +335,31 @@ function Recipients() {
 
   const totalCount = items.length;
 
+  const subtitle = selectedProjectId
+    ? `Project #${selectedProjectId} • ${totalCount} recipient${
+        totalCount === 1 ? "" : "s"
+      }`
+    : "Select a project to see recipients.";
+
   return (
     <div className={styles.page}>
       <div className={styles.shell}>
         <div className={styles.pageHeader}>
           <div className={styles.pageHeaderText}>
             <h2 className={styles.pageTitle}>Recipients</h2>
-            <p className={styles.pageSubtitle}>
-              {selectedProjectId
-                ? `Project #${selectedProjectId} • ${totalCount} recipient${
-                    totalCount === 1 ? "" : "s"
-                  }`
-                : "Select a project to see recipients."}
-            </p>
+            <p className={styles.pageSubtitle}>{subtitle}</p>
           </div>
 
           <div className={styles.headerActions}>
-            <label className={styles.compactToggle}>
-              <input
-                type="checkbox"
-                checked={compact}
-                onChange={(e) => setCompact(e.target.checked)}
-              />
-              <span>Compact mode</span>
-            </label>
-
             <div className={styles.columnsBox}>
               <button
                 className={styles.columnsBtn}
                 onClick={() => setColumnsOpen((v) => !v)}
+                title="Choose visible columns"
+                type="button"
               >
-                Columns ▾
+                <FiColumns />
+                Columns
               </button>
 
               {columnsOpen && (
@@ -400,18 +393,17 @@ function Recipients() {
                   ? "Finish the current draft first"
                   : "Create new recipient"
               }
+              type="button"
             >
-              + New
+              <FiPlus />
+              New
             </button>
           </div>
         </div>
 
         {formError && <div className={styles.errorBanner}>{formError}</div>}
 
-        <div
-          className={`${styles.table} ${compact ? styles.compact : ""}`}
-          style={{ ["--rec-grid-cols"]: gridCols }}
-        >
+        <div className={styles.table} style={{ ["--rec-grid-cols"]: gridCols }}>
           <div className={`${styles.gridRow} ${styles.headerRow}`}>
             {headerLabels.map((h, i) => (
               <div
