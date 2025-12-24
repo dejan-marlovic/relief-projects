@@ -89,8 +89,7 @@ const Transactions = ({ refreshTrigger }) => {
   const [currencies, setCurrencies] = useState([]);
   const [costDetailOptions, setCostDetailOptions] = useState([]);
 
-  // UI
-  const [compact, setCompact] = useState(false);
+  // UI (removed compact functionality)
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [visibleCols, setVisibleCols] = useState(() =>
     Array(headerLabels.length).fill(true)
@@ -474,14 +473,7 @@ const Transactions = ({ refreshTrigger }) => {
           </div>
 
           <div className={styles.headerActions}>
-            <label className={styles.compactToggle}>
-              <input
-                type="checkbox"
-                checked={compact}
-                onChange={(e) => setCompact(e.target.checked)}
-              />
-              <span>Compact</span>
-            </label>
+            {/* ✅ Compact toggle removed */}
 
             <div className={styles.columnsBox}>
               <button
@@ -535,7 +527,7 @@ const Transactions = ({ refreshTrigger }) => {
         )}
 
         <div
-          className={`${styles.table} ${compact ? styles.compact : ""}`}
+          className={styles.table}
           style={{ ["--tx-grid-cols"]: gridCols }}
           ref={tableRef}
         >
