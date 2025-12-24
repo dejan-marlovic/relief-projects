@@ -88,7 +88,7 @@ const Budgets = () => {
               }
             >
               <FiPlus />
-              New
+              New Budget
             </button>
           </div>
         </div>
