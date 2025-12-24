@@ -9,7 +9,7 @@ import React, {
 import { ProjectContext } from "../../context/ProjectContext";
 import SignatureRow from "./Signature/Signature";
 import styles from "./Signatures.module.scss";
-import { FiPlus, FiColumns, FiMinimize2 } from "react-icons/fi";
+import { FiPlus, FiColumns } from "react-icons/fi";
 
 const BASE_URL = "http://localhost:8080";
 
@@ -95,7 +95,6 @@ function Signatures() {
   const [employeeOptions, setEmployeeOptions] = useState([]);
 
   // UI
-  const [compact, setCompact] = useState(false);
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [visibleCols, setVisibleCols] = useState(() =>
     Array(headerLabels.length).fill(true)
@@ -451,7 +450,6 @@ function Signatures() {
   return (
     <div className={styles.page}>
       <div className={styles.shell}>
-        {/* ✅ Blue header like Transactions/PaymentOrders */}
         <div className={styles.pageHeader}>
           <div className={styles.pageHeaderText}>
             <h3 className={styles.pageTitle}>Signatures</h3>
@@ -459,25 +457,17 @@ function Signatures() {
           </div>
 
           <div className={styles.headerActions}>
-            <label className={styles.compactToggle}>
-              <input
-                type="checkbox"
-                checked={compact}
-                onChange={(e) => setCompact(e.target.checked)}
-              />
-              <FiMinimize2 />
-              <span>Compact</span>
-            </label>
-
             <div className={styles.columnsBox}>
               <button
                 className={styles.columnsBtn}
                 onClick={() => setColumnsOpen((v) => !v)}
                 title="Choose visible columns"
+                type="button"
               >
                 <FiColumns />
                 Columns
               </button>
+
               {columnsOpen && (
                 <div className={styles.columnsPanel}>
                   {headerLabels.map((h, i) => (
@@ -509,6 +499,7 @@ function Signatures() {
                   ? "Finish the current draft first"
                   : "Create new signature"
               }
+              type="button"
             >
               <FiPlus />
               New
@@ -518,11 +509,7 @@ function Signatures() {
 
         {formError && <div className={styles.errorBanner}>{formError}</div>}
 
-        {/* ✅ Table inside shell */}
-        <div
-          className={`${styles.table} ${compact ? styles.compact : ""}`}
-          style={{ ["--sig-grid-cols"]: gridCols }}
-        >
+        <div className={styles.table} style={{ ["--sig-grid-cols"]: gridCols }}>
           <div className={`${styles.gridRow} ${styles.headerRow}`}>
             {headerLabels.map((h, i) => (
               <div

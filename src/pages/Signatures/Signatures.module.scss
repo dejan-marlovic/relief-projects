@@ -8,7 +8,7 @@ $primary: #4a90e2;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* ✅ Big white card shell like Transactions */
+/* Big white card shell like Transactions */
 .shell {
   background: #fff;
   border-radius: 14px;
@@ -17,7 +17,7 @@ $primary: #4a90e2;
   padding: 1.25rem;
 }
 
-/* ✅ Blue header like Project/Transactions */
+/* Blue header like Project/Transactions */
 .pageHeader {
   display: flex;
   align-items: flex-start;
@@ -56,67 +56,44 @@ $primary: #4a90e2;
   justify-content: flex-end;
 }
 
-/* compact toggle pill */
-.compactToggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.92rem;
-  color: #374151;
-  padding: 0.65rem 0.75rem;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
-  background: #fff;
-
-  input {
-    transform: translateY(1px);
-  }
-}
-
 /* Columns dropdown */
 .columnsBox {
   position: relative;
 }
 
+/* ✅ Match Transactions "Columns" pill */
 .columnsBtn {
+  @include forms.ghost-button($primary);
+  padding: 0.6rem 0.85rem;
+  font-size: 0.92rem;
+
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: #f5f6f8;
-  border: 1px solid #e6e6e6;
-  border-radius: 12px;
-  padding: 0.7rem 0.85rem;
-  cursor: pointer;
-  font-weight: 700;
-  color: #1f2937;
-
-  &:hover {
-    background: #eef2ff;
-  }
 }
 
 .columnsPanel {
   position: absolute;
-  top: 52px;
+  top: 46px;
   right: 0;
   background: #fff;
   border: 1px solid #e6e6e6;
-  border-radius: 14px;
+  border-radius: 12px;
   padding: 10px 12px;
-  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.1);
-  max-height: 340px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  max-height: 320px;
   overflow: auto;
   z-index: 10;
-  min-width: 260px;
+  min-width: 240px;
 }
 
 .colItem {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 2px;
+  padding: 4px 2px;
   white-space: nowrap;
-  font-size: 0.94rem;
+  color: #374151;
 }
 
 .lockNote {
@@ -125,7 +102,7 @@ $primary: #4a90e2;
   font-size: 0.85em;
 }
 
-/* ✅ New button uses your shared primary button styling */
+/* New button uses shared primary button styling */
 .primaryBtn {
   @include forms.primary-button;
   padding: 0.78rem 1rem;
@@ -148,24 +125,13 @@ $primary: #4a90e2;
   isolation: isolate;
   overflow: auto;
   max-height: 60vh;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 12px;
+  border: 1px solid rgba(74, 144, 226, 0.14);
+  border-radius: 14px;
   background: #fff;
 
   --sig-header-bg: #f6f7fb;
   --sig-header-border: #e5e7eb;
   --sig-grid-cols: 110px; /* fallback */
-}
-
-/* Compact mode tweaks */
-.compact .gridRow {
-  padding: 4px 8px !important;
-  font-size: 0.86rem !important;
-}
-.compact :global(input),
-.compact :global(select) {
-  padding: 4px 6px !important;
-  font-size: 0.86rem !important;
 }
 
 /* Grid shared by header + rows */
@@ -174,7 +140,7 @@ $primary: #4a90e2;
   grid-template-columns: var(--sig-grid-cols);
   align-items: center;
   column-gap: 8px;
-  min-width: 900px;
+  min-width: 1100px;
 }
 
 /* Header row */
@@ -204,6 +170,7 @@ $primary: #4a90e2;
   z-index: 6;
   background: var(--sig-header-bg);
   box-shadow: 2px 0 0 rgba(0, 0, 0, 0.04);
+  overflow: visible;
 }
 
 /* Hidden col */
