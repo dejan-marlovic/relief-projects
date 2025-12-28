@@ -16,6 +16,23 @@ const toNumOrNull = (v) => {
   return Number.isFinite(n) ? n : null;
 };
 
+async function safeParseJsonResponse(res) {
+  const raw = await res.text().catch(() => "");
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function makeApiError(message, fieldErrors = null, status = null) {
+  const err = new Error(message || "Request failed.");
+  err.fieldErrors = fieldErrors;
+  err.status = status;
+  return err;
+}
+
 const TransactionAllocations = ({ txId, costDetailOptions = [] }) => {
   const token = useMemo(() => localStorage.getItem("authToken"), []);
   const authHeaders = useMemo(
@@ -38,21 +55,33 @@ const TransactionAllocations = ({ txId, costDetailOptions = [] }) => {
     note: "",
   });
 
+  // ✅ ONLY for Add form
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
+
+  // ✅ NEW: row-scoped errors for inline save
+  // { [allocationId]: { message: string, fieldErrors?: {...} } }
+  const [rowErrorsById, setRowErrorsById] = useState({});
 
   const fetchRows = useCallback(async () => {
     if (!txId) return;
     setLoading(true);
+
+    // keep add-form errors separate
     setFormError("");
+    setFieldErrors({});
+
+    // optional: clear row errors on reload
+    setRowErrorsById({});
+
     try {
       const res = await fetch(
         `${BASE_URL}/api/cost-allocations/transaction/${txId}`,
         { headers: authHeaders }
       );
       if (!res.ok) {
-        const txt = await res.text().catch(() => "");
-        throw new Error(`Failed to fetch allocations. ${txt}`);
+        const data = await safeParseJsonResponse(res);
+        throw new Error(data?.message || "Failed to fetch allocations.");
       }
       const data = await res.json();
       setRows(Array.isArray(data) ? data : []);
@@ -70,8 +99,6 @@ const TransactionAllocations = ({ txId, costDetailOptions = [] }) => {
   }, [fetchRows]);
 
   const upsert = async ({ costDetailId, plannedAmount, note }) => {
-    setFormError("");
-    setFieldErrors({});
     const payload = {
       transactionId: Number(txId),
       costDetailId: Number(costDetailId),
@@ -86,20 +113,18 @@ const TransactionAllocations = ({ txId, costDetailOptions = [] }) => {
     });
 
     if (!res.ok) {
-      const raw = await res.text().catch(() => "");
-      let data = null;
-      try {
-        data = raw ? JSON.parse(raw) : null;
-      } catch {
-        // ignore
-      }
-      if (data?.fieldErrors) setFieldErrors(data.fieldErrors);
-      throw new Error(data?.message || raw || "Failed to save allocation.");
+      const data = await safeParseJsonResponse(res);
+      const msg = data?.message || "Failed to save allocation.";
+      throw makeApiError(msg, data?.fieldErrors || null, res.status);
     }
+
     return await res.json();
   };
 
   const onAdd = async () => {
+    setFormError("");
+    setFieldErrors({});
+
     const cdId = toNumOrNull(draft.costDetailId);
     const planned =
       draft.plannedAmount === "" ? null : Number(draft.plannedAmount);
@@ -125,18 +150,38 @@ const TransactionAllocations = ({ txId, costDetailOptions = [] }) => {
       await fetchRows();
     } catch (e) {
       console.error(e);
+      // Add-form: show errors here
+      if (e.fieldErrors) setFieldErrors(e.fieldErrors);
       setFormError(e.message || "Failed to add allocation.");
     }
   };
 
   const onInlineUpdate = async (row, patch) => {
+    // clear only this row's error
+    setRowErrorsById((prev) => {
+      const next = { ...prev };
+      delete next[row.id];
+      return next;
+    });
+
     const planned =
       patch.plannedAmount === "" || patch.plannedAmount == null
         ? null
         : Number(patch.plannedAmount);
 
+    // local row validation -> row error (not global banner)
+    const localFe = {};
     if (planned == null || !Number.isFinite(planned) || planned < 0) {
-      setFormError("Planned amount must be a number >= 0.");
+      localFe.plannedAmount = "Planned amount must be a number >= 0.";
+    }
+    if (Object.keys(localFe).length) {
+      setRowErrorsById((prev) => ({
+        ...prev,
+        [row.id]: {
+          message: "Please fix the highlighted fields.",
+          fieldErrors: localFe,
+        },
+      }));
       return;
     }
 
@@ -149,21 +194,37 @@ const TransactionAllocations = ({ txId, costDetailOptions = [] }) => {
       await fetchRows();
     } catch (e) {
       console.error(e);
-      setFormError(e.message || "Failed to update allocation.");
+      // ✅ Inline row: put backend error inside the row
+      setRowErrorsById((prev) => ({
+        ...prev,
+        [row.id]: {
+          message: e.message || "Failed to update allocation.",
+          fieldErrors: e.fieldErrors || null,
+        },
+      }));
     }
   };
 
   const onDelete = async (id) => {
     if (!window.confirm("Delete this allocation?")) return;
+
     setFormError("");
+
+    // clear row error if any
+    setRowErrorsById((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+
     try {
       const res = await fetch(`${BASE_URL}/api/cost-allocations/${id}`, {
         method: "DELETE",
         headers: authHeaders,
       });
       if (!res.ok) {
-        const raw = await res.text().catch(() => "");
-        throw new Error(raw || "Failed to delete allocation.");
+        const data = await safeParseJsonResponse(res);
+        throw new Error(data?.message || "Failed to delete allocation.");
       }
       await fetchRows();
     } catch (e) {
@@ -306,6 +367,14 @@ const TransactionAllocations = ({ txId, costDetailOptions = [] }) => {
                     })`
                   : `CostDetail #${r.costDetailId}`;
               })()}
+              rowError={rowErrorsById[r.id] || null}
+              clearRowError={() =>
+                setRowErrorsById((prev) => {
+                  const next = { ...prev };
+                  delete next[r.id];
+                  return next;
+                })
+              }
               onSave={(patch) => onInlineUpdate(r, patch)}
               onDelete={() => onDelete(r.id)}
             />
@@ -316,7 +385,14 @@ const TransactionAllocations = ({ txId, costDetailOptions = [] }) => {
   );
 };
 
-const AllocationRow = ({ row, label, onSave, onDelete }) => {
+const AllocationRow = ({
+  row,
+  label,
+  onSave,
+  onDelete,
+  rowError,
+  clearRowError,
+}) => {
   const [plannedAmount, setPlannedAmount] = useState(row.plannedAmount ?? "");
   const [note, setNote] = useState(row.note ?? "");
 
@@ -325,18 +401,32 @@ const AllocationRow = ({ row, label, onSave, onDelete }) => {
     setNote(row.note ?? "");
   }, [row.id, row.plannedAmount, row.note]);
 
+  const plannedError = rowError?.fieldErrors?.plannedAmount || "";
+
   return (
     <div className={styles.trow}>
       <div className={styles.cdLabel}>{label}</div>
 
       <div>
         <input
-          className={styles.textInput}
+          className={`${styles.textInput} ${
+            plannedError ? styles.inputError : ""
+          }`}
           type="number"
           step="0.01"
           value={plannedAmount}
-          onChange={(e) => setPlannedAmount(e.target.value)}
+          onChange={(e) => {
+            setPlannedAmount(e.target.value);
+            clearRowError?.();
+          }}
         />
+        {plannedError ? (
+          <div className={styles.fieldError}>{plannedError}</div>
+        ) : null}
+
+        {rowError?.message ? (
+          <div className={styles.rowError}>{rowError.message}</div>
+        ) : null}
       </div>
 
       <div>
@@ -344,7 +434,10 @@ const AllocationRow = ({ row, label, onSave, onDelete }) => {
           className={styles.textInput}
           type="text"
           value={note}
-          onChange={(e) => setNote(e.target.value)}
+          onChange={(e) => {
+            setNote(e.target.value);
+            clearRowError?.();
+          }}
         />
       </div>
 

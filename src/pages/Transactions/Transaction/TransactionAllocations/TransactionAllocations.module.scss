@@ -198,3 +198,13 @@ $danger: #e74c3c;
   padding: 10px;
   color: #6b7280;
 }
+
+.rowError {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: #b00000;
+}
+
+.inputError {
+  border-color: #b00020 !important;
+}
