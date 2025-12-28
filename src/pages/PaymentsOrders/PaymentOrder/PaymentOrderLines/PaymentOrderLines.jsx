@@ -65,6 +65,16 @@ function normalizeLine(r) {
   };
 }
 
+/**
+ * Creates an Error that also carries fieldErrors for UI placement.
+ */
+function makeApiError(message, fieldErrors = null, status = null) {
+  const err = new Error(message || "Request failed.");
+  err.fieldErrors = fieldErrors;
+  err.status = status;
+  return err;
+}
+
 const PaymentOrderLines = ({
   paymentOrderId,
   txOptions = [],
@@ -91,7 +101,7 @@ const PaymentOrderLines = ({
   const [isLocked, setIsLocked] = useState(false);
   const [lockMessage, setLockMessage] = useState("");
 
-  // draft create row
+  // create-row (draft) state
   const [draft, setDraft] = useState({
     transactionId: "",
     organizationId: "",
@@ -101,14 +111,25 @@ const PaymentOrderLines = ({
     memo: "",
   });
 
+  // ✅ only for CREATE row
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
+
+  // ✅ NEW: row-scoped errors for inline updates, keyed by rowId
+  // { [rowId]: { message: string, fieldErrors: {amount?: string, ...} } }
+  const [rowErrorsById, setRowErrorsById] = useState({});
 
   const fetchRows = useCallback(async () => {
     if (!paymentOrderId) return;
     setLoading(true);
+
+    // Only clear create errors globally
     setFormError("");
     setFieldErrors({});
+
+    // Clear row errors when reloading (optional; usually fine)
+    setRowErrorsById({});
+
     setIsLocked(false);
     setLockMessage("");
 
@@ -159,7 +180,6 @@ const PaymentOrderLines = ({
 
     if (!res.ok) {
       const data = await safeParseJsonResponse(res);
-      if (data?.fieldErrors) setFieldErrors(data.fieldErrors);
 
       if (isLockedResponse(res, data)) {
         setIsLocked(true);
@@ -169,12 +189,15 @@ const PaymentOrderLines = ({
         );
       }
 
+      // create form uses global fieldErrors
+      if (data?.fieldErrors) setFieldErrors(data.fieldErrors);
+
       const msg =
         data?.message ||
         (res.status === 409 ? "Conflict: payment order is locked." : null) ||
         "Failed to create line.";
 
-      throw new Error(msg);
+      throw makeApiError(msg, data?.fieldErrors || null, res.status);
     }
 
     return await res.json();
@@ -189,7 +212,6 @@ const PaymentOrderLines = ({
 
     if (!res.ok) {
       const data = await safeParseJsonResponse(res);
-      if (data?.fieldErrors) setFieldErrors(data.fieldErrors);
 
       if (isLockedResponse(res, data)) {
         setIsLocked(true);
@@ -204,7 +226,8 @@ const PaymentOrderLines = ({
         (res.status === 409 ? "Conflict: payment order is locked." : null) ||
         "Failed to update line.";
 
-      throw new Error(msg);
+      // IMPORTANT: don't set global fieldErrors here
+      throw makeApiError(msg, data?.fieldErrors || null, res.status);
     }
 
     return await res.json();
@@ -288,8 +311,12 @@ const PaymentOrderLines = ({
   const onInlineSave = async (rowId, patch) => {
     if (isLocked) return;
 
-    setFormError("");
-    setFieldErrors({});
+    // clear only this row’s error
+    setRowErrorsById((prev) => {
+      const next = { ...prev };
+      delete next[rowId];
+      return next;
+    });
 
     const payload = {
       paymentOrderId: Number(paymentOrderId),
@@ -318,16 +345,26 @@ const PaymentOrderLines = ({
       memo: patch.memo ?? null,
     };
 
+    // keep simple client-side guards per-row (put them into row error too)
+    const localFe = {};
     if (
       payload.amount == null ||
       !Number.isFinite(payload.amount) ||
       payload.amount <= 0
     ) {
-      setFormError("Amount must be a number > 0.");
-      return;
+      localFe.amount = "Amount must be a number > 0.";
     }
     if (!payload.organizationId) {
-      setFormError("Organization is required.");
+      localFe.organizationId = "Organization is required.";
+    }
+    if (Object.keys(localFe).length) {
+      setRowErrorsById((prev) => ({
+        ...prev,
+        [rowId]: {
+          message: "Please fix the highlighted fields.",
+          fieldErrors: localFe,
+        },
+      }));
       return;
     }
 
@@ -336,7 +373,15 @@ const PaymentOrderLines = ({
       await fetchRows();
     } catch (e) {
       console.error(e);
-      setFormError(e.message || "Failed to update line.");
+
+      // ✅ Put backend message onto this row
+      setRowErrorsById((prev) => ({
+        ...prev,
+        [rowId]: {
+          message: e.message || "Failed to update line.",
+          fieldErrors: e.fieldErrors || null,
+        },
+      }));
     }
   };
 
@@ -346,6 +391,13 @@ const PaymentOrderLines = ({
 
     setFormError("");
     setFieldErrors({});
+
+    // clear row error if any
+    setRowErrorsById((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
 
     try {
       await apiDelete(id);
@@ -388,6 +440,7 @@ const PaymentOrderLines = ({
         </div>
       )}
 
+      {/* keep page-level banner for fetch/create/delete errors */}
       {formError && (
         <div className={styles.errorBanner}>
           <FiAlertCircle />
@@ -552,6 +605,14 @@ const PaymentOrderLines = ({
               currencyOptions={currencyOptions}
               costDetailOptions={costDetailOptions}
               locked={isLocked}
+              rowError={rowErrorsById[r.id] || null}
+              clearRowError={() =>
+                setRowErrorsById((prev) => {
+                  const next = { ...prev };
+                  delete next[r.id];
+                  return next;
+                })
+              }
               onSave={(patch) => onInlineSave(r.id, patch)}
               onDelete={() => onDelete(r.id)}
             />
@@ -571,6 +632,8 @@ const LineRow = ({
   locked = false,
   onSave,
   onDelete,
+  rowError,
+  clearRowError,
 }) => {
   const [transactionId, setTransactionId] = useState(row.transactionId ?? "");
   const [organizationId, setOrganizationId] = useState(
@@ -598,13 +661,19 @@ const LineRow = ({
     row.memo,
   ]);
 
+  const amountError = rowError?.fieldErrors?.amount || "";
+  const orgError = rowError?.fieldErrors?.organizationId || "";
+
   return (
     <div className={styles.trow}>
       <div>
         <select
           value={transactionId}
           disabled={locked}
-          onChange={(e) => setTransactionId(e.target.value)}
+          onChange={(e) => {
+            setTransactionId(e.target.value);
+            clearRowError?.();
+          }}
           className={styles.input}
         >
           <option value="">(header)</option>
@@ -620,8 +689,11 @@ const LineRow = ({
         <select
           value={organizationId}
           disabled={locked}
-          onChange={(e) => setOrganizationId(e.target.value)}
-          className={styles.input}
+          onChange={(e) => {
+            setOrganizationId(e.target.value);
+            clearRowError?.();
+          }}
+          className={`${styles.input} ${orgError ? styles.inputError : ""}`}
         >
           <option value="">Select…</option>
           {orgOptions.map((o) => (
@@ -630,13 +702,17 @@ const LineRow = ({
             </option>
           ))}
         </select>
+        {orgError ? <div className={styles.fieldError}>{orgError}</div> : null}
       </div>
 
       <div>
         <select
           value={costDetailId}
           disabled={locked}
-          onChange={(e) => setCostDetailId(e.target.value)}
+          onChange={(e) => {
+            setCostDetailId(e.target.value);
+            clearRowError?.();
+          }}
           className={styles.input}
         >
           <option value="">(none)</option>
@@ -652,7 +728,10 @@ const LineRow = ({
         <select
           value={currencyId}
           disabled={locked}
-          onChange={(e) => setCurrencyId(e.target.value)}
+          onChange={(e) => {
+            setCurrencyId(e.target.value);
+            clearRowError?.();
+          }}
           className={styles.input}
         >
           <option value="">(none)</option>
@@ -670,9 +749,20 @@ const LineRow = ({
           step="0.01"
           value={amount}
           disabled={locked}
-          onChange={(e) => setAmount(e.target.value)}
-          className={styles.input}
+          onChange={(e) => {
+            setAmount(e.target.value);
+            clearRowError?.();
+          }}
+          className={`${styles.input} ${amountError ? styles.inputError : ""}`}
         />
+        {amountError ? (
+          <div className={styles.fieldError}>{amountError}</div>
+        ) : null}
+
+        {/* Optional: show general backend message for the row */}
+        {rowError?.message ? (
+          <div className={styles.rowError}>{rowError.message}</div>
+        ) : null}
       </div>
 
       <div>
@@ -680,7 +770,10 @@ const LineRow = ({
           type="text"
           value={memo}
           disabled={locked}
-          onChange={(e) => setMemo(e.target.value)}
+          onChange={(e) => {
+            setMemo(e.target.value);
+            clearRowError?.();
+          }}
           className={styles.input}
         />
       </div>
