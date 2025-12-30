@@ -16,17 +16,13 @@ const BASE_URL = "http://localhost:8080";
 const blankTx = {
   organizationId: "",
   projectId: "",
+  budgetId: "", // ✅ NEW
   financierOrganizationId: "",
   transactionStatusId: "",
   appliedForAmount: "",
-  appliedForExchangeRateId: "",
-  firstShareSEKAmount: "",
   firstShareAmount: "",
   approvedAmount: "",
-  approvedAmountCurrencyId: "",
-  approvedAmountExchangeRateId: "",
   ownContribution: "",
-  secondShareAmountSEK: "",
   secondShareAmount: "",
   datePlanned: "",
   okStatus: "",
@@ -36,42 +32,21 @@ const headerLabels = [
   "Actions",
   "Org",
   "Project",
+  "Budget", // ✅ NEW
   "Financier",
   "Status",
   "Applied Amt",
-  "Applied FX",
-  "1st SEK",
-  "1st Orig",
+  "1st Share",
   "Approved Amt",
-  "Approved Curr",
-  "Approved FX",
-  "2nd SEK",
-  "2nd Orig",
+  "2nd Share",
   "Own Contrib",
   "Date Planned",
   "OK Status",
 ];
 
 const BASE_COL_WIDTHS = [
-  160, 160, 220, 180, 160, 120, 140, 120, 120, 140, 120, 140, 120, 120, 110,
-  170, 100,
+  160, 160, 220, 260, 180, 160, 120, 120, 140, 120, 110, 170, 100,
 ];
-
-const fetchCurrencies = async (token) => {
-  const response = await fetch(`${BASE_URL}/api/currencies/active`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!response.ok) throw new Error("Failed to fetch currencies");
-  return await response.json();
-};
-
-const fetchExchangeRates = async (token) => {
-  const response = await fetch(`${BASE_URL}/api/exchange-rates/active`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!response.ok) throw new Error("Failed to fetch exchange rates");
-  return await response.json();
-};
 
 const Transactions = ({ refreshTrigger }) => {
   const { selectedProjectId } = useContext(ProjectContext);
@@ -85,11 +60,10 @@ const Transactions = ({ refreshTrigger }) => {
   const [orgOptions, setOrgOptions] = useState([]);
   const [projectOptions, setProjectOptions] = useState([]);
   const [statusOptions, setStatusOptions] = useState([]);
-  const [fxOptions, setFxOptions] = useState([]);
-  const [currencies, setCurrencies] = useState([]);
+  const [budgetOptions, setBudgetOptions] = useState([]); // ✅ NEW
   const [costDetailOptions, setCostDetailOptions] = useState([]);
 
-  // UI (removed compact functionality)
+  // UI
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [visibleCols, setVisibleCols] = useState(() =>
     Array(headerLabels.length).fill(true)
@@ -151,40 +125,30 @@ const Transactions = ({ refreshTrigger }) => {
   // dropdowns
   useEffect(() => {
     let cancelled = false;
-    const token = localStorage.getItem("authToken");
 
     (async () => {
       try {
-        const [orgRes, projRes, statRes, currenciesData, fxData] =
-          await Promise.all([
-            fetch(`${BASE_URL}/api/organizations/active/options`, {
-              headers: authHeaders,
-            }),
-            fetch(`${BASE_URL}/api/projects/ids-names`, {
-              headers: authHeaders,
-            }),
-            fetch(`${BASE_URL}/api/transaction-statuses/active`, {
-              headers: authHeaders,
-            }),
-            fetchCurrencies(token),
-            fetchExchangeRates(token),
-          ]);
+        const [orgRes, projRes, statRes] = await Promise.all([
+          fetch(`${BASE_URL}/api/organizations/active/options`, {
+            headers: authHeaders,
+          }),
+          fetch(`${BASE_URL}/api/projects/ids-names`, { headers: authHeaders }),
+          fetch(`${BASE_URL}/api/transaction-statuses/active`, {
+            headers: authHeaders,
+          }),
+        ]);
 
         if (cancelled) return;
 
         setOrgOptions(orgRes.ok ? await orgRes.json() : []);
         setProjectOptions(projRes.ok ? await projRes.json() : []);
         setStatusOptions(statRes.ok ? await statRes.json() : []);
-        setCurrencies(Array.isArray(currenciesData) ? currenciesData : []);
-        setFxOptions(Array.isArray(fxData) ? fxData : []);
       } catch (e) {
         if (!cancelled) {
           console.error("Error fetching dropdown options:", e);
           setOrgOptions([]);
           setProjectOptions([]);
           setStatusOptions([]);
-          setFxOptions([]);
-          setCurrencies([]);
         }
       }
     })();
@@ -207,13 +171,14 @@ const Transactions = ({ refreshTrigger }) => {
     }
   }, [editingId]);
 
-  // cost detail options
+  // ✅ budgets + cost detail options (same effect)
   useEffect(() => {
     let cancelled = false;
 
     const run = async () => {
       if (!selectedProjectId) {
         setCostDetailOptions([]);
+        setBudgetOptions([]);
         return;
       }
       try {
@@ -226,6 +191,8 @@ const Transactions = ({ refreshTrigger }) => {
         );
         const budgets = bRes.ok ? await bRes.json() : [];
         const budgetList = Array.isArray(budgets) ? budgets : [];
+
+        if (!cancelled) setBudgetOptions(budgetList);
 
         const all = [];
         for (const b of budgetList) {
@@ -240,8 +207,11 @@ const Transactions = ({ refreshTrigger }) => {
 
         if (!cancelled) setCostDetailOptions(all);
       } catch (e) {
-        console.error("Failed to load cost detail options:", e);
-        if (!cancelled) setCostDetailOptions([]);
+        console.error("Failed to load budgets/cost detail options:", e);
+        if (!cancelled) {
+          setCostDetailOptions([]);
+          setBudgetOptions([]);
+        }
       }
     };
 
@@ -260,17 +230,13 @@ const Transactions = ({ refreshTrigger }) => {
       [tx.id]: {
         organizationId: tx.organizationId,
         projectId: tx.projectId,
+        budgetId: tx.budgetId, // ✅ NEW
         financierOrganizationId: tx.financierOrganizationId,
         transactionStatusId: tx.transactionStatusId,
         appliedForAmount: tx.appliedForAmount,
-        appliedForExchangeRateId: tx.appliedForExchangeRateId,
-        firstShareSEKAmount: tx.firstShareSEKAmount,
         firstShareAmount: tx.firstShareAmount,
         approvedAmount: tx.approvedAmount,
-        approvedAmountCurrencyId: tx.approvedAmountCurrencyId,
-        approvedAmountExchangeRateId: tx.approvedAmountExchangeRateId,
         ownContribution: tx.ownContribution,
-        secondShareAmountSEK: tx.secondShareAmountSEK,
         secondShareAmount: tx.secondShareAmount,
         datePlanned: tx.datePlanned,
         okStatus: tx.okStatus,
@@ -289,11 +255,15 @@ const Transactions = ({ refreshTrigger }) => {
     setEditingId("new");
     setExpandedTxId(null);
 
+    // If there is exactly one budget for the project, preselect it
+    const autoBudgetId = budgetOptions.length === 1 ? budgetOptions[0].id : "";
+
     setEditedValues((prev) => ({
       ...prev,
       new: {
         ...blankTx,
         projectId: selectedProjectId || "",
+        budgetId: autoBudgetId,
       },
     }));
 
@@ -333,6 +303,7 @@ const Transactions = ({ refreshTrigger }) => {
         ? Number(values.organizationId)
         : null,
       projectId: effectiveProjectId ? Number(effectiveProjectId) : null,
+      budgetId: values.budgetId ? Number(values.budgetId) : null, // ✅ NEW (required)
       financierOrganizationId: values.financierOrganizationId
         ? Number(values.financierOrganizationId)
         : null,
@@ -342,28 +313,13 @@ const Transactions = ({ refreshTrigger }) => {
       appliedForAmount: values.appliedForAmount
         ? Number(values.appliedForAmount)
         : null,
-      appliedForExchangeRateId: values.appliedForExchangeRateId
-        ? Number(values.appliedForExchangeRateId)
-        : null,
-      firstShareSEKAmount: values.firstShareSEKAmount
-        ? Number(values.firstShareSEKAmount)
-        : null,
       firstShareAmount: values.firstShareAmount
         ? Number(values.firstShareAmount)
         : null,
       approvedAmount: values.approvedAmount
         ? Number(values.approvedAmount)
         : null,
-      approvedAmountCurrencyId: values.approvedAmountCurrencyId
-        ? Number(values.approvedAmountCurrencyId)
-        : null,
-      approvedAmountExchangeRateId: values.approvedAmountExchangeRateId
-        ? Number(values.approvedAmountExchangeRateId)
-        : null,
       ownContribution: values.ownContribution || null,
-      secondShareAmountSEK: values.secondShareAmountSEK
-        ? Number(values.secondShareAmountSEK)
-        : null,
       secondShareAmount: values.secondShareAmount
         ? Number(values.secondShareAmount)
         : null,
@@ -473,8 +429,6 @@ const Transactions = ({ refreshTrigger }) => {
           </div>
 
           <div className={styles.headerActions}>
-            {/* ✅ Compact toggle removed */}
-
             <div className={styles.columnsBox}>
               <button
                 type="button"
@@ -568,8 +522,7 @@ const Transactions = ({ refreshTrigger }) => {
                 organizations={orgOptions}
                 projects={projectOptions}
                 statuses={statusOptions}
-                exchangeRates={fxOptions}
-                currencies={currencies}
+                budgets={budgetOptions} // ✅ NEW
                 visibleCols={visibleCols}
                 fieldErrors={fieldErrors[tx.id] || {}}
                 expanded={expandedTxId === tx.id}
@@ -583,7 +536,11 @@ const Transactions = ({ refreshTrigger }) => {
 
           {editingId === "new" && (
             <Transaction
-              tx={{ id: "new", ...blankTx, projectId: selectedProjectId || "" }}
+              tx={{
+                id: "new",
+                ...blankTx,
+                projectId: selectedProjectId || "",
+              }}
               isEditing
               editedValues={editedValues.new}
               onChange={onChange}
@@ -593,8 +550,7 @@ const Transactions = ({ refreshTrigger }) => {
               organizations={orgOptions}
               projects={projectOptions}
               statuses={statusOptions}
-              exchangeRates={fxOptions}
-              currencies={currencies}
+              budgets={budgetOptions} // ✅ NEW
               visibleCols={visibleCols}
               isEven={false}
               fieldErrors={fieldErrors.new || {}}

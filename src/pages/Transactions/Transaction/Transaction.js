@@ -37,8 +37,7 @@ const Transaction = ({
   organizations = [],
   projects = [],
   statuses = [],
-  exchangeRates = [],
-  currencies = [],
+  budgets = [],
   visibleCols = [],
   isEven = false,
   fieldErrors = {},
@@ -161,76 +160,28 @@ const Transaction = ({
     </>
   );
 
-  const findCurrency = (currencyId) => {
-    if (currencyId == null) return undefined;
-    const numericId =
-      typeof currencyId === "string" ? Number(currencyId) : currencyId;
-    return currencies.find((c) => c.id === numericId);
+  const budgetLabel = (b) => {
+    if (!b) return "-";
+    const desc = b.budgetDescription || b.description || "";
+    return desc ? `${b.id} — ${desc}` : String(b.id);
   };
 
-  const currencyLabelById = (currencyId) => {
-    if (!currencyId) return "-";
-    const cur = findCurrency(currencyId);
-    return cur ? cur.name : currencyId;
-  };
-
-  const selectCurrency = (field) => (
+  const selectBudget = () => (
     <>
       <select
-        value={ev[field] ?? tx[field] ?? ""}
-        onChange={(e) => onChange(field, toNum(e.target.value))}
+        value={ev.budgetId ?? tx.budgetId ?? ""}
+        onChange={(e) => onChange("budgetId", toNum(e.target.value))}
         onBlur={autoSave ? submit : undefined}
-        className={inputClass(field)}
+        className={inputClass("budgetId")}
       >
-        <option value="">Select currency</option>
-        {currencies.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.name} — {c.description}
+        <option value="">Select budget</option>
+        {budgets.map((b) => (
+          <option key={b.id} value={b.id}>
+            {budgetLabel(b)}
           </option>
         ))}
       </select>
-      <FieldError name={field} />
-    </>
-  );
-
-  const formatRateLabel = (r) => {
-    if (!r) return "-";
-    const baseCur = findCurrency(r.baseCurrencyId);
-    const quoteCur = findCurrency(r.quoteCurrencyId);
-    const baseName = baseCur?.name || `CUR#${r.baseCurrencyId}`;
-    const quoteName = quoteCur?.name || `CUR#${r.quoteCurrencyId}`;
-    const rate = typeof r.rate === "number" ? r.rate : Number(r.rate);
-    if (!Number.isFinite(rate)) return `1 ${baseName} → ? ${quoteName}`;
-    return `1 ${baseName} → ${rate} ${quoteName}`;
-  };
-
-  const fxLabelByFxId = (fxId) => {
-    if (!fxId) return "-";
-    const numericId = typeof fxId === "string" ? Number(fxId) : fxId;
-    const r = exchangeRates.find((er) => {
-      const erId = typeof er.id === "string" ? Number(er.id) : er.id;
-      return erId === numericId;
-    });
-    if (!r) return fxId;
-    return formatRateLabel(r);
-  };
-
-  const selectFx = (field) => (
-    <>
-      <select
-        value={ev[field] ?? tx[field] ?? ""}
-        onChange={(e) => onChange(field, toNum(e.target.value))}
-        onBlur={autoSave ? submit : undefined}
-        className={inputClass(field)}
-      >
-        <option value="">Select FX</option>
-        {exchangeRates.map((r) => (
-          <option key={r.id} value={r.id}>
-            {formatRateLabel(r)}
-          </option>
-        ))}
-      </select>
-      <FieldError name={field} />
+      <FieldError name="budgetId" />
     </>
   );
 
@@ -240,6 +191,10 @@ const Transaction = ({
     projects.find((p) => p.id === id)?.projectName || (id ?? "-");
   const statusName = (id) =>
     statuses.find((s) => s.id === id)?.transactionStatusName || (id ?? "-");
+  const budgetName = (id) =>
+    budgets.find((b) => b.id === id)
+      ? budgetLabel(budgets.find((b) => b.id === id))
+      : id ?? "-";
 
   const inputDate = (
     <>
@@ -346,72 +301,52 @@ const Transaction = ({
         <Cell className={hc(2)}>
           {isEditing ? selectProject() : projectName(tx.projectId)}
         </Cell>
+
+        {/* ✅ NEW */}
         <Cell className={hc(3)}>
+          {isEditing ? selectBudget() : budgetName(tx.budgetId)}
+        </Cell>
+
+        <Cell className={hc(4)}>
           {isEditing
             ? selectOrg("financierOrganizationId")
             : orgName(tx.financierOrganizationId)}
         </Cell>
-        <Cell className={hc(4)}>
+        <Cell className={hc(5)}>
           {isEditing ? selectStatus() : statusName(tx.transactionStatusId)}
         </Cell>
 
-        <Cell className={hc(5)}>
-          {isEditing
-            ? inputNum("appliedForAmount", "0.01")
-            : tx.appliedForAmount ?? "-"}
-        </Cell>
         <Cell className={hc(6)}>
           {isEditing
-            ? selectFx("appliedForExchangeRateId")
-            : fxLabelByFxId(tx.appliedForExchangeRateId)}
+            ? inputNum("appliedForAmount", "1")
+            : tx.appliedForAmount ?? "-"}
         </Cell>
 
         <Cell className={hc(7)}>
-          {isEditing
-            ? inputNum("firstShareSEKAmount", "0.01")
-            : tx.firstShareSEKAmount ?? "-"}
-        </Cell>
-        <Cell className={hc(8)}>
           {isEditing
             ? inputNum("firstShareAmount", "0.01")
             : tx.firstShareAmount ?? "-"}
         </Cell>
 
-        <Cell className={hc(9)}>
+        <Cell className={hc(8)}>
           {isEditing
-            ? inputNum("approvedAmount", "0.01")
+            ? inputNum("approvedAmount", "1")
             : tx.approvedAmount ?? "-"}
         </Cell>
 
-        <Cell className={hc(10)}>
-          {isEditing
-            ? selectCurrency("approvedAmountCurrencyId")
-            : currencyLabelById(tx.approvedAmountCurrencyId)}
-        </Cell>
-
-        <Cell className={hc(11)}>
-          {isEditing
-            ? selectFx("approvedAmountExchangeRateId")
-            : fxLabelByFxId(tx.approvedAmountExchangeRateId)}
-        </Cell>
-
-        <Cell className={hc(12)}>
-          {isEditing
-            ? inputNum("secondShareAmountSEK", "0.01")
-            : tx.secondShareAmountSEK ?? "-"}
-        </Cell>
-        <Cell className={hc(13)}>
+        <Cell className={hc(9)}>
           {isEditing
             ? inputNum("secondShareAmount", "0.01")
             : tx.secondShareAmount ?? "-"}
         </Cell>
 
-        <Cell className={hc(14)}>
+        <Cell className={hc(10)}>
           {isEditing
             ? selectYesNo("ownContribution")
             : tx.ownContribution ?? "-"}
         </Cell>
-        <Cell className={hc(15)}>
+
+        <Cell className={hc(11)}>
           {isEditing
             ? inputDate
             : tx.datePlanned
@@ -419,7 +354,7 @@ const Transaction = ({
             : "-"}
         </Cell>
 
-        <Cell className={hc(16)}>
+        <Cell className={hc(12)}>
           {isEditing ? selectYesNo("okStatus") : tx.okStatus ?? "-"}
         </Cell>
       </div>
@@ -429,6 +364,7 @@ const Transaction = ({
           <TransactionAllocations
             txId={tx.id}
             costDetailOptions={costDetailOptions}
+            budgetOptions={budgets} // ✅ add this
           />
         </div>
       )}

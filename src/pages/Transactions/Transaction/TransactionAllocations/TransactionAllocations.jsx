@@ -33,7 +33,17 @@ function makeApiError(message, fieldErrors = null, status = null) {
   return err;
 }
 
-const TransactionAllocations = ({ txId, costDetailOptions = [] }) => {
+/**
+ * NEW optional props:
+ * - budgetOptions: list of budgets for the selected project (from Transactions page)
+ * - fallbackCurrencyLabel: optional string if you want to pass a label directly
+ */
+const TransactionAllocations = ({
+  txId,
+  costDetailOptions = [],
+  budgetOptions = [],
+  fallbackCurrencyLabel = "",
+}) => {
   const token = useMemo(() => localStorage.getItem("authToken"), []);
   const authHeaders = useMemo(
     () =>
@@ -55,23 +65,80 @@ const TransactionAllocations = ({ txId, costDetailOptions = [] }) => {
     note: "",
   });
 
-  // ✅ ONLY for Add form
+  // add-form errors
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
 
-  // ✅ NEW: row-scoped errors for inline save
-  // { [allocationId]: { message: string, fieldErrors?: {...} } }
+  // row-scoped errors
   const [rowErrorsById, setRowErrorsById] = useState({});
+
+  // ✅ NEW: transaction context (for cap + budgetId)
+  const [txMeta, setTxMeta] = useState({
+    approvedAmount: null,
+    budgetId: null,
+    projectId: null,
+  });
+
+  const fetchTxMeta = useCallback(async () => {
+    if (!txId) return;
+    try {
+      const res = await fetch(`${BASE_URL}/api/transactions/${txId}`, {
+        headers: authHeaders,
+      });
+      if (!res.ok) return;
+
+      const data = await res.json().catch(() => null);
+      if (!data) return;
+
+      setTxMeta({
+        approvedAmount:
+          data.approvedAmount === "" || data.approvedAmount == null
+            ? null
+            : Number(data.approvedAmount),
+        budgetId: data.budgetId ?? null,
+        projectId: data.projectId ?? null,
+      });
+    } catch (e) {
+      // non-fatal
+      console.warn("Failed to fetch transaction meta:", e);
+    }
+  }, [txId, authHeaders]);
+
+  const currencyLabel = useMemo(() => {
+    // 1) explicit fallback if provided
+    if (fallbackCurrencyLabel) return fallbackCurrencyLabel;
+
+    // 2) try from budgetOptions by txMeta.budgetId
+    const bId =
+      typeof txMeta.budgetId === "string"
+        ? Number(txMeta.budgetId)
+        : txMeta.budgetId;
+
+    if (bId && Array.isArray(budgetOptions) && budgetOptions.length) {
+      const b = budgetOptions.find((x) => Number(x.id) === Number(bId));
+      if (b) {
+        // be defensive: different DTOs might have different shapes
+        const name =
+          b?.localCurrency?.name ||
+          b?.localCurrencyName ||
+          b?.localCurrencyCode ||
+          b?.localCurrencyId ||
+          "";
+        if (name) return String(name);
+      }
+    }
+
+    return ""; // unknown is ok
+  }, [fallbackCurrencyLabel, budgetOptions, txMeta.budgetId]);
+
+  const currencySuffix = currencyLabel ? ` ${currencyLabel}` : "";
 
   const fetchRows = useCallback(async () => {
     if (!txId) return;
     setLoading(true);
 
-    // keep add-form errors separate
     setFormError("");
     setFieldErrors({});
-
-    // optional: clear row errors on reload
     setRowErrorsById({});
 
     try {
@@ -95,8 +162,18 @@ const TransactionAllocations = ({ txId, costDetailOptions = [] }) => {
   }, [txId, authHeaders]);
 
   useEffect(() => {
+    fetchTxMeta();
     fetchRows();
-  }, [fetchRows]);
+  }, [fetchTxMeta, fetchRows]);
+
+  const allocatedTotal = useMemo(() => {
+    return rows.reduce((acc, r) => acc + (Number(r.plannedAmount) || 0), 0);
+  }, [rows]);
+
+  const approvedAmountNum =
+    txMeta.approvedAmount == null || !Number.isFinite(txMeta.approvedAmount)
+      ? null
+      : Number(txMeta.approvedAmount);
 
   const upsert = async ({ costDetailId, plannedAmount, note }) => {
     const payload = {
@@ -148,16 +225,15 @@ const TransactionAllocations = ({ txId, costDetailOptions = [] }) => {
 
       setDraft({ costDetailId: "", plannedAmount: "", note: "" });
       await fetchRows();
+      await fetchTxMeta();
     } catch (e) {
       console.error(e);
-      // Add-form: show errors here
       if (e.fieldErrors) setFieldErrors(e.fieldErrors);
       setFormError(e.message || "Failed to add allocation.");
     }
   };
 
   const onInlineUpdate = async (row, patch) => {
-    // clear only this row's error
     setRowErrorsById((prev) => {
       const next = { ...prev };
       delete next[row.id];
@@ -169,7 +245,6 @@ const TransactionAllocations = ({ txId, costDetailOptions = [] }) => {
         ? null
         : Number(patch.plannedAmount);
 
-    // local row validation -> row error (not global banner)
     const localFe = {};
     if (planned == null || !Number.isFinite(planned) || planned < 0) {
       localFe.plannedAmount = "Planned amount must be a number >= 0.";
@@ -192,9 +267,9 @@ const TransactionAllocations = ({ txId, costDetailOptions = [] }) => {
         note: patch.note ?? row.note ?? "",
       });
       await fetchRows();
+      await fetchTxMeta();
     } catch (e) {
       console.error(e);
-      // ✅ Inline row: put backend error inside the row
       setRowErrorsById((prev) => ({
         ...prev,
         [row.id]: {
@@ -210,7 +285,6 @@ const TransactionAllocations = ({ txId, costDetailOptions = [] }) => {
 
     setFormError("");
 
-    // clear row error if any
     setRowErrorsById((prev) => {
       const next = { ...prev };
       delete next[id];
@@ -227,11 +301,29 @@ const TransactionAllocations = ({ txId, costDetailOptions = [] }) => {
         throw new Error(data?.message || "Failed to delete allocation.");
       }
       await fetchRows();
+      await fetchTxMeta();
     } catch (e) {
       console.error(e);
       setFormError(e.message || "Failed to delete allocation.");
     }
   };
+
+  const capHint = useMemo(() => {
+    if (approvedAmountNum == null) return null;
+    const remaining = approvedAmountNum - allocatedTotal;
+    const ok = remaining >= 0;
+
+    const fmt = (n) => (Number.isFinite(n) ? Number(n).toFixed(2) : String(n));
+
+    return {
+      ok,
+      text: `Allocated: ${fmt(
+        allocatedTotal
+      )}${currencySuffix} / Approved: ${fmt(
+        approvedAmountNum
+      )}${currencySuffix} (Remaining: ${fmt(remaining)}${currencySuffix})`,
+    };
+  }, [approvedAmountNum, allocatedTotal, currencySuffix]);
 
   return (
     <div className={styles.wrap}>
@@ -240,13 +332,31 @@ const TransactionAllocations = ({ txId, costDetailOptions = [] }) => {
           <div className={styles.title}>Planned allocations</div>
           <div className={styles.sub}>
             Transaction #{txId} → split planned amounts by cost line
+            {currencyLabel ? (
+              <span>
+                {" "}
+                • Amounts in <strong>{currencyLabel}</strong>
+              </span>
+            ) : null}
           </div>
+
+          {capHint ? (
+            <div
+              className={`${styles.sub} ${capHint.ok ? "" : styles.inputError}`}
+              style={{ marginTop: 6 }}
+            >
+              {capHint.text}
+            </div>
+          ) : null}
         </div>
 
         <button
           type="button"
           className={styles.iconPillBtn}
-          onClick={fetchRows}
+          onClick={async () => {
+            await fetchTxMeta();
+            await fetchRows();
+          }}
           disabled={loading}
           title="Refresh allocations"
         >
@@ -289,7 +399,9 @@ const TransactionAllocations = ({ txId, costDetailOptions = [] }) => {
           </div>
 
           <div className={styles.field}>
-            <label>Planned amount</label>
+            <label>
+              Planned amount{currencyLabel ? ` (${currencyLabel})` : ""}
+            </label>
             <input
               type="number"
               step="0.01"
@@ -337,7 +449,7 @@ const TransactionAllocations = ({ txId, costDetailOptions = [] }) => {
       <div className={styles.table}>
         <div className={styles.thead}>
           <div>Cost detail</div>
-          <div>Planned</div>
+          <div>Planned{currencyLabel ? ` (${currencyLabel})` : ""}</div>
           <div>Note</div>
           <div />
         </div>
@@ -367,6 +479,7 @@ const TransactionAllocations = ({ txId, costDetailOptions = [] }) => {
                     })`
                   : `CostDetail #${r.costDetailId}`;
               })()}
+              currencyLabel={currencyLabel}
               rowError={rowErrorsById[r.id] || null}
               clearRowError={() =>
                 setRowErrorsById((prev) => {
@@ -392,6 +505,7 @@ const AllocationRow = ({
   onDelete,
   rowError,
   clearRowError,
+  currencyLabel = "",
 }) => {
   const [plannedAmount, setPlannedAmount] = useState(row.plannedAmount ?? "");
   const [note, setNote] = useState(row.note ?? "");
@@ -408,18 +522,26 @@ const AllocationRow = ({
       <div className={styles.cdLabel}>{label}</div>
 
       <div>
-        <input
-          className={`${styles.textInput} ${
-            plannedError ? styles.inputError : ""
-          }`}
-          type="number"
-          step="0.01"
-          value={plannedAmount}
-          onChange={(e) => {
-            setPlannedAmount(e.target.value);
-            clearRowError?.();
-          }}
-        />
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <input
+            className={`${styles.textInput} ${
+              plannedError ? styles.inputError : ""
+            }`}
+            type="number"
+            step="0.01"
+            value={plannedAmount}
+            onChange={(e) => {
+              setPlannedAmount(e.target.value);
+              clearRowError?.();
+            }}
+          />
+          {currencyLabel ? (
+            <span style={{ opacity: 0.7, whiteSpace: "nowrap" }}>
+              {currencyLabel}
+            </span>
+          ) : null}
+        </div>
+
         {plannedError ? (
           <div className={styles.fieldError}>{plannedError}</div>
         ) : null}
