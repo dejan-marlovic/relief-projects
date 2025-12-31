@@ -9,6 +9,7 @@ import React, {
 import { ProjectContext } from "../../context/ProjectContext";
 import SignatureRow from "./Signature/Signature";
 import styles from "./Signatures.module.scss";
+import { FiPlus, FiColumns } from "react-icons/fi";
 
 const BASE_URL = "http://localhost:8080";
 
@@ -30,6 +31,57 @@ const BASE_COL_WIDTHS = [
   200, // Date
 ];
 
+// ---- helpers ----
+async function safeParseJsonResponse(res) {
+  const raw = await res.text().catch(() => "");
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Normalize signature DTO coming from backend.
+ * Handles common variations: id/signatureId, paymentOrderId/paymentOrder etc.
+ */
+function normalizeSignature(s) {
+  if (!s || typeof s !== "object") return null;
+
+  const id = s.id ?? s.signatureId ?? s.signature_id ?? null;
+
+  const signatureStatusId =
+    s.signatureStatusId ??
+    s.signature_status_id ??
+    s.signatureStatus?.id ??
+    s.signatureStatus?.signatureStatusId ??
+    null;
+
+  const employeeId =
+    s.employeeId ??
+    s.employee_id ??
+    s.employee?.id ??
+    s.employee?.employeeId ??
+    null;
+
+  const paymentOrderId =
+    s.paymentOrderId ??
+    s.payment_order_id ??
+    s.paymentOrder?.id ??
+    s.paymentOrder?.paymentOrderId ??
+    null;
+
+  return {
+    id,
+    signatureStatusId,
+    employeeId,
+    paymentOrderId,
+    signature: s.signature ?? "",
+    signatureDate: s.signatureDate ?? s.signature_date ?? null,
+  };
+}
+
 function Signatures() {
   const { selectedProjectId } = useContext(ProjectContext);
 
@@ -43,7 +95,6 @@ function Signatures() {
   const [employeeOptions, setEmployeeOptions] = useState([]);
 
   // UI
-  const [compact, setCompact] = useState(false);
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [visibleCols, setVisibleCols] = useState(() =>
     Array(headerLabels.length).fill(true)
@@ -89,7 +140,12 @@ function Signatures() {
           { headers: authHeaders }
         );
         if (!res.ok) throw new Error(`Failed ${res.status}`);
-        setItems(await res.json());
+
+        const data = await res.json();
+        const arr = Array.isArray(data) ? data : data ? [data] : [];
+        const normalized = arr.map(normalizeSignature).filter(Boolean);
+
+        setItems(normalized);
       } catch (e) {
         console.error(e);
         setItems([]);
@@ -111,7 +167,15 @@ function Signatures() {
         );
         if (!res.ok) throw new Error(`Failed ${res.status}`);
         const data = await res.json();
-        setPoOptions(Array.isArray(data) ? data : data ? [data] : []);
+        const arr = Array.isArray(data) ? data : data ? [data] : [];
+
+        const normalized = arr
+          .map((po) => ({
+            id: po.id ?? po.paymentOrderId ?? po.payment_order_id,
+          }))
+          .filter((x) => x.id != null);
+
+        setPoOptions(normalized);
       } catch (e) {
         console.error(e);
         setPoOptions([]);
@@ -127,14 +191,17 @@ function Signatures() {
       });
       if (!res.ok) throw new Error(`Failed ${res.status}`);
       const data = await res.json();
+
       const normalized = (Array.isArray(data) ? data : []).map((s) => ({
-        id: s.id ?? s.signatureStatusId ?? s.statusId,
+        id: s.id ?? s.signatureStatusId ?? s.signature_status_id,
         label:
           s.signatureStatusName ??
+          s.signature_status_name ??
           s.name ??
           s.statusName ??
-          `Status #${s.id ?? s.signatureStatusId ?? s.statusId}`,
+          `Status #${s.id ?? s.signatureStatusId ?? s.signature_status_id}`,
       }));
+
       setStatusOptions(normalized.filter((x) => x.id != null));
     } catch (e) {
       console.error(e);
@@ -149,12 +216,15 @@ function Signatures() {
       });
       if (!res.ok) throw new Error(`Failed ${res.status}`);
       const data = await res.json();
+
       const normalized = (Array.isArray(data) ? data : []).map((e) => ({
-        id: e.id ?? e.employeeId,
+        id: e.id ?? e.employeeId ?? e.employee_id,
         label:
-          [e.firstName, e.lastName].filter(Boolean).join(" ") ||
-          `Employee #${e.id ?? e.employeeId}`,
+          [e.firstName ?? e.first_name, e.lastName ?? e.last_name]
+            .filter(Boolean)
+            .join(" ") || `Employee #${e.id ?? e.employeeId ?? e.employee_id}`,
       }));
+
       setEmployeeOptions(normalized.filter((x) => x.id != null));
     } catch (e) {
       console.error(e);
@@ -176,7 +246,6 @@ function Signatures() {
     fetchEmployees();
   }, [fetchSignatureStatuses, fetchEmployees]);
 
-  // auto-scroll when "new" row appears
   useEffect(() => {
     if (editingId === "new" && newRowRef.current) {
       newRowRef.current.scrollIntoView({
@@ -260,6 +329,22 @@ function Signatures() {
     setFormError("");
   };
 
+  const validateClientSide = (rowId, v) => {
+    const fe = {};
+    if (!v.signatureStatusId) fe.signatureStatusId = "Status is required.";
+    if (!v.employeeId) fe.employeeId = "Employee is required.";
+    if (!v.paymentOrderId) fe.paymentOrderId = "Payment order is required.";
+    if (!v.signature || !String(v.signature).trim())
+      fe.signature = "Signature is required.";
+
+    if (Object.keys(fe).length > 0) {
+      setFieldErrors((prev) => ({ ...prev, [rowId]: fe }));
+      setFormError("Please fix the highlighted fields.");
+      return false;
+    }
+    return true;
+  };
+
   const save = async () => {
     const id = editingId;
     const v = editedValues[id];
@@ -267,20 +352,18 @@ function Signatures() {
 
     const isCreate = id === "new";
 
-    const payload = {
-      signatureStatusId:
-        v.signatureStatusId !== "" ? Number(v.signatureStatusId) : null,
-      employeeId: v.employeeId !== "" ? Number(v.employeeId) : null,
-      paymentOrderId: v.paymentOrderId !== "" ? Number(v.paymentOrderId) : null,
-      signature: v.signature || "",
-      signatureDate: v.signatureDate || null,
-    };
-
     setFormError("");
-    setFieldErrors((prev) => ({
-      ...prev,
-      [id]: {},
-    }));
+    setFieldErrors((prev) => ({ ...prev, [id]: {} }));
+
+    if (!validateClientSide(id, v)) return;
+
+    const payload = {
+      signatureStatusId: Number(v.signatureStatusId),
+      employeeId: Number(v.employeeId),
+      paymentOrderId: Number(v.paymentOrderId),
+      signature: String(v.signature || "").trim(),
+      signatureDate: v.signatureDate ? v.signatureDate : null,
+    };
 
     try {
       const res = await fetch(
@@ -295,25 +378,19 @@ function Signatures() {
       );
 
       if (!res.ok) {
-        const raw = await res.text().catch(() => "");
-        let data = null;
-        try {
-          data = raw ? JSON.parse(raw) : null;
-        } catch (e) {
-          console.warn("Failed to parse signature error JSON:", e);
+        const data = await safeParseJsonResponse(res);
+
+        if (data?.fieldErrors) {
+          setFieldErrors((prev) => ({ ...prev, [id]: data.fieldErrors }));
         }
 
-        if (data && data.fieldErrors) {
-          setFieldErrors((prev) => ({
-            ...prev,
-            [id]: data.fieldErrors,
-          }));
-        }
-
-        setFormError(
+        const msg =
           data?.message ||
-            `Failed to ${isCreate ? "create" : "update"} signature.`
-        );
+          (res.status === 409
+            ? "Conflict: this item is locked."
+            : `Failed to ${isCreate ? "create" : "update"} signature.`);
+
+        setFormError(msg);
         return;
       }
 
@@ -330,16 +407,30 @@ function Signatures() {
   const remove = async (id) => {
     if (!id) return;
     if (!window.confirm("Delete this signature?")) return;
+
+    setFormError("");
+
     try {
       const res = await fetch(`${BASE_URL}/api/signatures/${id}`, {
         method: "DELETE",
         headers: authHeaders,
       });
-      if (!res.ok) throw new Error("Delete failed");
+
+      if (!res.ok) {
+        const data = await safeParseJsonResponse(res);
+        const msg =
+          data?.message ||
+          (res.status === 409
+            ? "Conflict: this item is locked."
+            : "Delete failed.");
+        setFormError(msg);
+        return;
+      }
+
       await fetchSignatures(selectedProjectId);
     } catch (e) {
       console.error(e);
-      alert("Delete failed.");
+      setFormError("Delete failed.");
     }
   };
 
@@ -350,140 +441,142 @@ function Signatures() {
     return parts.join(" ");
   }, [visibleCols]);
 
+  const subtitle = selectedProjectId
+    ? `Project #${selectedProjectId} • ${items.length} signature${
+        items.length === 1 ? "" : "s"
+      }`
+    : "Select a project to see signatures";
+
   return (
-    <div className={styles.container}>
-      {/* Toolbar */}
-      <div className={styles.toolbar}>
-        <label className={styles.compactToggle}>
-          <input
-            type="checkbox"
-            checked={compact}
-            onChange={(e) => setCompact(e.target.checked)}
-          />
-          <span>Compact mode</span>
-        </label>
+    <div className={styles.page}>
+      <div className={styles.shell}>
+        <div className={styles.pageHeader}>
+          <div className={styles.pageHeaderText}>
+            <h3 className={styles.pageTitle}>Signatures</h3>
+            <p className={styles.pageSubtitle}>{subtitle}</p>
+          </div>
 
-        <div className={styles.columnsBox}>
-          <button
-            className={styles.columnsBtn}
-            onClick={() => setColumnsOpen((v) => !v)}
-          >
-            Columns ▾
-          </button>
-          {columnsOpen && (
-            <div className={styles.columnsPanel}>
-              {headerLabels.map((h, i) => (
-                <label key={h} className={styles.colItem}>
-                  <input
-                    type="checkbox"
-                    checked={visibleCols[i]}
-                    disabled={i === 0}
-                    onChange={() => toggleCol(i)}
-                  />
-                  <span>{h}</span>
-                  {i === 0 && <em className={styles.lockNote}> (locked)</em>}
-                </label>
-              ))}
+          <div className={styles.headerActions}>
+            <div className={styles.columnsBox}>
+              <button
+                className={styles.columnsBtn}
+                onClick={() => setColumnsOpen((v) => !v)}
+                title="Choose visible columns"
+                type="button"
+              >
+                <FiColumns />
+                Columns
+              </button>
+
+              {columnsOpen && (
+                <div className={styles.columnsPanel}>
+                  {headerLabels.map((h, i) => (
+                    <label key={h} className={styles.colItem}>
+                      <input
+                        type="checkbox"
+                        checked={visibleCols[i]}
+                        disabled={i === 0}
+                        onChange={() => toggleCol(i)}
+                      />
+                      <span>{h}</span>
+                      {i === 0 && (
+                        <em className={styles.lockNote}> (locked)</em>
+                      )}
+                    </label>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
 
-      {/* Global error banner */}
-      {formError && <div className={styles.errorBanner}>{formError}</div>}
-
-      {/* Table */}
-      <div
-        className={`${styles.table} ${compact ? styles.compact : ""}`}
-        style={{ ["--sig-grid-cols"]: gridCols }}
-      >
-        {/* Header */}
-        <div className={`${styles.gridRow} ${styles.headerRow}`}>
-          {headerLabels.map((h, i) => (
-            <div
-              key={h}
-              className={`${styles.headerCell}
-                ${i === 0 ? styles.stickyColHeader : ""}
-                ${!visibleCols[i] ? styles.hiddenCol : ""}`}
+            <button
+              className={styles.primaryBtn}
+              onClick={startCreate}
+              disabled={!selectedProjectId || editingId === "new"}
+              title={
+                !selectedProjectId
+                  ? "Select a project first"
+                  : editingId === "new"
+                  ? "Finish the current draft first"
+                  : "Create new signature"
+              }
+              type="button"
             >
-              {h}
-            </div>
-          ))}
+              <FiPlus />
+              New
+            </button>
+          </div>
         </div>
 
-        {/* Body */}
-        {!selectedProjectId ? (
-          <p className={styles.noData}>
-            Select a project to see its signatures.
-          </p>
-        ) : items.length === 0 ? (
-          <p className={styles.noData}>No signatures for this project.</p>
-        ) : (
-          items.map((s, idx) => (
+        {formError && <div className={styles.errorBanner}>{formError}</div>}
+
+        <div className={styles.table} style={{ ["--sig-grid-cols"]: gridCols }}>
+          <div className={`${styles.gridRow} ${styles.headerRow}`}>
+            {headerLabels.map((h, i) => (
+              <div
+                key={h}
+                className={`${styles.headerCell}
+                  ${i === 0 ? styles.stickyColHeader : ""}
+                  ${!visibleCols[i] ? styles.hiddenCol : ""}`}
+              >
+                {h}
+              </div>
+            ))}
+          </div>
+
+          {!selectedProjectId ? (
+            <p className={styles.noData}>
+              Select a project to see its signatures.
+            </p>
+          ) : items.length === 0 ? (
+            <p className={styles.noData}>No signatures for this project.</p>
+          ) : (
+            items.map((s, idx) => (
+              <SignatureRow
+                key={s.id}
+                row={s}
+                isEven={idx % 2 === 0}
+                isEditing={editingId === s.id}
+                editedValues={editedValues[s.id]}
+                onEdit={() => startEdit(s)}
+                onChange={onChange}
+                onSave={save}
+                onCancel={cancel}
+                onDelete={remove}
+                poOptions={poOptions}
+                statusOptions={statusOptions}
+                employeeOptions={employeeOptions}
+                visibleCols={visibleCols}
+                fieldErrors={fieldErrors[s.id] || {}}
+              />
+            ))
+          )}
+
+          {editingId === "new" && (
             <SignatureRow
-              key={s.id}
-              row={s}
-              isEven={idx % 2 === 0}
-              isEditing={editingId === s.id}
-              editedValues={editedValues[s.id]}
-              onEdit={() => startEdit(s)}
+              row={{
+                id: "new",
+                signatureStatusId: "",
+                employeeId: "",
+                paymentOrderId: "",
+                signature: "",
+                signatureDate: "",
+              }}
+              isEditing
+              editedValues={editedValues.new}
               onChange={onChange}
               onSave={save}
               onCancel={cancel}
-              onDelete={remove}
+              onDelete={() => {}}
               poOptions={poOptions}
               statusOptions={statusOptions}
               employeeOptions={employeeOptions}
               visibleCols={visibleCols}
-              fieldErrors={fieldErrors[s.id] || {}}
+              isEven={false}
+              fieldErrors={fieldErrors.new || {}}
+              rowRef={newRowRef}
             />
-          ))
-        )}
-
-        {/* Inline create row */}
-        {editingId === "new" && (
-          <SignatureRow
-            row={{
-              id: "new",
-              signatureStatusId: "",
-              employeeId: "",
-              paymentOrderId: "",
-              signature: "",
-              signatureDate: "",
-            }}
-            isEditing
-            editedValues={editedValues.new}
-            onChange={onChange}
-            onSave={save}
-            onCancel={cancel}
-            onDelete={() => {}}
-            poOptions={poOptions}
-            statusOptions={statusOptions}
-            employeeOptions={employeeOptions}
-            visibleCols={visibleCols}
-            isEven={false}
-            fieldErrors={fieldErrors.new || {}}
-            rowRef={newRowRef}
-          />
-        )}
-      </div>
-
-      {/* Create */}
-      <div className={styles.createBar}>
-        <button
-          className={styles.addBtn}
-          onClick={startCreate}
-          disabled={!selectedProjectId || editingId === "new"}
-          title={
-            !selectedProjectId
-              ? "Select a project first"
-              : editingId === "new"
-              ? "Finish the current draft first"
-              : "Create new signature"
-          }
-        >
-          + New Signature
-        </button>
+          )}
+        </div>
       </div>
     </div>
   );

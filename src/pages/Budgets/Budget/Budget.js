@@ -386,26 +386,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
               </p>
             </div>
 
-            <div className={styles.headerActions}>
-              <button
-                type="button"
-                onClick={handleSave}
-                className={styles.saveButton}
-                disabled={loading}
-              >
-                <FiSave />
-                Save
-              </button>
-              <button
-                type="button"
-                onClick={handleDelete}
-                className={styles.deleteButton}
-                disabled={loading}
-              >
-                <FiTrash2 />
-                Delete
-              </button>
-            </div>
+            {/* ✅ Removed duplicate Save/Delete buttons from the top header */}
           </div>
 
           {formError && (

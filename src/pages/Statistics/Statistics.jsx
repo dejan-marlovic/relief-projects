@@ -157,6 +157,7 @@ const Statistics = () => {
       const sectorId = row?.sectorId;
       const projectId = row?.projectId;
       if (sectorId == null) continue;
+
       let bucket = bySector.get(sectorId);
       if (!bucket) {
         bucket = { count: 0, projectIds: new Set() };
@@ -273,16 +274,24 @@ const Statistics = () => {
 
   return (
     <div className={styles.page}>
-      <div className={styles.card}>
-        <h2 className={styles.title}>Projects by Sector</h2>
-        <p className={styles.subtitle}>
-          Distribution of projects across sectors (from Project–Sector
-          relations).
-        </p>
+      <div className={styles.shell}>
+        {/* ✅ Project/Transactions style header */}
+        <div className={styles.pageHeader}>
+          <div className={styles.pageHeaderText}>
+            <h2 className={styles.pageTitle}>Statistics</h2>
+            <p className={styles.pageSubtitle}>
+              Projects by sector (based on Project–Sector relations).
+            </p>
+          </div>
+
+          <div className={styles.headerActions}>
+            {/* (Optional future controls: filters, export, etc.) */}
+          </div>
+        </div>
 
         {loading && <div className={styles.loadingSkeleton} />}
 
-        {!loading && error && <div className={styles.errorText}>{error}</div>}
+        {!loading && error && <div className={styles.errorBanner}>{error}</div>}
 
         {!loading && !error && pieData.length === 0 && (
           <div className={styles.emptyText}>No project–sector data found.</div>

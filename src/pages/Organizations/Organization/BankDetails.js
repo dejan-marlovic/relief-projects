@@ -1,5 +1,6 @@
+// src/pages/Organizations/Organization/BankDetails.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import styles from "./Organization.module.scss";
+import styles from "./BankDetails.module.scss";
 import { FiEdit, FiTrash2, FiSave, FiX, FiPlus } from "react-icons/fi";
 
 const BASE_URL = "http://localhost:8080";
@@ -11,12 +12,21 @@ const blankBank = {
   swiftCode: "",
 };
 
+async function safeParseJsonResponse(res) {
+  const raw = await res.text().catch(() => "");
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
 const BankDetails = ({ organizationId }) => {
   const [rows, setRows] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
 
-  // 🔴 error state
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({}); // { [rowId]: { fieldName: message } }
 
@@ -32,7 +42,6 @@ const BankDetails = ({ organizationId }) => {
     [token]
   );
 
-  // fetch all bank details and filter by organization
   const loadForOrg = async () => {
     if (!organizationId) {
       setRows([]);
@@ -67,8 +76,12 @@ const BankDetails = ({ organizationId }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [organizationId]);
 
+  const rowKeyOf = (row) => row.bankId ?? row.id;
+  const isRowEditing = (row) => rowKeyOf(row) === editingId;
+  const evForRow = (row) => editedValues[rowKeyOf(row)] || {};
+
   const startEdit = (row) => {
-    const id = row.bankId ?? row.id;
+    const id = rowKeyOf(row);
     setEditingId(id);
     setEditedValues((prev) => ({
       ...prev,
@@ -90,10 +103,7 @@ const BankDetails = ({ organizationId }) => {
 
   const startCreate = () => {
     setEditingId("new");
-    setEditedValues((prev) => ({
-      ...prev,
-      new: { ...blankBank },
-    }));
+    setEditedValues((prev) => ({ ...prev, new: { ...blankBank } }));
 
     setFieldErrors((prev) => {
       const next = { ...prev };
@@ -151,10 +161,7 @@ const BankDetails = ({ organizationId }) => {
     };
 
     setFormError("");
-    setFieldErrors((prev) => ({
-      ...prev,
-      [id]: {},
-    }));
+    setFieldErrors((prev) => ({ ...prev, [id]: {} }));
 
     try {
       const res = await fetch(
@@ -169,21 +176,10 @@ const BankDetails = ({ organizationId }) => {
       );
 
       if (!res.ok) {
-        const raw = await res.text().catch(() => "");
-        let data = null;
-        try {
-          data = raw ? JSON.parse(raw) : null;
-        } catch (e) {
-          console.warn("Failed to parse bank detail error JSON:", e);
+        const data = await safeParseJsonResponse(res);
+        if (data?.fieldErrors) {
+          setFieldErrors((prev) => ({ ...prev, [id]: data.fieldErrors }));
         }
-
-        if (data && data.fieldErrors) {
-          setFieldErrors((prev) => ({
-            ...prev,
-            [id]: data.fieldErrors,
-          }));
-        }
-
         setFormError(
           data?.message ||
             `Failed to ${isCreate ? "create" : "update"} bank detail.`
@@ -205,23 +201,27 @@ const BankDetails = ({ organizationId }) => {
     if (!id) return;
     if (!window.confirm("Delete this bank detail?")) return;
 
+    setFormError("");
+
     try {
       const res = await fetch(`${BASE_URL}/api/bank-details/${id}`, {
         method: "DELETE",
         headers: authHeaders,
       });
-      if (!res.ok) throw new Error("Failed to delete bank detail");
+
+      if (!res.ok) {
+        const data = await safeParseJsonResponse(res);
+        setFormError(data?.message || "Failed to delete bank detail.");
+        return;
+      }
+
       await loadForOrg();
     } catch (e) {
       console.error(e);
-      alert("Failed to delete bank detail.");
+      setFormError("Failed to delete bank detail.");
     }
   };
 
-  const editingRowId = (row) => (row.bankId ?? row.id ?? null) === editingId;
-  const evForRow = (row) => editedValues[row.bankId ?? row.id] || {};
-
-  // === validation helpers for per-row errors ===
   const getRowFieldError = (rowKey, name) =>
     fieldErrors?.[rowKey] ? fieldErrors[rowKey][name] : undefined;
 
@@ -236,14 +236,15 @@ const BankDetails = ({ organizationId }) => {
   };
 
   return (
-    <div className={styles.bankDetailsContainer}>
-      <div className={styles.bankDetailsHeader}>
-        <span className={styles.bankDetailsTitle}>
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <div className={styles.title}>
           Bank details for organization #{organizationId}
-        </span>
+        </div>
+
         <button
           type="button"
-          className={styles.bankAddBtn}
+          className={styles.primaryBtn}
           onClick={startCreate}
           disabled={editingId === "new"}
         >
@@ -251,49 +252,54 @@ const BankDetails = ({ organizationId }) => {
         </button>
       </div>
 
-      {/* 🔴 local error banner */}
-      {formError && <div className={styles.bankErrorBanner}>{formError}</div>}
+      {formError && <div className={styles.errorBanner}>{formError}</div>}
 
       {rows.length === 0 && editingId !== "new" && (
         <p className={styles.noData}>No bank details for this organization.</p>
       )}
 
-      <div className={styles.bankDetailsTable}>
-        {/* header row */}
-        <div className={styles.bankDetailsRow}>
-          <div className={styles.bankDetailsCell}>Actions</div>
-          <div className={styles.bankDetailsCell}>Bank name</div>
-          <div className={styles.bankDetailsCell}>Account number</div>
-          <div className={styles.bankDetailsCell}>Branch</div>
-          <div className={styles.bankDetailsCell}>SWIFT</div>
+      <div className={styles.table}>
+        <div className={`${styles.gridRow} ${styles.headerRow}`}>
+          <div className={`${styles.headerCell} ${styles.stickyColHeader}`}>
+            Actions
+          </div>
+          <div className={styles.headerCell}>Bank name</div>
+          <div className={styles.headerCell}>Account number</div>
+          <div className={styles.headerCell}>Branch</div>
+          <div className={styles.headerCell}>SWIFT</div>
         </div>
 
-        {/* existing rows */}
         {rows.map((row, idx) => {
-          const rowId = row.bankId ?? row.id;
-          const isRowEditing = editingRowId(row);
+          const rowId = rowKeyOf(row);
+          const edit = isRowEditing(row);
           const ev = evForRow(row);
-          const zebra = idx % 2 === 0 ? styles.zebraEven : "";
 
           return (
-            <div key={rowId} className={`${styles.bankDetailsRow} ${zebra}`}>
+            <div
+              key={rowId}
+              className={`${styles.gridRow} ${styles.dataRow} ${
+                idx % 2 === 0 ? styles.zebraEven : ""
+              } ${styles.hoverable}`}
+            >
               {/* actions */}
-              <div className={styles.bankDetailsCell}>
-                {isRowEditing ? (
+              <div className={`${styles.cell} ${styles.stickyCol}`}>
+                {edit ? (
                   <div className={styles.actions}>
                     <button
                       type="button"
-                      className={styles.actionBtn}
+                      className={styles.iconCircleBtn}
                       onClick={save}
                       title="Save"
+                      aria-label="Save"
                     >
                       <FiSave />
                     </button>
                     <button
                       type="button"
-                      className={`${styles.actionBtn} ${styles.danger}`}
+                      className={styles.dangerIconBtn}
                       onClick={cancel}
                       title="Cancel"
+                      aria-label="Cancel"
                     >
                       <FiX />
                     </button>
@@ -302,17 +308,19 @@ const BankDetails = ({ organizationId }) => {
                   <div className={styles.actions}>
                     <button
                       type="button"
-                      className={styles.actionBtn}
+                      className={styles.iconCircleBtn}
                       onClick={() => startEdit(row)}
                       title="Edit"
+                      aria-label="Edit"
                     >
                       <FiEdit />
                     </button>
                     <button
                       type="button"
-                      className={`${styles.actionBtn} ${styles.danger}`}
+                      className={styles.dangerIconBtn}
                       onClick={() => remove(rowId)}
                       title="Delete"
+                      aria-label="Delete"
                     >
                       <FiTrash2 />
                     </button>
@@ -321,8 +329,8 @@ const BankDetails = ({ organizationId }) => {
               </div>
 
               {/* bank name */}
-              <div className={styles.bankDetailsCell}>
-                {isRowEditing ? (
+              <div className={styles.cell}>
+                {edit ? (
                   <>
                     <input
                       className={inputClassFor(rowId, "bankName")}
@@ -337,9 +345,9 @@ const BankDetails = ({ organizationId }) => {
                 )}
               </div>
 
-              {/* account number */}
-              <div className={styles.bankDetailsCell}>
-                {isRowEditing ? (
+              {/* account */}
+              <div className={styles.cell}>
+                {edit ? (
                   <>
                     <input
                       className={inputClassFor(rowId, "accountNumber")}
@@ -357,8 +365,8 @@ const BankDetails = ({ organizationId }) => {
               </div>
 
               {/* branch */}
-              <div className={styles.bankDetailsCell}>
-                {isRowEditing ? (
+              <div className={styles.cell}>
+                {edit ? (
                   <>
                     <input
                       className={inputClassFor(rowId, "branchName")}
@@ -374,8 +382,8 @@ const BankDetails = ({ organizationId }) => {
               </div>
 
               {/* swift */}
-              <div className={styles.bankDetailsCell}>
-                {isRowEditing ? (
+              <div className={styles.cell}>
+                {edit ? (
                   <>
                     <input
                       className={inputClassFor(rowId, "swiftCode")}
@@ -393,77 +401,75 @@ const BankDetails = ({ organizationId }) => {
           );
         })}
 
-        {/* create row */}
         {editingId === "new" && (
-          <div className={styles.bankDetailsRow}>
-            <div className={styles.bankDetailsCell}>
+          <div
+            className={`${styles.gridRow} ${styles.dataRow} ${styles.hoverable}`}
+          >
+            <div className={`${styles.cell} ${styles.stickyCol}`}>
               <div className={styles.actions}>
                 <button
                   type="button"
-                  className={styles.actionBtn}
+                  className={styles.iconCircleBtn}
                   onClick={save}
                   title="Save"
+                  aria-label="Save"
                 >
                   <FiSave />
                 </button>
                 <button
                   type="button"
-                  className={`${styles.actionBtn} ${styles.danger}`}
+                  className={styles.dangerIconBtn}
                   onClick={cancel}
                   title="Cancel"
+                  aria-label="Cancel"
                 >
                   <FiX />
                 </button>
               </div>
             </div>
 
-            <div className={styles.bankDetailsCell}>
-              <>
-                <input
-                  className={inputClassFor("new", "bankName")}
-                  type="text"
-                  value={editedValues.new?.bankName ?? ""}
-                  onChange={(e) => onChange("bankName", e.target.value)}
-                  placeholder="Bank name"
-                />
-                <FieldError rowKey="new" name="bankName" />
-              </>
+            <div className={styles.cell}>
+              <input
+                className={inputClassFor("new", "bankName")}
+                type="text"
+                value={editedValues.new?.bankName ?? ""}
+                onChange={(e) => onChange("bankName", e.target.value)}
+                placeholder="Bank name"
+              />
+              <FieldError rowKey="new" name="bankName" />
             </div>
-            <div className={styles.bankDetailsCell}>
-              <>
-                <input
-                  className={inputClassFor("new", "accountNumber")}
-                  type="text"
-                  value={editedValues.new?.accountNumber ?? ""}
-                  onChange={(e) => onChange("accountNumber", e.target.value)}
-                  placeholder="Account number"
-                />
-                <FieldError rowKey="new" name="accountNumber" />
-              </>
+
+            <div className={styles.cell}>
+              <input
+                className={inputClassFor("new", "accountNumber")}
+                type="text"
+                value={editedValues.new?.accountNumber ?? ""}
+                onChange={(e) => onChange("accountNumber", e.target.value)}
+                placeholder="Account number"
+              />
+              <FieldError rowKey="new" name="accountNumber" />
             </div>
-            <div className={styles.bankDetailsCell}>
-              <>
-                <input
-                  className={inputClassFor("new", "branchName")}
-                  type="text"
-                  value={editedValues.new?.branchName ?? ""}
-                  onChange={(e) => onChange("branchName", e.target.value)}
-                  placeholder="Branch"
-                />
-                <FieldError rowKey="new" name="branchName" />
-              </>
+
+            <div className={styles.cell}>
+              <input
+                className={inputClassFor("new", "branchName")}
+                type="text"
+                value={editedValues.new?.branchName ?? ""}
+                onChange={(e) => onChange("branchName", e.target.value)}
+                placeholder="Branch"
+              />
+              <FieldError rowKey="new" name="branchName" />
             </div>
-            <div className={styles.bankDetailsCell}>
-              <>
-                <input
-                  className={inputClassFor("new", "swiftCode")}
-                  type="text"
-                  value={editedValues.new?.swiftCode ?? ""}
-                  onChange={(e) => onChange("swiftCode", e.target.value)}
-                  placeholder="SWIFT"
-                />
-                <FieldError rowKey="new" name="swiftCode" />
-              </>
+
+            <div className={styles.cell}>
+              <input
+                className={inputClassFor("new", "swiftCode")}
+                type="text"
+                value={editedValues.new?.swiftCode ?? ""}
+                onChange={(e) => onChange("swiftCode", e.target.value)}
+                placeholder="SWIFT"
+              />
+              <FieldError rowKey="new" name="swiftCode" />
             </div>
           </div>
         )}

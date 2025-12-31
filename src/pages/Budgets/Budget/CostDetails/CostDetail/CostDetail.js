@@ -38,7 +38,7 @@ const CostDetail = ({
           value={ev.costDescription ?? cost.costDescription ?? ""}
           onChange={(e) => onChange("costDescription", e.target.value)}
           onBlur={autoSave ? handleSubmit : undefined}
-          className={`${styles.input} ${styles.cell} ${styles.cellDescription}`}
+          className={`${styles.input} ${styles.cell}`}
           placeholder="Description"
         />
 
@@ -46,7 +46,7 @@ const CostDetail = ({
           value={ev.costTypeId ?? cost.costTypeId ?? ""}
           onChange={(e) => onChange("costTypeId", toNum(e.target.value))}
           onBlur={autoSave ? handleSubmit : undefined}
-          className={`${styles.select} ${styles.cell} ${styles.cellType}`}
+          className={`${styles.select} ${styles.cell}`}
         >
           <option value="">Type</option>
           {costTypes.map((type) => (
@@ -60,7 +60,7 @@ const CostDetail = ({
           value={ev.costId ?? cost.costId ?? ""}
           onChange={(e) => onChange("costId", toNum(e.target.value))}
           onBlur={autoSave ? handleSubmit : undefined}
-          className={`${styles.select} ${styles.cell} ${styles.cellCategory}`}
+          className={`${styles.select} ${styles.cell}`}
         >
           <option value="">Category</option>
           {costs.map((c) => (
@@ -76,7 +76,7 @@ const CostDetail = ({
           value={ev.noOfUnits ?? cost.noOfUnits ?? ""}
           onChange={(e) => onChange("noOfUnits", toNum(e.target.value))}
           onBlur={autoSave ? handleSubmit : undefined}
-          className={`${styles.input} ${styles.cell} ${styles.cellUnits}`}
+          className={`${styles.input} ${styles.cell}`}
           placeholder="Units"
         />
 
@@ -86,7 +86,7 @@ const CostDetail = ({
           value={ev.unitPrice ?? cost.unitPrice ?? ""}
           onChange={(e) => onChange("unitPrice", toNum(e.target.value))}
           onBlur={autoSave ? handleSubmit : undefined}
-          className={`${styles.input} ${styles.cell} ${styles.cellPrice}`}
+          className={`${styles.input} ${styles.cell}`}
           placeholder="Price"
         />
 
@@ -98,21 +98,21 @@ const CostDetail = ({
             onChange("percentageCharging", toNum(e.target.value))
           }
           onBlur={autoSave ? handleSubmit : undefined}
-          className={`${styles.input} ${styles.cell} ${styles.cellPercent}`}
+          className={`${styles.input} ${styles.cell}`}
           placeholder="%"
         />
 
-        {/* Local amount is calculated in CostDetails and shown as read-only */}
+        {/* Local amount calculated; read-only */}
         <input
           type="number"
           step="0.001"
           value={ev.amountLocalCurrency ?? cost.amountLocalCurrency ?? ""}
           readOnly
-          className={`${styles.input} ${styles.cell} ${styles.cellAmt}`}
+          className={`${styles.input} ${styles.cell}`}
           placeholder="Local"
         />
 
-        {/* SEK amount (reporting currency) */}
+        {/* SEK amount */}
         <input
           type="number"
           step="0.001"
@@ -123,7 +123,7 @@ const CostDetail = ({
             onChange("amountReportingCurrency", toNum(e.target.value))
           }
           onBlur={autoSave ? handleSubmit : undefined}
-          className={`${styles.input} ${styles.cell} ${styles.cellAmt}`}
+          className={`${styles.input} ${styles.cell}`}
           placeholder="SEK"
         />
 
@@ -133,7 +133,7 @@ const CostDetail = ({
           value={ev.amountGBP ?? cost.amountGBP ?? ""}
           onChange={(e) => onChange("amountGBP", toNum(e.target.value))}
           onBlur={autoSave ? handleSubmit : undefined}
-          className={`${styles.input} ${styles.cell} ${styles.cellAmt}`}
+          className={`${styles.input} ${styles.cell}`}
           placeholder="GBP"
         />
 
@@ -143,7 +143,7 @@ const CostDetail = ({
           value={ev.amountEuro ?? cost.amountEuro ?? ""}
           onChange={(e) => onChange("amountEuro", toNum(e.target.value))}
           onBlur={autoSave ? handleSubmit : undefined}
-          className={`${styles.input} ${styles.cell} ${styles.cellAmt}`}
+          className={`${styles.input} ${styles.cell}`}
           placeholder="EUR"
         />
 
@@ -164,33 +164,40 @@ const CostDetail = ({
     );
   }
 
-  // view mode – just render whatever is in cost (already recalculated in CostDetails)
+  // view mode
   const displayCost = cost;
 
   return (
     <div className={styles.viewRow}>
-      <div className={`${styles.vcell} ${styles.cellDescription}`}>
+      <div className={styles.vcell}>
         <strong>{displayCost.costDescription}</strong>
       </div>
-      <div className={`${styles.vcell} ${styles.cellType}`}>
+
+      <div className={styles.vcell}>
         {costTypes.find((t) => t.id === displayCost.costTypeId)?.costTypeName ||
           "-"}
       </div>
-      <div className={`${styles.vcell} ${styles.cellCategory}`}>
+
+      <div className={styles.vcell}>
         {costs.find((c) => c.id === displayCost.costId)?.costName || "-"}
       </div>
-      <div className={`${styles.vcell} ${styles.cellUnitsPrice}`}>
-        {`${displayCost.noOfUnits} × ${displayCost.unitPrice}`}
+
+      <div className={styles.vcell}>{displayCost.noOfUnits ?? "-"}</div>
+      <div className={styles.vcell}>{displayCost.unitPrice ?? "-"}</div>
+      <div className={styles.vcell}>
+        {displayCost.percentageCharging ?? "-"}%
       </div>
-      <div className={`${styles.vcell} ${styles.cellPercent}`}>
-        {`${displayCost.percentageCharging}%`}
+
+      <div className={styles.vcell}>
+        {displayCost.amountLocalCurrency ?? "-"}
       </div>
-      <div className={`${styles.vcell} ${styles.cellAmounts}`}>
-        Local: {displayCost.amountLocalCurrency ?? "-"} | SEK:{" "}
-        {displayCost.amountReportingCurrency ?? "-"} | GBP:{" "}
-        {displayCost.amountGBP ?? "-"} | EUR: {displayCost.amountEuro ?? "-"}
+      <div className={styles.vcell}>
+        {displayCost.amountReportingCurrency ?? "-"}
       </div>
-      <div className={`${styles.vcell} ${styles.cellActions}`}>
+      <div className={styles.vcell}>{displayCost.amountGBP ?? "-"}</div>
+      <div className={styles.vcell}>{displayCost.amountEuro ?? "-"}</div>
+
+      <div className={styles.vcell}>
         <button
           onClick={(e) => {
             e.preventDefault();

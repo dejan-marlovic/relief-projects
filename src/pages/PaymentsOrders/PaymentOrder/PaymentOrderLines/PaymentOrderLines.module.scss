@@ -1,0 +1,206 @@
+@use "../../../../styles/forms" as forms;
+
+$primary: #4a90e2;
+$danger: #e74c3c;
+
+.wrap {
+  border: 1px solid rgba(74, 144, 226, 0.14);
+  border-radius: 14px;
+  padding: 12px;
+  margin: 10px 0 0 0;
+  background: rgba(74, 144, 226, 0.04);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.title {
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.sub {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+/* Buttons */
+.iconPillBtn {
+  @include forms.ghost-button($primary);
+  padding: 0.6rem 0.85rem;
+  font-size: 0.92rem;
+}
+
+.primaryInlineBtn {
+  @include forms.primary-button;
+  padding: 0.7rem 1rem;
+}
+
+.iconCircleBtn {
+  border-radius: 999px;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(74, 144, 226, 0.25);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: #fff;
+  transition: transform 0.12s ease, box-shadow 0.2s ease;
+  color: #1f2937;
+
+  &:hover {
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
+
+  svg {
+    font-size: 16px;
+  }
+}
+
+.dangerIconBtn {
+  border: none;
+  background: $danger;
+  color: #fff;
+  border-radius: 10px;
+  padding: 0.45rem 0.55rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: filter 0.15s ease;
+
+  &:hover {
+    filter: brightness(0.95);
+  }
+
+  &:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    filter: none;
+  }
+
+  svg {
+    font-size: 16px;
+  }
+}
+
+/* Errors like Project */
+.errorBanner {
+  background-color: #ffe6e6;
+  color: #b00000;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin: 0.75rem 0;
+  font-size: 0.9rem;
+  border: 1px solid #ffb3b3;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Add row */
+.addRow {
+  display: grid;
+  grid-template-columns: 1.2fr 1.5fr 2fr 1fr 1fr 2fr auto;
+  gap: 10px;
+  align-items: end;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(74, 144, 226, 0.12);
+  margin-bottom: 12px;
+}
+
+.field label {
+  display: block;
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 4px;
+  font-weight: 700;
+}
+
+.input {
+  @include forms.text-input;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.92rem;
+}
+
+.fieldActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Validation */
+.inputError {
+  border-color: #b00000 !important;
+  box-shadow: 0 0 4px rgba(176, 0, 0, 0.35);
+  outline: none;
+}
+
+.fieldError {
+  font-size: 12px;
+  color: #b00020;
+  margin-top: 4px;
+}
+
+/* Table */
+.table {
+  width: 100%;
+}
+
+.thead,
+.trow {
+  display: grid;
+  grid-template-columns: 1.2fr 1.5fr 2fr 1fr 1fr 2fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.thead {
+  font-size: 12px;
+  color: #6b7280;
+  padding: 6px 8px;
+  font-weight: 700;
+}
+
+.trow {
+  padding: 10px 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.rowActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.empty {
+  padding: 10px;
+  color: #6b7280;
+}
+
+.rowError {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: #b00000;
+}

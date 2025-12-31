@@ -1,4 +1,5 @@
 // src/components/Recipients/Recipient/Recipient.jsx
+import React from "react";
 import styles from "./Recipient.module.scss";
 import { FiEdit, FiTrash2, FiSave, FiX } from "react-icons/fi";
 
@@ -19,8 +20,8 @@ const RecipientRow = ({
   orgOptions = [],
   visibleCols = [],
   isEven = false,
-  fieldErrors = {}, // NEW: per-row field errors
-  rowRef = null, // for auto-scroll if needed later
+  fieldErrors = {},
+  rowRef = null,
 }) => {
   const ev = editedValues || {};
   const isCreate = (row?.id ?? "") === "new";
@@ -34,7 +35,6 @@ const RecipientRow = ({
 
   const toNum = (v) => (v === "" ? "" : Number(v));
 
-  // ==== error helpers ====
   const getFieldError = (name) => fieldErrors?.[name];
   const hasError = (name) => Boolean(getFieldError(name));
   const inputClass = (name) =>
@@ -120,16 +120,25 @@ const RecipientRow = ({
       } ${styles.hoverable}`}
     >
       {/* 0: Actions */}
-      <Cell className={`${styles.stickyCol} ${hc(0)}`}>
+      <Cell className={`${styles.stickyCol} ${styles.actionsCol} ${hc(0)}`}>
         {isEditing ? (
           <div className={styles.actions}>
-            <button className={styles.actionBtn} onClick={submit} title="Save">
+            <button
+              type="button"
+              className={styles.iconCircleBtn}
+              onClick={submit}
+              title="Save"
+              aria-label="Save"
+            >
               <FiSave />
             </button>
+
             <button
-              className={`${styles.actionBtn} ${styles.danger}`}
+              type="button"
+              className={styles.dangerIconBtn}
               onClick={onCancel}
               title="Cancel"
+              aria-label="Cancel"
             >
               <FiX />
             </button>
@@ -137,24 +146,29 @@ const RecipientRow = ({
         ) : (
           <div className={styles.actions}>
             <button
-              className={styles.actionBtn}
+              type="button"
+              className={styles.iconCircleBtn}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 onEdit();
               }}
               title="Edit"
+              aria-label="Edit"
             >
               <FiEdit />
             </button>
+
             <button
-              className={`${styles.actionBtn} ${styles.danger}`}
+              type="button"
+              className={styles.dangerIconBtn}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 onDelete(row.id);
               }}
               title="Delete"
+              aria-label="Delete"
             >
               <FiTrash2 />
             </button>
