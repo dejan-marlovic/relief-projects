@@ -1,41 +1,45 @@
-/*CostDetails.module.scss*/
-
 .noDataMessage {
   padding: 16px;
   font-style: italic;
   color: #555;
 }
 
+/* Shared layout variables for header + row grid */
+.gridContainer {
+  --cd-gap: 10px;
+
+  /* Responsive columns (shrink to fit, avoids horizontal scroll) */
+  --cd-cols: minmax(140px, 2.2fr) /* Description */ minmax(80px, 1.1fr)
+    /* Type */ minmax(110px, 1.4fr) /* Category */ minmax(55px, 0.8fr)
+    /* Units */ minmax(65px, 0.9fr) /* Unit price */ minmax(55px, 0.8fr)
+    /* % Charged */ minmax(65px, 0.9fr) /* Local */ minmax(65px, 0.9fr)
+    /* SEK */ minmax(65px, 0.9fr) /* GBP */ minmax(65px, 0.9fr) /* EUR */ 80px; /* Actions */
+
+  overflow-x: hidden; /* prevent page-level horizontal scrollbar */
+}
+
 .headerRow {
   font-weight: bold;
-  display: flex;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: var(--cd-cols);
+  column-gap: var(--cd-gap);
+  align-items: center;
+
   padding-bottom: 8px;
   border-bottom: 2px solid #000;
+
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 2;
 }
 
-.headerCellDescription {
-  flex: 1 1 150px;
-}
-
-.headerCellType {
-  flex: 1 1 100px;
-}
-
-.headerCellCategory {
-  flex: 1 1 100px;
-}
-
-.headerCellUnits {
-  flex: 1 1 100px;
-}
-
-.headerCellCharged {
-  flex: 1 1 100px;
-}
-
-.headerCellAmounts {
-  flex: 1 1 250px;
+/* prevent header cells from forcing width */
+.headerRow > div {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .typeSection {
