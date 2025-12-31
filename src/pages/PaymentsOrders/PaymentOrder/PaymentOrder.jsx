@@ -1,6 +1,13 @@
 import React from "react";
 import styles from "./PaymentOrder.module.scss";
-import { FiEdit, FiTrash2, FiSave, FiX } from "react-icons/fi";
+import {
+  FiEdit,
+  FiTrash2,
+  FiSave,
+  FiX,
+  FiChevronDown,
+  FiChevronUp,
+} from "react-icons/fi";
 
 const Cell = ({ children, className }) => (
   <div className={`${styles.cell} ${className || ""}`}>{children}</div>
@@ -30,11 +37,17 @@ const PaymentOrder = ({
   transactions = [],
   visibleCols = [],
   isEven = false,
-  fieldErrors = {}, // NEW: per-row field errors
-  rowRef = null, // NEW: for scrolling to the "new" row
+  fieldErrors = {},
+  rowRef = null,
+
+  // lines expansion
+  expanded = false,
+  onToggleLines,
+
+  // optional: lock UI (disable edit/delete if locked)
+  locked = false,
 }) => {
   const ev = editedValues || {};
-
   const isCreate = (po?.id ?? "") === "new";
   const autoSave = isEditing && !isCreate;
 
@@ -46,7 +59,7 @@ const PaymentOrder = ({
 
   const toNum = (v) => (v === "" ? "" : Number(v));
 
-  // ==== error helpers (same pattern as Transactions) ====
+  // ==== error helpers ====
   const getFieldError = (name) => fieldErrors?.[name];
   const hasError = (name) => Boolean(getFieldError(name));
   const inputClass = (name) =>
@@ -66,6 +79,7 @@ const PaymentOrder = ({
         onChange={(e) => onChange(field, toNum(e.target.value))}
         onBlur={autoSave ? submit : undefined}
         className={inputClass(field)}
+        disabled={locked}
       />
       <FieldError name={field} />
     </>
@@ -79,6 +93,7 @@ const PaymentOrder = ({
         onChange={(e) => onChange(field, e.target.value)}
         onBlur={autoSave ? submit : undefined}
         className={inputClass(field)}
+        disabled={locked}
       />
       <FieldError name={field} />
     </>
@@ -96,6 +111,7 @@ const PaymentOrder = ({
         }
         onBlur={autoSave ? submit : undefined}
         className={inputClass("transactionId")}
+        disabled={locked}
       >
         <option value="">(none)</option>
         {transactions.map((t) => (
@@ -119,12 +135,12 @@ const PaymentOrder = ({
         }
         onBlur={autoSave ? submit : undefined}
         className={inputClass("paymentOrderDate")}
+        disabled={locked}
       />
       <FieldError name="paymentOrderDate" />
     </>
   );
 
-  // hidden column helper (aligns with header visibility)
   const hc = (i) => (!visibleCols[i] ? styles.hiddenCol : "");
 
   return (
@@ -133,16 +149,23 @@ const PaymentOrder = ({
       className={`${styles.row} ${styles.gridRow} ${
         isEven ? styles.zebraEven : ""
       } ${styles.hoverable}`}
+      title={locked ? "Locked by final (Booked) signature" : undefined}
+      style={locked ? { opacity: 0.92 } : undefined}
     >
       {/* 0: Actions (sticky left) */}
       <Cell className={`${styles.stickyCol} ${styles.actionsCol} ${hc(0)}`}>
         {isEditing ? (
           <div className={styles.actions}>
-            <button className={styles.actionBtn} onClick={submit} title="Save">
+            <button
+              className={styles.iconCircleBtn}
+              onClick={submit}
+              title="Save"
+              disabled={locked}
+            >
               <FiSave />
             </button>
             <button
-              className={`${styles.actionBtn} ${styles.danger}`}
+              className={styles.dangerIconBtn}
               onClick={onCancel}
               title="Cancel"
             >
@@ -152,24 +175,44 @@ const PaymentOrder = ({
         ) : (
           <div className={styles.actions}>
             <button
-              className={styles.actionBtn}
+              className={styles.iconCircleBtn}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 onEdit();
               }}
-              title="Edit"
+              title={locked ? "Locked" : "Edit"}
+              disabled={locked}
             >
               <FiEdit />
             </button>
+
+            {/* Lines toggle (use same expand icon behavior as Transactions) */}
+            {!isCreate && (
+              <button
+                type="button"
+                className={styles.iconCircleBtn}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onToggleLines?.();
+                }}
+                title={expanded ? "Hide lines" : "Show lines"}
+                aria-label={expanded ? "Hide lines" : "Show lines"}
+              >
+                {expanded ? <FiChevronUp /> : <FiChevronDown />}
+              </button>
+            )}
+
             <button
-              className={`${styles.actionBtn} ${styles.danger}`}
+              className={styles.dangerIconBtn}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 onDelete(po.id);
               }}
-              title="Delete"
+              title={locked ? "Locked" : "Delete"}
+              disabled={locked}
             >
               <FiTrash2 />
             </button>

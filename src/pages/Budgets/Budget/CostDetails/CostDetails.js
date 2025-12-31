@@ -101,11 +101,6 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
   };
 
   // ---- SHARED AMOUNT CALCULATION ----
-  // Implements:
-  // - Local currency base cost
-  // - Local -> GBP (budget.localExchangeRateToGbpId)
-  // - Local -> SEK (budget.reportingExchangeRateSekId)
-  // - Local -> EUR (budget.reportingExchangeRateEurId)
   const computeAmounts = useCallback(
     (row) => {
       if (!budget) return row;
@@ -145,7 +140,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
 
       return updated;
     },
-    [budget, exchangeRates] // exchangeRates used indirectly via getRateById
+    [budget, exchangeRates]
   );
 
   // 🔁 Recalc + persist all cost details when budget is saved
@@ -155,34 +150,10 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
 
       const token = localStorage.getItem("authToken");
 
-      console.log("🔁 Recalculating all cost details with budget:", {
-        sekRateId: budget.reportingExchangeRateSekId,
-        eurRateId: budget.reportingExchangeRateEurId,
-        gbpRateId: budget.localExchangeRateToGbpId,
-      });
-
       const updatedList = await Promise.all(
         list.map(async (item) => {
-          const before = {
-            id: item.costDetailId,
-            local: item.amountLocalCurrency,
-            sek: item.amountReportingCurrency,
-            gbp: item.amountGBP,
-            eur: item.amountEuro,
-          };
-
           const computed = computeAmounts(item);
           const merged = { ...item, ...computed };
-
-          const after = {
-            id: merged.costDetailId,
-            local: merged.amountLocalCurrency,
-            sek: merged.amountReportingCurrency,
-            gbp: merged.amountGBP,
-            eur: merged.amountEuro,
-          };
-
-          console.log("➡️ Cost detail recalc", { before, after });
 
           const payload = {
             ...merged,
@@ -234,10 +205,6 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
         })
       );
 
-      console.log(
-        "✅ Finished recalculation, updated cost details:",
-        updatedList
-      );
       setCostDetails(updatedList);
     },
     [budget, exchangeRates, computeAmounts]
@@ -245,7 +212,6 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
 
   // 👉 fetch on mount + whenever refreshTrigger changes
   useEffect(() => {
-    console.log("🔔 refreshTrigger is", refreshTrigger, "budget is", budget);
     const run = async () => {
       const data = await fetchCostDetails();
 
@@ -292,7 +258,6 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
     setEditedValues((prev) => {
       const current = prev[editingId] || {};
 
-      // basic field update
       const baseUpdated = {
         ...current,
         [field]: ["costDescription"].includes(field)
@@ -300,7 +265,6 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
           : toNumOrBlank(value),
       };
 
-      // Only auto-recalculate when one of these fields change
       const shouldRecalc = [
         "noOfUnits",
         "unitPrice",
@@ -339,7 +303,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
       }
 
       const payload = {
-        budgetId, // link to current budget
+        budgetId,
         costDescription: values.costDescription,
         costTypeId: Number(values.costTypeId),
         costId: Number(values.costId),
@@ -482,16 +446,20 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
   const groupedData = groupCosts();
 
   return (
-    <div>
+    <div className={styles.gridContainer}>
       {/* Header */}
       <div className={styles.headerRow}>
-        <div className={styles.headerCellDescription}>Description</div>
-        <div className={styles.headerCellType}>Type</div>
-        <div className={styles.headerCellCategory}>Category</div>
-        <div className={styles.headerCellUnits}>Units</div>
-        <div className={styles.headerCellCharged}>Price / %</div>
-        <div className={styles.headerCellAmounts}>Amounts</div>
-        <div className={styles.headerCellActions}></div>
+        <div>Description</div>
+        <div>Type</div>
+        <div>Category</div>
+        <div>Units</div>
+        <div>Unit price</div>
+        <div>% Charged</div>
+        <div>Local</div>
+        <div>SEK</div>
+        <div>GBP</div>
+        <div>EUR</div>
+        <div></div>
       </div>
 
       {/* Existing data */}
@@ -574,7 +542,6 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
           onChange={handleChange}
           onSave={() => handleSave("new")}
           onCancel={handleCancel}
-          // unused in create row:
           onEdit={() => {}}
           onDelete={() => {}}
         />

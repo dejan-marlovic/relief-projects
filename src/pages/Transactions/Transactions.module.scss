@@ -1,48 +1,97 @@
-/*Transactions.module.scss*/
+/* src/components/Transactions/Transactions.module.scss */
+@use "../../styles/forms" as forms;
+
+$primary: #4a90e2;
+
 /* Outer wrapper */
 .container {
+  padding: 1.25rem;
+  margin-top: 1rem;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Toolbar (compact + columns) */
-.toolbar {
+/* Card wrapper like Project */
+.card {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid rgba(74, 144, 226, 0.18);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+  padding: 1.25rem;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.headerText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 1.2rem;
+  color: $primary;
+  font-weight: 700;
+}
+
+.cardMeta {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.headerActions {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin: 6px 0 10px;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
+/* Toolbar */
 .compactToggle {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 0.92rem;
+  color: #374151;
+
+  input {
+    transform: translateY(1px);
+  }
 }
 
 .columnsBox {
   position: relative;
 }
 
-.columnsBtn {
-  background: #f5f6f8;
-  border: 1px solid #e6e6e6;
-  border-radius: 6px;
-  padding: 6px 10px;
-  cursor: pointer;
+.iconPillBtn {
+  @include forms.ghost-button($primary);
+  padding: 0.6rem 0.85rem;
+  font-size: 0.92rem;
 }
 
 .columnsPanel {
   position: absolute;
-  top: 36px;
-  left: 0;
+  top: 46px;
+  right: 0;
   background: #fff;
   border: 1px solid #e6e6e6;
-  border-radius: 8px;
-  padding: 8px 10px;
+  border-radius: 12px;
+  padding: 10px 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   max-height: 320px;
   overflow: auto;
   z-index: 10;
-  min-width: 220px;
+  min-width: 240px;
 }
 
 .colItem {
@@ -51,6 +100,7 @@
   gap: 8px;
   padding: 4px 2px;
   white-space: nowrap;
+  color: #374151;
 }
 
 .lockNote {
@@ -59,22 +109,44 @@
   font-size: 0.85em;
 }
 
-/* Scrollable table container; grid columns are injected via inline CSS var */
+/* Primary button like Project */
+.primaryInlineBtn {
+  @include forms.primary-button;
+  padding: 0.7rem 1rem;
+}
+
+/* Error banner like Project */
+.errorBanner {
+  background-color: #ffe6e6;
+  color: #b00000;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin: 0.75rem 0 1rem;
+  font-size: 0.9rem;
+  border: 1px solid #ffb3b3;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Table container */
 .table {
-  position: relative; /* stacking context for sticky/z-index correctness */
+  position: relative;
   isolation: isolate;
   overflow: auto;
   max-height: 60vh;
-  border: 1px solid #e6e6e6;
-  border-radius: 8px;
+  border: 1px solid rgba(74, 144, 226, 0.14);
+  border-radius: 14px;
   background: #fff;
 
-  --tx-header-bg: #f6f7fb; /* subtle grayish */
-  --tx-header-border: #e5e7eb; /* thin divider */
-  --tx-grid-cols: 110px; /* default fallback; overwritten inline */
+  --tx-header-bg: #f6f7fb;
+  --tx-header-border: #e5e7eb;
+
+  /* ✅ widened Actions column so the trash icon never clips */
+  --tx-grid-cols: 140px;
 }
 
-/* Compact mode tweaks */
+/* Compact */
 .compact .gridRow {
   padding: 4px 8px !important;
   font-size: 0.86rem !important;
@@ -86,25 +158,25 @@
   font-size: 0.86rem !important;
 }
 
-/* Grid row style shared by header + data rows */
+/* Shared grid row */
 .gridRow {
   display: grid;
   grid-template-columns: var(--tx-grid-cols);
   align-items: center;
   column-gap: 8px;
-  min-width: 1200px; /* allow horiz scroll instead of over-squishing */
+  min-width: 1200px;
 }
 
 /* Header row */
 .headerRow {
   position: sticky;
   top: 0;
-  z-index: 5; /* above data rows */
-  background: var(--tx-header-bg); /* solid row backdrop */
+  z-index: 5;
+  background: var(--tx-header-bg);
   border-bottom: 1px solid var(--tx-header-border);
   padding: 10px 12px;
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.92rem;
 }
 
@@ -112,19 +184,22 @@
   padding-right: 4px;
   white-space: nowrap;
   color: #30323a;
-  background: var(--tx-header-bg); /* keep each cell opaque */
+  background: var(--tx-header-bg);
 }
 
-/* Sticky first column (Actions) – header */
+/* Sticky header col */
 .stickyColHeader {
   position: sticky;
   left: 0;
-  z-index: 6; /* above the header row itself */
+  z-index: 6;
   background: var(--tx-header-bg);
   box-shadow: 2px 0 0 rgba(0, 0, 0, 0.04);
+
+  /* ✅ prevent edge clipping */
+  overflow: visible;
 }
 
-/* When a column is hidden (width collapsed to 0), hide its content too */
+/* Hidden col */
 .hiddenCol {
   width: 0 !important;
   padding: 0 !important;
@@ -134,37 +209,8 @@
   pointer-events: none;
 }
 
-/* Empty states + create bar */
+/* Empty */
 .noData {
   padding: 12px;
   color: #666;
-}
-
-.createBar {
-  margin-top: 10px;
-}
-
-.addBtn {
-  background: #2f7bfd;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 12px;
-  cursor: pointer;
-}
-
-.addBtn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* 🔴 Top error banner (like Budget) */
-.errorBanner {
-  margin-bottom: 10px;
-  padding: 8px 12px;
-  border-radius: 6px;
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #b91c1c;
-  font-size: 0.9rem;
 }

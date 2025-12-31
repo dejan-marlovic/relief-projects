@@ -26,7 +26,7 @@ const initialProjectDetails = {
   projectName: "",
   pinCode: "",
   donorOrganizationId: "",
-  fundingSource: "",
+  // ✅ removed fundingSource (handled via organization link)
   implementingPartnerOrganizationId: "",
   addressId: "",
   foSupportCostPercent: "",
@@ -240,13 +240,16 @@ const RegisterProject = () => {
 
       setLoading(true);
 
+      // ✅ Ensure fundingSource is not sent even if backend/old state expects it
+      const { fundingSource, ...payload } = projectDetails;
+
       const response = await fetch(`${BASE_URL}/api/projects`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(projectDetails),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -425,16 +428,7 @@ const RegisterProject = () => {
                   </div>
                 </div>
 
-                <div className={styles.formGroup}>
-                  <label>Funding Source</label>
-                  <input
-                    className={styles.textInput}
-                    name="fundingSource"
-                    placeholder="Funding Source"
-                    value={projectDetails.fundingSource}
-                    onChange={handleInputChange}
-                  />
-                </div>
+                {/* ✅ Funding Source removed */}
 
                 <div className={styles.row2}>
                   <div className={styles.formGroup}>

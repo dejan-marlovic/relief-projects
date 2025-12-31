@@ -1,44 +1,76 @@
-/*Statistics.module.scss*/
+$primary: #4a90e2;
+
+/* Page padding like other pages */
 .page {
-  padding: 1.5rem;
+  padding: 1.25rem;
+  margin-top: 1rem;
   width: 100%;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.card {
+/* ✅ Big white shell like Project/Transactions */
+.shell {
   max-width: 1720px;
   margin: 0 auto;
   background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  padding: 1.5rem 1.75rem 1.25rem;
+  border-radius: 14px;
+  border: 1px solid rgba(74, 144, 226, 0.18);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+  padding: 1.25rem;
   overflow: visible;
 }
 
-/* Titles */
-.title {
-  font-size: 1.75rem;
-  margin: 0 0 0.25rem;
-  color: #4a90e2;
+/* ✅ Header like Project/Transactions */
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-.subtitle {
-  color: #666;
-  margin: 0 0 0.75rem;
-  font-size: 0.97rem;
+.pageHeaderText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
 }
 
-/* States */
-.infoText {
-  color: #555;
-  margin: 0.25rem 0 0.75rem;
+.pageTitle {
+  margin: 0;
+  font-size: 1.2rem;
+  color: $primary;
+  font-weight: 700;
 }
 
-.errorText {
-  color: #b91c1c;
-  margin: 0.5rem 0;
+.pageSubtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6b7280;
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* ✅ Error banner like Project */
+.errorBanner {
+  background-color: #ffe6e6;
+  color: #b00000;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin: 0.75rem 0 1rem;
+  font-size: 0.9rem;
+  border: 1px solid #ffb3b3;
+}
+
+/* Empty + info */
 .emptyText {
   color: #555;
   margin: 0.5rem 0 0.75rem;
@@ -47,9 +79,10 @@
 /* Loading skeleton box inside the chart area */
 .loadingSkeleton {
   background: #f3f4f6;
-  border-radius: 8px;
-  margin: 0 0 0.5rem 0;
+  border-radius: 12px;
+  margin: 0.25rem 0 0.5rem 0;
   height: 560px; /* approximate chart height */
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 /* Chart wrapper row */
@@ -98,16 +131,17 @@
 .tooltipBox {
   background: #fff;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 10px 12px;
   max-width: 360px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
   line-height: 1.25;
 }
 
 .tooltipTitle {
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 6px;
+  color: #111827;
 }
 
 .tooltipCount {
@@ -126,18 +160,18 @@
 
 .tooltipMore {
   font-size: 12px;
-  color: #666;
+  color: #6b7280;
   margin-top: 4px;
 }
 
 .tooltipEmpty {
   font-size: 13px;
-  color: #666;
+  color: #6b7280;
 }
 
 /* Meta counters row */
 .meta {
-  margin-top: 0.75rem;
+  margin-top: 0.9rem;
   font-size: 0.8rem;
   color: #777;
   display: flex;

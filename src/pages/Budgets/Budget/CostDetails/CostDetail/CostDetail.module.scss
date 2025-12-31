@@ -1,60 +1,41 @@
-/*CostDetail.module.scss*/
-
 .rowForm,
 .viewRow {
-  display: flex;
+  display: grid;
+  grid-template-columns: var(--cd-cols);
+  column-gap: var(--cd-gap);
   align-items: center;
-  gap: 10px;
+
   padding: 8px 0;
   border-bottom: 1px solid #e3e3e3;
-  flex-wrap: nowrap; /* keep single row */
-  overflow-x: auto; /* allow horizontal scroll if needed */
+
+  /* remove row-level horizontal scrolling */
+  overflow-x: hidden;
 }
 
 .cell,
 .vcell {
-  flex: 0 0 auto;
-  min-width: 0;
+  min-width: 0; /* key for grid shrink */
 }
 
-.cellDescription {
-  flex: 1 1 240px;
-  min-width: 200px;
+/* prevent view cells from forcing width */
+.vcell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.cellType {
-  width: 120px;
-}
-.cellCategory {
-  width: 160px;
-}
-.cellUnits {
-  width: 90px;
-}
-.cellPrice {
-  width: 100px;
-}
-.cellUnitsPrice {
-  width: 150px;
-}
-.cellPercent {
-  width: 80px;
-}
-.cellAmt {
-  width: 110px;
-}
-.cellAmounts {
-  flex: 1 1 360px;
-  min-width: 320px;
-}
-.cellActions {
-  width: 96px;
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
+
+/* ensure long description/type/category don't blow up width */
+.vcell strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
 }
 
 .input,
 .select {
+  width: 100%;
+  min-width: 0; /* key: allow shrink, stops horizontal overflow */
   padding: 4px 8px;
   font-size: 14px;
   border: 1px solid #ccc;
@@ -81,6 +62,13 @@
   gap: 8px;
   align-items: center;
 }
+
+.cellActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
 .actionBtn {
   background: transparent;
   border: 1px solid #ccc;
@@ -97,9 +85,11 @@
     color: #007bff;
   }
 }
+
 .danger {
   border-color: #e74c3c;
   color: #e74c3c;
+
   &:hover {
     color: #fff;
     background: #e74c3c;
