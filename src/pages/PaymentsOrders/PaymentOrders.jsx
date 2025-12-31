@@ -85,7 +85,7 @@ function PaymentOrders() {
   const [editedValues, setEditedValues] = useState({});
   const [txOptions, setTxOptions] = useState([]);
 
-  // UI (compact removed)
+  // UI
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [visibleCols, setVisibleCols] = useState(() =>
     Array(headerLabels.length).fill(true)
@@ -96,7 +96,6 @@ function PaymentOrders() {
 
   const [expandedPoId, setExpandedPoId] = useState(null);
   const [orgOptions, setOrgOptions] = useState([]);
-  const [currencyOptions, setCurrencyOptions] = useState([]);
   const [costDetailOptions, setCostDetailOptions] = useState([]);
 
   // Track which POs are known locked (based on a 409 response)
@@ -184,17 +183,6 @@ function PaymentOrders() {
     }
   }, [authHeaders]);
 
-  const fetchCurrencyOptions = useCallback(async () => {
-    try {
-      const res = await fetch(`${BASE_URL}/api/currencies/active`, {
-        headers: authHeaders,
-      });
-      setCurrencyOptions(res.ok ? await res.json() : []);
-    } catch {
-      setCurrencyOptions([]);
-    }
-  }, [authHeaders]);
-
   const fetchCostDetailsForProject = useCallback(
     async (projectId) => {
       if (!projectId) {
@@ -232,7 +220,6 @@ function PaymentOrders() {
     fetchTxOptions(selectedProjectId);
 
     fetchOrgOptions();
-    fetchCurrencyOptions();
     fetchCostDetailsForProject(selectedProjectId);
 
     setEditingId(null);
@@ -245,7 +232,6 @@ function PaymentOrders() {
     fetchOrders,
     fetchTxOptions,
     fetchOrgOptions,
-    fetchCurrencyOptions,
     fetchCostDetailsForProject,
     selectedProjectId,
   ]);
@@ -560,7 +546,6 @@ function PaymentOrders() {
                       paymentOrderId={po.id}
                       txOptions={txOptions}
                       orgOptions={orgOptions}
-                      currencyOptions={currencyOptions}
                       costDetailOptions={costDetailOptions}
                     />
                   </div>
