@@ -16,6 +16,7 @@ const BASE_URL = "http://localhost:8080";
 
 const headerLabels = [
   "Actions",
+  "PO ID", // ✅ NEW
   "Transaction",
   "Date",
   "#Tx",
@@ -26,7 +27,17 @@ const headerLabels = [
 ];
 
 // ✅ match number of columns above
-const BASE_COL_WIDTHS = [160, 160, 180, 90, 300, 140, 200, 140];
+const BASE_COL_WIDTHS = [
+  160, // Actions
+  110, // ✅ PO ID
+  160, // Transaction
+  180, // Date
+  90, // #Tx
+  300, // Description
+  140, // Amount
+  200, // Message
+  140, // Pin Code
+];
 
 const blankPO = {
   transactionId: "",

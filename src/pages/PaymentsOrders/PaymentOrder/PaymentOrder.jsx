@@ -149,6 +149,9 @@ const PaymentOrder = ({
       ? 0
       : Number(po.amount);
 
+  // ✅ PO ID label (read-only)
+  const poIdLabel = isCreate ? "(new)" : po?.id != null ? `PO#${po.id}` : "-";
+
   return (
     <div
       ref={rowRef || undefined}
@@ -225,12 +228,15 @@ const PaymentOrder = ({
         )}
       </Cell>
 
+      {/* 1: PO ID (read-only) */}
+      <Cell className={hc(1)}>{poIdLabel}</Cell>
+
       {/* data columns */}
-      <Cell className={hc(1)}>
+      <Cell className={hc(2)}>
         {isEditing ? selectTransaction : po.transactionId ?? "-"}
       </Cell>
 
-      <Cell className={hc(2)}>
+      <Cell className={hc(3)}>
         {isEditing
           ? inputDate
           : po.paymentOrderDate
@@ -238,26 +244,26 @@ const PaymentOrder = ({
           : "-"}
       </Cell>
 
-      <Cell className={hc(3)}>
+      <Cell className={hc(4)}>
         {isEditing
           ? inputNum("numberOfTransactions", "1")
           : po.numberOfTransactions ?? "-"}
       </Cell>
 
-      <Cell className={hc(4)}>
+      <Cell className={hc(5)}>
         {isEditing
           ? inputText("paymentOrderDescription")
           : po.paymentOrderDescription ?? "-"}
       </Cell>
 
       {/* ✅ Amount (computed, not editable) */}
-      <Cell className={hc(5)}>{computedAmount.toFixed(2)}</Cell>
+      <Cell className={hc(6)}>{computedAmount.toFixed(2)}</Cell>
 
-      <Cell className={hc(6)}>
+      <Cell className={hc(7)}>
         {isEditing ? inputText("message") : po.message ?? "-"}
       </Cell>
 
-      <Cell className={hc(7)}>
+      <Cell className={hc(8)}>
         {isEditing ? inputText("pinCode") : po.pinCode ?? "-"}
       </Cell>
     </div>
