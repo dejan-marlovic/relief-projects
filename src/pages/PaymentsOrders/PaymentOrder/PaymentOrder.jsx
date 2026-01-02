@@ -57,8 +57,6 @@ const PaymentOrder = ({
     onSave();
   };
 
-  const toNum = (v) => (v === "" ? "" : Number(v));
-
   // ==== error helpers ====
   const getFieldError = (name) => fieldErrors?.[name];
   const hasError = (name) => Boolean(getFieldError(name));
@@ -76,7 +74,9 @@ const PaymentOrder = ({
         type="number"
         step={step}
         value={ev[field] ?? po[field] ?? ""}
-        onChange={(e) => onChange(field, toNum(e.target.value))}
+        onChange={(e) =>
+          onChange(field, e.target.value === "" ? "" : Number(e.target.value))
+        }
         onBlur={autoSave ? submit : undefined}
         className={inputClass(field)}
         disabled={locked}
@@ -143,6 +143,15 @@ const PaymentOrder = ({
 
   const hc = (i) => (!visibleCols[i] ? styles.hiddenCol : "");
 
+  // ✅ amount is computed by backend, display only
+  const computedAmount =
+    po?.amount == null || Number.isNaN(Number(po.amount))
+      ? 0
+      : Number(po.amount);
+
+  // ✅ PO ID label (read-only)
+  const poIdLabel = isCreate ? "(new)" : po?.id != null ? `PO#${po.id}` : "-";
+
   return (
     <div
       ref={rowRef || undefined}
@@ -187,7 +196,6 @@ const PaymentOrder = ({
               <FiEdit />
             </button>
 
-            {/* Lines toggle (use same expand icon behavior as Transactions) */}
             {!isCreate && (
               <button
                 type="button"
@@ -220,12 +228,15 @@ const PaymentOrder = ({
         )}
       </Cell>
 
-      {/* 1..8 data columns */}
-      <Cell className={hc(1)}>
+      {/* 1: PO ID (read-only) */}
+      <Cell className={hc(1)}>{poIdLabel}</Cell>
+
+      {/* data columns */}
+      <Cell className={hc(2)}>
         {isEditing ? selectTransaction : po.transactionId ?? "-"}
       </Cell>
 
-      <Cell className={hc(2)}>
+      <Cell className={hc(3)}>
         {isEditing
           ? inputDate
           : po.paymentOrderDate
@@ -233,27 +244,20 @@ const PaymentOrder = ({
           : "-"}
       </Cell>
 
-      <Cell className={hc(3)}>
+      <Cell className={hc(4)}>
         {isEditing
           ? inputNum("numberOfTransactions", "1")
           : po.numberOfTransactions ?? "-"}
       </Cell>
 
-      <Cell className={hc(4)}>
+      <Cell className={hc(5)}>
         {isEditing
           ? inputText("paymentOrderDescription")
           : po.paymentOrderDescription ?? "-"}
       </Cell>
 
-      <Cell className={hc(5)}>
-        {isEditing ? inputNum("amount", "0.000001") : po.amount ?? "-"}
-      </Cell>
-
-      <Cell className={hc(6)}>
-        {isEditing
-          ? inputNum("totalAmount", "0.000001")
-          : po.totalAmount ?? "-"}
-      </Cell>
+      {/* ✅ Amount (computed, not editable) */}
+      <Cell className={hc(6)}>{computedAmount.toFixed(2)}</Cell>
 
       <Cell className={hc(7)}>
         {isEditing ? inputText("message") : po.message ?? "-"}

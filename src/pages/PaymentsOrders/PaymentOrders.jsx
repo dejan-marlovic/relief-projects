@@ -16,25 +16,34 @@ const BASE_URL = "http://localhost:8080";
 
 const headerLabels = [
   "Actions",
+  "PO ID", // ✅ NEW
   "Transaction",
   "Date",
   "#Tx",
   "Description",
-  "Amount",
-  "Total Amount",
+  "Amount", // ✅ computed from backend
   "Message",
   "Pin Code",
 ];
 
-const BASE_COL_WIDTHS = [160, 160, 180, 90, 300, 140, 160, 200, 140];
+// ✅ match number of columns above
+const BASE_COL_WIDTHS = [
+  160, // Actions
+  110, // ✅ PO ID
+  160, // Transaction
+  180, // Date
+  90, // #Tx
+  300, // Description
+  140, // Amount
+  200, // Message
+  140, // Pin Code
+];
 
 const blankPO = {
   transactionId: "",
   paymentOrderDate: "",
   numberOfTransactions: "",
   paymentOrderDescription: "",
-  amount: "",
-  totalAmount: "",
   message: "",
   pinCode: "",
 };
@@ -70,8 +79,8 @@ function normalizePO(po) {
       po.numberOfTransactions ?? po.number_of_transactions ?? null,
     paymentOrderDescription:
       po.paymentOrderDescription ?? po.payment_order_description ?? "",
-    amount: po.amount ?? null,
-    totalAmount: po.totalAmount ?? po.total_amount ?? null,
+    // ✅ backend computed
+    amount: po.amount ?? 0,
     message: po.message ?? "",
     pinCode: po.pinCode ?? po.pin_code ?? "",
   };
@@ -85,7 +94,7 @@ function PaymentOrders() {
   const [editedValues, setEditedValues] = useState({});
   const [txOptions, setTxOptions] = useState([]);
 
-  // UI (compact removed)
+  // UI
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [visibleCols, setVisibleCols] = useState(() =>
     Array(headerLabels.length).fill(true)
@@ -96,7 +105,6 @@ function PaymentOrders() {
 
   const [expandedPoId, setExpandedPoId] = useState(null);
   const [orgOptions, setOrgOptions] = useState([]);
-  const [currencyOptions, setCurrencyOptions] = useState([]);
   const [costDetailOptions, setCostDetailOptions] = useState([]);
 
   // Track which POs are known locked (based on a 409 response)
@@ -184,17 +192,6 @@ function PaymentOrders() {
     }
   }, [authHeaders]);
 
-  const fetchCurrencyOptions = useCallback(async () => {
-    try {
-      const res = await fetch(`${BASE_URL}/api/currencies/active`, {
-        headers: authHeaders,
-      });
-      setCurrencyOptions(res.ok ? await res.json() : []);
-    } catch {
-      setCurrencyOptions([]);
-    }
-  }, [authHeaders]);
-
   const fetchCostDetailsForProject = useCallback(
     async (projectId) => {
       if (!projectId) {
@@ -232,7 +229,6 @@ function PaymentOrders() {
     fetchTxOptions(selectedProjectId);
 
     fetchOrgOptions();
-    fetchCurrencyOptions();
     fetchCostDetailsForProject(selectedProjectId);
 
     setEditingId(null);
@@ -245,7 +241,6 @@ function PaymentOrders() {
     fetchOrders,
     fetchTxOptions,
     fetchOrgOptions,
-    fetchCurrencyOptions,
     fetchCostDetailsForProject,
     selectedProjectId,
   ]);
@@ -268,8 +263,6 @@ function PaymentOrders() {
         paymentOrderDate: po.paymentOrderDate ?? "",
         numberOfTransactions: po.numberOfTransactions ?? "",
         paymentOrderDescription: po.paymentOrderDescription ?? "",
-        amount: po.amount ?? "",
-        totalAmount: po.totalAmount ?? "",
         message: po.message ?? "",
         pinCode: po.pinCode ?? "",
       },
@@ -342,14 +335,13 @@ function PaymentOrders() {
 
     const isCreate = id === "new";
 
+    // ✅ no amount / totalAmount in payload anymore
     const payload = {
       transactionId: v.transactionId !== "" ? Number(v.transactionId) : null,
       paymentOrderDate: v.paymentOrderDate || null,
       numberOfTransactions:
         v.numberOfTransactions !== "" ? Number(v.numberOfTransactions) : null,
       paymentOrderDescription: v.paymentOrderDescription || "",
-      amount: v.amount !== "" ? Number(v.amount) : null,
-      totalAmount: v.totalAmount !== "" ? Number(v.totalAmount) : null,
       message: v.message || "",
       pinCode: v.pinCode || "",
     };
@@ -560,7 +552,6 @@ function PaymentOrders() {
                       paymentOrderId={po.id}
                       txOptions={txOptions}
                       orgOptions={orgOptions}
-                      currencyOptions={currencyOptions}
                       costDetailOptions={costDetailOptions}
                     />
                   </div>
@@ -571,7 +562,7 @@ function PaymentOrders() {
 
           {editingId === "new" && (
             <PaymentOrder
-              po={{ id: "new", ...blankPO }}
+              po={{ id: "new", ...blankPO, amount: 0 }}
               isEditing
               editedValues={editedValues.new}
               onChange={onChange}

@@ -52,14 +52,11 @@ function normalizeLine(r) {
     r.costDetail?.id ??
     null;
 
-  const currencyId = r.currencyId ?? r.currency_id ?? r.currency?.id ?? null;
-
   return {
     id,
     transactionId,
     organizationId,
     costDetailId,
-    currencyId,
     amount: r.amount ?? null,
     memo: r.memo ?? "",
   };
@@ -79,7 +76,6 @@ const PaymentOrderLines = ({
   paymentOrderId,
   txOptions = [],
   orgOptions = [],
-  currencyOptions = [],
   costDetailOptions = [],
 }) => {
   const token = useMemo(() => localStorage.getItem("authToken"), []);
@@ -106,7 +102,6 @@ const PaymentOrderLines = ({
     transactionId: "",
     organizationId: "",
     costDetailId: "",
-    currencyId: "",
     amount: "",
     memo: "",
   });
@@ -115,7 +110,7 @@ const PaymentOrderLines = ({
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
 
-  // ✅ NEW: row-scoped errors for inline updates, keyed by rowId
+  // ✅ row-scoped errors for inline updates, keyed by rowId
   // { [rowId]: { message: string, fieldErrors: {amount?: string, ...} } }
   const [rowErrorsById, setRowErrorsById] = useState({});
 
@@ -127,7 +122,7 @@ const PaymentOrderLines = ({
     setFormError("");
     setFieldErrors({});
 
-    // Clear row errors when reloading (optional; usually fine)
+    // Clear row errors when reloading (optional)
     setRowErrorsById({});
 
     setIsLocked(false);
@@ -270,7 +265,6 @@ const PaymentOrderLines = ({
       transactionId: draft.transactionId ? Number(draft.transactionId) : null,
       organizationId: toNumOrNull(draft.organizationId),
       costDetailId: draft.costDetailId ? Number(draft.costDetailId) : null,
-      currencyId: draft.currencyId ? Number(draft.currencyId) : null,
       amount: draft.amount === "" ? null : Number(draft.amount),
       memo: draft.memo || null,
     };
@@ -297,7 +291,6 @@ const PaymentOrderLines = ({
         transactionId: "",
         organizationId: "",
         costDetailId: "",
-        currencyId: "",
         amount: "",
         memo: "",
       });
@@ -335,17 +328,11 @@ const PaymentOrderLines = ({
           : patch.costDetailId
           ? Number(patch.costDetailId)
           : null,
-      currencyId:
-        patch.currencyId === ""
-          ? null
-          : patch.currencyId
-          ? Number(patch.currencyId)
-          : null,
       amount: patch.amount === "" ? null : Number(patch.amount),
       memo: patch.memo ?? null,
     };
 
-    // keep simple client-side guards per-row (put them into row error too)
+    // simple client-side guards per-row (put them into row error too)
     const localFe = {};
     if (
       payload.amount == null ||
@@ -374,7 +361,7 @@ const PaymentOrderLines = ({
     } catch (e) {
       console.error(e);
 
-      // ✅ Put backend message onto this row
+      // Put backend message onto this row
       setRowErrorsById((prev) => ({
         ...prev,
         [rowId]: {
@@ -440,7 +427,7 @@ const PaymentOrderLines = ({
         </div>
       )}
 
-      {/* keep page-level banner for fetch/create/delete errors */}
+      {/* page-level banner for fetch/create/delete errors */}
       {formError && (
         <div className={styles.errorBanner}>
           <FiAlertCircle />
@@ -515,25 +502,6 @@ const PaymentOrderLines = ({
         </div>
 
         <div className={styles.field}>
-          <label>Currency</label>
-          <select
-            value={draft.currencyId}
-            disabled={loading || isLocked}
-            onChange={(e) =>
-              setDraft((p) => ({ ...p, currencyId: e.target.value }))
-            }
-            className={styles.input}
-          >
-            <option value="">(none)</option>
-            {currencyOptions.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className={styles.field}>
           <label>Amount *</label>
           <input
             type="number"
@@ -585,7 +553,6 @@ const PaymentOrderLines = ({
           <div>Tx</div>
           <div>Org</div>
           <div>Cost detail</div>
-          <div>Currency</div>
           <div>Amount</div>
           <div>Memo</div>
           <div />
@@ -602,7 +569,6 @@ const PaymentOrderLines = ({
               row={r}
               txOptions={txOptions}
               orgOptions={orgOptions}
-              currencyOptions={currencyOptions}
               costDetailOptions={costDetailOptions}
               locked={isLocked}
               rowError={rowErrorsById[r.id] || null}
@@ -627,7 +593,6 @@ const LineRow = ({
   row,
   txOptions,
   orgOptions,
-  currencyOptions,
   costDetailOptions,
   locked = false,
   onSave,
@@ -640,7 +605,6 @@ const LineRow = ({
     row.organizationId ?? ""
   );
   const [costDetailId, setCostDetailId] = useState(row.costDetailId ?? "");
-  const [currencyId, setCurrencyId] = useState(row.currencyId ?? "");
   const [amount, setAmount] = useState(row.amount ?? "");
   const [memo, setMemo] = useState(row.memo ?? "");
 
@@ -648,7 +612,6 @@ const LineRow = ({
     setTransactionId(row.transactionId ?? "");
     setOrganizationId(row.organizationId ?? "");
     setCostDetailId(row.costDetailId ?? "");
-    setCurrencyId(row.currencyId ?? "");
     setAmount(row.amount ?? "");
     setMemo(row.memo ?? "");
   }, [
@@ -656,7 +619,6 @@ const LineRow = ({
     row.transactionId,
     row.organizationId,
     row.costDetailId,
-    row.currencyId,
     row.amount,
     row.memo,
   ]);
@@ -725,25 +687,6 @@ const LineRow = ({
       </div>
 
       <div>
-        <select
-          value={currencyId}
-          disabled={locked}
-          onChange={(e) => {
-            setCurrencyId(e.target.value);
-            clearRowError?.();
-          }}
-          className={styles.input}
-        >
-          <option value="">(none)</option>
-          {currencyOptions.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
         <input
           type="number"
           step="0.01"
@@ -759,7 +702,6 @@ const LineRow = ({
           <div className={styles.fieldError}>{amountError}</div>
         ) : null}
 
-        {/* Optional: show general backend message for the row */}
         {rowError?.message ? (
           <div className={styles.rowError}>{rowError.message}</div>
         ) : null}
@@ -790,7 +732,6 @@ const LineRow = ({
               transactionId,
               organizationId,
               costDetailId,
-              currencyId,
               amount,
               memo,
             })

@@ -213,6 +213,8 @@ const Transaction = ({
 
   const hc = (i) => (!visibleCols[i] ? styles.hiddenCol : "");
 
+  const txIdLabel = isCreate ? "(new)" : tx?.id != null ? `TX#${tx.id}` : "-";
+
   return (
     <>
       <div
@@ -221,7 +223,7 @@ const Transaction = ({
           isEven ? styles.zebraEven : ""
         } ${styles.hoverable}`}
       >
-        {/* Actions */}
+        {/* 0: Actions */}
         <Cell className={`${styles.stickyCol} ${styles.actionsCol} ${hc(0)}`}>
           {isEditing ? (
             <div className={styles.actions}>
@@ -295,58 +297,63 @@ const Transaction = ({
           )}
         </Cell>
 
-        <Cell className={hc(1)}>
+        {/* 1: Tx ID (read-only, never editable) */}
+        <Cell className={hc(1)}>{txIdLabel}</Cell>
+
+        {/* 2..: rest */}
+        <Cell className={hc(2)}>
           {isEditing ? selectOrg("organizationId") : orgName(tx.organizationId)}
         </Cell>
-        <Cell className={hc(2)}>
+
+        <Cell className={hc(3)}>
           {isEditing ? selectProject() : projectName(tx.projectId)}
         </Cell>
 
-        {/* ✅ NEW */}
-        <Cell className={hc(3)}>
+        <Cell className={hc(4)}>
           {isEditing ? selectBudget() : budgetName(tx.budgetId)}
         </Cell>
 
-        <Cell className={hc(4)}>
+        <Cell className={hc(5)}>
           {isEditing
             ? selectOrg("financierOrganizationId")
             : orgName(tx.financierOrganizationId)}
         </Cell>
-        <Cell className={hc(5)}>
+
+        <Cell className={hc(6)}>
           {isEditing ? selectStatus() : statusName(tx.transactionStatusId)}
         </Cell>
 
-        <Cell className={hc(6)}>
+        <Cell className={hc(7)}>
           {isEditing
             ? inputNum("appliedForAmount", "1")
             : tx.appliedForAmount ?? "-"}
         </Cell>
 
-        <Cell className={hc(7)}>
+        <Cell className={hc(8)}>
           {isEditing
             ? inputNum("firstShareAmount", "0.01")
             : tx.firstShareAmount ?? "-"}
         </Cell>
 
-        <Cell className={hc(8)}>
+        <Cell className={hc(9)}>
           {isEditing
             ? inputNum("approvedAmount", "1")
             : tx.approvedAmount ?? "-"}
         </Cell>
 
-        <Cell className={hc(9)}>
+        <Cell className={hc(10)}>
           {isEditing
             ? inputNum("secondShareAmount", "0.01")
             : tx.secondShareAmount ?? "-"}
         </Cell>
 
-        <Cell className={hc(10)}>
+        <Cell className={hc(11)}>
           {isEditing
             ? selectYesNo("ownContribution")
             : tx.ownContribution ?? "-"}
         </Cell>
 
-        <Cell className={hc(11)}>
+        <Cell className={hc(12)}>
           {isEditing
             ? inputDate
             : tx.datePlanned
@@ -354,7 +361,7 @@ const Transaction = ({
             : "-"}
         </Cell>
 
-        <Cell className={hc(12)}>
+        <Cell className={hc(13)}>
           {isEditing ? selectYesNo("okStatus") : tx.okStatus ?? "-"}
         </Cell>
       </div>
@@ -364,7 +371,7 @@ const Transaction = ({
           <TransactionAllocations
             txId={tx.id}
             costDetailOptions={costDetailOptions}
-            budgetOptions={budgets} // ✅ add this
+            budgetOptions={budgets}
           />
         </div>
       )}

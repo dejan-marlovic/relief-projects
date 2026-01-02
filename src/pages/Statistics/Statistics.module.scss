@@ -70,6 +70,26 @@ $primary: #4a90e2;
   border: 1px solid #ffb3b3;
 }
 
+/* Info banner (non-error) */
+.infoBanner {
+  background: #f8fafc;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  color: #374151;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin: 0.5rem 0 1rem;
+  font-size: 0.9rem;
+
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+      "Liberation Mono", "Courier New", monospace;
+    font-size: 0.85em;
+    background: rgba(0, 0, 0, 0.04);
+    padding: 2px 6px;
+    border-radius: 6px;
+  }
+}
+
 /* Empty + info */
 .emptyText {
   color: #555;
@@ -127,7 +147,7 @@ $primary: #4a90e2;
   font-size: 0.9rem;
 }
 
-/* Tooltip for slices */
+/* Tooltip for slices/bars */
 .tooltipBox {
   background: #fff;
   border: 1px solid #e5e7eb;
@@ -187,4 +207,44 @@ $primary: #4a90e2;
 
 .sliceLabel {
   font-size: 12px;
+}
+
+/* ===== New: Bar chart section ===== */
+
+.sectionSpacer {
+  height: 26px;
+}
+
+.sectionHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0.25rem 0 0.75rem;
+  align-items: center;
+  text-align: center;
+}
+
+.sectionTitle {
+  font-weight: 800;
+  color: #111827;
+  font-size: 1.05rem;
+}
+
+.sectionSubtitle {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.barCard {
+  margin-top: 0.5rem;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
+  background: #fff;
+  padding: 10px 12px 14px;
+}
+
+.barChartWrap {
+  width: 100%;
+  min-height: 420px;
 }

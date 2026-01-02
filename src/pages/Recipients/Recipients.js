@@ -13,13 +13,14 @@ import { FiColumns, FiPlus } from "react-icons/fi";
 
 const BASE_URL = "http://localhost:8080";
 
-const headerLabels = ["Actions", "Organization", "Payment Order"];
+const headerLabels = ["Actions", "Organization", "Payment Order", "Amount"];
 
-// ✅ match Transactions: make Actions a bit wider to avoid clipping
+// ✅ add width for Amount column
 const BASE_COL_WIDTHS = [
-  130, // Actions (was 110)
+  130, // Actions
   260, // Organization
   170, // Payment Order
+  140, // Amount
 ];
 
 async function safeParseJsonResponse(res) {
@@ -446,7 +447,12 @@ function Recipients() {
 
           {editingId === "new" && (
             <RecipientRow
-              row={{ id: "new", organizationId: "", paymentOrderId: "" }}
+              row={{
+                id: "new",
+                organizationId: "",
+                paymentOrderId: "",
+                amount: 0,
+              }}
               isEditing
               editedValues={editedValues.new}
               onChange={onChange}
