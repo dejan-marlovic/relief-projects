@@ -6,17 +6,39 @@ export const ProjectContext = createContext();
 
 const ProjectProvider = ({ children }) => {
   const [projects, setProjects] = useState([]);
-  const [selectedProjectId, setSelectedProjectId] = useState("");
 
-  // 🔄 Fetch: Project IDs and names
+  // ✅ restore last selected project on mount
+  const [selectedProjectId, setSelectedProjectId] = useState(() => {
+    try {
+      return localStorage.getItem("selectedProjectId") || "";
+    } catch {
+      return "";
+    }
+  });
+
+  // ✅ DEBUG: detect provider remounts (temporary)
+  useEffect(() => {
+    console.log("✅ ProjectProvider mounted");
+    return () => console.log("❌ ProjectProvider unmounted");
+  }, []);
+
+  // ✅ persist selection whenever it changes
+  useEffect(() => {
+    try {
+      if (selectedProjectId) {
+        localStorage.setItem("selectedProjectId", selectedProjectId);
+      } else {
+        localStorage.removeItem("selectedProjectId");
+      }
+    } catch {
+      // ignore
+    }
+  }, [selectedProjectId]);
+
   const fetchProjects = useCallback(async () => {
     try {
       const token = localStorage.getItem("authToken");
-
-      // ❗ If there's no token yet (user not logged in), don't call the API
-      if (!token) {
-        return;
-      }
+      if (!token) return;
 
       const response = await fetch(`${BASE_URL}/api/projects/ids-names`, {
         method: "GET",
@@ -29,17 +51,17 @@ const ProjectProvider = ({ children }) => {
       if (!response.ok) throw new Error("Failed to fetch projects");
 
       const projectNamesAndIds = await response.json();
-
       const list = Array.isArray(projectNamesAndIds) ? projectNamesAndIds : [];
 
       setProjects(list);
 
-      // Only set a default selected project if we don't already have one
+      // ✅ keep current selection if it still exists; otherwise default to first
       setSelectedProjectId((prev) => {
-        if (prev) return prev;
-        if (list.length > 0) {
-          return list[0].id.toString();
-        }
+        const prevStr = prev ? String(prev) : "";
+        const exists = prevStr && list.some((p) => String(p.id) === prevStr);
+
+        if (exists) return prevStr;
+        if (list.length > 0) return String(list[0].id);
         return "";
       });
     } catch (error) {
@@ -47,7 +69,6 @@ const ProjectProvider = ({ children }) => {
     }
   }, []);
 
-  // Try to fetch on mount (works when user refreshes while already logged in)
   useEffect(() => {
     fetchProjects();
   }, [fetchProjects]);
@@ -59,7 +80,6 @@ const ProjectProvider = ({ children }) => {
         setProjects,
         selectedProjectId,
         setSelectedProjectId,
-        // 👇 this is what Login will call after successful login
         refreshProjects: fetchProjects,
       }}
     >

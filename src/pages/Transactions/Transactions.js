@@ -16,7 +16,7 @@ const BASE_URL = "http://localhost:8080";
 const blankTx = {
   organizationId: "",
   projectId: "",
-  budgetId: "", // ✅ NEW
+  budgetId: "",
   financierOrganizationId: "",
   transactionStatusId: "",
   appliedForAmount: "",
@@ -30,9 +30,10 @@ const blankTx = {
 
 const headerLabels = [
   "Actions",
+  "Tx ID", // ✅ NEW (read-only)
   "Org",
   "Project",
-  "Budget", // ✅ NEW
+  "Budget",
   "Financier",
   "Status",
   "Applied Amt",
@@ -44,8 +45,22 @@ const headerLabels = [
   "OK Status",
 ];
 
+// Added one width for Tx ID
 const BASE_COL_WIDTHS = [
-  160, 160, 220, 260, 180, 160, 120, 120, 140, 120, 110, 170, 100,
+  160, // Actions
+  110, // ✅ Tx ID
+  160, // Org
+  220, // Project
+  260, // Budget
+  180, // Financier
+  160, // Status
+  120, // Applied Amt
+  120, // 1st Share
+  140, // Approved Amt
+  120, // 2nd Share
+  110, // Own Contrib
+  170, // Date Planned
+  100, // OK Status
 ];
 
 const Transactions = ({ refreshTrigger }) => {
@@ -60,7 +75,7 @@ const Transactions = ({ refreshTrigger }) => {
   const [orgOptions, setOrgOptions] = useState([]);
   const [projectOptions, setProjectOptions] = useState([]);
   const [statusOptions, setStatusOptions] = useState([]);
-  const [budgetOptions, setBudgetOptions] = useState([]); // ✅ NEW
+  const [budgetOptions, setBudgetOptions] = useState([]);
   const [costDetailOptions, setCostDetailOptions] = useState([]);
 
   // UI
@@ -78,7 +93,7 @@ const Transactions = ({ refreshTrigger }) => {
   const newRowRef = useRef(null);
 
   const toggleCol = (i) => {
-    if (i === 0) return;
+    if (i === 0) return; // keep Actions visible
     setVisibleCols((prev) => {
       const next = [...prev];
       next[i] = !next[i];
@@ -111,6 +126,7 @@ const Transactions = ({ refreshTrigger }) => {
         );
         if (!res.ok)
           throw new Error(`Failed to fetch transactions (${res.status})`);
+
         const data = await res.json();
         const list = Array.isArray(data) ? data : data ? [data] : [];
         setTransactions(list);
@@ -171,7 +187,7 @@ const Transactions = ({ refreshTrigger }) => {
     }
   }, [editingId]);
 
-  // ✅ budgets + cost detail options (same effect)
+  // budgets + cost detail options
   useEffect(() => {
     let cancelled = false;
 
@@ -230,7 +246,7 @@ const Transactions = ({ refreshTrigger }) => {
       [tx.id]: {
         organizationId: tx.organizationId,
         projectId: tx.projectId,
-        budgetId: tx.budgetId, // ✅ NEW
+        budgetId: tx.budgetId,
         financierOrganizationId: tx.financierOrganizationId,
         transactionStatusId: tx.transactionStatusId,
         appliedForAmount: tx.appliedForAmount,
@@ -255,7 +271,6 @@ const Transactions = ({ refreshTrigger }) => {
     setEditingId("new");
     setExpandedTxId(null);
 
-    // If there is exactly one budget for the project, preselect it
     const autoBudgetId = budgetOptions.length === 1 ? budgetOptions[0].id : "";
 
     setEditedValues((prev) => ({
@@ -303,7 +318,7 @@ const Transactions = ({ refreshTrigger }) => {
         ? Number(values.organizationId)
         : null,
       projectId: effectiveProjectId ? Number(effectiveProjectId) : null,
-      budgetId: values.budgetId ? Number(values.budgetId) : null, // ✅ NEW (required)
+      budgetId: values.budgetId ? Number(values.budgetId) : null,
       financierOrganizationId: values.financierOrganizationId
         ? Number(values.financierOrganizationId)
         : null,
@@ -440,6 +455,7 @@ const Transactions = ({ refreshTrigger }) => {
                 <FiColumns />
                 Columns
               </button>
+
               {columnsOpen && (
                 <div className={styles.columnsPanel}>
                   {headerLabels.map((h, i) => (
@@ -522,7 +538,7 @@ const Transactions = ({ refreshTrigger }) => {
                 organizations={orgOptions}
                 projects={projectOptions}
                 statuses={statusOptions}
-                budgets={budgetOptions} // ✅ NEW
+                budgets={budgetOptions}
                 visibleCols={visibleCols}
                 fieldErrors={fieldErrors[tx.id] || {}}
                 expanded={expandedTxId === tx.id}
@@ -550,7 +566,7 @@ const Transactions = ({ refreshTrigger }) => {
               organizations={orgOptions}
               projects={projectOptions}
               statuses={statusOptions}
-              budgets={budgetOptions} // ✅ NEW
+              budgets={budgetOptions}
               visibleCols={visibleCols}
               isEven={false}
               fieldErrors={fieldErrors.new || {}}

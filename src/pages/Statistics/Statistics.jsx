@@ -1,5 +1,16 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { PieChart, Pie, Tooltip, Cell } from "recharts";
+import {
+  PieChart,
+  Pie,
+  Tooltip as RechartsTooltip,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+} from "recharts";
 import styles from "./Statistics.module.scss";
 
 const BASE_URL = "http://localhost:8080";
@@ -50,10 +61,44 @@ const SliceTooltip = ({ active, payload }) => {
   );
 };
 
+// Tooltip for bars (same UI pattern as SliceTooltip)
+const BarTooltip = ({ active, payload, label }) => {
+  if (!active || !payload || !payload.length) return null;
+  const d = payload[0]?.payload;
+  if (!d) return null;
+
+  const names = Array.isArray(d.projectNames) ? d.projectNames : [];
+  const MAX_SHOW = 10;
+  const more = Math.max(0, names.length - MAX_SHOW);
+
+  return (
+    <div className={styles.tooltipBox}>
+      <div className={styles.tooltipTitle}>{label ?? d.name}</div>
+      <div className={styles.tooltipCount}>
+        <strong>{d.value}</strong> project{d.value === 1 ? "" : "s"}
+      </div>
+
+      {names.length > 0 ? (
+        <ul className={styles.tooltipProjects}>
+          {names.slice(0, MAX_SHOW).map((n) => (
+            <li key={n}>{n}</li>
+          ))}
+        </ul>
+      ) : (
+        <div className={styles.tooltipEmpty}>No projects listed.</div>
+      )}
+
+      {more > 0 && <div className={styles.tooltipMore}>+{more} more…</div>}
+    </div>
+  );
+};
+
 const Statistics = () => {
   const [relations, setRelations] = useState([]);
   const [sectors, setSectors] = useState([]);
-  const [projects, setProjects] = useState([]);
+  const [projects, setProjects] = useState([]); // ids-names (used for labels/tooltips)
+  const [projectTypes, setProjectTypes] = useState([]); // active project types
+  const [projectsWithTypes, setProjectsWithTypes] = useState([]); // ideally includes type id
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -68,40 +113,47 @@ const Statistics = () => {
         }
       : { "Content-Type": "application/json", Accept: "application/json" };
 
+    const fetchJson = async (url, { optional = false } = {}) => {
+      const res = await fetch(url, { signal: ac.signal, headers: authHeaders });
+
+      if (res.status === 204) return []; // no content => treat as empty list
+
+      if (!res.ok) {
+        // Optional endpoint: allow missing route without hard failing the page
+        if (optional && (res.status === 404 || res.status === 403)) return null;
+        throw new Error(`Fetch failed (${res.status}) for ${url}`);
+      }
+
+      const data = await res.json();
+      return data;
+    };
+
     (async () => {
       try {
         setLoading(true);
         setError("");
 
-        const [relRes, secRes, projRes] = await Promise.all([
-          fetch(`${BASE_URL}/api/project-sectors/active`, {
-            signal: ac.signal,
-            headers: authHeaders,
-          }),
-          fetch(`${BASE_URL}/api/sectors/active`, {
-            signal: ac.signal,
-            headers: authHeaders,
-          }),
-          fetch(`${BASE_URL}/api/projects/ids-names`, {
-            signal: ac.signal,
-            headers: authHeaders,
-          }),
-        ]);
-
-        if (!relRes.ok)
-          throw new Error(`Project–sectors fetch failed: ${relRes.status}`);
-        if (!secRes.ok)
-          throw new Error(`Sectors fetch failed: ${secRes.status}`);
-        if (!projRes.ok)
-          throw new Error(`Projects fetch failed: ${projRes.status}`);
-
-        const relRows = await relRes.json();
-        const secRows = await secRes.json();
-        const projRows = await projRes.json();
+        // NOTE:
+        // - projects/ids-names is what your current pie tooltip mapping uses
+        // - projects/active is OPTIONAL and only used to compute projects by type
+        const [relRows, secRows, projRows, typeRows, projActiveRows] =
+          await Promise.all([
+            fetchJson(`${BASE_URL}/api/project-sectors/active`),
+            fetchJson(`${BASE_URL}/api/sectors/active`),
+            fetchJson(`${BASE_URL}/api/projects/ids-names`),
+            fetchJson(`${BASE_URL}/api/project-types/active`),
+            fetchJson(`${BASE_URL}/api/projects/active`, { optional: true }),
+          ]);
 
         setRelations(Array.isArray(relRows) ? relRows : []);
         setSectors(Array.isArray(secRows) ? secRows : []);
         setProjects(Array.isArray(projRows) ? projRows : []);
+        setProjectTypes(Array.isArray(typeRows) ? typeRows : []);
+
+        // If /api/projects/active exists and returns a list, use it; otherwise empty list
+        setProjectsWithTypes(
+          Array.isArray(projActiveRows) ? projActiveRows : []
+        );
       } catch (e) {
         if (e.name !== "AbortError") setError(e.message || "Unknown error");
       } finally {
@@ -113,20 +165,19 @@ const Statistics = () => {
   }, []);
 
   const COLORS = [
-    "#3366CC",
-    "#DC3912",
-    "#FF9900",
-    "#109618",
-    "#990099",
-    "#0099C6",
-    "#DD4477",
-    "#66AA00",
-    "#B82E2E",
-    "#316395",
-    "#994499",
-    "#22AA99",
+    "#6FA8DC", // blue
+    "#E67C73", // coral
+    "#F6B26B", // orange
+    "#93C47D", // green
+    "#8E7CC3", // purple
+    "#76A5AF", // teal
+    "#C27BA0", // mauve
+    "#A4C2F4", // light blue
+    "#FFD966", // yellow
+    "#B4A7D6", // lavender
+    "#6D9EEB", // brighter blue
+    "#D5A6BD", // dusty pink
   ];
-
   // Sector id -> "CODE — Description"
   const sectorNameMap = useMemo(() => {
     const map = new Map();
@@ -181,7 +232,98 @@ const Statistics = () => {
     [pieData]
   );
 
-  // ===== Chart geometry =====
+  // ===== Project type mapping + bar data =====
+  const projectTypeNameMap = useMemo(() => {
+    const map = new Map();
+    for (const t of projectTypes) {
+      const id = t?.id ?? t?.projectTypeId;
+      const name =
+        t?.projectTypeName ?? t?.name ?? (id != null ? `Type ${id}` : "Type");
+      if (id != null) map.set(Number(id), String(name));
+    }
+    return map;
+  }, [projectTypes]);
+
+  const extractProjectId = (p) => {
+    const id = p?.id ?? p?.projectId;
+    return id == null ? null : Number(id);
+  };
+
+  const extractProjectName = (p) => {
+    const id = extractProjectId(p);
+    return (
+      p?.projectName ??
+      p?.name ??
+      (id != null ? projectNameMap.get(id) : null) ??
+      (id != null ? `Project ${id}` : "Project")
+    );
+  };
+
+  // Try hard to find a "type id" field in whatever /api/projects/active returns
+  const extractProjectTypeId = (p) => {
+    const raw =
+      p?.projectTypeId ??
+      p?.typeId ??
+      p?.project_type_id ??
+      p?.projectType?.id ??
+      p?.projectType?.projectTypeId ??
+      p?.projectType?.project_type_id ??
+      p?.projectType?.project_typeId;
+
+    if (raw == null) return null;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : null;
+  };
+
+  const barData = useMemo(() => {
+    // If /api/projects/active isn't available (or doesn't include type ids), we may not have any bar data.
+    if (!Array.isArray(projectsWithTypes) || projectsWithTypes.length === 0)
+      return [];
+
+    const byType = new Map(); // typeId (number|null) -> { projectIds:Set<number>, count:number }
+
+    for (const p of projectsWithTypes) {
+      const pid = extractProjectId(p);
+      const typeId = extractProjectTypeId(p);
+
+      // Keep "Unassigned" bucket if type is missing
+      const key = typeId == null ? "__UNASSIGNED__" : String(typeId);
+
+      let bucket = byType.get(key);
+      if (!bucket) {
+        bucket = { count: 0, projectIds: new Set() };
+        byType.set(key, bucket);
+      }
+
+      bucket.count += 1;
+      if (pid != null) bucket.projectIds.add(pid);
+    }
+
+    const rows = Array.from(byType.entries()).map(([key, info]) => {
+      const isUnassigned = key === "__UNASSIGNED__";
+      const typeId = isUnassigned ? null : Number(key);
+      const name = isUnassigned
+        ? "Unassigned"
+        : projectTypeNameMap.get(typeId) || `Type ${typeId}`;
+
+      const projectNames = Array.from(info.projectIds)
+        .map((pid) => projectNameMap.get(pid) || `Project ${pid}`)
+        .sort((a, b) => a.localeCompare(b));
+
+      return {
+        typeId,
+        name,
+        value: info.count,
+        projectNames,
+      };
+    });
+
+    // Sort: biggest first, then name
+    rows.sort((a, b) => b.value - a.value || a.name.localeCompare(b.name));
+    return rows;
+  }, [projectsWithTypes, projectTypeNameMap, projectNameMap]);
+
+  // ===== Chart geometry (Pie) =====
   const CHART_WIDTH = 1460;
   const OUTER_RADIUS = 185;
   const LABEL_OFFSET = 110;
@@ -272,10 +414,17 @@ const Statistics = () => {
     [pieData]
   );
 
+  const barHasTypeInfo = useMemo(() => {
+    // Heuristic: at least one project has a detectable type id
+    if (!Array.isArray(projectsWithTypes) || projectsWithTypes.length === 0)
+      return false;
+    return projectsWithTypes.some((p) => extractProjectTypeId(p) != null);
+  }, [projectsWithTypes]);
+
   return (
     <div className={styles.page}>
       <div className={styles.shell}>
-        {/* ✅ Project/Transactions style header */}
+        {/* ✅ Header */}
         <div className={styles.pageHeader}>
           <div className={styles.pageHeaderText}>
             <h2 className={styles.pageTitle}>Statistics</h2>
@@ -284,9 +433,7 @@ const Statistics = () => {
             </p>
           </div>
 
-          <div className={styles.headerActions}>
-            {/* (Optional future controls: filters, export, etc.) */}
-          </div>
+          <div className={styles.headerActions}>{/* future controls */}</div>
         </div>
 
         {loading && <div className={styles.loadingSkeleton} />}
@@ -324,13 +471,83 @@ const Statistics = () => {
                   ))}
                 </Pie>
 
-                <Tooltip content={<SliceTooltip />} />
+                <RechartsTooltip content={<SliceTooltip />} />
               </PieChart>
             </div>
 
             <div className={styles.chartLegendSpacer} />
-
             <LegendBlock items={legendItems} />
+
+            {/* ✅ Bar chart right under pie chart */}
+            <div className={styles.sectionSpacer} />
+
+            <div className={styles.sectionHeader}>
+              <div className={styles.sectionTitle}>
+                Projects by project type
+              </div>
+              <div className={styles.sectionSubtitle}>
+                Counts come from your projects endpoint (must include a project
+                type id).
+              </div>
+            </div>
+
+            {!barHasTypeInfo && (
+              <div className={styles.infoBanner}>
+                I couldn’t detect any project type id on{" "}
+                <code>/api/projects/active</code>.
+                <br />
+                Make sure it returns something like <code>
+                  projectTypeId
+                </code>{" "}
+                (or <code>projectType.id</code>) per project.
+              </div>
+            )}
+
+            {barHasTypeInfo && barData.length === 0 && (
+              <div className={styles.emptyText}>
+                No project–type data found.
+              </div>
+            )}
+
+            {barHasTypeInfo && barData.length > 0 && (
+              <div className={styles.barCard}>
+                <div className={styles.barChartWrap}>
+                  <ResponsiveContainer width="100%" height={420}>
+                    <BarChart
+                      data={barData}
+                      margin={{ top: 16, right: 24, bottom: 70, left: 8 }}
+                    >
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="rgba(0,0,0,0.08)"
+                      />
+                      <XAxis
+                        dataKey="name"
+                        interval={0}
+                        angle={-20}
+                        textAnchor="end"
+                        height={70}
+                        tickFormatter={(v) =>
+                          typeof v === "string" && v.length > 24
+                            ? `${v.slice(0, 23)}…`
+                            : v
+                        }
+                      />
+                      <YAxis allowDecimals={false} />
+                      <RechartsTooltip content={<BarTooltip />} />
+                      <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                        {barData.map((entry, index) => (
+                          <Cell
+                            key={`bar-${entry.typeId ?? entry.name}`}
+                            fill={COLORS[index % COLORS.length]}
+                          />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
           </>
         )}
 
@@ -338,6 +555,9 @@ const Statistics = () => {
           <span>relations: {relations.length}</span>
           <span>sectors: {sectors.length}</span>
           <span>slices: {pieData.length}</span>
+          <span>project types: {projectTypes.length}</span>
+          <span>projects (ids-names): {projects.length}</span>
+          <span>projects (active): {projectsWithTypes.length}</span>
         </div>
       </div>
     </div>
