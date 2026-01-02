@@ -20,21 +20,19 @@ const headerLabels = [
   "Date",
   "#Tx",
   "Description",
-  "Amount",
-  "Total Amount",
+  "Amount", // ✅ computed from backend
   "Message",
   "Pin Code",
 ];
 
-const BASE_COL_WIDTHS = [160, 160, 180, 90, 300, 140, 160, 200, 140];
+// ✅ match number of columns above
+const BASE_COL_WIDTHS = [160, 160, 180, 90, 300, 140, 200, 140];
 
 const blankPO = {
   transactionId: "",
   paymentOrderDate: "",
   numberOfTransactions: "",
   paymentOrderDescription: "",
-  amount: "",
-  totalAmount: "",
   message: "",
   pinCode: "",
 };
@@ -70,8 +68,8 @@ function normalizePO(po) {
       po.numberOfTransactions ?? po.number_of_transactions ?? null,
     paymentOrderDescription:
       po.paymentOrderDescription ?? po.payment_order_description ?? "",
-    amount: po.amount ?? null,
-    totalAmount: po.totalAmount ?? po.total_amount ?? null,
+    // ✅ backend computed
+    amount: po.amount ?? 0,
     message: po.message ?? "",
     pinCode: po.pinCode ?? po.pin_code ?? "",
   };
@@ -254,8 +252,6 @@ function PaymentOrders() {
         paymentOrderDate: po.paymentOrderDate ?? "",
         numberOfTransactions: po.numberOfTransactions ?? "",
         paymentOrderDescription: po.paymentOrderDescription ?? "",
-        amount: po.amount ?? "",
-        totalAmount: po.totalAmount ?? "",
         message: po.message ?? "",
         pinCode: po.pinCode ?? "",
       },
@@ -328,14 +324,13 @@ function PaymentOrders() {
 
     const isCreate = id === "new";
 
+    // ✅ no amount / totalAmount in payload anymore
     const payload = {
       transactionId: v.transactionId !== "" ? Number(v.transactionId) : null,
       paymentOrderDate: v.paymentOrderDate || null,
       numberOfTransactions:
         v.numberOfTransactions !== "" ? Number(v.numberOfTransactions) : null,
       paymentOrderDescription: v.paymentOrderDescription || "",
-      amount: v.amount !== "" ? Number(v.amount) : null,
-      totalAmount: v.totalAmount !== "" ? Number(v.totalAmount) : null,
       message: v.message || "",
       pinCode: v.pinCode || "",
     };
@@ -556,7 +551,7 @@ function PaymentOrders() {
 
           {editingId === "new" && (
             <PaymentOrder
-              po={{ id: "new", ...blankPO }}
+              po={{ id: "new", ...blankPO, amount: 0 }}
               isEditing
               editedValues={editedValues.new}
               onChange={onChange}
