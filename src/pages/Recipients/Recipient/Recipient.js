@@ -112,6 +112,12 @@ const RecipientRow = ({
 
   const hc = (i) => (!visibleCols[i] ? styles.hiddenCol : "");
 
+  // ✅ amount is computed by backend; display only
+  const amountNum =
+    row?.amount == null || Number.isNaN(Number(row.amount))
+      ? 0
+      : Number(row.amount);
+
   return (
     <div
       ref={rowRef || undefined}
@@ -191,6 +197,9 @@ const RecipientRow = ({
       <Cell className={hc(2)}>
         {isEditing ? selectPO : row.paymentOrderId ?? "-"}
       </Cell>
+
+      {/* 3: Amount (computed, read-only) */}
+      <Cell className={hc(3)}>{amountNum.toFixed(2)}</Cell>
     </div>
   );
 };
