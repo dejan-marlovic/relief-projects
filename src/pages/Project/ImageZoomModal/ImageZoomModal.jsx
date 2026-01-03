@@ -1,4 +1,3 @@
-// ImageZoomModal.jsx
 import React, { useEffect, useMemo } from "react";
 import { FiX, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import styles from "./ImageZoomModal.module.scss";
@@ -109,7 +108,7 @@ const ImageZoomModal = ({
           </div>
         </div>
 
-        {/* ✅ Thumbnail strip */}
+        {/* Thumbnail strip */}
         {images.length > 1 && (
           <div className={styles.thumbStrip}>
             {images.map((img, i) => {
@@ -141,12 +140,16 @@ const ImageZoomModal = ({
         )}
 
         <div className={styles.canvas}>
-          <img
-            src={src}
-            alt={alt || "Zoomed cover"}
-            className={styles.image}
-            draggable={false}
-          />
+          {/* New wrapper for padding around the centered image */}
+          <div className={styles.imageWrapper}>
+            <img
+              src={src}
+              alt={alt || "Zoomed cover"}
+              className={styles.image}
+              draggable={false}
+            />
+          </div>
+
           <div className={styles.hint}>
             {images.length > 1 ? "←/→ to navigate • " : ""}
             Click outside or press ESC to close
