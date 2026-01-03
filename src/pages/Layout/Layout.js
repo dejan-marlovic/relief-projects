@@ -17,6 +17,7 @@ const Layout = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
+    localStorage.removeItem("selectedProjectId"); // ✅ important
     navigate("/login");
   };
 
@@ -83,7 +84,6 @@ const Layout = () => {
         </div>
       </header>
 
-      {/* TAB BAR */}
       <nav className={styles.nav}>
         <ul className={styles.tabList}>
           {[
@@ -93,11 +93,8 @@ const Layout = () => {
             ["/payments", "Payments"],
             ["/signatures", "Signatures"],
             ["/recipients", "Recipients"],
-
-            // ✅ swapped order
             ["/organizations", "Related Organizations"],
             ["/documents", "Documents"],
-
             ["/statistics", "Statistics"],
             ["/register-project", "New Project"],
           ].map(([path, label]) => (
