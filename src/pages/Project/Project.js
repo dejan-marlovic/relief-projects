@@ -7,6 +7,9 @@ import Memos from "../Project/Memos/Memos.jsx";
 
 import { ProjectContext } from "../../context/ProjectContext";
 
+// ✅ Use ImageZoomModal again
+import ImageZoomModal from "./ImageZoomModal/ImageZoomModal.jsx";
+
 import {
   FiTrash2,
   FiChevronLeft,
@@ -123,6 +126,31 @@ const Project = () => {
           .filter(Boolean)
       : [];
   }, [projectDetails?.projectCoverImage]);
+
+  // ✅ Zoom modal state + helpers (gallery-aware)
+  const [zoomOpen, setZoomOpen] = useState(false);
+  const [zoomIndex, setZoomIndex] = useState(0);
+
+  const openZoomByIndex = (idx) => {
+    if (!imageNames?.length) return;
+    const safeIdx = Math.max(0, Math.min(idx, imageNames.length - 1));
+    setZoomIndex(safeIdx);
+    setZoomOpen(true);
+  };
+
+  const openZoomByName = (filename) => {
+    if (!filename) return;
+    const idx = imageNames.findIndex((n) => n === filename);
+    openZoomByIndex(idx >= 0 ? idx : 0);
+  };
+
+  const closeZoom = () => setZoomOpen(false);
+
+  // keep slideshow in sync when navigating inside modal
+  const handleZoomChangeIndex = (nextIdx) => {
+    setZoomIndex(nextIdx);
+    setCurrentImageIndex(nextIdx);
+  };
 
   // Reset slideshow index when image list changes
   useEffect(() => {
@@ -1148,6 +1176,9 @@ const Project = () => {
                         src={`${coverImagePath}${imageNames[currentImageIndex]}`}
                         alt="Project Cover"
                         className={styles.coverImage}
+                        style={{ cursor: "zoom-in" }}
+                        onClick={() => openZoomByIndex(currentImageIndex)}
+                        title="Click to open"
                       />
 
                       {imageNames.length > 1 && (
@@ -1192,7 +1223,14 @@ const Project = () => {
                       <ul className={styles.cleanList}>
                         {imageNames.map((name) => (
                           <li key={name} className={styles.imageRow}>
-                            <span className={styles.filename}>{name}</span>
+                            <span
+                              className={styles.filename}
+                              style={{ cursor: "zoom-in" }}
+                              onClick={() => openZoomByName(name)}
+                              title="Click to open"
+                            >
+                              {name}
+                            </span>
                             <button
                               type="button"
                               onClick={() => handleDeleteImage(name)}
@@ -1957,6 +1995,16 @@ const Project = () => {
           </div>
         </div>
       )}
+
+      {/* ✅ Modal mount */}
+      <ImageZoomModal
+        open={zoomOpen}
+        images={imageNames}
+        index={zoomIndex}
+        basePath={coverImagePath}
+        onClose={closeZoom}
+        onChangeIndex={handleZoomChangeIndex}
+      />
     </div>
   );
 };
