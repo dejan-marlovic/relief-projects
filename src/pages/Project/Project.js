@@ -1315,6 +1315,53 @@ const Project = () => {
                   </div>
                 </div>
 
+                {/* ✅ MOVED HERE: Upload block above the cover image */}
+                <div className={styles.sectionRowStack}>
+                  <div className={styles.sectionTitle}>
+                    <FiUploadCloud />
+                    <span>Cover image upload</span>
+                  </div>
+
+                  <div
+                    onDrop={handleCoverDrop}
+                    onDragOver={handleCoverDragOver}
+                    className={styles.dropzone}
+                    onClick={() =>
+                      document.getElementById("coverImageFileInput")?.click()
+                    }
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <div className={styles.dropzoneText}>
+                      {uploadingCover ? (
+                        <strong>Uploading…</strong>
+                      ) : (
+                        <>
+                          <strong>Drag & drop</strong> or click to select an
+                          image
+                        </>
+                      )}
+                      <div className={styles.dropzoneHint}>
+                        PNG, JPG, WEBP • recommended wide image
+                      </div>
+                    </div>
+                  </div>
+
+                  <input
+                    id="coverImageFileInput"
+                    type="file"
+                    accept="image/*"
+                    style={{ display: "none" }}
+                    onChange={handleCoverFileInput}
+                  />
+
+                  {uploadError && (
+                    <div className={styles.inlineError}>{uploadError}</div>
+                  )}
+                </div>
+
+                <div className={styles.divider} />
+
                 {imageNames.length > 0 ? (
                   <>
                     <div className={styles.imageShell}>
@@ -1426,7 +1473,7 @@ const Project = () => {
                     <div>
                       <div style={{ fontWeight: 600 }}>No cover image yet</div>
                       <div style={{ fontSize: 12, color: "#666" }}>
-                        Upload one below to show a slideshow here.
+                        Upload one above to show a slideshow here.
                       </div>
                     </div>
                   </div>
@@ -1785,59 +1832,10 @@ const Project = () => {
                       style={{ gridColumn: "1 / -1" }}
                     >
                       <div className={styles.cardHeader}>
-                        <div className={styles.cardTitle}>Links & media</div>
+                        <div className={styles.cardTitle}>Project Links</div>
                         <div className={styles.cardMeta}>
-                          Sectors, organizations, participants, upload
+                          Sectors, organizations, participants
                         </div>
-                      </div>
-
-                      {/* Upload */}
-                      <div className={styles.sectionRowStack}>
-                        <div className={styles.sectionTitle}>
-                          <FiUploadCloud />
-                          <span>Cover image upload</span>
-                        </div>
-
-                        <div
-                          onDrop={handleCoverDrop}
-                          onDragOver={handleCoverDragOver}
-                          className={styles.dropzone}
-                          onClick={() =>
-                            document
-                              .getElementById("coverImageFileInput")
-                              ?.click()
-                          }
-                          role="button"
-                          tabIndex={0}
-                        >
-                          <div className={styles.dropzoneText}>
-                            {uploadingCover ? (
-                              <strong>Uploading…</strong>
-                            ) : (
-                              <>
-                                <strong>Drag & drop</strong> or click to select
-                                an image
-                              </>
-                            )}
-                            <div className={styles.dropzoneHint}>
-                              PNG, JPG, WEBP • recommended wide image
-                            </div>
-                          </div>
-                        </div>
-
-                        <input
-                          id="coverImageFileInput"
-                          type="file"
-                          accept="image/*"
-                          style={{ display: "none" }}
-                          onChange={handleCoverFileInput}
-                        />
-
-                        {uploadError && (
-                          <div className={styles.inlineError}>
-                            {uploadError}
-                          </div>
-                        )}
                       </div>
 
                       <div className={styles.split}>
