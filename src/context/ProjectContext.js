@@ -16,12 +16,6 @@ const ProjectProvider = ({ children }) => {
     }
   });
 
-  // ✅ DEBUG: detect provider remounts (temporary)
-  useEffect(() => {
-    console.log("✅ ProjectProvider mounted");
-    return () => console.log("❌ ProjectProvider unmounted");
-  }, []);
-
   // ✅ persist selection whenever it changes
   useEffect(() => {
     try {
@@ -35,9 +29,12 @@ const ProjectProvider = ({ children }) => {
     }
   }, [selectedProjectId]);
 
+  // 🔄 Fetch: Project IDs and names
   const fetchProjects = useCallback(async () => {
     try {
       const token = localStorage.getItem("authToken");
+
+      // ❗ If there's no token yet (user not logged in), don't call the API
       if (!token) return;
 
       const response = await fetch(`${BASE_URL}/api/projects/ids-names`, {
@@ -69,6 +66,7 @@ const ProjectProvider = ({ children }) => {
     }
   }, []);
 
+  // Try to fetch on mount (works when user refreshes while already logged in)
   useEffect(() => {
     fetchProjects();
   }, [fetchProjects]);
