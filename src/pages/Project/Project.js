@@ -2175,6 +2175,7 @@ const Project = () => {
       <ImageZoomModal
         open={zoomOpen}
         images={imageNames}
+        captions={imageCaptions}
         index={zoomIndex}
         basePath={coverImagePath}
         onClose={closeZoom}
