@@ -27,7 +27,7 @@
   gap: 12px;
   padding: 10px 12px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  flex-shrink: 0; /* Prevent toolbar from shrinking */
+  flex-shrink: 0;
 }
 
 .title {
@@ -80,7 +80,7 @@
   background: #0f0f0f;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   overflow-x: auto;
-  flex-shrink: 0; /* Don't let it shrink */
+  flex-shrink: 0;
 }
 
 .thumbBtn {
@@ -122,27 +122,36 @@
   min-height: 0;
 }
 
-/* NEW: Full-space centering container without fixed padding */
+/* Full-space centering container without fixed padding */
 .imageWrapper {
   flex: 1;
   min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px; /* Minimal safe padding — prevents edge touch on mobile */
+  padding: 12px;
   box-sizing: border-box;
 }
 
-/* Image now uses calc() to respect padding but never exceed container */
 .image {
-  max-width: calc(100% - 24px); /* Accounts for left + right padding */
-  max-height: calc(100% - 24px); /* Accounts for top + bottom padding */
+  max-width: calc(100% - 24px);
+  max-height: calc(100% - 24px);
   object-fit: contain;
   display: block;
   user-select: none;
   pointer-events: auto;
-  /* Optional: subtle shadow for depth */
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* ✅ NEW: Caption styling */
+.caption {
+  padding: 10px 12px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(17, 17, 17, 0.9);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  line-height: 1.4;
+  white-space: pre-wrap;
 }
 
 .hint {

@@ -7,6 +7,7 @@ const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
 const ImageZoomModal = ({
   open,
   images = [],
+  captions = [], // ✅ NEW
   index = 0,
   basePath = "",
   onClose,
@@ -20,6 +21,8 @@ const ImageZoomModal = ({
   const filename = images[safeIndex] || "";
   const src = filename ? `${basePath}${filename}` : "";
   const alt = filename || "Cover image";
+
+  const caption = captions?.[safeIndex] || ""; // ✅ NEW
 
   const canNav = images.length > 1;
 
@@ -140,7 +143,6 @@ const ImageZoomModal = ({
         )}
 
         <div className={styles.canvas}>
-          {/* New wrapper for padding around the centered image */}
           <div className={styles.imageWrapper}>
             <img
               src={src}
@@ -149,6 +151,11 @@ const ImageZoomModal = ({
               draggable={false}
             />
           </div>
+
+          {/* ✅ NEW: Caption */}
+          {caption && caption.trim() ? (
+            <div className={styles.caption}>{caption}</div>
+          ) : null}
 
           <div className={styles.hint}>
             {images.length > 1 ? "←/→ to navigate • " : ""}
