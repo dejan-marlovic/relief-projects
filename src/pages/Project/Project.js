@@ -7,6 +7,9 @@ import Memos from "../Project/Memos/Memos.jsx";
 
 import { ProjectContext } from "../../context/ProjectContext";
 
+// ✅ Use ImageZoomModal again
+import ImageZoomModal from "./ImageZoomModal/ImageZoomModal.jsx";
+
 import {
   FiTrash2,
   FiChevronLeft,
@@ -21,6 +24,9 @@ import {
 
 const BASE_URL = "http://localhost:8080";
 const coverImagePath = `${BASE_URL}/images/projects/`;
+
+// ✅ caption delimiter (must match backend)
+const CAPTION_DELIM = "|||";
 
 const Project = () => {
   const navigate = useNavigate();
@@ -114,6 +120,43 @@ const Project = () => {
   const inputClass = (fieldName) =>
     `${styles.textInput} ${hasError(fieldName) ? styles.inputError : ""}`;
 
+  // =========================
+  // ✅ CAPTION SYNC HELPERS
+  // =========================
+  const parseCaptions = (raw) => {
+    if (raw == null) return [];
+    const str = String(raw);
+    if (!str.length) return [];
+    return str.split(CAPTION_DELIM).map((s) => s ?? "");
+  };
+
+  const buildCaptionString = (arr) => (arr || []).join(CAPTION_DELIM);
+
+  const parseImages = (project) => {
+    const raw = project?.projectCoverImage;
+    return raw
+      ? String(raw)
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
+  };
+
+  const normalizeProjectCaptions = (project) => {
+    if (!project) return project;
+
+    const imgs = parseImages(project);
+    const caps = parseCaptions(project.projectCoverImageCaption);
+
+    while (caps.length < imgs.length) caps.push("");
+    if (caps.length > imgs.length) caps.length = imgs.length;
+
+    return {
+      ...project,
+      projectCoverImageCaption: buildCaptionString(caps),
+    };
+  };
+
   // 🔍 Derive image list from comma-separated string
   const imageNames = useMemo(() => {
     return projectDetails?.projectCoverImage
@@ -123,6 +166,63 @@ const Project = () => {
           .filter(Boolean)
       : [];
   }, [projectDetails?.projectCoverImage]);
+
+  // ✅ Captions array derived from delimiter-string (kept in sync with imageNames)
+  const imageCaptions = useMemo(() => {
+    const caps = parseCaptions(projectDetails?.projectCoverImageCaption);
+    const len = imageNames.length;
+
+    const next = Array.from({ length: len }, (_, i) => caps[i] ?? "");
+    return next;
+  }, [projectDetails?.projectCoverImageCaption, imageNames.length]);
+
+  // ✅ Update caption for a specific image index (writes back to delimiter-string)
+  const setCaptionAtIndex = (idx, captionText) => {
+    setProjectDetails((prev) => {
+      if (!prev) return prev;
+
+      const imgs = parseImages(prev);
+      const caps = parseCaptions(prev.projectCoverImageCaption);
+
+      while (caps.length < imgs.length) caps.push("");
+      if (caps.length > imgs.length) caps.length = imgs.length;
+
+      if (imgs.length === 0) return prev;
+
+      const safeIdx = Math.max(0, Math.min(idx, imgs.length - 1));
+      caps[safeIdx] = captionText ?? "";
+
+      return {
+        ...prev,
+        projectCoverImageCaption: buildCaptionString(caps),
+      };
+    });
+  };
+
+  // ✅ Zoom modal state + helpers (gallery-aware)
+  const [zoomOpen, setZoomOpen] = useState(false);
+  const [zoomIndex, setZoomIndex] = useState(0);
+
+  const openZoomByIndex = (idx) => {
+    if (!imageNames?.length) return;
+    const safeIdx = Math.max(0, Math.min(idx, imageNames.length - 1));
+    setZoomIndex(safeIdx);
+    setZoomOpen(true);
+  };
+
+  const openZoomByName = (filename) => {
+    if (!filename) return;
+    const idx = imageNames.findIndex((n) => n === filename);
+    openZoomByIndex(idx >= 0 ? idx : 0);
+  };
+
+  const closeZoom = () => setZoomOpen(false);
+
+  // keep slideshow in sync when navigating inside modal
+  const handleZoomChangeIndex = (nextIdx) => {
+    setZoomIndex(nextIdx);
+    setCurrentImageIndex(nextIdx);
+  };
 
   // Reset slideshow index when image list changes
   useEffect(() => {
@@ -146,7 +246,9 @@ const Project = () => {
 
         if (!response.ok) throw new Error("Failed to fetch project details");
         const projectDetailsData = await response.json();
-        setProjectDetails(projectDetailsData);
+
+        // ✅ normalize captions length to match images
+        setProjectDetails(normalizeProjectCaptions(projectDetailsData));
       } catch (error) {
         console.error("Error fetching project details:", error);
         setFormError("Failed to load project details.");
@@ -483,12 +585,15 @@ const Project = () => {
       }
 
       const updatedProject = await response.json();
-      setProjectDetails(updatedProject);
+
+      // ✅ normalize captions length to match images
+      const normalized = normalizeProjectCaptions(updatedProject);
+      setProjectDetails(normalized);
 
       setProjects((prev) =>
         prev.map((p) =>
-          p.id === updatedProject.id
-            ? { ...p, projectName: updatedProject.projectName }
+          p.id === normalized.id
+            ? { ...p, projectName: normalized.projectName }
             : p
         )
       );
@@ -513,10 +618,18 @@ const Project = () => {
     if (file) uploadCoverImage(file);
   };
 
+  // ✅ Delete image + preserve captions even if backend wipes them
   const handleDeleteImage = async (filename) => {
     if (!projectDetails?.id) return;
     if (!window.confirm(`Delete image "${filename}" from this project?`))
       return;
+
+    // snapshot current mapping: filename -> caption (by index)
+    const prevImages = parseImages(projectDetails);
+    const prevCaps = parseCaptions(projectDetails.projectCoverImageCaption);
+    const captionByName = new Map(
+      prevImages.map((img, i) => [img, prevCaps[i] ?? ""])
+    );
 
     try {
       const response = await authFetch(
@@ -531,13 +644,73 @@ const Project = () => {
         throw new Error(text || "Failed to delete image");
       }
 
-      const updatedProject = await response.json();
-      setProjectDetails(updatedProject);
+      const updatedProjectRaw = await response.json();
+      const updatedImages = parseImages(updatedProjectRaw);
+
+      // rebuild captions for remaining images using old mapping
+      const rebuiltCaps = updatedImages.map(
+        (img) => captionByName.get(img) ?? ""
+      );
+      const rebuiltCaptionString = buildCaptionString(rebuiltCaps);
+
+      const backendCaps = parseCaptions(
+        updatedProjectRaw?.projectCoverImageCaption
+      );
+
+      // If backend wiped or shortened captions, override with rebuilt
+      const backendLooksBad =
+        !updatedProjectRaw?.projectCoverImageCaption ||
+        (updatedImages.length > 0 && backendCaps.length === 0) ||
+        backendCaps.length < updatedImages.length;
+
+      let finalProject = backendLooksBad
+        ? {
+            ...updatedProjectRaw,
+            projectCoverImageCaption: rebuiltCaptionString,
+          }
+        : normalizeProjectCaptions(updatedProjectRaw);
+
+      // ✅ NEW: persist rebuilt captions back to backend if it wiped them
+      if (backendLooksBad) {
+        try {
+          const persistRes = await authFetch(
+            `${BASE_URL}/api/projects/${finalProject.id}`,
+            {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(finalProject),
+            }
+          );
+
+          if (persistRes.ok) {
+            const persisted = await safeReadJson(persistRes);
+            if (persisted) finalProject = normalizeProjectCaptions(persisted);
+          } else {
+            const msg = await persistRes.text().catch(() => "");
+            console.warn("Caption persist after delete failed:", msg);
+          }
+        } catch (e) {
+          console.warn("Caption persist after delete threw:", e);
+        }
+      }
+
+      setProjectDetails(finalProject);
+
+      // keep indices in bounds
+      setCurrentImageIndex((prevIdx) => {
+        if (updatedImages.length === 0) return 0;
+        return Math.min(prevIdx, updatedImages.length - 1);
+      });
+
+      setZoomIndex((prevIdx) => {
+        if (updatedImages.length === 0) return 0;
+        return Math.min(prevIdx, updatedImages.length - 1);
+      });
 
       setProjects((prev) =>
         prev.map((p) =>
-          p.id === updatedProject.id
-            ? { ...p, projectName: updatedProject.projectName }
+          p.id === finalProject.id
+            ? { ...p, projectName: finalProject.projectName }
             : p
         )
       );
@@ -890,7 +1063,8 @@ const Project = () => {
       const updatedProject = text ? JSON.parse(text) : null;
 
       if (updatedProject) {
-        setProjectDetails(updatedProject);
+        // ✅ normalize captions length to match images
+        setProjectDetails(normalizeProjectCaptions(updatedProject));
 
         setProjects((prevProjects) =>
           prevProjects.map((proj) =>
@@ -1148,6 +1322,9 @@ const Project = () => {
                         src={`${coverImagePath}${imageNames[currentImageIndex]}`}
                         alt="Project Cover"
                         className={styles.coverImage}
+                        style={{ cursor: "zoom-in" }}
+                        onClick={() => openZoomByIndex(currentImageIndex)}
+                        title="Click to open"
                       />
 
                       {imageNames.length > 1 && (
@@ -1185,6 +1362,35 @@ const Project = () => {
                       )}
                     </div>
 
+                    {/* ✅ Caption editor (saved when clicking Save) */}
+                    <div style={{ marginTop: 12 }}>
+                      <div
+                        style={{
+                          fontWeight: 700,
+                          marginBottom: 6,
+                          fontSize: 13,
+                        }}
+                      >
+                        Caption (current image)
+                      </div>
+
+                      <textarea
+                        value={imageCaptions[currentImageIndex] || ""}
+                        onChange={(e) =>
+                          setCaptionAtIndex(currentImageIndex, e.target.value)
+                        }
+                        placeholder="Write a caption for this image..."
+                        className={styles.textareaInput}
+                        style={{ minHeight: 64 }}
+                      />
+
+                      <div
+                        style={{ fontSize: 12, color: "#666", marginTop: 6 }}
+                      >
+                        Captions are saved when you click <strong>Save</strong>.
+                      </div>
+                    </div>
+
                     <div className={styles.imageList}>
                       <div className={styles.imageListTitle}>
                         <strong>Images</strong>
@@ -1192,7 +1398,14 @@ const Project = () => {
                       <ul className={styles.cleanList}>
                         {imageNames.map((name) => (
                           <li key={name} className={styles.imageRow}>
-                            <span className={styles.filename}>{name}</span>
+                            <span
+                              className={styles.filename}
+                              style={{ cursor: "zoom-in" }}
+                              onClick={() => openZoomByName(name)}
+                              title="Click to open"
+                            >
+                              {name}
+                            </span>
                             <button
                               type="button"
                               onClick={() => handleDeleteImage(name)}
@@ -1957,6 +2170,17 @@ const Project = () => {
           </div>
         </div>
       )}
+
+      {/* ✅ Modal mount */}
+      <ImageZoomModal
+        open={zoomOpen}
+        images={imageNames}
+        captions={imageCaptions}
+        index={zoomIndex}
+        basePath={coverImagePath}
+        onClose={closeZoom}
+        onChangeIndex={handleZoomChangeIndex}
+      />
     </div>
   );
 };
