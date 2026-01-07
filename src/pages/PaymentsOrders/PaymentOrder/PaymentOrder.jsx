@@ -134,6 +134,11 @@ const PaymentOrder = ({
 
   // ✅ PO ID label (read-only)
   const poIdLabel = isCreate ? "(new)" : po?.id != null ? `PO#${po.id}` : "-";
+  const poIdWithLock =
+    !isCreate && locked ? `${poIdLabel} (Booked)` : poIdLabel;
+
+  const lockedTitle =
+    "Booked (final signature) — this payment order is read-only. Undo/remove the Booked signature to edit.";
 
   return (
     <div
@@ -141,7 +146,7 @@ const PaymentOrder = ({
       className={`${styles.row} ${styles.gridRow} ${
         isEven ? styles.zebraEven : ""
       } ${styles.hoverable}`}
-      title={locked ? "Locked by final (Booked) signature" : undefined}
+      title={locked ? lockedTitle : undefined}
       style={locked ? { opacity: 0.92 } : undefined}
     >
       {/* 0: Actions (sticky left) */}
@@ -151,7 +156,7 @@ const PaymentOrder = ({
             <button
               className={styles.iconCircleBtn}
               onClick={submit}
-              title="Save"
+              title={locked ? lockedTitle : "Save"}
               disabled={locked}
             >
               <FiSave />
@@ -173,7 +178,7 @@ const PaymentOrder = ({
                 e.stopPropagation();
                 onEdit();
               }}
-              title={locked ? "Locked" : "Edit"}
+              title={locked ? lockedTitle : "Edit"}
               disabled={locked}
             >
               <FiEdit />
@@ -202,7 +207,7 @@ const PaymentOrder = ({
                 e.stopPropagation();
                 onDelete(po.id);
               }}
-              title={locked ? "Locked" : "Delete"}
+              title={locked ? lockedTitle : "Delete"}
               disabled={locked}
             >
               <FiTrash2 />
@@ -212,7 +217,7 @@ const PaymentOrder = ({
       </Cell>
 
       {/* 1: PO ID (read-only) */}
-      <Cell className={hc(1)}>{poIdLabel}</Cell>
+      <Cell className={hc(1)}>{poIdWithLock}</Cell>
 
       {/* 2: Transaction */}
       <Cell className={hc(2)}>

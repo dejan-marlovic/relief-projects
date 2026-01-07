@@ -10,7 +10,7 @@ import { ProjectContext } from "../../context/ProjectContext";
 import PaymentOrder from "./PaymentOrder/PaymentOrder";
 import styles from "./PaymentOrders.module.scss";
 import PaymentOrderLines from "./PaymentOrder/PaymentOrderLines/PaymentOrderLines";
-import { FiPlus, FiColumns } from "react-icons/fi";
+import { FiPlus, FiColumns, FiAlertCircle } from "react-icons/fi";
 
 const BASE_URL = "http://localhost:8080";
 
@@ -55,6 +55,17 @@ async function safeParseJsonResponse(res) {
   }
 }
 
+function isLockedResponse(res, data) {
+  if (res?.status === 409) return true;
+  const msg = (data?.message || "").toLowerCase();
+  return (
+    msg.includes("locked") ||
+    msg.includes("booked") ||
+    msg.includes("final") ||
+    msg.includes("signature")
+  );
+}
+
 // Normalize in case backend returns paymentOrderId instead of id, etc.
 function normalizePO(po) {
   if (!po || typeof po !== "object") return null;
@@ -95,7 +106,12 @@ function PaymentOrders() {
     Array(headerLabels.length).fill(true)
   );
 
+  // ✅ separate banners like PaymentOrderLines:
+  // - lockedBanner = special "Booked (locked)" banner
+  // - formError = other errors
+  const [lockedBanner, setLockedBanner] = useState("");
   const [formError, setFormError] = useState("");
+
   const [fieldErrors, setFieldErrors] = useState({});
 
   const [expandedPoId, setExpandedPoId] = useState(null);
@@ -229,7 +245,11 @@ function PaymentOrders() {
     setEditingId(null);
     setEditedValues({});
     setFieldErrors({});
+
+    // ✅ clear banners on project change
+    setLockedBanner("");
     setFormError("");
+
     setExpandedPoId(null);
     setLockedPoIds(new Set());
   }, [
@@ -267,6 +287,8 @@ function PaymentOrders() {
       delete next[po.id];
       return next;
     });
+
+    // when user starts editing, clear normal errors (keep lockedBanner if present)
     setFormError("");
   };
 
@@ -279,7 +301,9 @@ function PaymentOrders() {
       delete next.new;
       return next;
     });
+
     setFormError("");
+    setLockedBanner("");
   };
 
   const onChange = (field, value) => {
@@ -329,8 +353,6 @@ function PaymentOrders() {
 
     const isCreate = id === "new";
 
-    // ✅ no #Tx (numberOfTransactions) in UI or payload
-    // ✅ no amount / totalAmount in payload anymore
     const payload = {
       transactionId: v.transactionId !== "" ? Number(v.transactionId) : null,
       paymentOrderDate: v.paymentOrderDate || null,
@@ -361,21 +383,31 @@ function PaymentOrders() {
           setFieldErrors((prev) => ({ ...prev, [id]: data.fieldErrors }));
         }
 
-        const msg =
-          data?.message ||
-          (res.status === 409
-            ? "Conflict: payment order is locked."
-            : `Failed to ${isCreate ? "create" : "update"} payment order.`);
+        const poLabel = !isCreate ? `PO#${id}` : "Payment order";
 
-        setFormError(msg);
+        const lockedMsgFallback =
+          `${poLabel} is Booked (final signature) and is read-only. ` +
+          `Undo/remove the Booked signature to make changes.`;
 
-        if (!isCreate && res.status === 409) {
+        if (!isCreate && isLockedResponse(res, data)) {
+          const msg = data?.message || lockedMsgFallback;
+          setLockedBanner(msg);
           markLocked(id);
           cancel();
+          return;
         }
 
+        const msg =
+          data?.message ||
+          `Failed to ${isCreate ? "create" : "update"} payment order.`;
+
+        setFormError(msg);
         return;
       }
+
+      // success -> clear banners
+      setLockedBanner("");
+      setFormError("");
 
       await fetchOrders(selectedProjectId);
       cancel();
@@ -383,7 +415,9 @@ function PaymentOrders() {
       console.error(e);
       setFormError(
         e.message ||
-          `Failed to ${isCreate ? "create" : "update"} payment order.`
+          `Failed to ${
+            editingId === "new" ? "create" : "update"
+          } payment order.`
       );
     }
   };
@@ -402,16 +436,25 @@ function PaymentOrders() {
 
       if (!res.ok) {
         const data = await safeParseJsonResponse(res);
-        const msg =
-          data?.message ||
-          (res.status === 409
-            ? "Conflict: payment order is locked."
-            : "Delete failed.");
-        setFormError(msg);
 
-        if (res.status === 409) markLocked(id);
+        const poLabel = `PO#${id}`;
+        const lockedMsgFallback =
+          `${poLabel} is Booked (final signature) and cannot be deleted. ` +
+          `Undo/remove the Booked signature to delete it.`;
+
+        if (isLockedResponse(res, data)) {
+          setLockedBanner(data?.message || lockedMsgFallback);
+          markLocked(id);
+          return;
+        }
+
+        setFormError(data?.message || "Delete failed.");
         return;
       }
+
+      // success -> clear banners
+      setLockedBanner("");
+      setFormError("");
 
       await fetchOrders(selectedProjectId);
     } catch (e) {
@@ -432,6 +475,8 @@ function PaymentOrders() {
         orders.length === 1 ? "" : "s"
       }`
     : "Select a project to see payment orders";
+
+  const lockedBannerText = lockedBanner && `${lockedBanner} (Editing disabled)`;
 
   return (
     <div className={styles.page}>
@@ -493,7 +538,21 @@ function PaymentOrders() {
           </div>
         </div>
 
-        {formError && <div className={styles.errorBanner}>{formError}</div>}
+        {/* ✅ Locked banner (same style as PaymentOrderLines) */}
+        {lockedBannerText && (
+          <div className={styles.errorBanner}>
+            <FiAlertCircle />
+            <span>{lockedBannerText}</span>
+          </div>
+        )}
+
+        {/* Other errors */}
+        {formError && (
+          <div className={styles.errorBanner}>
+            <FiAlertCircle />
+            <span>{formError}</span>
+          </div>
+        )}
 
         <div className={styles.table} style={{ ["--po-grid-cols"]: gridCols }}>
           <div className={`${styles.gridRow} ${styles.headerRow}`}>
