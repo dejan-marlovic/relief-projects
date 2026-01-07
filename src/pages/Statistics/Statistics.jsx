@@ -165,18 +165,18 @@ const Statistics = () => {
   }, []);
 
   const COLORS = [
-    "#6FA8DC", // blue
-    "#E67C73", // coral
-    "#F6B26B", // orange
-    "#93C47D", // green
-    "#8E7CC3", // purple
-    "#76A5AF", // teal
-    "#C27BA0", // mauve
-    "#A4C2F4", // light blue
-    "#FFD966", // yellow
-    "#B4A7D6", // lavender
-    "#6D9EEB", // brighter blue
-    "#D5A6BD", // dusty pink
+    "#3D85C6", // blue (darker)
+    "#CC4125", // coral (darker)
+    "#E69138", // orange (darker)
+    "#6AA84F", // green (darker)
+    "#674EA7", // purple (darker)
+    "#45818E", // teal (darker)
+    "#A64D79", // mauve (darker)
+    "#6D9EEB", // light blue (darker)
+    "#F1C232", // yellow (darker)
+    "#8E7CC3", // lavender (darker)
+    "#3C78D8", // brighter blue (darker)
+    "#C27BA0", // dusty pink (darker)
   ];
   // Sector id -> "CODE — Description"
   const sectorNameMap = useMemo(() => {
