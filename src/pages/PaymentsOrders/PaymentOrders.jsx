@@ -16,12 +16,11 @@ const BASE_URL = "http://localhost:8080";
 
 const headerLabels = [
   "Actions",
-  "PO ID", // ✅ NEW
+  "PO ID",
   "Transaction",
   "Date",
-  "#Tx",
   "Description",
-  "Amount", // ✅ computed from backend
+  "Amount",
   "Message",
   "Pin Code",
 ];
@@ -29,10 +28,9 @@ const headerLabels = [
 // ✅ match number of columns above
 const BASE_COL_WIDTHS = [
   160, // Actions
-  110, // ✅ PO ID
+  110, // PO ID
   160, // Transaction
   180, // Date
-  90, // #Tx
   300, // Description
   140, // Amount
   200, // Message
@@ -42,7 +40,6 @@ const BASE_COL_WIDTHS = [
 const blankPO = {
   transactionId: "",
   paymentOrderDate: "",
-  numberOfTransactions: "",
   paymentOrderDescription: "",
   message: "",
   pinCode: "",
@@ -75,8 +72,6 @@ function normalizePO(po) {
     id,
     transactionId,
     paymentOrderDate: po.paymentOrderDate ?? po.payment_order_date ?? null,
-    numberOfTransactions:
-      po.numberOfTransactions ?? po.number_of_transactions ?? null,
     paymentOrderDescription:
       po.paymentOrderDescription ?? po.payment_order_description ?? "",
     // ✅ backend computed
@@ -261,7 +256,6 @@ function PaymentOrders() {
       [po.id]: {
         transactionId: po.transactionId ?? "",
         paymentOrderDate: po.paymentOrderDate ?? "",
-        numberOfTransactions: po.numberOfTransactions ?? "",
         paymentOrderDescription: po.paymentOrderDescription ?? "",
         message: po.message ?? "",
         pinCode: po.pinCode ?? "",
@@ -335,12 +329,11 @@ function PaymentOrders() {
 
     const isCreate = id === "new";
 
+    // ✅ no #Tx (numberOfTransactions) in UI or payload
     // ✅ no amount / totalAmount in payload anymore
     const payload = {
       transactionId: v.transactionId !== "" ? Number(v.transactionId) : null,
       paymentOrderDate: v.paymentOrderDate || null,
-      numberOfTransactions:
-        v.numberOfTransactions !== "" ? Number(v.numberOfTransactions) : null,
       paymentOrderDescription: v.paymentOrderDescription || "",
       message: v.message || "",
       pinCode: v.pinCode || "",
