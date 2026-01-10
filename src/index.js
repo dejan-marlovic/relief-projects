@@ -17,7 +17,8 @@ import Documents from "./pages/Documents/Documents";
 import Statistics from "./pages/Statistics/Statistics";
 import RegisterProject from "./pages/RegisterProject/RegisterProject";
 import Organizations from "./pages/Organizations/Organizations";
-import OperationalGuide from "./pages/OperationalGuide/OperationalGuide"; // ✅ NEW
+import OperationalGuide from "./pages/OperationalGuide/OperationalGuide"; // ✅ Existing
+import About from "./pages/About/About"; // ✅ NEW
 import NoPage from "./pages/NoPage/NoPage"; // Catch-all for undefined routes (404)
 
 // Import the context provider to share state across all components
@@ -51,8 +52,11 @@ export default function App() {
             <Route path="organizations" element={<Organizations />} />
             <Route path="register-project" element={<RegisterProject />} />
 
-            {/* ✅ NEW: Operational Guide (last tab/route) */}
+            {/* ✅ Operational Guide */}
             <Route path="operational-guide" element={<OperationalGuide />} />
+
+            {/* ✅ NEW: About (tab after operational guide) */}
+            <Route path="about" element={<About />} />
 
             {/* Catch-all route */}
             <Route path="*" element={<NoPage />} />

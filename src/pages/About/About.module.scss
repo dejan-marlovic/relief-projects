@@ -1,0 +1,272 @@
+$primary: #4a90e2;
+
+.page {
+  padding: 1.25rem;
+  margin-top: 1rem;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.shell {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid rgba(74, 144, 226, 0.18);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+  padding: 1.25rem;
+}
+
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.pageHeaderText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: 1.2rem;
+  color: $primary;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pageSubtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 1.4fr 0.8fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 1024px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+}
+
+.heroCard {
+  background: #fff;
+  border: 1px solid rgba(74, 144, 226, 0.14);
+  border-radius: 14px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+}
+
+.heroKicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #1f2937;
+  font-weight: 800;
+  font-size: 0.95rem;
+  margin-bottom: 0.35rem;
+}
+
+.heroTitle {
+  margin: 0;
+  font-size: 1.15rem;
+  color: $primary;
+}
+
+.heroText {
+  margin: 0.6rem 0 0;
+  color: #374151;
+  line-height: 1.6;
+}
+
+.heroSide {
+  display: grid;
+  gap: 1rem;
+}
+
+.statCard {
+  background: #fff;
+  border: 1px solid rgba(74, 144, 226, 0.14);
+  border-radius: 14px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+}
+
+.statTitle {
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 0.25rem;
+}
+
+.statValue {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: $primary;
+}
+
+.statText {
+  margin: 0.5rem 0 0;
+  color: #374151;
+  line-height: 1.55;
+}
+
+.section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.sectionTitle {
+  margin: 0 0 0.75rem;
+  color: #1f2937;
+  font-size: 1.05rem;
+  font-weight: 900;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  background: #fff;
+  border: 1px solid rgba(74, 144, 226, 0.14);
+  border-radius: 14px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+}
+
+.cardIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: rgba(74, 144, 226, 0.1);
+  border: 1px solid rgba(74, 144, 226, 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: $primary;
+  margin-bottom: 0.5rem;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.cardTitle {
+  margin: 0;
+  color: #111827;
+  font-size: 0.98rem;
+  font-weight: 900;
+}
+
+.cardText {
+  margin: 0.45rem 0 0;
+  color: #374151;
+  line-height: 1.55;
+}
+
+.flow {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.flowStep {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 0.75rem;
+  align-items: start;
+  background: #fff;
+  border: 1px solid rgba(74, 144, 226, 0.14);
+  border-radius: 14px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+  padding: 0.9rem 1rem;
+}
+
+.flowNumber {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: rgba(74, 144, 226, 0.12);
+  border: 1px solid rgba(74, 144, 226, 0.25);
+  color: $primary;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flowTitle {
+  margin: 0;
+  color: #111827;
+  font-size: 0.98rem;
+  font-weight: 900;
+}
+
+.flowText {
+  margin: 0.35rem 0 0;
+  color: #374151;
+  line-height: 1.55;
+}
+
+.principles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 1024px) {
+  .principles {
+    grid-template-columns: 1fr;
+  }
+}
+
+.principle {
+  background: #fff;
+  border: 1px solid rgba(74, 144, 226, 0.14);
+  border-radius: 14px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+}
+
+.principleTitle {
+  margin: 0;
+  color: $primary;
+  font-weight: 900;
+  font-size: 0.98rem;
+}
+
+.principleText {
+  margin: 0.45rem 0 0;
+  color: #374151;
+  line-height: 1.55;
+}
+
+.footerNote {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.footerText {
+  margin: 0;
+  color: #374151;
+  line-height: 1.55;
+}
