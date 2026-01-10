@@ -21,9 +21,9 @@ const blankLink = {
 // Only 3 columns: Actions, Organization, Status
 const headerLabels = ["Actions", "Organization", "Status"];
 
-// ✅ Actions a bit wider so 3 icons (edit/delete/expand) never clip
+// ✅ Actions wider: edit/delete/address/bank
 const BASE_COL_WIDTHS = [
-  190, // Actions
+  230, // Actions
   240, // Organization
   180, // Status
 ];

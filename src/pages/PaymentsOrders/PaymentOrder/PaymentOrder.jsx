@@ -68,23 +68,6 @@ const PaymentOrder = ({
       <div className={styles.fieldError}>{getFieldError(name)}</div>
     ) : null;
 
-  const inputNum = (field, step = "1") => (
-    <>
-      <input
-        type="number"
-        step={step}
-        value={ev[field] ?? po[field] ?? ""}
-        onChange={(e) =>
-          onChange(field, e.target.value === "" ? "" : Number(e.target.value))
-        }
-        onBlur={autoSave ? submit : undefined}
-        className={inputClass(field)}
-        disabled={locked}
-      />
-      <FieldError name={field} />
-    </>
-  );
-
   const inputText = (field) => (
     <>
       <input
@@ -151,6 +134,11 @@ const PaymentOrder = ({
 
   // ✅ PO ID label (read-only)
   const poIdLabel = isCreate ? "(new)" : po?.id != null ? `PO#${po.id}` : "-";
+  const poIdWithLock =
+    !isCreate && locked ? `${poIdLabel} (Booked)` : poIdLabel;
+
+  const lockedTitle =
+    "Booked (final signature) — this payment order is read-only. Undo/remove the Booked signature to edit.";
 
   return (
     <div
@@ -158,7 +146,7 @@ const PaymentOrder = ({
       className={`${styles.row} ${styles.gridRow} ${
         isEven ? styles.zebraEven : ""
       } ${styles.hoverable}`}
-      title={locked ? "Locked by final (Booked) signature" : undefined}
+      title={locked ? lockedTitle : undefined}
       style={locked ? { opacity: 0.92 } : undefined}
     >
       {/* 0: Actions (sticky left) */}
@@ -168,7 +156,7 @@ const PaymentOrder = ({
             <button
               className={styles.iconCircleBtn}
               onClick={submit}
-              title="Save"
+              title={locked ? lockedTitle : "Save"}
               disabled={locked}
             >
               <FiSave />
@@ -190,7 +178,7 @@ const PaymentOrder = ({
                 e.stopPropagation();
                 onEdit();
               }}
-              title={locked ? "Locked" : "Edit"}
+              title={locked ? lockedTitle : "Edit"}
               disabled={locked}
             >
               <FiEdit />
@@ -219,7 +207,7 @@ const PaymentOrder = ({
                 e.stopPropagation();
                 onDelete(po.id);
               }}
-              title={locked ? "Locked" : "Delete"}
+              title={locked ? lockedTitle : "Delete"}
               disabled={locked}
             >
               <FiTrash2 />
@@ -229,13 +217,14 @@ const PaymentOrder = ({
       </Cell>
 
       {/* 1: PO ID (read-only) */}
-      <Cell className={hc(1)}>{poIdLabel}</Cell>
+      <Cell className={hc(1)}>{poIdWithLock}</Cell>
 
-      {/* data columns */}
+      {/* 2: Transaction */}
       <Cell className={hc(2)}>
         {isEditing ? selectTransaction : po.transactionId ?? "-"}
       </Cell>
 
+      {/* 3: Date */}
       <Cell className={hc(3)}>
         {isEditing
           ? inputDate
@@ -244,26 +233,23 @@ const PaymentOrder = ({
           : "-"}
       </Cell>
 
+      {/* 4: Description */}
       <Cell className={hc(4)}>
-        {isEditing
-          ? inputNum("numberOfTransactions", "1")
-          : po.numberOfTransactions ?? "-"}
-      </Cell>
-
-      <Cell className={hc(5)}>
         {isEditing
           ? inputText("paymentOrderDescription")
           : po.paymentOrderDescription ?? "-"}
       </Cell>
 
-      {/* ✅ Amount (computed, not editable) */}
-      <Cell className={hc(6)}>{computedAmount.toFixed(2)}</Cell>
+      {/* 5: Amount (computed, not editable) */}
+      <Cell className={hc(5)}>{computedAmount.toFixed(2)}</Cell>
 
-      <Cell className={hc(7)}>
+      {/* 6: Message */}
+      <Cell className={hc(6)}>
         {isEditing ? inputText("message") : po.message ?? "-"}
       </Cell>
 
-      <Cell className={hc(8)}>
+      {/* 7: Pin Code */}
+      <Cell className={hc(7)}>
         {isEditing ? inputText("pinCode") : po.pinCode ?? "-"}
       </Cell>
     </div>

@@ -9,6 +9,13 @@ const DOCUMENTS_BASE_PATH = `${BASE_URL}/documents/`;
 // 🔹 TODO: replace with real current employee ID from your auth/user context
 const CURRENT_EMPLOYEE_ID = 1;
 
+// ✅ Keep this in sync with backend:
+// spring.servlet.multipart.max-file-size / spring.servlet.multipart.max-request-size
+const MAX_UPLOAD_MB = 50;
+const MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024;
+
+const formatMB = (bytes) => `${(bytes / 1024 / 1024).toFixed(1)}MB`;
+
 const Documents = () => {
   const { selectedProjectId } = useContext(ProjectContext);
 
@@ -18,6 +25,7 @@ const Documents = () => {
 
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [uploadInfo, setUploadInfo] = useState(""); // small helper message (optional)
 
   const [deletingId, setDeletingId] = useState(null);
   const [deleteError, setDeleteError] = useState("");
@@ -74,11 +82,47 @@ const Documents = () => {
     fetchDocs();
   }, [selectedProjectId, authHeaders]);
 
+  // ✅ Parse API errors nicely (supports your ApiError { message, fieldErrors... })
+  const readApiErrorMessage = async (res) => {
+    const contentType = res.headers.get("content-type") || "";
+
+    // If backend returns JSON (ApiError)
+    if (contentType.includes("application/json")) {
+      const json = await res.json().catch(() => null);
+
+      // Your ApiError has "message"
+      if (json?.message) return json.message;
+
+      // fallback keys if you ever return other shapes
+      if (json?.error) return json.error;
+      if (json?.details) return json.details;
+
+      return "Request failed.";
+    }
+
+    // Fallback to text
+    const text = await res.text().catch(() => "");
+    return text || "Request failed.";
+  };
+
   const uploadDocument = async (file) => {
     if (!file || !selectedProjectId) return;
 
     setUploadError("");
+    setUploadInfo("");
+
+    // ✅ Client-side guard (best UX)
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setUploadError(
+        `File is too large (${formatMB(
+          file.size
+        )}). Max allowed is ${MAX_UPLOAD_MB}MB.`
+      );
+      return;
+    }
+
     setUploading(true);
+    setUploadInfo(`Uploading ${file.name} (${formatMB(file.size)})...`);
 
     try {
       const formData = new FormData();
@@ -96,15 +140,24 @@ const Documents = () => {
       });
 
       if (!res.ok) {
-        const text = await res.text().catch(() => "");
-        throw new Error(text || "Upload failed");
+        // ✅ Special-case 413 from backend for a friendly message
+        if (res.status === 413) {
+          // read backend message (ApiError.message)
+          const msg = await readApiErrorMessage(res);
+          throw new Error(msg || `File is too large (max ${MAX_UPLOAD_MB}MB).`);
+        }
+
+        const msg = await readApiErrorMessage(res);
+        throw new Error(msg || "Upload failed");
       }
 
       const created = await res.json();
       setDocuments((prev) => [created, ...prev]);
+      setUploadInfo("Upload complete ✅");
     } catch (err) {
       console.error(err);
       setUploadError(err.message || "Upload failed");
+      setUploadInfo("");
     } finally {
       setUploading(false);
     }
@@ -123,6 +176,8 @@ const Documents = () => {
   const handleFileInput = (e) => {
     const file = e.target.files?.[0];
     if (file) uploadDocument(file);
+    // optional: allow selecting the same file twice in a row
+    e.target.value = "";
   };
 
   const handleClickPicker = () => {
@@ -147,8 +202,8 @@ const Documents = () => {
       });
 
       if (!res.ok) {
-        const text = await res.text().catch(() => "");
-        throw new Error(text || "Failed to delete document");
+        const msg = await readApiErrorMessage(res);
+        throw new Error(msg || "Failed to delete document");
       }
 
       setDocuments((prev) => prev.filter((d) => d.id !== docId));
@@ -165,18 +220,17 @@ const Documents = () => {
   return (
     <div className={styles.page}>
       <div className={styles.shell}>
-        {/* Header like Project/Transactions */}
+        {/* Header */}
         <div className={styles.pageHeader}>
           <div className={styles.pageHeaderText}>
             <h2 className={styles.pageTitle}>Documents</h2>
             <p className={styles.pageSubtitle}>
-              Upload and manage files for the selected project.
+              Upload and manage files for the selected project. Max{" "}
+              {MAX_UPLOAD_MB}MB.
             </p>
           </div>
 
-          <div className={styles.headerActions}>
-            {/* (Optional future action buttons can go here) */}
-          </div>
+          <div className={styles.headerActions} />
         </div>
 
         {!selectedProjectId && (
@@ -185,8 +239,13 @@ const Documents = () => {
 
         {selectedProjectId && (
           <>
-            {/* Error banner like Project */}
+            {/* Error banner */}
             {anyError && <div className={styles.errorBanner}>{anyError}</div>}
+
+            {/* Optional small info line */}
+            {uploadInfo && !uploadError && (
+              <p className={styles.infoText}>{uploadInfo}</p>
+            )}
 
             {/* Upload area */}
             <div
@@ -205,7 +264,7 @@ const Documents = () => {
               <span>
                 {uploading
                   ? "Uploading..."
-                  : "Drag & drop a document here, or click to select"}
+                  : `Drag & drop a document here, or click to select (max ${MAX_UPLOAD_MB}MB)`}
               </span>
             </div>
 

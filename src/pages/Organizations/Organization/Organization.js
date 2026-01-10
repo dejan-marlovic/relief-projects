@@ -10,6 +10,7 @@ import {
   FiChevronUp,
 } from "react-icons/fi";
 import BankDetails from "./BankDetails";
+import AddressDetails from "./AddressDetails";
 
 const Cell = ({ children, className }) => (
   <div className={`${styles.cell} ${className || ""}`}>{children}</div>
@@ -36,6 +37,7 @@ const Organization = ({
   const autoSave = isEditing && !isCreate;
 
   const [showBankDetails, setShowBankDetails] = useState(false);
+  const [showAddressDetails, setShowAddressDetails] = useState(false);
 
   const submit = (e) => {
     e.preventDefault();
@@ -163,6 +165,33 @@ const Organization = ({
                 <FiTrash2 />
               </button>
 
+              {/* toggle address details */}
+              {link.organizationId && (
+                <button
+                  type="button"
+                  className={`${styles.iconCircleBtn} ${
+                    showAddressDetails ? styles.iconCircleBtnActive : ""
+                  }`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowAddressDetails((v) => !v);
+                  }}
+                  title={
+                    showAddressDetails
+                      ? "Hide address details"
+                      : "Show address details"
+                  }
+                  aria-label={
+                    showAddressDetails
+                      ? "Hide address details"
+                      : "Show address details"
+                  }
+                >
+                  {showAddressDetails ? <FiChevronUp /> : <FiChevronDown />}
+                </button>
+              )}
+
               {/* toggle bank details */}
               {link.organizationId && (
                 <button
@@ -200,9 +229,16 @@ const Organization = ({
         </Cell>
       </div>
 
+      {/* Inline address details panel */}
+      {showAddressDetails && link.organizationId && (
+        <div className={styles.detailsWrapperRow}>
+          <AddressDetails organizationId={link.organizationId} />
+        </div>
+      )}
+
       {/* Inline bank details panel */}
       {showBankDetails && link.organizationId && (
-        <div className={styles.bankDetailsWrapperRow}>
+        <div className={styles.detailsWrapperRow}>
           <BankDetails organizationId={link.organizationId} />
         </div>
       )}
