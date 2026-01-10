@@ -15,8 +15,9 @@ import Signatures from "./pages/Signatures/Signatures";
 import Recipients from "./pages/Recipients/Recipients";
 import Documents from "./pages/Documents/Documents";
 import Statistics from "./pages/Statistics/Statistics";
-import RegisterProject from "./pages/RegisterProject/RegisterProject"; // ✅ Register Project page
+import RegisterProject from "./pages/RegisterProject/RegisterProject";
 import Organizations from "./pages/Organizations/Organizations";
+import OperationalGuide from "./pages/OperationalGuide/OperationalGuide"; // ✅ NEW
 import NoPage from "./pages/NoPage/NoPage"; // Catch-all for undefined routes (404)
 
 // Import the context provider to share state across all components
@@ -27,21 +28,18 @@ import "./styles/global.scss";
 // ✅ Main App component: this sets up routing and wraps everything in context
 export default function App() {
   return (
-    // 🌐 Wrap the app in ProjectProvider so project-related context is globally available
     <ProjectProvider>
-      {/* Set up React Router to handle browser navigation without full page reloads */}
       <BrowserRouter>
-        {/* Define all the routes of the application */}
         <Routes>
           {/* Public route: login is outside the main layout */}
           <Route path="/login" element={<Login />} />
 
-          {/* Main route with Layout wrapper — this becomes the base for all subroutes */}
+          {/* Main route with Layout wrapper */}
           <Route path="/" element={<Layout />}>
-            {/* 👇 Nested routes rendered inside <Outlet /> of Layout.jsx */}
-            {/* Default route for "/" (i.e., homepage) */}
+            {/* Default route */}
             <Route index element={<Project />} />
-            {/* Other sections/tabs of the app */}
+
+            {/* Other sections/tabs */}
             <Route path="project" element={<Project />} />
             <Route path="budgets" element={<Budgets />} />
             <Route path="transactions" element={<Transactions />} />
@@ -51,9 +49,12 @@ export default function App() {
             <Route path="documents" element={<Documents />} />
             <Route path="statistics" element={<Statistics />} />
             <Route path="organizations" element={<Organizations />} />
-            <Route path="register-project" element={<RegisterProject />} />{" "}
-            {/* ✅ New page to register a project */}
-            {/* Catch-all route (if user navigates to a non-existent route) */}
+            <Route path="register-project" element={<RegisterProject />} />
+
+            {/* ✅ NEW: Operational Guide (last tab/route) */}
+            <Route path="operational-guide" element={<OperationalGuide />} />
+
+            {/* Catch-all route */}
             <Route path="*" element={<NoPage />} />
           </Route>
         </Routes>
@@ -63,6 +64,5 @@ export default function App() {
 }
 
 // 🧩 Mount the React app to the DOM
-// This is the entry point that connects React with the HTML file (usually index.html)
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(<App />);

@@ -17,7 +17,7 @@ const Layout = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
-    localStorage.removeItem("selectedProjectId"); // ✅ important
+    localStorage.removeItem("selectedProjectId");
     navigate("/login");
   };
 
@@ -28,7 +28,11 @@ const Layout = () => {
 
   const isRegisterPage = location.pathname === "/register-project";
   const isStatisticsPage = location.pathname === "/statistics";
-  const hideSelector = isRegisterPage || isStatisticsPage;
+  const isOperationalGuidePage = location.pathname === "/operational-guide";
+
+  // ✅ hide selector where project context is not needed
+  const hideSelector =
+    isRegisterPage || isStatisticsPage || isOperationalGuidePage;
 
   const isActive = (path) => location.pathname === path;
 
@@ -97,6 +101,9 @@ const Layout = () => {
             ["/documents", "Documents"],
             ["/statistics", "Statistics"],
             ["/register-project", "New Project"],
+
+            // ✅ NEW (last tab)
+            ["/operational-guide", "Operational Guide"],
           ].map(([path, label]) => (
             <li key={path} className={styles.tabItem}>
               <Link

@@ -1,0 +1,191 @@
+$primary: #4a90e2;
+
+.page {
+  padding: 1.25rem;
+  margin-top: 1rem;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.shell {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid rgba(74, 144, 226, 0.18);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+  padding: 1.25rem;
+}
+
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.pageHeaderText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: 1.2rem;
+  color: $primary;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pageSubtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.toc {
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+}
+
+@media (max-width: 1024px) {
+  .toc {
+    position: static;
+  }
+}
+
+.tocCard {
+  background: #fff;
+  border: 1px solid rgba(74, 144, 226, 0.14);
+  border-radius: 14px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+}
+
+.tocTitle {
+  font-weight: 800;
+  color: #1f2937;
+  margin-bottom: 0.6rem;
+}
+
+.tocList {
+  margin: 0;
+  padding-left: 1.1rem;
+
+  li {
+    margin: 0.35rem 0;
+  }
+}
+
+.tocLink {
+  color: #1f2937;
+  text-decoration: none;
+  padding: 6px 8px;
+  border-radius: 10px;
+  display: inline-block;
+
+  &:hover {
+    background: rgba(74, 144, 226, 0.08);
+    color: $primary;
+  }
+}
+
+.tocLinkActive {
+  background: rgba(74, 144, 226, 0.12);
+  border: 1px solid rgba(74, 144, 226, 0.25);
+  color: $primary;
+  font-weight: 700;
+}
+
+.content {
+  min-width: 0;
+}
+
+.part {
+  background: #fff;
+  border: 1px solid rgba(74, 144, 226, 0.14);
+  border-radius: 14px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+  margin-bottom: 1rem;
+
+  h2 {
+    margin: 0 0 0.75rem;
+    color: $primary;
+    font-size: 1.05rem;
+  }
+
+  h3 {
+    margin: 1rem 0 0.35rem;
+    color: #1f2937;
+    font-size: 0.95rem;
+  }
+
+  h4 {
+    margin: 0.8rem 0 0.25rem;
+    color: #111827;
+    font-size: 0.9rem;
+  }
+
+  h5 {
+    margin: 0.7rem 0 0.25rem;
+    color: #111827;
+    font-size: 0.85rem;
+  }
+
+  p {
+    margin: 0.35rem 0;
+    color: #374151;
+    line-height: 1.55;
+  }
+
+  ul,
+  ol {
+    margin: 0.35rem 0 0.35rem 1.1rem;
+    color: #374151;
+    line-height: 1.55;
+  }
+
+  code {
+    background: rgba(74, 144, 226, 0.08);
+    border: 1px solid rgba(74, 144, 226, 0.18);
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 0.9em;
+  }
+}
+
+.backToTop {
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.backToTopLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: $primary;
+  text-decoration: none;
+  font-weight: 700;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
