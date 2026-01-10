@@ -132,12 +132,12 @@ $danger: #e74c3c;
   }
 }
 
-/* ===== Bank details "expanded panel" like Transactions allocations ===== */
-.bankDetailsWrapperRow {
+/* ✅ Generic expanded panel wrapper (used by Address + Bank details) */
+.detailsWrapperRow {
   grid-column: 1 / -1;
 
   /* align under non-sticky columns (match Actions col width) */
-  padding-left: 190px;
+  padding-left: 230px;
   padding-right: 12px;
   padding-top: 10px;
   padding-bottom: 12px;

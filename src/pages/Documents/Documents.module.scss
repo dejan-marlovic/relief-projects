@@ -3,6 +3,10 @@
 $primary: #4a90e2;
 $danger: #e74c3c;
 
+// ✅ NEW (for nicer upload messages)
+$success: #16a34a;
+$warning: #b45309;
+
 /* Page padding like other pages */
 .page {
   padding: 1.25rem;
@@ -64,6 +68,34 @@ $danger: #e74c3c;
 .emptyText {
   color: #555;
   margin: 0.5rem 0;
+}
+
+/* ✅ NEW: status banner (non-error) */
+.statusBanner {
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin: 0.75rem 0 1rem;
+  font-size: 0.9rem;
+  border: 1px solid transparent;
+}
+
+/* variants */
+.statusInfo {
+  background: rgba(74, 144, 226, 0.08);
+  color: #1f3b77;
+  border-color: rgba(74, 144, 226, 0.22);
+}
+
+.statusSuccess {
+  background: rgba(22, 163, 74, 0.1);
+  color: #0f5132;
+  border-color: rgba(22, 163, 74, 0.28);
+}
+
+.statusWarning {
+  background: rgba(180, 83, 9, 0.1);
+  color: #7c2d12;
+  border-color: rgba(180, 83, 9, 0.28);
 }
 
 /* Error banner like Project */
