@@ -124,46 +124,49 @@ function Recipients() {
     [authHeaders]
   );
 
-  // FETCH: organizations (project-aware options)
-  const fetchOrganizations = useCallback(
-    async (projectId) => {
-      if (!projectId) {
-        setOrgOptions([]);
-        return;
-      }
-      try {
-        const res = await fetch(
-          `${BASE_URL}/api/organizations/by-project/${projectId}/options`,
-          { headers: authHeaders }
-        );
-        if (!res.ok) throw new Error(`Failed ${res.status}`);
-        const data = await res.json();
+  // ✅ FETCH: organizations (ALL active options - not project-filtered)
+  const fetchOrganizations = useCallback(async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/organizations/active/options`, {
+        headers: authHeaders,
+      });
+      if (!res.ok) throw new Error(`Failed ${res.status}`);
+      const data = await res.json();
 
-        const normalized = (Array.isArray(data) ? data : []).map((o) => ({
-          id:
-            o.id ??
-            o.organizationId ??
-            (typeof o.value === "number" ? o.value : null),
-          label:
-            o.label ??
-            o.name ??
-            o.organizationName ??
-            (o.id != null ? `Org #${o.id}` : ""),
-        }));
+      // Robust normalization: supports {id,label}, {organizationId,name},
+      // {value:"123", label:"Org"}, etc.
+      const normalized = (Array.isArray(data) ? data : []).map((o) => {
+        const rawId =
+          o?.id ??
+          o?.organizationId ??
+          o?.organization_id ??
+          o?.orgId ??
+          o?.value;
 
-        setOrgOptions(normalized.filter((x) => x.id != null));
-      } catch (e) {
-        console.error(e);
-        setOrgOptions([]);
-      }
-    },
-    [authHeaders]
-  );
+        const idNum = rawId === "" || rawId == null ? null : Number(rawId);
+        const id = Number.isFinite(idNum) ? idNum : null;
+
+        const label =
+          o?.label ??
+          o?.name ??
+          o?.organizationName ??
+          o?.organization_name ??
+          (id != null ? `Org #${id}` : "");
+
+        return { id, label };
+      });
+
+      setOrgOptions(normalized.filter((x) => x.id != null));
+    } catch (e) {
+      console.error(e);
+      setOrgOptions([]);
+    }
+  }, [authHeaders]);
 
   useEffect(() => {
     fetchRecipients(selectedProjectId);
     fetchPaymentOrders(selectedProjectId);
-    fetchOrganizations(selectedProjectId);
+    fetchOrganizations(); // ✅ now independent of project
 
     setEditingId(null);
     setEditedValues({});
