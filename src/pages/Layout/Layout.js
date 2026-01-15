@@ -98,7 +98,7 @@ const Layout = () => {
             ["/payments", "Payments"],
             ["/signatures", "Signatures"],
             ["/recipients", "Recipients"],
-            ["/organizations", "Related Organizations"],
+            ["/organizations", "Organizations"],
             ["/documents", "Documents"],
             ["/statistics", "Statistics"],
             ["/register-project", "New Project"],
