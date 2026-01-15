@@ -683,7 +683,7 @@ const Statistics = () => {
                 Projects by project type
               </div>
               <div className={styles.sectionSubtitle}>
-                Counts come from your projects (must include a project type id).
+                Counts come from your project's project type.
               </div>
             </div>
 
