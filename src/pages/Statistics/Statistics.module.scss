@@ -8,7 +8,7 @@ $primary: #4a90e2;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* ✅ Big white shell like Project/Transactions */
+/* Big white shell like Project/Transactions */
 .shell {
   max-width: 1720px;
   margin: 0 auto;
@@ -20,7 +20,7 @@ $primary: #4a90e2;
   overflow: visible;
 }
 
-/* ✅ Header like Project/Transactions */
+/* Header like Project/Transactions */
 .pageHeader {
   display: flex;
   align-items: flex-start;
@@ -59,7 +59,7 @@ $primary: #4a90e2;
   justify-content: flex-end;
 }
 
-/* ✅ Error banner like Project */
+/* Error banner */
 .errorBanner {
   background-color: #ffe6e6;
   color: #b00000;
@@ -96,12 +96,12 @@ $primary: #4a90e2;
   margin: 0.5rem 0 0.75rem;
 }
 
-/* Loading skeleton box inside the chart area */
+/* Loading skeleton box */
 .loadingSkeleton {
   background: #f3f4f6;
   border-radius: 12px;
   margin: 0.25rem 0 0.5rem 0;
-  height: 560px; /* approximate chart height */
+  height: 560px;
   border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
@@ -147,7 +147,7 @@ $primary: #4a90e2;
   font-size: 0.9rem;
 }
 
-/* Tooltip for slices/bars */
+/* Tooltip */
 .tooltipBox {
   background: #fff;
   border: 1px solid #e5e7eb;
@@ -209,8 +209,7 @@ $primary: #4a90e2;
   font-size: 12px;
 }
 
-/* ===== New: Bar chart section ===== */
-
+/* Section spacing + header */
 .sectionSpacer {
   height: 26px;
 }
@@ -233,8 +232,18 @@ $primary: #4a90e2;
 .sectionSubtitle {
   color: #6b7280;
   font-size: 0.9rem;
+
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+      "Liberation Mono", "Courier New", monospace;
+    font-size: 0.85em;
+    background: rgba(0, 0, 0, 0.04);
+    padding: 2px 6px;
+    border-radius: 6px;
+  }
 }
 
+/* Bar chart card */
 .barCard {
   margin-top: 0.5rem;
   border-radius: 14px;
@@ -247,4 +256,34 @@ $primary: #4a90e2;
 .barChartWrap {
   width: 100%;
   min-height: 420px;
+}
+
+/* ✅ NEW: Donut chart card */
+.donutCard {
+  margin-top: 0.5rem;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
+  background: #fff;
+  padding: 10px 12px 14px;
+}
+
+.donutChartWrap {
+  width: 100%;
+  min-height: 420px;
+}
+
+/* Center label inside donut */
+.donutCenterText {
+  fill: #111827;
+}
+
+.donutCenterValue {
+  font-weight: 800;
+  font-size: 26px;
+}
+
+.donutCenterSub {
+  font-size: 13px;
+  fill: #6b7280;
 }
