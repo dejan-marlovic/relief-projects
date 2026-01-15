@@ -96,9 +96,10 @@ const BarTooltip = ({ active, payload, label }) => {
 const Statistics = () => {
   const [relations, setRelations] = useState([]);
   const [sectors, setSectors] = useState([]);
-  const [projects, setProjects] = useState([]); // ids-names (used for labels/tooltips)
+  const [projects, setProjects] = useState([]); // ids-names (labels/tooltips)
   const [projectTypes, setProjectTypes] = useState([]); // active project types
-  const [projectsWithTypes, setProjectsWithTypes] = useState([]); // ideally includes type id
+  const [projectStatuses, setProjectStatuses] = useState([]); // active statuses
+  const [projectsWithTypes, setProjectsWithTypes] = useState([]); // /api/projects/active (types + statuses)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -133,22 +134,29 @@ const Statistics = () => {
         setLoading(true);
         setError("");
 
-        // NOTE:
-        // - projects/ids-names is what your current pie tooltip mapping uses
-        // - projects/active is OPTIONAL and only used to compute projects by type
-        const [relRows, secRows, projRows, typeRows, projActiveRows] =
-          await Promise.all([
-            fetchJson(`${BASE_URL}/api/project-sectors/active`),
-            fetchJson(`${BASE_URL}/api/sectors/active`),
-            fetchJson(`${BASE_URL}/api/projects/ids-names`),
-            fetchJson(`${BASE_URL}/api/project-types/active`),
-            fetchJson(`${BASE_URL}/api/projects/active`, { optional: true }),
-          ]);
+        const [
+          relRows,
+          secRows,
+          projRows,
+          typeRows,
+          statusRows,
+          projActiveRows,
+        ] = await Promise.all([
+          fetchJson(`${BASE_URL}/api/project-sectors/active`),
+          fetchJson(`${BASE_URL}/api/sectors/active`),
+          fetchJson(`${BASE_URL}/api/projects/ids-names`),
+          fetchJson(`${BASE_URL}/api/project-types/active`),
+          fetchJson(`${BASE_URL}/api/project-statuses/active`, {
+            optional: true,
+          }),
+          fetchJson(`${BASE_URL}/api/projects/active`, { optional: true }),
+        ]);
 
         setRelations(Array.isArray(relRows) ? relRows : []);
         setSectors(Array.isArray(secRows) ? secRows : []);
         setProjects(Array.isArray(projRows) ? projRows : []);
         setProjectTypes(Array.isArray(typeRows) ? typeRows : []);
+        setProjectStatuses(Array.isArray(statusRows) ? statusRows : []);
 
         // If /api/projects/active exists and returns a list, use it; otherwise empty list
         setProjectsWithTypes(
@@ -165,19 +173,20 @@ const Statistics = () => {
   }, []);
 
   const COLORS = [
-    "#3D85C6", // blue (darker)
-    "#CC4125", // coral (darker)
-    "#E69138", // orange (darker)
-    "#6AA84F", // green (darker)
-    "#674EA7", // purple (darker)
-    "#45818E", // teal (darker)
-    "#A64D79", // mauve (darker)
-    "#6D9EEB", // light blue (darker)
-    "#F1C232", // yellow (darker)
-    "#8E7CC3", // lavender (darker)
-    "#3C78D8", // brighter blue (darker)
-    "#C27BA0", // dusty pink (darker)
+    "#3D85C6",
+    "#CC4125",
+    "#E69138",
+    "#6AA84F",
+    "#674EA7",
+    "#45818E",
+    "#A64D79",
+    "#6D9EEB",
+    "#F1C232",
+    "#8E7CC3",
+    "#3C78D8",
+    "#C27BA0",
   ];
+
   // Sector id -> "CODE — Description"
   const sectorNameMap = useMemo(() => {
     const map = new Map();
@@ -202,6 +211,9 @@ const Statistics = () => {
     return map;
   }, [projects]);
 
+  // ================================
+  // Sector pie (existing)
+  // ================================
   const pieData = useMemo(() => {
     const bySector = new Map();
     for (const row of relations) {
@@ -232,7 +244,9 @@ const Statistics = () => {
     [pieData]
   );
 
-  // ===== Project type mapping + bar data =====
+  // ================================
+  // Project type bar (existing)
+  // ================================
   const projectTypeNameMap = useMemo(() => {
     const map = new Map();
     for (const t of projectTypes) {
@@ -259,7 +273,6 @@ const Statistics = () => {
     );
   };
 
-  // Try hard to find a "type id" field in whatever /api/projects/active returns
   const extractProjectTypeId = (p) => {
     const raw =
       p?.projectTypeId ??
@@ -276,7 +289,6 @@ const Statistics = () => {
   };
 
   const barData = useMemo(() => {
-    // If /api/projects/active isn't available (or doesn't include type ids), we may not have any bar data.
     if (!Array.isArray(projectsWithTypes) || projectsWithTypes.length === 0)
       return [];
 
@@ -286,7 +298,6 @@ const Statistics = () => {
       const pid = extractProjectId(p);
       const typeId = extractProjectTypeId(p);
 
-      // Keep "Unassigned" bucket if type is missing
       const key = typeId == null ? "__UNASSIGNED__" : String(typeId);
 
       let bucket = byType.get(key);
@@ -310,20 +321,125 @@ const Statistics = () => {
         .map((pid) => projectNameMap.get(pid) || `Project ${pid}`)
         .sort((a, b) => a.localeCompare(b));
 
-      return {
-        typeId,
-        name,
-        value: info.count,
-        projectNames,
-      };
+      return { typeId, name, value: info.count, projectNames };
     });
 
-    // Sort: biggest first, then name
     rows.sort((a, b) => b.value - a.value || a.name.localeCompare(b.name));
     return rows;
   }, [projectsWithTypes, projectTypeNameMap, projectNameMap]);
 
-  // ===== Chart geometry (Pie) =====
+  const barHasTypeInfo = useMemo(() => {
+    if (!Array.isArray(projectsWithTypes) || projectsWithTypes.length === 0)
+      return false;
+    return projectsWithTypes.some((p) => extractProjectTypeId(p) != null);
+  }, [projectsWithTypes]);
+
+  // ================================
+  // ✅ NEW: Project status donut
+  // ================================
+  const projectStatusNameMap = useMemo(() => {
+    const map = new Map();
+    for (const s of projectStatuses) {
+      const id = s?.id ?? s?.projectStatusId;
+      const name =
+        s?.statusName ?? s?.name ?? (id != null ? `Status ${id}` : "Status");
+      if (id != null) map.set(Number(id), String(name));
+    }
+    return map;
+  }, [projectStatuses]);
+
+  const extractProjectStatusId = (p) => {
+    const raw =
+      p?.projectStatusId ??
+      p?.statusId ??
+      p?.project_status_id ??
+      p?.projectStatus?.id ??
+      p?.projectStatus?.projectStatusId ??
+      p?.projectStatus?.project_status_id ??
+      p?.projectStatus?.project_statusId;
+
+    if (raw == null) return null;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : null;
+  };
+
+  const statusHasInfo = useMemo(() => {
+    if (!Array.isArray(projectsWithTypes) || projectsWithTypes.length === 0)
+      return false;
+    return projectsWithTypes.some((p) => extractProjectStatusId(p) != null);
+  }, [projectsWithTypes]);
+
+  const statusData = useMemo(() => {
+    if (!Array.isArray(projectsWithTypes) || projectsWithTypes.length === 0)
+      return [];
+
+    const byStatus = new Map(); // statusId or "__UNASSIGNED__" -> { count, projectIds:Set }
+
+    for (const p of projectsWithTypes) {
+      const pid = extractProjectId(p);
+      const sid = extractProjectStatusId(p);
+      const key = sid == null ? "__UNASSIGNED__" : String(sid);
+
+      let bucket = byStatus.get(key);
+      if (!bucket) {
+        bucket = { count: 0, projectIds: new Set() };
+        byStatus.set(key, bucket);
+      }
+
+      bucket.count += 1;
+      if (pid != null) bucket.projectIds.add(pid);
+    }
+
+    const rows = Array.from(byStatus.entries()).map(([key, info]) => {
+      const isUnassigned = key === "__UNASSIGNED__";
+      const statusId = isUnassigned ? null : Number(key);
+
+      const name = isUnassigned
+        ? "Unassigned"
+        : projectStatusNameMap.get(statusId) || `Status ${statusId}`;
+
+      const projectNames = Array.from(info.projectIds)
+        .map((pid) => projectNameMap.get(pid) || `Project ${pid}`)
+        .sort((a, b) => a.localeCompare(b));
+
+      return { statusId, name, value: info.count, projectNames };
+    });
+
+    rows.sort((a, b) => b.value - a.value || a.name.localeCompare(b.name));
+    return rows;
+  }, [projectsWithTypes, projectStatusNameMap, projectNameMap]);
+
+  const statusTotal = useMemo(
+    () => statusData.reduce((s, d) => s + d.value, 0),
+    [statusData]
+  );
+
+  const statusLegendItems = useMemo(
+    () =>
+      statusData.map((d, i) => ({
+        key: d.statusId ?? `status-${i}`,
+        color: COLORS[i % COLORS.length],
+        label: d.name,
+      })),
+    [statusData]
+  );
+
+  // ================================
+  // Sector legend items
+  // ================================
+  const legendItems = useMemo(
+    () =>
+      pieData.map((d, i) => ({
+        key: d.sectorId,
+        color: COLORS[i % COLORS.length],
+        label: d.name,
+      })),
+    [pieData]
+  );
+
+  // ================================
+  // Pie geometry (existing)
+  // ================================
   const CHART_WIDTH = 1460;
   const OUTER_RADIUS = 185;
   const LABEL_OFFSET = 110;
@@ -354,7 +470,7 @@ const Statistics = () => {
   };
 
   const renderLabel = ({ cx, cy, midAngle, outerRadius, name, value }) => {
-    const verticalFactor = Math.abs(Math.sin(midAngle * RADIAN)); // 0 @ sides, 1 @ top/bottom
+    const verticalFactor = Math.abs(Math.sin(midAngle * RADIAN));
     const extra = POLE_EXTRA * verticalFactor;
 
     const sx =
@@ -404,32 +520,15 @@ const Statistics = () => {
     );
   };
 
-  const legendItems = useMemo(
-    () =>
-      pieData.map((d, i) => ({
-        key: d.sectorId,
-        color: COLORS[i % COLORS.length],
-        label: d.name,
-      })),
-    [pieData]
-  );
-
-  const barHasTypeInfo = useMemo(() => {
-    // Heuristic: at least one project has a detectable type id
-    if (!Array.isArray(projectsWithTypes) || projectsWithTypes.length === 0)
-      return false;
-    return projectsWithTypes.some((p) => extractProjectTypeId(p) != null);
-  }, [projectsWithTypes]);
-
   return (
     <div className={styles.page}>
       <div className={styles.shell}>
-        {/* ✅ Header */}
+        {/* Header */}
         <div className={styles.pageHeader}>
           <div className={styles.pageHeaderText}>
             <h2 className={styles.pageTitle}>Statistics</h2>
             <p className={styles.pageSubtitle}>
-              Projects by sector (based on Project–Sector relations).
+              Projects by sector, status, and type.
             </p>
           </div>
 
@@ -440,45 +539,143 @@ const Statistics = () => {
 
         {!loading && error && <div className={styles.errorBanner}>{error}</div>}
 
-        {!loading && !error && pieData.length === 0 && (
-          <div className={styles.emptyText}>No project–sector data found.</div>
-        )}
-
-        {!loading && !error && pieData.length > 0 && (
+        {!loading && !error && (
           <>
-            <div className={styles.chartRow}>
-              <PieChart
-                width={CHART_WIDTH}
-                height={CHART_HEIGHT}
-                margin={{ top: 8, right: 32, bottom: 0, left: 32 }}
-              >
-                <Pie
-                  data={pieData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx={CHART_WIDTH / 2}
-                  cy={CY}
-                  outerRadius={OUTER_RADIUS}
-                  label={renderLabel}
-                  labelLine={false}
-                  isAnimationActive
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${entry.sectorId}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
+            {/* ========================= */}
+            {/* Sector PIE */}
+            {/* ========================= */}
+            {pieData.length === 0 ? (
+              <div className={styles.emptyText}>
+                No project–sector data found.
+              </div>
+            ) : (
+              <>
+                <div className={styles.chartRow}>
+                  <PieChart
+                    width={CHART_WIDTH}
+                    height={CHART_HEIGHT}
+                    margin={{ top: 8, right: 32, bottom: 0, left: 32 }}
+                  >
+                    <Pie
+                      data={pieData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx={CHART_WIDTH / 2}
+                      cy={CY}
+                      outerRadius={OUTER_RADIUS}
+                      label={renderLabel}
+                      labelLine={false}
+                      isAnimationActive
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${entry.sectorId}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
 
-                <RechartsTooltip content={<SliceTooltip />} />
-              </PieChart>
+                    <RechartsTooltip content={<SliceTooltip />} />
+                  </PieChart>
+                </div>
+
+                <div className={styles.chartLegendSpacer} />
+                <LegendBlock items={legendItems} />
+              </>
+            )}
+
+            {/* ========================= */}
+            {/* ✅ NEW: Status DONUT */}
+            {/* ========================= */}
+            <div className={styles.sectionSpacer} />
+
+            <div className={styles.sectionHeader}>
+              <div className={styles.sectionTitle}>
+                Projects by project status
+              </div>
+              <div className={styles.sectionSubtitle}>
+                Counts come from your{" "}
+                <code>Project status value on project main page</code>.
+              </div>
             </div>
 
-            <div className={styles.chartLegendSpacer} />
-            <LegendBlock items={legendItems} />
+            {!statusHasInfo && (
+              <div className={styles.infoBanner}>
+                I couldn’t detect any project status id on{" "}
+                <code>/api/projects/active</code>.
+                <br />
+                Make sure it returns something like <code>
+                  projectStatusId
+                </code>{" "}
+                (or <code>projectStatus.id</code>) per project.
+              </div>
+            )}
 
-            {/* ✅ Bar chart right under pie chart */}
+            {statusHasInfo && statusData.length === 0 && (
+              <div className={styles.emptyText}>
+                No project–status data found.
+              </div>
+            )}
+
+            {statusHasInfo && statusData.length > 0 && (
+              <>
+                <div className={styles.donutCard}>
+                  <div className={styles.donutChartWrap}>
+                    <ResponsiveContainer width="100%" height={420}>
+                      <PieChart>
+                        <Pie
+                          data={statusData}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={155}
+                          innerRadius={95}
+                          paddingAngle={2}
+                          isAnimationActive
+                        >
+                          {statusData.map((entry, index) => (
+                            <Cell
+                              key={`status-${entry.statusId ?? entry.name}`}
+                              fill={COLORS[index % COLORS.length]}
+                            />
+                          ))}
+                        </Pie>
+
+                        {/* center label */}
+                        <text
+                          x="50%"
+                          y="50%"
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                          className={styles.donutCenterText}
+                        >
+                          <tspan className={styles.donutCenterValue}>
+                            {statusTotal}
+                          </tspan>
+                          <tspan
+                            x="50%"
+                            dy="18"
+                            className={styles.donutCenterSub}
+                          >
+                            projects
+                          </tspan>
+                        </text>
+
+                        <RechartsTooltip content={<SliceTooltip />} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                <div className={styles.chartLegendSpacer} />
+                <LegendBlock items={statusLegendItems} />
+              </>
+            )}
+
+            {/* ========================= */}
+            {/* Project TYPE BAR (existing) */}
+            {/* ========================= */}
             <div className={styles.sectionSpacer} />
 
             <div className={styles.sectionHeader}>
@@ -486,7 +683,7 @@ const Statistics = () => {
                 Projects by project type
               </div>
               <div className={styles.sectionSubtitle}>
-                Counts come from your projects (must include a project type id).
+                Counts come from your project's project type.
               </div>
             </div>
 
@@ -554,6 +751,7 @@ const Statistics = () => {
           <span>relations: {relations.length}</span>
           <span>sectors: {sectors.length}</span>
           <span>slices: {pieData.length}</span>
+          <span>project statuses: {projectStatuses.length}</span>
           <span>project types: {projectTypes.length}</span>
           <span>projects (ids-names): {projects.length}</span>
           <span>projects (active): {projectsWithTypes.length}</span>
