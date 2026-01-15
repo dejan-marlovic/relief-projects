@@ -97,9 +97,9 @@ const Statistics = () => {
   const [relations, setRelations] = useState([]);
   const [sectors, setSectors] = useState([]);
   const [projects, setProjects] = useState([]); // ids-names (labels/tooltips)
-  const [projectTypes, setProjectTypes] = useState([]); // active project types
-  const [projectStatuses, setProjectStatuses] = useState([]); // active statuses
-  const [projectsWithTypes, setProjectsWithTypes] = useState([]); // /api/projects/active (types + statuses)
+  const [projectTypes, setProjectTypes] = useState([]); // active project types (names only)
+  const [projectStatuses, setProjectStatuses] = useState([]); // active statuses (names only)
+  const [projectsWithTypes, setProjectsWithTypes] = useState([]); // projects (for status/type values)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -117,16 +117,14 @@ const Statistics = () => {
     const fetchJson = async (url, { optional = false } = {}) => {
       const res = await fetch(url, { signal: ac.signal, headers: authHeaders });
 
-      if (res.status === 204) return []; // no content => treat as empty list
+      if (res.status === 204) return [];
 
       if (!res.ok) {
-        // Optional endpoint: allow missing route without hard failing the page
         if (optional && (res.status === 404 || res.status === 403)) return null;
         throw new Error(`Fetch failed (${res.status}) for ${url}`);
       }
 
-      const data = await res.json();
-      return data;
+      return res.json();
     };
 
     (async () => {
@@ -157,8 +155,6 @@ const Statistics = () => {
         setProjects(Array.isArray(projRows) ? projRows : []);
         setProjectTypes(Array.isArray(typeRows) ? typeRows : []);
         setProjectStatuses(Array.isArray(statusRows) ? statusRows : []);
-
-        // If /api/projects/active exists and returns a list, use it; otherwise empty list
         setProjectsWithTypes(
           Array.isArray(projActiveRows) ? projActiveRows : []
         );
@@ -211,8 +207,13 @@ const Statistics = () => {
     return map;
   }, [projects]);
 
+  const extractProjectId = (p) => {
+    const id = p?.id ?? p?.projectId;
+    return id == null ? null : Number(id);
+  };
+
   // ================================
-  // Sector pie (existing)
+  // Sector pie (counts based on Sector input in main Project page)
   // ================================
   const pieData = useMemo(() => {
     const bySector = new Map();
@@ -245,7 +246,7 @@ const Statistics = () => {
   );
 
   // ================================
-  // Project type bar (existing)
+  // Project type bar (counts based on Project Type input in main Project page)
   // ================================
   const projectTypeNameMap = useMemo(() => {
     const map = new Map();
@@ -257,21 +258,6 @@ const Statistics = () => {
     }
     return map;
   }, [projectTypes]);
-
-  const extractProjectId = (p) => {
-    const id = p?.id ?? p?.projectId;
-    return id == null ? null : Number(id);
-  };
-
-  const extractProjectName = (p) => {
-    const id = extractProjectId(p);
-    return (
-      p?.projectName ??
-      p?.name ??
-      (id != null ? projectNameMap.get(id) : null) ??
-      (id != null ? `Project ${id}` : "Project")
-    );
-  };
 
   const extractProjectTypeId = (p) => {
     const raw =
@@ -292,7 +278,7 @@ const Statistics = () => {
     if (!Array.isArray(projectsWithTypes) || projectsWithTypes.length === 0)
       return [];
 
-    const byType = new Map(); // typeId (number|null) -> { projectIds:Set<number>, count:number }
+    const byType = new Map();
 
     for (const p of projectsWithTypes) {
       const pid = extractProjectId(p);
@@ -335,7 +321,7 @@ const Statistics = () => {
   }, [projectsWithTypes]);
 
   // ================================
-  // ✅ NEW: Project status donut
+  // Project status donut (counts based on Project Status input in main Project page)
   // ================================
   const projectStatusNameMap = useMemo(() => {
     const map = new Map();
@@ -373,7 +359,7 @@ const Statistics = () => {
     if (!Array.isArray(projectsWithTypes) || projectsWithTypes.length === 0)
       return [];
 
-    const byStatus = new Map(); // statusId or "__UNASSIGNED__" -> { count, projectIds:Set }
+    const byStatus = new Map();
 
     for (const p of projectsWithTypes) {
       const pid = extractProjectId(p);
@@ -424,9 +410,7 @@ const Statistics = () => {
     [statusData]
   );
 
-  // ================================
   // Sector legend items
-  // ================================
   const legendItems = useMemo(
     () =>
       pieData.map((d, i) => ({
@@ -544,6 +528,14 @@ const Statistics = () => {
             {/* ========================= */}
             {/* Sector PIE */}
             {/* ========================= */}
+            <div className={styles.sectionHeader}>
+              <div className={styles.sectionTitle}>Projects by sector</div>
+              <div className={styles.sectionSubtitle}>
+                Counts come from the <strong>Sector</strong> selection on the
+                main Project page.
+              </div>
+            </div>
+
             {pieData.length === 0 ? (
               <div className={styles.emptyText}>
                 No project–sector data found.
@@ -585,7 +577,7 @@ const Statistics = () => {
             )}
 
             {/* ========================= */}
-            {/* ✅ NEW: Status DONUT */}
+            {/* Status DONUT */}
             {/* ========================= */}
             <div className={styles.sectionSpacer} />
 
@@ -594,20 +586,17 @@ const Statistics = () => {
                 Projects by project status
               </div>
               <div className={styles.sectionSubtitle}>
-                Counts come from your{" "}
-                <code>Project status value on project main page</code>.
+                Counts come from the <strong>Project Status</strong> selection
+                on the main Project page.
               </div>
             </div>
 
             {!statusHasInfo && (
               <div className={styles.infoBanner}>
-                I couldn’t detect any project status id on{" "}
-                <code>/api/projects/active</code>.
+                I couldn’t detect any project status on the project data.
                 <br />
-                Make sure it returns something like <code>
-                  projectStatusId
-                </code>{" "}
-                (or <code>projectStatus.id</code>) per project.
+                Make sure each project has a Project Status selected on the main
+                Project page.
               </div>
             )}
 
@@ -674,7 +663,7 @@ const Statistics = () => {
             )}
 
             {/* ========================= */}
-            {/* Project TYPE BAR (existing) */}
+            {/* Project TYPE BAR */}
             {/* ========================= */}
             <div className={styles.sectionSpacer} />
 
@@ -683,19 +672,17 @@ const Statistics = () => {
                 Projects by project type
               </div>
               <div className={styles.sectionSubtitle}>
-                Counts come from your project's project type.
+                Counts come from the <strong>Project Type</strong> selection on
+                the main Project page.
               </div>
             </div>
 
             {!barHasTypeInfo && (
               <div className={styles.infoBanner}>
-                I couldn’t detect any project type id on{" "}
-                <code>/api/projects/active</code>.
+                I couldn’t detect any project type on the project data.
                 <br />
-                Make sure it returns something like <code>
-                  projectTypeId
-                </code>{" "}
-                (or <code>projectType.id</code>) per project.
+                Make sure each project has a Project Type selected on the main
+                Project page.
               </div>
             )}
 
