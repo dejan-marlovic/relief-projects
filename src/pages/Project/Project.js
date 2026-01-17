@@ -22,8 +22,8 @@ import {
   FiAlertCircle,
 } from "react-icons/fi";
 
-import { BASE_URL } from "../../config/api"; // adjust path if needed
-const coverImagePath = `${BASE_URL}/images/projects/`;
+import { BASE_URL, ASSETS_URL } from "../../config/api";
+const coverImagePath = `${ASSETS_URL}/images/projects/`;
 
 // ✅ caption delimiter (must match backend)
 const CAPTION_DELIM = "|||";
