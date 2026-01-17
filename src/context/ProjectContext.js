@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useCallback } from "react";
 
-const BASE_URL = "http://localhost:8080";
+import { BASE_URL } from "../config/api"; // adjust path if needed
 
 export const ProjectContext = createContext();
 

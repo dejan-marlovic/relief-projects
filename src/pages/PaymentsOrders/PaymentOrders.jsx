@@ -12,7 +12,7 @@ import styles from "./PaymentOrders.module.scss";
 import PaymentOrderLines from "./PaymentOrder/PaymentOrderLines/PaymentOrderLines";
 import { FiPlus, FiColumns, FiAlertCircle } from "react-icons/fi";
 
-const BASE_URL = "http://localhost:8080";
+import { BASE_URL } from "../../config/api"; // adjust path if needed
 
 const headerLabels = [
   "Actions",

@@ -11,7 +11,7 @@ import RecipientRow from "./Recipient/Recipient";
 import styles from "./Recipients.module.scss";
 import { FiColumns, FiPlus } from "react-icons/fi";
 
-const BASE_URL = "http://localhost:8080";
+import { BASE_URL } from "../../config/api"; // adjust path if needed
 
 const headerLabels = ["Actions", "Organization", "Payment Order", "Amount"];
 

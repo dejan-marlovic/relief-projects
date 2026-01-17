@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import styles from "./BankDetails.module.scss";
 import { FiEdit, FiTrash2, FiSave, FiX, FiPlus } from "react-icons/fi";
 
-const BASE_URL = "http://localhost:8080";
+import { BASE_URL } from "../../../config/api"; // adjust path if needed
 
 const blankBank = {
   bankName: "",

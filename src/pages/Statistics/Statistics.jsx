@@ -13,7 +13,7 @@ import {
 } from "recharts";
 import styles from "./Statistics.module.scss";
 
-const BASE_URL = "http://localhost:8080";
+import { BASE_URL } from "../../config/api"; // adjust path if needed
 const tokenFromStorage = () => localStorage.getItem("authToken");
 
 // Legend (styled via CSS Module, only dynamic color stays inline)
