@@ -22,7 +22,7 @@ import {
   FiAlertCircle,
 } from "react-icons/fi";
 
-const BASE_URL = "http://localhost:8080";
+import { BASE_URL } from "../../config/api"; // adjust path if needed
 const coverImagePath = `${BASE_URL}/images/projects/`;
 
 // ✅ caption delimiter (must match backend)

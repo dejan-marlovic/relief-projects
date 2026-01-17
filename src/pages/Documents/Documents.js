@@ -3,7 +3,7 @@ import { ProjectContext } from "../../context/ProjectContext";
 import { FiTrash2, FiDownload, FiUploadCloud } from "react-icons/fi";
 import styles from "./Documents.module.scss";
 
-const BASE_URL = "http://localhost:8080";
+import { BASE_URL } from "../../config/api"; // adjust path if needed
 const DOCUMENTS_BASE_PATH = `${BASE_URL}/documents/`;
 
 // 🔹 TODO: replace with real current employee ID from your auth/user context

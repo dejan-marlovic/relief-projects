@@ -2,8 +2,7 @@ import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Login.module.scss";
 import { ProjectContext } from "../../context/ProjectContext";
-
-const BASE_URL = "http://localhost:8080";
+import { BASE_URL } from "../../config/api"; // adjust path if needed
 
 function Login() {
   const [username, setUsername] = useState("");
