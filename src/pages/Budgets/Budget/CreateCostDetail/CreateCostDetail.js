@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styles from "./CreateCostDetail.module.scss";
 
-const BASE_URL = "http://localhost:8080";
+import { BASE_URL } from "../../../../config/api"; // adjust path if needed
 
 const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
   const [costTypes, setCostTypes] = useState([]);

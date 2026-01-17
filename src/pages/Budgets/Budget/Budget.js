@@ -5,7 +5,7 @@ import CostDetails from "./CostDetails/CostDetails";
 // ✅ Icons (same style as Project)
 import { FiSave, FiTrash2, FiAlertCircle } from "react-icons/fi";
 
-const BASE_URL = "http://localhost:8080";
+import { BASE_URL } from "../../../config/api"; // adjust path if needed
 
 const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
   const formatDate = (dateString) =>

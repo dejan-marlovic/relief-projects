@@ -11,7 +11,7 @@ import styles from "./Memos.module.scss";
 import projectStyles from "../Project.module.scss"; // ← reuse Project form styles
 import { FiEdit, FiTrash2, FiSave, FiX } from "react-icons/fi";
 
-const BASE_URL = "http://localhost:8080";
+import { BASE_URL } from "../../../config/api"; // adjust path if needed
 
 // Text getter
 const getText = (m = {}) =>

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import CostDetail from "./CostDetail/CostDetail";
 import styles from "./CostDetails.module.scss";
 
-const BASE_URL = "http://localhost:8080";
+import { BASE_URL } from "../../../../config/api"; // adjust path if needed
 
 const blankCostDetail = {
   costDescription: "",
