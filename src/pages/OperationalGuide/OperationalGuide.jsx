@@ -2103,6 +2103,7 @@ const OperationalGuide = () => {
                 <li>Projects missing sector links</li>
                 <li>Projects missing project type</li>
                 <li>Soft-deleted projects/links</li>
+                <li>Projects missing status on main project page</li>
               </ul>
 
               <h3>6. Practical operational rules (summary)</h3>
