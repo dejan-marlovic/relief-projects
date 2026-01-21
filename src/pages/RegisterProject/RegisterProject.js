@@ -1,13 +1,10 @@
-// Core React imports
+// RegisterProject.jsx
 import React, { useEffect, useState, useContext, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 
-// Styles specific to the RegisterProject form
 import styles from "./RegisterProject.module.scss";
-
-// Import context to update the global list of projects
 import { ProjectContext } from "../../context/ProjectContext";
 
-// ✅ Icons (same vibe as Project/Budget)
 import {
   FiSave,
   FiX,
@@ -16,8 +13,8 @@ import {
   FiAlertCircle,
 } from "react-icons/fi";
 
-// ✅ Base URL (backend) – same as in Project component
-const BASE_URL = "http://localhost:8080";
+// ✅ IMPORTANT: use shared config (works in IDE dev + Docker + AWS)
+import { BASE_URL } from "../../config/api";
 
 // Optional: initial state helper to avoid resetting to {}
 const initialProjectDetails = {
@@ -26,7 +23,6 @@ const initialProjectDetails = {
   projectName: "",
   pinCode: "",
   donorOrganizationId: "",
-  // ✅ removed fundingSource (handled via organization link)
   implementingPartnerOrganizationId: "",
   addressId: "",
   foSupportCostPercent: "",
@@ -34,7 +30,7 @@ const initialProjectDetails = {
   projectDescription: "",
   projectCoverImage: "",
   projectStatusId: "",
-  approved: "Yes", // Default value
+  approved: "Yes",
   projectPeriodMonths: "",
   projectDate: "",
   projectStart: "",
@@ -46,7 +42,6 @@ const initialProjectDetails = {
 };
 
 // 🔍 Simple client-side validation for required fields (UX only)
-// Backend still validates with @NotNull / @NotBlank
 const validateProjectDetails = (values) => {
   const errors = {};
 
@@ -66,12 +61,15 @@ const validateProjectDetails = (values) => {
 };
 
 const RegisterProject = () => {
+  const navigate = useNavigate();
+
   const [loading, setLoading] = useState(false);
 
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
 
-  const { setProjects } = useContext(ProjectContext);
+  // ✅ grab setSelectedProjectId too, so we can auto-open the created project
+  const { setProjects, setSelectedProjectId } = useContext(ProjectContext);
 
   const [projectDetails, setProjectDetails] = useState(initialProjectDetails);
 
@@ -93,6 +91,45 @@ const RegisterProject = () => {
   const inputClass = (fieldName) =>
     `${styles.textInput} ${hasError(fieldName) ? styles.inputError : ""}`;
 
+  // 🔐 Helper: fetch with auth + automatic 401 handling (same behavior as Project.jsx)
+  const authFetch = async (url, options = {}) => {
+    const token = localStorage.getItem("authToken");
+
+    const mergedOptions = {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    };
+
+    const res = await fetch(url, mergedOptions);
+
+    if (res.status === 401) {
+      localStorage.removeItem("authToken");
+      navigate("/login");
+      throw new Error("Unauthorized - redirecting to login");
+    }
+
+    return res;
+  };
+
+  // ✅ Safe JSON reader: handles 204 / empty body / non-json without crashing
+  const safeReadJson = async (res) => {
+    if (!res) return null;
+    if (res.status === 204) return null;
+
+    const text = await res.text().catch(() => "");
+    if (!text || !text.trim()) return null;
+
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      console.warn("safeReadJson: failed to parse JSON:", e);
+      return null;
+    }
+  };
+
   // Cleanup preview URL
   useEffect(() => {
     return () => {
@@ -103,26 +140,37 @@ const RegisterProject = () => {
 
   // Load form dropdown data from the server once when component mounts
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
-
     const fetchData = async () => {
       try {
         setLoading(true);
 
-        const [statuses, types, addrs, projects] = await Promise.all([
-          fetch(`${BASE_URL}/api/project-statuses/active`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }).then((res) => res.json()),
-          fetch(`${BASE_URL}/api/project-types/active`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }).then((res) => res.json()),
-          fetch(`${BASE_URL}/api/addresses/active`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }).then((res) => res.json()),
-          fetch(`${BASE_URL}/api/projects/ids-names`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }).then((res) => res.json()),
-        ]);
+        // If no token, redirect early (prevents confusing JSON errors)
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+          navigate("/login");
+          return;
+        }
+
+        const [statusesRes, typesRes, addrsRes, projectsRes] =
+          await Promise.all([
+            authFetch(`${BASE_URL}/api/project-statuses/active`, {
+              headers: { "Content-Type": "application/json" },
+            }),
+            authFetch(`${BASE_URL}/api/project-types/active`, {
+              headers: { "Content-Type": "application/json" },
+            }),
+            authFetch(`${BASE_URL}/api/addresses/active`, {
+              headers: { "Content-Type": "application/json" },
+            }),
+            authFetch(`${BASE_URL}/api/projects/ids-names`, {
+              headers: { "Content-Type": "application/json" },
+            }),
+          ]);
+
+        const statuses = await safeReadJson(statusesRes);
+        const types = await safeReadJson(typesRes);
+        const addrs = await safeReadJson(addrsRes);
+        const projects = await safeReadJson(projectsRes);
 
         setProjectStatuses(Array.isArray(statuses) ? statuses : []);
         setProjectTypes(Array.isArray(types) ? types : []);
@@ -140,15 +188,12 @@ const RegisterProject = () => {
     };
 
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-
-    setProjectDetails((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setProjectDetails((prev) => ({ ...prev, [name]: value }));
   };
 
   // ✅ cover picker helpers
@@ -168,9 +213,7 @@ const RegisterProject = () => {
     if (file) handleCoverFileSelected(file);
   };
 
-  const handleCoverDragOver = (e) => {
-    e.preventDefault();
-  };
+  const handleCoverDragOver = (e) => e.preventDefault();
 
   const handleCoverFileInput = (e) => {
     const file = e.target.files?.[0];
@@ -185,17 +228,15 @@ const RegisterProject = () => {
     setUploadingCover(true);
 
     try {
-      const token = localStorage.getItem("authToken");
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch(
+      const response = await authFetch(
         `${BASE_URL}/api/projects/${projectId}/cover-image`,
         {
           method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
           body: formData,
-        }
+        },
       );
 
       if (!response.ok) {
@@ -203,7 +244,7 @@ const RegisterProject = () => {
         throw new Error(text || "Failed to upload cover image");
       }
 
-      return await response.json();
+      return await safeReadJson(response);
     } catch (err) {
       console.error(err);
       setUploadError(err.message || "Upload failed");
@@ -223,10 +264,35 @@ const RegisterProject = () => {
     setFieldErrors({});
   };
 
+  // Convert some fields to numbers (helps backend consistency, especially after Docker/AWS)
+  const toNumberOrNull = (v) => {
+    if (v === "" || v === null || v === undefined) return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
+
+  const buildPayload = (values) => {
+    // remove legacy field if it exists
+    // eslint-disable-next-line no-unused-vars
+    const { fundingSource, ...rest } = values;
+
+    return {
+      ...rest,
+      projectStatusId: toNumberOrNull(rest.projectStatusId),
+      projectTypeId: toNumberOrNull(rest.projectTypeId),
+      addressId: toNumberOrNull(rest.addressId),
+      partOfId: toNumberOrNull(rest.partOfId),
+      projectPeriodMonths:
+        rest.projectPeriodMonths === ""
+          ? null
+          : Number(rest.projectPeriodMonths),
+      // keep decimals as strings (backend BigDecimal usually accepts strings fine)
+      // keep datetime-local strings as-is (you already confirmed it works)
+    };
+  };
+
   const handleRegister = async () => {
     try {
-      const token = localStorage.getItem("authToken");
-
       setFormError("");
       setFieldErrors({});
 
@@ -240,15 +306,11 @@ const RegisterProject = () => {
 
       setLoading(true);
 
-      // ✅ Ensure fundingSource is not sent even if backend/old state expects it
-      const { fundingSource, ...payload } = projectDetails;
+      const payload = buildPayload(projectDetails);
 
-      const response = await fetch(`${BASE_URL}/api/projects`, {
+      const response = await authFetch(`${BASE_URL}/api/projects`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
@@ -265,15 +327,22 @@ const RegisterProject = () => {
         if (data) {
           if (data.fieldErrors) setFieldErrors(data.fieldErrors);
           setFormError(
-            data.message || "There was a problem creating the project."
+            data.message || "There was a problem creating the project.",
           );
         } else {
-          setFormError("There was a problem creating the project.");
+          setFormError(text || "There was a problem creating the project.");
         }
         return;
       }
 
-      const newProject = await response.json();
+      const newProject = await safeReadJson(response);
+      if (!newProject?.id) {
+        setFormError(
+          "Project was created, but response did not include an id.",
+        );
+        return;
+      }
+
       let finalProject = newProject;
 
       // ✅ If user selected a cover file, upload it now
@@ -282,13 +351,32 @@ const RegisterProject = () => {
         if (updated) finalProject = updated;
       }
 
-      alert("Project created successfully!");
-      setProjects((prev) => [...prev, finalProject]);
+      // ✅ Update global list (dedupe if needed)
+      setProjects((prev) => {
+        const arr = Array.isArray(prev) ? prev : [];
+        const exists = arr.some(
+          (p) => String(p.id) === String(finalProject.id),
+        );
+        return exists
+          ? arr.map((p) =>
+              String(p.id) === String(finalProject.id) ? finalProject : p,
+            )
+          : [...arr, finalProject];
+      });
 
+      // ✅ Select the newly created project so Project.jsx can fetch /api/projects/:id
+      setSelectedProjectId(String(finalProject.id));
+
+      alert("Project created successfully!");
       resetForm();
+
+      // Optional: if you have a dedicated route for project details, you can navigate there
+      // navigate("/projects");
     } catch (error) {
       console.error("Create error:", error);
-      setFormError("Unexpected error while creating project.");
+      setFormError(
+        error?.message || "Unexpected error while creating project.",
+      );
     } finally {
       setLoading(false);
     }
@@ -296,7 +384,7 @@ const RegisterProject = () => {
 
   const hasAnyFieldErrors = useMemo(
     () => Object.keys(fieldErrors || {}).length > 0,
-    [fieldErrors]
+    [fieldErrors],
   );
 
   return (
@@ -427,8 +515,6 @@ const RegisterProject = () => {
                     />
                   </div>
                 </div>
-
-                {/* ✅ Funding Source removed */}
 
                 <div className={styles.row2}>
                   <div className={styles.formGroup}>
