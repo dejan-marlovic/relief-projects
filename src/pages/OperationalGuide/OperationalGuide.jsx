@@ -2085,10 +2085,11 @@ const OperationalGuide = () => {
               </p>
 
               <h3>3. What you see on the Statistics page</h3>
-              <p>The page contains two charts:</p>
+              <p>The page contains three charts:</p>
               <ul>
                 <li>Pie chart — Projects by Sector</li>
                 <li>Bar chart — Projects by Project Type</li>
+                <li>Dounat chart — Projects by Project Status</li>
               </ul>
 
               <h3>4. How to use the charts (day-to-day)</h3>
