@@ -1,3 +1,4 @@
+#Dockerfile frontend
 # -----------------------
 # Build stage (CRA build)
 # -----------------------
@@ -26,6 +27,9 @@ FROM nginx:alpine
 
 # Copy built static files into nginx
 COPY --from=build /app/build /usr/share/nginx/html
+
+# ✅ add this
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
