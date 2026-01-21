@@ -31,9 +31,16 @@ const Layout = () => {
   const isOperationalGuidePage = location.pathname === "/operational-guide";
   const isAboutPage = location.pathname === "/about";
 
+  // ✅ NEW: Admin page is global (no project context needed)
+  const isAdminPage = location.pathname.startsWith("/admin");
+
   // ✅ hide selector where project context is not needed
   const hideSelector =
-    isRegisterPage || isStatisticsPage || isOperationalGuidePage || isAboutPage;
+    isRegisterPage ||
+    isStatisticsPage ||
+    isOperationalGuidePage ||
+    isAboutPage ||
+    isAdminPage;
 
   const isActive = (path) => location.pathname === path;
 
@@ -106,20 +113,27 @@ const Layout = () => {
             // ✅ Existing
             ["/operational-guide", "Guide"],
 
-            // ✅ NEW: About tab (after operational guide)
+            // ✅ Existing
             ["/about", "About"],
-          ].map(([path, label]) => (
-            <li key={path} className={styles.tabItem}>
-              <Link
-                to={path}
-                className={`${styles.tabLink} ${
-                  isActive(path) ? styles.active : ""
-                }`}
-              >
-                {label}
-              </Link>
-            </li>
-          ))}
+
+            // ✅ NEW: Admin (placeholder)
+            ["/admin", "Admin"],
+          ].map(([path, label]) => {
+            const isAdminTab = path === "/admin";
+
+            return (
+              <li key={path} className={styles.tabItem}>
+                <Link
+                  to={path}
+                  className={`${styles.tabLink} ${
+                    isActive(path) ? styles.active : ""
+                  } ${isAdminTab ? styles.adminTab : ""}`}
+                >
+                  {label}
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       </nav>
 
