@@ -138,7 +138,9 @@ $secondary-color: #e74c3c;
   border-top-left-radius: 12px;
   border-top-right-radius: 12px;
 
-  transition: background 0.2s ease, transform 0.1s ease;
+  transition:
+    background 0.2s ease,
+    transform 0.1s ease;
 }
 
 .tabLink:hover {
@@ -172,4 +174,21 @@ $secondary-color: #e74c3c;
   .tabList {
     overflow-x: auto;
   }
+}
+
+/* ✅ Admin tab: subtle standout */
+.adminTab {
+  border-color: rgba(231, 76, 60, 0.55) !important;
+  background: rgba(231, 76, 60, 0.08) !important;
+  color: #b42318 !important;
+}
+
+.adminTab:hover {
+  background: rgba(231, 76, 60, 0.14) !important;
+}
+
+/* If Admin is active, keep it “admin-colored” while active */
+.active.adminTab {
+  border-color: rgba(231, 76, 60, 0.75) !important;
+  color: #b42318 !important;
 }
