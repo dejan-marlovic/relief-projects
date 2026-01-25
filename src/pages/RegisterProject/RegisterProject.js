@@ -531,7 +531,7 @@ const RegisterProject = () => {
                   </div>
 
                   <div className={styles.formGroup}>
-                    <label>IRW Support Cost (%)</label>
+                    <label>Own Support Cost (%)</label>
                     <input
                       className={styles.textInput}
                       type="number"

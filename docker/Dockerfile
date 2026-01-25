@@ -26,9 +26,14 @@ COPY --from=build /app/build /usr/share/nginx/html
 # We keep your repo filename docker/nginx.conf, but copy it as a template inside the image.
 COPY docker/nginx.conf /etc/nginx/templates/default.conf.template
 
-# ✅ Default for local docker-compose (service name "app")
-# (no trailing slash!)
-ENV API_PROXY_PASS=http://app:8080
+# ✅ DEFAULT SAFE FOR AWS/ECS:
+# nginx must be able to resolve this at startup, otherwise it exits.
+# ALB routes /api/* to backend anyway, so this is not used in AWS requests,
+# but it must be resolvable so nginx can start.
+#
+# ✅ Local docker-compose overrides this to http://app:8080 (see docker-compose.yml),
+# so local still works exactly like before.
+ENV API_PROXY_PASS=http://127.0.0.1:8080
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
