@@ -79,7 +79,7 @@ const Layout = () => {
 
           <div className={styles.logoWrap}>
             <img
-              src="/images/logo/logo.png"
+              src="/logo.png"
               alt="Relief Projects logo"
               className={styles.logo}
             />
