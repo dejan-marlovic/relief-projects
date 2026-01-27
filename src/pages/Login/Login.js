@@ -52,7 +52,7 @@ function Login() {
       {/* Centered logo above input fields */}
       <div className={styles.logoWrapper}>
         <img
-          src="/images/logo/logo.png"
+          src="/logo.png"
           alt="Relief Projects logo"
           className={styles.logo}
         />
