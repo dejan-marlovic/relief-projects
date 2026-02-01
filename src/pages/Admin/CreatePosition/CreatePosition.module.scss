@@ -1,0 +1,10 @@
+@use "../../../styles/forms" as form;
+
+$primary: #4a90e2;
+$danger: #e74c3c;
+
+.projectContainer {
+  padding: 1.2rem; //root font (html) font-size if 16 px 1.2 rem = 19.2px
+  margin-top: 1rem;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
