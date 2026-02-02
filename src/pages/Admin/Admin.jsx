@@ -1,4 +1,6 @@
+import CreatePosition from "./CreatePosition/CreatePosition";
+
 const Admin = () => {
-  return <h1>Hi im Admin</h1>;
+  return <CreatePosition></CreatePosition>;
 };
 export default Admin;
