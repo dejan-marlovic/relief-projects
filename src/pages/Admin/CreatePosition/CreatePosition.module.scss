@@ -1,10 +1,182 @@
-@use "../../../styles/forms" as form;
+/* ==========================================================================
+   Stylesheet structure overview
+   - Uses a shared "forms" SCSS module for consistent input/label/button styles.
+   - Defines layout containers (page, cards), typography (titles/subtitles),
+     form grouping, error states, and action buttons.
+   - Includes a small responsive tweak for mobile screens.
+   ========================================================================== */
 
-$primary: #4a90e2;
-$danger: #e74c3c;
+@use "../../../styles/forms" as forms; // Imports shared form mixins/vars; referenced as forms.<name>
 
+$primary: #4a90e2; // Primary theme color (used for headings/buttons)
+$danger: #e74c3c; // Danger theme color (used for destructive actions)
+
+/* .projectContainer: outer page wrapper that sets overall spacing + base typography */
 .projectContainer {
-  padding: 1.2rem; //root font (html) font-size if 16 px 1.2 rem = 19.2px
-  margin-top: 1rem;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  padding: 1.25rem; // Inner spacing around the whole page section (rem scales with root font-size)
+  margin-top: 1rem; // Space above the container, separating it from content above
+  font-family:
+    "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; // Sets the default font stack for this area
+}
+
+/* .formContainer: main form "panel" with card look (white bg, rounded, border, shadow) */
+.formContainer {
+  background: #fff; // White background to contrast with page background
+  border-radius: 14px; // Rounded corners for a modern card feel
+  border: 1px solid rgba(74, 144, 226, 0.18); // Subtle blue-tinted border (alpha = 0.18)
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06); // Soft shadow: x=0, y=10px, blur=24px, 6% black
+  padding: 1.25rem; // Inner spacing so content doesn't touch the edges
+}
+
+/* .textInput: applies shared input styling (padding, border, focus styles, etc.) and removes extra spacing */
+.textInput {
+  @include forms.text-input; // Reuses the shared text input mixin (consistent input styling across app)
+  margin-bottom: 0; // Prevents the input from adding extra space below itself (layout control)
+}
+
+/* label: consistent label styling + block layout so it sits above inputs */
+label {
+  @include forms.form-label; // Reuses shared label styling (font size/weight/color)
+  display: block; // Makes label take its own line (so input starts beneath it)
+  margin-bottom: 0.35rem; // Small gap between label and the input underneath
+}
+
+/* .pageHeader: top bar with title on the left and actions on the right */
+.pageHeader {
+  display: flex; // Enables flexible horizontal layout
+  align-items: flex-start; // Aligns items at the top (useful if left side has multi-line text)
+  justify-content: space-between; // Pushes left content and right actions to opposite sides
+  gap: 1rem; // Space between left and right groups if they wrap/stack
+  margin-bottom: 1rem; // Space below the header before the next section
+  padding-bottom: 1rem; // Adds breathing room above the bottom border line
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06); // Very light divider line under the header
+}
+
+/* .pageHeaderText: stacks title + subtitle vertically with a small gap */
+.pageHeaderText {
+  display: flex; // Uses flex to control vertical spacing easily
+  flex-direction: column; // Stacks children (title + subtitle) vertically
+  gap: 0.25rem; // Tight spacing between title and subtitle
+}
+
+/* .pageTitle: main heading for the page section */
+.pageTitle {
+  margin: 0; // Removes default h* margin for predictable spacing
+  font-size: 1.2rem; // Slightly larger text for emphasis
+  color: $primary; // Uses theme primary color for brand consistency
+}
+
+/* .pageSubtitle: secondary heading text under the title */
+.pageSubtitle {
+  margin: 0; // Removes default margin so spacing is controlled by gaps above
+  font-size: 0.9rem; // Smaller than title to indicate lower hierarchy
+  color: #6b7280; // Muted gray for secondary text (less visual weight)
+}
+
+/* .headerActions: container for buttons/controls in the header */
+.headerActions {
+  display: flex; // Lays actions out in a row
+  align-items: center; // Vertically centers buttons/icons
+  gap: 0.6rem; // Spacing between action buttons
+}
+
+/* .card: reusable card surface for content blocks (similar to formContainer but slightly lighter) */
+.card {
+  background: #fff; // White surface for content
+  border: 1px solid rgba(74, 144, 226, 0.14); // Subtle border, slightly lighter alpha than formContainer
+  border-radius: 14px; // Rounded corners
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05); // Soft shadow: smaller offset + blur than formContainer
+  padding: 1rem; // Inner spacing inside the card
+}
+
+/* .cardHeader: top row of a card with title on left and meta/actions on right */
+.cardHeader {
+  display: flex; // Horizontal layout for title + meta/actions
+  align-items: baseline; // Aligns text baselines (nice when font sizes differ)
+  justify-content: space-between; // Spreads left and right content
+  gap: 0.75rem; // Space between elements if they wrap
+  margin-bottom: 0.85rem; // Space below header before card body content
+}
+
+/* .cardTitle: prominent label/title for the card section */
+.cardTitle {
+  font-weight: 700; // Bold title for emphasis
+  color: #1f2937; // Dark gray for strong readability
+}
+
+/* .cardMeta: small, muted metadata text (e.g., date, id, status) */
+.cardMeta {
+  font-size: 0.8rem; // Smaller text for metadata
+  color: #6b7280; // Muted gray to reduce prominence
+}
+
+/* .formGroup: wraps a label + input + error text as a vertical block */
+.formGroup {
+  display: flex; // Flex container for consistent vertical spacing
+  flex-direction: column; // Stacks label/input/error vertically
+  gap: 0.35rem; // Tight spacing between elements inside the group
+  margin-bottom: 0.9rem; // Space below each group to separate from next field
+}
+
+/* .errorBanner: prominent, inline-flex alert area for form/page errors */
+.errorBanner {
+  background-color: #ffe6e6; // Light red background to indicate error state
+  color: #b00000; // Dark red text for contrast and clarity
+  padding: 10px 14px; // Inner spacing around the banner content
+  border-radius: 10px; // Rounded corners for a friendly alert style
+  margin: 0.75rem 0; // Vertical spacing above and below the banner
+  font-size: 0.9rem; // Slightly smaller than body text; still readable
+  border: 1px solid #ffb3b3; // Border to define the banner edge against white backgrounds
+  display: flex; // Aligns icon + text nicely in a row
+  gap: 8px; // Space between icon and message text
+  align-items: center; // Vertically centers icon and text
+}
+
+/* .fieldError: small helper text under an input for field-level validation messages */
+.fieldError {
+  color: #b00000; // Dark red to match error theme
+  font-size: 0.8rem; // Smaller text so it reads as helper/error note
+  margin-top: 4px; // Small spacing from the input above
+  font-weight: 500; // Medium weight to make it noticeable without being too heavy
+}
+
+/* .inputError: applied to an input to visually indicate invalid state */
+.inputError {
+  border-color: #b00000 !important; // Forces red border even if other styles compete (important overrides)
+  box-shadow: 0 0 4px rgba(176, 0, 0, 0.35); // Red glow to reinforce the error state
+  outline: none; // Removes default focus outline (relies on custom border/shadow instead)
+}
+
+/* .saveButton: primary action button (reuses shared button styling + aligns icon/text) */
+.saveButton {
+  @include forms.primary-button; // Shared primary button styling (colors, padding, hover, etc.)
+  display: inline-flex; // Allows icon + text alignment while behaving like inline element
+  align-items: center; // Vertically centers icon and label
+  gap: 0.5rem; // Space between icon and text
+}
+
+/* .deleteButton: destructive action button (reuses shared danger button styling + aligns icon/text) */
+.deleteButton {
+  @include forms.danger-button; // Shared danger button styling (red theme, hover, etc.)
+  display: inline-flex; // Enables clean icon + label alignment
+  align-items: center; // Centers icon and text vertically
+  gap: 0.5rem; // Space between icon and text
+}
+
+/* .bottomActions: footer row for action buttons aligned to the right */
+.bottomActions {
+  margin-top: 1rem; // Space above the action bar to separate it from form content
+  display: flex; // Lays out buttons in a row
+  align-items: center; // Vertically centers buttons
+  gap: 0.8rem; // Space between buttons
+  justify-content: flex-end; // Pushes buttons to the right side
+  padding: 0.75rem 0.25rem 0.25rem; // Adds top padding + slight horizontal/bottom padding for breathing room
+}
+
+/* Responsive: on small screens, stack bottom actions vertically for easier tapping */
+@media (max-width: 640px) {
+  .bottomActions {
+    flex-direction: column; // Stack buttons vertically instead of in a row
+    align-items: stretch; // Make buttons fill available width (better on mobile)
+  }
 }
