@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { FiSave, FiX, FiBriefcase } from "react-icons/fi";
 import styles from "./CreatePosition.module.scss";
 import { useNavigate } from "react-router-dom";
@@ -45,9 +45,20 @@ const CreatePosition = () => {
   };
 
   //hasError becomes true if fieldErrors.positionName has a message
-  const hasError = Boolean(fieldErrors.positionName);
+
   //inputClass becomes "textInput inputError" when invalid, otherwise "textInput"
-  const inputClass = `${styles.textInput} ${hasError ? styles.inputError : ""}`;
+
+  //Without useMemo, any calculated values are recalculated every render.
+  //With useMemo, React recalculates only when the dependencies change.
+  const inputClass = useMemo(() => {
+    const hasError = Boolean(fieldErrors?.positionName);
+    return `${styles.textInput} ${hasError ? styles.inputError : ""}`;
+  }, [fieldErrors]);
+
+  const hasAnyFieldErrors = useMemo(
+    () => Object.keys(fieldErrors || {}).length > 0,
+    [fieldErrors],
+  );
 
   // 🔐 Helper: fetch with auth + automatic 401 handling
   //Declares an async function (so you can use await inside it)
@@ -62,6 +73,10 @@ const CreatePosition = () => {
       // you keep them without manually copying each property.
       ...options,
       //If the caller already set headers (like "Content-Type": "application/json"), you preserve them
+
+      //In an object literal, if the same key appears twice, the last one overrides the earlier one.
+      //“Take everything from options…”
+      //…but for headers, use my custom merged headers object.
       headers: {
         //if the caller provided headers, use them
         //otherwise use an empty object
@@ -81,6 +96,53 @@ const CreatePosition = () => {
       throw new Error("Unauthorized - redirecting to login");
     }
     return res;
+  };
+
+  const safeReadJson = async (res) => {
+    if (!res) return null;
+    if (res.status === 204) return null;
+
+    const text = await res.text().catch(() => "");
+
+    //if text is empty after trimming
+    if (!text || !text.trim()) return null;
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      return null;
+    }
+  };
+
+  // Best-effort extraction of field errors from various backend formats
+  const extractFieldErrors = (data) => {
+    if (!data) return null;
+
+    if (data.fieldErrors && typeof data.fieldErrors === "object") {
+      return data.fieldErrors;
+    }
+
+    if (Array.isArray(data.errors)) {
+      const fe = {};
+      data.errors.forEach((e) => {
+        const field = e.field || e.name || e.property || e.path;
+        const msg = e.defaultMessage || e.message || e.msg;
+        if (field && msg) fe[field] = msg;
+      });
+      return Object.keys(fe).length ? fe : null;
+    }
+
+    if (Array.isArray(data.violations)) {
+      const fe = {};
+      data.violations.forEach((v) => {
+        const field = v.field || v.propertyPath || v.path;
+        const msg = v.message;
+        if (field && msg) fe[field] = msg;
+      });
+      return Object.keys(fe).length ? fe : null;
+    }
+
+    return null;
   };
 
   return (
@@ -126,6 +188,7 @@ const CreatePosition = () => {
           <div className={styles.formGroup}>
             <label>Position Name</label>
             <input
+              //we use computed variable not from styles
               className={inputClass}
               placeholder="e.g. Project Manager"
               //The <input> does not own its own value.
