@@ -233,26 +233,6 @@ const CreatePosition = () => {
               Add a new position to your master data list.
             </p>
           </div>
-
-          <div className={styles.headerActions}>
-            <button
-              type="button"
-              className={styles.saveButton}
-              onClick={handleCreate}
-              disabled={loading}
-            >
-              <FiSave /> {loading ? "Creating..." : "Create"}
-            </button>
-
-            <button
-              type="button"
-              className={styles.deleteButton}
-              onClick={onResetClick}
-              disabled={loading}
-            >
-              <FiX /> Reset
-            </button>
-          </div>
         </div>
 
         {formError && <div className={styles.errorBanner}>{formError}</div>}
