@@ -17,6 +17,7 @@ const CreatePosition = () => {
 
   //gives you a function you can call to change the current URL programmatically
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const validate = (name) => {
     const errors = {};
@@ -145,6 +146,29 @@ const CreatePosition = () => {
     return null;
   };
 
+  const handleCreate = async () => {
+    try {
+      setFormError("");
+      setFieldErrors({});
+
+      const errors = validate(positionName);
+
+      if (Object.keys(errors).length) {
+        setFieldErrors(errors);
+        setFormError("Please fix the highlighted fields.");
+        return;
+      }
+
+      setLoading(true);
+
+      const token = localStorage.getItem("authToken");
+
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+    } catch {}
+  };
   return (
     <div className={styles.projectContainer}>
       <div className={styles.formContainer}>
