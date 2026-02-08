@@ -26,19 +26,7 @@ const CreatePosition = () => {
     return errors;
   };
 
-  const onCreateClick = () => {
-    setFormError("");
-    setFieldErrors({});
-
-    const errors = validate(positionName);
-    if (Object.keys(errors).length) {
-      //changed state so we can change class if it contains errors
-      setFieldErrors(errors);
-      setFormError("Please fix the highlighted fields.");
-      return;
-    }
-  };
-
+  //Reset button handler
   const onResetClick = () => {
     setPositionName("");
     setFieldErrors({});
@@ -46,7 +34,6 @@ const CreatePosition = () => {
   };
 
   //hasError becomes true if fieldErrors.positionName has a message
-
   //inputClass becomes "textInput inputError" when invalid, otherwise "textInput"
 
   //Without useMemo, any calculated values are recalculated every render.
@@ -73,7 +60,6 @@ const CreatePosition = () => {
       //If the caller provides method, body, credentials, etc.,
       // you keep them without manually copying each property.
       ...options,
-      //If the caller already set headers (like "Content-Type": "application/json"), you preserve them
 
       //In an object literal, if the same key appears twice, the last one overrides the earlier one.
       //“Take everything from options…”
@@ -96,18 +82,13 @@ const CreatePosition = () => {
       navigate("/login", { replace: true });
       throw new Error("Unauthorized - redirecting to login");
     }
+
     return res;
   };
 
-  const safeReadJson = async (res) => {
-    if (!res) return null;
-    if (res.status === 204) return null;
-
-    const text = await res.text().catch(() => "");
-
-    //if text is empty after trimming
+  //Helper: safely parse text into JSON (returns null if empty/invalid)
+  const safeParseJson = (text) => {
     if (!text || !text.trim()) return null;
-
     try {
       return JSON.parse(text);
     } catch {
@@ -115,10 +96,25 @@ const CreatePosition = () => {
     }
   };
 
+  const safeReadJson = async (res) => {
+    if (!res) return null;
+    if (res.status === 204) return null;
+
+    //Reads body once as text (safe)
+    const text = await res.text().catch(() => "");
+
+    //if text is empty after trimming
+    if (!text || !text.trim()) return null;
+
+    return safeParseJson(text);
+  };
+
   // Best-effort extraction of field errors from various backend formats
   const extractFieldErrors = (data) => {
     if (!data) return null;
 
+    //Your backend returns fieldErrors in this shape:
+    //{ message: "...", fieldErrors: { positionName: "..." } }
     if (data.fieldErrors && typeof data.fieldErrors === "object") {
       return data.fieldErrors;
     }
@@ -161,14 +157,69 @@ const CreatePosition = () => {
 
       setLoading(true);
 
+      //Optional early check: if no token, go to login
       const token = localStorage.getItem("authToken");
-
       if (!token) {
-        navigate("/login");
+        navigate("/login", { replace: true });
         return;
       }
-    } catch {}
+
+      const payload = { positionName: positionName.trim() };
+
+      //NOTE: This assumes BASE_URL is like "http://localhost:8080"
+      //If BASE_URL already includes "/api", then remove the "/api" below.
+      const res = await authFetch(`${BASE_URL}/api/positions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        //IMPORTANT BUG FIX:
+        //Don't call res.text() twice. Read the body ONCE here:
+        const bodyText = await res.text().catch(() => "");
+        const data = safeParseJson(bodyText);
+
+        const fe = extractFieldErrors(data);
+        if (fe) setFieldErrors(fe);
+
+        setFormError(
+          data?.message ||
+            data?.detail ||
+            bodyText ||
+            "Failed to create position",
+        );
+        return;
+      }
+
+      const created = await safeReadJson(res);
+
+      //Some APIs return id/positionId/position_id. We'll accept any of these.
+      const createdId =
+        created?.id ?? created?.positionId ?? created?.position_id;
+
+      if (!createdId) {
+        setFormError(
+          "Position was created, but response did not include an id.",
+        );
+        return;
+      }
+
+      alert("Position was created successfully!");
+      onResetClick();
+      //Optional: navigate somewhere (list/details) after creation
+      //navigate("/positions");
+    } catch (err) {
+      console.error(err);
+
+      //If authFetch threw due to 401, it already navigated to /login.
+      //This message is still safe for other errors (network, 500, etc.).
+      setFormError(err?.message || "Unexpected error while creating position.");
+    } finally {
+      setLoading(false);
+    }
   };
+
   return (
     <div className={styles.projectContainer}>
       <div className={styles.formContainer}>
@@ -187,14 +238,17 @@ const CreatePosition = () => {
             <button
               type="button"
               className={styles.saveButton}
-              onClick={onCreateClick}
+              onClick={handleCreate}
+              disabled={loading}
             >
-              <FiSave /> Create
+              <FiSave /> {loading ? "Creating..." : "Create"}
             </button>
+
             <button
               type="button"
               className={styles.deleteButton}
               onClick={onResetClick}
+              disabled={loading}
             >
               <FiX /> Reset
             </button>
@@ -233,11 +287,17 @@ const CreatePosition = () => {
                 setFieldErrors((prev) => ({ ...prev, positionName: "" }));
                 setFormError("");
               }}
+              disabled={loading}
             />
 
             {/*If there’s an error message, it renders it*/}
             {/*If it’s undefined, it renders nothing visible*/}
             <div className={styles.fieldError}>{fieldErrors.positionName}</div>
+
+            {/*Optional debug for your own learning:
+                Shows if ANY field errors exist.
+                Remove later if you don’t need it. */}
+            {/* <div>hasAnyFieldErrors: {String(hasAnyFieldErrors)}</div> */}
           </div>
         </div>
 
@@ -245,14 +305,17 @@ const CreatePosition = () => {
           <button
             type="button"
             className={styles.saveButton}
-            onClick={onCreateClick}
+            onClick={handleCreate}
+            disabled={loading}
           >
-            <FiSave /> Create position
+            <FiSave /> {loading ? "Creating..." : "Create position"}
           </button>
+
           <button
             type="button"
             className={styles.deleteButton}
             onClick={onResetClick}
+            disabled={loading}
           >
             <FiX /> Reset
           </button>
