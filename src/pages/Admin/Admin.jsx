@@ -2,8 +2,7 @@ import React, { useMemo, useState } from "react";
 import styles from "./Admin.module.scss";
 
 import CreatePosition from "../Admin/CreatePosition/CreatePosition";
-// If Admin is at: src/components/Admin/Admin.jsx
-// and RegisterProject is at: src/components/Projects/RegisterProject/RegisterProject.jsx
+import CreateEmployee from "../Admin/CreateEmployee/CreateEmployee";
 import RegisterProject from "../RegisterProject/RegisterProject";
 
 const Admin = () => {
@@ -15,7 +14,10 @@ const Admin = () => {
     switch (entity) {
       case "project":
         return RegisterProject;
+      case "employee":
+        return CreateEmployee;
       case "position":
+        return CreatePosition;
       default:
         return CreatePosition;
     }
@@ -45,6 +47,7 @@ const Admin = () => {
             >
               <option value="position">Position (master data)</option>
               <option value="project">Project</option>
+              <option value="employee">Employee</option>
             </select>
           </div>
         </div>

@@ -1,0 +1,42 @@
+@use "../../../styles/forms" as forms;
+
+$primary: #4a90e2;
+
+.projectContainer {
+  padding: 1.25rem;
+  margin-top: 1rem;
+  font-family: "Segoe UI", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.formContainer {
+  background: #fff;
+  border-radius: 14px;
+  /*
+  alpha is opacity: 0.18 = 82% transparent
+  */
+  border: 1px solid rgba(74, 144, 226, 0.18);
+
+  /*
+    offset-x: 0 (no horizontal shift)
+
+    offset-y: 10px (shadow goes down)
+
+    blur-radius: 24px (how soft/blurred it is)
+
+    color: rgba(0, 0, 0, 0.06) (black with 6% opacity)
+  */
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+  padding: 1.25rem;
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: 1.2rem;
+  color: $primary;
+}
+
+.pageSubtitle {
+  margin: 0.35rem 0 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
