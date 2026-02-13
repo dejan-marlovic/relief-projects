@@ -58,8 +58,55 @@ const CreateEmployee = () => {
     if (!res) return null;
     //no content safe read json
     if (res.status === 204) return null;
+    //if reading fails (network hiccup, stream already consumed, etc.),
+    // don’t crash—just use an empty string instead.
     const text = await res.text().catch(() => "");
     return safeParseJson(text);
+  };
+
+  const extractFieldErrors = (data) => {
+    if (!data) return null;
+
+    if (data.fieldErrors && typeof data.fieldErrors === "object") {
+      return data.fieldErrors;
+    }
+
+    if (Array.isArray(data.errors)) {
+      const fe = {};
+      data.errors.forEach((e) => {
+        //try diffrent name for fields in array element, for example:
+        /*
+        {
+            "errors": [
+                { "field": "firstName", "message": "Required" }
+            ]
+        }
+            backend A uses field
+
+            backend B uses name
+
+            backend C uses path
+        */
+        const field = e.field || e.name || e.property || e.path;
+        const msg = e.defaultMessage || e.message || e.msg;
+        //Every time an element e has both a field and a msg, this line runs:
+        if (field && msg) fe[field] = msg;
+      });
+      //return it only if it got something
+      return Object.keys(fe).length ? fe : null;
+    }
+
+    if (Array.isArray(data.violations)) {
+      const fe = {};
+      data.violations.forEach((v) => {
+        const field = v.field || v.propertyPath || v.path;
+        const msg = v.message;
+        if (field && msg) fe[field] = msg;
+      });
+      return Object.keys(fe).length ? fe : null;
+    }
+
+    return null;
   };
 
   return (
