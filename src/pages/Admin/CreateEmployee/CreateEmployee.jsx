@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { FiSave, FiX, FiUser, FiAlertCircle } from "react-icons/fi";
 import styles from "./CreateEmployee.module.scss";
 import { useNavigate } from "react-router-dom";
+import { BASE_URL } from "../../../config/api";
 
 const CreateEmployee = () => {
   const navigate = useNavigate();
 
-  const [firstName, setFirstname] = useState("");
+  const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [positionId, setPositionId] = useState("");
 
@@ -14,7 +16,7 @@ const CreateEmployee = () => {
   //ui state
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState("");
-  const [fieldErrors, setFieldErrors] = useState([]);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   //a helper that behaves like fetch, but injects auth + handles 401.
   const authFetch = async (url, options = {}) => {
@@ -109,11 +111,119 @@ const CreateEmployee = () => {
     return null;
   };
 
+  const validate = (values) => {
+    const errors = {};
+    if (!values.firstName.trim()) errors.firstName = "First name is required";
+    if (!values.lastName.trim()) errors.lastName = "Last name is required";
+    if (!values.positionId.trim()) errors.positionId = "Postion is required";
+  };
+
+  const onResetClick = () => {
+    setFirstName("");
+    setLastName("");
+    setPositionId(""); // clears selection only
+
+    // do NOT reset positions — that's the "loaded list" we keep
+    // setPositions([]);  <-- don't do this
+
+    setFieldErrors({}); // note: this should be an object, not []
+    setFormError("");
+  };
+
+  const inputClass = (fieldName) => {
+    //checks if field has errors in our fieldErrors state
+    const hasError = Boolean(fieldErrors?.[fieldName]);
+    return `${styles.textInput} ${hasError ? styles.hasError : ""}`;
+  };
+
+  useEffect(() => {
+    const loadPostions = async () => {
+      try {
+        setLoading(true);
+        setFormError("");
+
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+          //don’t add this navigation to the browser history—replace the current entry
+          //If we didn’t use replace: true, the user could:
+          /*
+          get redirected to /login
+
+          press the browser Back button
+
+          land back on the protected page again (which might immediately redirect again, or briefly show
+          */
+          navigate("/login", { replace: true });
+          //exit the function if there is no token
+          return;
+        }
+        const res = await authFetch(`${BASE_URL}/api/postions/active`, {
+          headers: { "Content-Type": "application/json" },
+        });
+
+        const data = await safeReadJson(res);
+        setPositions(Array.isArray(data) ? data : []);
+      } catch (e) {
+        console.error(e);
+        setPositions([]);
+        setFormError("Faild to load postions.");
+      } finally {
+        setLoading(false);
+      }
+    };
+  }, []);
+
   return (
     <div className={styles.projectContainer}>
       <div className={styles.formContainer}>
-        <h3 className={styles.pageTitle}>Create Employee</h3>
-        <p className={styles.pageSubtitle}>Stub works</p>
+        <div className={styles.pageHeader}>
+          <div className={styles.pageHeaderText}>
+            <h3 clasName={styles.pageTitle}>
+              <FiUser style={{ postion: "relative", top: 2 }}></FiUser>
+            </h3>
+            <p className={styles.pageSubtitle}>
+              Add an employee and assign a postion.
+            </p>
+          </div>
+        </div>
+      </div>
+      {formError && (
+        <div className={styles.errorBanner}>
+          <FiAlertCircle>
+            <span>{formError}</span>
+          </FiAlertCircle>
+        </div>
+      )}
+
+      <div className={styles.card}>
+        <div className={styles.cardHeader}>
+          <div className={styles.cardTitle}>Core Details</div>
+          <div className={styles.cardMeta}>Required fields</div>
+        </div>
+        <div className={styles.formGroup}>
+          <label>First name</label>
+          <input
+            //inputClass helper returns className + error className if there is an error for firsName filed
+            className={inputClass("firstName")}
+            //Makes it a controlled input.
+            //The visible text in the input always comes from React state firstName.
+            value={firstName}
+            //Runs every time the user types.
+            onChange={(e) => {
+              //e is the change event, e.target is the input.
+              setFirstName(e.target.value);
+              //Updates state to the new text the user typed.
+              //This keeps the input in sync with React state.
+              //(prev) => ... is used so you don’t lose errors for other fields.
+              setFieldErrors((prev) => ({ ...prev, firstName: "" }));
+              setFormError("");
+            }}
+            //Disables the input when loading is true (e.g., while fetching positions or submitting).
+            disabled={loading}
+            placeholder="e.g Dejan"
+          />
+          <div className={styles.fieldError}>{fieldErrors.firstName}</div>
+        </div>
       </div>
     </div>
   );
