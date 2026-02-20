@@ -1,32 +1,49 @@
 @use "../../../styles/forms" as forms;
 
 $primary: #4a90e2;
+$danger: #e74c3c;
 
 .projectContainer {
   padding: 1.25rem;
   margin-top: 1rem;
-  font-family: "Segoe UI", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .formContainer {
   background: #fff;
   border-radius: 14px;
-  /*
-  alpha is opacity: 0.18 = 82% transparent
-  */
   border: 1px solid rgba(74, 144, 226, 0.18);
-
-  /*
-    offset-x: 0 (no horizontal shift)
-
-    offset-y: 10px (shadow goes down)
-
-    blur-radius: 24px (how soft/blurred it is)
-
-    color: rgba(0, 0, 0, 0.06) (black with 6% opacity)
-  */
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
   padding: 1.25rem;
+}
+
+.textInput,
+select {
+  @include forms.text-input;
+  margin-bottom: 0;
+  background: #fff;
+}
+
+label {
+  @include forms.form-label;
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.pageHeaderText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .pageTitle {
@@ -36,7 +53,96 @@ $primary: #4a90e2;
 }
 
 .pageSubtitle {
-  margin: 0.35rem 0 0;
+  margin: 0;
   font-size: 0.9rem;
   color: #6b7280;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid rgba(74, 144, 226, 0.14);
+  border-radius: 14px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.cardTitle {
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.cardMeta {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.9rem;
+}
+
+.errorBanner {
+  background-color: #ffe6e6;
+  color: #b00000;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin: 0.75rem 0;
+  font-size: 0.9rem;
+  border: 1px solid #ffb3b3;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.fieldError {
+  color: #b00000;
+  font-size: 0.8rem;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.inputError {
+  border-color: #b00000 !important;
+  box-shadow: 0 0 4px rgba(176, 0, 0, 0.35);
+  outline: none;
+}
+
+.saveButton {
+  @include forms.primary-button;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.deleteButton {
+  @include forms.danger-button;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bottomActions {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  justify-content: flex-end;
+  padding: 0.75rem 0.25rem 0.25rem;
+}
+
+@media (max-width: 640px) {
+  .bottomActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }

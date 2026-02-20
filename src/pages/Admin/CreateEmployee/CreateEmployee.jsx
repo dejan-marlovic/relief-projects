@@ -224,6 +224,70 @@ const CreateEmployee = () => {
           />
           <div className={styles.fieldError}>{fieldErrors.firstName}</div>
         </div>
+
+        <div className={styles.formGroup}>
+          <label>Last Name</label>
+          <input
+            className={inputClass("lastName")}
+            value={lastName}
+            //e is change event
+            onChange={(e) => {
+              //e.target is the element
+              ////Updates state to the new text the user typed.
+              setLastName(e.target.value);
+              ////(prev) => ... is used so you don’t lose errors for other fields.
+              setFieldErrors((...prev) => ({ ...prev, lastName: "" }));
+              setFormError("");
+            }}
+            //Disables the input when loading is true (e.g., while fetching positions or submitting).
+            disabled={loading}
+            placeholder="e.g. Svensson"
+          />
+          <div className={styles.fieldError}>{fieldErrors.lastName}</div>
+        </div>
+
+        <div className={styles.formGroup}>
+          <label>Position</label>
+          <select
+            className={inputClass("postionId")}
+            value={positionId}
+            onChange={(e) => {
+              // e.target is the <select> element
+              // Update state to the newly selected option value (position id)
+              setPositionId(e.target.value);
+
+              // Functional updater: keep other field errors, clear only this field's error
+              setFieldErrors((prev) => ({ ...prev, positionId: "" }));
+
+              // Clear the general/top form error banner when the user makes a correction
+              setFormError("");
+            }}
+            disabled={loading}
+          >
+            <option value="">Select postion</option>
+            {/*we define function map will use
+            (p) => (...) is an arrow function
+
+            Implicit return:
+
+            (p) => (
+              <option>...</option>
+            )
+
+           Explicit return, we need to write return
+
+           (p) => {
+            return <option>...</option>;
+           }
+            */}
+            {positions.map((p) => (
+              <option kay={p.id} value={p.id}>
+                {p.positionName ?? p.name ?? `Position #${p.id}`}
+              </option>
+            ))}
+          </select>
+          <div className={styles.fieldError}>{fieldErrors.positionId}</div>
+        </div>
       </div>
     </div>
   );
