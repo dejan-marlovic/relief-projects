@@ -21,6 +21,7 @@ const CreateEmployee = () => {
   // a helper that behaves like fetch, but injects auth + handles 401.
   const authFetch = async (url, options = {}) => {
     const token = localStorage.getItem("authToken");
+    const hasToken = token && token !== "null" && token !== "undefined";
 
     const mergedOptions = {
       ...options,
@@ -28,7 +29,7 @@ const CreateEmployee = () => {
         ...(options.headers || {}),
         // Because this line comes after the previous header spread,
         // Authorization will win if someone tried to set Authorization earlier.
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(hasToken ? { Authorization: `Bearer ${token}` } : {}),
       },
     };
 
@@ -119,9 +120,10 @@ const CreateEmployee = () => {
   const validate = (values) => {
     const errors = {};
     if (!values.firstName.trim()) errors.firstName = "First name is required";
+    //do these state values exist / are they non-empty?
     if (!values.lastName.trim()) errors.lastName = "Last name is required";
     // positionId is a selected value, so checking falsy is enough
-    if (!values.positionId) errors.positionId = "Postion is required";
+    if (!values.positionId) errors.positionId = "Position is required";
     return errors; // ✅ IMPORTANT: return the errors object
   };
 
@@ -175,7 +177,7 @@ const CreateEmployee = () => {
       } catch (e) {
         console.error(e);
         setPositions([]);
-        setFormError("Faild to load postions.");
+        setFormError("Failed to load positions.");
       } finally {
         setLoading(false);
       }
@@ -185,6 +187,76 @@ const CreateEmployee = () => {
     loadPostions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleCreate = async () => {
+    try {
+      setFormError("");
+      setFieldErrors({});
+      const errors = validate({ firstName, lastName, positionId });
+      //is keys array for errors full?
+      if (Object.keys(errors).length) {
+        setFieldErrors(errors);
+        //adding banner message if we have errors
+        setFormError("Please fix the highlighted fields.");
+        return;
+      }
+
+      setLoading(true);
+
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      const payload = {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        positionId: Number(positionId),
+      };
+
+      const res = await authFetch(`${BASE_URL}/api/employees`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      //if we dont get ok status
+      //extract field erros form backend
+      if (!res.ok) {
+        // ✅ Use safeReadJson here too so we don't have to hand-parse
+        const data = await safeReadJson(res);
+
+        const fe = extractFieldErrors(data);
+        if (fe) setFieldErrors(fe);
+
+        setFormError(
+          data?.message || data?.detail || "Failed to create employee",
+        );
+        return;
+      }
+
+      const created = await safeReadJson(res);
+
+      const createdId =
+        created?.id ?? created?.employeeId ?? created?.employee_id;
+
+      if (!createdId) {
+        setFormError(
+          "Employee was created, but response did not include an id.",
+        );
+        return;
+      }
+
+      alert("Employee was created successfully!");
+      onResetClick();
+    } catch (err) {
+      console.error(err);
+      setFormError(err?.message || "Unexpected error while creating employee.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className={styles.projectContainer}>
@@ -198,7 +270,7 @@ const CreateEmployee = () => {
               Employee
             </h3>
             <p className={styles.pageSubtitle}>
-              Add an employee and assign a postion.
+              Add an employee and assign a position.
             </p>
           </div>
         </div>
@@ -283,7 +355,7 @@ const CreateEmployee = () => {
               }}
               disabled={loading}
             >
-              <option value="">Select postion</option>
+              <option value="">Select position</option>
               {/*we define function map will use
               (p) => (...) is an arrow function
 
@@ -299,12 +371,15 @@ const CreateEmployee = () => {
               return <option>...</option>;
              }
               */}
-              {positions.map((p) => (
-                // ✅ FIX: key prop name
-                <option key={p.id} value={p.id}>
-                  {p.positionName ?? p.name ?? `Position #${p.id}`}
-                </option>
-              ))}
+              {positions.map((p) => {
+                const id = p.id ?? p.positionId;
+                // ✅ FIX: key prop name + robust id field
+                return (
+                  <option key={id} value={id}>
+                    {p.positionName ?? p.name ?? `Position #${id}`}
+                  </option>
+                );
+              })}
             </select>
             <div className={styles.fieldError}>{fieldErrors.positionId}</div>
           </div>
@@ -315,18 +390,10 @@ const CreateEmployee = () => {
             type="button"
             className={styles.saveButton}
             disabled={loading}
-            onClick={() => {
-              const errors = validate({ firstName, lastName, positionId });
-              if (Object.keys(errors).length) {
-                setFieldErrors(errors);
-                setFormError("Please fix highlighted fields.");
-              } else {
-                alert("Validation OK ✅ (POST comes next step)");
-              }
-            }}
+            onClick={handleCreate}
           >
             {/* ✅ add content so button is visible */}
-            <FiSave /> Create employee
+            <FiSave /> {loading ? "Creating..." : "Create employee"}
           </button>
 
           <button
