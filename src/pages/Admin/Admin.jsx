@@ -3,6 +3,7 @@ import styles from "./Admin.module.scss";
 
 import CreatePosition from "../Admin/CreatePosition/CreatePosition";
 import CreateEmployee from "../Admin/CreateEmployee/CreateEmployee";
+import CreateUser from "../Admin/CreateUser/CreateUser";
 import RegisterProject from "../RegisterProject/RegisterProject";
 
 const Admin = () => {
@@ -16,8 +17,9 @@ const Admin = () => {
         return RegisterProject;
       case "employee":
         return CreateEmployee;
+      case "user":
+        return CreateUser;
       case "position":
-        return CreatePosition;
       default:
         return CreatePosition;
     }
@@ -48,6 +50,7 @@ const Admin = () => {
               <option value="position">Position (master data)</option>
               <option value="project">Project</option>
               <option value="employee">Employee</option>
+              <option value="user">User (login)</option>
             </select>
           </div>
         </div>
