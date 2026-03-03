@@ -131,6 +131,75 @@ export const createAuthFetch = (navigate) => {
 };
 
 /**
+ * Safe JSON parsing:
+ * - Returns null for empty strings
+ * - Returns null for invalid JSON
+ */
+export const safeParseJson = (text) => {
+  if (!text || !text.trim()) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Safe response reader:
+ * - Returns null for 204
+ * - Reads text first, then parses safely
+ * - 204 is the HTTP status “No Content.”
+ */
+export const safeReadJson = async (res) => {
+  if (!res) return null;
+  if (res.status === 204) return null;
+
+  const text = await res.text().catch(() => "");
+  return safeParseJson(text);
+};
+
+/**
+ * Extract field errors from various backend shapes.
+ * Supports:
+ * - { fieldErrors: { firstName: "...", ... } }
+ * - { errors: [ { field|name|path, message|defaultMessage }, ... ] }
+ * - { violations: [ { field|propertyPath, message }, ... ] }
+ */
+export const extractFieldErrors = (data) => {
+  if (!data) return null;
+
+  if (
+    data.fieldErrors &&
+    !Array.isArray(data.fieldErrors) &&
+    typeof data.fieldErrors === "object"
+  ) {
+    return data.fieldErrors;
+  }
+
+  if (Array.isArray(data.errors)) {
+    const fe = {};
+    data.errors.forEach((e) => {
+      const field = e.field || e.name || e.property || e.path;
+      const msg = e.defaultMessage || e.message || e.msg;
+      if (field && msg) fe[field] = msg;
+    });
+    return Object.keys(fe).length ? fe : null;
+  }
+
+  if (Array.isArray(data.violations)) {
+    const fe = {};
+    data.violations.forEach((v) => {
+      const field = v.field || v.propertyPath || v.path;
+      const msg = v.message;
+      if (field && msg) fe[field] = msg;
+    });
+    return Object.keys(fe).length ? fe : null;
+  }
+
+  return null;
+};
+
+/**
  * FYI: Common fetch options you might pass in "options" (RequestInit):
  *
  * - method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | ...
