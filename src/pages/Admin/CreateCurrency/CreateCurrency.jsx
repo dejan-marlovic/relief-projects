@@ -1,5 +1,9 @@
 // src/components/Admin/CreateCurrency/CreateCurrency.jsx
+
+//we are importing deafult react exports from "react" module + named exports: useMemo + useState
+//default export + selected named exports.
 import React, { useMemo, useState } from "react";
+//import named export useNavigate from module "react-router-dom"
 import { useNavigate } from "react-router-dom";
 import { FiSave, FiX, FiAlertCircle } from "react-icons/fi";
 
@@ -11,8 +15,9 @@ import {
   safeReadJson,
   extractFieldErrors,
 } from "../../../utils/http";
+import { MdDescription } from "react-icons/md";
 
-// Initial form state
+//Intial form state
 const initialCurrencyDetails = {
   name: "",
   description: "",
@@ -27,35 +32,42 @@ const validateCurrencyDetails = (values) => {
   const name = values.name?.trim() || "";
   const description = values.description?.trim() || "";
 
-  if (!name) errors.name = "Currency name is required (e.g. USD).";
+  if (!name) errors.name = "Currency name is required (e.g. USD)";
   else if (name.length > 50) errors.name = "Name must be max 50 characters.";
 
   if (!description)
     errors.description = "Currency description is required (e.g. US Dollar).";
   else if (description.length > 255)
-    errors.description = "Description must be max 255 characters.";
+    errors.description = "Description must be max 255 charachters.";
 
   return errors;
 };
 
 const CreateCurrency = () => {
   const navigate = useNavigate();
+  //With useMemo, React will reuse the same function unless a dependency changes.
+  //Recompute the memoized value only when something in the dependency array changes.
+  //factory pattern
   const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
 
-  // UI state
+  //UI state
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
 
-  // Form state
+  //Form state
   const [currencyDetails, setCurrencyDetails] = useState(
     initialCurrencyDetails,
   );
-
+  //Check if there is an error. If fieldErrors is populated for that field
   const hasError = (fieldName) => Boolean(fieldErrors?.[fieldName]);
+
+  //make input class inputError if there is an error
+  //we want inputClass allways inputError is added second if we have an error
   const inputClass = (fieldName) =>
     `${styles.textInput} ${hasError(fieldName) ? styles.inputError : ""}`;
 
+  //use setters to clean all states
   const resetForm = () => {
     setCurrencyDetails(initialCurrencyDetails);
     setFormError("");
@@ -82,8 +94,8 @@ const CreateCurrency = () => {
       setFormError("");
       setFieldErrors({});
 
-      // ✅ Client-side validation
       const errors = validateCurrencyDetails(currencyDetails);
+
       if (Object.keys(errors).length > 0) {
         setFieldErrors(errors);
         setFormError("Please fix the highlighted fields.");
@@ -93,7 +105,9 @@ const CreateCurrency = () => {
       setLoading(true);
 
       const token = localStorage.getItem("authToken");
+
       if (!token) {
+        // NOTE: must be "/login" (with a slash) to match your route
         navigate("/login", { replace: true });
         return;
       }
@@ -121,6 +135,7 @@ const CreateCurrency = () => {
       }
 
       const created = await safeReadJson(res);
+      // fixed typos: crrencyId -> currencyId
       const createdId =
         created?.id ?? created?.currencyId ?? created?.currency_id;
 
@@ -129,7 +144,7 @@ const CreateCurrency = () => {
       );
       resetForm();
     } catch (err) {
-      console.error("Create currency error:", err);
+      console.error("Create currency error", err);
       setFormError(err?.message || "Unexpected error while creating currency.");
     } finally {
       setLoading(false);
@@ -142,103 +157,74 @@ const CreateCurrency = () => {
   );
 
   return (
-    <div className={styles.createContainer}>
-      <div className={styles.formContainer}>
-        <div className={styles.pageHeader}>
-          <div className={styles.pageHeaderText}>
-            <h3 className={styles.pageTitle}>Create Currency</h3>
-            <p className={styles.pageSubtitle}>
-              Add a currency (name + description).
-            </p>
-          </div>
+    <div>
+      <h1>Hej</h1>
+
+      {/* basic placeholders so you can test quickly */}
+      {formError && (
+        <div>
+          <FiAlertCircle /> {formError}
         </div>
+      )}
 
-        {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
-        )}
+      {hasAnyFieldErrors && (
+        <ul>
+          {Object.entries(fieldErrors).map(([field, message]) => (
+            <li key={field}>
+              <strong>{field}</strong>: {message}
+            </li>
+          ))}
+        </ul>
+      )}
 
-        {hasAnyFieldErrors && (
-          <div className={styles.errorList}>
-            <ul>
-              {Object.entries(fieldErrors).map(([field, message]) => (
-                <li key={field}>
-                  <strong>{field}</strong>: {message}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        <div className={styles.grid}>
-          <div className={styles.card}>
-            <div className={styles.cardHeader}>
-              <div className={styles.cardTitle}>Currency details</div>
-              <div className={styles.cardMeta}>Required fields</div>
-            </div>
-
-            <div className={styles.formGroup}>
-              <label>Currency name</label>
-              <input
-                className={inputClass("name")}
-                name="name"
-                placeholder="e.g. USD"
-                value={currencyDetails.name}
-                onChange={handleInputChange}
-                disabled={loading}
-              />
-              {hasError("name") && (
-                <div className={styles.fieldError}>{fieldErrors.name}</div>
-              )}
-            </div>
-
-            <div className={styles.formGroup}>
-              <label>Description</label>
-              <input
-                className={inputClass("description")}
-                name="description"
-                placeholder="e.g. US Dollar"
-                value={currencyDetails.description}
-                onChange={handleInputChange}
-                disabled={loading}
-              />
-              {hasError("description") && (
-                <div className={styles.fieldError}>
-                  {fieldErrors.description}
-                </div>
-              )}
-            </div>
-
-            <div className={styles.mutedHint}>
-              Note: name and description should be unique.
-            </div>
-          </div>
-        </div>
-
-        <div className={styles.bottomActions}>
-          <button
-            type="button"
-            onClick={handleCreate}
-            className={styles.saveButton}
+      <div>
+        <label>
+          Currency name
+          <input
+            className={inputClass("name")}
+            name="name"
+            placeholder="e.g. USD"
+            value={currencyDetails.name}
+            onChange={handleInputChange}
             disabled={loading}
-          >
-            <FiSave /> {loading ? "Creating..." : "Create currency"}
-          </button>
-
-          <button
-            type="button"
-            onClick={resetForm}
-            className={styles.deleteButton}
-            disabled={loading}
-          >
-            <FiX /> Reset form
-          </button>
-        </div>
+          />
+        </label>
+        {hasError("name") && <div>{fieldErrors.name}</div>}
       </div>
+
+      <div>
+        <label>
+          Description <MdDescription />
+          <input
+            className={inputClass("description")}
+            name="description"
+            placeholder="e.g. US Dollar"
+            value={currencyDetails.description}
+            onChange={handleInputChange}
+            disabled={loading}
+          />
+        </label>
+        {hasError("description") && <div>{fieldErrors.description}</div>}
+      </div>
+
+      <button type="button" onClick={handleCreate} disabled={loading}>
+        <FiSave /> {loading ? "Creating..." : "Create currency"}
+      </button>
+
+      <button type="button" onClick={resetForm} disabled={loading}>
+        <FiX /> Reset form
+      </button>
     </div>
   );
 };
 
-export default CreateCurrency;
+export default CreateCurrency; // src/utils/http.js
+
+/**
+ * NOTE:
+ * You wrote "I will add real return html later."
+ * The above JSX is just a minimal working placeholder so:
+ * - handleInputChange works
+ * - validation + fieldErrors display works
+ * - handleCreate can be tested end-to-end
+ */
