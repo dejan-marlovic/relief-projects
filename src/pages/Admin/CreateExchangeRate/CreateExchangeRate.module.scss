@@ -1,60 +1,166 @@
-/* src/components/Admin/CreateExchangeRate/CreateExchangeRate.module.scss */
+@use "../../../styles/forms" as forms;
+
+$primary: #4a90e2;
+$danger: #e74c3c;
 
 .createContainer {
-  width: 100%;
-  /* Fill the admin content area like CreateCurrency (no narrow centering) */
-  padding: 24px;
+  padding: 1.25rem;
+  margin-top: 1rem;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* IMPORTANT: remove width cap so it fills the admin page */
 .formContainer {
-  width: 100%;
-  max-width: none;
-  margin: 0;
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid rgba(74, 144, 226, 0.18);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+  padding: 1.25rem;
 }
 
+/* Inputs */
+.textInput {
+  @include forms.text-input;
+  margin-bottom: 0;
+}
+
+/* Labels */
+label {
+  @include forms.form-label;
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+/* Header */
 .pageHeader {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 16px;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .pageHeaderText {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0.25rem;
 }
 
 .pageTitle {
   margin: 0;
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 1.2rem;
+  color: $primary;
 }
 
 .pageSubtitle {
   margin: 0;
-  font-size: 14px;
-  opacity: 0.8;
+  font-size: 0.9rem;
+  color: #6b7280;
 }
 
-.errorBanner {
-  display: flex;
-  gap: 10px;
+/* Buttons */
+.saveButton {
+  @include forms.primary-button;
+  display: inline-flex;
   align-items: center;
-  padding: 12px 14px;
+  gap: 0.5rem;
+}
+
+.deleteButton {
+  @include forms.danger-button;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Cards */
+.card {
+  background: #fff;
+  border: 1px solid rgba(74, 144, 226, 0.14);
+  border-radius: 14px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.cardTitle {
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.cardMeta {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+/* Form helpers */
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.9rem;
+}
+
+/* Main grid of cards (same as CreateUser) */
+.grid {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Bottom actions */
+.bottomActions {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  justify-content: flex-end;
+  padding: 0.75rem 0.25rem 0.25rem;
+}
+
+@media (max-width: 640px) {
+  .bottomActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* Errors */
+.errorBanner {
+  background-color: #ffe6e6;
+  color: #b00000;
+  padding: 10px 14px;
   border-radius: 10px;
-  margin: 10px 0 12px;
-  border: 1px solid rgba(220, 53, 69, 0.35);
-  background: rgba(220, 53, 69, 0.08);
+  margin: 0.75rem 0;
+  font-size: 0.9rem;
+  border: 1px solid #ffb3b3;
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .errorList {
-  margin: 0 0 12px;
-  padding: 10px 14px;
+  background-color: #fff7f0;
+  border: 1px solid #ffd5a3;
   border-radius: 10px;
-  border: 1px solid rgba(220, 53, 69, 0.25);
-  background: rgba(220, 53, 69, 0.05);
+  padding: 8px 14px;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
 
   ul {
     margin: 0;
@@ -62,155 +168,47 @@
   }
 
   li {
-    margin: 4px 0;
-    font-size: 13px;
+    margin: 2px 0;
   }
-}
-
-/* Full-width layout */
-.grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-}
-
-/* Card stretches full width */
-.card {
-  width: 100%;
-  border-radius: 14px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  background: rgba(255, 255, 255, 0.7);
-  padding: 16px;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.06);
-}
-
-.cardHeader {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 14px;
-}
-
-.cardTitle {
-  font-weight: 700;
-  font-size: 14px;
-}
-
-.cardMeta {
-  font-size: 12px;
-  opacity: 0.75;
-}
-
-/* --- Two column layout for the fields --- */
-/* LEFT column: base + quote */
-/* RIGHT column: rate + rateDate */
-.twoColumnForm {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  align-items: start;
-  margin-bottom: 12px;
-}
-
-.column {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-/* Responsive fallback: 1 column on smaller screens */
-@media (max-width: 820px) {
-  .createContainer {
-    padding: 16px;
-  }
-
-  .twoColumnForm {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* --- Form controls --- */
-.formGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-
-  label {
-    font-size: 13px;
-    font-weight: 600;
-    opacity: 0.9;
-  }
-}
-
-.textInput {
-  width: 100%;
-  border-radius: 10px;
-  border: 1px solid rgba(0, 0, 0, 0.14);
-  padding: 10px 12px;
-  font-size: 14px;
-  outline: none;
-  background: rgba(255, 255, 255, 0.85);
-
-  &:focus {
-    border-color: rgba(0, 0, 0, 0.28);
-  }
-}
-
-.inputError {
-  border-color: rgba(220, 53, 69, 0.65) !important;
-  background: rgba(220, 53, 69, 0.06);
 }
 
 .fieldError {
-  font-size: 12px;
-  color: rgba(220, 53, 69, 0.95);
+  color: #b00000;
+  font-size: 0.8rem;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.inputError {
+  border-color: #b00000 !important;
+  box-shadow: 0 0 4px rgba(176, 0, 0, 0.35);
+  outline: none;
 }
 
 .mutedHint {
-  margin-top: 6px;
-  font-size: 12px;
-  opacity: 0.75;
-  line-height: 1.35;
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
 }
 
-/* --- Bottom actions --- */
-.bottomActions {
-  display: flex;
-  gap: 12px;
-  margin-top: 16px;
-  align-items: center;
+/* Skeleton (same pattern as CreateUser) */
+.skeletonWrap {
+  padding: 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: #fafafa;
 }
 
-.saveButton,
-.deleteButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border-radius: 12px;
-  padding: 10px 14px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  cursor: pointer;
-  font-weight: 700;
-  font-size: 14px;
+.skeletonLine {
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+  margin-bottom: 10px;
 }
 
-.saveButton {
-  background: rgba(0, 0, 0, 0.85);
-  color: #fff;
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-}
-
-.deleteButton {
-  background: rgba(255, 255, 255, 0.85);
-  color: rgba(0, 0, 0, 0.85);
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
+.skeletonLineShort {
+  height: 12px;
+  width: 55%;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
 }

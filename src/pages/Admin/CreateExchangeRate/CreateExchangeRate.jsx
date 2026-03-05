@@ -312,21 +312,24 @@ const CreateExchangeRate = () => {
           </div>
         )}
 
-        <div className={styles.grid}>
-          <div className={styles.card}>
-            <div className={styles.cardHeader}>
-              <div className={styles.cardTitle}>Exchange rate details</div>
-              <div className={styles.cardMeta}>
-                {loadingCurrencies
-                  ? "Loading currencies..."
-                  : "Required fields"}
-              </div>
-            </div>
+        {loadingCurrencies ? (
+          <div className={styles.skeletonWrap}>
+            <div className={styles.skeletonLine} />
+            <div className={styles.skeletonLine} />
+            <div className={styles.skeletonLineShort} />
+          </div>
+        ) : (
+          <>
+            <div className={styles.grid}>
+              {/* LEFT CARD (like CreateUser): base + quote */}
+              <div className={styles.card}>
+                <div className={styles.cardHeader}>
+                  <div className={styles.cardTitle}>Currencies</div>
+                  <div className={styles.cardMeta}>
+                    Select base and quote currency
+                  </div>
+                </div>
 
-            {/* Two columns: LEFT = base+quote, RIGHT = rate+rateDate */}
-            <div className={styles.twoColumnForm}>
-              {/* LEFT COLUMN */}
-              <div className={styles.column}>
                 <div className={styles.formGroup}>
                   <label>Base currency</label>
                   <select
@@ -334,7 +337,7 @@ const CreateExchangeRate = () => {
                     name="baseCurrencyId"
                     value={baseId}
                     onChange={handleInputChange}
-                    disabled={loading || loadingCurrencies}
+                    disabled={loading}
                   >
                     <option value="">Select base currency...</option>
                     {currencies.map((c) => (
@@ -357,7 +360,7 @@ const CreateExchangeRate = () => {
                     name="quoteCurrencyId"
                     value={quoteId}
                     onChange={handleInputChange}
-                    disabled={loading || loadingCurrencies}
+                    disabled={loading}
                   >
                     <option value="">Select quote currency...</option>
                     {currencies.map((c) => (
@@ -365,9 +368,7 @@ const CreateExchangeRate = () => {
                         key={c.id}
                         value={c.id}
                         // UX: prevent selecting same currency (still validated server-side too)
-                        disabled={
-                          String(baseId) === String(c.id) && Boolean(baseId)
-                        }
+                        disabled={String(baseId) === String(c.id) && !!baseId}
                       >
                         {currencyLabel(c)}
                       </option>
@@ -379,10 +380,22 @@ const CreateExchangeRate = () => {
                     </div>
                   )}
                 </div>
+
+                {currencies.length === 0 && (
+                  <div className={styles.mutedHint}>
+                    No currencies found. Create currencies first (Admin →
+                    Currency).
+                  </div>
+                )}
               </div>
 
-              {/* RIGHT COLUMN */}
-              <div className={styles.column}>
+              {/* RIGHT CARD (like CreateUser): rate + date */}
+              <div className={styles.card}>
+                <div className={styles.cardHeader}>
+                  <div className={styles.cardTitle}>Rate details</div>
+                  <div className={styles.cardMeta}>Rate and timestamp</div>
+                </div>
+
                 <div className={styles.formGroup}>
                   <label>Rate</label>
                   <input
@@ -419,42 +432,41 @@ const CreateExchangeRate = () => {
                     </div>
                   )}
                 </div>
+
+                <div className={styles.mutedHint}>
+                  Note: your DB unique constraint is{" "}
+                  <strong>
+                    (base_currency_id, quote_currency_id, rate_date)
+                  </strong>
+                  .
+                </div>
               </div>
             </div>
 
-            <div className={styles.mutedHint}>
-              Note: your DB unique constraint is{" "}
-              <strong>(base_currency_id, quote_currency_id, rate_date)</strong>.
+            <div className={styles.bottomActions}>
+              <button
+                type="button"
+                onClick={handleCreate}
+                className={styles.saveButton}
+                disabled={loading || currencies.length === 0}
+                title={
+                  currencies.length === 0 ? "Create currencies first." : ""
+                }
+              >
+                <FiSave /> {loading ? "Creating..." : "Create exchange rate"}
+              </button>
+
+              <button
+                type="button"
+                onClick={resetForm}
+                className={styles.deleteButton}
+                disabled={loading}
+              >
+                <FiX /> Reset form
+              </button>
             </div>
-
-            {currencies.length === 0 && !loadingCurrencies && (
-              <div className={styles.mutedHint}>
-                No currencies found. Create currencies first (Admin → Currency).
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className={styles.bottomActions}>
-          <button
-            type="button"
-            onClick={handleCreate}
-            className={styles.saveButton}
-            disabled={loading || loadingCurrencies || currencies.length === 0}
-            title={currencies.length === 0 ? "Create currencies first." : ""}
-          >
-            <FiSave /> {loading ? "Creating..." : "Create exchange rate"}
-          </button>
-
-          <button
-            type="button"
-            onClick={resetForm}
-            className={styles.deleteButton}
-            disabled={loading || loadingCurrencies}
-          >
-            <FiX /> Reset form
-          </button>
-        </div>
+          </>
+        )}
       </div>
     </div>
   );
