@@ -218,7 +218,7 @@ const CreateCurrency = () => {
   );
 };
 
-export default CreateCurrency; // src/utils/http.js
+export default CreateCurrency;
 
 /**
  * NOTE:
