@@ -157,63 +157,101 @@ const CreateCurrency = () => {
   );
 
   return (
-    <div>
-      <h1>Hej</h1>
-
-      {/* basic placeholders so you can test quickly */}
-      {formError && (
-        <div>
-          <FiAlertCircle /> {formError}
+    <div className={styles.createContainer}>
+      <div className={styles.formContainer}>
+        <div className={styles.pageHeader}>
+          <div className={styles.pageHeaderText}>
+            <h3 className={styles.pageTitle}>Create Currency</h3>
+            <p className={styles.pageSubtitle}>
+              Add a currency (name + description).
+            </p>
+          </div>
         </div>
-      )}
 
-      {hasAnyFieldErrors && (
-        <ul>
-          {Object.entries(fieldErrors).map(([field, message]) => (
-            <li key={field}>
-              <strong>{field}</strong>: {message}
-            </li>
-          ))}
-        </ul>
-      )}
+        {formError && (
+          <div className={styles.errorBanner}>
+            <FiAlertCircle />
+            <span>{formError}</span>
+          </div>
+        )}
 
-      <div>
-        <label>
-          Currency name
-          <input
-            className={inputClass("name")}
-            name="name"
-            placeholder="e.g. USD"
-            value={currencyDetails.name}
-            onChange={handleInputChange}
+        {hasAnyFieldErrors && (
+          <div className={styles.errorList}>
+            <ul>
+              {Object.entries(fieldErrors).map(([field, message]) => (
+                <li key={field}>
+                  <strong>{field}</strong>: {message}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className={styles.grid}>
+          <div className={styles.card}>
+            <div className={styles.cardHeader}>
+              <div className={styles.cardTitle}>Currency details</div>
+              <div className={styles.cardMeta}>Required fields</div>
+            </div>
+
+            <div className={styles.formGroup}>
+              <label>Currency name</label>
+              <input
+                className={inputClass("name")}
+                name="name"
+                placeholder="e.g. USD"
+                value={currencyDetails.name}
+                onChange={handleInputChange}
+                disabled={loading}
+              />
+              {hasError("name") && (
+                <div className={styles.fieldError}>{fieldErrors.name}</div>
+              )}
+            </div>
+
+            <div className={styles.formGroup}>
+              <label>Description</label>
+              <input
+                className={inputClass("description")}
+                name="description"
+                placeholder="e.g. US Dollar"
+                value={currencyDetails.description}
+                onChange={handleInputChange}
+                disabled={loading}
+              />
+              {hasError("description") && (
+                <div className={styles.fieldError}>
+                  {fieldErrors.description}
+                </div>
+              )}
+            </div>
+
+            <div className={styles.mutedHint}>
+              Note: name and description should be unique.
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.bottomActions}>
+          <button
+            type="button"
+            onClick={handleCreate}
+            className={styles.saveButton}
             disabled={loading}
-          />
-        </label>
-        {hasError("name") && <div>{fieldErrors.name}</div>}
-      </div>
+          >
+            <FiSave /> {loading ? "Creating..." : "Create currency"}
+          </button>
 
-      <div>
-        <label>
-          Description <MdDescription />
-          <input
-            className={inputClass("description")}
-            name="description"
-            placeholder="e.g. US Dollar"
-            value={currencyDetails.description}
-            onChange={handleInputChange}
+          <button
+            type="button"
+            onClick={resetForm}
+            className={styles.deleteButton}
             disabled={loading}
-          />
-        </label>
-        {hasError("description") && <div>{fieldErrors.description}</div>}
+          >
+            <FiX /> Reset form
+          </button>
+        </div>
       </div>
-
-      <button type="button" onClick={handleCreate} disabled={loading}>
-        <FiSave /> {loading ? "Creating..." : "Create currency"}
-      </button>
-
-      <button type="button" onClick={resetForm} disabled={loading}>
-        <FiX /> Reset form
-      </button>
     </div>
   );
 };

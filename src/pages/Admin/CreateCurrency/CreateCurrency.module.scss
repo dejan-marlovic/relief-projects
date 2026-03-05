@@ -1,7 +1,7 @@
+/* src/components/Admin/CreateCurrency/CreateCurrency.module.scss */
 @use "../../../styles/forms" as forms;
 
 $primary: #4a90e2;
-$danger: #e74c3c;
 
 .createContainer {
   width: 100%;
@@ -20,19 +20,6 @@ $danger: #e74c3c;
   border: 1px solid rgba(74, 144, 226, 0.18);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
   padding: 1.25rem;
-}
-
-/* Inputs */
-.textInput {
-  @include forms.text-input;
-  margin-bottom: 0;
-}
-
-/* Labels */
-label {
-  @include forms.form-label;
-  display: block;
-  margin-bottom: 0.35rem;
 }
 
 /* Header */
@@ -64,96 +51,6 @@ label {
   margin: 0;
   font-size: 0.9rem;
   color: #6b7280;
-}
-
-/* Buttons */
-.saveButton {
-  @include forms.primary-button;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.deleteButton {
-  @include forms.danger-button;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-/* Cards */
-.card {
-  background: #fff;
-  border: 1px solid rgba(74, 144, 226, 0.14);
-  border-radius: 14px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
-  padding: 1rem;
-}
-
-.cardHeader {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.85rem;
-}
-
-.cardTitle {
-  font-weight: 700;
-  color: #1f2937;
-}
-
-.cardMeta {
-  font-size: 0.8rem;
-  color: #6b7280;
-}
-
-/* Form helpers */
-.formGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  margin-bottom: 0.9rem;
-}
-
-/* Main grid of cards (keep same structure as CreateUser) */
-.grid {
-  margin-top: 1rem;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-/* ✅ Currency has ONE card: make it span full width on desktop */
-.grid > .card {
-  grid-column: 1 / -1;
-}
-
-@media (max-width: 1024px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
-
-  .grid > .card {
-    grid-column: auto;
-  }
-}
-
-/* Bottom actions */
-.bottomActions {
-  margin-top: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  justify-content: flex-end;
-  padding: 0.75rem 0.25rem 0.25rem;
-}
-
-@media (max-width: 640px) {
-  .bottomActions {
-    flex-direction: column;
-    align-items: stretch;
-  }
 }
 
 /* Errors */
@@ -201,30 +98,108 @@ label {
   outline: none;
 }
 
+/* Grid + cards (same structure as CreateUser) */
+.grid {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* Currency has ONE card: make it span full width on desktop */
+.grid > .card {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .grid > .card {
+    grid-column: auto;
+  }
+}
+
+.card {
+  background: #fff;
+  border: 1px solid rgba(74, 144, 226, 0.14);
+  border-radius: 14px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.cardTitle {
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.cardMeta {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+/* Form helpers */
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.9rem;
+
+  label {
+    @include forms.form-label;
+    display: block;
+    margin-bottom: 0.35rem;
+  }
+}
+
+.textInput {
+  @include forms.text-input;
+  margin-bottom: 0;
+}
+
 .mutedHint {
   font-size: 0.8rem;
   color: #6b7280;
   margin-top: 0.25rem;
 }
 
-/* Skeleton (optional, but keeps parity with CreateUser styles) */
-.skeletonWrap {
-  padding: 1rem;
-  border-radius: 14px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  background: #fafafa;
+/* Bottom actions */
+.bottomActions {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  justify-content: flex-end;
+  padding: 0.75rem 0.25rem 0.25rem;
 }
 
-.skeletonLine {
-  height: 12px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.08);
-  margin-bottom: 10px;
+@media (max-width: 640px) {
+  .bottomActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
-.skeletonLineShort {
-  height: 12px;
-  width: 55%;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.08);
+/* Buttons */
+.saveButton {
+  @include forms.primary-button;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.deleteButton {
+  @include forms.danger-button;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
