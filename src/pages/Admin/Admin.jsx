@@ -4,7 +4,8 @@ import styles from "./Admin.module.scss";
 import CreatePosition from "../Admin/CreatePosition/CreatePosition";
 import CreateEmployee from "../Admin/CreateEmployee/CreateEmployee";
 import CreateUser from "../Admin/CreateUser/CreateUser";
-import CreateCurrency from "../Admin/CreateCurrency/CreateCurrency"; // ✅ NEW
+import CreateCurrency from "../Admin/CreateCurrency/CreateCurrency";
+import CreateExchangeRate from "../Admin/CreateExchangeRate/CreateExchangeRate"; // ✅ NEW
 import RegisterProject from "../RegisterProject/RegisterProject";
 
 const Admin = () => {
@@ -20,8 +21,10 @@ const Admin = () => {
         return CreateEmployee;
       case "user":
         return CreateUser;
-      case "currency": // ✅ NEW
+      case "currency":
         return CreateCurrency;
+      case "exchangeRate": // ✅ NEW
+        return CreateExchangeRate;
       case "position":
       default:
         return CreatePosition;
@@ -51,7 +54,10 @@ const Admin = () => {
               onChange={(e) => setEntity(e.target.value)}
             >
               <option value="position">Position (master data)</option>
-              <option value="currency">Currency (master data)</option>{" "}
+              <option value="currency">Currency (master data)</option>
+              <option value="exchangeRate">
+                Exchange Rate (master data)
+              </option>{" "}
               {/* ✅ NEW */}
               <option value="project">Project</option>
               <option value="employee">Employee</option>
