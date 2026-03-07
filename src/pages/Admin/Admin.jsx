@@ -1,3 +1,5 @@
+// src/components/Admin/Admin.jsx
+
 import React, { useMemo, useState } from "react";
 import styles from "./Admin.module.scss";
 
@@ -7,6 +9,7 @@ import CreateUser from "../Admin/CreateUser/CreateUser";
 import CreateCurrency from "../Admin/CreateCurrency/CreateCurrency";
 import CreateExchangeRate from "../Admin/CreateExchangeRate/CreateExchangeRate";
 import CreateCostType from "../Admin/CreateCostType/CreateCostType"; // ✅ NEW
+import CreateCost from "../Admin/CreateCost/CreateCost"; // ✅ NEW
 import RegisterProject from "../RegisterProject/RegisterProject";
 
 const Admin = () => {
@@ -22,12 +25,17 @@ const Admin = () => {
         return CreateEmployee;
       case "user":
         return CreateUser;
+
       case "currency":
         return CreateCurrency;
       case "exchangeRate":
         return CreateExchangeRate;
+
       case "costType": // ✅ NEW
         return CreateCostType;
+      case "cost": // ✅ NEW
+        return CreateCost;
+
       case "position":
       default:
         return CreatePosition;
@@ -56,11 +64,14 @@ const Admin = () => {
               value={entity}
               onChange={(e) => setEntity(e.target.value)}
             >
+              {/* Master data */}
               <option value="position">Position (master data)</option>
               <option value="currency">Currency (master data)</option>
               <option value="exchangeRate">Exchange Rate (master data)</option>
               <option value="costType">Cost Type (master data)</option>{" "}
               {/* ✅ NEW */}
+              <option value="cost">Cost (master data)</option> {/* ✅ NEW */}
+              {/* Core entities */}
               <option value="project">Project</option>
               <option value="employee">Employee</option>
               <option value="user">User (login)</option>
