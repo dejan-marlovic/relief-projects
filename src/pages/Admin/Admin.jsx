@@ -5,7 +5,8 @@ import CreatePosition from "../Admin/CreatePosition/CreatePosition";
 import CreateEmployee from "../Admin/CreateEmployee/CreateEmployee";
 import CreateUser from "../Admin/CreateUser/CreateUser";
 import CreateCurrency from "../Admin/CreateCurrency/CreateCurrency";
-import CreateExchangeRate from "../Admin/CreateExchangeRate/CreateExchangeRate"; // ✅ NEW
+import CreateExchangeRate from "../Admin/CreateExchangeRate/CreateExchangeRate";
+import CreateCostType from "../Admin/CreateCostType/CreateCostType"; // ✅ NEW
 import RegisterProject from "../RegisterProject/RegisterProject";
 
 const Admin = () => {
@@ -23,8 +24,10 @@ const Admin = () => {
         return CreateUser;
       case "currency":
         return CreateCurrency;
-      case "exchangeRate": // ✅ NEW
+      case "exchangeRate":
         return CreateExchangeRate;
+      case "costType": // ✅ NEW
+        return CreateCostType;
       case "position":
       default:
         return CreatePosition;
@@ -55,9 +58,8 @@ const Admin = () => {
             >
               <option value="position">Position (master data)</option>
               <option value="currency">Currency (master data)</option>
-              <option value="exchangeRate">
-                Exchange Rate (master data)
-              </option>{" "}
+              <option value="exchangeRate">Exchange Rate (master data)</option>
+              <option value="costType">Cost Type (master data)</option>{" "}
               {/* ✅ NEW */}
               <option value="project">Project</option>
               <option value="employee">Employee</option>
