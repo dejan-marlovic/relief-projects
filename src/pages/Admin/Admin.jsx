@@ -8,8 +8,9 @@ import CreateEmployee from "../Admin/CreateEmployee/CreateEmployee";
 import CreateUser from "../Admin/CreateUser/CreateUser";
 import CreateCurrency from "../Admin/CreateCurrency/CreateCurrency";
 import CreateExchangeRate from "../Admin/CreateExchangeRate/CreateExchangeRate";
-import CreateCostType from "../Admin/CreateCostType/CreateCostType"; // ✅ NEW
-import CreateCost from "../Admin/CreateCost/CreateCost"; // ✅ NEW
+import CreateCostType from "../Admin/CreateCostType/CreateCostType";
+import CreateCost from "../Admin/CreateCost/CreateCost";
+import CreateProjectStatus from "../Admin/CreateProjectStatus/CreateProjectStatus"; // ✅ NEW
 import RegisterProject from "../RegisterProject/RegisterProject";
 
 const Admin = () => {
@@ -31,10 +32,13 @@ const Admin = () => {
       case "exchangeRate":
         return CreateExchangeRate;
 
-      case "costType": // ✅ NEW
+      case "costType":
         return CreateCostType;
-      case "cost": // ✅ NEW
+      case "cost":
         return CreateCost;
+
+      case "projectStatus": // ✅ NEW
+        return CreateProjectStatus;
 
       case "position":
       default:
@@ -68,9 +72,12 @@ const Admin = () => {
               <option value="position">Position (master data)</option>
               <option value="currency">Currency (master data)</option>
               <option value="exchangeRate">Exchange Rate (master data)</option>
-              <option value="costType">Cost Type (master data)</option>{" "}
+              <option value="costType">Cost Type (master data)</option>
+              <option value="cost">Cost (master data)</option>
+              <option value="projectStatus">
+                Project Status (master data)
+              </option>{" "}
               {/* ✅ NEW */}
-              <option value="cost">Cost (master data)</option> {/* ✅ NEW */}
               {/* Core entities */}
               <option value="project">Project</option>
               <option value="employee">Employee</option>
