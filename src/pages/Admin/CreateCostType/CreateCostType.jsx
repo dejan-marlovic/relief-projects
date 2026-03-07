@@ -120,7 +120,9 @@ const CreateCostType = () => {
         created?.id ?? created?.costTypeId ?? created?.cost_type_id;
 
       alert(
-        `Cost type created successfully${createdId ? ` (id: ${createdId})` : "!"}`,
+        `Cost type created successfully${
+          createdId ? ` (id: ${createdId})` : "!"
+        }`,
       );
 
       resetForm();
@@ -205,9 +207,9 @@ const CreateCostType = () => {
                 </div>
 
                 <div className={styles.mutedHint}>
-                  This is a <strong>high-level grouping</strong>. Individual
-                  cost items (like fuel, rent, salaries) belong under a Cost
-                  Type.
+                  This is a <strong>high-level grouping</strong>. It will be
+                  available when you create <strong>Budgets</strong> and also
+                  used to group <strong>Cost Details</strong>.
                 </div>
               </div>
 
@@ -215,7 +217,7 @@ const CreateCostType = () => {
               <div className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>How this is used</div>
-                  <div className={styles.cardMeta}>One level above Costs</div>
+                  <div className={styles.cardMeta}>Budgets + grouping</div>
                 </div>
 
                 <div className={styles.mutedHint}>
@@ -234,8 +236,12 @@ const CreateCostType = () => {
                       </ul>
                     </li>
                     <li>
-                      Later, when creating a <strong>Cost</strong>, you pick one
-                      of these as the parent category.
+                      When creating a <strong>Budget</strong>, these cost types
+                      will be available to help structure the budget.
+                    </li>
+                    <li>
+                      In <strong>Cost Details</strong>, cost types are used for
+                      grouping and reporting (e.g. totals per Direct/Indirect).
                     </li>
                     <li>Name is required and max 255 characters.</li>
                   </ul>
