@@ -30,7 +30,7 @@ const validateOrganizationStatusDetails = (values) => {
 
   if (!name)
     errors.organizationStatusName =
-      "Organization status name is required (e.g. Active).";
+      "Organization status name is required (e.g. Financier).";
   else if (name.length > 255)
     errors.organizationStatusName = "Name must be max 255 characters.";
 
@@ -154,8 +154,8 @@ const CreateOrganizationStatus = () => {
           <div className={styles.pageHeaderText}>
             <h3 className={styles.pageTitle}>Create Organization Status</h3>
             <p className={styles.pageSubtitle}>
-              Add a status used to classify organizations (e.g. Active,
-              Inactive).
+              Add “role / relationship” types for organizations (e.g. Financier,
+              Partner, Donor).
             </p>
           </div>
         </div>
@@ -200,7 +200,7 @@ const CreateOrganizationStatus = () => {
                   <input
                     className={inputClass("organizationStatusName")}
                     name="organizationStatusName"
-                    placeholder="e.g. Active"
+                    placeholder="e.g. Financier"
                     value={organizationStatusDetails.organizationStatusName}
                     onChange={handleInputChange}
                     autoComplete="off"
@@ -213,8 +213,10 @@ const CreateOrganizationStatus = () => {
                 </div>
 
                 <div className={styles.mutedHint}>
-                  Tip: keep names consistent and short (e.g. Active, Suspended,
-                  Closed).
+                  Examples: <strong>Financier</strong>, <strong>Partner</strong>
+                  , <strong>Lead</strong>, <strong>Funder</strong>,{" "}
+                  <strong>Donor</strong>, <strong>Implementing Partner</strong>,{" "}
+                  <strong>Default</strong>.
                 </div>
               </div>
 
@@ -228,16 +230,16 @@ const CreateOrganizationStatus = () => {
                 <div className={styles.mutedHint}>
                   <ul style={{ margin: "0.4rem 0 0 1rem" }}>
                     <li>
-                      Organization statuses are used to classify and filter{" "}
-                      <strong>Organizations</strong> in your ERP.
+                      Organization status in your projects (e.g. Donor vs
+                      Implementing Partner).
                     </li>
                     <li>
-                      The API exposes active statuses via{" "}
-                      <strong>/api/organization-statuses/active</strong>.
+                      When creating or editing an <strong>Organization</strong>,
+                      you select one of these statuses to classify it.
                     </li>
                     <li>
-                      Deleting a status uses <strong>soft delete</strong> (sets{" "}
-                      <code>is_deleted</code> and <code>deleted_at</code>).
+                      This enables filtering + reporting, e.g. “show all{" "}
+                      <strong>Donors</strong>” or group partners by role.
                     </li>
                   </ul>
                 </div>
