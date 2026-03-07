@@ -313,11 +313,6 @@ const CreateAddress = () => {
                       and <strong>Projects</strong>.
                     </li>
                     <li>
-                      Your backend delete logic reassigns related entities to a{" "}
-                      <strong>default address</strong> (id: <strong>16</strong>)
-                      before soft-deleting the address.
-                    </li>
-                    <li>
                       Street + city are required; other fields are optional.
                     </li>
                   </ul>
