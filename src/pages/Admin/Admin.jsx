@@ -6,11 +6,16 @@ import styles from "./Admin.module.scss";
 import CreatePosition from "../Admin/CreatePosition/CreatePosition";
 import CreateEmployee from "../Admin/CreateEmployee/CreateEmployee";
 import CreateUser from "../Admin/CreateUser/CreateUser";
+
 import CreateCurrency from "../Admin/CreateCurrency/CreateCurrency";
 import CreateExchangeRate from "../Admin/CreateExchangeRate/CreateExchangeRate";
+
 import CreateCostType from "../Admin/CreateCostType/CreateCostType";
 import CreateCost from "../Admin/CreateCost/CreateCost";
-import CreateProjectStatus from "../Admin/CreateProjectStatus/CreateProjectStatus"; // ✅ NEW
+
+import CreateProjectStatus from "../Admin/CreateProjectStatus/CreateProjectStatus";
+import CreateAddress from "../Admin/CreateAddress/CreateAddress"; // ✅ NEW
+
 import RegisterProject from "../RegisterProject/RegisterProject";
 
 const Admin = () => {
@@ -22,6 +27,7 @@ const Admin = () => {
     switch (entity) {
       case "project":
         return RegisterProject;
+
       case "employee":
         return CreateEmployee;
       case "user":
@@ -37,8 +43,11 @@ const Admin = () => {
       case "cost":
         return CreateCost;
 
-      case "projectStatus": // ✅ NEW
+      case "projectStatus":
         return CreateProjectStatus;
+
+      case "address": // ✅ NEW
+        return CreateAddress;
 
       case "position":
       default:
@@ -76,7 +85,8 @@ const Admin = () => {
               <option value="cost">Cost (master data)</option>
               <option value="projectStatus">
                 Project Status (master data)
-              </option>{" "}
+              </option>
+              <option value="address">Address (master data)</option>{" "}
               {/* ✅ NEW */}
               {/* Core entities */}
               <option value="project">Project</option>
