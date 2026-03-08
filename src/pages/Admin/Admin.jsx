@@ -17,7 +17,8 @@ import CreateProjectStatus from "../Admin/CreateProjectStatus/CreateProjectStatu
 import CreateOrganizationStatus from "../Admin/CreateOrganizationStatus/CreateOrganizationStatus";
 import CreateAddress from "../Admin/CreateAddress/CreateAddress";
 
-import CreateOrganization from "../Admin/CreateOrganization/CreateOrganization"; // ✅ NEW
+import CreateOrganization from "../Admin/CreateOrganization/CreateOrganization";
+import CreateProjectType from "../Admin/CreateProjectType/CreateProjectType"; // ✅ NEW
 
 import RegisterProject from "../RegisterProject/RegisterProject";
 
@@ -46,6 +47,9 @@ const Admin = () => {
       case "cost":
         return CreateCost;
 
+      case "projectType": // ✅ NEW
+        return CreateProjectType;
+
       case "projectStatus":
         return CreateProjectStatus;
 
@@ -55,7 +59,7 @@ const Admin = () => {
       case "address":
         return CreateAddress;
 
-      case "organization": // ✅ NEW
+      case "organization":
         return CreateOrganization;
 
       case "position":
@@ -90,17 +94,23 @@ const Admin = () => {
               <option value="position">Position (master data)</option>
               <option value="currency">Currency (master data)</option>
               <option value="exchangeRate">Exchange Rate (master data)</option>
+
               <option value="costType">Cost Type (master data)</option>
               <option value="cost">Cost (master data)</option>
+
+              <option value="projectType">Project Type (master data)</option>
               <option value="projectStatus">
                 Project Status (master data)
               </option>
+
               <option value="organizationStatus">
                 Organization Status (master data)
               </option>
+
               <option value="address">Address (master data)</option>
+
               {/* Core entities */}
-              <option value="organization">Organization</option> {/* ✅ NEW */}
+              <option value="organization">Organization</option>
               <option value="project">Project</option>
               <option value="employee">Employee</option>
               <option value="user">User (login)</option>
