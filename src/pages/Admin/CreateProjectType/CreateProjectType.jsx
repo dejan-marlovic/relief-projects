@@ -231,28 +231,6 @@ const CreateProjectType = () => {
                     </li>
                   </ul>
                 </div>
-
-                <div
-                  className={styles.mutedHint}
-                  style={{ marginTop: "0.6rem" }}
-                >
-                  Examples from your current table:
-                  <ul style={{ margin: "0.4rem 0 0 1rem" }}>
-                    <li>
-                      <strong>Humanitarian</strong>, <strong>Democracy</strong>,{" "}
-                      <strong>Development</strong>
-                    </li>
-                    <li>
-                      <strong>Structural Support</strong>,{" "}
-                      <strong>Information</strong>,{" "}
-                      <strong>Administrative</strong>
-                    </li>
-                    <li>
-                      <strong>Own Humanitarian</strong>,{" "}
-                      <strong>Own Development</strong>, <strong>Other</strong>
-                    </li>
-                  </ul>
-                </div>
               </div>
             </div>
 
