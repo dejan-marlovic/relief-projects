@@ -243,10 +243,6 @@ const CreateSector = () => {
                       show all <strong>EDU</strong> projects).
                     </li>
                     <li>
-                      Consistent grouping across budgets/cost details where
-                      sector tagging is used.
-                    </li>
-                    <li>
                       Aligns with common humanitarian sector codes (CCM, WASH,
                       HEA, etc.).
                     </li>
