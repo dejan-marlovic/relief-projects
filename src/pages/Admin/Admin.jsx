@@ -14,8 +14,10 @@ import CreateCostType from "../Admin/CreateCostType/CreateCostType";
 import CreateCost from "../Admin/CreateCost/CreateCost";
 
 import CreateProjectStatus from "../Admin/CreateProjectStatus/CreateProjectStatus";
-import CreateOrganizationStatus from "../Admin/CreateOrganizationStatus/CreateOrganizationStatus"; // ✅ NEW
+import CreateOrganizationStatus from "../Admin/CreateOrganizationStatus/CreateOrganizationStatus";
 import CreateAddress from "../Admin/CreateAddress/CreateAddress";
+
+import CreateOrganization from "../Admin/CreateOrganization/CreateOrganization"; // ✅ NEW
 
 import RegisterProject from "../RegisterProject/RegisterProject";
 
@@ -47,11 +49,14 @@ const Admin = () => {
       case "projectStatus":
         return CreateProjectStatus;
 
-      case "organizationStatus": // ✅ NEW
+      case "organizationStatus":
         return CreateOrganizationStatus;
 
       case "address":
         return CreateAddress;
+
+      case "organization": // ✅ NEW
+        return CreateOrganization;
 
       case "position":
       default:
@@ -85,20 +90,17 @@ const Admin = () => {
               <option value="position">Position (master data)</option>
               <option value="currency">Currency (master data)</option>
               <option value="exchangeRate">Exchange Rate (master data)</option>
-
               <option value="costType">Cost Type (master data)</option>
               <option value="cost">Cost (master data)</option>
-
               <option value="projectStatus">
                 Project Status (master data)
               </option>
               <option value="organizationStatus">
                 Organization Status (master data)
               </option>
-
               <option value="address">Address (master data)</option>
-
               {/* Core entities */}
+              <option value="organization">Organization</option> {/* ✅ NEW */}
               <option value="project">Project</option>
               <option value="employee">Employee</option>
               <option value="user">User (login)</option>
