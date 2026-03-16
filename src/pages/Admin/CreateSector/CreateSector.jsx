@@ -63,13 +63,63 @@ const CreateSector = () => {
     setFieldErrors({});
   };
 
+  //receives e, which is the event object React gives you when an input changes.
+  //For <input onChange={handleInputChange} />, React passes a “change event”.
   const handleInputChange = (e) => {
+    //e.target is the DOM element that triggered the event — <input> element.
+    //This line is just a short way of writing: const name = e.target.name; const name = e.target.name;
+    //You can use one handler for many inputs, because the name tells you which field to update.
+    //Object destructuring
     const { name, value } = e.target;
 
+    //core update
+    //we are using the functional state update form
+    //This is the safest form when new state depends on the previous state.
+    //Inside it: { ...prev } → makes a shallow copy of the previous state object (immutability).
+    //typing in the sectorCode field updates only sectorDetails.sectorCode
+    //typing in the sectorDescription field updates only sectorDetails.sectorDescription
+    //Immutability via object spread
+    //We don’t mutate prev; you create a new object.
+    //Computed property names: { [name]: value }
     setSectorDetails((prev) => ({ ...prev, [name]: value }));
 
     // Clear per-field error as user edits
     setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+    /*
+    This line:
+
+    setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+
+    does two things at once:
+
+    { ...prev } copies all existing properties from prev into a new object
+
+    [name]: "" then overwrites (or adds) that one property on the new object
+
+    So:
+
+    If prev already had other error fields, they stay untouched.
+
+    The one matching name becomes "" (cleared).
+
+    If that key didn’t exist before, it gets added.
+
+    This line:
+
+    setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+
+        does two things at once:
+
+        { ...prev } copies all existing properties from prev into a new object
+
+        [name]: "" then overwrites (or adds) that one property on the new object
+        
+        Important detail
+
+        If a property appears multiple times in an object literal, 
+        the last one wins. Since [name]: "" comes after ...prev, it overrides the copied value.
+    */
+
     setFormError("");
   };
 

@@ -19,7 +19,9 @@ import CreateAddress from "../Admin/CreateAddress/CreateAddress";
 
 import CreateOrganization from "../Admin/CreateOrganization/CreateOrganization";
 import CreateProjectType from "../Admin/CreateProjectType/CreateProjectType";
-import CreateSector from "../Admin/CreateSector/CreateSector"; // ✅ NEW
+import CreateSector from "../Admin/CreateSector/CreateSector";
+
+import CreateTransactionStatus from "../Admin/CreateTransactionStatus/CreateTransactionStatus"; // ✅ NEW
 
 import RegisterProject from "../RegisterProject/RegisterProject";
 
@@ -51,8 +53,11 @@ const Admin = () => {
       case "projectType":
         return CreateProjectType;
 
-      case "sector": // ✅ NEW
+      case "sector":
         return CreateSector;
+
+      case "transactionStatus": // ✅ NEW
+        return CreateTransactionStatus;
 
       case "projectStatus":
         return CreateProjectStatus;
@@ -101,7 +106,10 @@ const Admin = () => {
               <option value="costType">Cost Type (master data)</option>
               <option value="cost">Cost (master data)</option>
               <option value="projectType">Project Type (master data)</option>
-              <option value="sector">Sector (master data)</option>{" "}
+              <option value="sector">Sector (master data)</option>
+              <option value="transactionStatus">
+                Transaction Status (master data)
+              </option>{" "}
               {/* ✅ NEW */}
               <option value="projectStatus">
                 Project Status (master data)
