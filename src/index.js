@@ -61,7 +61,7 @@ export default function App() {
             <Route path="about" element={<About />} />
 
             {/* ✅ NEW: Admin placeholder */}
-            <Route path="admin" element={<Admin />} />
+            <Route path="admin github deploy test" element={<Admin />} />
 
             {/* Catch-all route */}
             <Route path="*" element={<NoPage />} />
