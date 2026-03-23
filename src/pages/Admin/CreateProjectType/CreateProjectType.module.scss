@@ -1,0 +1,216 @@
+/* src/components/Admin/CreateProjectType/CreateProjectType.module.scss */
+
+@use "../../../styles/forms" as forms;
+
+$primary: #4a90e2;
+$danger: #e74c3c;
+
+.createContainer {
+  padding: 1.25rem;
+  margin-top: 1rem;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.formContainer {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid rgba(74, 144, 226, 0.18);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+  padding: 1.25rem;
+}
+
+/* Inputs */
+.textInput {
+  @include forms.text-input;
+  margin-bottom: 0;
+}
+
+/* Labels */
+label {
+  @include forms.form-label;
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+/* Header */
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.pageHeaderText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: 1.2rem;
+  color: $primary;
+}
+
+.pageSubtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+/* Buttons */
+.saveButton {
+  @include forms.primary-button;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.deleteButton {
+  @include forms.danger-button;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Cards */
+.card {
+  background: #fff;
+  border: 1px solid rgba(74, 144, 226, 0.14);
+  border-radius: 14px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.cardTitle {
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.cardMeta {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+/* Form helpers */
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.9rem;
+}
+
+/* Main grid of cards */
+.grid {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Bottom actions */
+.bottomActions {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  justify-content: flex-end;
+  padding: 0.75rem 0.25rem 0.25rem;
+}
+
+@media (max-width: 640px) {
+  .bottomActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* Errors */
+.errorBanner {
+  background-color: #ffe6e6;
+  color: #b00000;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin: 0.75rem 0;
+  font-size: 0.9rem;
+  border: 1px solid #ffb3b3;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.errorList {
+  background-color: #fff7f0;
+  border: 1px solid #ffd5a3;
+  border-radius: 10px;
+  padding: 8px 14px;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+
+  ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+
+  li {
+    margin: 2px 0;
+  }
+}
+
+.fieldError {
+  color: #b00000;
+  font-size: 0.8rem;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.inputError {
+  border-color: #b00000 !important;
+  box-shadow: 0 0 4px rgba(176, 0, 0, 0.35);
+  outline: none;
+}
+
+.mutedHint {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+/* Skeleton */
+.skeletonWrap {
+  padding: 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: #fafafa;
+}
+
+.skeletonLine {
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+  margin-bottom: 10px;
+}
+
+.skeletonLineShort {
+  height: 12px;
+  width: 55%;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+}

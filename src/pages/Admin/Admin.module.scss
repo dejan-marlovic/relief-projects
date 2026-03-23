@@ -1,0 +1,76 @@
+@use "../../styles/forms" as forms;
+
+$primary: #4a90e2;
+
+.adminContainer {
+  padding: 1.25rem;
+  margin-top: 1rem;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.selectorCard {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid rgba(74, 144, 226, 0.18);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.selectorRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.selectorText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.selectorTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: $primary;
+}
+
+.selectorSubtitle {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.selectorControl {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 300px;
+}
+
+.selectorLabel {
+  @include forms.form-label;
+  display: block;
+  margin-bottom: 0;
+}
+
+.selectInput {
+  @include forms.text-input;
+  margin-bottom: 0;
+  background: #fff;
+}
+
+.content {
+  /* Keep this empty; CreatePosition/RegisterProject already have their own layout */
+}
+
+@media (max-width: 640px) {
+  .selectorRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .selectorControl {
+    min-width: unset;
+  }
+}
