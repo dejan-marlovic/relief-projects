@@ -117,7 +117,7 @@ const Layout = () => {
             ["/about", "About"],
 
             // ✅ NEW: Admin (placeholder)
-            ["/admin", "Admin github deploy test"],
+            ["/admin", "Admin"],
           ].map(([path, label]) => {
             const isAdminTab = path === "/admin";
 
