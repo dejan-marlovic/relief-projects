@@ -85,7 +85,7 @@ const Project = () => {
   const [sectorOptions, setSectorOptions] = useState([]);
   const [selectedSectorIds, setSelectedSectorIds] = useState([]);
   const [currentProjectSectorLinks, setCurrentProjectSectorLinks] = useState(
-    []
+    [],
   );
 
   // ✅ Cover image upload state
@@ -241,7 +241,7 @@ const Project = () => {
 
         const response = await authFetch(
           `${BASE_URL}/api/projects/${selectedProjectId}`,
-          { headers: { "Content-Type": "application/json" } }
+          { headers: { "Content-Type": "application/json" } },
         );
 
         if (!response.ok) throw new Error("Failed to fetch project details");
@@ -295,7 +295,7 @@ const Project = () => {
         if (!res.ok) throw new Error("Failed to fetch project-sector links");
         const links = await res.json();
         const byProject = (Array.isArray(links) ? links : []).filter(
-          (ps) => String(ps.projectId) === String(selectedProjectId)
+          (ps) => String(ps.projectId) === String(selectedProjectId),
         );
         setCurrentProjectSectorLinks(byProject);
         setSelectedSectorIds(byProject.map((ps) => String(ps.sectorId)));
@@ -314,7 +314,7 @@ const Project = () => {
       try {
         const response = await authFetch(
           `${BASE_URL}/api/project-statuses/active`,
-          { headers: { "Content-Type": "application/json" } }
+          { headers: { "Content-Type": "application/json" } },
         );
 
         if (!response.ok) throw new Error("Failed to fetch project statuses");
@@ -340,7 +340,7 @@ const Project = () => {
         const allProjects = await response.json();
 
         const filteredProjects = allProjects.filter(
-          (p) => p.id.toString() !== selectedProjectId
+          (p) => p.id.toString() !== selectedProjectId,
         );
 
         setAvailableParentProjects(filteredProjects);
@@ -388,7 +388,7 @@ const Project = () => {
       try {
         const res = await authFetch(
           `${BASE_URL}/api/organizations/active/options`,
-          { headers: { "Content-Type": "application/json" } }
+          { headers: { "Content-Type": "application/json" } },
         );
 
         const data = await safeReadJson(res);
@@ -408,7 +408,7 @@ const Project = () => {
       try {
         const res = await authFetch(
           `${BASE_URL}/api/organization-statuses/active`,
-          { headers: { "Content-Type": "application/json" } }
+          { headers: { "Content-Type": "application/json" } },
         );
         if (!res.ok) throw new Error("Failed to fetch organization statuses");
         const data = await res.json();
@@ -436,7 +436,7 @@ const Project = () => {
       try {
         const res = await authFetch(
           `${BASE_URL}/api/organizations/by-project/${projectId}/options`,
-          { headers: { "Content-Type": "application/json" } }
+          { headers: { "Content-Type": "application/json" } },
         );
 
         if (!res.ok) {
@@ -457,12 +457,12 @@ const Project = () => {
       try {
         const res = await authFetch(
           `${BASE_URL}/api/project-organizations/active`,
-          { headers: { "Content-Type": "application/json" } }
+          { headers: { "Content-Type": "application/json" } },
         );
         if (!res.ok) throw new Error("Failed to fetch project organizations");
         const data = await res.json();
         const byProject = (Array.isArray(data) ? data : []).filter(
-          (po) => String(po.projectId) === String(projectId)
+          (po) => String(po.projectId) === String(projectId),
         );
         setProjectOrganizations(byProject);
       } catch (e) {
@@ -523,13 +523,13 @@ const Project = () => {
           `${BASE_URL}/api/employee-projects/active`,
           {
             headers: { "Content-Type": "application/json" },
-          }
+          },
         );
 
         const data = await safeReadJson(res);
         const all = Array.isArray(data) ? data : [];
         const byProject = all.filter(
-          (ep) => String(ep.projectId) === String(projectId)
+          (ep) => String(ep.projectId) === String(projectId),
         );
         setProjectParticipants(byProject);
       } catch (e) {
@@ -570,7 +570,7 @@ const Project = () => {
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: formData,
-        }
+        },
       );
 
       if (response.status === 401) {
@@ -594,8 +594,8 @@ const Project = () => {
         prev.map((p) =>
           p.id === normalized.id
             ? { ...p, projectName: normalized.projectName }
-            : p
-        )
+            : p,
+        ),
       );
     } catch (err) {
       console.error(err);
@@ -628,7 +628,7 @@ const Project = () => {
     const prevImages = parseImages(projectDetails);
     const prevCaps = parseCaptions(projectDetails.projectCoverImageCaption);
     const captionByName = new Map(
-      prevImages.map((img, i) => [img, prevCaps[i] ?? ""])
+      prevImages.map((img, i) => [img, prevCaps[i] ?? ""]),
     );
 
     try {
@@ -636,7 +636,7 @@ const Project = () => {
         `${BASE_URL}/api/projects/${
           projectDetails.id
         }/cover-image/${encodeURIComponent(filename)}`,
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
 
       if (!response.ok) {
@@ -649,12 +649,12 @@ const Project = () => {
 
       // rebuild captions for remaining images using old mapping
       const rebuiltCaps = updatedImages.map(
-        (img) => captionByName.get(img) ?? ""
+        (img) => captionByName.get(img) ?? "",
       );
       const rebuiltCaptionString = buildCaptionString(rebuiltCaps);
 
       const backendCaps = parseCaptions(
-        updatedProjectRaw?.projectCoverImageCaption
+        updatedProjectRaw?.projectCoverImageCaption,
       );
 
       // If backend wiped or shortened captions, override with rebuilt
@@ -679,7 +679,7 @@ const Project = () => {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(finalProject),
-            }
+            },
           );
 
           if (persistRes.ok) {
@@ -711,8 +711,8 @@ const Project = () => {
         prev.map((p) =>
           p.id === finalProject.id
             ? { ...p, projectName: finalProject.projectName }
-            : p
-        )
+            : p,
+        ),
       );
     } catch (err) {
       console.error(err);
@@ -730,12 +730,12 @@ const Project = () => {
 
   const handleRemoveSectorClick = async (sectorId) => {
     const link = currentProjectSectorLinks.find(
-      (l) => String(l.sectorId) === String(sectorId)
+      (l) => String(l.sectorId) === String(sectorId),
     );
 
     if (!link) {
       setSelectedSectorIds((prev) =>
-        prev.filter((id) => String(id) !== String(sectorId))
+        prev.filter((id) => String(id) !== String(sectorId)),
       );
       return;
     }
@@ -747,15 +747,15 @@ const Project = () => {
         `${BASE_URL}/api/project-sectors/${link.id}`,
         {
           method: "DELETE",
-        }
+        },
       );
       if (!res.ok) throw new Error("Failed to delete sector link");
 
       setCurrentProjectSectorLinks((prev) =>
-        prev.filter((l) => l.id !== link.id)
+        prev.filter((l) => l.id !== link.id),
       );
       setSelectedSectorIds((prev) =>
-        prev.filter((id) => String(id) !== String(sectorId))
+        prev.filter((id) => String(id) !== String(sectorId)),
       );
     } catch (e) {
       console.error(e);
@@ -788,12 +788,12 @@ const Project = () => {
 
       const reloadPO = await authFetch(
         `${BASE_URL}/api/project-organizations/active`,
-        { headers: { "Content-Type": "application/json" } }
+        { headers: { "Content-Type": "application/json" } },
       );
       if (reloadPO.ok) {
         const data = await reloadPO.json();
         const byProject = (Array.isArray(data) ? data : []).filter(
-          (po) => String(po.projectId) === String(projectId)
+          (po) => String(po.projectId) === String(projectId),
         );
         setProjectOrganizations(byProject);
       }
@@ -812,12 +812,12 @@ const Project = () => {
     try {
       const res = await authFetch(
         `${BASE_URL}/api/project-organizations/${projectOrgId}`,
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
       if (!res.ok) throw new Error("Failed to delete project organization.");
 
       setProjectOrganizations((prev) =>
-        prev.filter((po) => po.id !== projectOrgId)
+        prev.filter((po) => po.id !== projectOrgId),
       );
     } catch (e) {
       console.error(e);
@@ -828,7 +828,7 @@ const Project = () => {
   // ✅ Participants: helper to get employee's position id from EmployeeDTO
   const getEmployeePositionId = (employeeId) => {
     const e = (employeeOptions || []).find(
-      (x) => String(x.id) === String(employeeId)
+      (x) => String(x.id) === String(employeeId),
     );
     if (!e) return null;
 
@@ -853,7 +853,7 @@ const Project = () => {
     const positionId = getEmployeePositionId(selectedEmployeeId);
     if (!positionId) {
       setParticipantError(
-        "Could not find this employee's positionId. Make sure EmployeeDTO includes positionId (or position.id)."
+        "Could not find this employee's positionId. Make sure EmployeeDTO includes positionId (or position.id).",
       );
       return;
     }
@@ -881,12 +881,12 @@ const Project = () => {
         `${BASE_URL}/api/employee-projects/active`,
         {
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
       const data = await safeReadJson(reload);
       const all = Array.isArray(data) ? data : [];
       const byProject = all.filter(
-        (ep) => String(ep.projectId) === String(projectDetails.id)
+        (ep) => String(ep.projectId) === String(projectDetails.id),
       );
       setProjectParticipants(byProject);
 
@@ -903,7 +903,7 @@ const Project = () => {
     try {
       const res = await authFetch(
         `${BASE_URL}/api/employee-projects/${participantId}`,
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
       if (!res.ok) {
         const msg = await res.text().catch(() => "");
@@ -911,7 +911,7 @@ const Project = () => {
       }
 
       setProjectParticipants((prev) =>
-        prev.filter((p) => p.id !== participantId)
+        prev.filter((p) => p.id !== participantId),
       );
     } catch (e) {
       console.error(e);
@@ -932,7 +932,7 @@ const Project = () => {
     try {
       const response = await authFetch(
         `${BASE_URL}/api/projects/${projectDetails.id}`,
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
 
       if (!response.ok) throw new Error("Failed to delete project");
@@ -940,7 +940,7 @@ const Project = () => {
       alert("Project deleted successfully!");
 
       const updatedProjects = projects.filter(
-        (p) => p.id !== projectDetails.id
+        (p) => p.id !== projectDetails.id,
       );
       setProjects(updatedProjects);
 
@@ -965,16 +965,16 @@ const Project = () => {
 
   const syncProjectSectors = async (projectId) => {
     const currentBySectorId = new Map(
-      currentProjectSectorLinks.map((l) => [String(l.sectorId), l])
+      currentProjectSectorLinks.map((l) => [String(l.sectorId), l]),
     );
 
     const selectedSet = new Set(selectedSectorIds.map(String));
 
     const toAdd = [...selectedSet].filter(
-      (sid) => !currentBySectorId.has(String(sid))
+      (sid) => !currentBySectorId.has(String(sid)),
     );
     const toRemove = currentProjectSectorLinks.filter(
-      (l) => !selectedSet.has(String(l.sectorId))
+      (l) => !selectedSet.has(String(l.sectorId)),
     );
 
     for (const sid of toAdd) {
@@ -1001,7 +1001,7 @@ const Project = () => {
       try {
         const res = await authFetch(
           `${BASE_URL}/api/project-sectors/${link.id}`,
-          { method: "DELETE" }
+          { method: "DELETE" },
         );
         if (!res.ok) throw new Error("Failed to delete sector link");
       } catch (e) {
@@ -1016,7 +1016,7 @@ const Project = () => {
       });
       const links = res.ok ? await res.json() : [];
       const byProject = (Array.isArray(links) ? links : []).filter(
-        (ps) => String(ps.projectId) === String(projectId)
+        (ps) => String(ps.projectId) === String(projectId),
       );
       setCurrentProjectSectorLinks(byProject);
       setSelectedSectorIds(byProject.map((ps) => String(ps.sectorId)));
@@ -1036,7 +1036,7 @@ const Project = () => {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(projectDetails),
-        }
+        },
       );
 
       const text = await response.text();
@@ -1052,7 +1052,7 @@ const Project = () => {
         if (data) {
           if (data.fieldErrors) setFieldErrors(data.fieldErrors);
           setFormError(
-            data.message || "There was a problem updating the project."
+            data.message || "There was a problem updating the project.",
           );
         } else {
           setFormError("There was a problem updating the project.");
@@ -1070,8 +1070,8 @@ const Project = () => {
           prevProjects.map((proj) =>
             proj.id === updatedProject.id
               ? { ...proj, projectName: updatedProject.projectName }
-              : proj
-          )
+              : proj,
+          ),
         );
       }
 
@@ -1088,7 +1088,7 @@ const Project = () => {
 
   const getSectorLabel = (id) => {
     const s = sectorOptions.find(
-      (x) => String(x.id ?? x.sectorId ?? x.sector_id) === String(id)
+      (x) => String(x.id ?? x.sectorId ?? x.sector_id) === String(id),
     );
     return (
       s?.sectorDescription ||
@@ -1101,7 +1101,7 @@ const Project = () => {
 
   const getOrgLabel = (id) => {
     const o = allOrganizationOptions.find(
-      (opt) => String(opt.id ?? opt.organizationId) === String(id)
+      (opt) => String(opt.id ?? opt.organizationId) === String(id),
     );
     return (
       o?.name ||
@@ -1115,8 +1115,8 @@ const Project = () => {
     const s = orgStatusOptions.find(
       (opt) =>
         String(
-          opt.id ?? opt.organizationStatusId ?? opt.organization_status_id
-        ) === String(id)
+          opt.id ?? opt.organizationStatusId ?? opt.organization_status_id,
+        ) === String(id),
     );
     return (
       s?.organizationStatusName ||
@@ -1159,7 +1159,7 @@ const Project = () => {
       Array.isArray(orgStatusOptions) ? orgStatusOptions : []
     )
       .map((s) =>
-        String(s.id ?? s.organizationStatusId ?? s.organization_status_id)
+        String(s.id ?? s.organizationStatusId ?? s.organization_status_id),
       )
       .filter(Boolean);
 
@@ -1176,7 +1176,7 @@ const Project = () => {
 
         if (!usedByOrg.has(orgId)) usedByOrg.set(orgId, new Set());
         usedByOrg.get(orgId).add(statusId);
-      }
+      },
     );
 
     return allOrgs.filter((o) => {
@@ -1196,35 +1196,11 @@ const Project = () => {
     const all = Array.isArray(employeeOptions) ? employeeOptions : [];
     const used = new Set(
       (Array.isArray(projectParticipants) ? projectParticipants : []).map((p) =>
-        String(p.employeeId)
-      )
+        String(p.employeeId),
+      ),
     );
     return all.filter((e) => !used.has(String(e.id)));
   }, [employeeOptions, projectParticipants]);
-
-  const pillStyle = {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "6px",
-    padding: "4px 10px",
-    margin: "6px 6px 0 0",
-    borderRadius: "999px",
-    border: "1px solid rgba(74,144,226,0.25)",
-    fontSize: "12px",
-    lineHeight: 1.6,
-    background: "rgba(74,144,226,0.08)",
-  };
-
-  const pillBtnStyle = {
-    border: "none",
-    background: "transparent",
-    cursor: "pointer",
-    fontSize: "14px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 0,
-  };
 
   const hasProject = Boolean(projectDetails);
 
@@ -1380,11 +1356,12 @@ const Project = () => {
                             type="button"
                             onClick={() =>
                               setCurrentImageIndex((prev) =>
-                                prev === 0 ? imageNames.length - 1 : prev - 1
+                                prev === 0 ? imageNames.length - 1 : prev - 1,
                               )
                             }
                             aria-label="Previous image"
-                            className={styles.iconCircleBtn}
+                            className={`${styles.actionBtn} ${styles.iconOnlyBtn}`}
+                            title="Previous image"
                           >
                             <FiChevronLeft />
                           </button>
@@ -1397,11 +1374,12 @@ const Project = () => {
                             type="button"
                             onClick={() =>
                               setCurrentImageIndex((prev) =>
-                                prev === imageNames.length - 1 ? 0 : prev + 1
+                                prev === imageNames.length - 1 ? 0 : prev + 1,
                               )
                             }
                             aria-label="Next image"
-                            className={styles.iconCircleBtn}
+                            className={`${styles.actionBtn} ${styles.iconOnlyBtn}`}
+                            title="Next image"
                           >
                             <FiChevronRight />
                           </button>
@@ -1456,7 +1434,7 @@ const Project = () => {
                             <button
                               type="button"
                               onClick={() => handleDeleteImage(name)}
-                              className={styles.dangerIconBtn}
+                              className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.iconOnlyBtn}`}
                               aria-label={`Delete image ${name}`}
                               title={`Delete image ${name}`}
                             >
@@ -1857,7 +1835,7 @@ const Project = () => {
                             ) : (
                               sectorOptions.map((s) => {
                                 const idStr = String(
-                                  s.id ?? s.sectorId ?? s.sector_id
+                                  s.id ?? s.sectorId ?? s.sector_id,
                                 );
                                 const label =
                                   s.sectorDescription ||
@@ -1879,7 +1857,7 @@ const Project = () => {
                                       onChange={(e) =>
                                         handleToggleSector(
                                           idStr,
-                                          e.target.checked
+                                          e.target.checked,
                                         )
                                       }
                                     />
@@ -1893,16 +1871,16 @@ const Project = () => {
                           <div style={{ marginTop: 8 }}>
                             {selectedSectorIds.length > 0 ? (
                               selectedSectorIds.map((sid) => (
-                                <span key={sid} style={pillStyle}>
-                                  {getSectorLabel(sid)}
+                                <span key={sid} className={styles.pill}>
+                                  <span>{getSectorLabel(sid)}</span>
                                   <button
                                     type="button"
                                     onClick={() => handleRemoveSectorClick(sid)}
                                     aria-label={`Remove sector ${getSectorLabel(
-                                      sid
+                                      sid,
                                     )}`}
                                     title="Remove sector"
-                                    style={pillBtnStyle}
+                                    className={styles.pillRemoveBtn}
                                   >
                                     <FiX />
                                   </button>
@@ -1942,7 +1920,7 @@ const Project = () => {
                                       </div>
                                       <div className={styles.orgStatus}>
                                         {getOrgStatusLabel(
-                                          po.organizationStatusId
+                                          po.organizationStatusId,
                                         )}
                                       </div>
                                     </div>
@@ -1951,7 +1929,7 @@ const Project = () => {
                                       onClick={() =>
                                         handleDeleteProjectOrganization(po.id)
                                       }
-                                      className={styles.dangerIconBtn}
+                                      className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.iconOnlyBtn}`}
                                       aria-label="Remove organization from project"
                                       title="Remove organization"
                                     >
@@ -2061,7 +2039,7 @@ const Project = () => {
                                     onClick={() =>
                                       handleDeleteParticipant(p.id)
                                     }
-                                    className={styles.dangerIconBtn}
+                                    className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.iconOnlyBtn}`}
                                     aria-label="Remove participant from project"
                                     title="Remove participant"
                                   >
