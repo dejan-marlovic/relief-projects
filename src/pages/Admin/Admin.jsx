@@ -1,5 +1,3 @@
-// src/components/Admin/Admin.jsx
-
 import React, { useMemo, useState } from "react";
 import styles from "./Admin.module.scss";
 
@@ -21,17 +19,48 @@ import CreateOrganization from "../Admin/CreateOrganization/CreateOrganization";
 import CreateProjectType from "../Admin/CreateProjectType/CreateProjectType";
 import CreateSector from "../Admin/CreateSector/CreateSector";
 
-import CreateTransactionStatus from "../Admin/CreateTransactionStatus/CreateTransactionStatus"; // ✅ NEW
+import CreateTransactionStatus from "../Admin/CreateTransactionStatus/CreateTransactionStatus";
+
+import DeleteUser from "../Admin/DeleteUser/DeleteUser";
+import UpdateUser from "../Admin/UpdateUser/UpdateUser";
+import RestoreUser from "../Admin/RestoreUser/RestoreUser";
 
 import RegisterProject from "../RegisterProject/RegisterProject";
 
 const Admin = () => {
-  // Which "create screen" is currently selected
-  const [entity, setEntity] = useState("position");
+  const [action, setAction] = useState("create");
 
-  // Choose which component to render
+  const [createEntity, setCreateEntity] = useState("position");
+  const [deleteEntity, setDeleteEntity] = useState("user");
+  const [updateEntity, setUpdateEntity] = useState("user");
+  const [restoreEntity, setRestoreEntity] = useState("user");
+
   const SelectedComponent = useMemo(() => {
-    switch (entity) {
+    if (action === "delete") {
+      switch (deleteEntity) {
+        case "user":
+        default:
+          return DeleteUser;
+      }
+    }
+
+    if (action === "update") {
+      switch (updateEntity) {
+        case "user":
+        default:
+          return UpdateUser;
+      }
+    }
+
+    if (action === "restore") {
+      switch (restoreEntity) {
+        case "user":
+        default:
+          return RestoreUser;
+      }
+    }
+
+    switch (createEntity) {
       case "project":
         return RegisterProject;
 
@@ -56,7 +85,7 @@ const Admin = () => {
       case "sector":
         return CreateSector;
 
-      case "transactionStatus": // ✅ NEW
+      case "transactionStatus":
         return CreateTransactionStatus;
 
       case "projectStatus":
@@ -75,63 +104,154 @@ const Admin = () => {
       default:
         return CreatePosition;
     }
-  }, [entity]);
+  }, [action, createEntity, deleteEntity, updateEntity, restoreEntity]);
+
+  const handleActionChange = (e) => {
+    setAction(e.target.value);
+  };
+
+  const currentEntityValue =
+    action === "create"
+      ? createEntity
+      : action === "delete"
+        ? deleteEntity
+        : action === "update"
+          ? updateEntity
+          : restoreEntity;
+
+  const handleEntityChange = (e) => {
+    const { value } = e.target;
+
+    if (action === "create") setCreateEntity(value);
+    if (action === "delete") setDeleteEntity(value);
+    if (action === "update") setUpdateEntity(value);
+    if (action === "restore") setRestoreEntity(value);
+  };
 
   return (
     <div className={styles.adminContainer}>
-      {/* Selector bar */}
       <div className={styles.selectorCard}>
         <div className={styles.selectorRow}>
           <div className={styles.selectorText}>
             <div className={styles.selectorTitle}>Admin</div>
             <div className={styles.selectorSubtitle}>
-              Choose what you want to create.
+              Choose an action first, then choose an entity.
             </div>
           </div>
 
           <div className={styles.selectorControl}>
-            <label className={styles.selectorLabel} htmlFor="adminEntitySelect">
-              Create entity
-            </label>
-            <select
-              id="adminEntitySelect"
-              className={styles.selectInput}
-              value={entity}
-              onChange={(e) => setEntity(e.target.value)}
-            >
-              {/* Master data */}
-              <option value="position">Position (master data)</option>
-              <option value="currency">Currency (master data)</option>
-              <option value="exchangeRate">Exchange Rate (master data)</option>
-              <option value="costType">Cost Type (master data)</option>
-              <option value="cost">Cost (master data)</option>
-              <option value="projectType">Project Type (master data)</option>
-              <option value="sector">Sector (master data)</option>
-              <option value="transactionStatus">
-                Transaction Status (master data)
-              </option>{" "}
-              {/* ✅ NEW */}
-              <option value="projectStatus">
-                Project Status (master data)
-              </option>
-              <option value="organizationStatus">
-                Organization Status (master data)
-              </option>
-              <option value="address">Address (master data)</option>
-              {/* Core entities */}
-              <option value="organization">Organization</option>
-              <option value="project">Project</option>
-              <option value="employee">Employee</option>
-              <option value="user">User (login)</option>
-            </select>
+            <div className={styles.toolbarRow}>
+              <div className={styles.actionCard}>
+                <span className={styles.selectorLabel}>Action:</span>
+
+                <div className={styles.actionOptions}>
+                  <label className={styles.radioOption}>
+                    <input
+                      type="radio"
+                      name="adminAction"
+                      value="create"
+                      checked={action === "create"}
+                      onChange={handleActionChange}
+                    />
+                    <span>Create</span>
+                  </label>
+
+                  <label className={styles.radioOption}>
+                    <input
+                      type="radio"
+                      name="adminAction"
+                      value="delete"
+                      checked={action === "delete"}
+                      onChange={handleActionChange}
+                    />
+                    <span>Delete</span>
+                  </label>
+
+                  <label className={styles.radioOption}>
+                    <input
+                      type="radio"
+                      name="adminAction"
+                      value="update"
+                      checked={action === "update"}
+                      onChange={handleActionChange}
+                    />
+                    <span>Update</span>
+                  </label>
+
+                  <label className={styles.radioOption}>
+                    <input
+                      type="radio"
+                      name="adminAction"
+                      value="restore"
+                      checked={action === "restore"}
+                      onChange={handleActionChange}
+                    />
+                    <span>Restore</span>
+                  </label>
+                </div>
+              </div>
+
+              <label
+                className={styles.selectorLabel}
+                htmlFor="adminEntitySelect"
+              >
+                {action === "create" && "Create entity:"}
+                {action === "delete" && "Delete entity:"}
+                {action === "update" && "Update entity:"}
+                {action === "restore" && "Restore entity:"}
+              </label>
+
+              <select
+                id="adminEntitySelect"
+                className={styles.selectInput}
+                value={currentEntityValue}
+                onChange={handleEntityChange}
+              >
+                {action === "create" && (
+                  <>
+                    <option value="position">Position (master data)</option>
+                    <option value="currency">Currency (master data)</option>
+                    <option value="exchangeRate">
+                      Exchange Rate (master data)
+                    </option>
+                    <option value="costType">Cost Type (master data)</option>
+                    <option value="cost">Cost (master data)</option>
+                    <option value="projectType">
+                      Project Type (master data)
+                    </option>
+                    <option value="sector">Sector (master data)</option>
+                    <option value="transactionStatus">
+                      Transaction Status (master data)
+                    </option>
+                    <option value="projectStatus">
+                      Project Status (master data)
+                    </option>
+                    <option value="organizationStatus">
+                      Organization Status (master data)
+                    </option>
+                    <option value="address">Address (master data)</option>
+                    <option value="organization">Organization</option>
+                    <option value="project">Project</option>
+                    <option value="employee">Employee</option>
+                    <option value="user">User (login)</option>
+                  </>
+                )}
+
+                {(action === "delete" ||
+                  action === "update" ||
+                  action === "restore") && (
+                  <option value="user">User (login)</option>
+                )}
+              </select>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Render the chosen create form */}
       <div className={styles.content}>
-        {/* key forces a clean remount when switching (resets form state) */}
-        <SelectedComponent key={entity} />
+        <SelectedComponent
+          key={`${action}-${createEntity}-${deleteEntity}-${updateEntity}-${restoreEntity}`}
+        />
       </div>
     </div>
   );
