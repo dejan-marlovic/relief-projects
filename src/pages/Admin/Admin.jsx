@@ -28,15 +28,37 @@ import RestoreUser from "../Admin/RestoreUser/RestoreUser";
 import RegisterProject from "../RegisterProject/RegisterProject";
 
 const Admin = () => {
+  const [action, setAction] = useState("create");
+
   const [createEntity, setCreateEntity] = useState("position");
-  const [deleteEntity, setDeleteEntity] = useState("");
-  const [updateEntity, setUpdateEntity] = useState("");
-  const [restoreEntity, setRestoreEntity] = useState("");
+  const [deleteEntity, setDeleteEntity] = useState("user");
+  const [updateEntity, setUpdateEntity] = useState("user");
+  const [restoreEntity, setRestoreEntity] = useState("user");
 
   const SelectedComponent = useMemo(() => {
-    if (deleteEntity === "user") return DeleteUser;
-    if (updateEntity === "user") return UpdateUser;
-    if (restoreEntity === "user") return RestoreUser;
+    if (action === "delete") {
+      switch (deleteEntity) {
+        case "user":
+        default:
+          return DeleteUser;
+      }
+    }
+
+    if (action === "update") {
+      switch (updateEntity) {
+        case "user":
+        default:
+          return UpdateUser;
+      }
+    }
+
+    if (action === "restore") {
+      switch (restoreEntity) {
+        case "user":
+        default:
+          return RestoreUser;
+      }
+    }
 
     switch (createEntity) {
       case "project":
@@ -82,32 +104,28 @@ const Admin = () => {
       default:
         return CreatePosition;
     }
-  }, [createEntity, deleteEntity, updateEntity, restoreEntity]);
+  }, [action, createEntity, deleteEntity, updateEntity, restoreEntity]);
 
-  const clearOtherActions = (action) => {
-    if (action !== "delete") setDeleteEntity("");
-    if (action !== "update") setUpdateEntity("");
-    if (action !== "restore") setRestoreEntity("");
+  const handleActionChange = (e) => {
+    setAction(e.target.value);
   };
 
-  const handleCreateChange = (e) => {
-    setCreateEntity(e.target.value);
-    clearOtherActions("create");
-  };
+  const currentEntityValue =
+    action === "create"
+      ? createEntity
+      : action === "delete"
+        ? deleteEntity
+        : action === "update"
+          ? updateEntity
+          : restoreEntity;
 
-  const handleDeleteChange = (e) => {
-    setDeleteEntity(e.target.value);
-    clearOtherActions("delete");
-  };
+  const handleEntityChange = (e) => {
+    const { value } = e.target;
 
-  const handleUpdateChange = (e) => {
-    setUpdateEntity(e.target.value);
-    clearOtherActions("update");
-  };
-
-  const handleRestoreChange = (e) => {
-    setRestoreEntity(e.target.value);
-    clearOtherActions("restore");
+    if (action === "create") setCreateEntity(value);
+    if (action === "delete") setDeleteEntity(value);
+    if (action === "update") setUpdateEntity(value);
+    if (action === "restore") setRestoreEntity(value);
   };
 
   return (
@@ -117,100 +135,122 @@ const Admin = () => {
           <div className={styles.selectorText}>
             <div className={styles.selectorTitle}>Admin</div>
             <div className={styles.selectorSubtitle}>
-              Choose what you want to create, delete, update or restore.
+              Choose an action first, then choose an entity.
             </div>
           </div>
 
           <div className={styles.selectorControl}>
-            <label
-              className={styles.selectorLabel}
-              htmlFor="adminCreateEntitySelect"
-            >
-              Create entity
-            </label>
-            <select
-              id="adminCreateEntitySelect"
-              className={styles.selectInput}
-              value={createEntity}
-              onChange={handleCreateChange}
-            >
-              <option value="position">Position (master data)</option>
-              <option value="currency">Currency (master data)</option>
-              <option value="exchangeRate">Exchange Rate (master data)</option>
-              <option value="costType">Cost Type (master data)</option>
-              <option value="cost">Cost (master data)</option>
-              <option value="projectType">Project Type (master data)</option>
-              <option value="sector">Sector (master data)</option>
-              <option value="transactionStatus">
-                Transaction Status (master data)
-              </option>
-              <option value="projectStatus">
-                Project Status (master data)
-              </option>
-              <option value="organizationStatus">
-                Organization Status (master data)
-              </option>
-              <option value="address">Address (master data)</option>
-              <option value="organization">Organization</option>
-              <option value="project">Project</option>
-              <option value="employee">Employee</option>
-              <option value="user">User (login)</option>
-            </select>
+            <div className={styles.toolbarRow}>
+              <div className={styles.actionCard}>
+                <span className={styles.selectorLabel}>Action</span>
 
-            <label
-              className={styles.selectorLabel}
-              htmlFor="adminDeleteEntitySelect"
-            >
-              Delete entity
-            </label>
-            <select
-              id="adminDeleteEntitySelect"
-              className={styles.selectInput}
-              value={deleteEntity}
-              onChange={handleDeleteChange}
-            >
-              <option value="">Select entity to delete</option>
-              <option value="user">User (login)</option>
-            </select>
+                <div className={styles.actionOptions}>
+                  <label className={styles.radioOption}>
+                    <input
+                      type="radio"
+                      name="adminAction"
+                      value="create"
+                      checked={action === "create"}
+                      onChange={handleActionChange}
+                    />
+                    <span>Create</span>
+                  </label>
 
-            <label
-              className={styles.selectorLabel}
-              htmlFor="adminUpdateEntitySelect"
-            >
-              Update entity
-            </label>
-            <select
-              id="adminUpdateEntitySelect"
-              className={styles.selectInput}
-              value={updateEntity}
-              onChange={handleUpdateChange}
-            >
-              <option value="">Select entity to update</option>
-              <option value="user">User (login)</option>
-            </select>
+                  <label className={styles.radioOption}>
+                    <input
+                      type="radio"
+                      name="adminAction"
+                      value="delete"
+                      checked={action === "delete"}
+                      onChange={handleActionChange}
+                    />
+                    <span>Delete</span>
+                  </label>
 
-            <label
-              className={styles.selectorLabel}
-              htmlFor="adminRestoreEntitySelect"
-            >
-              Restore entity
-            </label>
-            <select
-              id="adminRestoreEntitySelect"
-              className={styles.selectInput}
-              value={restoreEntity}
-              onChange={handleRestoreChange}
-            >
-              <option value="">Select entity to restore</option>
-              <option value="user">User (login)</option>
-            </select>
+                  <label className={styles.radioOption}>
+                    <input
+                      type="radio"
+                      name="adminAction"
+                      value="update"
+                      checked={action === "update"}
+                      onChange={handleActionChange}
+                    />
+                    <span>Update</span>
+                  </label>
+
+                  <label className={styles.radioOption}>
+                    <input
+                      type="radio"
+                      name="adminAction"
+                      value="restore"
+                      checked={action === "restore"}
+                      onChange={handleActionChange}
+                    />
+                    <span>Restore</span>
+                  </label>
+                </div>
+              </div>
+
+              <label
+                className={styles.selectorLabel}
+                htmlFor="adminEntitySelect"
+              >
+                {action === "create" && "Create entity"}
+                {action === "delete" && "Delete entity"}
+                {action === "update" && "Update entity"}
+                {action === "restore" && "Restore entity"}
+              </label>
+
+              <select
+                id="adminEntitySelect"
+                className={styles.selectInput}
+                value={currentEntityValue}
+                onChange={handleEntityChange}
+              >
+                {action === "create" && (
+                  <>
+                    <option value="position">Position (master data)</option>
+                    <option value="currency">Currency (master data)</option>
+                    <option value="exchangeRate">
+                      Exchange Rate (master data)
+                    </option>
+                    <option value="costType">Cost Type (master data)</option>
+                    <option value="cost">Cost (master data)</option>
+                    <option value="projectType">
+                      Project Type (master data)
+                    </option>
+                    <option value="sector">Sector (master data)</option>
+                    <option value="transactionStatus">
+                      Transaction Status (master data)
+                    </option>
+                    <option value="projectStatus">
+                      Project Status (master data)
+                    </option>
+                    <option value="organizationStatus">
+                      Organization Status (master data)
+                    </option>
+                    <option value="address">Address (master data)</option>
+                    <option value="organization">Organization</option>
+                    <option value="project">Project</option>
+                    <option value="employee">Employee</option>
+                    <option value="user">User (login)</option>
+                  </>
+                )}
+
+                {(action === "delete" ||
+                  action === "update" ||
+                  action === "restore") && (
+                  <option value="user">User (login)</option>
+                )}
+              </select>
+            </div>
           </div>
         </div>
       </div>
 
       <div className={styles.content}>
         <SelectedComponent
-          key={deleteEntity || updateEntity || restoreEntity || createEntity}
+          key={`${action}-${createEntity}-${deleteEntity}-${updateEntity}-${restoreEntity}`}
         />
       </div>
     </div>
