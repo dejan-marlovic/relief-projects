@@ -44,33 +44,106 @@ $primary: #4a90e2;
 .selectorControl {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  min-width: 300px;
+  gap: 0.75rem;
+  min-width: 760px;
 }
 
 .selectorLabel {
   @include forms.form-label;
-  display: block;
-  margin-bottom: 0;
+  display: inline-block;
+  white-space: nowrap;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.toolbarRow {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  flex-wrap: nowrap;
+}
+
+.actionCard {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.9rem;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid rgba(74, 144, 226, 0.16);
+  border-radius: 12px;
+  background: rgba(74, 144, 226, 0.04);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  flex: 0 0 auto;
+}
+
+.actionOptions {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 1rem;
+  flex: 0 0 auto;
+}
+
+.radioOption {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  white-space: nowrap;
+  cursor: pointer;
+  color: #374151;
+  font-size: 0.95rem;
+  line-height: 1.2;
+
+  input[type="radio"] {
+    margin: 0;
+    accent-color: $primary;
+    cursor: pointer;
+    align-self: baseline;
+  }
+
+  span {
+    display: inline-block;
+    line-height: 1.2;
+  }
 }
 
 .selectInput {
   @include forms.text-input;
   margin-bottom: 0;
   background: #fff;
+  min-width: 280px;
+  flex: 1 1 auto;
+  align-self: baseline;
 }
 
 .content {
-  /* Keep this empty; CreatePosition/RegisterProject already have their own layout */
+  /* Keep this empty; inner admin forms already have their own layout */
 }
 
-@media (max-width: 640px) {
+@media (max-width: 1200px) {
   .selectorRow {
     flex-direction: column;
     align-items: stretch;
   }
 
   .selectorControl {
+    min-width: unset;
+  }
+
+  .toolbarRow {
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+  }
+
+  .actionCard {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .actionOptions {
+    flex-wrap: wrap;
+  }
+
+  .selectInput {
+    width: 100%;
     min-width: unset;
   }
 }
