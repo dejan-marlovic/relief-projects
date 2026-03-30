@@ -142,7 +142,7 @@ const Admin = () => {
           <div className={styles.selectorControl}>
             <div className={styles.toolbarRow}>
               <div className={styles.actionCard}>
-                <span className={styles.selectorLabel}>Action</span>
+                <span className={styles.selectorLabel}>Action:</span>
 
                 <div className={styles.actionOptions}>
                   <label className={styles.radioOption}>
@@ -195,10 +195,10 @@ const Admin = () => {
                 className={styles.selectorLabel}
                 htmlFor="adminEntitySelect"
               >
-                {action === "create" && "Create entity"}
-                {action === "delete" && "Delete entity"}
-                {action === "update" && "Update entity"}
-                {action === "restore" && "Restore entity"}
+                {action === "create" && "Create entity:"}
+                {action === "delete" && "Delete entity:"}
+                {action === "update" && "Update entity:"}
+                {action === "restore" && "Restore entity:"}
               </label>
 
               <select
