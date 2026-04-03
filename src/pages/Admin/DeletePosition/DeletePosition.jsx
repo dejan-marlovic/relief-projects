@@ -195,3 +195,33 @@ So useNavigate belongs to the router library.
 Like other hooks, useNavigate should be called at the top level of the component, not inside conditions or loops.
 */
 import { useNavigate } from "react-router-dom";
+
+//named import pattern, but this time from the react-icons library.
+/*
+these:
+
+FiTrash2
+FiRefreshCw
+FiAlertCircle
+FiBriefcase
+
+are React components that render SVG icons.
+
+//react-icons = the icon library package
+// /fi = the Feather Icons set inside that package
+//import icons from the Feather icon collection
+
+Why do they look like React components?
+
+Because they are React components.
+
+Instead of manually drawing icons with SVG code, you import ready-made icon components and place them in your UI.
+*/
+import {
+  FiTrash2,
+  FiRefreshCw,
+  FiAlertCircle,
+  FiBriefcase,
+} from "react-icons/fi";
+
+import styles from "./DeletePosition.module.scss";
