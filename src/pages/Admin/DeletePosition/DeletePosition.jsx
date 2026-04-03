@@ -1,0 +1,197 @@
+//ES module import pattern in React
+//It combines two kinds of imports from the same module:
+//Default import → React
+//Named imports → useEffect, useMemo, useState
+//react in this case is module name
+//pattern is: import DefaultThing, { namedThing1, namedThing2 } from "module-name";
+//React is the main React library
+//hooks like useState, useEffect, and useMemo are functions provided by the React package
+
+//useState
+
+//Lets a component store and update local state.
+/*
+Use it when:
+
+input values change
+dropdown selections change
+loading flags change
+fetched data should be stored
+*/
+
+/*
+useEffect
+
+Lets you run side effects after render.
+
+Use it for:
+
+fetching data from API
+adding/removing event listeners
+syncing something after render
+reacting to dependency changes
+*/
+
+/*
+useMemo
+
+Memoizes a computed value so React does not recalculate it on every render unless dependencies change.
+
+Use it when:
+
+calculation is a bit expensive
+you want stable derived values between renders
+you want to avoid unnecessary recalculation
+ */
+import React, { useEffect, useMemo, useState } from "react";
+
+//useNavigate gives you a function that lets you send the user to another route in code.
+//const navigate = useNavigate();
+//Now navigate is a function we can use like this:
+//navigate("/login");
+//We use useNavigate when navigation should happen because of some logic, not just because the user
+
+/*
+rendering in React means React is figuring out what should appear on the screen right now.
+A React component is basically a function that says:
+
+“Based on the current data, this is the UI I want to show.”
+
+Rendering = building the visible UI from your component code
+
+So React looks at:
+
+your component
+your state
+your props
+
+and then decides:
+
+what text to show
+what buttons to show
+what lists to show
+what classes or styles to apply
+
+Your component says:
+
+if loading → show "Loading..."
+if user exists → show "Welcome Dejan"
+if no user → show "Please log in"
+
+React checks the current situation and puts the right thing on the screen.
+
+That process is rendering.
+
+React runs the component function again when something changes
+
+So rendering is not only the first display.
+It also happens again when data change
+
+
+Important simple idea
+
+React rendering does not mean the whole browser page reloads.
+
+It usually means:
+
+React runs your component again
+compares old UI with new UI
+updates only the parts that changed
+
+So if only one number changes, React usually only updates that small part.
+
+“Render” in plain words
+
+You can think of it as:
+
+read the component
+calculate what the UI should look like
+show or update it
+
+First render
+
+The component appears for the first time.
+
+Example:
+
+<UserCard />
+
+React renders it and shows it.
+
+Re-render
+
+The component runs again because something changed.
+
+Usually because:
+
+state changed
+props changed
+parent re-rendered
+
+Important distinction
+Rendering is not the same as:
+clicking
+fetching
+saving to database
+side effects
+
+Those things may cause a render, but they are not the render itself.
+
+For example:
+
+click button
+button updates state
+state change causes render
+
+So the render is the UI update part.
+
+
+Tiny mental model
+
+A component is like this:
+
+UI = f(data)
+
+Meaning:
+
+The UI is a function of the current data.
+
+If data changes, React runs the function again and gets new UI.
+
+That is the core idea of rendering.
+
+So understanding rendering helps explain:
+
+why components run again
+why console.log may print multiple times
+why useMemo can help
+why unnecessary re-renders matter sometimes
+
+One sentence summary
+
+In plain language, rendering in React means React reading your component and deciding what 
+should be shown on the screen based on the current data.
+
+=======================
+
+React handles:
+
+components
+state
+rendering
+effects
+
+react-router-dom handles:
+
+URLs
+routes
+page navigation
+route params
+browser history
+
+So useNavigate belongs to the router library.
+
+
+Like other hooks, useNavigate should be called at the top level of the component, not inside conditions or loops.
+*/
+import { useNavigate } from "react-router-dom";
