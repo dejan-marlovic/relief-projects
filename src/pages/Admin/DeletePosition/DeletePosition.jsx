@@ -225,3 +225,10 @@ import {
 } from "react-icons/fi";
 
 import styles from "./DeletePosition.module.scss";
+import { BASE_URL } from "../../../config/api";
+
+import { createAuthFetch, safeReadJson } from "../../../utils/http";
+
+const DeletePosition = () => {};
+
+export default DeletePosition;
