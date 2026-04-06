@@ -139,9 +139,9 @@ Those things may cause a render, but they are not the render itself.
 
 For example:
 
-click button
-button updates state
-state change causes render
+1. click button
+2. button updates state
+3. state change causes render
 
 So the render is the UI update part.
 
@@ -229,6 +229,54 @@ import { BASE_URL } from "../../../config/api";
 
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
 
-const DeletePosition = () => {};
+const DeletePosition = () => {
+  const navigate = useNavigate();
+
+  //function React can call to calculate the memoized value.
+  //That means authFetch becomes whatever createAuthFetch(navigate) returns, probably a custom fetch function.
+  //Build my authFetch function once, and do not rebuild it on every render unless navigate changes
+  //authFetch is a memoized function value. Because createAuthFetch(navigate) returns a function
+  //That returned function is what gets stored in authFetch.
+  /*
+    React does this:
+
+    1. calls createAuthFetch(navigate)
+    2. gets back an async function
+    3. stores that returned function as the memoized value
+    4. puts that stored function into authFetch
+
+    So later, when you do:
+
+    await authFetch(url, options);
+    authFetch becomes a memoized function reference.
+  */
+  const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
+
+  const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const [positions, setPositions] = useState([]);
+
+  const [selectedPositionId, setSelectedPositionId] = useState("");
+
+  const [formError, setFormError] = useState("");
+  const [sucessMessage, setSuccessMessage] = useState("");
+
+  const selectedPosition = useMemo(() => {
+    const id = Number(selectedPositionId);
+    if (!id) return null;
+    return positions.find((position) => position.id === id) || null;
+  }, [selectedPositionId, positions]);
+
+  const loadPositions = async () => {
+    try {
+      setLoading(true);
+      setFormError("");
+      setSuccessMessage("");
+    } catch (err) {
+    } finally {
+    }
+  };
+};
 
 export default DeletePosition;
