@@ -273,10 +273,90 @@ const DeletePosition = () => {
       setLoading(true);
       setFormError("");
       setSuccessMessage("");
+
+      const res = await authFetch(`${BASE_URL}/api/positions/active`, {
+        headers: { "Content-Type": "application/json" },
+      });
+      //no content check
+      if (!res.ok) {
+        const data = await safeReadJson(res);
+        setPositions([]);
+        setFormError(
+          data?.message || data?.detail || "Failed to load active postions",
+        );
+        return;
+      }
+      const data = await safeReadJson(res);
+
+      const nextPositions = Array.isArray(data) ? data : [];
+
+      setPositions(nextPositions);
+
+      // if selected postion no longer exists in refreshed list -> Clear it
+      //If the user currently has a selected position id, but that id is no longer found
+      // in the newly fetched positions list, clear the selection
+      if (
+        selectedPositionId &&
+        //There is not any position in the new array with this selected id
+        !nextPositions.some(
+          //This checks whether at least one position in nextPositions matches the condition.
+          (position) => position.id === Number(selectedPositionId),
+        )
+      ) {
+        setSelectedPositionId("");
+      }
     } catch (err) {
+      //print both my custom message and the actual error
+      console.error("Failed to load active positions:", err);
+      setPositions([]);
+      setFormError(err?.message || "Unexpected error while loading positions");
     } finally {
+      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    //After this component appears on the screen the first time, call loadPositions() once.
+    /*
+    With useEffect:
+
+    component renders
+    useEffect runs after render
+    loadPositions() fetches positions
+    setPositions(nextPositions) updates state
+    React re-renders with the loaded positions
+    */
+    loadPositions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  /*
+  1. First render
+
+    React runs component.
+
+    At this point:
+
+    positions = []
+    loading = false
+    formError = ""
+ 
+  2. useEffect runs
+
+    Because of this:
+
+    useEffect(() => {
+    loadPositions();
+    }, []);
+
+    React runs loadPositions() after the component is mounted.
+
+    Re-render happens
+
+    Because setPositions(...) changed state, React renders the component again.
+
+    Now the UI can show the actual positions.
+
+    */
 };
 
 export default DeletePosition;
