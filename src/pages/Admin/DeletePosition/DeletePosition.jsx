@@ -1,7 +1,8 @@
-//ES module import pattern in React
+//ECMAScript module import pattern in React
 //It combines two kinds of imports from the same module:
 //Default import → React
 //Named imports → useEffect, useMemo, useState
+import React, { useEffect, useMemo, useState } from "react";
 //react in this case is module name
 //pattern is: import DefaultThing, { namedThing1, namedThing2 } from "module-name";
 //React is the main React library
@@ -43,7 +44,6 @@ calculation is a bit expensive
 you want stable derived values between renders
 you want to avoid unnecessary recalculation
  */
-import React, { useEffect, useMemo, useState } from "react";
 
 //useNavigate gives you a function that lets you send the user to another route in code.
 //const navigate = useNavigate();
