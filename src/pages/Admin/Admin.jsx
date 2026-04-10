@@ -22,6 +22,7 @@ import CreateSector from "../Admin/CreateSector/CreateSector";
 import CreateTransactionStatus from "../Admin/CreateTransactionStatus/CreateTransactionStatus";
 
 import DeleteUser from "../Admin/DeleteUser/DeleteUser";
+import DeletePosition from "../Admin/DeletePosition/DeletePosition";
 import UpdateUser from "../Admin/UpdateUser/UpdateUser";
 import RestoreUser from "../Admin/RestoreUser/RestoreUser";
 
@@ -38,6 +39,8 @@ const Admin = () => {
   const SelectedComponent = useMemo(() => {
     if (action === "delete") {
       switch (deleteEntity) {
+        case "position":
+          return DeletePosition;
         case "user":
         default:
           return DeleteUser;
@@ -237,9 +240,14 @@ const Admin = () => {
                   </>
                 )}
 
-                {(action === "delete" ||
-                  action === "update" ||
-                  action === "restore") && (
+                {action === "delete" && (
+                  <>
+                    <option value="position">Position (master data)</option>
+                    <option value="user">User (login)</option>
+                  </>
+                )}
+
+                {(action === "update" || action === "restore") && (
                   <option value="user">User (login)</option>
                 )}
               </select>
