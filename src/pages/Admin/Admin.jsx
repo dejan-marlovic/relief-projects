@@ -28,6 +28,7 @@ import DeleteCurrency from "../Admin/DeleteCurrency/DeleteCurrency";
 import DeleteExchangeRate from "../Admin/DeleteExchangeRate/DeleteExchangeRate";
 import DeleteCostType from "../Admin/DeleteCostType/DeleteCostType";
 import DeleteCost from "../Admin/DeleteCost/DeleteCost";
+import DeleteProjectStatus from "../Admin/DeleteProjectStatus/DeleteProjectStatus";
 
 import UpdateUser from "../Admin/UpdateUser/UpdateUser";
 import RestoreUser from "../Admin/RestoreUser/RestoreUser";
@@ -57,6 +58,8 @@ const Admin = () => {
           return DeleteCostType;
         case "cost":
           return DeleteCost;
+        case "projectStatus":
+          return DeleteProjectStatus;
         case "user":
         default:
           return DeleteUser;
@@ -266,6 +269,9 @@ const Admin = () => {
                     </option>
                     <option value="costType">Cost Type (master data)</option>
                     <option value="cost">Cost (master data)</option>
+                    <option value="projectStatus">
+                      Project Status (master data)
+                    </option>
                     <option value="user">User (login)</option>
                   </>
                 )}
