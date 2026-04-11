@@ -24,6 +24,7 @@ import CreateTransactionStatus from "../Admin/CreateTransactionStatus/CreateTran
 import DeleteUser from "../Admin/DeleteUser/DeleteUser";
 import DeletePosition from "../Admin/DeletePosition/DeletePosition";
 import DeleteEmployee from "../Admin/DeleteEmployee/DeleteEmployee";
+import DeleteCurrency from "../Admin/DeleteCurrency/DeleteCurrency";
 
 import UpdateUser from "../Admin/UpdateUser/UpdateUser";
 import RestoreUser from "../Admin/RestoreUser/RestoreUser";
@@ -45,6 +46,8 @@ const Admin = () => {
           return DeletePosition;
         case "employee":
           return DeleteEmployee;
+        case "currency":
+          return DeleteCurrency;
         case "user":
         default:
           return DeleteUser;
@@ -248,6 +251,7 @@ const Admin = () => {
                   <>
                     <option value="position">Position (master data)</option>
                     <option value="employee">Employee</option>
+                    <option value="currency">Currency (master data)</option>
                     <option value="user">User (login)</option>
                   </>
                 )}
