@@ -23,6 +23,8 @@ import CreateTransactionStatus from "../Admin/CreateTransactionStatus/CreateTran
 
 import DeleteUser from "../Admin/DeleteUser/DeleteUser";
 import DeletePosition from "../Admin/DeletePosition/DeletePosition";
+import DeleteEmployee from "../Admin/DeleteEmployee/DeleteEmployee";
+
 import UpdateUser from "../Admin/UpdateUser/UpdateUser";
 import RestoreUser from "../Admin/RestoreUser/RestoreUser";
 
@@ -41,6 +43,8 @@ const Admin = () => {
       switch (deleteEntity) {
         case "position":
           return DeletePosition;
+        case "employee":
+          return DeleteEmployee;
         case "user":
         default:
           return DeleteUser;
@@ -243,6 +247,7 @@ const Admin = () => {
                 {action === "delete" && (
                   <>
                     <option value="position">Position (master data)</option>
+                    <option value="employee">Employee</option>
                     <option value="user">User (login)</option>
                   </>
                 )}
