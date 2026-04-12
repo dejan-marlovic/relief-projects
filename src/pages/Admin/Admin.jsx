@@ -22,6 +22,22 @@ import CreateSector from "../Admin/CreateSector/CreateSector";
 import CreateTransactionStatus from "../Admin/CreateTransactionStatus/CreateTransactionStatus";
 
 import DeleteUser from "../Admin/DeleteUser/DeleteUser";
+import DeletePosition from "../Admin/DeletePosition/DeletePosition";
+import DeleteEmployee from "../Admin/DeleteEmployee/DeleteEmployee";
+import DeleteCurrency from "../Admin/DeleteCurrency/DeleteCurrency";
+import DeleteExchangeRate from "../Admin/DeleteExchangeRate/DeleteExchangeRate";
+import DeleteCostType from "../Admin/DeleteCostType/DeleteCostType";
+import DeleteCost from "../Admin/DeleteCost/DeleteCost";
+import DeleteProjectType from "../Admin/DeleteProjectType/DeleteProjectType";
+import DeleteSector from "../Admin/DeleteSector/DeleteSector";
+import DeleteProjectStatus from "../Admin/DeleteProjectStatus/DeleteProjectStatus";
+import DeleteOrganizationStatus from "../Admin/DeleteOrganizationStatus/DeleteOrganizationStatus";
+import DeleteAddress from "../Admin/DeleteAddress/DeleteAddress";
+import DeleteOrganization from "../Admin/DeleteOrganization/DeleteOrganization";
+import DeleteProject from "../Admin/DeleteProject/DeleteProject";
+import DeleteBudget from "../Admin/DeleteBudget/DeleteBudget";
+import DeleteDocument from "../Admin/DeleteDocument/DeleteDocument";
+
 import UpdateUser from "../Admin/UpdateUser/UpdateUser";
 import RestoreUser from "../Admin/RestoreUser/RestoreUser";
 
@@ -38,6 +54,36 @@ const Admin = () => {
   const SelectedComponent = useMemo(() => {
     if (action === "delete") {
       switch (deleteEntity) {
+        case "position":
+          return DeletePosition;
+        case "employee":
+          return DeleteEmployee;
+        case "currency":
+          return DeleteCurrency;
+        case "exchangeRate":
+          return DeleteExchangeRate;
+        case "costType":
+          return DeleteCostType;
+        case "cost":
+          return DeleteCost;
+        case "projectType":
+          return DeleteProjectType;
+        case "sector":
+          return DeleteSector;
+        case "projectStatus":
+          return DeleteProjectStatus;
+        case "organizationStatus":
+          return DeleteOrganizationStatus;
+        case "address":
+          return DeleteAddress;
+        case "organization":
+          return DeleteOrganization;
+        case "project":
+          return DeleteProject;
+        case "budget":
+          return DeleteBudget;
+        case "document":
+          return DeleteDocument;
         case "user":
         default:
           return DeleteUser;
@@ -237,9 +283,36 @@ const Admin = () => {
                   </>
                 )}
 
-                {(action === "delete" ||
-                  action === "update" ||
-                  action === "restore") && (
+                {action === "delete" && (
+                  <>
+                    <option value="position">Position (master data)</option>
+                    <option value="employee">Employee</option>
+                    <option value="currency">Currency (master data)</option>
+                    <option value="exchangeRate">
+                      Exchange Rate (master data)
+                    </option>
+                    <option value="costType">Cost Type (master data)</option>
+                    <option value="cost">Cost (master data)</option>
+                    <option value="projectType">
+                      Project Type (master data)
+                    </option>
+                    <option value="sector">Sector (master data)</option>
+                    <option value="projectStatus">
+                      Project Status (master data)
+                    </option>
+                    <option value="organizationStatus">
+                      Organization Status (master data)
+                    </option>
+                    <option value="address">Address (master data)</option>
+                    <option value="organization">Organization</option>
+                    <option value="project">Project</option>
+                    <option value="budget">Budget</option>
+                    <option value="document">Document</option>
+                    <option value="user">User (login)</option>
+                  </>
+                )}
+
+                {(action === "update" || action === "restore") && (
                   <option value="user">User (login)</option>
                 )}
               </select>
