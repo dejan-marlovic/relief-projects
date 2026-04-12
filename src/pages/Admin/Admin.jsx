@@ -28,11 +28,14 @@ import DeleteCurrency from "../Admin/DeleteCurrency/DeleteCurrency";
 import DeleteExchangeRate from "../Admin/DeleteExchangeRate/DeleteExchangeRate";
 import DeleteCostType from "../Admin/DeleteCostType/DeleteCostType";
 import DeleteCost from "../Admin/DeleteCost/DeleteCost";
-import DeleteProjectStatus from "../Admin/DeleteProjectStatus/DeleteProjectStatus";
-import DeleteAddress from "../Admin/DeleteAddress/DeleteAddress";
-import DeleteOrganizationStatus from "../Admin/DeleteOrganizationStatus/DeleteOrganizationStatus";
-import DeleteOrganization from "../Admin/DeleteOrganization/DeleteOrganization";
 import DeleteProjectType from "../Admin/DeleteProjectType/DeleteProjectType";
+import DeleteSector from "../Admin/DeleteSector/DeleteSector";
+import DeleteProjectStatus from "../Admin/DeleteProjectStatus/DeleteProjectStatus";
+import DeleteOrganizationStatus from "../Admin/DeleteOrganizationStatus/DeleteOrganizationStatus";
+import DeleteAddress from "../Admin/DeleteAddress/DeleteAddress";
+import DeleteOrganization from "../Admin/DeleteOrganization/DeleteOrganization";
+import DeleteProject from "../Admin/DeleteProject/DeleteProject";
+import DeleteBudget from "../Admin/DeleteBudget/DeleteBudget";
 
 import UpdateUser from "../Admin/UpdateUser/UpdateUser";
 import RestoreUser from "../Admin/RestoreUser/RestoreUser";
@@ -62,16 +65,22 @@ const Admin = () => {
           return DeleteCostType;
         case "cost":
           return DeleteCost;
+        case "projectType":
+          return DeleteProjectType;
+        case "sector":
+          return DeleteSector;
         case "projectStatus":
           return DeleteProjectStatus;
         case "organizationStatus":
           return DeleteOrganizationStatus;
-        case "organization":
-          return DeleteOrganization;
-        case "projectType":
-          return DeleteProjectType;
         case "address":
           return DeleteAddress;
+        case "organization":
+          return DeleteOrganization;
+        case "project":
+          return DeleteProject;
+        case "budget":
+          return DeleteBudget;
         case "user":
         default:
           return DeleteUser;
@@ -284,6 +293,7 @@ const Admin = () => {
                     <option value="projectType">
                       Project Type (master data)
                     </option>
+                    <option value="sector">Sector (master data)</option>
                     <option value="projectStatus">
                       Project Status (master data)
                     </option>
@@ -292,6 +302,8 @@ const Admin = () => {
                     </option>
                     <option value="address">Address (master data)</option>
                     <option value="organization">Organization</option>
+                    <option value="project">Project</option>
+                    <option value="budget">Budget</option>
                     <option value="user">User (login)</option>
                   </>
                 )}
