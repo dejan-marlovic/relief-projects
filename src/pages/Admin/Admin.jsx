@@ -29,6 +29,10 @@ import DeleteExchangeRate from "../Admin/DeleteExchangeRate/DeleteExchangeRate";
 import DeleteCostType from "../Admin/DeleteCostType/DeleteCostType";
 import DeleteCost from "../Admin/DeleteCost/DeleteCost";
 import DeleteProjectStatus from "../Admin/DeleteProjectStatus/DeleteProjectStatus";
+import DeleteAddress from "../Admin/DeleteAddress/DeleteAddress";
+import DeleteOrganizationStatus from "../Admin/DeleteOrganizationStatus/DeleteOrganizationStatus";
+import DeleteOrganization from "../Admin/DeleteOrganization/DeleteOrganization";
+import DeleteProjectType from "../Admin/DeleteProjectType/DeleteProjectType";
 
 import UpdateUser from "../Admin/UpdateUser/UpdateUser";
 import RestoreUser from "../Admin/RestoreUser/RestoreUser";
@@ -60,6 +64,14 @@ const Admin = () => {
           return DeleteCost;
         case "projectStatus":
           return DeleteProjectStatus;
+        case "organizationStatus":
+          return DeleteOrganizationStatus;
+        case "organization":
+          return DeleteOrganization;
+        case "projectType":
+          return DeleteProjectType;
+        case "address":
+          return DeleteAddress;
         case "user":
         default:
           return DeleteUser;
@@ -269,9 +281,17 @@ const Admin = () => {
                     </option>
                     <option value="costType">Cost Type (master data)</option>
                     <option value="cost">Cost (master data)</option>
+                    <option value="projectType">
+                      Project Type (master data)
+                    </option>
                     <option value="projectStatus">
                       Project Status (master data)
                     </option>
+                    <option value="organizationStatus">
+                      Organization Status (master data)
+                    </option>
+                    <option value="address">Address (master data)</option>
+                    <option value="organization">Organization</option>
                     <option value="user">User (login)</option>
                   </>
                 )}
