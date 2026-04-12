@@ -36,6 +36,7 @@ import DeleteAddress from "../Admin/DeleteAddress/DeleteAddress";
 import DeleteOrganization from "../Admin/DeleteOrganization/DeleteOrganization";
 import DeleteProject from "../Admin/DeleteProject/DeleteProject";
 import DeleteBudget from "../Admin/DeleteBudget/DeleteBudget";
+import DeleteDocument from "../Admin/DeleteDocument/DeleteDocument";
 
 import UpdateUser from "../Admin/UpdateUser/UpdateUser";
 import RestoreUser from "../Admin/RestoreUser/RestoreUser";
@@ -81,6 +82,8 @@ const Admin = () => {
           return DeleteProject;
         case "budget":
           return DeleteBudget;
+        case "document":
+          return DeleteDocument;
         case "user":
         default:
           return DeleteUser;
@@ -304,6 +307,7 @@ const Admin = () => {
                     <option value="organization">Organization</option>
                     <option value="project">Project</option>
                     <option value="budget">Budget</option>
+                    <option value="document">Document</option>
                     <option value="user">User (login)</option>
                   </>
                 )}
