@@ -30,6 +30,8 @@ import DeleteCostType from "../Admin/DeleteCostType/DeleteCostType";
 import DeleteCost from "../Admin/DeleteCost/DeleteCost";
 import DeleteProjectType from "../Admin/DeleteProjectType/DeleteProjectType";
 import DeleteSector from "../Admin/DeleteSector/DeleteSector";
+import DeleteTransactionStatus from "../Admin/DeleteTransactionStatus/DeleteTransactionStatus";
+import DeleteSignatureStatus from "../Admin/DeleteSignatureStatus/DeleteSignatureStatus";
 import DeleteProjectStatus from "../Admin/DeleteProjectStatus/DeleteProjectStatus";
 import DeleteOrganizationStatus from "../Admin/DeleteOrganizationStatus/DeleteOrganizationStatus";
 import DeleteAddress from "../Admin/DeleteAddress/DeleteAddress";
@@ -38,7 +40,8 @@ import DeleteProject from "../Admin/DeleteProject/DeleteProject";
 import DeleteBudget from "../Admin/DeleteBudget/DeleteBudget";
 import DeleteDocument from "../Admin/DeleteDocument/DeleteDocument";
 import DeleteBankDetail from "../Admin/DeleteBankDetail/DeleteBankDetail";
-import DeleteTransactionStatus from "../Admin/DeleteTransactionStatus/DeleteTransactionStatus";
+import DeleteTransaction from "../Admin/DeleteTransaction/DeleteTransaction";
+import DeletePaymentOrder from "../Admin/DeletePaymentOrder/DeletePaymentOrder";
 
 import UpdateUser from "../Admin/UpdateUser/UpdateUser";
 import RestoreUser from "../Admin/RestoreUser/RestoreUser";
@@ -74,6 +77,8 @@ const Admin = () => {
           return DeleteSector;
         case "transactionStatus":
           return DeleteTransactionStatus;
+        case "signatureStatus":
+          return DeleteSignatureStatus;
         case "projectStatus":
           return DeleteProjectStatus;
         case "organizationStatus":
@@ -90,6 +95,10 @@ const Admin = () => {
           return DeleteDocument;
         case "bankDetail":
           return DeleteBankDetail;
+        case "transaction":
+          return DeleteTransaction;
+        case "paymentOrder":
+          return DeletePaymentOrder;
         case "user":
         default:
           return DeleteUser;
@@ -306,6 +315,9 @@ const Admin = () => {
                     <option value="transactionStatus">
                       Transaction Status (master data)
                     </option>
+                    <option value="signatureStatus">
+                      Signature Status (master data)
+                    </option>
                     <option value="projectStatus">
                       Project Status (master data)
                     </option>
@@ -318,6 +330,8 @@ const Admin = () => {
                     <option value="budget">Budget</option>
                     <option value="document">Document</option>
                     <option value="bankDetail">Bank Detail</option>
+                    <option value="transaction">Transaction</option>
+                    <option value="paymentOrder">Payment Order</option>
                     <option value="user">User (login)</option>
                   </>
                 )}
