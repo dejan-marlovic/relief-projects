@@ -37,6 +37,8 @@ import DeleteOrganization from "../Admin/DeleteOrganization/DeleteOrganization";
 import DeleteProject from "../Admin/DeleteProject/DeleteProject";
 import DeleteBudget from "../Admin/DeleteBudget/DeleteBudget";
 import DeleteDocument from "../Admin/DeleteDocument/DeleteDocument";
+import DeleteBankDetail from "../Admin/DeleteBankDetail/DeleteBankDetail";
+import DeleteTransactionStatus from "../Admin/DeleteTransactionStatus/DeleteTransactionStatus";
 
 import UpdateUser from "../Admin/UpdateUser/UpdateUser";
 import RestoreUser from "../Admin/RestoreUser/RestoreUser";
@@ -70,6 +72,8 @@ const Admin = () => {
           return DeleteProjectType;
         case "sector":
           return DeleteSector;
+        case "transactionStatus":
+          return DeleteTransactionStatus;
         case "projectStatus":
           return DeleteProjectStatus;
         case "organizationStatus":
@@ -84,6 +88,8 @@ const Admin = () => {
           return DeleteBudget;
         case "document":
           return DeleteDocument;
+        case "bankDetail":
+          return DeleteBankDetail;
         case "user":
         default:
           return DeleteUser;
@@ -297,6 +303,9 @@ const Admin = () => {
                       Project Type (master data)
                     </option>
                     <option value="sector">Sector (master data)</option>
+                    <option value="transactionStatus">
+                      Transaction Status (master data)
+                    </option>
                     <option value="projectStatus">
                       Project Status (master data)
                     </option>
@@ -308,6 +317,7 @@ const Admin = () => {
                     <option value="project">Project</option>
                     <option value="budget">Budget</option>
                     <option value="document">Document</option>
+                    <option value="bankDetail">Bank Detail</option>
                     <option value="user">User (login)</option>
                   </>
                 )}
