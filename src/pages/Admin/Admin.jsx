@@ -32,6 +32,8 @@ import DeleteProjectType from "../Admin/DeleteProjectType/DeleteProjectType";
 import DeleteSector from "../Admin/DeleteSector/DeleteSector";
 import DeleteTransactionStatus from "../Admin/DeleteTransactionStatus/DeleteTransactionStatus";
 import DeleteSignatureStatus from "../Admin/DeleteSignatureStatus/DeleteSignatureStatus";
+import DeleteSignature from "../Admin/DeleteSignature/DeleteSignature";
+import DeleteRecipient from "../Admin/DeleteRecipient/DeleteRecipient";
 import DeleteProjectStatus from "../Admin/DeleteProjectStatus/DeleteProjectStatus";
 import DeleteOrganizationStatus from "../Admin/DeleteOrganizationStatus/DeleteOrganizationStatus";
 import DeleteAddress from "../Admin/DeleteAddress/DeleteAddress";
@@ -79,6 +81,10 @@ const Admin = () => {
           return DeleteTransactionStatus;
         case "signatureStatus":
           return DeleteSignatureStatus;
+        case "signature":
+          return DeleteSignature;
+        case "recipient":
+          return DeleteRecipient;
         case "projectStatus":
           return DeleteProjectStatus;
         case "organizationStatus":
@@ -318,6 +324,8 @@ const Admin = () => {
                     <option value="signatureStatus">
                       Signature Status (master data)
                     </option>
+                    <option value="signature">Signature</option>
+                    <option value="recipient">Recipient</option>
                     <option value="projectStatus">
                       Project Status (master data)
                     </option>
