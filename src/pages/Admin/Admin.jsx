@@ -18,8 +18,15 @@ import CreateAddress from "../Admin/CreateAddress/CreateAddress";
 import CreateOrganization from "../Admin/CreateOrganization/CreateOrganization";
 import CreateProjectType from "../Admin/CreateProjectType/CreateProjectType";
 import CreateSector from "../Admin/CreateSector/CreateSector";
-
 import CreateTransactionStatus from "../Admin/CreateTransactionStatus/CreateTransactionStatus";
+import CreateSignatureStatus from "../Admin/CreateSignatureStatus/CreateSignatureStatus";
+import CreateSignature from "../Admin/CreateSignature/CreateSignature";
+import CreateRecipient from "../Admin/CreateRecipient/CreateRecipient";
+import CreateBudget from "../Admin/CreateBudget/CreateBudget";
+import CreateDocument from "../Admin/CreateDocument/CreateDocument";
+import CreateBankDetail from "../Admin/CreateBankDetail/CreateBankDetail";
+import CreateTransaction from "../Admin/CreateTransaction/CreateTransaction";
+import CreatePaymentOrder from "../Admin/CreatePaymentOrder/CreatePaymentOrder";
 
 import DeleteUser from "../Admin/DeleteUser/DeleteUser";
 import DeletePosition from "../Admin/DeletePosition/DeletePosition";
@@ -85,11 +92,19 @@ const CREATE_ENTITY_VALUES = new Set([
   "projectType",
   "sector",
   "transactionStatus",
+  "signatureStatus",
+  "signature",
+  "recipient",
   "projectStatus",
   "organizationStatus",
   "address",
   "organization",
   "project",
+  "budget",
+  "document",
+  "bankDetail",
+  "transaction",
+  "paymentOrder",
   "employee",
   "user",
 ]);
@@ -245,6 +260,12 @@ const Admin = () => {
         return CreateSector;
       case "transactionStatus":
         return CreateTransactionStatus;
+      case "signatureStatus":
+        return CreateSignatureStatus;
+      case "signature":
+        return CreateSignature;
+      case "recipient":
+        return CreateRecipient;
       case "projectStatus":
         return CreateProjectStatus;
       case "organizationStatus":
@@ -253,6 +274,16 @@ const Admin = () => {
         return CreateAddress;
       case "organization":
         return CreateOrganization;
+      case "budget":
+        return CreateBudget;
+      case "document":
+        return CreateDocument;
+      case "bankDetail":
+        return CreateBankDetail;
+      case "transaction":
+        return CreateTransaction;
+      case "paymentOrder":
+        return CreatePaymentOrder;
       case "position":
       default:
         return CreatePosition;
