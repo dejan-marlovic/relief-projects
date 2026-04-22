@@ -54,6 +54,7 @@ import DeletePaymentOrder from "../Admin/DeletePaymentOrder/DeletePaymentOrder";
 
 import UpdateUser from "../Admin/UpdateUser/UpdateUser";
 import UpdatePosition from "../Admin/UpdatePosition/UpdatePosition";
+import UpdateEmployee from "../Admin/UpdateEmployee/UpdateEmployee";
 import UpdateCurrency from "../Admin/UpdateCurrency/UpdateCurrency";
 import UpdateExchangeRate from "../Admin/UpdateExchangeRate/UpdateExchangeRate";
 import UpdateCostType from "../Admin/UpdateCostType/UpdateCostType";
@@ -68,8 +69,12 @@ import UpdateProjectStatus from "../Admin/UpdateProjectStatus/UpdateProjectStatu
 import UpdateOrganizationStatus from "../Admin/UpdateOrganizationStatus/UpdateOrganizationStatus";
 import UpdateAddress from "../Admin/UpdateAddress/UpdateAddress";
 import UpdateOrganization from "../Admin/UpdateOrganization/UpdateOrganization";
-import UpdateBudget from "../Admin/UpdateBudget/UpdateBudget";
 import UpdateProject from "../Admin/UpdateProject/UpdateProject";
+import UpdateBudget from "../Admin/UpdateBudget/UpdateBudget";
+import UpdateDocument from "../Admin/UpdateDocument/UpdateDocument";
+import UpdateBankDetail from "../Admin/UpdateBankDetail/UpdateBankDetail";
+import UpdateTransaction from "../Admin/UpdateTransaction/UpdateTransaction";
+import UpdatePaymentOrder from "../Admin/UpdatePaymentOrder/UpdatePaymentOrder";
 
 import RestoreUser from "../Admin/RestoreUser/RestoreUser";
 
@@ -171,6 +176,11 @@ const UPDATE_ENTITY_VALUES = new Set([
   "organization",
   "project",
   "budget",
+  "document",
+  "bankDetail",
+  "transaction",
+  "paymentOrder",
+  "employee",
   "user",
 ]);
 
@@ -265,6 +275,8 @@ const Admin = () => {
       switch (updateEntity) {
         case "position":
           return UpdatePosition;
+        case "employee":
+          return UpdateEmployee;
         case "currency":
           return UpdateCurrency;
         case "exchangeRate":
@@ -297,6 +309,14 @@ const Admin = () => {
           return UpdateProject;
         case "budget":
           return UpdateBudget;
+        case "document":
+          return UpdateDocument;
+        case "bankDetail":
+          return UpdateBankDetail;
+        case "transaction":
+          return UpdateTransaction;
+        case "paymentOrder":
+          return UpdatePaymentOrder;
         case "user":
           return UpdateUser;
         default:
