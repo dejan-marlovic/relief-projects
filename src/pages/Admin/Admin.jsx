@@ -50,13 +50,110 @@ import RestoreUser from "../Admin/RestoreUser/RestoreUser";
 
 import RegisterProject from "../RegisterProject/RegisterProject";
 
+const ENTITY_OPTIONS = [
+  { value: "position", label: "Position (master data)" },
+  { value: "currency", label: "Currency (master data)" },
+  { value: "exchangeRate", label: "Exchange Rate (master data)" },
+  { value: "costType", label: "Cost Type (master data)" },
+  { value: "cost", label: "Cost (master data)" },
+  { value: "projectType", label: "Project Type (master data)" },
+  { value: "sector", label: "Sector (master data)" },
+  { value: "transactionStatus", label: "Transaction Status (master data)" },
+  { value: "signatureStatus", label: "Signature Status (master data)" },
+  { value: "signature", label: "Signature" },
+  { value: "recipient", label: "Recipient" },
+  { value: "projectStatus", label: "Project Status (master data)" },
+  { value: "organizationStatus", label: "Organization Status (master data)" },
+  { value: "address", label: "Address (master data)" },
+  { value: "organization", label: "Organization" },
+  { value: "project", label: "Project" },
+  { value: "budget", label: "Budget" },
+  { value: "document", label: "Document" },
+  { value: "bankDetail", label: "Bank Detail" },
+  { value: "transaction", label: "Transaction" },
+  { value: "paymentOrder", label: "Payment Order" },
+  { value: "employee", label: "Employee" },
+  { value: "user", label: "User (login)" },
+];
+
+const CREATE_ENTITY_VALUES = new Set([
+  "position",
+  "currency",
+  "exchangeRate",
+  "costType",
+  "cost",
+  "projectType",
+  "sector",
+  "transactionStatus",
+  "projectStatus",
+  "organizationStatus",
+  "address",
+  "organization",
+  "project",
+  "employee",
+  "user",
+]);
+
+const DELETE_ENTITY_VALUES = new Set([
+  "position",
+  "currency",
+  "exchangeRate",
+  "costType",
+  "cost",
+  "projectType",
+  "sector",
+  "transactionStatus",
+  "signatureStatus",
+  "signature",
+  "recipient",
+  "projectStatus",
+  "organizationStatus",
+  "address",
+  "organization",
+  "project",
+  "budget",
+  "document",
+  "bankDetail",
+  "transaction",
+  "paymentOrder",
+  "employee",
+  "user",
+]);
+
+const UPDATE_ENTITY_VALUES = new Set(["user"]);
+const RESTORE_ENTITY_VALUES = new Set(["user"]);
+
 const Admin = () => {
   const [action, setAction] = useState("create");
 
   const [createEntity, setCreateEntity] = useState("position");
-  const [deleteEntity, setDeleteEntity] = useState("user");
+  const [deleteEntity, setDeleteEntity] = useState("position");
   const [updateEntity, setUpdateEntity] = useState("user");
   const [restoreEntity, setRestoreEntity] = useState("user");
+
+  const entityOptionsForAction = useMemo(() => {
+    if (action === "create") {
+      return ENTITY_OPTIONS.filter((option) =>
+        CREATE_ENTITY_VALUES.has(option.value),
+      );
+    }
+
+    if (action === "delete") {
+      return ENTITY_OPTIONS.filter((option) =>
+        DELETE_ENTITY_VALUES.has(option.value),
+      );
+    }
+
+    if (action === "update") {
+      return ENTITY_OPTIONS.filter((option) =>
+        UPDATE_ENTITY_VALUES.has(option.value),
+      );
+    }
+
+    return ENTITY_OPTIONS.filter((option) =>
+      RESTORE_ENTITY_VALUES.has(option.value),
+    );
+  }, [action]);
 
   const SelectedComponent = useMemo(() => {
     if (action === "delete") {
@@ -130,43 +227,32 @@ const Admin = () => {
     switch (createEntity) {
       case "project":
         return RegisterProject;
-
       case "employee":
         return CreateEmployee;
       case "user":
         return CreateUser;
-
       case "currency":
         return CreateCurrency;
       case "exchangeRate":
         return CreateExchangeRate;
-
       case "costType":
         return CreateCostType;
       case "cost":
         return CreateCost;
-
       case "projectType":
         return CreateProjectType;
-
       case "sector":
         return CreateSector;
-
       case "transactionStatus":
         return CreateTransactionStatus;
-
       case "projectStatus":
         return CreateProjectStatus;
-
       case "organizationStatus":
         return CreateOrganizationStatus;
-
       case "address":
         return CreateAddress;
-
       case "organization":
         return CreateOrganization;
-
       case "position":
       default:
         return CreatePosition;
@@ -274,79 +360,14 @@ const Admin = () => {
                 value={currentEntityValue}
                 onChange={handleEntityChange}
               >
-                {action === "create" && (
-                  <>
-                    <option value="position">Position (master data)</option>
-                    <option value="currency">Currency (master data)</option>
-                    <option value="exchangeRate">
-                      Exchange Rate (master data)
-                    </option>
-                    <option value="costType">Cost Type (master data)</option>
-                    <option value="cost">Cost (master data)</option>
-                    <option value="projectType">
-                      Project Type (master data)
-                    </option>
-                    <option value="sector">Sector (master data)</option>
-                    <option value="transactionStatus">
-                      Transaction Status (master data)
-                    </option>
-                    <option value="projectStatus">
-                      Project Status (master data)
-                    </option>
-                    <option value="organizationStatus">
-                      Organization Status (master data)
-                    </option>
-                    <option value="address">Address (master data)</option>
-                    <option value="organization">Organization</option>
-                    <option value="project">Project</option>
-                    <option value="employee">Employee</option>
-                    <option value="user">User (login)</option>
-                  </>
-                )}
-
-                {action === "delete" && (
-                  <>
-                    <option value="position">Position (master data)</option>
-                    <option value="employee">Employee</option>
-                    <option value="currency">Currency (master data)</option>
-                    <option value="exchangeRate">
-                      Exchange Rate (master data)
-                    </option>
-                    <option value="costType">Cost Type (master data)</option>
-                    <option value="cost">Cost (master data)</option>
-                    <option value="projectType">
-                      Project Type (master data)
-                    </option>
-                    <option value="sector">Sector (master data)</option>
-                    <option value="transactionStatus">
-                      Transaction Status (master data)
-                    </option>
-                    <option value="signatureStatus">
-                      Signature Status (master data)
-                    </option>
-                    <option value="signature">Signature</option>
-                    <option value="recipient">Recipient</option>
-                    <option value="projectStatus">
-                      Project Status (master data)
-                    </option>
-                    <option value="organizationStatus">
-                      Organization Status (master data)
-                    </option>
-                    <option value="address">Address (master data)</option>
-                    <option value="organization">Organization</option>
-                    <option value="project">Project</option>
-                    <option value="budget">Budget</option>
-                    <option value="document">Document</option>
-                    <option value="bankDetail">Bank Detail</option>
-                    <option value="transaction">Transaction</option>
-                    <option value="paymentOrder">Payment Order</option>
-                    <option value="user">User (login)</option>
-                  </>
-                )}
-
-                {(action === "update" || action === "restore") && (
-                  <option value="user">User (login)</option>
-                )}
+                {entityOptionsForAction.map((option) => (
+                  <option
+                    key={`${action}-${option.value}`}
+                    value={option.value}
+                  >
+                    {option.label}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
