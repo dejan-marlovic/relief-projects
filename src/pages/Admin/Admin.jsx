@@ -53,6 +53,20 @@ import DeleteTransaction from "../Admin/DeleteTransaction/DeleteTransaction";
 import DeletePaymentOrder from "../Admin/DeletePaymentOrder/DeletePaymentOrder";
 
 import UpdateUser from "../Admin/UpdateUser/UpdateUser";
+import UpdatePosition from "../Admin/UpdatePosition/UpdatePosition";
+import UpdateCurrency from "../Admin/UpdateCurrency/UpdateCurrency";
+import UpdateExchangeRate from "../Admin/UpdateExchangeRate/UpdateExchangeRate";
+import UpdateCostType from "../Admin/UpdateCostType/UpdateCostType";
+import UpdateCost from "../Admin/UpdateCost/UpdateCost";
+import UpdateProjectType from "../Admin/UpdateProjectType/UpdateProjectType";
+import UpdateSector from "../Admin/UpdateSector/UpdateSector";
+import UpdateTransactionStatus from "../Admin/UpdateTransactionStatus/UpdateTransactionStatus";
+import UpdateSignatureStatus from "../Admin/UpdateSignatureStatus/UpdateSignatureStatus";
+import UpdateSignature from "../Admin/UpdateSignature/UpdateSignature";
+import UpdateRecipient from "../Admin/UpdateRecipient/UpdateRecipient";
+import UpdateProjectStatus from "../Admin/UpdateProjectStatus/UpdateProjectStatus";
+import UpdateOrganizationStatus from "../Admin/UpdateOrganizationStatus/UpdateOrganizationStatus";
+
 import RestoreUser from "../Admin/RestoreUser/RestoreUser";
 
 import RegisterProject from "../RegisterProject/RegisterProject";
@@ -135,7 +149,23 @@ const DELETE_ENTITY_VALUES = new Set([
   "user",
 ]);
 
-const UPDATE_ENTITY_VALUES = new Set(["user"]);
+const UPDATE_ENTITY_VALUES = new Set([
+  "position",
+  "currency",
+  "exchangeRate",
+  "costType",
+  "cost",
+  "projectType",
+  "sector",
+  "transactionStatus",
+  "signatureStatus",
+  "signature",
+  "recipient",
+  "projectStatus",
+  "organizationStatus",
+  "user",
+]);
+
 const RESTORE_ENTITY_VALUES = new Set(["user"]);
 
 const Admin = () => {
@@ -143,7 +173,7 @@ const Admin = () => {
 
   const [createEntity, setCreateEntity] = useState("position");
   const [deleteEntity, setDeleteEntity] = useState("position");
-  const [updateEntity, setUpdateEntity] = useState("user");
+  const [updateEntity, setUpdateEntity] = useState("position");
   const [restoreEntity, setRestoreEntity] = useState("user");
 
   const entityOptionsForAction = useMemo(() => {
@@ -225,9 +255,36 @@ const Admin = () => {
 
     if (action === "update") {
       switch (updateEntity) {
+        case "position":
+          return UpdatePosition;
+        case "currency":
+          return UpdateCurrency;
+        case "exchangeRate":
+          return UpdateExchangeRate;
+        case "costType":
+          return UpdateCostType;
+        case "cost":
+          return UpdateCost;
+        case "projectType":
+          return UpdateProjectType;
+        case "sector":
+          return UpdateSector;
+        case "transactionStatus":
+          return UpdateTransactionStatus;
+        case "signatureStatus":
+          return UpdateSignatureStatus;
+        case "signature":
+          return UpdateSignature;
+        case "recipient":
+          return UpdateRecipient;
+        case "projectStatus":
+          return UpdateProjectStatus;
+        case "organizationStatus":
+          return UpdateOrganizationStatus;
         case "user":
-        default:
           return UpdateUser;
+        default:
+          return UpdatePosition;
       }
     }
 
