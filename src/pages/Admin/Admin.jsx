@@ -66,6 +66,10 @@ import UpdateSignature from "../Admin/UpdateSignature/UpdateSignature";
 import UpdateRecipient from "../Admin/UpdateRecipient/UpdateRecipient";
 import UpdateProjectStatus from "../Admin/UpdateProjectStatus/UpdateProjectStatus";
 import UpdateOrganizationStatus from "../Admin/UpdateOrganizationStatus/UpdateOrganizationStatus";
+import UpdateAddress from "../Admin/UpdateAddress/UpdateAddress";
+import UpdateOrganization from "../Admin/UpdateOrganization/UpdateOrganization";
+import UpdateBudget from "../Admin/UpdateBudget/UpdateBudget";
+import UpdateProject from "../Admin/UpdateProject/UpdateProject";
 
 import RestoreUser from "../Admin/RestoreUser/RestoreUser";
 
@@ -163,6 +167,10 @@ const UPDATE_ENTITY_VALUES = new Set([
   "recipient",
   "projectStatus",
   "organizationStatus",
+  "address",
+  "organization",
+  "project",
+  "budget",
   "user",
 ]);
 
@@ -281,6 +289,14 @@ const Admin = () => {
           return UpdateProjectStatus;
         case "organizationStatus":
           return UpdateOrganizationStatus;
+        case "address":
+          return UpdateAddress;
+        case "organization":
+          return UpdateOrganization;
+        case "project":
+          return UpdateProject;
+        case "budget":
+          return UpdateBudget;
         case "user":
           return UpdateUser;
         default:
