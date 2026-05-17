@@ -87,6 +87,7 @@ import RestoreSector from "../Admin/RestoreSector/RestoreSector";
 import RestoreTransactionStatus from "../Admin/RestoreTransactionStatus/RestoreTransactionStatus";
 import RestoreSignatureStatus from "../Admin/RestoreSignatureStatus/RestoreSignatureStatus";
 import RestoreSignature from "../Admin/RestoreSignature/RestoreSignature";
+import RestoreRecipient from "../Admin/RestoreRecipient/RestoreRecipient";
 
 import RegisterProject from "../RegisterProject/RegisterProject";
 
@@ -205,6 +206,7 @@ const RESTORE_ENTITY_VALUES = new Set([
   "transactionStatus",
   "signatureStatus",
   "signature",
+  "recipient",
   "user",
 ]);
 
@@ -368,6 +370,8 @@ const Admin = () => {
           return RestoreSignatureStatus;
         case "signature":
           return RestoreSignature;
+        case "recipient":
+          return RestoreRecipient;
         case "user":
         default:
           return RestoreUser;
