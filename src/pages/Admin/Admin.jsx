@@ -78,6 +78,12 @@ import UpdatePaymentOrder from "../Admin/UpdatePaymentOrder/UpdatePaymentOrder";
 
 import RestoreUser from "../Admin/RestoreUser/RestoreUser";
 import RestorePosition from "../Admin/RestorePosition/RestorePosition";
+import RestoreCurrency from "../Admin/RestoreCurrency/RestoreCurrency";
+import RestoreExchangeRate from "../Admin/RestoreExchangeRate/RestoreExchangeRate";
+import RestoreCostType from "../Admin/RestoreCostType/RestoreCostType";
+import RestoreCost from "../Admin/RestoreCost/RestoreCost";
+import RestoreProjectType from "../Admin/RestoreProjectType/RestoreProjectType";
+import RestoreSector from "../Admin/RestoreSector/RestoreSector";
 
 import RegisterProject from "../RegisterProject/RegisterProject";
 
@@ -185,7 +191,16 @@ const UPDATE_ENTITY_VALUES = new Set([
   "user",
 ]);
 
-const RESTORE_ENTITY_VALUES = new Set(["position", "user"]);
+const RESTORE_ENTITY_VALUES = new Set([
+  "position",
+  "currency",
+  "exchangeRate",
+  "costType",
+  "cost",
+  "projectType",
+  "sector",
+  "user",
+]);
 
 const Admin = () => {
   const [action, setAction] = useState("create");
@@ -329,6 +344,18 @@ const Admin = () => {
       switch (restoreEntity) {
         case "position":
           return RestorePosition;
+        case "currency":
+          return RestoreCurrency;
+        case "exchangeRate":
+          return RestoreExchangeRate;
+        case "costType":
+          return RestoreCostType;
+        case "cost":
+          return RestoreCost;
+        case "projectType":
+          return RestoreProjectType;
+        case "sector":
+          return RestoreSector;
         case "user":
         default:
           return RestoreUser;
