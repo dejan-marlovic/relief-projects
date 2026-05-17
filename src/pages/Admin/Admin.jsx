@@ -84,6 +84,7 @@ import RestoreCostType from "../Admin/RestoreCostType/RestoreCostType";
 import RestoreCost from "../Admin/RestoreCost/RestoreCost";
 import RestoreProjectType from "../Admin/RestoreProjectType/RestoreProjectType";
 import RestoreSector from "../Admin/RestoreSector/RestoreSector";
+import RestoreTransactionStatus from "../Admin/RestoreTransactionStatus/RestoreTransactionStatus";
 
 import RegisterProject from "../RegisterProject/RegisterProject";
 
@@ -199,6 +200,7 @@ const RESTORE_ENTITY_VALUES = new Set([
   "cost",
   "projectType",
   "sector",
+  "transactionStatus",
   "user",
 ]);
 
@@ -356,6 +358,8 @@ const Admin = () => {
           return RestoreProjectType;
         case "sector":
           return RestoreSector;
+        case "transactionStatus":
+          return RestoreTransactionStatus;
         case "user":
         default:
           return RestoreUser;
