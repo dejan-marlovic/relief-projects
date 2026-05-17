@@ -77,6 +77,7 @@ import UpdateTransaction from "../Admin/UpdateTransaction/UpdateTransaction";
 import UpdatePaymentOrder from "../Admin/UpdatePaymentOrder/UpdatePaymentOrder";
 
 import RestoreUser from "../Admin/RestoreUser/RestoreUser";
+import RestorePosition from "../Admin/RestorePosition/RestorePosition";
 
 import RegisterProject from "../RegisterProject/RegisterProject";
 
@@ -184,7 +185,7 @@ const UPDATE_ENTITY_VALUES = new Set([
   "user",
 ]);
 
-const RESTORE_ENTITY_VALUES = new Set(["user"]);
+const RESTORE_ENTITY_VALUES = new Set(["position", "user"]);
 
 const Admin = () => {
   const [action, setAction] = useState("create");
@@ -192,7 +193,7 @@ const Admin = () => {
   const [createEntity, setCreateEntity] = useState("position");
   const [deleteEntity, setDeleteEntity] = useState("position");
   const [updateEntity, setUpdateEntity] = useState("position");
-  const [restoreEntity, setRestoreEntity] = useState("user");
+  const [restoreEntity, setRestoreEntity] = useState("position");
 
   const entityOptionsForAction = useMemo(() => {
     if (action === "create") {
@@ -326,6 +327,8 @@ const Admin = () => {
 
     if (action === "restore") {
       switch (restoreEntity) {
+        case "position":
+          return RestorePosition;
         case "user":
         default:
           return RestoreUser;
