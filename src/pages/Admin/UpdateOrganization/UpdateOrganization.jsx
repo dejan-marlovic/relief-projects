@@ -16,7 +16,6 @@ const initialForm = {
   contactEmail: "",
   contactPhone: "",
   addressId: "",
-  organizationStatusId: "",
 };
 
 const validate = (values) => {
@@ -38,9 +37,6 @@ const validate = (values) => {
   if (!phone) errors.contactPhone = "Contact phone is required.";
 
   if (!values.addressId) errors.addressId = "Address is required.";
-  if (!values.organizationStatusId) {
-    errors.organizationStatusId = "Organization status is required.";
-  }
 
   return errors;
 };
@@ -63,7 +59,6 @@ const UpdateOrganization = () => {
 
   const [organizations, setOrganizations] = useState([]);
   const [addresses, setAddresses] = useState([]);
-  const [organizationStatuses, setOrganizationStatuses] = useState([]);
   const [form, setForm] = useState(initialForm);
 
   const [loading, setLoading] = useState(false);
@@ -76,6 +71,7 @@ const UpdateOrganization = () => {
   const selectedOrganization = useMemo(() => {
     const id = Number(form.selectedId);
     if (!id) return null;
+
     return organizations.find((item) => item.id === id) || null;
   }, [form.selectedId, organizations]);
 
@@ -95,30 +91,24 @@ const UpdateOrganization = () => {
       setFormError("");
       setSuccessMessage("");
 
-      const [orgRes, addressRes, statusRes] = await Promise.all([
+      const [orgRes, addressRes] = await Promise.all([
         authFetch(`${BASE_URL}/api/organizations/active`, {
           headers: { "Content-Type": "application/json" },
         }),
         authFetch(`${BASE_URL}/api/addresses/active`, {
           headers: { "Content-Type": "application/json" },
         }),
-        authFetch(`${BASE_URL}/api/organization-statuses/active`, {
-          headers: { "Content-Type": "application/json" },
-        }),
       ]);
 
       const orgData = await safeReadJson(orgRes);
       const addressData = await safeReadJson(addressRes);
-      const statusData = await safeReadJson(statusRes);
 
       setOrganizations(Array.isArray(orgData) ? orgData : []);
       setAddresses(Array.isArray(addressData) ? addressData : []);
-      setOrganizationStatuses(Array.isArray(statusData) ? statusData : []);
     } catch (err) {
       console.error("Load organizations error:", err);
       setOrganizations([]);
       setAddresses([]);
-      setOrganizationStatuses([]);
       setFormError(
         err?.message || "Unexpected error while loading organization data.",
       );
@@ -154,9 +144,6 @@ const UpdateOrganization = () => {
       contactEmail: selected?.contactEmail || "",
       contactPhone: selected?.contactPhone || "",
       addressId: selected?.addressId ? String(selected.addressId) : "",
-      organizationStatusId: selected?.organizationStatusId
-        ? String(selected.organizationStatusId)
-        : "",
     });
   };
 
@@ -191,9 +178,6 @@ const UpdateOrganization = () => {
       addressId: selectedOrganization.addressId
         ? String(selectedOrganization.addressId)
         : "",
-      organizationStatusId: selectedOrganization.organizationStatusId
-        ? String(selectedOrganization.organizationStatusId)
-        : "",
     });
 
     setFieldErrors({});
@@ -221,7 +205,6 @@ const UpdateOrganization = () => {
         contactEmail: form.contactEmail.trim(),
         contactPhone: form.contactPhone.trim(),
         addressId: Number(form.addressId),
-        organizationStatusId: Number(form.organizationStatusId),
       };
 
       const res = await authFetch(
@@ -257,8 +240,6 @@ const UpdateOrganization = () => {
                 contactEmail: data?.contactEmail ?? payload.contactEmail,
                 contactPhone: data?.contactPhone ?? payload.contactPhone,
                 addressId: data?.addressId ?? payload.addressId,
-                organizationStatusId:
-                  data?.organizationStatusId ?? payload.organizationStatusId,
               }
             : item,
         ),
@@ -284,7 +265,7 @@ const UpdateOrganization = () => {
           <div className={styles.pageHeaderText}>
             <h3 className={styles.pageTitle}>Update Organization</h3>
             <p className={styles.pageSubtitle}>
-              Select an active organization and update its details.
+              Select an active organization and update its organization details.
             </p>
           </div>
         </div>
@@ -350,7 +331,7 @@ const UpdateOrganization = () => {
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Edit details</div>
                   <div className={styles.cardMeta}>
-                    Name, contact and relations
+                    Name, contact and address
                   </div>
                 </div>
 
@@ -407,28 +388,10 @@ const UpdateOrganization = () => {
                   </select>
                 </div>
 
-                <div className={styles.formGroup}>
-                  <label>Organization status</label>
-                  <select
-                    className={inputClass("organizationStatusId")}
-                    name="organizationStatusId"
-                    value={form.organizationStatusId}
-                    onChange={handleInputChange}
-                    disabled={!form.selectedId || saving}
-                  >
-                    <option value="">Select organization status</option>
-                    {organizationStatuses.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.organizationStatusName} (id: {item.id})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
                 <div className={styles.mutedHint}>
-                  Note: your backend DTO requires organizationStatusId, even
-                  though the organization service mainly updates address
-                  directly.
+                  Organization status is not updated here because it belongs to
+                  the project-organization relationship, not the organization
+                  itself.
                 </div>
               </div>
             </div>
