@@ -92,6 +92,7 @@ import RestoreProjectStatus from "../Admin/RestoreProjectStatus/RestoreProjectSt
 import RestoreOrganizationStatus from "../Admin/RestoreOrganizationStatus/RestoreOrganizationStatus";
 import RestoreAddress from "../Admin/RestoreAddress/RestoreAddress";
 import RestoreOrganization from "../Admin/RestoreOrganization/RestoreOrganization";
+import RestoreProject from "../Admin/RestoreProject/RestoreProject";
 
 import RegisterProject from "../RegisterProject/RegisterProject";
 
@@ -215,6 +216,7 @@ const RESTORE_ENTITY_VALUES = new Set([
   "organizationStatus",
   "address",
   "organization",
+  "project",
   "user",
 ]);
 
@@ -388,6 +390,8 @@ const Admin = () => {
           return RestoreAddress;
         case "organization":
           return RestoreOrganization;
+        case "project":
+          return RestoreProject;
         case "user":
         default:
           return RestoreUser;
