@@ -95,6 +95,10 @@ import RestoreOrganization from "../Admin/RestoreOrganization/RestoreOrganizatio
 import RestoreProject from "../Admin/RestoreProject/RestoreProject";
 import RestoreBudget from "../Admin/RestoreBudget/RestoreBudget";
 import RestoreDocument from "../Admin/RestoreDocument/RestoreDocument";
+import RestoreBankDetail from "../Admin/RestoreBankDetail/RestoreBankDetail";
+import RestoreTransaction from "../Admin/RestoreTransaction/RestoreTransaction";
+import RestorePaymentOrder from "../Admin/RestorePaymentOrder/RestorePaymentOrder";
+import RestoreEmployee from "../Admin/RestoreEmployee/RestoreEmployee";
 
 import RegisterProject from "../RegisterProject/RegisterProject";
 
@@ -221,6 +225,10 @@ const RESTORE_ENTITY_VALUES = new Set([
   "project",
   "budget",
   "document",
+  "bankDetail",
+  "transaction",
+  "paymentOrder",
+  "employee",
   "user",
 ]);
 
@@ -400,6 +408,14 @@ const Admin = () => {
           return RestoreBudget;
         case "document":
           return RestoreDocument;
+        case "bankDetail":
+          return RestoreBankDetail;
+        case "transaction":
+          return RestoreTransaction;
+        case "paymentOrder":
+          return RestorePaymentOrder;
+        case "employee":
+          return RestoreEmployee;
         case "user":
         default:
           return RestoreUser;
