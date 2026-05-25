@@ -1,87 +1,85 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiTrash2, FiRefreshCw, FiAlertCircle, FiFolder } from "react-icons/fi";
+import { FiTrash2, FiRefreshCw, FiAlertCircle, FiEdit3 } from "react-icons/fi";
 
-import styles from "./DeleteProject.module.scss";
+import styles from "./DeleteSignatureStatus.module.scss";
 import { BASE_URL } from "../../../config/api";
-import { ProjectContext } from "../../../context/ProjectContext";
 
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
 
-const DeleteProject = () => {
+const DeleteSignatureStatus = () => {
   const navigate = useNavigate();
 
   const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
 
-  const {
-    selectedProjectId: globalSelectedProjectId,
-    setSelectedProjectId: setGlobalSelectedProjectId,
-    refreshProjects,
-  } = useContext(ProjectContext);
-
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  const [projects, setProjects] = useState([]);
-  const [selectedProjectId, setSelectedProjectId] = useState("");
+  const [signatureStatuses, setSignatureStatuses] = useState([]);
+  const [selectedSignatureStatusId, setSelectedSignatureStatusId] =
+    useState("");
 
   const [formError, setFormError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  const selectedProject = useMemo(() => {
-    const id = Number(selectedProjectId);
+  const selectedSignatureStatus = useMemo(() => {
+    const id = Number(selectedSignatureStatusId);
     if (!id) return null;
-    return projects.find((project) => project.id === id) || null;
-  }, [selectedProjectId, projects]);
+    return signatureStatuses.find((status) => status.id === id) || null;
+  }, [selectedSignatureStatusId, signatureStatuses]);
 
-  const loadProjects = async () => {
+  const loadSignatureStatuses = async () => {
     try {
       setLoading(true);
       setFormError("");
       setSuccessMessage("");
 
-      const res = await authFetch(`${BASE_URL}/api/projects/active`, {
+      const res = await authFetch(`${BASE_URL}/api/signature-statuses/active`, {
         headers: { "Content-Type": "application/json" },
       });
 
       if (!res.ok && res.status !== 204) {
         const data = await safeReadJson(res);
-        setProjects([]);
+        setSignatureStatuses([]);
         setFormError(
-          data?.message || data?.detail || "Failed to load active projects.",
+          data?.message ||
+            data?.detail ||
+            "Failed to load active signature statuses.",
         );
         return;
       }
 
       const data = await safeReadJson(res);
-      const nextProjects = Array.isArray(data) ? data : [];
+      const nextSignatureStatuses = Array.isArray(data) ? data : [];
 
-      setProjects(nextProjects);
+      setSignatureStatuses(nextSignatureStatuses);
 
       if (
-        selectedProjectId &&
-        !nextProjects.some(
-          (project) => project.id === Number(selectedProjectId),
+        selectedSignatureStatusId &&
+        !nextSignatureStatuses.some(
+          (status) => status.id === Number(selectedSignatureStatusId),
         )
       ) {
-        setSelectedProjectId("");
+        setSelectedSignatureStatusId("");
       }
     } catch (err) {
-      console.error("Error loading projects:", err);
-      setProjects([]);
-      setFormError(err?.message || "Unexpected error while loading projects.");
+      console.error("Error loading signature statuses:", err);
+      setSignatureStatuses([]);
+      setFormError(
+        err?.message || "Unexpected error while loading signature statuses.",
+      );
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadProjects();
+    loadSignatureStatuses();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSelectChange = (e) => {
-    setSelectedProjectId(e.target.value);
+    setSelectedSignatureStatusId(e.target.value);
     setFormError("");
     setSuccessMessage("");
   };
@@ -91,13 +89,13 @@ const DeleteProject = () => {
       setFormError("");
       setSuccessMessage("");
 
-      if (!selectedProject) {
-        setFormError("Please select a project to delete.");
+      if (!selectedSignatureStatus) {
+        setFormError("Please select a signature status to delete.");
         return;
       }
 
       const confirmed = window.confirm(
-        `Are you sure you want to delete project "${selectedProject.projectName}" (id: ${selectedProject.id})?`,
+        `Are you sure you want to delete signature status "${selectedSignatureStatus.name}" (id: ${selectedSignatureStatus.id})?`,
       );
 
       if (!confirmed) return;
@@ -105,7 +103,7 @@ const DeleteProject = () => {
       setDeleting(true);
 
       const res = await authFetch(
-        `${BASE_URL}/api/projects/${selectedProject.id}`,
+        `${BASE_URL}/api/signature-statuses/${selectedSignatureStatus.id}`,
         {
           method: "DELETE",
         },
@@ -113,49 +111,43 @@ const DeleteProject = () => {
 
       if (res.status === 404) {
         setFormError(
-          "Project was not found. It may already have been deleted.",
+          "Signature status was not found. It may already have been deleted.",
         );
-        await loadProjects();
-        await refreshProjects();
+        await loadSignatureStatuses();
         return;
       }
 
       if (!res.ok) {
         const data = await safeReadJson(res);
         setFormError(
-          data?.message || data?.detail || "Failed to delete the project.",
+          data?.message ||
+            data?.detail ||
+            "Failed to delete the signature status.",
         );
         return;
       }
 
-      const deletedProjectId = selectedProject.id;
-      const deletedProjectName = selectedProject.projectName;
+      const deletedStatusName = selectedSignatureStatus.name;
 
-      setProjects((prev) =>
-        prev.filter((project) => project.id !== deletedProjectId),
+      setSignatureStatuses((prev) =>
+        prev.filter((status) => status.id !== selectedSignatureStatus.id),
       );
-
-      setSelectedProjectId("");
-
-      if (String(globalSelectedProjectId) === String(deletedProjectId)) {
-        setGlobalSelectedProjectId("");
-      }
-
-      await refreshProjects();
-
+      setSelectedSignatureStatusId("");
       setSuccessMessage(
-        `Project "${deletedProjectName}" was deleted successfully.`,
+        `Signature status "${deletedStatusName}" was deleted successfully.`,
       );
     } catch (err) {
-      console.error("Delete project error:", err);
-      setFormError(err?.message || "Unexpected error while deleting project.");
+      console.error("Delete signature status error:", err);
+      setFormError(
+        err?.message || "Unexpected error while deleting signature status.",
+      );
     } finally {
       setDeleting(false);
     }
   };
 
   const inputClass = `${styles.textInput} ${
-    formError && !selectedProjectId ? styles.inputError : ""
+    formError && !selectedSignatureStatusId ? styles.inputError : ""
   }`;
 
   return (
@@ -163,9 +155,9 @@ const DeleteProject = () => {
       <div className={styles.formContainer}>
         <div className={styles.pageHeader}>
           <div className={styles.pageHeaderText}>
-            <h3 className={styles.pageTitle}>Delete Project</h3>
+            <h3 className={styles.pageTitle}>Delete Signature Status</h3>
             <p className={styles.pageSubtitle}>
-              Select an active project and soft delete it.
+              Select an active signature status and soft delete it.
             </p>
           </div>
         </div>
@@ -179,7 +171,7 @@ const DeleteProject = () => {
 
         {successMessage && (
           <div className={styles.successBanner}>
-            <FiFolder />
+            <FiEdit3 />
             <span>{successMessage}</span>
           </div>
         )}
@@ -195,94 +187,78 @@ const DeleteProject = () => {
             <div className={styles.grid}>
               <div className={styles.card}>
                 <div className={styles.cardHeader}>
-                  <div className={styles.cardTitle}>Choose project</div>
+                  <div className={styles.cardTitle}>
+                    Choose signature status
+                  </div>
                   <div className={styles.cardMeta}>
-                    Loaded from /api/projects/active
+                    Loaded from /api/signature-statuses/active
                   </div>
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label htmlFor="deleteProjectSelect">Project</label>
+                  <label htmlFor="deleteSignatureStatusSelect">
+                    Signature status
+                  </label>
                   <select
-                    id="deleteProjectSelect"
+                    id="deleteSignatureStatusSelect"
                     className={inputClass}
-                    value={selectedProjectId}
+                    value={selectedSignatureStatusId}
                     onChange={handleSelectChange}
                     disabled={deleting}
                   >
-                    <option value="">Select project</option>
-                    {projects.map((project) => (
-                      <option key={project.id} value={project.id}>
-                        {project.projectCode} - {project.projectName} (id:{" "}
-                        {project.id})
+                    <option value="">Select signature status</option>
+                    {signatureStatuses.map((status) => (
+                      <option key={status.id} value={status.id}>
+                        {status.name} (id: {status.id})
                       </option>
                     ))}
                   </select>
                 </div>
 
                 <div className={styles.mutedHint}>
-                  Only active projects are shown in the dropdown.
+                  Only active signature statuses are shown in the dropdown.
                 </div>
               </div>
 
               <div className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>
-                    Selected project details
+                    Selected signature status details
                   </div>
                   <div className={styles.cardMeta}>Review before deleting</div>
                 </div>
 
-                {selectedProject ? (
+                {selectedSignatureStatus ? (
                   <div className={styles.detailList}>
                     <div className={styles.detailRow}>
                       <span className={styles.detailLabel}>Id</span>
                       <span className={styles.detailValue}>
-                        {selectedProject.id}
+                        {selectedSignatureStatus.id}
                       </span>
                     </div>
 
                     <div className={styles.detailRow}>
-                      <span className={styles.detailLabel}>Project code</span>
-                      <span className={styles.detailValue}>
-                        {selectedProject.projectCode || "N/A"}
+                      <span className={styles.detailLabel}>
+                        Signature status name
                       </span>
-                    </div>
-
-                    <div className={styles.detailRow}>
-                      <span className={styles.detailLabel}>Project name</span>
                       <span className={styles.detailValue}>
-                        {selectedProject.projectName || "N/A"}
-                      </span>
-                    </div>
-
-                    <div className={styles.detailRow}>
-                      <span className={styles.detailLabel}>Ref project no</span>
-                      <span className={styles.detailValue}>
-                        {selectedProject.refProjectNo || "N/A"}
-                      </span>
-                    </div>
-
-                    <div className={styles.detailRow}>
-                      <span className={styles.detailLabel}>Funding source</span>
-                      <span className={styles.detailValue}>
-                        {selectedProject.fundingSource || "N/A"}
+                        {selectedSignatureStatus.name}
                       </span>
                     </div>
 
                     <div className={styles.warningBox}>
                       This calls the backend DELETE endpoint. In your current
-                      backend setup, the project is soft deleted by setting
+                      backend setup, the signature status is soft deleted by
+                      setting
                       <code> is_deleted = true </code>
                       and
-                      <code> deleted_at = NOW() </code>. It also soft deletes
-                      related rows linked to that project according to the
-                      backend cascade rules.
+                      <code> deleted_at = NOW()</code>.
                     </div>
                   </div>
                 ) : (
                   <div className={styles.emptyState}>
-                    Select a project to preview its details before deleting.
+                    Select a signature status to preview its details before
+                    deleting.
                   </div>
                 )}
               </div>
@@ -291,7 +267,7 @@ const DeleteProject = () => {
             <div className={styles.bottomActions}>
               <button
                 type="button"
-                onClick={loadProjects}
+                onClick={loadSignatureStatuses}
                 className={styles.secondaryButton}
                 disabled={loading || deleting}
               >
@@ -302,9 +278,10 @@ const DeleteProject = () => {
                 type="button"
                 onClick={handleDelete}
                 className={styles.deleteButton}
-                disabled={deleting || !selectedProject}
+                disabled={deleting || !selectedSignatureStatus}
               >
-                <FiTrash2 /> {deleting ? "Deleting..." : "Delete project"}
+                <FiTrash2 />{" "}
+                {deleting ? "Deleting..." : "Delete signature status"}
               </button>
             </div>
           </>
@@ -314,4 +291,4 @@ const DeleteProject = () => {
   );
 };
 
-export default DeleteProject;
+export default DeleteSignatureStatus;

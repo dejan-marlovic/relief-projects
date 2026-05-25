@@ -13,44 +13,38 @@ import {
   extractFieldErrors,
 } from "../../../utils/http";
 
-// Initial form state
 const initialOrganizationDetails = {
   organizationName: "",
   contactEmail: "",
   contactPhone: "",
   addressId: "",
-  organizationStatusId: "",
 };
 
-// UX validation aligned with your DTO + entity constraints:
-// DTO: all required (NotNull + NotBlank) except none, and both ids required.
-// Entity: organization_name length 255, email length 255, phone length 255
 const validateOrganizationDetails = (values) => {
   const errors = {};
 
   const name = values.organizationName?.trim() || "";
   if (!name) errors.organizationName = "Organization name is required.";
-  else if (name.length > 255)
+  else if (name.length > 255) {
     errors.organizationName = "Organization name must be max 255 characters.";
+  }
 
   const email = values.contactEmail?.trim() || "";
   if (!email) errors.contactEmail = "Contact email is required.";
-  else if (email.length > 255)
+  else if (email.length > 255) {
     errors.contactEmail = "Email must be max 255 characters.";
-  else {
-    // eslint-disable-next-line no-useless-escape
+  } else {
     const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     if (!emailOk) errors.contactEmail = "Email must be a valid email address.";
   }
 
   const phone = values.contactPhone?.trim() || "";
   if (!phone) errors.contactPhone = "Contact phone is required.";
-  else if (phone.length > 255)
+  else if (phone.length > 255) {
     errors.contactPhone = "Contact phone must be max 255 characters.";
+  }
 
   if (!values.addressId) errors.addressId = "Address is required.";
-  if (!values.organizationStatusId)
-    errors.organizationStatusId = "Organization status is required.";
 
   return errors;
 };
@@ -59,17 +53,13 @@ const CreateOrganization = () => {
   const navigate = useNavigate();
   const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
 
-  // UI state
   const [loading, setLoading] = useState(false);
-  const [loadingRefs, setLoadingRefs] = useState(false); // addresses + statuses
+  const [loadingRefs, setLoadingRefs] = useState(false);
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
 
-  // Reference data
   const [addresses, setAddresses] = useState([]);
-  const [statuses, setStatuses] = useState([]);
 
-  // Form state
   const [organizationDetails, setOrganizationDetails] = useState(
     initialOrganizationDetails,
   );
@@ -86,7 +76,9 @@ const CreateOrganization = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
     setOrganizationDetails((prev) => ({ ...prev, [name]: value }));
+
     setFieldErrors((prev) => ({ ...prev, [name]: "" }));
     setFormError("");
   };
@@ -96,26 +88,21 @@ const CreateOrganization = () => {
     contactEmail: values.contactEmail?.trim() ?? "",
     contactPhone: values.contactPhone?.trim() ?? "",
     addressId: values.addressId ? Number(values.addressId) : null,
-    organizationStatusId: values.organizationStatusId
-      ? Number(values.organizationStatusId)
-      : null,
   });
 
-  const addressLabel = (a) => {
-    if (!a) return "";
-    const street = a.street ? String(a.street).trim() : "";
-    const city = a.city ? String(a.city).trim() : "";
-    const country = a.country ? String(a.country).trim() : "";
-    const postal = a.postalCode ? String(a.postalCode).trim() : "";
-    // Keep it compact for dropdowns
+  const addressLabel = (address) => {
+    if (!address) return "";
+
+    const street = address.street ? String(address.street).trim() : "";
+    const city = address.city ? String(address.city).trim() : "";
+    const country = address.country ? String(address.country).trim() : "";
+    const postal = address.postalCode ? String(address.postalCode).trim() : "";
+
     return `${street}${street && city ? ", " : ""}${city}${
       postal ? ` (${postal})` : ""
     }${country ? ` — ${country}` : ""}`;
   };
 
-  const statusLabel = (s) => s?.organizationStatusName ?? "";
-
-  // Load reference data: Addresses + Organization Statuses
   const loadReferenceData = async () => {
     try {
       setLoadingRefs(true);
@@ -127,57 +114,24 @@ const CreateOrganization = () => {
         return;
       }
 
-      const [addrRes, statusRes] = await Promise.all([
-        authFetch(`${BASE_URL}/api/addresses/active`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        }),
-        authFetch(`${BASE_URL}/api/organization-statuses/active`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        }),
-      ]);
+      const addrRes = await authFetch(`${BASE_URL}/api/addresses/active`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
 
-      // Addresses: controller returns 204 when empty
       let addrList = [];
       if (addrRes.status !== 204) {
         const addrData = await safeReadJson(addrRes);
         addrList = Array.isArray(addrData) ? addrData : [];
       }
 
-      // Org statuses: controller returns 204 when empty
-      let statusList = [];
-      if (statusRes.status !== 204) {
-        const statusData = await safeReadJson(statusRes);
-        statusList = Array.isArray(statusData) ? statusData : [];
-      }
-
-      // Sort for nicer UX
       addrList.sort((a, b) => addressLabel(a).localeCompare(addressLabel(b)));
-      statusList.sort((a, b) =>
-        String(statusLabel(a)).localeCompare(String(statusLabel(b))),
-      );
 
       setAddresses(addrList);
-      setStatuses(statusList);
-
-      // Auto-select "Default" status if present and not already selected
-      const defaultStatus = statusList.find(
-        (s) => String(statusLabel(s)).trim().toLowerCase() === "default",
-      );
-
-      if (defaultStatus?.id) {
-        setOrganizationDetails((prev) => ({
-          ...prev,
-          organizationStatusId:
-            prev.organizationStatusId || String(defaultStatus.id),
-        }));
-      }
     } catch (err) {
       console.error("Error loading reference data:", err);
       setAddresses([]);
-      setStatuses([]);
-      setFormError("Failed to load addresses / organization statuses.");
+      setFormError("Failed to load addresses.");
     } finally {
       setLoadingRefs(false);
     }
@@ -235,19 +189,12 @@ const CreateOrganization = () => {
         created?.id ?? created?.organizationId ?? created?.organization_id;
 
       alert(
-        `Organization created successfully${createdId ? ` (id: ${createdId})` : "!"}`,
+        `Organization created successfully${
+          createdId ? ` (id: ${createdId})` : "!"
+        }`,
       );
+
       resetForm();
-      // keep default selection after reset if possible
-      const defaultStatus = statuses.find(
-        (s) => String(statusLabel(s)).trim().toLowerCase() === "default",
-      );
-      if (defaultStatus?.id) {
-        setOrganizationDetails((prev) => ({
-          ...prev,
-          organizationStatusId: String(defaultStatus.id),
-        }));
-      }
     } catch (err) {
       console.error("Create organization error:", err);
       setFormError(
@@ -263,8 +210,7 @@ const CreateOrganization = () => {
     [fieldErrors],
   );
 
-  const disableCreate =
-    loading || loadingRefs || addresses.length === 0 || statuses.length === 0;
+  const disableCreate = loading || loadingRefs || addresses.length === 0;
 
   return (
     <div className={styles.createContainer}>
@@ -273,8 +219,7 @@ const CreateOrganization = () => {
           <div className={styles.pageHeaderText}>
             <h3 className={styles.pageTitle}>Create Organization</h3>
             <p className={styles.pageSubtitle}>
-              Add an organization and classify it (e.g. Donor, Partner,
-              Financier) + link an address.
+              Add an organization and link it to an address.
             </p>
           </div>
         </div>
@@ -307,7 +252,6 @@ const CreateOrganization = () => {
         ) : (
           <>
             <div className={styles.grid}>
-              {/* Card 1 */}
               <div className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Organization details</div>
@@ -325,6 +269,7 @@ const CreateOrganization = () => {
                     autoComplete="off"
                     disabled={loading}
                   />
+
                   {fieldErrors.organizationName && (
                     <div className={styles.fieldError}>
                       {fieldErrors.organizationName}
@@ -344,6 +289,7 @@ const CreateOrganization = () => {
                     autoComplete="off"
                     disabled={loading}
                   />
+
                   {fieldErrors.contactEmail && (
                     <div className={styles.fieldError}>
                       {fieldErrors.contactEmail}
@@ -362,6 +308,7 @@ const CreateOrganization = () => {
                     autoComplete="off"
                     disabled={loading}
                   />
+
                   {fieldErrors.contactPhone && (
                     <div className={styles.fieldError}>
                       {fieldErrors.contactPhone}
@@ -370,39 +317,15 @@ const CreateOrganization = () => {
                 </div>
 
                 <div className={styles.mutedHint}>
-                  Tip: Keep contact details generic (main inbox / switchboard)
-                  unless you model contacts separately.
+                  Tip: Keep contact details generic, such as a main inbox or
+                  switchboard, unless you model contacts separately.
                 </div>
               </div>
 
-              {/* Card 2 */}
               <div className={styles.card}>
                 <div className={styles.cardHeader}>
-                  <div className={styles.cardTitle}>Classification</div>
-                  <div className={styles.cardMeta}>Address + Status</div>
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label>Organization status</label>
-                  <select
-                    className={inputClass("organizationStatusId")}
-                    name="organizationStatusId"
-                    value={organizationDetails.organizationStatusId}
-                    onChange={handleInputChange}
-                    disabled={loading || statuses.length === 0}
-                  >
-                    <option value="">Select status...</option>
-                    {statuses.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {statusLabel(s)}
-                      </option>
-                    ))}
-                  </select>
-                  {fieldErrors.organizationStatusId && (
-                    <div className={styles.fieldError}>
-                      {fieldErrors.organizationStatusId}
-                    </div>
-                  )}
+                  <div className={styles.cardTitle}>Address</div>
+                  <div className={styles.cardMeta}>Organization location</div>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -415,12 +338,13 @@ const CreateOrganization = () => {
                     disabled={loading || addresses.length === 0}
                   >
                     <option value="">Select address...</option>
-                    {addresses.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {addressLabel(a)} (id: {a.id})
+                    {addresses.map((address) => (
+                      <option key={address.id} value={address.id}>
+                        {addressLabel(address)} (id: {address.id})
                       </option>
                     ))}
                   </select>
+
                   {fieldErrors.addressId && (
                     <div className={styles.fieldError}>
                       {fieldErrors.addressId}
@@ -428,22 +352,17 @@ const CreateOrganization = () => {
                   )}
                 </div>
 
-                {statuses.length === 0 && (
-                  <div className={styles.mutedHint}>
-                    No organization statuses found. Create them first (Admin →
-                    Organization Status).
-                  </div>
-                )}
-
                 {addresses.length === 0 && (
                   <div className={styles.mutedHint}>
-                    No addresses found. Create them first (Admin → Address).
+                    No addresses found. Create an address first in Admin →
+                    Address.
                   </div>
                 )}
 
                 <div className={styles.mutedHint}>
-                  These values are used across your system for grouping,
-                  filtering and reporting (e.g. list all Donors).
+                  Organization status is not selected here because it belongs to
+                  the project-organization relationship, not the organization
+                  itself.
                 </div>
               </div>
             </div>
@@ -454,13 +373,7 @@ const CreateOrganization = () => {
                 onClick={handleCreate}
                 className={styles.saveButton}
                 disabled={disableCreate}
-                title={
-                  statuses.length === 0
-                    ? "Create organization statuses first."
-                    : addresses.length === 0
-                      ? "Create addresses first."
-                      : ""
-                }
+                title={addresses.length === 0 ? "Create addresses first." : ""}
               >
                 <FiSave /> {loading ? "Creating..." : "Create organization"}
               </button>
