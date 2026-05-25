@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiRotateCcw,
@@ -10,10 +10,13 @@ import {
 import styles from "./RestoreProject.module.scss";
 import { BASE_URL } from "../../../config/api";
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
+import { ProjectContext } from "../../../context/ProjectContext";
 
 const RestoreProject = () => {
   const navigate = useNavigate();
   const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
+
+  const { refreshProjects } = useContext(ProjectContext);
 
   const [loading, setLoading] = useState(false);
   const [restoring, setRestoring] = useState(false);
@@ -263,6 +266,8 @@ const RestoreProject = () => {
       setDeletedProjects((prev) =>
         prev.filter((project) => project.id !== selectedProject.id),
       );
+
+      await refreshProjects();
 
       setSuccessMessage(
         `Project "${selectedProject.projectName}" restored successfully.`,

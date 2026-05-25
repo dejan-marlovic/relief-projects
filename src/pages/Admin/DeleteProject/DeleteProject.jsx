@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiTrash2, FiRefreshCw, FiAlertCircle, FiFolder } from "react-icons/fi";
 
 import styles from "./DeleteProject.module.scss";
 import { BASE_URL } from "../../../config/api";
+import { ProjectContext } from "../../../context/ProjectContext";
 
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
 
@@ -11,6 +12,12 @@ const DeleteProject = () => {
   const navigate = useNavigate();
 
   const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
+
+  const {
+    selectedProjectId: globalSelectedProjectId,
+    setSelectedProjectId: setGlobalSelectedProjectId,
+    refreshProjects,
+  } = useContext(ProjectContext);
 
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -109,6 +116,7 @@ const DeleteProject = () => {
           "Project was not found. It may already have been deleted.",
         );
         await loadProjects();
+        await refreshProjects();
         return;
       }
 
@@ -120,12 +128,21 @@ const DeleteProject = () => {
         return;
       }
 
+      const deletedProjectId = selectedProject.id;
       const deletedProjectName = selectedProject.projectName;
 
       setProjects((prev) =>
-        prev.filter((project) => project.id !== selectedProject.id),
+        prev.filter((project) => project.id !== deletedProjectId),
       );
+
       setSelectedProjectId("");
+
+      if (String(globalSelectedProjectId) === String(deletedProjectId)) {
+        setGlobalSelectedProjectId("");
+      }
+
+      await refreshProjects();
+
       setSuccessMessage(
         `Project "${deletedProjectName}" was deleted successfully.`,
       );
@@ -137,7 +154,9 @@ const DeleteProject = () => {
     }
   };
 
-  const inputClass = `${styles.textInput} ${formError && !selectedProjectId ? styles.inputError : ""}`;
+  const inputClass = `${styles.textInput} ${
+    formError && !selectedProjectId ? styles.inputError : ""
+  }`;
 
   return (
     <div className={styles.deleteContainer}>
@@ -257,11 +276,8 @@ const DeleteProject = () => {
                       <code> is_deleted = true </code>
                       and
                       <code> deleted_at = NOW() </code>. It also soft deletes
-                      related
-                      <code> ProjectSector </code>,
-                      <code> ProjectOrganization </code>, and
-                      <code> EmployeeProject </code>
-                      rows linked to that project.
+                      related rows linked to that project according to the
+                      backend cascade rules.
                     </div>
                   </div>
                 ) : (
