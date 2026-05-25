@@ -114,6 +114,62 @@ $primary: #4a90e2;
   align-self: baseline;
 }
 
+.entityLookupWrap {
+  position: relative;
+  min-width: 360px;
+  flex: 1 1 auto;
+  align-self: baseline;
+}
+
+.entityLookupWrap .selectInput {
+  width: 100%;
+}
+
+.entityLookupMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 0.35rem;
+  border: 1px solid rgba(74, 144, 226, 0.25);
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.16);
+}
+
+.entityLookupOption {
+  width: 100%;
+  display: block;
+  padding: 0.55rem 0.7rem;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #111827;
+  text-align: left;
+  font: inherit;
+  line-height: 1.25;
+  cursor: pointer;
+}
+
+.entityLookupOption:hover {
+  background: rgba(74, 144, 226, 0.08);
+}
+
+.entityLookupOptionActive {
+  background: rgba(74, 144, 226, 0.14);
+  color: #1f2937;
+  font-weight: 700;
+}
+
+.entityLookupEmpty {
+  padding: 0.65rem 0.75rem;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
 .content {
   /* Keep this empty; inner admin forms already have their own layout */
 }
@@ -143,6 +199,11 @@ $primary: #4a90e2;
   }
 
   .selectInput {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .entityLookupWrap {
     width: 100%;
     min-width: unset;
   }

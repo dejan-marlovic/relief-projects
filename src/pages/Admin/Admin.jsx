@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import styles from "./Admin.module.scss";
 
 import CreatePosition from "../Admin/CreatePosition/CreatePosition";
@@ -236,9 +236,15 @@ const Admin = () => {
   const [action, setAction] = useState("create");
 
   // One shared entity state for all actions.
-  // This means if you select "Project", it stays "Project" when switching
+  // Example: if you select "Project", it stays "Project" when switching
   // between Create, Delete, Update, and Restore.
   const [selectedEntity, setSelectedEntity] = useState("position");
+
+  // Text shown in the searchable lookup field.
+  const [entitySearch, setEntitySearch] = useState("Position (master data)");
+
+  // Controls the custom dropdown menu.
+  const [entityMenuOpen, setEntityMenuOpen] = useState(false);
 
   const entityOptionsForAction = useMemo(() => {
     if (action === "create") {
@@ -263,6 +269,55 @@ const Admin = () => {
       RESTORE_ENTITY_VALUES.has(option.value),
     );
   }, [action]);
+
+  const selectedEntityOption = useMemo(() => {
+    return (
+      entityOptionsForAction.find(
+        (option) => option.value === selectedEntity,
+      ) ||
+      entityOptionsForAction[0] ||
+      null
+    );
+  }, [entityOptionsForAction, selectedEntity]);
+
+  const filteredEntityOptions = useMemo(() => {
+    const query = entitySearch.trim().toLowerCase();
+
+    if (!query) {
+      return entityOptionsForAction;
+    }
+
+    return entityOptionsForAction.filter((option) => {
+      const label = option.label.toLowerCase();
+      const value = option.value.toLowerCase();
+
+      return label.includes(query) || value.includes(query);
+    });
+  }, [entityOptionsForAction, entitySearch]);
+
+  useEffect(() => {
+    if (!selectedEntityOption) return;
+
+    const existsInCurrentAction = entityOptionsForAction.some(
+      (option) => option.value === selectedEntity,
+    );
+
+    if (!existsInCurrentAction && entityOptionsForAction.length > 0) {
+      setSelectedEntity(entityOptionsForAction[0].value);
+      setEntitySearch(entityOptionsForAction[0].label);
+      return;
+    }
+
+    if (!entityMenuOpen) {
+      setEntitySearch(selectedEntityOption.label);
+    }
+  }, [
+    action,
+    selectedEntity,
+    selectedEntityOption,
+    entityOptionsForAction,
+    entityMenuOpen,
+  ]);
 
   const SelectedComponent = useMemo(() => {
     if (action === "delete") {
@@ -474,12 +529,70 @@ const Admin = () => {
   }, [action, selectedEntity]);
 
   const handleActionChange = (e) => {
-    const nextAction = e.target.value;
-    setAction(nextAction);
+    setAction(e.target.value);
+    setEntityMenuOpen(false);
   };
 
-  const handleEntityChange = (e) => {
-    setSelectedEntity(e.target.value);
+  const handleEntityLookupFocus = () => {
+    setEntityMenuOpen(true);
+    setEntitySearch("");
+  };
+
+  const handleEntityLookupChange = (e) => {
+    setEntitySearch(e.target.value);
+    setEntityMenuOpen(true);
+  };
+
+  const handleEntityLookupBlur = () => {
+    window.setTimeout(() => {
+      setEntityMenuOpen(false);
+
+      const normalizedValue = entitySearch.trim().toLowerCase();
+
+      if (!normalizedValue) {
+        if (selectedEntityOption) {
+          setEntitySearch(selectedEntityOption.label);
+        }
+        return;
+      }
+
+      const exactMatch = entityOptionsForAction.find(
+        (option) =>
+          option.label.toLowerCase() === normalizedValue ||
+          option.value.toLowerCase() === normalizedValue,
+      );
+
+      if (exactMatch) {
+        setSelectedEntity(exactMatch.value);
+        setEntitySearch(exactMatch.label);
+        return;
+      }
+
+      const partialMatch = entityOptionsForAction.find((option) => {
+        const label = option.label.toLowerCase();
+        const value = option.value.toLowerCase();
+
+        return (
+          label.includes(normalizedValue) || value.includes(normalizedValue)
+        );
+      });
+
+      if (partialMatch) {
+        setSelectedEntity(partialMatch.value);
+        setEntitySearch(partialMatch.label);
+        return;
+      }
+
+      if (selectedEntityOption) {
+        setEntitySearch(selectedEntityOption.label);
+      }
+    }, 150);
+  };
+
+  const handleEntityOptionSelect = (option) => {
+    setSelectedEntity(option.value);
+    setEntitySearch(option.label);
+    setEntityMenuOpen(false);
   };
 
   return (
@@ -489,7 +602,7 @@ const Admin = () => {
           <div className={styles.selectorText}>
             <div className={styles.selectorTitle}>Admin</div>
             <div className={styles.selectorSubtitle}>
-              Choose an action first, then choose an entity.
+              Choose an action first, then search or choose an entity.
             </div>
           </div>
 
@@ -547,7 +660,7 @@ const Admin = () => {
 
               <label
                 className={styles.selectorLabel}
-                htmlFor="adminEntitySelect"
+                htmlFor="adminEntityLookup"
               >
                 {action === "create" && "Create entity:"}
                 {action === "delete" && "Delete entity:"}
@@ -555,21 +668,46 @@ const Admin = () => {
                 {action === "restore" && "Restore entity:"}
               </label>
 
-              <select
-                id="adminEntitySelect"
-                className={styles.selectInput}
-                value={selectedEntity}
-                onChange={handleEntityChange}
-              >
-                {entityOptionsForAction.map((option) => (
-                  <option
-                    key={`${action}-${option.value}`}
-                    value={option.value}
-                  >
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              <div className={styles.entityLookupWrap}>
+                <input
+                  id="adminEntityLookup"
+                  className={styles.selectInput}
+                  value={entitySearch}
+                  onFocus={handleEntityLookupFocus}
+                  onChange={handleEntityLookupChange}
+                  onBlur={handleEntityLookupBlur}
+                  placeholder="Type to search entity..."
+                  autoComplete="off"
+                />
+
+                {entityMenuOpen && (
+                  <div className={styles.entityLookupMenu}>
+                    {filteredEntityOptions.length > 0 ? (
+                      filteredEntityOptions.map((option) => (
+                        <button
+                          key={`${action}-${option.value}`}
+                          type="button"
+                          className={`${styles.entityLookupOption} ${
+                            option.value === selectedEntity
+                              ? styles.entityLookupOptionActive
+                              : ""
+                          }`}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            handleEntityOptionSelect(option);
+                          }}
+                        >
+                          {option.label}
+                        </button>
+                      ))
+                    ) : (
+                      <div className={styles.entityLookupEmpty}>
+                        No matching entity
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
