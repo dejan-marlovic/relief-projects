@@ -235,10 +235,10 @@ const RESTORE_ENTITY_VALUES = new Set([
 const Admin = () => {
   const [action, setAction] = useState("create");
 
-  const [createEntity, setCreateEntity] = useState("position");
-  const [deleteEntity, setDeleteEntity] = useState("position");
-  const [updateEntity, setUpdateEntity] = useState("position");
-  const [restoreEntity, setRestoreEntity] = useState("position");
+  // One shared entity state for all actions.
+  // This means if you select "Project", it stays "Project" when switching
+  // between Create, Delete, Update, and Restore.
+  const [selectedEntity, setSelectedEntity] = useState("position");
 
   const entityOptionsForAction = useMemo(() => {
     if (action === "create") {
@@ -266,7 +266,7 @@ const Admin = () => {
 
   const SelectedComponent = useMemo(() => {
     if (action === "delete") {
-      switch (deleteEntity) {
+      switch (selectedEntity) {
         case "position":
           return DeletePosition;
         case "employee":
@@ -318,7 +318,7 @@ const Admin = () => {
     }
 
     if (action === "update") {
-      switch (updateEntity) {
+      switch (selectedEntity) {
         case "position":
           return UpdatePosition;
         case "employee":
@@ -371,7 +371,7 @@ const Admin = () => {
     }
 
     if (action === "restore") {
-      switch (restoreEntity) {
+      switch (selectedEntity) {
         case "position":
           return RestorePosition;
         case "currency":
@@ -422,7 +422,7 @@ const Admin = () => {
       }
     }
 
-    switch (createEntity) {
+    switch (selectedEntity) {
       case "project":
         return RegisterProject;
       case "employee":
@@ -471,28 +471,15 @@ const Admin = () => {
       default:
         return CreatePosition;
     }
-  }, [action, createEntity, deleteEntity, updateEntity, restoreEntity]);
+  }, [action, selectedEntity]);
 
   const handleActionChange = (e) => {
-    setAction(e.target.value);
+    const nextAction = e.target.value;
+    setAction(nextAction);
   };
 
-  const currentEntityValue =
-    action === "create"
-      ? createEntity
-      : action === "delete"
-        ? deleteEntity
-        : action === "update"
-          ? updateEntity
-          : restoreEntity;
-
   const handleEntityChange = (e) => {
-    const { value } = e.target;
-
-    if (action === "create") setCreateEntity(value);
-    if (action === "delete") setDeleteEntity(value);
-    if (action === "update") setUpdateEntity(value);
-    if (action === "restore") setRestoreEntity(value);
+    setSelectedEntity(e.target.value);
   };
 
   return (
@@ -571,7 +558,7 @@ const Admin = () => {
               <select
                 id="adminEntitySelect"
                 className={styles.selectInput}
-                value={currentEntityValue}
+                value={selectedEntity}
                 onChange={handleEntityChange}
               >
                 {entityOptionsForAction.map((option) => (
@@ -589,9 +576,7 @@ const Admin = () => {
       </div>
 
       <div className={styles.content}>
-        <SelectedComponent
-          key={`${action}-${createEntity}-${deleteEntity}-${updateEntity}-${restoreEntity}`}
-        />
+        <SelectedComponent key={`${action}-${selectedEntity}`} />
       </div>
     </div>
   );
