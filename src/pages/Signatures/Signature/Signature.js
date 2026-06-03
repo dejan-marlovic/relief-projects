@@ -143,7 +143,7 @@ const SignatureRow = ({
         onChange={(e) =>
           onChange(
             "signatureDate",
-            e.target.value ? new Date(e.target.value).toISOString() : ""
+            e.target.value ? new Date(e.target.value).toISOString() : "",
           )
         }
         onBlur={autoSave ? submit : undefined}
@@ -155,12 +155,12 @@ const SignatureRow = ({
 
   const statusLabelById = (id) => {
     const hit = statusOptions.find((s) => String(s.id) === String(id));
-    return hit ? hit.label : id ?? "-";
+    return hit ? hit.label : (id ?? "-");
   };
 
   const employeeLabelById = (id) => {
     const hit = employeeOptions.find((e) => String(e.id) === String(id));
-    return hit ? hit.label : id ?? "-";
+    return hit ? hit.label : (id ?? "-");
   };
 
   const hc = (i) => (!visibleCols[i] ? styles.hiddenCol : "");
@@ -177,16 +177,21 @@ const SignatureRow = ({
         {isEditing ? (
           <div className={styles.actions}>
             <button
+              type="button"
               className={styles.iconCircleBtn}
               onClick={submit}
               title="Save"
+              aria-label="Save"
             >
               <FiSave />
             </button>
+
             <button
+              type="button"
               className={styles.dangerIconBtn}
               onClick={onCancel}
               title="Cancel"
+              aria-label="Cancel"
             >
               <FiX />
             </button>
@@ -194,6 +199,7 @@ const SignatureRow = ({
         ) : (
           <div className={styles.actions}>
             <button
+              type="button"
               className={styles.iconCircleBtn}
               onClick={(e) => {
                 e.preventDefault();
@@ -201,21 +207,26 @@ const SignatureRow = ({
                 onEdit();
               }}
               title="Edit"
+              aria-label="Edit"
             >
               <FiEdit />
             </button>
 
-            <button
-              className={styles.dangerIconBtn}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onDelete(row.id);
-              }}
-              title="Delete"
-            >
-              <FiTrash2 />
-            </button>
+            {!isCreate && (
+              <button
+                type="button"
+                className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.iconOnlyBtn}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onDelete(row.id);
+                }}
+                title="Delete"
+                aria-label="Delete signature"
+              >
+                <FiTrash2 />
+              </button>
+            )}
           </div>
         )}
       </Cell>
@@ -232,12 +243,12 @@ const SignatureRow = ({
 
       {/* 3: Payment Order */}
       <Cell className={hc(3)}>
-        {isEditing ? selectPO : row.paymentOrderId ?? "-"}
+        {isEditing ? selectPO : (row.paymentOrderId ?? "-")}
       </Cell>
 
       {/* 4: Signature */}
       <Cell className={hc(4)}>
-        {isEditing ? inputText("signature") : row.signature ?? "-"}
+        {isEditing ? inputText("signature") : (row.signature ?? "-")}
       </Cell>
 
       {/* 5: Date */}
@@ -245,8 +256,8 @@ const SignatureRow = ({
         {isEditing
           ? inputDate
           : row.signatureDate
-          ? new Date(row.signatureDate).toLocaleString()
-          : "-"}
+            ? new Date(row.signatureDate).toLocaleString()
+            : "-"}
       </Cell>
     </div>
   );
