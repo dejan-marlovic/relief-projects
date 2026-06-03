@@ -66,7 +66,7 @@ const RecipientRow = ({
         onChange={(e) =>
           onChange(
             "paymentOrderId",
-            e.target.value ? Number(e.target.value) : ""
+            e.target.value ? Number(e.target.value) : "",
           )
         }
         onBlur={autoSave ? submit : undefined}
@@ -88,7 +88,7 @@ const RecipientRow = ({
         onChange={(e) =>
           onChange(
             "organizationId",
-            e.target.value ? Number(e.target.value) : ""
+            e.target.value ? Number(e.target.value) : "",
           )
         }
         onBlur={autoSave ? submit : undefined}
@@ -107,7 +107,7 @@ const RecipientRow = ({
 
   const orgLabelById = (id) => {
     const hit = orgOptions.find((o) => String(o.id) === String(id));
-    return hit ? hit.label ?? `Org #${hit.id}` : id ?? "-";
+    return hit ? (hit.label ?? `Org #${hit.id}`) : (id ?? "-");
   };
 
   const hc = (i) => (!visibleCols[i] ? styles.hiddenCol : "");
@@ -165,19 +165,21 @@ const RecipientRow = ({
               <FiEdit />
             </button>
 
-            <button
-              type="button"
-              className={styles.dangerIconBtn}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onDelete(row.id);
-              }}
-              title="Delete"
-              aria-label="Delete"
-            >
-              <FiTrash2 />
-            </button>
+            {!isCreate && (
+              <button
+                type="button"
+                className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.iconOnlyBtn}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onDelete(row.id);
+                }}
+                title="Delete"
+                aria-label="Delete recipient"
+              >
+                <FiTrash2 />
+              </button>
+            )}
           </div>
         )}
       </Cell>
@@ -189,13 +191,13 @@ const RecipientRow = ({
             ? selectOrg
             : inputNum("organizationId", "1")
           : orgOptions.length > 0
-          ? orgLabelById(row.organizationId)
-          : row.organizationId ?? "-"}
+            ? orgLabelById(row.organizationId)
+            : (row.organizationId ?? "-")}
       </Cell>
 
       {/* 2: Payment Order */}
       <Cell className={hc(2)}>
-        {isEditing ? selectPO : row.paymentOrderId ?? "-"}
+        {isEditing ? selectPO : (row.paymentOrderId ?? "-")}
       </Cell>
 
       {/* 3: Amount (computed, read-only) */}
