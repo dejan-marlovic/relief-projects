@@ -50,12 +50,17 @@ $danger: #e74c3c;
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .stickyCol {
   @include tables.table-sticky-col;
   background: inherit;
   box-shadow: 2px 0 0 rgba(0, 0, 0, 0.04);
+
+  /* ✅ prevent icon clipping */
+  overflow: visible;
 }
 
 .hiddenCol {
@@ -63,6 +68,7 @@ $danger: #e74c3c;
 }
 
 .actionsCol {
+  padding-right: 10px;
 }
 
 /* Icon buttons like Transactions / PaymentOrders */
@@ -76,7 +82,9 @@ $danger: #e74c3c;
   justify-content: center;
   cursor: pointer;
   background: #fff;
-  transition: transform 0.12s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.2s ease;
   color: #1f2937;
 
   &:hover {
@@ -105,6 +113,7 @@ $danger: #e74c3c;
   border-color: rgba(74, 144, 226, 0.35);
 }
 
+/* Existing solid danger button: still used for Cancel while editing */
 .dangerIconBtn {
   border: none;
   background: $danger;
@@ -130,6 +139,58 @@ $danger: #e74c3c;
   svg {
     font-size: 16px;
   }
+}
+
+/* ✅ Project-style trash-can icon button */
+.actionBtn {
+  background: #fff;
+  color: #1f2937;
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+
+  svg {
+    font-size: 1rem;
+  }
+
+  &:hover {
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+.actionBtnDanger {
+  background: #fff5f5;
+  color: #d33;
+  border-color: #f3c0c0;
+}
+
+.iconOnlyBtn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  flex-shrink: 0;
 }
 
 /* ✅ Generic expanded panel wrapper (used by Address + Bank details) */

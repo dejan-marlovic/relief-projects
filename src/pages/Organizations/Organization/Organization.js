@@ -125,6 +125,7 @@ const Organization = ({
               >
                 <FiSave />
               </button>
+
               <button
                 type="button"
                 className={styles.dangerIconBtn}
@@ -151,19 +152,21 @@ const Organization = ({
                 <FiEdit />
               </button>
 
-              <button
-                type="button"
-                className={styles.dangerIconBtn}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onDelete(link.id);
-                }}
-                title="Delete"
-                aria-label="Delete"
-              >
-                <FiTrash2 />
-              </button>
+              {!isCreate && (
+                <button
+                  type="button"
+                  className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.iconOnlyBtn}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onDelete(link.id);
+                  }}
+                  title="Delete"
+                  aria-label="Delete organization relation"
+                >
+                  <FiTrash2 />
+                </button>
+              )}
 
               {/* toggle address details */}
               {link.organizationId && (
