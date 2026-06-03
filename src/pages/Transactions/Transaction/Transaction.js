@@ -17,7 +17,7 @@ function toDateTimeLocal(iso) {
   const d = new Date(iso);
   const pad = (n) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
-    d.getHours()
+    d.getHours(),
   )}:${pad(d.getMinutes())}`;
 }
 
@@ -194,7 +194,7 @@ const Transaction = ({
   const budgetName = (id) =>
     budgets.find((b) => b.id === id)
       ? budgetLabel(budgets.find((b) => b.id === id))
-      : id ?? "-";
+      : (id ?? "-");
 
   const inputDate = (
     <>
@@ -282,7 +282,7 @@ const Transaction = ({
 
               <button
                 type="button"
-                className={styles.dangerIconBtn}
+                className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.iconOnlyBtn}`}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -326,43 +326,43 @@ const Transaction = ({
         <Cell className={hc(7)}>
           {isEditing
             ? inputNum("appliedForAmount", "1")
-            : tx.appliedForAmount ?? "-"}
+            : (tx.appliedForAmount ?? "-")}
         </Cell>
 
         <Cell className={hc(8)}>
           {isEditing
             ? inputNum("firstShareAmount", "0.01")
-            : tx.firstShareAmount ?? "-"}
+            : (tx.firstShareAmount ?? "-")}
         </Cell>
 
         <Cell className={hc(9)}>
           {isEditing
             ? inputNum("approvedAmount", "1")
-            : tx.approvedAmount ?? "-"}
+            : (tx.approvedAmount ?? "-")}
         </Cell>
 
         <Cell className={hc(10)}>
           {isEditing
             ? inputNum("secondShareAmount", "0.01")
-            : tx.secondShareAmount ?? "-"}
+            : (tx.secondShareAmount ?? "-")}
         </Cell>
 
         <Cell className={hc(11)}>
           {isEditing
             ? selectYesNo("ownContribution")
-            : tx.ownContribution ?? "-"}
+            : (tx.ownContribution ?? "-")}
         </Cell>
 
         <Cell className={hc(12)}>
           {isEditing
             ? inputDate
             : tx.datePlanned
-            ? new Date(tx.datePlanned).toLocaleString()
-            : "-"}
+              ? new Date(tx.datePlanned).toLocaleString()
+              : "-"}
         </Cell>
 
         <Cell className={hc(13)}>
-          {isEditing ? selectYesNo("okStatus") : tx.okStatus ?? "-"}
+          {isEditing ? selectYesNo("okStatus") : (tx.okStatus ?? "-")}
         </Cell>
       </div>
 
