@@ -67,6 +67,7 @@ const Transactions = ({ refreshTrigger }) => {
   const { selectedProjectId } = useContext(ProjectContext);
 
   const [transactions, setTransactions] = useState([]);
+  const [selectedTxIds, setSelectedTxIds] = useState(() => new Set());
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
   const [expandedTxId, setExpandedTxId] = useState(null);
@@ -81,7 +82,7 @@ const Transactions = ({ refreshTrigger }) => {
   // UI
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [visibleCols, setVisibleCols] = useState(() =>
-    Array(headerLabels.length).fill(true)
+    Array(headerLabels.length).fill(true),
   );
 
   // errors
@@ -110,19 +111,20 @@ const Transactions = ({ refreshTrigger }) => {
             "Content-Type": "application/json",
           }
         : { "Content-Type": "application/json" },
-    [token]
+    [token],
   );
 
   const fetchTransactions = useCallback(
     async (projectId) => {
       if (!projectId) {
         setTransactions([]);
+        setSelectedTxIds(new Set());
         return;
       }
       try {
         const res = await fetch(
           `${BASE_URL}/api/transactions/project/${projectId}`,
-          { headers: authHeaders }
+          { headers: authHeaders },
         );
         if (!res.ok)
           throw new Error(`Failed to fetch transactions (${res.status})`);
@@ -130,12 +132,17 @@ const Transactions = ({ refreshTrigger }) => {
         const data = await res.json();
         const list = Array.isArray(data) ? data : data ? [data] : [];
         setTransactions(list);
+
+        setSelectedTxIds((prev) => {
+          const activeIds = new Set(list.map((tx) => tx.id));
+          return new Set([...prev].filter((id) => activeIds.has(id)));
+        });
       } catch (err) {
         console.error("Error fetching transactions:", err);
         setTransactions([]);
       }
     },
-    [authHeaders]
+    [authHeaders],
   );
 
   // dropdowns
@@ -203,7 +210,7 @@ const Transactions = ({ refreshTrigger }) => {
 
         const bRes = await fetch(
           `${BASE_URL}/api/budgets/project/${selectedProjectId}`,
-          { headers }
+          { headers },
         );
         const budgets = bRes.ok ? await bRes.json() : [];
         const budgetList = Array.isArray(budgets) ? budgets : [];
@@ -214,7 +221,7 @@ const Transactions = ({ refreshTrigger }) => {
         for (const b of budgetList) {
           const cdRes = await fetch(
             `${BASE_URL}/api/cost-details/by-budget/${b.id}`,
-            { headers }
+            { headers },
           );
           if (!cdRes.ok) continue;
           const cds = await cdRes.json();
@@ -308,7 +315,7 @@ const Transactions = ({ refreshTrigger }) => {
     const isCreate = id === "new";
     const effectiveProjectId = isCreate
       ? values.projectId || selectedProjectId
-      : values.projectId ?? null;
+      : (values.projectId ?? null);
 
     setFormError("");
     setFieldErrors((prev) => ({ ...prev, [id]: {} }));
@@ -351,7 +358,7 @@ const Transactions = ({ refreshTrigger }) => {
           method: isCreate ? "POST" : "PUT",
           headers: authHeaders,
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       if (!res.ok) {
@@ -369,7 +376,7 @@ const Transactions = ({ refreshTrigger }) => {
 
         setFormError(
           data?.message ||
-            `Failed to ${isCreate ? "create" : "update"} transaction.`
+            `Failed to ${isCreate ? "create" : "update"} transaction.`,
         );
         return;
       }
@@ -380,7 +387,7 @@ const Transactions = ({ refreshTrigger }) => {
       console.error(err);
       setFormError(
         err.message ||
-          `Failed to ${isCreate ? "create" : "update"} transaction.`
+          `Failed to ${isCreate ? "create" : "update"} transaction.`,
       );
     }
   };
@@ -427,10 +434,53 @@ const Transactions = ({ refreshTrigger }) => {
 
   const gridCols = useMemo(() => {
     const parts = BASE_COL_WIDTHS.map((w, i) =>
-      visibleCols[i] ? `${w}px` : "0px"
+      visibleCols[i] ? `${w}px` : "0px",
     );
     return parts.join(" ");
   }, [visibleCols]);
+
+  const selectedCount = selectedTxIds.size;
+
+  const selectableTransactions = useMemo(
+    () => transactions.filter((tx) => tx?.id != null),
+    [transactions],
+  );
+
+  const allVisibleSelected =
+    selectableTransactions.length > 0 &&
+    selectableTransactions.every((tx) => selectedTxIds.has(tx.id));
+
+  const toggleSelected = (id, checked) => {
+    if (!id) return;
+
+    setSelectedTxIds((prev) => {
+      const next = new Set(prev);
+
+      if (checked) {
+        next.add(id);
+      } else {
+        next.delete(id);
+      }
+
+      return next;
+    });
+  };
+
+  const toggleSelectAllVisible = (checked) => {
+    setSelectedTxIds((prev) => {
+      const next = new Set(prev);
+
+      selectableTransactions.forEach((tx) => {
+        if (checked) {
+          next.add(tx.id);
+        } else {
+          next.delete(tx.id);
+        }
+      });
+
+      return next;
+    });
+  };
 
   return (
     <div className={styles.container}>
