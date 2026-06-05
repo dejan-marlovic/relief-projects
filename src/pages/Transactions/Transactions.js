@@ -9,7 +9,7 @@ import React, {
 import { ProjectContext } from "../../context/ProjectContext";
 import Transaction from "./Transaction/Transaction";
 import styles from "./Transactions.module.scss";
-import { FiAlertCircle, FiPlus, FiColumns } from "react-icons/fi";
+import { FiAlertCircle, FiPlus, FiColumns, FiTrash2 } from "react-icons/fi";
 
 import { BASE_URL } from "../../config/api"; // adjust path if needed
 
@@ -424,8 +424,13 @@ const Transactions = ({ refreshTrigger }) => {
       });
       if (!res.ok) throw new Error("Failed to delete transaction");
 
-      setExpandedTxId((cur) => (cur === id ? null : cur));
+      setSelectedTxIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
       await fetchTransactions(selectedProjectId);
+      setExpandedTxId((cur) => (cur === id ? null : cur));
     } catch (err) {
       console.error(err);
       alert("Failed to delete transaction.");
@@ -480,6 +485,40 @@ const Transactions = ({ refreshTrigger }) => {
 
       return next;
     });
+  };
+
+  const removeSelected = async () => {
+    const ids = [...selectedTxIds];
+
+    if (ids.length === 0) return;
+
+    if (
+      !window.confirm(
+        `Delete ${ids.length} selected transaction ${ids.length === 1 ? "" : "s"}?`,
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`${BASE_URL}/api/transactions/bulk-delete`, {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({ ids }),
+      });
+
+      if (!res.ok) {
+        const raw = await res.text().catch(() => "");
+        throw new Error(raw || "Failed to delete selected transactions.");
+      }
+
+      setSelectedTxIds(new Set());
+      setExpandedTxId((cur) => (ids.includes(cur) ? null : cur));
+      await fetchTransactions(selectedProjectId);
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Faild to delete selected transactions.");
+    }
   };
 
   return (
