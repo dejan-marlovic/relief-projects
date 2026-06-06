@@ -533,6 +533,16 @@ const Transactions = ({ refreshTrigger }) => {
           </div>
 
           <div className={styles.headerActions}>
+            <button
+              type="button"
+              className={styles.dangerInlineBtn}
+              onClick={removeSelected}
+              disabled={selectedCount === 0}
+              title="Delete selected transactions"
+            >
+              <FiTrash2></FiTrash2>
+              Delete selected {selectedCount > 0 ? `(${selectedCount})` : ""}
+            </button>
             <div className={styles.columnsBox}>
               <button
                 type="button"
@@ -564,7 +574,6 @@ const Transactions = ({ refreshTrigger }) => {
                 </div>
               )}
             </div>
-
             <button
               type="button"
               className={styles.primaryInlineBtn}
