@@ -143,7 +143,7 @@ $primary: #4a90e2;
   --tx-header-border: #e5e7eb;
 
   /* ✅ widened Actions column so the trash icon never clips */
-  --tx-grid-cols: 140px;
+  --tx-grid-cols: 190px;
 }
 
 /* Compact */
@@ -213,4 +213,28 @@ $primary: #4a90e2;
 .noData {
   padding: 12px;
   color: #666;
+}
+
+.dangerInlineBtn {
+  @include forms.danger-button;
+  padding: 0.7rem 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.headerActionsCell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+
+  input {
+    transform: translateY(1px);
+  }
 }

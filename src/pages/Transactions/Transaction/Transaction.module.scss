@@ -149,7 +149,7 @@ $danger: #e74c3c;
   grid-column: 1 / -1;
 
   /* keep alignment under non-sticky columns */
-  padding-left: 140px; /* ✅ match widened Actions column */
+  padding-left: 190px; /* ✅ match widened Actions column */
   padding-right: 12px;
   padding-top: 10px;
   padding-bottom: 12px;
@@ -211,4 +211,17 @@ $danger: #e74c3c;
   height: 34px;
   padding: 0;
   flex-shrink: 0;
+}
+
+.rowCheckbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+  accent-color: $primary;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
 }

@@ -47,7 +47,7 @@ const headerLabels = [
 
 // Added one width for Tx ID
 const BASE_COL_WIDTHS = [
-  160, // Actions
+  190, // Actions
   110, // ✅ Tx ID
   160, // Org
   220, // Project
@@ -494,7 +494,7 @@ const Transactions = ({ refreshTrigger }) => {
 
     if (
       !window.confirm(
-        `Delete ${ids.length} selected transaction ${ids.length === 1 ? "" : "s"}?`,
+        `Delete ${ids.length} selected transaction${ids.length === 1 ? "" : "s"}?`,
       )
     ) {
       return;
@@ -517,7 +517,7 @@ const Transactions = ({ refreshTrigger }) => {
       await fetchTransactions(selectedProjectId);
     } catch (err) {
       console.error(err);
-      alert(err.message || "Faild to delete selected transactions.");
+      alert(err.message || "Failed to delete selected transactions.");
     }
   };
 
@@ -609,7 +609,21 @@ const Transactions = ({ refreshTrigger }) => {
                   i === 0 ? styles.actionsCol : ""
                 }`}
               >
-                {h}
+                {i === 0 ? (
+                  <div className={styles.headerActionsCell}>
+                    <input
+                      type="checkbox"
+                      checked={allVisibleSelected}
+                      onChange={(e) => toggleSelectAllVisible(e.target.checked)}
+                      disabled={selectableTransactions.length === 0}
+                      title="Select all visible transactions"
+                      aria-label="Select all visible transactions"
+                    />
+                    <span>{h}</span>
+                  </div>
+                ) : (
+                  h
+                )}
               </div>
             ))}
           </div>
@@ -633,6 +647,9 @@ const Transactions = ({ refreshTrigger }) => {
                 onSave={save}
                 onCancel={cancel}
                 onDelete={remove}
+                isSelected={selectedTxIds.has(tx.id)}
+                onSelectChange={toggleSelected}
+                selectionDisabled={editingId === tx.id}
                 organizations={orgOptions}
                 projects={projectOptions}
                 statuses={statusOptions}
@@ -661,6 +678,9 @@ const Transactions = ({ refreshTrigger }) => {
               onSave={save}
               onCancel={cancel}
               onDelete={() => {}}
+              isSelected={false}
+              onSelectChange={() => {}}
+              selectionDisabled
               organizations={orgOptions}
               projects={projectOptions}
               statuses={statusOptions}

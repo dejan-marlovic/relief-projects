@@ -34,6 +34,9 @@ const Transaction = ({
   onSave,
   onCancel,
   onDelete,
+  isSelected = false,
+  onSelectChange,
+  selectionDisabled = false,
   organizations = [],
   projects = [],
   statuses = [],
@@ -248,6 +251,22 @@ const Transaction = ({
             </div>
           ) : (
             <div className={styles.actions}>
+              {!isCreate && (
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  disabled={selectionDisabled}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    onSelectChange?.(tx.id, e.target.checked);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  title="Select transaction"
+                  aria-label={`Select transaction ${tx.id}`}
+                  className={styles.rowCheckbox}
+                />
+              )}
+
               <button
                 type="button"
                 className={styles.iconCircleBtn}
@@ -280,19 +299,21 @@ const Transaction = ({
                 </button>
               )}
 
-              <button
-                type="button"
-                className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.iconOnlyBtn}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onDelete(tx.id);
-                }}
-                title="Delete"
-                aria-label="Delete"
-              >
-                <FiTrash2 />
-              </button>
+              {!isCreate && (
+                <button
+                  type="button"
+                  className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.iconOnlyBtn}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onDelete(tx.id);
+                  }}
+                  title="Delete"
+                  aria-label="Delete"
+                >
+                  <FiTrash2 />
+                </button>
+              )}
             </div>
           )}
         </Cell>
