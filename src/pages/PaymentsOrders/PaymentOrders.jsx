@@ -531,6 +531,49 @@ function PaymentOrders() {
     };
   };
 
+  //This function will be called when the user clicks “Delete selected” button.
+  const removeSelected = async () => {
+    const ids = [...selectedPoIds];
+
+    if (ids.length === 0) return;
+
+    if (
+      !window.confirm(
+        `Delete ${ids.length} selected payment order${ids.length === 1 ? "" : "s"}?`,
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`${BASE_URL}/api/payment-orders/bulk-delete`, {
+        method: "POST",
+        headers: authHeaders,
+
+        // { ids } is shorthand for { ids: ids }
+        // JSON.stringify({ ids }) sends {"ids":[1,2,3]}
+        body: JSON.stringify({ ids }),
+      });
+
+      if (!res.ok) {
+        const raw = await res.text().catch(() => "");
+        throw new Error(raw || "Failed to remove selected payment orders");
+      }
+
+      // Clear all selected checkboxes after successful delete.
+      setSelectedPoIds(new Set());
+
+      // If the currently expanded payment order was deleted, close the lines panel.
+      setExpandedPoId((cur) => (ids.includes(cur) ? null : cur));
+
+      // Reload the latest payment orders from the backend.
+      await fetchOrders(selectedProjectId);
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Failed to delete selected payment orders");
+    }
+  };
+
   const subtitle = selectedProjectId
     ? `Project #${selectedProjectId} • ${orders.length} order${
         orders.length === 1 ? "" : "s"
