@@ -10,7 +10,7 @@ import { ProjectContext } from "../../context/ProjectContext";
 import PaymentOrder from "./PaymentOrder/PaymentOrder";
 import styles from "./PaymentOrders.module.scss";
 import PaymentOrderLines from "./PaymentOrder/PaymentOrderLines/PaymentOrderLines";
-import { FiPlus, FiColumns, FiAlertCircle } from "react-icons/fi";
+import { FiPlus, FiColumns, FiAlertCircle, FiTrash2 } from "react-icons/fi";
 
 import { BASE_URL } from "../../config/api"; // adjust path if needed
 
@@ -103,7 +103,7 @@ function PaymentOrders() {
   // UI
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [visibleCols, setVisibleCols] = useState(() =>
-    Array(headerLabels.length).fill(true)
+    Array(headerLabels.length).fill(true),
   );
 
   // ✅ separate banners like PaymentOrderLines:
@@ -115,6 +115,9 @@ function PaymentOrders() {
   const [fieldErrors, setFieldErrors] = useState({});
 
   const [expandedPoId, setExpandedPoId] = useState(null);
+
+  const [selectedPoIds, setSelectedPoIds] = useState(() => new Set());
+
   const [orgOptions, setOrgOptions] = useState([]);
   const [costDetailOptions, setCostDetailOptions] = useState([]);
 
@@ -141,19 +144,20 @@ function PaymentOrders() {
             "Content-Type": "application/json",
           }
         : { "Content-Type": "application/json" },
-    [token]
+    [token],
   );
 
   const fetchOrders = useCallback(
     async (projectId) => {
       if (!projectId) {
         setOrders([]);
+        setSelectedPoIds(new Set());
         return;
       }
       try {
         const res = await fetch(
           `${BASE_URL}/api/payment-orders/project/${projectId}`,
-          { headers: authHeaders }
+          { headers: authHeaders },
         );
         if (!res.ok) throw new Error(`Failed ${res.status}`);
 
@@ -161,12 +165,17 @@ function PaymentOrders() {
         const arr = Array.isArray(data) ? data : data ? [data] : [];
         const normalized = arr.map(normalizePO).filter(Boolean);
         setOrders(normalized);
+
+        setSelectedPoIds((prev) => {
+          const activeIds = new Set(normalized.map((po) => po.id));
+          return new Set([...prev].filter((id) => activeIds.has(id)));
+        });
       } catch (e) {
         console.error(e);
         setOrders([]);
       }
     },
-    [authHeaders]
+    [authHeaders],
   );
 
   const fetchTxOptions = useCallback(
@@ -178,7 +187,7 @@ function PaymentOrders() {
       try {
         const res = await fetch(
           `${BASE_URL}/api/transactions/project/${projectId}`,
-          { headers: authHeaders }
+          { headers: authHeaders },
         );
         if (!res.ok) throw new Error(`Failed ${res.status}`);
         const data = await res.json();
@@ -189,7 +198,7 @@ function PaymentOrders() {
         setTxOptions([]);
       }
     },
-    [authHeaders]
+    [authHeaders],
   );
 
   const fetchOrgOptions = useCallback(async () => {
@@ -212,7 +221,7 @@ function PaymentOrders() {
       try {
         const bRes = await fetch(
           `${BASE_URL}/api/budgets/project/${projectId}`,
-          { headers: authHeaders }
+          { headers: authHeaders },
         );
         const budgets = bRes.ok ? await bRes.json() : [];
         const list = Array.isArray(budgets) ? budgets : [];
@@ -221,7 +230,7 @@ function PaymentOrders() {
         for (const b of list) {
           const cdRes = await fetch(
             `${BASE_URL}/api/cost-details/by-budget/${b.id}`,
-            { headers: authHeaders }
+            { headers: authHeaders },
           );
           if (!cdRes.ok) continue;
           const cds = await cdRes.json();
@@ -232,7 +241,7 @@ function PaymentOrders() {
         setCostDetailOptions([]);
       }
     },
-    [authHeaders]
+    [authHeaders],
   );
 
   useEffect(() => {
@@ -373,7 +382,7 @@ function PaymentOrders() {
           method: isCreate ? "POST" : "PUT",
           headers: authHeaders,
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       if (!res.ok) {
@@ -417,7 +426,7 @@ function PaymentOrders() {
         e.message ||
           `Failed to ${
             editingId === "new" ? "create" : "update"
-          } payment order.`
+          } payment order.`,
       );
     }
   };
@@ -465,10 +474,62 @@ function PaymentOrders() {
 
   const gridCols = useMemo(() => {
     const parts = BASE_COL_WIDTHS.map((w, i) =>
-      visibleCols[i] ? `${w}px` : "0px"
+      visibleCols[i] ? `${w}px` : "0px",
     );
     return parts.join(" ");
   }, [visibleCols]);
+
+  const selectedPoCount = selectedPoIds.size;
+
+  //creates a memoized calculated list.
+  //create a list of payment orders that can be selected
+  //This creates a constant variable.
+  //Only recalculate this value when its dependencies change. (orders)
+  const selectablePaymentOrders = useMemo(
+    //From all orders, keep only payment orders that have an ID.
+    () => orders.filter((po) => po?.id != null),
+    [orders],
+  );
+
+  //This creates a boolean.
+  //Are all selectable payment orders currently selected?
+  //It is usually used for the header “select all” checkbox.
+  const allVisibleSelected =
+    selectablePaymentOrders.length > 0 &&
+    //Is this payment order selected?
+    selectablePaymentOrders.every(
+      (po) => selectedPoIds.has(po.id) && !lockedPoIds.has(po.id),
+    );
+
+  const toggleSelectedPo = (id, checked) => {
+    if (!id) return;
+    setSelectedPoIds((prev) => {
+      const next = new Set(prev);
+
+      if (checked) {
+        next.add(id);
+      } else {
+        next.delete(id);
+      }
+
+      return next;
+    });
+
+    const toggleSelectAllVisible = (checked) => {
+      setSelectedPoIds((prev) => {
+        const next = new Set(prev);
+
+        selectablePaymentOrders.forEach((po) => {
+          if (checked) {
+            next.add(po.id);
+          } else {
+            next.delete(po.id);
+          }
+        });
+        return next;
+      });
+    };
+  };
 
   const subtitle = selectedProjectId
     ? `Project #${selectedProjectId} • ${orders.length} order${
@@ -528,8 +589,8 @@ function PaymentOrders() {
                 !selectedProjectId
                   ? "Select a project first"
                   : editingId === "new"
-                  ? "Finish the current draft first"
-                  : "Create new payment order"
+                    ? "Finish the current draft first"
+                    : "Create new payment order"
               }
             >
               <FiPlus />
