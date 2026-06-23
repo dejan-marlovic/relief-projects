@@ -183,7 +183,7 @@ const PaymentOrder = ({
               <input
                 type="checkbox"
                 checked={isSelected}
-                disabled={selectionDisabled}
+                disabled={selectionDisabled || locked}
                 onChange={(e) => {
                   e.stopPropagation();
                   onSelectChange?.(po.id, e.target.checked);

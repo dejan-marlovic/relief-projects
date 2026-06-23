@@ -173,6 +173,7 @@ function PaymentOrders() {
       } catch (e) {
         console.error(e);
         setOrders([]);
+        setSelectedPoIds(new Set());
       }
     },
     [authHeaders],
@@ -487,6 +488,12 @@ function PaymentOrders() {
     return parts.join(" ");
   }, [visibleCols]);
 
+  const selectablePaymentOrders = useMemo(
+    //From all orders, keep only payment orders that have an ID.
+    () => orders.filter((po) => po?.id != null && !lockedPoIds.has(po.id)),
+    [orders, lockedPoIds],
+  );
+
   const selectedPoCount = [...selectedPoIds].filter((id) =>
     selectablePaymentOrders.some((po) => po.id === id),
   ).length;
@@ -494,11 +501,6 @@ function PaymentOrders() {
   //create a list of payment orders that can be selected
   //This creates a constant variable.
   //Only recalculate this value when its dependencies change. (orders)
-  const selectablePaymentOrders = useMemo(
-    //From all orders, keep only payment orders that have an ID.
-    () => orders.filter((po) => po?.id != null && !lockedPoIds.has(po.id)),
-    [orders, lockedPoIds],
-  );
 
   //This creates a boolean.
   //Are all selectable payment orders currently selected?
@@ -608,7 +610,7 @@ function PaymentOrders() {
               title="Delete selected payment orders"
             >
               <FiTrash2></FiTrash2>
-              Delete selected
+              Delete selected{" "}
               {selectedPoCount > 0 ? `(${selectedPoCount})` : ""}
             </button>
             <div className={styles.columnsBox}>
