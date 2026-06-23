@@ -27,7 +27,7 @@ const headerLabels = [
 
 // ✅ match number of columns above
 const BASE_COL_WIDTHS = [
-  160, // Actions
+  190, // Actions
   110, // PO ID
   160, // Transaction
   180, // Date
@@ -465,6 +465,14 @@ function PaymentOrders() {
       setLockedBanner("");
       setFormError("");
 
+      setSelectedPoIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+
+      setExpandedPoId((cur) => (cur === id ? null : cur));
+
       await fetchOrders(selectedProjectId);
     } catch (e) {
       console.error(e);
@@ -479,16 +487,17 @@ function PaymentOrders() {
     return parts.join(" ");
   }, [visibleCols]);
 
-  const selectedPoCount = selectedPoIds.size;
-
+  const selectedPoCount = [...selectedPoIds].filter((id) =>
+    selectablePaymentOrders.some((po) => po.id === id),
+  ).length;
   //creates a memoized calculated list.
   //create a list of payment orders that can be selected
   //This creates a constant variable.
   //Only recalculate this value when its dependencies change. (orders)
   const selectablePaymentOrders = useMemo(
     //From all orders, keep only payment orders that have an ID.
-    () => orders.filter((po) => po?.id != null),
-    [orders],
+    () => orders.filter((po) => po?.id != null && !lockedPoIds.has(po.id)),
+    [orders, lockedPoIds],
   );
 
   //This creates a boolean.
@@ -497,9 +506,7 @@ function PaymentOrders() {
   const allVisibleSelected =
     selectablePaymentOrders.length > 0 &&
     //Is this payment order selected?
-    selectablePaymentOrders.every(
-      (po) => selectedPoIds.has(po.id) && !lockedPoIds.has(po.id),
-    );
+    selectablePaymentOrders.every((po) => selectedPoIds.has(po.id));
 
   const toggleSelectedPo = (id, checked) => {
     if (!id) return;
@@ -514,26 +521,27 @@ function PaymentOrders() {
 
       return next;
     });
+  };
 
-    const toggleSelectAllVisible = (checked) => {
-      setSelectedPoIds((prev) => {
-        const next = new Set(prev);
+  const toggleSelectAllVisible = (checked) => {
+    setSelectedPoIds((prev) => {
+      const next = new Set(prev);
 
-        selectablePaymentOrders.forEach((po) => {
-          if (checked) {
-            next.add(po.id);
-          } else {
-            next.delete(po.id);
-          }
-        });
-        return next;
+      selectablePaymentOrders.forEach((po) => {
+        if (checked) {
+          next.add(po.id);
+        } else {
+          next.delete(po.id);
+        }
       });
-    };
+      return next;
+    });
   };
 
   //This function will be called when the user clicks “Delete selected” button.
   const removeSelected = async () => {
-    const ids = [...selectedPoIds];
+    const selectableIds = new Set(selectablePaymentOrders.map((po) => po.id));
+    const ids = [...selectedPoIds].filter((id) => selectableIds.has(id));
 
     if (ids.length === 0) return;
 
@@ -592,6 +600,17 @@ function PaymentOrders() {
           </div>
 
           <div className={styles.headerActions}>
+            <button
+              type="button"
+              className={styles.dangerInlineBtn}
+              onClick={removeSelected}
+              disabled={selectedPoCount === 0}
+              title="Delete selected payment orders"
+            >
+              <FiTrash2></FiTrash2>
+              Delete selected
+              {selectedPoCount > 0 ? `(${selectedPoCount})` : ""}
+            </button>
             <div className={styles.columnsBox}>
               <button
                 type="button"
@@ -668,7 +687,21 @@ function PaymentOrders() {
                   ${!visibleCols[i] ? styles.hiddenCol : ""}
                   ${i === 0 ? styles.actionsCol : ""}`}
               >
-                {h}
+                {i === 0 ? (
+                  <div className={styles.headerActionsCell}>
+                    <input
+                      type="checkbox"
+                      checked={allVisibleSelected}
+                      onChange={(e) => toggleSelectAllVisible(e.target.checked)}
+                      disabled={selectablePaymentOrders.length === 0}
+                      title="Select all visible payment orders"
+                      aria-label="Select all visible payment orders"
+                    ></input>
+                    <span>{h}</span>
+                  </div>
+                ) : (
+                  h
+                )}
               </div>
             ))}
           </div>
@@ -699,6 +732,11 @@ function PaymentOrders() {
                   expanded={expandedPoId === po.id}
                   onToggleLines={() =>
                     setExpandedPoId((cur) => (cur === po.id ? null : po.id))
+                  }
+                  isSelected={selectedPoIds.has(po.id)}
+                  onSelectChange={toggleSelectedPo}
+                  selectionDisabled={
+                    editingId === po.id || lockedPoIds.has(po.id)
                   }
                 />
 

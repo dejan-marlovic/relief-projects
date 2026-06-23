@@ -46,6 +46,9 @@ const PaymentOrder = ({
 
   // optional: lock UI (disable edit/delete if locked)
   locked = false,
+  isSelected = false,
+  onSelectChange,
+  selectionDisabled = false,
 }) => {
   const ev = editedValues || {};
   const isCreate = (po?.id ?? "") === "new";
@@ -176,6 +179,21 @@ const PaymentOrder = ({
           </div>
         ) : (
           <div className={styles.actions}>
+            {!isCreate && (
+              <input
+                type="checkbox"
+                checked={isSelected}
+                disabled={selectionDisabled}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  onSelectChange?.(po.id, e.target.checked);
+                }}
+                onClick={(e) => e.stopPropagation()}
+                title="Select payment order"
+                aria-label={`Select payment order ${po.id}`}
+                className={styles.rowCheckbox}
+              ></input>
+            )}
             <button
               type="button"
               className={styles.iconCircleBtn}

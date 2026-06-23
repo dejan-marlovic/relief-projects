@@ -429,6 +429,7 @@ const Transactions = ({ refreshTrigger }) => {
         next.delete(id);
         return next;
       });
+
       await fetchTransactions(selectedProjectId);
       setExpandedTxId((cur) => (cur === id ? null : cur));
     } catch (err) {
@@ -452,6 +453,7 @@ const Transactions = ({ refreshTrigger }) => {
   );
 
   const allVisibleSelected =
+    //prevents the select-all checkbox from being checked when the table is empty.
     selectableTransactions.length > 0 &&
     selectableTransactions.every((tx) => selectedTxIds.has(tx.id));
 
