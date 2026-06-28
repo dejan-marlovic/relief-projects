@@ -89,6 +89,7 @@ function normalizePO(po) {
     amount: po.amount ?? 0,
     message: po.message ?? "",
     pinCode: po.pinCode ?? po.pin_code ?? "",
+    locked: Boolean(po.locked ?? po.isLocked ?? false),
   };
 }
 
@@ -166,9 +167,18 @@ function PaymentOrders() {
         const normalized = arr.map(normalizePO).filter(Boolean);
         setOrders(normalized);
 
+        const lockedIds = new Set(
+          normalized.filter((po) => po.locked).map((po) => po.id),
+        );
+
+        setLockedPoIds(lockedIds);
+
         setSelectedPoIds((prev) => {
-          const activeIds = new Set(normalized.map((po) => po.id));
-          return new Set([...prev].filter((id) => activeIds.has(id)));
+          const selectableIds = new Set(
+            normalized.filter((po) => !po.locked).map((po) => po.id),
+          );
+
+          return new Set([...prev].filter((id) => selectableIds.has(id)));
         });
       } catch (e) {
         console.error(e);
