@@ -9,7 +9,7 @@ import React, {
 import { ProjectContext } from "../../context/ProjectContext";
 import SignatureRow from "./Signature/Signature";
 import styles from "./Signatures.module.scss";
-import { FiPlus, FiColumns } from "react-icons/fi";
+import { FiPlus, FiColumns, FiTrash2 } from "react-icons/fi";
 
 import { BASE_URL } from "../../config/api"; // adjust path if needed
 
@@ -88,6 +88,14 @@ function Signatures() {
   const [items, setItems] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
+  //React allows a lazy initializer function
+  //runs only when the component is first created.
+  //So React says: I will call this function once to get the initial state.
+  //function version is preferred when creating the initial value has some
+  //cost or when you want to avoid recreating it unnecessarily on every render.
+  const [selectedSignatureIds, setSelectedSignatureIds] = useState(
+    () => new Set(),
+  );
 
   // dropdown data
   const [poOptions, setPoOptions] = useState([]);
@@ -97,7 +105,7 @@ function Signatures() {
   // UI
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [visibleCols, setVisibleCols] = useState(() =>
-    Array(headerLabels.length).fill(true)
+    Array(headerLabels.length).fill(true),
   );
 
   // errors
@@ -125,33 +133,72 @@ function Signatures() {
             "Content-Type": "application/json",
           }
         : { "Content-Type": "application/json" },
-    [token]
+    [token],
   );
 
   const fetchSignatures = useCallback(
     async (projectId) => {
       if (!projectId) {
         setItems([]);
+        //Clear selection when no project is selected
+        setSelectedSignatureIds(new Set());
         return;
       }
       try {
         const res = await fetch(
           `${BASE_URL}/api/signatures/by-project/${projectId}`,
-          { headers: authHeaders }
+          { headers: authHeaders },
         );
         if (!res.ok) throw new Error(`Failed ${res.status}`);
 
+        //reads the JSON response from your backend
         const data = await res.json();
+        //makes sure we always work with an array.
+        //If data is one object, wrap it in an array:
+        /*
+        if data is already an array:
+              use data
+
+          else if data exists:
+              wrap it in an array
+
+          else:
+              use an empty array
+        */
         const arr = Array.isArray(data) ? data : data ? [data] : [];
+
+        //converts every backend signature into the frontend shape we want.
+        //same as: .filter((item) => Boolean(item))
+        //It keeps only values that are “truthy” and removes values that are “falsy”.
+        //This runs normalizeSignature on every item in the array.
+
+        /*
+        1. convert every backend object into your frontend format
+        2. remove any invalid results such as null or undefined
+        */
         const normalized = arr.map(normalizeSignature).filter(Boolean);
 
+        //This updates the visible signature table/list with the fresh data.
+        //Stores the cleaned array in React state, so your table/list shows
+        // only valid normalized signatures.
         setItems(normalized);
+
+        //This removes selected IDs that no longer exist after reload.
+        setSelectedSignatureIds((prev) => {
+          //This creates a Set containing only the IDs that exist in the newly loaded data.
+          //gives: [1, 2, 3]
+          const activeIds = new Set(normalized.map((s) => s.id));
+
+          //This is the actual cleanup
+          //This keeps only IDs that still exist in the new data
+          return new Set([...prev].filter((id) => activeIds.has(id)));
+        });
       } catch (e) {
         console.error(e);
         setItems([]);
       }
     },
-    [authHeaders]
+    [authHeaders],
   );
 
   const fetchPaymentOrders = useCallback(
@@ -163,7 +210,7 @@ function Signatures() {
       try {
         const res = await fetch(
           `${BASE_URL}/api/payment-orders/project/${projectId}`,
-          { headers: authHeaders }
+          { headers: authHeaders },
         );
         if (!res.ok) throw new Error(`Failed ${res.status}`);
         const data = await res.json();
@@ -181,7 +228,7 @@ function Signatures() {
         setPoOptions([]);
       }
     },
-    [authHeaders]
+    [authHeaders],
   );
 
   const fetchSignatureStatuses = useCallback(async () => {
@@ -374,7 +421,7 @@ function Signatures() {
           method: isCreate ? "POST" : "PUT",
           headers: authHeaders,
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       if (!res.ok) {
@@ -399,9 +446,44 @@ function Signatures() {
     } catch (e) {
       console.error(e);
       setFormError(
-        e.message || `Failed to ${isCreate ? "create" : "update"} signature.`
+        e.message || `Failed to ${isCreate ? "create" : "update"} signature.`,
       );
     }
+  };
+
+  /*
+  If one row checkbox is checked, add that row ID to selectedSignatureIds.
+  If it is unchecked, remove that row ID from selectedSignatureIds.
+  */
+  const toggleSelectedSignature = (id, checked) => {
+    if (!id) return;
+
+    setSelectedSignatureIds((prev) => {
+      const next = new Set(prev);
+
+      if (checked) {
+        next.add(id);
+      } else {
+        next.delete(id);
+      }
+
+      return next;
+    });
+  };
+
+  const toggleSelectAllVisible = (checked) => {
+    setSelectedSignatureIds((prev) => {
+      const next = new Set(prev);
+
+      selectableSignatures.forEach((s) => {
+        if (checked) {
+          next.add(s.id);
+        } else {
+          next.delete(s.id);
+        }
+      });
+      return next;
+    });
   };
 
   const remove = async (id) => {
@@ -427,6 +509,12 @@ function Signatures() {
         return;
       }
 
+      setSelectedSignatureIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+
       await fetchSignatures(selectedProjectId);
     } catch (e) {
       console.error(e);
@@ -434,12 +522,65 @@ function Signatures() {
     }
   };
 
+  const removeSelected = async () => {
+    const ids = [...selectedSignatureIds];
+
+    if (
+      !window.confirm(
+        //comma is just a trailing comma from formatting
+        `Delete ${ids.length} selected signature${ids.length === 1 ? "" : "s"}?`,
+      )
+    ) {
+      return;
+    }
+
+    setFormError("");
+
+    try {
+      const res = await fetch(`${BASE_URL}/api/signatures/bulk-delete`, {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({ ids }),
+      });
+
+      if (!res.ok) {
+        const data = await safeParseJsonResponse(res);
+        throw new Error(
+          data?.message || "Failed to delete selected signatures.",
+        );
+      }
+      setSelectedSignatureIds(new Set());
+      await fetchSignatures(selectedProjectId);
+    } catch (err) {
+      console.error(err);
+      setFormError(err.message || "Failed to delete selected signatures.");
+    }
+  };
+
   const gridCols = useMemo(() => {
     const parts = BASE_COL_WIDTHS.map((w, i) =>
-      visibleCols[i] ? `${w}px` : "0px"
+      visibleCols[i] ? `${w}px` : "0px",
     );
     return parts.join(" ");
   }, [visibleCols]);
+
+  const selectableSignatures = useMemo(
+    () => items.filter((s) => s?.id != null),
+    [items],
+  );
+
+  const selectedSignatureCount = selectedSignatureIds.size;
+
+  //Create a boolean variable.
+  //The value will be used for something like a “select all” checkbox
+  //Only say all visible rows are selected if there is at least one visible selectable row.
+  //Is this signature’s ID inside the selected IDs set?
+  //There is at least one selectable signature, and every selectable
+  //signature’s ID exists in the selected IDs set.
+  //From all loaded signatures, keep only rows that have a real ID and can be selected.
+  const allVisibleSelected =
+    selectableSignatures.length > 0 &&
+    selectableSignatures.every((s) => selectedSignatureIds.has(s.id));
 
   const subtitle = selectedProjectId
     ? `Project #${selectedProjectId} • ${items.length} signature${
@@ -457,6 +598,17 @@ function Signatures() {
           </div>
 
           <div className={styles.headerActions}>
+            <button
+              type="button"
+              className={styles.dangerInlineBtm}
+              onClick={removeSelected}
+              disabled={selectedSignatureCount === 0}
+              title="Delete selected signatures"
+            >
+              <FiTrash2></FiTrash2>
+              Delete selsected{" "}
+              {selectedSignatureCount > 0 ? `(${selectedSignatureCount})` : ""}
+            </button>
             <div className={styles.columnsBox}>
               <button
                 className={styles.columnsBtn}
@@ -496,8 +648,8 @@ function Signatures() {
                 !selectedProjectId
                   ? "Select a project first"
                   : editingId === "new"
-                  ? "Finish the current draft first"
-                  : "Create new signature"
+                    ? "Finish the current draft first"
+                    : "Create new signature"
               }
               type="button"
             >
@@ -518,7 +670,21 @@ function Signatures() {
                   ${i === 0 ? styles.stickyColHeader : ""}
                   ${!visibleCols[i] ? styles.hiddenCol : ""}`}
               >
-                {h}
+                {i === 0 ? (
+                  <div className={styles.headerActionsCell}>
+                    <input
+                      type="checkbox"
+                      checked={allVisibleSelected}
+                      onChange={(e) => toggleSelectAllVisible(e.target.checked)}
+                      disabled={selectableSignatures.length === 0}
+                      title="Select all visible signatures"
+                      aria-label="Select all visible signatures"
+                    ></input>
+                    <span>{h}</span>
+                  </div>
+                ) : (
+                  h
+                )}
               </div>
             ))}
           </div>
