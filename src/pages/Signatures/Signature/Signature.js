@@ -18,6 +18,11 @@ function toDateTimeLocal(iso) {
   );
 }
 
+/**
+ * Renders one signature row and receives selection state from the parent.
+ * The parent controls whether the row is selected, how selection changes,
+ * and whether selection should be disabled while the row is being edited.
+ */
 const SignatureRow = ({
   row,
   isEditing = false,
