@@ -206,6 +206,42 @@ const SignatureRow = ({
           </div>
         ) : (
           <div className={styles.actions}>
+            {!isCreate && (
+              <input
+                type="checkbox"
+                //The row itself does not decide if it is checked. The parent decides by passing:
+                //isSelected={selectedSignatureIds.has(s.id)}
+                checked={isSelected}
+                //This disables the checkbox when the parent says selection should be disabled.
+                //the parent sends: selectionDisabled={editingId === s.id}
+                disabled={selectionDisabled}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  //This calls the function passed from the parent.
+                  onSelectChange?.(row.id, e.target.checked);
+                }}
+                //Stop this event here. Do not let it bubble up to parent elements.
+                /*
+                1. Browser fires click/change event.
+                2. stopPropagation prevents the event from triggering parent row click handlers.
+                3. e.target.checked tells us whether the checkbox is now checked.
+                4. onSelectChange(row.id, checked) calls the parent function.
+                5. Parent updates selectedSignatureIds.
+                6. Parent re-renders the row with updated isSelected.
+                7. Checkbox shows the correct checked/unchecked state.
+
+                So this checkbox is controlled by the parent, but the row is responsible for reporting:
+
+                My checkbox changed.
+                Here is my row ID.
+                Here is the new checked value.
+                */
+                onClick={(e) => e.stopPropagation()}
+                title="Select signature"
+                aria-label={`Select signature ${row.id}`}
+                className={styles.rowCheckbox}
+              ></input>
+            )}
             <button
               type="button"
               className={styles.iconCircleBtn}

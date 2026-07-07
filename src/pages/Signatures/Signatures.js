@@ -525,6 +525,8 @@ function Signatures() {
   const removeSelected = async () => {
     const ids = [...selectedSignatureIds];
 
+    if (ids.length === 0) return;
+
     if (
       !window.confirm(
         //comma is just a trailing comma from formatting
@@ -600,13 +602,13 @@ function Signatures() {
           <div className={styles.headerActions}>
             <button
               type="button"
-              className={styles.dangerInlineBtm}
+              className={styles.dangerInlineBtn}
               onClick={removeSelected}
               disabled={selectedSignatureCount === 0}
               title="Delete selected signatures"
             >
-              <FiTrash2></FiTrash2>
-              Delete selsected{" "}
+              <FiTrash2 />
+              Delete selected{" "}
               {selectedSignatureCount > 0 ? `(${selectedSignatureCount})` : ""}
             </button>
             <div className={styles.columnsBox}>
@@ -709,7 +711,7 @@ function Signatures() {
                 onCancel={cancel}
                 onDelete={remove}
                 isSelected={selectedSignatureIds.has(s.id)}
-                onSelectChage={toggleSelectedSignature}
+                onSelectChange={toggleSelectedSignature}
                 selectionDisabled={editingId === s.id}
                 poOptions={poOptions}
                 statusOptions={statusOptions}
@@ -736,6 +738,9 @@ function Signatures() {
               onSave={save}
               onCancel={cancel}
               onDelete={() => {}}
+              isSelected={false}
+              onSelectChange={() => {}}
+              selectionDisabled
               poOptions={poOptions}
               statusOptions={statusOptions}
               employeeOptions={employeeOptions}
