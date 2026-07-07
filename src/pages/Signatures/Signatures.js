@@ -708,6 +708,9 @@ function Signatures() {
                 onSave={save}
                 onCancel={cancel}
                 onDelete={remove}
+                isSelected={selectedSignatureIds.has(s.id)}
+                onSelectChage={toggleSelectedSignature}
+                selectionDisabled={editingId === s.id}
                 poOptions={poOptions}
                 statusOptions={statusOptions}
                 employeeOptions={employeeOptions}
