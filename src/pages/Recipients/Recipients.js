@@ -9,7 +9,7 @@ import React, {
 import { ProjectContext } from "../../context/ProjectContext";
 import RecipientRow from "./Recipient/Recipient";
 import styles from "./Recipients.module.scss";
-import { FiColumns, FiPlus } from "react-icons/fi";
+import { FiColumns, FiPlus, FiTrash2 } from "react-icons/fi";
 
 import { BASE_URL } from "../../config/api"; // adjust path if needed
 
@@ -40,6 +40,15 @@ function Recipients() {
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
 
+  // Lazy initializer function.
+  // React does not use the function itself as the state value.
+  // Instead, React calls it once when the component first mounts,
+  // and uses its return value as the initial state.
+  // This avoids creating a new Set on every render just to have React ignore it.
+  const [selectedRecipientIds, setSelectedRecipientIds] = useState(
+    () => new Set(),
+  );
+
   // dropdown data
   const [poOptions, setPoOptions] = useState([]);
   const [orgOptions, setOrgOptions] = useState([]);
@@ -47,7 +56,7 @@ function Recipients() {
   // UI
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [visibleCols, setVisibleCols] = useState(() =>
-    Array(headerLabels.length).fill(true)
+    Array(headerLabels.length).fill(true),
   );
 
   // errors
@@ -74,7 +83,7 @@ function Recipients() {
             "Content-Type": "application/json",
           }
         : { "Content-Type": "application/json" },
-    [token]
+    [token],
   );
 
   // FETCH: recipients filtered by project
@@ -82,23 +91,32 @@ function Recipients() {
     async (projectId) => {
       if (!projectId) {
         setItems([]);
+        setSelectedRecipientIds(new Set());
         return;
       }
       try {
         const res = await fetch(
           `${BASE_URL}/api/recipients/by-project/${projectId}`,
-          { headers: authHeaders }
+          { headers: authHeaders },
         );
         if (!res.ok) throw new Error(`Failed ${res.status}`);
         const data = await res.json();
         const arr = Array.isArray(data) ? data : data ? [data] : [];
+
         setItems(arr);
+
+        //removes selected IDs that no longer exist after reload
+        setSelectedRecipientIds((prev) => {
+          //maps recipient elements to ids only
+          const activeIds = new Set(arr.map((r) => r.id));
+          return new Set([...prev].filter((id) => activeIds.has(id)));
+        });
       } catch (e) {
         console.error(e);
         setItems([]);
       }
     },
-    [authHeaders]
+    [authHeaders],
   );
 
   // FETCH: payment orders (dropdown) filtered by project
@@ -111,7 +129,7 @@ function Recipients() {
       try {
         const res = await fetch(
           `${BASE_URL}/api/payment-orders/project/${projectId}`,
-          { headers: authHeaders }
+          { headers: authHeaders },
         );
         if (!res.ok) throw new Error(`Failed ${res.status}`);
         const data = await res.json();
@@ -121,7 +139,7 @@ function Recipients() {
         setPoOptions([]);
       }
     },
-    [authHeaders]
+    [authHeaders],
   );
 
   // ✅ FETCH: organizations (ALL active options - not project-filtered)
@@ -279,7 +297,7 @@ function Recipients() {
           method: isCreate ? "POST" : "PUT",
           headers: authHeaders,
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       if (!res.ok) {
@@ -291,7 +309,7 @@ function Recipients() {
 
         setFormError(
           data?.message ||
-            `Failed to ${isCreate ? "create" : "update"} recipient.`
+            `Failed to ${isCreate ? "create" : "update"} recipient.`,
         );
         return;
       }
@@ -301,7 +319,7 @@ function Recipients() {
     } catch (e) {
       console.error(e);
       setFormError(
-        e.message || `Failed to ${isCreate ? "create" : "update"} recipient.`
+        e.message || `Failed to ${isCreate ? "create" : "update"} recipient.`,
       );
     }
   };
@@ -332,10 +350,26 @@ function Recipients() {
 
   const gridCols = useMemo(() => {
     const parts = BASE_COL_WIDTHS.map((w, i) =>
-      visibleCols[i] ? `${w}px` : "0px"
+      visibleCols[i] ? `${w}px` : "0px",
     );
     return parts.join(" ");
   }, [visibleCols]);
+
+  const selectableRecipients = useMemo(
+    //only sved recipiants with id can be selected
+    () => items.filter((r) => r?.id != null),
+    [items],
+  );
+
+  const selectedRecipientCount = selectedRecipientIds.size;
+
+  //Controls whether the header “select all” checkbox appears checked.
+  //There is at least one selectable recipient, and every selectable recipient is currently selected.
+  const allVisibleSelected =
+    //.every() returns true for an empty array.
+    selectableRecipients.length > 0 &&
+    //Is this recipient’s ID inside the selected IDs Set?
+    selectableRecipients.every((r) => selectedRecipientIds.has(r.id));
 
   const totalCount = items.length;
 
@@ -394,8 +428,8 @@ function Recipients() {
                 !selectedProjectId
                   ? "Select a project first"
                   : editingId === "new"
-                  ? "Finish the current draft first"
-                  : "Create new recipient"
+                    ? "Finish the current draft first"
+                    : "Create new recipient"
               }
               type="button"
             >
