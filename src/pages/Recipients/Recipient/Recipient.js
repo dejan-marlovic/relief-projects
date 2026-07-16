@@ -16,6 +16,9 @@ const RecipientRow = ({
   onSave,
   onCancel,
   onDelete,
+  isSelected = false,
+  onSelectChange,
+  selectionDisabled = false,
   poOptions = [],
   orgOptions = [],
   visibleCols = [],
@@ -151,6 +154,22 @@ const RecipientRow = ({
           </div>
         ) : (
           <div className={styles.actions}>
+            {!isCreate && (
+              <input
+                type="checkbox"
+                checked={isSelected}
+                disabled={selectionDisabled}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  onSelectChange?.(row.id, e.target.checked);
+                }}
+                onClick={(e) => e.stopPropagation()}
+                title="Select recipient"
+                aria-label={`Select recipient ${row.id}`}
+                className={styles.rowCheckbox}
+              />
+            )}
+
             <button
               type="button"
               className={styles.iconCircleBtn}
@@ -174,7 +193,7 @@ const RecipientRow = ({
                   e.stopPropagation();
                   onDelete(row.id);
                 }}
-                title="Delete"
+                title="Delete recipient"
                 aria-label="Delete recipient"
               >
                 <FiTrash2 />

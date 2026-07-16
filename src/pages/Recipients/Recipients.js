@@ -1,3 +1,4 @@
+// src/components/Recipients/Recipients.jsx
 import React, {
   useCallback,
   useContext,
@@ -41,10 +42,8 @@ function Recipients() {
   const [editedValues, setEditedValues] = useState({});
 
   // Lazy initializer function.
-  // React does not use the function itself as the state value.
-  // Instead, React calls it once when the component first mounts,
-  // and uses its return value as the initial state.
-  // This avoids creating a new Set on every render just to have React ignore it.
+  // React calls this once when the component first mounts
+  // and uses the returned Set as the initial state.
   const [selectedRecipientIds, setSelectedRecipientIds] = useState(
     () => new Set(),
   );
@@ -94,20 +93,22 @@ function Recipients() {
         setSelectedRecipientIds(new Set());
         return;
       }
+
       try {
         const res = await fetch(
           `${BASE_URL}/api/recipients/by-project/${projectId}`,
           { headers: authHeaders },
         );
+
         if (!res.ok) throw new Error(`Failed ${res.status}`);
+
         const data = await res.json();
         const arr = Array.isArray(data) ? data : data ? [data] : [];
 
         setItems(arr);
 
-        //removes selected IDs that no longer exist after reload
+        // Remove selected IDs that no longer exist after reload.
         setSelectedRecipientIds((prev) => {
-          //maps recipient elements to ids only
           const activeIds = new Set(arr.map((r) => r.id));
           return new Set([...prev].filter((id) => activeIds.has(id)));
         });
@@ -126,12 +127,15 @@ function Recipients() {
         setPoOptions([]);
         return;
       }
+
       try {
         const res = await fetch(
           `${BASE_URL}/api/payment-orders/project/${projectId}`,
           { headers: authHeaders },
         );
+
         if (!res.ok) throw new Error(`Failed ${res.status}`);
+
         const data = await res.json();
         setPoOptions(Array.isArray(data) ? data : data ? [data] : []);
       } catch (e) {
@@ -142,13 +146,15 @@ function Recipients() {
     [authHeaders],
   );
 
-  // ✅ FETCH: organizations (ALL active options - not project-filtered)
+  // FETCH: organizations (ALL active options - not project-filtered)
   const fetchOrganizations = useCallback(async () => {
     try {
       const res = await fetch(`${BASE_URL}/api/organizations/active/options`, {
         headers: authHeaders,
       });
+
       if (!res.ok) throw new Error(`Failed ${res.status}`);
+
       const data = await res.json();
 
       // Robust normalization: supports {id,label}, {organizationId,name},
@@ -184,7 +190,7 @@ function Recipients() {
   useEffect(() => {
     fetchRecipients(selectedProjectId);
     fetchPaymentOrders(selectedProjectId);
-    fetchOrganizations(); // ✅ now independent of project
+    fetchOrganizations();
 
     setEditingId(null);
     setEditedValues({});
@@ -227,6 +233,7 @@ function Recipients() {
       delete next[row.id];
       return next;
     });
+
     setFormError("");
   };
 
@@ -239,6 +246,7 @@ function Recipients() {
       delete next.new;
       return next;
     });
+
     setFormError("");
   };
 
@@ -329,6 +337,7 @@ function Recipients() {
     if (!window.confirm("Delete this recipient?")) return;
 
     setFormError("");
+
     try {
       const res = await fetch(`${BASE_URL}/api/recipients/${id}`, {
         method: "DELETE",
@@ -341,10 +350,85 @@ function Recipients() {
         return;
       }
 
+      setSelectedRecipientIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+
       await fetchRecipients(selectedProjectId);
     } catch (e) {
       console.error(e);
       setFormError("Delete failed.");
+    }
+  };
+
+  const toggleSelectedRecipient = (id, checked) => {
+    if (!id) return;
+
+    setSelectedRecipientIds((prev) => {
+      const next = new Set(prev);
+
+      if (checked) {
+        next.add(id);
+      } else {
+        next.delete(id);
+      }
+
+      return next;
+    });
+  };
+
+  const toggleSelectAllVisible = (checked) => {
+    setSelectedRecipientIds((prev) => {
+      const next = new Set(prev);
+
+      selectableRecipients.forEach((r) => {
+        if (checked) {
+          next.add(r.id);
+        } else {
+          next.delete(r.id);
+        }
+      });
+
+      return next;
+    });
+  };
+
+  const removeSelected = async () => {
+    const ids = [...selectedRecipientIds];
+
+    if (ids.length === 0) return;
+
+    if (
+      !window.confirm(
+        `Delete ${ids.length} selected recipient${ids.length === 1 ? "" : "s"}?`,
+      )
+    ) {
+      return;
+    }
+
+    setFormError("");
+
+    try {
+      const res = await fetch(`${BASE_URL}/api/recipients/bulk-delete`, {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({ ids }),
+      });
+
+      if (!res.ok) {
+        const data = await safeParseJsonResponse(res);
+        throw new Error(
+          data?.message || "Failed to delete selected recipients.",
+        );
+      }
+
+      setSelectedRecipientIds(new Set());
+      await fetchRecipients(selectedProjectId);
+    } catch (err) {
+      console.error(err);
+      setFormError(err.message || "Failed to delete recipients.");
     }
   };
 
@@ -356,19 +440,14 @@ function Recipients() {
   }, [visibleCols]);
 
   const selectableRecipients = useMemo(
-    //only sved recipiants with id can be selected
     () => items.filter((r) => r?.id != null),
     [items],
   );
 
   const selectedRecipientCount = selectedRecipientIds.size;
 
-  //Controls whether the header “select all” checkbox appears checked.
-  //There is at least one selectable recipient, and every selectable recipient is currently selected.
   const allVisibleSelected =
-    //.every() returns true for an empty array.
     selectableRecipients.length > 0 &&
-    //Is this recipient’s ID inside the selected IDs Set?
     selectableRecipients.every((r) => selectedRecipientIds.has(r.id));
 
   const totalCount = items.length;
@@ -389,6 +468,18 @@ function Recipients() {
           </div>
 
           <div className={styles.headerActions}>
+            <button
+              type="button"
+              className={styles.dangerInlineBtn}
+              onClick={removeSelected}
+              disabled={selectedRecipientCount === 0}
+              title="Delete selected recipients"
+            >
+              <FiTrash2 />
+              Delete selected{" "}
+              {selectedRecipientCount > 0 ? `(${selectedRecipientCount})` : ""}
+            </button>
+
             <div className={styles.columnsBox}>
               <button
                 className={styles.columnsBtn}
@@ -450,7 +541,21 @@ function Recipients() {
                   ${i === 0 ? styles.stickyColHeader : ""}
                   ${!visibleCols[i] ? styles.hiddenCol : ""}`}
               >
-                {h}
+                {i === 0 ? (
+                  <div className={styles.headerActionsCell}>
+                    <input
+                      type="checkbox"
+                      checked={allVisibleSelected}
+                      onChange={(e) => toggleSelectAllVisible(e.target.checked)}
+                      disabled={selectableRecipients.length === 0}
+                      title="Select all visible recipients"
+                      aria-label="Select all visible recipients"
+                    />
+                    <span>{h}</span>
+                  </div>
+                ) : (
+                  h
+                )}
               </div>
             ))}
           </div>
@@ -474,6 +579,9 @@ function Recipients() {
                 onSave={save}
                 onCancel={cancel}
                 onDelete={remove}
+                isSelected={selectedRecipientIds.has(r.id)}
+                onSelectChange={toggleSelectedRecipient}
+                selectionDisabled={editingId === r.id}
                 poOptions={poOptions}
                 orgOptions={orgOptions}
                 visibleCols={visibleCols}
@@ -496,6 +604,9 @@ function Recipients() {
               onSave={save}
               onCancel={cancel}
               onDelete={() => {}}
+              isSelected={false}
+              onSelectChange={() => {}}
+              selectionDisabled
               poOptions={poOptions}
               orgOptions={orgOptions}
               visibleCols={visibleCols}

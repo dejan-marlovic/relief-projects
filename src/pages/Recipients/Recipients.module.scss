@@ -188,3 +188,23 @@ $primary: #4a90e2;
   padding: 12px;
   color: #666;
 }
+
+.dangerInlineBtn {
+  @include forms.danger-button;
+  padding: 0.78rem 1rem;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.headerActionsCell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}

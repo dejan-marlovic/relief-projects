@@ -189,3 +189,15 @@ $danger: #e74c3c;
   padding: 0;
   flex-shrink: 0;
 }
+
+.rowCheckbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
