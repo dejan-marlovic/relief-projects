@@ -33,6 +33,49 @@ async function safeParseJsonResponse(res) {
     return null;
   }
 }
+//409 Conflict
+//The request itself is understandable,
+// but the current state of the resource does not allow the action.
+function isLockedResponse(res, data) {
+  if (res?.status === 409) return true;
+
+  const msg = (data?.message || "").toLowerCase();
+
+  return (
+    msg.includes("locked") ||
+    msg.includes("booked") ||
+    msg.includes("final") ||
+    msg.includes("signature")
+  );
+}
+
+function normalizeRecipient(r) {
+  if (!r || typeof r !== "object") return null;
+
+  const id = r.id ?? r.recipientId ?? r.recipient_id ?? null;
+
+  const organizationId =
+    r.organizationId ??
+    r.organization_id ??
+    r.organization?.id ??
+    r.organization?.organizationId ??
+    null;
+
+  const paymentOrderId =
+    r.paymentOrderId ??
+    r.payment_order_id ??
+    r.paymentOrder?.id ??
+    r.paymentOrder?.paymentOrderId ??
+    null;
+
+  return {
+    id,
+    organizationId,
+    paymentOrderId,
+    amount: r.amount ?? 0,
+    locked: Boolean(r.locked ?? r.isLocked ?? false),
+  };
+}
 
 function Recipients() {
   const { selectedProjectId } = useContext(ProjectContext);
