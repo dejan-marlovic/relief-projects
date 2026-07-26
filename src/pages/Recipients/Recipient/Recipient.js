@@ -19,6 +19,7 @@ const RecipientRow = ({
   isSelected = false,
   onSelectChange,
   selectionDisabled = false,
+  locked = false,
   poOptions = [],
   orgOptions = [],
   visibleCols = [],
@@ -57,6 +58,7 @@ const RecipientRow = ({
         onChange={(e) => onChange(field, toNum(e.target.value))}
         onBlur={autoSave ? submit : undefined}
         className={inputClass(field)}
+        disabled={locked}
       />
       <FieldError name={field} />
     </>
@@ -74,6 +76,7 @@ const RecipientRow = ({
         }
         onBlur={autoSave ? submit : undefined}
         className={inputClass("paymentOrderId")}
+        disabled={locked}
       >
         <option value="">(none)</option>
         {poOptions.map((po) => (
@@ -96,6 +99,7 @@ const RecipientRow = ({
         }
         onBlur={autoSave ? submit : undefined}
         className={inputClass("organizationId")}
+        disabled={locked}
       >
         <option value="">(none)</option>
         {orgOptions.map((o) => (
@@ -120,6 +124,8 @@ const RecipientRow = ({
     row?.amount == null || Number.isNaN(Number(row.amount))
       ? 0
       : Number(row.amount);
+  const lockedTitle =
+    "Booked (final signature) — this recipient is read-only. Undo/remove the Booked signature to edit.";
 
   return (
     <div
@@ -127,6 +133,8 @@ const RecipientRow = ({
       className={`${styles.row} ${styles.gridRow} ${
         isEven ? styles.zebraEven : ""
       } ${styles.hoverable}`}
+      title={locked ? lockedTitle : undefined}
+      style={locked ? { opacity: 0.92 } : undefined}
     >
       {/* 0: Actions */}
       <Cell className={`${styles.stickyCol} ${styles.actionsCol} ${hc(0)}`}>
@@ -136,8 +144,9 @@ const RecipientRow = ({
               type="button"
               className={styles.iconCircleBtn}
               onClick={submit}
-              title="Save"
+              title={locked ? lockedTitle : "Save"}
               aria-label="Save"
+              disabled={locked}
             >
               <FiSave />
             </button>
@@ -158,7 +167,7 @@ const RecipientRow = ({
               <input
                 type="checkbox"
                 checked={isSelected}
-                disabled={selectionDisabled}
+                disabled={selectionDisabled || locked}
                 onChange={(e) => {
                   e.stopPropagation();
                   onSelectChange?.(row.id, e.target.checked);
@@ -178,8 +187,9 @@ const RecipientRow = ({
                 e.stopPropagation();
                 onEdit();
               }}
-              title="Edit"
+              title={locked ? lockedTitle : "Edit"}
               aria-label="Edit"
+              disabled={locked}
             >
               <FiEdit />
             </button>
@@ -195,6 +205,7 @@ const RecipientRow = ({
                 }}
                 title="Delete recipient"
                 aria-label="Delete recipient"
+                disabled={locked}
               >
                 <FiTrash2 />
               </button>

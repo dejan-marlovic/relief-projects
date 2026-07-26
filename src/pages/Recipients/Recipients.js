@@ -37,8 +37,6 @@ async function safeParseJsonResponse(res) {
 //The request itself is understandable,
 // but the current state of the resource does not allow the action.
 function isLockedResponse(res, data) {
-  if (res?.status === 409) return true;
-
   const msg = (data?.message || "").toLowerCase();
 
   return (
@@ -70,6 +68,9 @@ function normalizeRecipient(r) {
 
   return {
     id,
+    //organizationId, is shorthand for: organizationId: organizationId, etc
+    //But for amount, we do not first create a variable called amount
+    //works only when you already have a variable called organizationId.
     organizationId,
     paymentOrderId,
     amount: r.amount ?? 0,
@@ -90,6 +91,9 @@ function Recipients() {
   const [selectedRecipientIds, setSelectedRecipientIds] = useState(
     () => new Set(),
   );
+
+  const [lockedRecipientIds, setLockedRecipientIds] = useState(() => new Set());
+  const [lockedBanner, setLockedBanner] = useState("");
 
   // dropdown data
   const [poOptions, setPoOptions] = useState([]);
@@ -134,6 +138,8 @@ function Recipients() {
       if (!projectId) {
         setItems([]);
         setSelectedRecipientIds(new Set());
+        setLockedRecipientIds(new Set());
+        setLockedBanner("");
         return;
       }
 
@@ -147,17 +153,42 @@ function Recipients() {
 
         const data = await res.json();
         const arr = Array.isArray(data) ? data : data ? [data] : [];
+        //Each recipient is passed into your normalizeRecipient function.
+        //.filter(Boolean) removes the null value.
+        const normalized = arr.map(normalizeRecipient).filter(Boolean);
 
-        setItems(arr);
+        //Store the normalized recipients
+        //React schedules a re-render after this state update.
+        setItems(normalized);
+
+        //Extract the IDs of locked recipients
+        //First: filter the locked recipients
+        //Second: extract their IDs
+        //Third: create a Set
+        //Set is useful because checking whether an ID is locked is simple:
+        //lockedRecipientIds.has(recipient.id)
+        const lockedIds = new Set(
+          normalized.filter((r) => r.locked).map((r) => r.id),
+        );
+
+        //Save the locked IDs in state
+        setLockedRecipientIds(lockedIds);
 
         // Remove selected IDs that no longer exist after reload.
+        //Create a set of selectable recipient IDs
         setSelectedRecipientIds((prev) => {
-          const activeIds = new Set(arr.map((r) => r.id));
-          return new Set([...prev].filter((id) => activeIds.has(id)));
+          const selectableIds = new Set(
+            normalized.filter((r) => !r.locked).map((r) => r.id),
+          );
+
+          return new Set([...prev].filter((id) => selectableIds.has(id)));
+          //after every fetch, only recipients that still exist and are not locked may remain selected.
         });
       } catch (e) {
         console.error(e);
         setItems([]);
+        setSelectedRecipientIds(new Set());
+        setLockedRecipientIds(new Set());
       }
     },
     [authHeaders],
@@ -278,6 +309,7 @@ function Recipients() {
     });
 
     setFormError("");
+    setLockedBanner("");
   };
 
   const startCreate = () => {
@@ -291,6 +323,7 @@ function Recipients() {
     });
 
     setFormError("");
+    setLockedBanner("");
   };
 
   const onChange = (field, value) => {
@@ -352,10 +385,43 @@ function Recipients() {
       );
 
       if (!res.ok) {
+        //tries to convert the response body into a JavaScript object.
+
+        //Example:
+        /*
+            {
+            "status": 409,
+            "message": "This payment order is Booked and cannot be edited.",
+            "fieldErrors": {
+              "paymentOrderId": "Booked payment orders are read-only."
+            }
+          }
+       
+          safeParseJsonResponse should not crash if the backend returns:
+
+            an empty response;
+            plain text;
+            malformed JSON;
+            an HTML error page.
+          */
+
         const data = await safeParseJsonResponse(res);
 
+        //Check whether the backend returned field-specific errors
+        //optional chaining operator
         if (data?.fieldErrors) {
           setFieldErrors((prev) => ({ ...prev, [id]: data.fieldErrors }));
+        }
+
+        if (isLockedResponse(res, data)) {
+          const msg =
+            data?.message ||
+            "This payment order is Booked (locked). Existing recipients cannot be changed.";
+
+          setLockedBanner(msg);
+          setFormError("");
+          await fetchRecipients(selectedProjectId);
+          return;
         }
 
         setFormError(
@@ -389,6 +455,18 @@ function Recipients() {
 
       if (!res.ok) {
         const data = await safeParseJsonResponse(res);
+
+        if (isLockedResponse(res, data)) {
+          const msg =
+            data?.message ||
+            "This payment order is Booked (locked). Existing recipients cannot be deleted.";
+
+          setLockedBanner(msg);
+          setFormError("");
+          await fetchRecipients(selectedProjectId);
+          return;
+        }
+
         setFormError(data?.message || "Delete failed.");
         return;
       }
@@ -462,6 +540,17 @@ function Recipients() {
 
       if (!res.ok) {
         const data = await safeParseJsonResponse(res);
+
+        if (isLockedResponse(res, data)) {
+          const msg =
+            data?.message ||
+            "One or more recipients belong to a Booked payment order and cannot be deleted.";
+
+          setLockedBanner(msg);
+          setFormError("");
+          await fetchRecipients(selectedProjectId);
+          return;
+        }
         throw new Error(
           data?.message || "Failed to delete selected recipients.",
         );
@@ -483,8 +572,9 @@ function Recipients() {
   }, [visibleCols]);
 
   const selectableRecipients = useMemo(
-    () => items.filter((r) => r?.id != null),
-    [items],
+    //This makes select-all skip locked recipients.
+    () => items.filter((r) => r?.id != null && !lockedRecipientIds.has(r.id)),
+    [items, lockedRecipientIds],
   );
 
   const selectedRecipientCount = selectedRecipientIds.size;
@@ -572,7 +662,10 @@ function Recipients() {
             </button>
           </div>
         </div>
-
+        {/*If lockedBanner is a non-empty string, the <div> is rendered.*/}
+        {lockedBanner && (
+          <div className={styles.errorBanner}>{lockedBanner}</div>
+        )}
         {formError && <div className={styles.errorBanner}>{formError}</div>}
 
         <div className={styles.table} style={{ ["--rec-grid-cols"]: gridCols }}>
@@ -624,7 +717,10 @@ function Recipients() {
                 onDelete={remove}
                 isSelected={selectedRecipientIds.has(r.id)}
                 onSelectChange={toggleSelectedRecipient}
-                selectionDisabled={editingId === r.id}
+                selectionDisabled={
+                  editingId === r.id || lockedRecipientIds.has(r.id)
+                }
+                locked={lockedRecipientIds.has(r.id)}
                 poOptions={poOptions}
                 orgOptions={orgOptions}
                 visibleCols={visibleCols}
@@ -656,6 +752,7 @@ function Recipients() {
               isEven={false}
               fieldErrors={fieldErrors.new || {}}
               rowRef={newRowRef}
+              locked={false}
             />
           )}
         </div>
