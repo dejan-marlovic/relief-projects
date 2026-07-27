@@ -1,6 +1,7 @@
 // Project.jsx
 import React, { useEffect, useState, useContext, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import ExcelJS from "exceljs";
 
 import styles from "./Project.module.scss";
 import Memos from "../Project/Memos/Memos.jsx";
@@ -20,6 +21,7 @@ import {
   FiUploadCloud,
   FiImage,
   FiAlertCircle,
+  FiDownload,
 } from "react-icons/fi";
 
 import { BASE_URL, ASSETS_URL } from "../../config/api";
@@ -30,6 +32,110 @@ const CAPTION_DELIM = "|||";
 
 const Project = () => {
   const navigate = useNavigate();
+
+  const excelColors = {
+    darkBlue: "1F4E78",
+    mediumBlue: "5B9BD5",
+    lightBlue: "D9EAF7",
+    lightGray: "F3F4F6",
+    borderGray: "D1D5DB",
+    white: "FFFFFF",
+    text: "1F2937",
+  };
+
+  const safeExcelValue = (value) => {
+    if (value == null || value === undefined || value === "") {
+      return "Not specified";
+    }
+    return value;
+  };
+
+  const formatExcelDate = (value) => {
+    //checks whether value is falsy.
+    if (!value) return "Not specified";
+
+    const date = new Date(value);
+
+    //date.getTime() returns the date as the number of milliseconds since January 1, 1970.
+    //valid date example: 1785141000000
+    //invalid date example: new Date("hello").getTime() retuns NaN not a number
+    //formatExcelDate("Unknown date") returns  Unknown date
+    if (Number.isNaN(date.getTime())) {
+      return String(value);
+    }
+
+    //If the date is valid, it is formatted as a readable string.
+    return date.toLocaleString("sv-SE", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const sanitizeExcelFilename = (value) => {
+    const cleaned = String(value || "project")
+      .trim()
+      //character class: [<>:"/\\|?*]
+      .replace(/[<>:"/\\|?*\s]+/g, "_")
+      .replace(/^_+|_+$/g, "");
+
+    return cleaned || "project";
+  };
+
+  //cell is an object provided by ExcelJS. It represents one Excel cell.
+  /*
+  we are doing this: 
+      const fontSettings = {
+      bold: true,
+      size: 18,
+      color: {
+        argb: excelColors.white,
+      },
+    };
+
+    cell.font = fontSettings;
+  */
+  const applyTitleStyle = (cell) => {
+    //these are standard JavaScript objects.
+    // ExcelJS simply expects those objects to have a particular shape.
+    cell.font = {
+      bold: true,
+      size: 18,
+      color: { argb: excelColors.white },
+    };
+
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: excelColors.darkBlue },
+    };
+
+    cell.alignment = {
+      vertical: "middle",
+      horizontal: "left",
+    };
+  };
+
+  const applySectionStyle = (cell) => {
+    cell.font = {
+      bold: true,
+      size: 12,
+      color: { argb: excelColors.white },
+    };
+
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: excelColors.mediumBlue },
+    };
+
+    cell.alignment = {
+      vertical: "middle",
+      horizontal: "left",
+    };
+  };
 
   // 🔐 Helper: fetch with auth + automatic 401 handling
   const authFetch = async (url, options = {}) => {
@@ -75,6 +181,7 @@ const Project = () => {
 
   const [projectDetails, setProjectDetails] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [exportingProject, setExportingProject] = useState(false);
 
   const [projectStatuses, setProjectStatuses] = useState([]);
   const [projectTypes, setProjectTypes] = useState([]);
