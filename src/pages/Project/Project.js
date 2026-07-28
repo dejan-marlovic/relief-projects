@@ -97,9 +97,31 @@ const Project = () => {
 
     cell.font = fontSettings;
   */
+  //receives one ExcelJS cell object: cell
+  /*
+  Example:
+  const titleCell = worksheet.getCell("A1");
+  applyTitleStyle(titleCell);
+
+
+  How the title will look
+
+The title cell will look approximately like this:
+
+┌────────────────────────────────────────┐
+│ PROJECT REPORT                         │
+└────────────────────────────────────────┘
+
+  With:
+
+  dark-blue background;
+  white text;
+  bold font;
+  18-point font;
+  left alignment;
+  vertical centering.
+  */
   const applyTitleStyle = (cell) => {
-    //these are standard JavaScript objects.
-    // ExcelJS simply expects those objects to have a particular shape.
     cell.font = {
       bold: true,
       size: 18,
@@ -118,6 +140,23 @@ const Project = () => {
     };
   };
 
+  /*
+  How the section heading will look
+
+Approximately:
+
+  ┌────────────────────────────────────────┐
+  │ Project Information                    │
+  └────────────────────────────────────────┘
+
+  With:
+
+  medium-blue background;
+  white bold text;
+  12-point font;
+  left alignment;
+  vertical centering.
+  */
   const applySectionStyle = (cell) => {
     cell.font = {
       bold: true,
@@ -125,19 +164,133 @@ const Project = () => {
       color: { argb: excelColors.white },
     };
 
+    //sets the background fill of the cell.
+    //fill should be one solid color rather than stripes, dots, gradients, or another pattern
+    //fgColor means foreground color.
+    //With a solid pattern, this is effectively the cell background color.
     cell.fill = {
       type: "pattern",
       pattern: "solid",
       fgColor: { argb: excelColors.mediumBlue },
     };
 
+    //This controls how the text is positioned inside the cell.
     cell.alignment = {
       vertical: "middle",
       horizontal: "left",
     };
   };
 
-  // 🔐 Helper: fetch with auth + automatic 401 handling
+  //This creates a helper that styles an entire Excel row rather than one cell.
+  /*
+    const headerRow = worksheet.addRow([
+    "Name",
+    "Status",
+    "Amount",
+    "Created",
+  ]);
+
+  applyTableHeaderStyle(headerRow);
+
+  Each header cell gets a solid dark-blue background.
+
+  So the entire header row appears as one dark-blue band.
+
+  How the table header will look
+
+Approximately:
+
+  ┌──────────────┬──────────────┬──────────────┐
+  │ Name         │ Status       │ Amount       │
+  └──────────────┴──────────────┴──────────────┘
+
+  With:
+
+  dark-blue background;
+  white bold text;
+  left alignment;
+  vertical centering;
+  wrapped long headings;
+  thin gray borders around every cell
+  */
+  const applyTableHeaderStyle = (row) => {
+    //row.eachCell() is an ExcelJS method.
+    row.eachCell((cell) => {
+      cell.font = {
+        bold: true,
+        color: { argb: excelColors.white },
+      };
+
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: excelColors.darkBlue },
+      };
+
+      cell.alignment = {
+        vertical: "middle",
+        horizontal: "left",
+        wrapText: true,
+      };
+
+      cell.border = {
+        top: {
+          style: "thin",
+          color: { argb: excelColors.borderGray },
+        },
+        left: {
+          style: "thin",
+          color: { argb: excelColors.borderGray },
+        },
+        bottom: {
+          style: "thin",
+          color: { argb: excelColors.borderGray },
+        },
+        right: {
+          style: "thin",
+          color: { argb: excelColors.borderGray },
+        },
+      };
+    });
+  };
+
+  const applyDataRowStyle = (row, index) => {
+    row.eachCell((cell) => {
+      cell.alignment = {
+        vertical: "top",
+        horizontal: "left",
+        wrapText: true,
+      };
+
+      cell.border = {
+        top: {
+          style: "thin",
+          color: { argb: excelColors.borderGray },
+        },
+        left: {
+          style: "thin",
+          color: { argb: excelColors.borderGray },
+        },
+        bottom: {
+          style: "thin",
+          color: { argb: excelColors.borderGray },
+        },
+        right: {
+          style: "thin",
+          color: { argb: excelColors.borderGray },
+        },
+      };
+
+      if (index % 2 === 1) {
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: excelColors.lightGray },
+        };
+      }
+    });
+  };
+  //Helper: fetch with auth + automatic 401 handling
   const authFetch = async (url, options = {}) => {
     const token = localStorage.getItem("authToken");
 
