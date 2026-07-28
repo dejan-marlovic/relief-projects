@@ -290,6 +290,42 @@ Approximately:
       }
     });
   };
+
+  //takes in id and returns readable status
+  const getProjectStatusLabel = (id) => {
+    const status = (projectStatuses || []).find(
+      (item) => String(item.id) === String(id),
+    );
+
+    return status?.statusName || (id ? `Status ${id}` : "Not specified");
+  };
+
+  const getProjectTypeLabel = (id) => {
+    const type =
+      (projectTypes || []).find((item) => String(item.id)) === String(id);
+
+    return type?.projectTypeName || (id ? `Type ${id}` : "Not specified");
+  };
+
+  const getAddressLabel = (id) => {
+    const address = (addresses || []).find(
+      (item) => String(item.id) === String(id),
+    );
+
+    if (!address) {
+      return id ? `Address ${id}` : "Not specified";
+    }
+
+    const cityLine = [address.postalCode, address.city, address.state]
+      //.filter(Boolean) removes empty values such as:  state: ""
+      .filter(Boolean)
+      .join(" ");
+
+    return [address.street, cityLine, address.country]
+      .filter(Boolean)
+      .join(", ");
+  };
+
   //Helper: fetch with auth + automatic 401 handling
   const authFetch = async (url, options = {}) => {
     const token = localStorage.getItem("authToken");
