@@ -326,6 +326,25 @@ Approximately:
       .join(", ");
   };
 
+  const getParentProjectLabel = (id) => {
+    if (!id) return "Not specified";
+
+    const allProjects = [
+      ...(Array.isArray(projects) ? projects : []),
+      ...(Array.isArray(availableParentProjects)
+        ? availableParentProjects
+        : []),
+    ];
+
+    const parentProject = allProjects.find(
+      (project) => String(project.id) === String(id),
+    );
+
+    return parentProject
+      ? `${parentProject.projectCode} — ${parentProject.projectName}`
+      : `Project ${id}`;
+  };
+
   //Helper: fetch with auth + automatic 401 handling
   const authFetch = async (url, options = {}) => {
     const token = localStorage.getItem("authToken");
