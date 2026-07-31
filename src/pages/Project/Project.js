@@ -345,6 +345,81 @@ Approximately:
       : `Project ${id}`;
   };
 
+  const addWorksheetTitle = (worksheet, title, subtitle, lastColumn) => {
+    //lastColumn combines into one large cell, example: A1  B1  C1  D1  E1  F1  G1  H1. From A to H:
+    // worksheet.mergeCells("A1:H1");
+    //lastColumn = The final column across which the title should stretch.
+    /*
+           A       B       C       D       E       F       G       H
+    ┌───────────────────────────────────────────────────────────────┐
+1   │                       Project Report                          │
+    ├───────────────────────────────────────────────────────────────┤
+2   │ Generated on 31 July 2026                                    │
+    ├───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┤
+3   │ A3    │ B3    │ C3    │ D3    │ E3    │ F3    │ G3    │ H3    │
+    └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘
+    */
+    worksheet.mergeCells(`A1:${lastColumn}1`);
+
+    //Because A1:H1 has been merged, the title appears across that entire merged area.
+    worksheet.getCell("A1").value = title;
+
+    applyTitleStyle(worksheet.getCell("A1"));
+
+    //getRow(1) retrieves the ExcelJS row object for row 1.
+    worksheet.getRow(1).height = 28;
+
+    //same for: A2  B2  C2  D2  E2  F2  G2  H2
+    worksheet.mergeCells(`A2:${lastColumn}2`);
+
+    //Because A2:H2 is merged, the value appears across the merged subtitle area.
+    worksheet.getCell("A2").value = subtitle;
+
+    worksheet.getCell("A2").font = {
+      italic: true,
+      color: { argb: "6B7280" },
+    };
+
+    worksheet.getCell("A2").alignment = {
+      vertical: "middle",
+      horizontal: "left",
+    };
+
+    /*
+    That creates a visual hierarchy:
+
+    Larger row for the main title
+    Smaller row for the subtitle
+    */
+    worksheet.getRow(2).height = 22;
+  };
+
+  const handleExportProject = async () => {
+    if (!projectDetails?.id) {
+      setFormError("Please select a project before exporting.");
+      return;
+    }
+
+    try {
+      setExportingProject(true);
+      setFormError("");
+
+      const workbook = ExcelJS.Workbook();
+
+      workbook.creator = "Relief Projects";
+      workbook.lastModifiedBy = "Relief Projects";
+      workbook.created = new Date();
+      workbook.modified = new Date();
+
+      workbook.title = projectDetails.projectName || "Project Export";
+      workbook.subject = `Project export: ${projectDetails.projectName || ""}`;
+
+      // =====================================================
+      // SHEET 1: COMPLETE PROJECT REPORT
+      // =====================================================
+    } catch {}
+  };
+
   //Helper: fetch with auth + automatic 401 handling
   const authFetch = async (url, options = {}) => {
     const token = localStorage.getItem("authToken");
