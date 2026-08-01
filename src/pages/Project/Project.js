@@ -301,8 +301,9 @@ Approximately:
   };
 
   const getProjectTypeLabel = (id) => {
-    const type =
-      (projectTypes || []).find((item) => String(item.id)) === String(id);
+    const type = (projectTypes || []).find(
+      (item) => String(item.id) === String(id),
+    );
 
     return type?.projectTypeName || (id ? `Type ${id}` : "Not specified");
   };
@@ -340,9 +341,13 @@ Approximately:
       (project) => String(project.id) === String(id),
     );
 
-    return parentProject
-      ? `${parentProject.projectCode} — ${parentProject.projectName}`
-      : `Project ${id}`;
+    if (!parentProject) return `Project ${id}`;
+
+    const parentCode = parentProject.projectCode || "";
+    const parentName = parentProject.projectName || parentProject.name || "";
+    const parentLabel = [parentCode, parentName].filter(Boolean).join(" — ");
+
+    return parentLabel || `Project ${id}`;
   };
 
   const addWorksheetTitle = (worksheet, title, subtitle, lastColumn) => {
@@ -404,20 +409,708 @@ Approximately:
       setExportingProject(true);
       setFormError("");
 
-      const workbook = ExcelJS.Workbook();
+      // The workbook represents the entire Excel file.
+      const workbook = new ExcelJS.Workbook();
 
+      // Workbook metadata.
       workbook.creator = "Relief Projects";
       workbook.lastModifiedBy = "Relief Projects";
+
+      // Sets the workbook's creation date to the current date and time.
       workbook.created = new Date();
+
+      // Sets the workbook's last-modified date to the current date and time.
       workbook.modified = new Date();
 
       workbook.title = projectDetails.projectName || "Project Export";
+
       workbook.subject = `Project export: ${projectDetails.projectName || ""}`;
 
       // =====================================================
       // SHEET 1: COMPLETE PROJECT REPORT
       // =====================================================
-    } catch {}
+
+      // Adds a worksheet to the workbook. Its Excel tab is named
+      // "Complete Project Report".
+      //
+      // workbook
+      // └── reportSheet
+      //     └── "Complete Project Report"
+      //
+      // ExcelJS allows worksheet configuration to be passed as the
+      // second argument to addWorksheet().
+      const reportSheet = workbook.addWorksheet("Complete Project Report", {
+        // The views property controls how the worksheet is displayed
+        // when it is opened.
+        views: [
+          {
+            // Frozen rows remain visible while the user scrolls.
+            state: "frozen",
+
+            // Freeze the first two rows:
+            // Rows 1 and 2 remain visible.
+            // Rows 3 onward scroll normally.
+            ySplit: 2,
+          },
+        ],
+
+        properties: {
+          // Give worksheet rows a default height of 20.
+          defaultRowHeight: 20,
+        },
+
+        // Print and page configuration. This controls how the worksheet
+        // is laid out when printed or viewed in print-related modes.
+        pageSetup: {
+          // Portrait is taller than it is wide.
+          orientation: "portrait",
+
+          // Enable fit-to-page printing so Excel scales the sheet using
+          // the width and height limits below.
+          fitToPage: true,
+
+          // Fit all columns onto one printed page horizontally.
+          // Width: one page. Height: as many pages as necessary.
+          fitToWidth: 1,
+
+          // Allow the worksheet to use as many vertical pages as needed.
+          fitToHeight: 0,
+
+          // ExcelJS paper-size code 9 represents A4 paper.
+          paperSize: 9,
+        },
+      });
+
+      /*
+       * At this point, reportSheet is a newly created ExcelJS worksheet with:
+       * - the name "Complete Project Report";
+       * - two frozen rows;
+       * - a default row height of 20;
+       * - portrait A4 printing;
+       * - fit-to-page settings.
+       */
+
+      // Each object in this array describes one worksheet column.
+      // Because there are four objects, columns A through D are configured.
+      reportSheet.columns = [
+        // Column A: narrow column. The key is a programmatic identifier
+        // that can be used when adding object-based rows.
+        { key: "columnA", width: 8 },
+
+        // The second object represents Excel column B.
+        { key: "columnB", width: 31 },
+
+        // Column C is the widest of the four columns.
+        { key: "columnC", width: 42 },
+
+        // Column D has a medium width.
+        { key: "columnD", width: 26 },
+      ];
+
+      /*
+       * ExcelJS matches object properties to the configured column keys:
+       *
+       * reportSheet.addRow({
+       *   columnA: "1",
+       *   columnB: "Project Name",
+       *   columnC: projectDetails.projectName,
+       *   columnD: "Active",
+       * });
+       *
+       * columnA -> Excel column A
+       * columnB -> Excel column B
+       * columnC -> Excel column C
+       * columnD -> Excel column D
+       *
+       * Column widths:
+       * A: 8, B: 31, C: 42, D: 26
+       */
+
+      addWorksheetTitle(
+        reportSheet,
+        projectDetails.projectName || "Project Report",
+        `Project code: ${
+          projectDetails.projectCode || "Not specified"
+        } | Exported: ${new Date().toLocaleString("sv-SE")}`,
+        "D",
+      );
+
+      // Start at row 4 because:
+      // Row 1: title
+      // Row 2: subtitle
+      // Row 3: spacing
+      // Row 4: first report section
+      let currentRow = 4;
+
+      // Adds a full-width section heading at the current row.
+      // This inner helper can directly access reportSheet and currentRow
+      // from the surrounding handleExportProject function.
+      const addReportSection = (sectionName) => {
+        reportSheet.mergeCells(`A${currentRow}:D${currentRow}`);
+
+        const cell = reportSheet.getCell(`A${currentRow}`);
+
+        cell.value = sectionName;
+        applySectionStyle(cell);
+
+        reportSheet.getRow(currentRow).height = 22;
+
+        // Move the row pointer down so the next item is written
+        // to the following row.
+        currentRow += 1;
+      };
+
+      // Adds one label/value row. Column A contains the label, while
+      // columns B through D are merged into one wider value area.
+      const addReportField = (label, value) => {
+        reportSheet.mergeCells(`B${currentRow}:D${currentRow}`);
+
+        const labelCell = reportSheet.getCell(`A${currentRow}`);
+
+        const valueCell = reportSheet.getCell(`B${currentRow}`);
+
+        labelCell.value = label;
+        valueCell.value = safeExcelValue(value);
+
+        labelCell.font = {
+          bold: true,
+          color: { argb: excelColors.text },
+        };
+
+        labelCell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: excelColors.lightBlue },
+        };
+
+        [labelCell, valueCell].forEach((cell) => {
+          cell.alignment = {
+            vertical: "top",
+            horizontal: "left",
+            wrapText: true,
+          };
+
+          cell.border = {
+            top: {
+              style: "thin",
+              color: { argb: excelColors.borderGray },
+            },
+            left: {
+              style: "thin",
+              color: { argb: excelColors.borderGray },
+            },
+            bottom: {
+              style: "thin",
+              color: { argb: excelColors.borderGray },
+            },
+            right: {
+              style: "thin",
+              color: { argb: excelColors.borderGray },
+            },
+          };
+        });
+
+        currentRow += 1;
+      };
+
+      // Adds a table at the current row, styles its header and data rows,
+      // and leaves one blank row after the table.
+      const addReportTable = (headers, rows) => {
+        const headerRow = reportSheet.getRow(currentRow);
+
+        headers.forEach((header, index) => {
+          headerRow.getCell(index + 1).value = header;
+        });
+
+        applyTableHeaderStyle(headerRow);
+        currentRow += 1;
+
+        rows.forEach((values, index) => {
+          const row = reportSheet.getRow(currentRow);
+
+          values.forEach((value, cellIndex) => {
+            row.getCell(cellIndex + 1).value = safeExcelValue(value);
+          });
+
+          applyDataRowStyle(row, index);
+          currentRow += 1;
+        });
+
+        currentRow += 1;
+      };
+
+      // ------------------------
+      // Basic information
+      // ------------------------
+
+      addReportSection("Basic Information");
+
+      addReportField("Project ID", projectDetails.id);
+      addReportField("Project Code", projectDetails.projectCode);
+
+      addReportField("Reference Number", projectDetails.refProjectNo);
+
+      addReportField("Project Name", projectDetails.projectName);
+
+      addReportField("Funding Source", projectDetails.fundingSource);
+
+      addReportField(
+        "Project Status",
+        getProjectStatusLabel(projectDetails.projectStatusId),
+      );
+
+      addReportField(
+        "Project Type",
+        getProjectTypeLabel(projectDetails.projectTypeId),
+      );
+
+      addReportField(
+        "Parent Project",
+        getParentProjectLabel(projectDetails.partOfId),
+      );
+
+      addReportField("Address", getAddressLabel(projectDetails.addressId));
+
+      addReportField("Approved", projectDetails.approved);
+
+      // ------------------------
+      // Dates
+      // ------------------------
+
+      addReportSection("Project Period");
+
+      addReportField(
+        "Project Date",
+        formatExcelDate(projectDetails.projectDate),
+      );
+
+      addReportField(
+        "Project Start",
+        formatExcelDate(projectDetails.projectStart),
+      );
+
+      addReportField("Project End", formatExcelDate(projectDetails.projectEnd));
+
+      addReportField(
+        "Revised Start",
+        formatExcelDate(projectDetails.projectStartRev),
+      );
+
+      addReportField(
+        "Revised End",
+        formatExcelDate(projectDetails.projectEndRev),
+      );
+
+      addReportField("Period in Months", projectDetails.projectPeriodMonths);
+
+      // ------------------------
+      // Costs
+      // ------------------------
+
+      addReportSection("Support Costs");
+
+      addReportField(
+        "FO Support Cost",
+        projectDetails.foSupportCostPercent !== null &&
+          projectDetails.foSupportCostPercent !== undefined
+          ? `${projectDetails.foSupportCostPercent}%`
+          : null,
+      );
+
+      addReportField(
+        "Own organization Support Cost",
+        projectDetails.irwSupportCostPercent !== null &&
+          projectDetails.irwSupportCostPercent !== undefined
+          ? `${projectDetails.irwSupportCostPercent}%`
+          : null,
+      );
+
+      // ------------------------
+      // Description
+      // ------------------------
+
+      addReportSection("Project Description");
+
+      const descriptionRow = currentRow;
+
+      addReportField("Description", projectDetails.projectDescription);
+
+      reportSheet.getRow(descriptionRow).height = 80;
+
+      /*
+       * PIN code is deliberately excluded because downloaded
+       * spreadsheets can be forwarded or stored outside the system.
+       *
+       * Uncomment this when you explicitly want it included:
+       */
+      // addReportField("PIN Code", projectDetails.pinCode);
+
+      // ------------------------
+      // Sectors in main report
+      // ------------------------
+
+      addReportSection("Sectors");
+
+      const reportSectorRows =
+        selectedSectorIds.length > 0
+          ? selectedSectorIds.map((sectorId, index) => [
+              index + 1,
+              getSectorLabel(sectorId),
+              sectorId,
+              "",
+            ])
+          : [["", "No sectors assigned", "", ""]];
+
+      addReportTable(["Number", "Sector", "Sector ID", ""], reportSectorRows);
+
+      // ------------------------
+      // Organizations in report
+      // ------------------------
+
+      addReportSection("Related Organizations");
+
+      const reportOrganizationRows =
+        projectOrganizations.length > 0
+          ? projectOrganizations.map((organization, index) => [
+              index + 1,
+              getOrgLabel(organization.organizationId),
+              getOrgStatusLabel(organization.organizationStatusId),
+              organization.organizationId,
+            ])
+          : [["", "No related organizations", "", ""]];
+
+      addReportTable(
+        ["Number", "Organization", "Organization Status", "Organization ID"],
+        reportOrganizationRows,
+      );
+
+      // ------------------------
+      // Participants in report
+      // ------------------------
+
+      addReportSection("Project Participants");
+
+      const reportParticipantRows =
+        projectParticipants.length > 0
+          ? projectParticipants.map((participant, index) => [
+              index + 1,
+              getEmployeeLabel(participant.employeeId),
+              getPositionLabel(participant.positionId),
+              participant.employeeId,
+            ])
+          : [["", "No participants added", "", ""]];
+
+      addReportTable(
+        ["Number", "Participant", "Position", "Employee ID"],
+        reportParticipantRows,
+      );
+
+      // ------------------------
+      // Images in report
+      // ------------------------
+
+      addReportSection("Project Images");
+
+      const reportImageRows =
+        imageNames.length > 0
+          ? imageNames.map((filename, index) => [
+              index + 1,
+              filename,
+              imageCaptions[index] || "",
+              `${coverImagePath}${filename}`,
+            ])
+          : [["", "No project images", "", ""]];
+
+      const imageHeaderRow = reportSheet.getRow(currentRow);
+
+      ["Number", "Filename", "Caption", "Image URL"].forEach(
+        (header, index) => {
+          imageHeaderRow.getCell(index + 1).value = header;
+        },
+      );
+
+      applyTableHeaderStyle(imageHeaderRow);
+      currentRow += 1;
+
+      reportImageRows.forEach((values, index) => {
+        const row = reportSheet.getRow(currentRow);
+
+        values.forEach((value, cellIndex) => {
+          row.getCell(cellIndex + 1).value = safeExcelValue(value);
+        });
+
+        const imageUrl = values[3];
+
+        if (imageUrl) {
+          const urlCell = row.getCell(4);
+
+          urlCell.value = {
+            text: imageUrl,
+            hyperlink: imageUrl,
+          };
+
+          urlCell.font = {
+            color: { argb: "0563C1" },
+            underline: true,
+          };
+        }
+
+        applyDataRowStyle(row, index);
+
+        /*
+         * applyDataRowStyle sets the standard font, so we restore
+         * hyperlink styling after applying the row style.
+         */
+        if (imageUrl) {
+          row.getCell(4).font = {
+            color: { argb: "0563C1" },
+            underline: true,
+          };
+        }
+
+        currentRow += 1;
+      });
+
+      // =====================================================
+      // SHEET 2: SECTORS
+      // =====================================================
+
+      const sectorSheet = workbook.addWorksheet("Sectors", {
+        views: [
+          {
+            state: "frozen",
+            ySplit: 3,
+          },
+        ],
+      });
+
+      sectorSheet.columns = [
+        { key: "number", width: 12 },
+        { key: "sector", width: 55 },
+        { key: "sectorId", width: 18 },
+      ];
+
+      addWorksheetTitle(
+        sectorSheet,
+        "Project Sectors",
+        projectDetails.projectName || "",
+        "C",
+      );
+
+      const sectorHeader = sectorSheet.getRow(3);
+
+      sectorHeader.values = ["Number", "Sector", "Sector ID"];
+
+      applyTableHeaderStyle(sectorHeader);
+
+      const sectorRows =
+        selectedSectorIds.length > 0
+          ? selectedSectorIds.map((sectorId, index) => ({
+              number: index + 1,
+              sector: getSectorLabel(sectorId),
+              sectorId,
+            }))
+          : [
+              {
+                number: "",
+                sector: "No sectors assigned",
+                sectorId: "",
+              },
+            ];
+
+      sectorRows.forEach((sector, index) => {
+        const row = sectorSheet.addRow(sector);
+        applyDataRowStyle(row, index);
+      });
+
+      sectorSheet.autoFilter = {
+        from: "A3",
+        to: "C3",
+      };
+
+      // =====================================================
+      // SHEET 3: ORGANIZATIONS
+      // =====================================================
+
+      const organizationSheet = workbook.addWorksheet("Organizations", {
+        views: [
+          {
+            state: "frozen",
+            ySplit: 3,
+          },
+        ],
+      });
+
+      organizationSheet.columns = [
+        { key: "number", width: 12 },
+        { key: "organization", width: 45 },
+        { key: "status", width: 30 },
+        { key: "organizationId", width: 20 },
+      ];
+
+      addWorksheetTitle(
+        organizationSheet,
+        "Related Organizations",
+        projectDetails.projectName || "",
+        "D",
+      );
+
+      const organizationHeader = organizationSheet.getRow(3);
+
+      organizationHeader.values = [
+        "Number",
+        "Organization",
+        "Status",
+        "Organization ID",
+      ];
+
+      applyTableHeaderStyle(organizationHeader);
+
+      const organizationRows =
+        projectOrganizations.length > 0
+          ? projectOrganizations.map((organization, index) => ({
+              number: index + 1,
+              organization: getOrgLabel(organization.organizationId),
+              status: getOrgStatusLabel(organization.organizationStatusId),
+              organizationId: organization.organizationId,
+            }))
+          : [
+              {
+                number: "",
+                organization: "No related organizations",
+                status: "",
+                organizationId: "",
+              },
+            ];
+
+      organizationRows.forEach((organization, index) => {
+        const row = organizationSheet.addRow(organization);
+
+        applyDataRowStyle(row, index);
+      });
+
+      organizationSheet.autoFilter = {
+        from: "A3",
+        to: "D3",
+      };
+
+      // =====================================================
+      // SHEET 4: PARTICIPANTS
+      // =====================================================
+
+      const participantSheet = workbook.addWorksheet("Participants", {
+        views: [
+          {
+            state: "frozen",
+            ySplit: 3,
+          },
+        ],
+      });
+
+      participantSheet.columns = [
+        { key: "number", width: 12 },
+        { key: "participant", width: 42 },
+        { key: "position", width: 34 },
+        { key: "employeeId", width: 18 },
+      ];
+
+      addWorksheetTitle(
+        participantSheet,
+        "Project Participants",
+        projectDetails.projectName || "",
+        "D",
+      );
+
+      const participantHeader = participantSheet.getRow(3);
+
+      participantHeader.values = [
+        "Number",
+        "Participant",
+        "Position",
+        "Employee ID",
+      ];
+
+      applyTableHeaderStyle(participantHeader);
+
+      const participantRows =
+        projectParticipants.length > 0
+          ? projectParticipants.map((participant, index) => ({
+              number: index + 1,
+              participant: getEmployeeLabel(participant.employeeId),
+              position: getPositionLabel(participant.positionId),
+              employeeId: participant.employeeId,
+            }))
+          : [
+              {
+                number: "",
+                participant: "No participants added",
+                position: "",
+                employeeId: "",
+              },
+            ];
+
+      participantRows.forEach((participant, index) => {
+        const row = participantSheet.addRow(participant);
+
+        applyDataRowStyle(row, index);
+      });
+
+      participantSheet.autoFilter = {
+        from: "A3",
+        to: "D3",
+      };
+
+      // =====================================================
+      // GENERATE THE FILE
+      // =====================================================
+
+      // Convert the in-memory ExcelJS workbook into an XLSX buffer.
+      const buffer = await workbook.xlsx.writeBuffer();
+
+      // Wrap the generated buffer in a browser Blob with the correct
+      // MIME type for an .xlsx file.
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      // Create a temporary browser URL pointing to the Blob.
+      const downloadUrl = URL.createObjectURL(blob);
+
+      // Create a temporary HTML anchor element that will start
+      // the download when clicked.
+      const downloadLink = document.createElement("a");
+
+      // Use the project code first. Fall back to the project ID,
+      // and finally to the generic word "project".
+      const projectCode =
+        projectDetails.projectCode || projectDetails.id || "project";
+
+      const projectName = projectDetails.projectName || "project";
+
+      downloadLink.href = downloadUrl;
+
+      // Create a safe filename by removing or replacing characters
+      // that are invalid in file names.
+      downloadLink.download =
+        `${sanitizeExcelFilename(projectCode)}_` +
+        `${sanitizeExcelFilename(projectName)}.xlsx`;
+
+      // Add the temporary link to the page, click it programmatically,
+      // and remove it again.
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      downloadLink.remove();
+
+      // Release the temporary Blob URL because it is no longer needed.
+      URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error("Failed to export project:", error);
+
+      setFormError("Failed to export the selected project to Excel.");
+    } finally {
+      // This runs whether the export succeeds or fails.
+      setExportingProject(false);
+    }
   };
 
   //Helper: fetch with auth + automatic 401 handling
@@ -1628,6 +2321,15 @@ Approximately:
             </div>
 
             <div className={styles.headerActions}>
+              <button
+                type="button"
+                onClick={handleExportProject}
+                className={styles.exportButton}
+                disabled={loading || exportingProject || !projectDetails}
+              >
+                <FiDownload />
+                {exportingProject ? "Exporting..." : "Export to Excel"}
+              </button>
               <button
                 type="button"
                 onClick={handleSave}
