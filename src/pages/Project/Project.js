@@ -3210,28 +3210,6 @@ Approximately:
                       </div>
                     </div>
                   </div>
-
-                  {/* Bottom actions */}
-                  <div className={styles.bottomActions}>
-                    <button
-                      type="button"
-                      onClick={handleSave}
-                      className={styles.saveButton}
-                      disabled={loading}
-                    >
-                      <FiSave />
-                      Save changes
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleDelete}
-                      className={styles.deleteButton}
-                      disabled={loading}
-                    >
-                      <FiTrash2 />
-                      Delete project
-                    </button>
-                  </div>
                 </form>
               )}
             </section>
