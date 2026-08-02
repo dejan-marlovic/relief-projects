@@ -17,15 +17,31 @@ $primary: #4a90e2;
   padding: 1.25rem;
 }
 
-/* Header like Signatures */
+/*
+ * Sticky page header.
+ *
+ * The title, subtitle, and New Budget button remain visible while scrolling
+ * through the budget list.
+ */
 .pageHeader {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+
+  margin: -1.25rem -1.25rem 1rem;
+  padding: 1rem 1.25rem;
+
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px 14px 0 0;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .pageHeaderText {
@@ -54,15 +70,27 @@ $primary: #4a90e2;
   gap: 0.6rem;
   flex-wrap: wrap;
   justify-content: flex-end;
+  flex-shrink: 0;
 }
 
-/* New button matches Signatures */
+/* New Budget button */
 .primaryBtn {
   @include forms.primary-button;
   padding: 0.78rem 1rem;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
+  white-space: nowrap;
+}
+
+/*
+ * Keeps the sticky header from covering the first part of the form after
+ * scrollIntoView() runs.
+ */
+.createFormSection {
+  scroll-margin-top: 100px;
+  margin-bottom: 1rem;
 }
 
 /* Budget list */
@@ -75,4 +103,35 @@ $primary: #4a90e2;
 .noData {
   padding: 12px;
   color: #666;
+}
+
+@media (max-width: 760px) {
+  .page {
+    padding: 0.75rem;
+  }
+
+  .shell {
+    padding: 1rem;
+  }
+
+  .pageHeader {
+    flex-direction: column;
+    align-items: stretch;
+
+    margin: -1rem -1rem 1rem;
+    padding: 0.9rem 1rem;
+  }
+
+  .headerActions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .primaryBtn {
+    width: 100%;
+  }
+
+  .createFormSection {
+    scroll-margin-top: 155px;
+  }
 }
