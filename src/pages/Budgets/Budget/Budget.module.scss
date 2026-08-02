@@ -1,3 +1,5 @@
+//Budget.module.scss
+
 @use "../../../styles/forms" as forms;
 
 $primary: #4a90e2;
@@ -142,6 +144,43 @@ label {
   gap: 0.5rem;
 }
 
+.exportButton {
+  background: #fff;
+  color: #217346;
+  border: 1px solid rgba(33, 115, 70, 0.35);
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: rgba(33, 115, 70, 0.08);
+    border-color: rgba(33, 115, 70, 0.55);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.07);
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
 .deleteButton {
   @include forms.danger-button;
   display: inline-flex;
@@ -156,12 +195,18 @@ label {
   gap: 0.8rem;
   justify-content: flex-end;
   padding: 0.75rem 0.25rem 0.25rem;
+  flex-wrap: wrap;
 }
 
 @media (max-width: 640px) {
   .bottomActions {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .bottomActions > button {
+    width: 100%;
+    justify-content: center;
   }
 }
 
