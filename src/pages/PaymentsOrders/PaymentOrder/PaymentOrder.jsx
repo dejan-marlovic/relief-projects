@@ -129,13 +129,13 @@ const PaymentOrder = ({
 
   const hc = (i) => (!visibleCols[i] ? styles.hiddenCol : "");
 
-  // ✅ amount is computed by backend, display only
+  // amount is computed by backend, display only
   const computedAmount =
     po?.amount == null || Number.isNaN(Number(po.amount))
       ? 0
       : Number(po.amount);
 
-  // ✅ PO ID label (read-only)
+  // PO ID label (read-only)
   const poIdLabel = isCreate ? "(new)" : po?.id != null ? `PO#${po.id}` : "-";
   const poIdWithLock =
     !isCreate && locked ? `${poIdLabel} (Booked)` : poIdLabel;
@@ -183,16 +183,24 @@ const PaymentOrder = ({
               <input
                 type="checkbox"
                 checked={isSelected}
-                disabled={selectionDisabled || locked}
+                /*
+                 * Locked payment orders remain selectable because selection is
+                 * used for Excel export. Editing and deleting are still blocked.
+                 */
+                disabled={selectionDisabled}
                 onChange={(e) => {
                   e.stopPropagation();
                   onSelectChange?.(po.id, e.target.checked);
                 }}
                 onClick={(e) => e.stopPropagation()}
-                title="Select payment order"
+                title={
+                  locked
+                    ? "Select this locked payment order for export or bulk-delete review"
+                    : "Select payment order"
+                }
                 aria-label={`Select payment order ${po.id}`}
                 className={styles.rowCheckbox}
-              ></input>
+              />
             )}
             <button
               type="button"

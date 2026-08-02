@@ -6,11 +6,18 @@ import React, {
   useRef,
   useState,
 } from "react";
+import ExcelJS from "exceljs";
 import { ProjectContext } from "../../context/ProjectContext";
 import PaymentOrder from "./PaymentOrder/PaymentOrder";
 import styles from "./PaymentOrders.module.scss";
 import PaymentOrderLines from "./PaymentOrder/PaymentOrderLines/PaymentOrderLines";
-import { FiPlus, FiColumns, FiAlertCircle, FiTrash2 } from "react-icons/fi";
+import {
+  FiPlus,
+  FiColumns,
+  FiAlertCircle,
+  FiTrash2,
+  FiDownload,
+} from "react-icons/fi";
 
 import { BASE_URL } from "../../config/api"; // adjust path if needed
 
@@ -94,7 +101,7 @@ function normalizePO(po) {
 }
 
 function PaymentOrders() {
-  const { selectedProjectId } = useContext(ProjectContext);
+  const { selectedProjectId, projects } = useContext(ProjectContext);
 
   const [orders, setOrders] = useState([]);
   const [editingId, setEditingId] = useState(null);
@@ -118,6 +125,7 @@ function PaymentOrders() {
   const [expandedPoId, setExpandedPoId] = useState(null);
 
   const [selectedPoIds, setSelectedPoIds] = useState(() => new Set());
+  const [exportingSelected, setExportingSelected] = useState(false);
 
   const [orgOptions, setOrgOptions] = useState([]);
   const [costDetailOptions, setCostDetailOptions] = useState([]);
@@ -174,11 +182,15 @@ function PaymentOrders() {
         setLockedPoIds(lockedIds);
 
         setSelectedPoIds((prev) => {
-          const selectableIds = new Set(
-            normalized.filter((po) => !po.locked).map((po) => po.id),
-          );
+          /*
+           * Keep selected IDs that still exist in the refreshed result.
+           * Locked payment orders remain selectable because selection is also
+           * used for Excel export. The backend decides which selected orders
+           * may actually be deleted.
+           */
+          const activeIds = new Set(normalized.map((po) => po.id));
 
-          return new Set([...prev].filter((id) => selectableIds.has(id)));
+          return new Set([...prev].filter((id) => activeIds.has(id)));
         });
       } catch (e) {
         console.error(e);
@@ -499,9 +511,11 @@ function PaymentOrders() {
   }, [visibleCols]);
 
   const selectablePaymentOrders = useMemo(
-    //From all orders, keep only payment orders that have an ID.
-    () => orders.filter((po) => po?.id != null && !lockedPoIds.has(po.id)),
-    [orders, lockedPoIds],
+    // All active payment orders with an ID are selectable, including locked ones.
+    // Locked orders can be exported and may be sent to bulk delete, where the
+    // backend safely skips them and reports which IDs were not deleted.
+    () => orders.filter((po) => po?.id != null),
+    [orders],
   );
 
   const selectedPoCount = [...selectedPoIds].filter((id) =>
@@ -552,18 +566,21 @@ function PaymentOrders() {
 
   //This function will be called when the user clicks “Delete selected” button.
   const removeSelected = async () => {
-    const selectableIds = new Set(selectablePaymentOrders.map((po) => po.id));
-    const ids = [...selectedPoIds].filter((id) => selectableIds.has(id));
+    const activeIds = new Set(selectablePaymentOrders.map((po) => po.id));
+    const ids = [...selectedPoIds].filter((id) => activeIds.has(id));
 
     if (ids.length === 0) return;
 
     if (
       !window.confirm(
-        `Delete ${ids.length} selected payment order${ids.length === 1 ? "" : "s"}?`,
+        `Delete ${ids.length} selected payment order${ids.length === 1 ? "" : "s"}? Locked payment orders will be kept.`,
       )
     ) {
       return;
     }
+
+    setFormError("");
+    setLockedBanner("");
 
     try {
       const res = await fetch(`${BASE_URL}/api/payment-orders/bulk-delete`, {
@@ -575,27 +592,498 @@ function PaymentOrders() {
         body: JSON.stringify({ ids }),
       });
 
+      const data = await safeParseJsonResponse(res);
+
       if (!res.ok) {
-        const raw = await res.text().catch(() => "");
-        throw new Error(raw || "Failed to remove selected payment orders");
+        throw new Error(
+          data?.message || "Failed to remove selected payment orders",
+        );
       }
 
-      // Clear all selected checkboxes after successful delete.
-      setSelectedPoIds(new Set());
+      /*
+       * The backend returns a structured result. Locked orders are not deleted,
+       * but their IDs are listed in the response so the user understands why
+       * fewer rows were removed than selected.
+       */
+      const lockedIds = Array.isArray(data?.lockedPaymentOrderIds)
+        ? data.lockedPaymentOrderIds
+        : [];
 
-      // If the currently expanded payment order was deleted, close the lines panel.
-      setExpandedPoId((cur) => (ids.includes(cur) ? null : cur));
+      if (lockedIds.length > 0) {
+        setLockedBanner(
+          data?.message ||
+            `Locked payment orders were not deleted: ${lockedIds
+              .map((id) => `PO#${id}`)
+              .join(", ")}.`,
+        );
+      } else {
+        setLockedBanner("");
+      }
+
+      if (
+        Array.isArray(data?.notFoundPaymentOrderIds) &&
+        data.notFoundPaymentOrderIds.length > 0
+      ) {
+        setFormError(
+          `Payment orders not found: ${data.notFoundPaymentOrderIds
+            .map((id) => `PO#${id}`)
+            .join(", ")}.`,
+        );
+      }
 
       // Reload the latest payment orders from the backend.
       await fetchOrders(selectedProjectId);
+
+      // Keep only locked orders selected after the delete attempt. This makes
+      // it easy to export them or inspect them after the backend skipped them.
+      setSelectedPoIds(new Set(lockedIds));
+
+      // Close the lines panel if its payment order was successfully deleted.
+      setExpandedPoId((cur) =>
+        cur != null && !lockedIds.includes(cur) && ids.includes(cur)
+          ? null
+          : cur,
+      );
     } catch (err) {
       console.error(err);
-      alert(err.message || "Failed to delete selected payment orders");
+      setFormError(err.message || "Failed to delete selected payment orders");
+    }
+  };
+
+  // =========================
+  // EXCEL EXPORT HELPERS
+  // =========================
+
+  const excelColors = {
+    darkBlue: "FF1F4E78",
+    mediumBlue: "FF5B9BD5",
+    lightBlue: "FFD9EAF7",
+    lightGray: "FFF3F4F6",
+    paleGreen: "FFE2F0D9",
+    borderGray: "FFD1D5DB",
+    white: "FFFFFFFF",
+    text: "FF1F2937",
+  };
+
+  const sanitizeExcelFilename = (value, maxLength = 50) => {
+    const cleaned = String(value || "payment_orders")
+      .trim()
+      .replace(/[<>:"/\\|?*\s]+/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .slice(0, maxLength)
+      .replace(/_+$/g, "");
+
+    return cleaned || "payment_orders";
+  };
+
+  const sanitizeExcelText = (value) =>
+    String(value ?? "")
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, "")
+      .trim();
+
+  const toExcelNumber = (value) => {
+    if (value == null || value === "") return 0;
+    const number = Number(value);
+    return Number.isFinite(number) ? number : 0;
+  };
+
+  const formatExcelDate = (value) => {
+    if (!value) return "Not specified";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return sanitizeExcelText(value) || "Not specified";
+    }
+    return date.toLocaleString("sv-SE", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const getProjectName = (id) => {
+    if (id == null || id === "") return "Not specified";
+    const project = (Array.isArray(projects) ? projects : []).find(
+      (item) => String(item.id) === String(id),
+    );
+    return (
+      sanitizeExcelText(project?.projectName || project?.name) ||
+      `Project ${id}`
+    );
+  };
+
+  const getOrganizationName = (id) => {
+    if (id == null || id === "") return "Not specified";
+    const organization = orgOptions.find(
+      (item) => String(item.id) === String(id),
+    );
+    return sanitizeExcelText(organization?.name) || `Organization ${id}`;
+  };
+
+  const getCostDetailLabel = (id) => {
+    if (id == null || id === "") return "Not specified";
+    const costDetail = costDetailOptions.find(
+      (item) => Number(item.costDetailId) === Number(id),
+    );
+    const description = sanitizeExcelText(costDetail?.costDescription);
+    return costDetail
+      ? `${description || "No description"} (CD#${costDetail.costDetailId})`
+      : `Cost Detail #${id}`;
+  };
+
+  const applyExcelBorder = (cell) => {
+    cell.border = {
+      top: { style: "thin", color: { argb: excelColors.borderGray } },
+      left: { style: "thin", color: { argb: excelColors.borderGray } },
+      bottom: { style: "thin", color: { argb: excelColors.borderGray } },
+      right: { style: "thin", color: { argb: excelColors.borderGray } },
+    };
+  };
+
+  const styleExcelTitle = (cell) => {
+    cell.font = { bold: true, size: 18, color: { argb: excelColors.white } };
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: excelColors.darkBlue },
+    };
+    cell.alignment = { vertical: "middle", horizontal: "left" };
+  };
+
+  const styleExcelHeader = (row) => {
+    row.eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: excelColors.white } };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: excelColors.darkBlue },
+      };
+      cell.alignment = {
+        vertical: "middle",
+        horizontal: "left",
+        wrapText: true,
+      };
+      applyExcelBorder(cell);
+    });
+    row.height = 30;
+  };
+
+  const styleExcelRow = (row, index) => {
+    row.eachCell((cell) => {
+      cell.alignment = {
+        vertical: "top",
+        horizontal: "left",
+        wrapText: true,
+      };
+      applyExcelBorder(cell);
+      if (index % 2 === 1) {
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: excelColors.lightGray },
+        };
+      }
+    });
+  };
+
+  const handleExportSelected = async () => {
+    const selectedOrders = orders.filter(
+      (po) => po?.id != null && selectedPoIds.has(po.id),
+    );
+
+    if (selectedOrders.length === 0) {
+      setFormError(
+        "Please select at least one payment order before exporting.",
+      );
+      return;
+    }
+
+    try {
+      setExportingSelected(true);
+      setFormError("");
+
+      const sortedOrders = [...selectedOrders].sort((a, b) => {
+        const dateA = a.paymentOrderDate
+          ? new Date(a.paymentOrderDate).getTime()
+          : 0;
+        const dateB = b.paymentOrderDate
+          ? new Date(b.paymentOrderDate).getTime()
+          : 0;
+        if (dateA !== dateB) return dateA - dateB;
+        return Number(a.id || 0) - Number(b.id || 0);
+      });
+
+      /* Fetch the latest saved lines for every selected payment order. */
+      const lineResponses = await Promise.all(
+        sortedOrders.map(async (po) => {
+          const response = await fetch(
+            `${BASE_URL}/api/payment-order-lines/payment-order/${po.id}`,
+            { headers: authHeaders },
+          );
+
+          if (!response.ok) {
+            const data = await safeParseJsonResponse(response);
+            throw new Error(
+              data?.message || `Failed to load lines for PO#${po.id}.`,
+            );
+          }
+
+          const data = await response.json().catch(() => []);
+          return [po.id, Array.isArray(data) ? data : data ? [data] : []];
+        }),
+      );
+
+      const linesByPaymentOrderId = new Map(lineResponses);
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = "Relief Projects";
+      workbook.lastModifiedBy = "Relief Projects";
+      workbook.created = new Date();
+      workbook.modified = new Date();
+      workbook.title = "Selected Payment Orders";
+      workbook.subject = `Export of ${sortedOrders.length} selected payment orders with lines`;
+
+      const worksheet = workbook.addWorksheet("Selected Payment Orders", {
+        views: [{ state: "frozen", ySplit: 4 }],
+        properties: { defaultRowHeight: 20 },
+        pageSetup: {
+          orientation: "landscape",
+          fitToPage: true,
+          fitToWidth: 1,
+          fitToHeight: 0,
+          paperSize: 9,
+        },
+      });
+
+      /* Supported ExcelJS row grouping. */
+      worksheet.properties.outlineLevelRow = 1;
+
+      worksheet.columns = [
+        { key: "paymentOrderId", width: 16 },
+        { key: "transaction", width: 18 },
+        { key: "date", width: 22 },
+        { key: "description", width: 38 },
+        { key: "amount", width: 18 },
+        { key: "message", width: 32 },
+        { key: "pinCode", width: 18 },
+        { key: "status", width: 18 },
+      ];
+
+      worksheet.mergeCells("A1:H1");
+      worksheet.getCell("A1").value = "Selected Payment Orders Report";
+      styleExcelTitle(worksheet.getCell("A1"));
+      worksheet.getRow(1).height = 30;
+
+      const projectName = getProjectName(selectedProjectId);
+      worksheet.mergeCells("A2:H2");
+      worksheet.getCell("A2").value =
+        `Project: ${projectName} | Selected payment orders: ${sortedOrders.length} | ` +
+        `Exported: ${new Date().toLocaleString("sv-SE")}`;
+      worksheet.getCell("A2").font = {
+        italic: true,
+        color: { argb: "FF6B7280" },
+      };
+
+      worksheet.mergeCells("A3:H3");
+      worksheet.getCell("A3").value =
+        "Payment-order lines are collapsed initially. Use Excel's outline controls to expand or collapse them.";
+      worksheet.getCell("A3").fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: excelColors.lightBlue },
+      };
+      worksheet.getCell("A3").alignment = { wrapText: true };
+
+      const headerRow = worksheet.getRow(4);
+      headerRow.values = [
+        "Payment Order ID",
+        "Header Transaction",
+        "Date",
+        "Description",
+        "Amount",
+        "Message",
+        "Pin Code",
+        "Status",
+      ];
+      styleExcelHeader(headerRow);
+
+      let grandTotal = 0;
+
+      sortedOrders.forEach((po, index) => {
+        const poAmount = toExcelNumber(po.amount);
+        grandTotal += poAmount;
+
+        const orderRow = worksheet.addRow({
+          paymentOrderId: `PO#${po.id}`,
+          transaction:
+            po.transactionId != null
+              ? `TX#${po.transactionId}`
+              : "Not specified",
+          date: formatExcelDate(po.paymentOrderDate),
+          description:
+            sanitizeExcelText(po.paymentOrderDescription) || "Not specified",
+          amount: poAmount,
+          message: sanitizeExcelText(po.message) || "Not specified",
+          pinCode: sanitizeExcelText(po.pinCode) || "Not specified",
+          status: po.locked ? "Booked / Locked" : "Editable",
+        });
+
+        styleExcelRow(orderRow, index);
+        orderRow.eachCell((cell) => {
+          cell.font = { ...(cell.font || {}), bold: true };
+        });
+        orderRow.getCell(5).numFmt = "#,##0.00";
+
+        const lines = linesByPaymentOrderId.get(po.id) || [];
+        const lineHeader = worksheet.addRow([]);
+        lineHeader.outlineLevel = 1;
+        lineHeader.hidden = true;
+        lineHeader.getCell(1).value = "Lines";
+        lineHeader.getCell(2).value = "Transaction";
+        lineHeader.getCell(3).value = "Organization";
+        lineHeader.getCell(4).value = "Cost Detail";
+        lineHeader.getCell(5).value = "Amount";
+        lineHeader.getCell(6).value = "Memo";
+
+        for (let column = 1; column <= 8; column += 1) {
+          const cell = lineHeader.getCell(column);
+          cell.font = { bold: true, color: { argb: excelColors.white } };
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: excelColors.mediumBlue },
+          };
+          cell.alignment = { wrapText: true };
+          applyExcelBorder(cell);
+        }
+
+        let lineTotal = 0;
+
+        if (lines.length === 0) {
+          const emptyRow = worksheet.addRow([]);
+          emptyRow.outlineLevel = 1;
+          emptyRow.hidden = true;
+          emptyRow.getCell(1).value = "↳";
+          emptyRow.getCell(2).value = "No payment-order lines.";
+          for (let column = 1; column <= 8; column += 1) {
+            const cell = emptyRow.getCell(column);
+            cell.font = { italic: true, color: { argb: "FF6B7280" } };
+            cell.fill = {
+              type: "pattern",
+              pattern: "solid",
+              fgColor: { argb: excelColors.lightGray },
+            };
+            applyExcelBorder(cell);
+          }
+        } else {
+          lines.forEach((line, lineIndex) => {
+            const amount = toExcelNumber(line.amount);
+            lineTotal += amount;
+
+            const lineRow = worksheet.addRow([]);
+            lineRow.outlineLevel = 1;
+            lineRow.hidden = true;
+            lineRow.getCell(1).value = line.id != null ? `L#${line.id}` : "↳";
+            lineRow.getCell(2).value =
+              line.transactionId != null
+                ? `TX#${line.transactionId}`
+                : po.transactionId != null
+                  ? `TX#${po.transactionId} (header)`
+                  : "Not specified";
+            lineRow.getCell(3).value = getOrganizationName(line.organizationId);
+            lineRow.getCell(4).value = getCostDetailLabel(line.costDetailId);
+            lineRow.getCell(5).value = amount;
+            lineRow.getCell(6).value =
+              sanitizeExcelText(line.memo) || "Not specified";
+            lineRow.getCell(5).numFmt = "#,##0.00";
+
+            for (let column = 1; column <= 8; column += 1) {
+              const cell = lineRow.getCell(column);
+              cell.alignment = {
+                vertical: "top",
+                horizontal: "left",
+                wrapText: true,
+              };
+              applyExcelBorder(cell);
+              if (lineIndex % 2 === 1) {
+                cell.fill = {
+                  type: "pattern",
+                  pattern: "solid",
+                  fgColor: { argb: excelColors.lightGray },
+                };
+              }
+            }
+          });
+
+          const lineTotalRow = worksheet.addRow([]);
+          lineTotalRow.outlineLevel = 1;
+          lineTotalRow.hidden = true;
+          lineTotalRow.getCell(1).value = "TOTAL";
+          lineTotalRow.getCell(2).value = `Lines total for PO#${po.id}`;
+          lineTotalRow.getCell(5).value = Number(lineTotal.toFixed(2));
+          lineTotalRow.getCell(5).numFmt = "#,##0.00";
+          lineTotalRow.getCell(6).value =
+            `Header amount: ${poAmount.toFixed(2)} | Difference: ${(poAmount - lineTotal).toFixed(2)}`;
+
+          for (let column = 1; column <= 8; column += 1) {
+            const cell = lineTotalRow.getCell(column);
+            cell.font = { bold: true };
+            cell.fill = {
+              type: "pattern",
+              pattern: "solid",
+              fgColor: { argb: excelColors.paleGreen },
+            };
+            cell.alignment = { wrapText: true };
+            applyExcelBorder(cell);
+          }
+        }
+      });
+
+      const totalRow = worksheet.addRow([]);
+      totalRow.getCell(1).value = "GRAND TOTAL";
+      totalRow.getCell(5).value = Number(grandTotal.toFixed(2));
+      totalRow.getCell(5).numFmt = "#,##0.00";
+      for (let column = 1; column <= 8; column += 1) {
+        const cell = totalRow.getCell(column);
+        cell.font = { bold: true, color: { argb: excelColors.text } };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: excelColors.paleGreen },
+        };
+        applyExcelBorder(cell);
+      }
+
+      worksheet.autoFilter = { from: "A4", to: "H4" };
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const downloadUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const shortProjectName = sanitizeExcelFilename(projectName, 35);
+      link.href = downloadUrl;
+      link.download =
+        `Payment_Orders_${shortProjectName}_` +
+        `${sortedOrders.length}_selected.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 0);
+    } catch (error) {
+      console.error("Failed to export selected payment orders:", error);
+      setFormError(
+        error?.message ||
+          "Failed to export the selected payment orders to Excel.",
+      );
+    } finally {
+      setExportingSelected(false);
     }
   };
 
   const subtitle = selectedProjectId
-    ? `Project #${selectedProjectId} • ${orders.length} order${
+    ? `${getProjectName(selectedProjectId)} • ${orders.length} order${
         orders.length === 1 ? "" : "s"
       }`
     : "Select a project to see payment orders";
@@ -614,9 +1102,22 @@ function PaymentOrders() {
           <div className={styles.headerActions}>
             <button
               type="button"
+              className={styles.exportInlineBtn}
+              onClick={handleExportSelected}
+              disabled={selectedPoCount === 0 || exportingSelected}
+              title="Export selected payment orders to Excel"
+            >
+              <FiDownload />
+              {exportingSelected
+                ? "Exporting..."
+                : `Export selected${selectedPoCount > 0 ? ` (${selectedPoCount})` : ""}`}
+            </button>
+
+            <button
+              type="button"
               className={styles.dangerInlineBtn}
               onClick={removeSelected}
-              disabled={selectedPoCount === 0}
+              disabled={selectedPoCount === 0 || exportingSelected}
               title="Delete selected payment orders"
             >
               <FiTrash2></FiTrash2>
@@ -747,9 +1248,7 @@ function PaymentOrders() {
                   }
                   isSelected={selectedPoIds.has(po.id)}
                   onSelectChange={toggleSelectedPo}
-                  selectionDisabled={
-                    editingId === po.id || lockedPoIds.has(po.id)
-                  }
+                  selectionDisabled={editingId === po.id}
                 />
 
                 {expandedPoId === po.id && (

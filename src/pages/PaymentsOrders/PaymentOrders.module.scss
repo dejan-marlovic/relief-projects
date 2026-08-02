@@ -56,12 +56,11 @@ $primary: #4a90e2;
   justify-content: flex-end;
 }
 
-/* Columns UI (✅ EXACT match to Transactions) */
+/* Columns UI (EXACT match to Transactions) */
 .columnsBox {
   position: relative;
 }
 
-/* ✅ This is the important fix */
 .iconPillBtn {
   @include forms.ghost-button($primary);
   padding: 0.6rem 0.85rem;
@@ -104,7 +103,45 @@ $primary: #4a90e2;
   padding: 0.78rem 1rem;
 }
 
-/* Error (✅ make it match PaymentOrderLines banner) */
+/* Excel export button */
+.exportInlineBtn {
+  background: #fff;
+  color: #217346;
+  border: 1px solid rgba(33, 115, 70, 0.35);
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: rgba(33, 115, 70, 0.08);
+    border-color: rgba(33, 115, 70, 0.55);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.07);
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+/* Error (make it match PaymentOrderLines banner) */
 .errorBanner {
   background-color: #ffe6e6;
   color: #b00000;
@@ -113,7 +150,6 @@ $primary: #4a90e2;
   margin: 0.75rem 0;
   font-size: 0.9rem;
   border: 1px solid #ffb3b3;
-
   display: flex;
   gap: 8px;
   align-items: center;
@@ -131,12 +167,9 @@ $primary: #4a90e2;
 
   --po-header-bg: #f6f7fb;
   --po-header-border: #e5e7eb;
-
-  /* Default (overridden inline by --po-grid-cols) */
   --po-grid-cols: 190px;
 }
 
-/* Grid row */
 .gridRow {
   display: grid;
   grid-template-columns: var(--po-grid-cols);
@@ -145,7 +178,6 @@ $primary: #4a90e2;
   min-width: 1000px;
 }
 
-/* Header row */
 .headerRow {
   position: sticky;
   top: 0;
@@ -165,7 +197,6 @@ $primary: #4a90e2;
   background: var(--po-header-bg);
 }
 
-/* Sticky header col */
 .stickyColHeader {
   position: sticky;
   left: 0;
@@ -175,7 +206,6 @@ $primary: #4a90e2;
   overflow: visible;
 }
 
-/* Hidden col */
 .hiddenCol {
   width: 0 !important;
   padding: 0 !important;
@@ -185,7 +215,6 @@ $primary: #4a90e2;
   pointer-events: none;
 }
 
-/* Empty */
 .noData {
   padding: 12px;
   color: #666;
@@ -223,4 +252,25 @@ $primary: #4a90e2;
   background: rgba(74, 144, 226, 0.04);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
   padding: 10px 12px 12px;
+}
+
+@media (max-width: 760px) {
+  .pageHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .headerActions {
+    justify-content: flex-start;
+  }
+
+  .headerActions > button,
+  .columnsBox {
+    flex: 1 1 auto;
+  }
+
+  .columnsBox > button {
+    width: 100%;
+    justify-content: center;
+  }
 }
