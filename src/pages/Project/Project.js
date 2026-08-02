@@ -74,6 +74,35 @@ const Project = () => {
     });
   };
 
+  // Returns a memo date without an unnecessary time component.
+  // Memo dates come from an HTML date input and normally have the shape YYYY-MM-DD.
+  const formatExcelDateOnly = (value) => {
+    if (!value) return "Not specified";
+
+    const normalizedValue = String(value).slice(0, 10);
+    const date = new Date(`${normalizedValue}T00:00:00`);
+
+    if (Number.isNaN(date.getTime())) {
+      return String(value);
+    }
+
+    return date.toLocaleDateString("sv-SE", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+  };
+
+  // Memo DTOs have used a few different property names over time.
+  // This helper returns the first available memo-text value.
+  const getMemoText = (memo = {}) =>
+    memo.message ??
+    memo.text ??
+    memo.content ??
+    memo.body ??
+    memo.memoText ??
+    "";
+
   const sanitizeExcelFilename = (value) => {
     const cleaned = String(value || "project")
       .trim()
@@ -408,6 +437,51 @@ Approximately:
     try {
       setExportingProject(true);
       setFormError("");
+
+      // Fetch the latest saved memos from the backend.
+      // Memos.jsx uses the same endpoint and filters the returned data by project.
+      const memoResponse = await authFetch(`${BASE_URL}/api/memos/active`, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!memoResponse.ok && memoResponse.status !== 204) {
+        throw new Error("Failed to load project memos for export.");
+      }
+
+      // safeReadJson handles 204 responses and empty response bodies.
+      const memoData =
+        memoResponse.status === 204 ? [] : await safeReadJson(memoResponse);
+
+      // Normalize the response so the rest of the export always works with an array.
+      const allMemos = Array.isArray(memoData)
+        ? memoData
+        : memoData
+          ? [memoData]
+          : [];
+
+      // Keep only memos that belong to the currently selected project.
+      const projectMemos = allMemos.filter(
+        (memo) => String(memo.projectId) === String(projectDetails.id),
+      );
+
+      // Sort newest memo first without mutating the original array.
+      const sortedProjectMemos = [...projectMemos].sort((a, b) => {
+        const dateA = a.memoDate
+          ? new Date(`${String(a.memoDate).slice(0, 10)}T00:00:00`)
+          : null;
+
+        const dateB = b.memoDate
+          ? new Date(`${String(b.memoDate).slice(0, 10)}T00:00:00`)
+          : null;
+
+        if (!dateA && !dateB) return 0;
+        if (!dateA) return 1;
+        if (!dateB) return -1;
+
+        return dateB.getTime() - dateA.getTime();
+      });
 
       // The workbook represents the entire Excel file.
       const workbook = new ExcelJS.Workbook();
@@ -806,6 +880,126 @@ Approximately:
       );
 
       // ------------------------
+      // Memos in report
+      // ------------------------
+
+      addReportSection("Project Memos");
+
+      const reportMemoRows =
+        sortedProjectMemos.length > 0
+          ? sortedProjectMemos.map((memo, index) => [
+              index + 1,
+              formatExcelDateOnly(memo.memoDate),
+              getEmployeeLabel(memo.employeeId),
+              getPositionLabel(memo.positionId),
+            ])
+          : [["", "No memos available", "", ""]];
+
+      // This compact table makes it easy to scan memo metadata.
+      addReportTable(
+        ["Number", "Memo Date", "Employee", "Position"],
+        reportMemoRows,
+      );
+
+      // Add each memo again as a readable full-width text block.
+      if (sortedProjectMemos.length > 0) {
+        sortedProjectMemos.forEach((memo, index) => {
+          reportSheet.mergeCells(`A${currentRow}:D${currentRow}`);
+
+          const memoHeadingCell = reportSheet.getCell(`A${currentRow}`);
+
+          memoHeadingCell.value =
+            `Memo ${index + 1} — ` +
+            `${formatExcelDateOnly(memo.memoDate)} — ` +
+            `${getEmployeeLabel(memo.employeeId)}`;
+
+          memoHeadingCell.font = {
+            bold: true,
+            color: { argb: excelColors.text },
+          };
+
+          memoHeadingCell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: excelColors.lightBlue },
+          };
+
+          memoHeadingCell.alignment = {
+            vertical: "middle",
+            horizontal: "left",
+            wrapText: true,
+          };
+
+          memoHeadingCell.border = {
+            top: {
+              style: "thin",
+              color: { argb: excelColors.borderGray },
+            },
+            left: {
+              style: "thin",
+              color: { argb: excelColors.borderGray },
+            },
+            bottom: {
+              style: "thin",
+              color: { argb: excelColors.borderGray },
+            },
+            right: {
+              style: "thin",
+              color: { argb: excelColors.borderGray },
+            },
+          };
+
+          reportSheet.getRow(currentRow).height = 24;
+          currentRow += 1;
+
+          reportSheet.mergeCells(`A${currentRow}:D${currentRow}`);
+
+          const memoTextCell = reportSheet.getCell(`A${currentRow}`);
+          const memoText = getMemoText(memo) || "(Empty memo)";
+
+          memoTextCell.value = memoText;
+          memoTextCell.alignment = {
+            vertical: "top",
+            horizontal: "left",
+            wrapText: true,
+          };
+
+          memoTextCell.border = {
+            top: {
+              style: "thin",
+              color: { argb: excelColors.borderGray },
+            },
+            left: {
+              style: "thin",
+              color: { argb: excelColors.borderGray },
+            },
+            bottom: {
+              style: "thin",
+              color: { argb: excelColors.borderGray },
+            },
+            right: {
+              style: "thin",
+              color: { argb: excelColors.borderGray },
+            },
+          };
+
+          // Estimate a readable row height while limiting extremely long memos.
+          const estimatedLines = Math.max(
+            2,
+            Math.ceil(String(memoText).length / 95),
+          );
+
+          reportSheet.getRow(currentRow).height = Math.min(
+            180,
+            estimatedLines * 18,
+          );
+
+          // Leave a blank row before the next memo or report section.
+          currentRow += 2;
+        });
+      }
+
+      // ------------------------
       // Images in report
       // ------------------------
 
@@ -1058,6 +1252,99 @@ Approximately:
       participantSheet.autoFilter = {
         from: "A3",
         to: "D3",
+      };
+
+      // =====================================================
+      // SHEET 5: MEMOS
+      // =====================================================
+
+      const memoSheet = workbook.addWorksheet("Memos", {
+        views: [
+          {
+            state: "frozen",
+            ySplit: 3,
+          },
+        ],
+        properties: {
+          defaultRowHeight: 20,
+        },
+        pageSetup: {
+          // Landscape gives the memo-text column more horizontal room.
+          orientation: "landscape",
+          fitToPage: true,
+          fitToWidth: 1,
+          fitToHeight: 0,
+          paperSize: 9,
+        },
+      });
+
+      memoSheet.columns = [
+        { key: "number", width: 10 },
+        { key: "memoDate", width: 18 },
+        { key: "employee", width: 30 },
+        { key: "position", width: 28 },
+        { key: "message", width: 85 },
+        { key: "memoId", width: 14 },
+      ];
+
+      addWorksheetTitle(
+        memoSheet,
+        "Project Memos",
+        projectDetails.projectName || "",
+        "F",
+      );
+
+      const memoHeader = memoSheet.getRow(3);
+
+      memoHeader.values = [
+        "Number",
+        "Memo Date",
+        "Employee",
+        "Position",
+        "Memo",
+        "Memo ID",
+      ];
+
+      applyTableHeaderStyle(memoHeader);
+
+      const memoRows =
+        sortedProjectMemos.length > 0
+          ? sortedProjectMemos.map((memo, index) => ({
+              number: index + 1,
+              memoDate: formatExcelDateOnly(memo.memoDate),
+              employee: getEmployeeLabel(memo.employeeId),
+              position: getPositionLabel(memo.positionId),
+              message: getMemoText(memo) || "(Empty memo)",
+              memoId: memo.id,
+            }))
+          : [
+              {
+                number: "",
+                memoDate: "",
+                employee: "",
+                position: "",
+                message: "No memos available for this project",
+                memoId: "",
+              },
+            ];
+
+      memoRows.forEach((memo, index) => {
+        const row = memoSheet.addRow(memo);
+
+        applyDataRowStyle(row, index);
+
+        // Increase the row height according to the approximate memo length.
+        const estimatedLines = Math.max(
+          2,
+          Math.ceil(String(memo.message || "").length / 75),
+        );
+
+        row.height = Math.min(180, estimatedLines * 18);
+      });
+
+      memoSheet.autoFilter = {
+        from: "A3",
+        to: "F3",
       };
 
       // =====================================================

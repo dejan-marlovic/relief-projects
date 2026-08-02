@@ -93,7 +93,7 @@ export default function Memos() {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     }),
-    [token]
+    [token],
   );
 
   // Load active memos and filter by project
@@ -246,7 +246,7 @@ export default function Memos() {
           method: isCreate ? "POST" : "PUT",
           headers: authHeaders,
           body: JSON.stringify(payload),
-        }
+        },
       );
       if (!res.ok) throw new Error(`${isCreate ? "Create" : "Update"} failed`);
       await fetchMemos();
@@ -316,8 +316,8 @@ export default function Memos() {
             !selectedProjectId
               ? "Select a project first"
               : editingId === "new"
-              ? "Finish the current draft first"
-              : "Create new memo"
+                ? "Finish the current draft first"
+                : "Create new memo"
           }
         >
           + New Memo
