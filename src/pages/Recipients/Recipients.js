@@ -1,4 +1,3 @@
-// src/components/Recipients/Recipients.jsx
 import React, {
   useCallback,
   useContext,
@@ -7,10 +6,11 @@ import React, {
   useRef,
   useState,
 } from "react";
+import ExcelJS from "exceljs";
 import { ProjectContext } from "../../context/ProjectContext";
 import RecipientRow from "./Recipient/Recipient";
 import styles from "./Recipients.module.scss";
-import { FiColumns, FiPlus, FiTrash2 } from "react-icons/fi";
+import { FiColumns, FiPlus, FiTrash2, FiDownload } from "react-icons/fi";
 
 import { BASE_URL } from "../../config/api"; // adjust path if needed
 
@@ -94,6 +94,7 @@ function Recipients() {
 
   const [lockedRecipientIds, setLockedRecipientIds] = useState(() => new Set());
   const [lockedBanner, setLockedBanner] = useState("");
+  const [exportingSelected, setExportingSelected] = useState(false);
 
   // dropdown data
   const [poOptions, setPoOptions] = useState([]);
@@ -177,12 +178,16 @@ function Recipients() {
         // Remove selected IDs that no longer exist after reload.
         //Create a set of selectable recipient IDs
         setSelectedRecipientIds((prev) => {
-          const selectableIds = new Set(
-            normalized.filter((r) => !r.locked).map((r) => r.id),
-          );
+          /*
+           * Selection is independent from editability.
+           *
+           * Locked recipients remain selectable so they can be exported and so
+           * bulk delete can report them as skipped. Only IDs that no longer
+           * exist are removed after a refresh.
+           */
+          const activeIds = new Set(normalized.map((r) => r.id));
 
-          return new Set([...prev].filter((id) => selectableIds.has(id)));
-          //after every fetch, only recipients that still exist and are not locked may remain selected.
+          return new Set([...prev].filter((id) => activeIds.has(id)));
         });
       } catch (e) {
         console.error(e);
@@ -523,13 +528,14 @@ function Recipients() {
 
     if (
       !window.confirm(
-        `Delete ${ids.length} selected recipient${ids.length === 1 ? "" : "s"}?`,
+        `Delete ${ids.length} selected recipient${ids.length === 1 ? "" : "s"}? Locked recipients will be skipped.`,
       )
     ) {
       return;
     }
 
     setFormError("");
+    setLockedBanner("");
 
     try {
       const res = await fetch(`${BASE_URL}/api/recipients/bulk-delete`, {
@@ -538,22 +544,38 @@ function Recipients() {
         body: JSON.stringify({ ids }),
       });
 
+      const data = await safeParseJsonResponse(res);
+
       if (!res.ok) {
-        const data = await safeParseJsonResponse(res);
-
-        if (isLockedResponse(res, data)) {
-          const msg =
-            data?.message ||
-            "One or more recipients belong to a Booked payment order and cannot be deleted.";
-
-          setLockedBanner(msg);
-          setFormError("");
-          await fetchRecipients(selectedProjectId);
-          return;
-        }
         throw new Error(
           data?.message || "Failed to delete selected recipients.",
         );
+      }
+
+      /*
+       * Backend returns:
+       *
+       * {
+       *   requestedCount,
+       *   deletedCount,
+       *   lockedRecipientIds,
+       *   notFoundRecipientIds,
+       *   message
+       * }
+       */
+      const lockedIds = Array.isArray(data?.lockedRecipientIds)
+        ? data.lockedRecipientIds
+        : [];
+
+      if (lockedIds.length > 0) {
+        setLockedBanner(
+          data?.message ||
+            `Locked recipients were not deleted: ${lockedIds
+              .map((id) => `Recipient #${id}`)
+              .join(", ")}.`,
+        );
+      } else {
+        setLockedBanner("");
       }
 
       setSelectedRecipientIds(new Set());
@@ -561,6 +583,365 @@ function Recipients() {
     } catch (err) {
       console.error(err);
       setFormError(err.message || "Failed to delete recipients.");
+    }
+  };
+
+  // =========================
+  // ✅ EXCEL EXPORT HELPERS
+  // =========================
+
+  const excelColors = {
+    darkBlue: "FF1F4E78",
+    lightBlue: "FFD9EAF7",
+    lightGray: "FFF3F4F6",
+    borderGray: "FFD1D5DB",
+    white: "FFFFFFFF",
+    text: "FF1F2937",
+  };
+
+  const sanitizeExcelFilename = (value, maxLength = 50) => {
+    const cleaned = String(value || "recipients")
+      .trim()
+      .replace(/[<>:"/\\|?*\s]+/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .slice(0, maxLength)
+      .replace(/_+$/g, "");
+
+    return cleaned || "recipients";
+  };
+
+  const sanitizeExcelText = (value) =>
+    String(value ?? "")
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, "")
+      .trim();
+
+  const toExcelNumber = (value) => {
+    if (value == null || value === "") return 0;
+
+    const number = Number(value);
+    return Number.isFinite(number) ? number : 0;
+  };
+
+  const getOrganizationLabel = (id) => {
+    const organization = orgOptions.find(
+      (item) => String(item.id) === String(id),
+    );
+
+    return (
+      sanitizeExcelText(organization?.label) ||
+      (id != null ? `Organization ${id}` : "Not specified")
+    );
+  };
+
+  const getPaymentOrderForExport = (id) =>
+    poOptions.find((item) => String(item.id) === String(id)) || null;
+
+  const getPaymentOrderLabel = (id) => {
+    if (id == null || id === "") return "Not specified";
+
+    const paymentOrder = getPaymentOrderForExport(id);
+
+    if (!paymentOrder) return `PO#${id}`;
+
+    const description = sanitizeExcelText(
+      paymentOrder.paymentOrderDescription ??
+        paymentOrder.payment_order_description ??
+        "",
+    );
+
+    return description
+      ? `PO#${paymentOrder.id} — ${description}`
+      : `PO#${paymentOrder.id}`;
+  };
+
+  const getPaymentOrderState = (recipient) => {
+    const paymentOrder = getPaymentOrderForExport(recipient.paymentOrderId);
+
+    return recipient.locked || paymentOrder?.locked
+      ? "Booked / Locked"
+      : "Editable";
+  };
+
+  const applyExcelBorder = (cell) => {
+    cell.border = {
+      top: {
+        style: "thin",
+        color: { argb: excelColors.borderGray },
+      },
+      left: {
+        style: "thin",
+        color: { argb: excelColors.borderGray },
+      },
+      bottom: {
+        style: "thin",
+        color: { argb: excelColors.borderGray },
+      },
+      right: {
+        style: "thin",
+        color: { argb: excelColors.borderGray },
+      },
+    };
+  };
+
+  const handleExportSelected = async () => {
+    const selectedRecipients = items.filter(
+      (recipient) =>
+        recipient?.id != null && selectedRecipientIds.has(recipient.id),
+    );
+
+    if (selectedRecipients.length === 0) {
+      setFormError("Please select at least one recipient before exporting.");
+      return;
+    }
+
+    try {
+      setExportingSelected(true);
+      setFormError("");
+
+      const projectsResponse = await fetch(
+        `${BASE_URL}/api/projects/ids-names`,
+        {
+          headers: authHeaders,
+        },
+      );
+
+      if (!projectsResponse.ok) {
+        throw new Error("Failed to load project names for export.");
+      }
+
+      const projectsData = await projectsResponse.json();
+      const projects = Array.isArray(projectsData) ? projectsData : [];
+
+      const project = projects.find(
+        (item) => String(item.id) === String(selectedProjectId),
+      );
+
+      const projectName =
+        sanitizeExcelText(project?.projectName || project?.name) ||
+        (selectedProjectId ? `Project ${selectedProjectId}` : "Not specified");
+
+      const sortedRecipients = [...selectedRecipients].sort(
+        (a, b) => Number(a.id || 0) - Number(b.id || 0),
+      );
+
+      const workbook = new ExcelJS.Workbook();
+
+      workbook.creator = "Relief Projects";
+      workbook.lastModifiedBy = "Relief Projects";
+      workbook.created = new Date();
+      workbook.modified = new Date();
+      workbook.title = "Selected Recipients";
+      workbook.subject = `Export of ${sortedRecipients.length} selected recipients`;
+
+      const worksheet = workbook.addWorksheet("Selected Recipients", {
+        views: [{ state: "frozen", ySplit: 4 }],
+        properties: {
+          defaultRowHeight: 20,
+        },
+        pageSetup: {
+          orientation: "landscape",
+          fitToPage: true,
+          fitToWidth: 1,
+          fitToHeight: 0,
+          paperSize: 9,
+        },
+      });
+
+      worksheet.columns = [
+        { key: "recipientId", width: 15 },
+        { key: "organization", width: 34 },
+        { key: "paymentOrder", width: 46 },
+        { key: "amount", width: 18 },
+        { key: "state", width: 20 },
+        { key: "project", width: 34 },
+      ];
+
+      worksheet.mergeCells("A1:F1");
+      const titleCell = worksheet.getCell("A1");
+      titleCell.value = "Selected Recipients Report";
+      titleCell.font = {
+        bold: true,
+        size: 18,
+        color: { argb: excelColors.white },
+      };
+      titleCell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: excelColors.darkBlue },
+      };
+      titleCell.alignment = {
+        vertical: "middle",
+        horizontal: "left",
+      };
+      worksheet.getRow(1).height = 30;
+
+      worksheet.mergeCells("A2:F2");
+      worksheet.getCell("A2").value =
+        `Project: ${projectName} | ` +
+        `Selected recipients: ${sortedRecipients.length} | ` +
+        `Exported: ${new Date().toLocaleString("sv-SE")}`;
+      worksheet.getCell("A2").font = {
+        italic: true,
+        color: { argb: "FF6B7280" },
+      };
+      worksheet.getCell("A2").alignment = {
+        vertical: "middle",
+        horizontal: "left",
+        wrapText: true,
+      };
+
+      worksheet.mergeCells("A3:F3");
+      worksheet.getCell("A3").value =
+        "Only checked recipients are included. Booked recipients can be exported but remain read-only.";
+      worksheet.getCell("A3").fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: excelColors.lightBlue },
+      };
+      worksheet.getCell("A3").font = {
+        italic: true,
+        color: { argb: excelColors.text },
+      };
+      worksheet.getCell("A3").alignment = {
+        vertical: "middle",
+        horizontal: "left",
+        wrapText: true,
+      };
+
+      const headerRow = worksheet.getRow(4);
+      headerRow.values = [
+        "Recipient ID",
+        "Organization",
+        "Payment Order",
+        "Computed Amount",
+        "Recipient State",
+        "Project",
+      ];
+      headerRow.height = 30;
+
+      for (let column = 1; column <= 6; column += 1) {
+        const cell = headerRow.getCell(column);
+
+        cell.font = {
+          bold: true,
+          color: { argb: excelColors.white },
+        };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: excelColors.darkBlue },
+        };
+        cell.alignment = {
+          vertical: "middle",
+          horizontal: "left",
+          wrapText: true,
+        };
+        applyExcelBorder(cell);
+      }
+
+      let totalAmount = 0;
+
+      sortedRecipients.forEach((recipient, index) => {
+        const amount = toExcelNumber(recipient.amount);
+        totalAmount += amount;
+
+        const row = worksheet.addRow({
+          recipientId: recipient.id,
+          organization: getOrganizationLabel(recipient.organizationId),
+          paymentOrder: getPaymentOrderLabel(recipient.paymentOrderId),
+          amount,
+          state: getPaymentOrderState(recipient),
+          project: projectName,
+        });
+
+        row.getCell(4).numFmt = "#,##0.00";
+
+        for (let column = 1; column <= 6; column += 1) {
+          const cell = row.getCell(column);
+
+          cell.alignment = {
+            vertical: "top",
+            horizontal: "left",
+            wrapText: true,
+          };
+          applyExcelBorder(cell);
+
+          if (index % 2 === 1) {
+            cell.fill = {
+              type: "pattern",
+              pattern: "solid",
+              fgColor: { argb: excelColors.lightGray },
+            };
+          }
+        }
+      });
+
+      const totalRow = worksheet.addRow({
+        recipientId: "TOTAL",
+        organization: "",
+        paymentOrder: "",
+        amount: Number(totalAmount.toFixed(2)),
+        state: "",
+        project: "",
+      });
+
+      totalRow.getCell(4).numFmt = "#,##0.00";
+
+      for (let column = 1; column <= 6; column += 1) {
+        const cell = totalRow.getCell(column);
+
+        cell.font = {
+          bold: true,
+          color: { argb: excelColors.text },
+        };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFE2F0D9" },
+        };
+        cell.alignment = {
+          vertical: "middle",
+          horizontal: "left",
+          wrapText: true,
+        };
+        applyExcelBorder(cell);
+      }
+
+      worksheet.autoFilter = {
+        from: "A4",
+        to: "F4",
+      };
+
+      const buffer = await workbook.xlsx.writeBuffer();
+
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const downloadUrl = URL.createObjectURL(blob);
+      const downloadLink = document.createElement("a");
+
+      const shortProjectName = sanitizeExcelFilename(projectName, 35);
+
+      downloadLink.href = downloadUrl;
+      downloadLink.download =
+        `Recipients_${shortProjectName}_` +
+        `${sortedRecipients.length}_selected.xlsx`;
+
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      downloadLink.remove();
+
+      window.setTimeout(() => {
+        URL.revokeObjectURL(downloadUrl);
+      }, 0);
+    } catch (error) {
+      console.error("Failed to export selected recipients:", error);
+      setFormError(
+        error?.message || "Failed to export the selected recipients to Excel.",
+      );
+    } finally {
+      setExportingSelected(false);
     }
   };
 
@@ -572,9 +953,12 @@ function Recipients() {
   }, [visibleCols]);
 
   const selectableRecipients = useMemo(
-    //This makes select-all skip locked recipients.
-    () => items.filter((r) => r?.id != null && !lockedRecipientIds.has(r.id)),
-    [items, lockedRecipientIds],
+    /*
+     * Locked recipients are selectable for Excel export and bulk delete.
+     * Their edit and individual delete controls remain disabled.
+     */
+    () => items.filter((r) => r?.id != null),
+    [items],
   );
 
   const selectedRecipientCount = selectedRecipientIds.size;
@@ -603,9 +987,26 @@ function Recipients() {
           <div className={styles.headerActions}>
             <button
               type="button"
+              className={styles.exportInlineBtn}
+              onClick={handleExportSelected}
+              disabled={selectedRecipientCount === 0 || exportingSelected}
+              title="Export selected recipients to Excel"
+            >
+              <FiDownload />
+              {exportingSelected
+                ? "Exporting..."
+                : `Export selected${
+                    selectedRecipientCount > 0
+                      ? ` (${selectedRecipientCount})`
+                      : ""
+                  }`}
+            </button>
+
+            <button
+              type="button"
               className={styles.dangerInlineBtn}
               onClick={removeSelected}
-              disabled={selectedRecipientCount === 0}
+              disabled={selectedRecipientCount === 0 || exportingSelected}
               title="Delete selected recipients"
             >
               <FiTrash2 />
@@ -647,7 +1048,9 @@ function Recipients() {
             <button
               className={styles.primaryBtn}
               onClick={startCreate}
-              disabled={!selectedProjectId || editingId === "new"}
+              disabled={
+                !selectedProjectId || editingId === "new" || exportingSelected
+              }
               title={
                 !selectedProjectId
                   ? "Select a project first"
@@ -717,9 +1120,7 @@ function Recipients() {
                 onDelete={remove}
                 isSelected={selectedRecipientIds.has(r.id)}
                 onSelectChange={toggleSelectedRecipient}
-                selectionDisabled={
-                  editingId === r.id || lockedRecipientIds.has(r.id)
-                }
+                selectionDisabled={editingId === r.id}
                 locked={lockedRecipientIds.has(r.id)}
                 poOptions={poOptions}
                 orgOptions={orgOptions}

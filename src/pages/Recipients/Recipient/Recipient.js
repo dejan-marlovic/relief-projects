@@ -119,11 +119,12 @@ const RecipientRow = ({
 
   const hc = (i) => (!visibleCols[i] ? styles.hiddenCol : "");
 
-  // ✅ amount is computed by backend; display only
+  // Amount is computed by the backend and is display-only.
   const amountNum =
     row?.amount == null || Number.isNaN(Number(row.amount))
       ? 0
       : Number(row.amount);
+
   const lockedTitle =
     "Booked (final signature) — this recipient is read-only. Undo/remove the Booked signature to edit.";
 
@@ -167,7 +168,12 @@ const RecipientRow = ({
               <input
                 type="checkbox"
                 checked={isSelected}
-                disabled={selectionDisabled || locked}
+                /*
+                 * Selection is allowed even when the recipient is locked.
+                 * Locked rows remain read-only, but they can be selected for
+                 * Excel export and included in a bulk-delete attempt.
+                 */
+                disabled={selectionDisabled}
                 onChange={(e) => {
                   e.stopPropagation();
                   onSelectChange?.(row.id, e.target.checked);
@@ -203,7 +209,7 @@ const RecipientRow = ({
                   e.stopPropagation();
                   onDelete(row.id);
                 }}
-                title="Delete recipient"
+                title={locked ? lockedTitle : "Delete recipient"}
                 aria-label="Delete recipient"
                 disabled={locked}
               >
