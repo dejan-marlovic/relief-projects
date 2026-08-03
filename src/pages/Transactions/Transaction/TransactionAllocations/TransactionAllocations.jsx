@@ -359,13 +359,29 @@ const TransactionAllocations = ({
 
   const capHint = useMemo(() => {
     if (approvedAmountNum == null) return null;
+
     const remaining = approvedAmountNum - allocatedTotal;
     const ok = remaining >= 0;
+
+    const rawPercent =
+      approvedAmountNum > 0
+        ? (allocatedTotal / approvedAmountNum) * 100
+        : allocatedTotal > 0
+          ? 100
+          : 0;
+
+    /*
+     * The text can show a percentage above 100%, but the visual bar itself is
+     * capped at 100% so it does not overflow its container.
+     */
+    const progressPercent = Math.min(Math.max(rawPercent, 0), 100);
 
     const fmt = (n) => (Number.isFinite(n) ? Number(n).toFixed(2) : String(n));
 
     return {
       ok,
+      percent: rawPercent,
+      progressPercent,
       text: `Allocated: ${fmt(
         allocatedTotal,
       )}${currencySuffix} / Approved: ${fmt(
@@ -390,11 +406,36 @@ const TransactionAllocations = ({
           </div>
 
           {capHint ? (
-            <div
-              className={`${styles.sub} ${capHint.ok ? "" : styles.inputError}`}
-              style={{ marginTop: 6 }}
-            >
-              {capHint.text}
+            <div className={styles.allocationProgressWrap}>
+              <div
+                className={`${styles.sub} ${
+                  capHint.ok ? "" : styles.allocationTextOver
+                }`}
+              >
+                {capHint.text}
+              </div>
+
+              <div className={styles.progressMeta}>
+                <span>Allocation progress</span>
+                <strong>{capHint.percent.toFixed(1)}%</strong>
+              </div>
+
+              <div
+                className={styles.progressTrack}
+                role="progressbar"
+                aria-label="Allocation progress"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow={Math.round(capHint.progressPercent)}
+                aria-valuetext={`${capHint.percent.toFixed(1)}% allocated`}
+              >
+                <div
+                  className={`${styles.progressFill} ${
+                    capHint.ok ? "" : styles.progressFillOver
+                  }`}
+                  style={{ width: `${capHint.progressPercent}%` }}
+                />
+              </div>
             </div>
           ) : null}
         </div>
