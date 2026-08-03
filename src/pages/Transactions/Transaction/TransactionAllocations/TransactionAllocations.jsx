@@ -53,10 +53,11 @@ const TransactionAllocations = ({
             "Content-Type": "application/json",
           }
         : { "Content-Type": "application/json" },
-    [token]
+    [token],
   );
 
   const [rows, setRows] = useState([]);
+  const [currencies, setCurrencies] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const [draft, setDraft] = useState({
@@ -104,32 +105,79 @@ const TransactionAllocations = ({
     }
   }, [txId, authHeaders]);
 
-  const currencyLabel = useMemo(() => {
-    // 1) explicit fallback if provided
-    if (fallbackCurrencyLabel) return fallbackCurrencyLabel;
+  /*
+   * Fetch the active currency lookup once when this allocations component
+   * mounts. This lets us convert a budget's localCurrencyId, for example 10,
+   * into a readable currency code such as INR.
+   *
+   * This lookup is non-fatal: allocations can still be viewed and edited if
+   * the currency endpoint is temporarily unavailable.
+   */
+  const fetchCurrencies = useCallback(async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/currencies/active`, {
+        headers: authHeaders,
+      });
 
-    // 2) try from budgetOptions by txMeta.budgetId
-    const bId =
+      if (!res.ok) {
+        throw new Error(`Failed to fetch currencies (${res.status}).`);
+      }
+
+      const data = await res.json().catch(() => []);
+      setCurrencies(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.warn("Failed to fetch currencies:", e);
+      setCurrencies([]);
+    }
+  }, [authHeaders]);
+
+  const currencyLabel = useMemo(() => {
+    // 1) Prefer a label explicitly supplied by the parent.
+    if (fallbackCurrencyLabel) {
+      return fallbackCurrencyLabel;
+    }
+
+    // 2) Find the budget connected to this transaction.
+    const budgetId =
       typeof txMeta.budgetId === "string"
         ? Number(txMeta.budgetId)
         : txMeta.budgetId;
 
-    if (bId && Array.isArray(budgetOptions) && budgetOptions.length) {
-      const b = budgetOptions.find((x) => Number(x.id) === Number(bId));
-      if (b) {
-        // be defensive: different DTOs might have different shapes
-        const name =
-          b?.localCurrency?.name ||
-          b?.localCurrencyName ||
-          b?.localCurrencyCode ||
-          b?.localCurrencyId ||
-          "";
-        if (name) return String(name);
-      }
+    const budget = budgetOptions.find(
+      (item) => Number(item.id) === Number(budgetId),
+    );
+
+    if (!budget) {
+      return "";
     }
 
-    return ""; // unknown is ok
-  }, [fallbackCurrencyLabel, budgetOptions, txMeta.budgetId]);
+    // 3) Prefer a readable currency already included in the budget DTO.
+    const embeddedCurrencyName =
+      budget?.localCurrency?.name ||
+      budget?.localCurrencyName ||
+      budget?.localCurrencyCode ||
+      "";
+
+    if (embeddedCurrencyName) {
+      return String(embeddedCurrencyName);
+    }
+
+    // 4) Otherwise resolve localCurrencyId through /api/currencies/active.
+    const localCurrencyId =
+      budget.localCurrencyId == null || budget.localCurrencyId === ""
+        ? null
+        : Number(budget.localCurrencyId);
+
+    if (localCurrencyId == null || !Number.isFinite(localCurrencyId)) {
+      return "";
+    }
+
+    const matchingCurrency = currencies.find(
+      (currency) => Number(currency.id) === localCurrencyId,
+    );
+
+    return matchingCurrency?.name || "";
+  }, [fallbackCurrencyLabel, budgetOptions, currencies, txMeta.budgetId]);
 
   const currencySuffix = currencyLabel ? ` ${currencyLabel}` : "";
 
@@ -144,7 +192,7 @@ const TransactionAllocations = ({
     try {
       const res = await fetch(
         `${BASE_URL}/api/cost-allocations/transaction/${txId}`,
-        { headers: authHeaders }
+        { headers: authHeaders },
       );
       if (!res.ok) {
         const data = await safeParseJsonResponse(res);
@@ -164,7 +212,8 @@ const TransactionAllocations = ({
   useEffect(() => {
     fetchTxMeta();
     fetchRows();
-  }, [fetchTxMeta, fetchRows]);
+    fetchCurrencies();
+  }, [fetchTxMeta, fetchRows, fetchCurrencies]);
 
   const allocatedTotal = useMemo(() => {
     return rows.reduce((acc, r) => acc + (Number(r.plannedAmount) || 0), 0);
@@ -318,9 +367,9 @@ const TransactionAllocations = ({
     return {
       ok,
       text: `Allocated: ${fmt(
-        allocatedTotal
+        allocatedTotal,
       )}${currencySuffix} / Approved: ${fmt(
-        approvedAmountNum
+        approvedAmountNum,
       )}${currencySuffix} (Remaining: ${fmt(remaining)}${currencySuffix})`,
     };
   }, [approvedAmountNum, allocatedTotal, currencySuffix]);
@@ -354,8 +403,7 @@ const TransactionAllocations = ({
           type="button"
           className={styles.iconPillBtn}
           onClick={async () => {
-            await fetchTxMeta();
-            await fetchRows();
+            await Promise.all([fetchTxMeta(), fetchRows(), fetchCurrencies()]);
           }}
           disabled={loading}
           title="Refresh allocations"
@@ -471,7 +519,7 @@ const TransactionAllocations = ({
                     ? Number(r.costDetailId)
                     : r.costDetailId;
                 const cd = costDetailOptions.find(
-                  (x) => Number(x.costDetailId) === n
+                  (x) => Number(x.costDetailId) === n,
                 );
                 return cd
                   ? `${cd.costDescription || "No description"} (CD#${
