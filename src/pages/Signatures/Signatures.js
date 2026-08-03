@@ -6,10 +6,11 @@ import React, {
   useRef,
   useState,
 } from "react";
+import ExcelJS from "exceljs";
 import { ProjectContext } from "../../context/ProjectContext";
 import SignatureRow from "./Signature/Signature";
 import styles from "./Signatures.module.scss";
-import { FiPlus, FiColumns, FiTrash2 } from "react-icons/fi";
+import { FiPlus, FiColumns, FiTrash2, FiDownload } from "react-icons/fi";
 
 import { BASE_URL } from "../../config/api"; // adjust path if needed
 
@@ -96,6 +97,8 @@ function Signatures() {
   const [selectedSignatureIds, setSelectedSignatureIds] = useState(
     () => new Set(),
   );
+
+  const [exportingSelected, setExportingSelected] = useState(false);
 
   // dropdown data
   const [poOptions, setPoOptions] = useState([]);
@@ -219,6 +222,12 @@ function Signatures() {
         const normalized = arr
           .map((po) => ({
             id: po.id ?? po.paymentOrderId ?? po.payment_order_id,
+            paymentOrderDescription:
+              po.paymentOrderDescription ?? po.payment_order_description ?? "",
+            paymentOrderDate:
+              po.paymentOrderDate ?? po.payment_order_date ?? null,
+            amount: po.amount ?? 0,
+            locked: Boolean(po.locked ?? po.isLocked ?? false),
           }))
           .filter((x) => x.id != null);
 
@@ -559,6 +568,406 @@ function Signatures() {
     }
   };
 
+  // =========================
+  // ✅ EXCEL EXPORT HELPERS
+  // =========================
+
+  const excelColors = {
+    darkBlue: "FF1F4E78",
+    mediumBlue: "FF5B9BD5",
+    lightBlue: "FFD9EAF7",
+    lightGray: "FFF3F4F6",
+    paleGreen: "FFE2F0D9",
+    borderGray: "FFD1D5DB",
+    white: "FFFFFFFF",
+    text: "FF1F2937",
+  };
+
+  const sanitizeExcelFilename = (value, maxLength = 50) => {
+    /*
+     * Keep generated file names short and safe for Windows.
+     */
+    const cleaned = String(value || "signatures")
+      .trim()
+      .replace(/[<>:"/\\|?*\s]+/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .slice(0, maxLength)
+      .replace(/_+$/g, "");
+
+    return cleaned || "signatures";
+  };
+
+  const sanitizeExcelText = (value) => {
+    /*
+     * XLSX worksheets contain XML internally. Remove control characters that
+     * XML 1.0 does not allow, while preserving ordinary tabs and line breaks.
+     */
+    return String(value ?? "")
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, "")
+      .trim();
+  };
+
+  const formatExcelDate = (value) => {
+    if (!value) return "Not specified";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return sanitizeExcelText(value) || "Not specified";
+    }
+
+    return date.toLocaleString("sv-SE", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const getStatusLabel = (id) => {
+    const status = statusOptions.find((item) => String(item.id) === String(id));
+
+    return (
+      sanitizeExcelText(status?.label) ||
+      (id != null ? `Status ${id}` : "Not specified")
+    );
+  };
+
+  const getEmployeeLabel = (id) => {
+    const employee = employeeOptions.find(
+      (item) => String(item.id) === String(id),
+    );
+
+    return (
+      sanitizeExcelText(employee?.label) ||
+      (id != null ? `Employee ${id}` : "Not specified")
+    );
+  };
+
+  const getPaymentOrderExportLabel = (id) => {
+    if (id == null || id === "") return "Not specified";
+
+    const paymentOrder = poOptions.find(
+      (item) => String(item.id) === String(id),
+    );
+
+    if (!paymentOrder) return `PO#${id}`;
+
+    const description = sanitizeExcelText(paymentOrder.paymentOrderDescription);
+
+    return description
+      ? `PO#${paymentOrder.id} — ${description}`
+      : `PO#${paymentOrder.id}`;
+  };
+
+  const getPaymentOrderLockLabel = (id) => {
+    const paymentOrder = poOptions.find(
+      (item) => String(item.id) === String(id),
+    );
+
+    return paymentOrder?.locked ? "Booked / Locked" : "Editable";
+  };
+
+  const applyExcelBorder = (cell) => {
+    cell.border = {
+      top: {
+        style: "thin",
+        color: { argb: excelColors.borderGray },
+      },
+      left: {
+        style: "thin",
+        color: { argb: excelColors.borderGray },
+      },
+      bottom: {
+        style: "thin",
+        color: { argb: excelColors.borderGray },
+      },
+      right: {
+        style: "thin",
+        color: { argb: excelColors.borderGray },
+      },
+    };
+  };
+
+  const styleExcelTitle = (cell) => {
+    cell.font = {
+      bold: true,
+      size: 18,
+      color: { argb: excelColors.white },
+    };
+
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: excelColors.darkBlue },
+    };
+
+    cell.alignment = {
+      vertical: "middle",
+      horizontal: "left",
+    };
+  };
+
+  const styleExcelTableHeader = (row) => {
+    for (let column = 1; column <= 8; column += 1) {
+      const cell = row.getCell(column);
+
+      cell.font = {
+        bold: true,
+        color: { argb: excelColors.white },
+      };
+
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: excelColors.darkBlue },
+      };
+
+      cell.alignment = {
+        vertical: "middle",
+        horizontal: "left",
+        wrapText: true,
+      };
+
+      applyExcelBorder(cell);
+    }
+
+    row.height = 30;
+  };
+
+  const styleExcelDataRow = (row, index) => {
+    for (let column = 1; column <= 8; column += 1) {
+      const cell = row.getCell(column);
+
+      cell.alignment = {
+        vertical: "top",
+        horizontal: "left",
+        wrapText: true,
+      };
+
+      applyExcelBorder(cell);
+
+      if (index % 2 === 1) {
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: excelColors.lightGray },
+        };
+      }
+    }
+  };
+
+  // 📊 Export only the signature rows selected with the checkboxes.
+  const handleExportSelected = async () => {
+    const selectedSignatures = items.filter(
+      (signature) =>
+        signature?.id != null && selectedSignatureIds.has(signature.id),
+    );
+
+    if (selectedSignatures.length === 0) {
+      setFormError("Please select at least one signature before exporting.");
+      return;
+    }
+
+    try {
+      setExportingSelected(true);
+      setFormError("");
+
+      /*
+       * Fetch the lightweight project list at export time so the workbook can
+       * show a readable project name instead of only the selected project ID.
+       */
+      const projectsResponse = await fetch(
+        `${BASE_URL}/api/projects/ids-names`,
+        {
+          headers: authHeaders,
+        },
+      );
+
+      if (!projectsResponse.ok) {
+        throw new Error("Failed to load project names for export.");
+      }
+
+      const projectsData = await projectsResponse.json();
+      const projects = Array.isArray(projectsData) ? projectsData : [];
+
+      const matchingProject = projects.find(
+        (project) => String(project.id) === String(selectedProjectId),
+      );
+
+      const selectedProjectName =
+        sanitizeExcelText(
+          matchingProject?.projectName || matchingProject?.name,
+        ) ||
+        (selectedProjectId ? `Project ${selectedProjectId}` : "Not specified");
+
+      /*
+       * Sort signatures chronologically. Signatures without a valid date are
+       * placed first and then ordered by signature ID.
+       */
+      const sortedSignatures = [...selectedSignatures].sort((a, b) => {
+        const dateA = a.signatureDate ? new Date(a.signatureDate).getTime() : 0;
+
+        const dateB = b.signatureDate ? new Date(b.signatureDate).getTime() : 0;
+
+        const safeDateA = Number.isFinite(dateA) ? dateA : 0;
+        const safeDateB = Number.isFinite(dateB) ? dateB : 0;
+
+        if (safeDateA !== safeDateB) return safeDateA - safeDateB;
+
+        return Number(a.id || 0) - Number(b.id || 0);
+      });
+
+      const workbook = new ExcelJS.Workbook();
+
+      workbook.creator = "Relief Projects";
+      workbook.lastModifiedBy = "Relief Projects";
+      workbook.created = new Date();
+      workbook.modified = new Date();
+      workbook.title = "Selected Signatures";
+      workbook.subject = `Export of ${sortedSignatures.length} selected signatures`;
+
+      const worksheet = workbook.addWorksheet("Selected Signatures", {
+        views: [{ state: "frozen", ySplit: 4 }],
+        properties: {
+          defaultRowHeight: 20,
+        },
+        pageSetup: {
+          orientation: "landscape",
+          fitToPage: true,
+          fitToWidth: 1,
+          fitToHeight: 0,
+          paperSize: 9,
+        },
+      });
+
+      worksheet.columns = [
+        { key: "signatureId", width: 14 },
+        { key: "status", width: 22 },
+        { key: "employee", width: 30 },
+        { key: "paymentOrder", width: 42 },
+        { key: "paymentOrderState", width: 20 },
+        { key: "signature", width: 34 },
+        { key: "signatureDate", width: 23 },
+        { key: "project", width: 32 },
+      ];
+
+      worksheet.mergeCells("A1:H1");
+      worksheet.getCell("A1").value = "Selected Signatures Report";
+      styleExcelTitle(worksheet.getCell("A1"));
+      worksheet.getRow(1).height = 30;
+
+      worksheet.mergeCells("A2:H2");
+      worksheet.getCell("A2").value =
+        `Project: ${selectedProjectName} | ` +
+        `Selected signatures: ${sortedSignatures.length} | ` +
+        `Exported: ${new Date().toLocaleString("sv-SE")}`;
+
+      worksheet.getCell("A2").font = {
+        italic: true,
+        color: { argb: "FF6B7280" },
+      };
+
+      worksheet.getCell("A2").alignment = {
+        vertical: "middle",
+        horizontal: "left",
+        wrapText: true,
+      };
+
+      worksheet.mergeCells("A3:H3");
+      worksheet.getCell("A3").value =
+        "Only signature rows selected with the checkboxes are included.";
+
+      worksheet.getCell("A3").fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: excelColors.lightBlue },
+      };
+
+      worksheet.getCell("A3").font = {
+        italic: true,
+        color: { argb: excelColors.text },
+      };
+
+      worksheet.getCell("A3").alignment = {
+        vertical: "middle",
+        horizontal: "left",
+        wrapText: true,
+      };
+
+      const headerRow = worksheet.getRow(4);
+
+      headerRow.values = [
+        "Signature ID",
+        "Status",
+        "Employee",
+        "Payment Order",
+        "Payment Order State",
+        "Signature",
+        "Signature Date",
+        "Project",
+      ];
+
+      styleExcelTableHeader(headerRow);
+
+      sortedSignatures.forEach((signature, index) => {
+        const row = worksheet.addRow({
+          signatureId: signature.id,
+          status: getStatusLabel(signature.signatureStatusId),
+          employee: getEmployeeLabel(signature.employeeId),
+          paymentOrder: getPaymentOrderExportLabel(signature.paymentOrderId),
+          paymentOrderState: getPaymentOrderLockLabel(signature.paymentOrderId),
+          signature: sanitizeExcelText(signature.signature) || "Not specified",
+          signatureDate: formatExcelDate(signature.signatureDate),
+          project: selectedProjectName,
+        });
+
+        styleExcelDataRow(row, index);
+      });
+
+      worksheet.autoFilter = {
+        from: "A4",
+        to: "H4",
+      };
+
+      const buffer = await workbook.xlsx.writeBuffer();
+
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const downloadUrl = URL.createObjectURL(blob);
+      const downloadLink = document.createElement("a");
+
+      const shortProjectName = sanitizeExcelFilename(selectedProjectName, 35);
+
+      downloadLink.href = downloadUrl;
+      downloadLink.download =
+        `Signatures_${shortProjectName}_` +
+        `${sortedSignatures.length}_selected.xlsx`;
+
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      downloadLink.remove();
+
+      /*
+       * Delay URL cleanup until the browser has started the download.
+       */
+      window.setTimeout(() => {
+        URL.revokeObjectURL(downloadUrl);
+      }, 0);
+    } catch (error) {
+      console.error("Failed to export selected signatures:", error);
+
+      setFormError(
+        error?.message || "Failed to export the selected signatures to Excel.",
+      );
+    } finally {
+      setExportingSelected(false);
+    }
+  };
+
   const gridCols = useMemo(() => {
     const parts = BASE_COL_WIDTHS.map((w, i) =>
       visibleCols[i] ? `${w}px` : "0px",
@@ -602,9 +1011,26 @@ function Signatures() {
           <div className={styles.headerActions}>
             <button
               type="button"
+              className={styles.exportInlineBtn}
+              onClick={handleExportSelected}
+              disabled={selectedSignatureCount === 0 || exportingSelected}
+              title="Export selected signatures to Excel"
+            >
+              <FiDownload />
+              {exportingSelected
+                ? "Exporting..."
+                : `Export selected${
+                    selectedSignatureCount > 0
+                      ? ` (${selectedSignatureCount})`
+                      : ""
+                  }`}
+            </button>
+
+            <button
+              type="button"
               className={styles.dangerInlineBtn}
               onClick={removeSelected}
-              disabled={selectedSignatureCount === 0}
+              disabled={selectedSignatureCount === 0 || exportingSelected}
               title="Delete selected signatures"
             >
               <FiTrash2 />
@@ -645,7 +1071,9 @@ function Signatures() {
             <button
               className={styles.primaryBtn}
               onClick={startCreate}
-              disabled={!selectedProjectId || editingId === "new"}
+              disabled={
+                !selectedProjectId || editingId === "new" || exportingSelected
+              }
               title={
                 !selectedProjectId
                   ? "Select a project first"
