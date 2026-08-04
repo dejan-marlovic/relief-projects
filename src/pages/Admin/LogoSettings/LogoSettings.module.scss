@@ -405,3 +405,65 @@ $error: #b00020;
     max-width: 100%;
   }
 }
+
+.assetSection {
+  padding: 1rem;
+}
+
+.assetSectionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.assetSectionTitle {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.assetSectionSubtitle {
+  margin: 0.25rem 0 0;
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.assetDivider {
+  height: 1px;
+  margin: 0 1rem;
+  background: rgba(74, 144, 226, 0.14);
+}
+
+.assetSection .settingsGrid {
+  padding: 0;
+}
+
+.statusBadge {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid rgba(74, 144, 226, 0.22);
+  border-radius: 999px;
+  background: rgba(74, 144, 226, 0.08);
+  color: #286aa8;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.faviconPreview {
+  min-height: 140px;
+
+  img {
+    width: 64px;
+    height: 64px;
+    max-width: 64px;
+    max-height: 64px;
+    image-rendering: auto;
+    object-fit: contain;
+  }
+}

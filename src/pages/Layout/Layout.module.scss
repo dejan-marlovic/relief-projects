@@ -1,61 +1,198 @@
-.assetSection {
+$primary-color: #4a90e2;
+$secondary-color: #e74c3c;
+
+.layoutShell {
   padding: 1rem;
 }
 
-.assetSectionHeader {
+.content {
+  padding: 0.25rem;
+}
+
+/* ================= HEADER ================= */
+
+.headerBar {
   display: flex;
-  align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 0.85rem;
+  padding: 1.2rem 1.3rem;
+  margin-bottom: 1rem;
+
+  background: linear-gradient(135deg, #ffffff 0%, #f5f7fa 100%);
+  border-radius: 14px;
+  border: 1px solid lighten($primary-color, 40%);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.06);
 }
 
-.assetSectionTitle {
+.headerTitleBlock {
+  display: flex;
+  flex-direction: column;
+}
+
+.brandRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.brandIcon {
+  color: $primary-color;
+  font-size: 1.3rem;
+}
+
+.headerTitle {
   margin: 0;
-  color: #1f2937;
-  font-size: 1.05rem;
+  font-size: 2rem;
   font-weight: 700;
+  color: $primary-color;
 }
 
-.assetSectionSubtitle {
-  margin: 0.25rem 0 0;
+.headerTitleAccent {
+  font-weight: 800;
+}
+
+.headerSubtitle {
+  margin: 0;
   color: #6b7280;
-  font-size: 0.85rem;
 }
 
-.assetDivider {
-  height: 1px;
-  margin: 0 1rem;
-  background: rgba(74, 144, 226, 0.14);
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-.assetSection .settingsGrid {
+.selectorInline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 240px;
+}
+
+.selectorLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.selectInput {
+  padding: 0.7rem;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+}
+
+.logoWrap {
+  padding: 0.5rem 0.75rem;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.logo {
+  display: block;
+  width: auto;
+  height: 80px;
+  max-width: 180px;
+  object-fit: contain;
+}
+
+.logoutIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(231, 76, 60, 0.25);
+  background: #fff;
+  color: $secondary-color;
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+
+/* ================= TABS ================= */
+
+.nav {
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(74, 144, 226, 0.35);
+}
+
+.tabList {
+  list-style: none;
+  display: flex;
+  gap: 0.25rem;
+  margin: 0;
   padding: 0;
 }
 
-.statusBadge {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.35rem 0.6rem;
-  border: 1px solid rgba(74, 144, 226, 0.22);
-  border-radius: 999px;
-  background: rgba(74, 144, 226, 0.08);
-  color: #286aa8;
-  font-size: 0.75rem;
-  font-weight: 700;
+.tabItem {
+  margin: 0;
 }
 
-.faviconPreview {
-  min-height: 140px;
+/* TAB look: top-rounded, flat bottom */
+.tabLink {
+  display: inline-block;
+  padding: 0.75rem 1.2rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+  color: #333;
 
-  img {
-    width: 64px;
-    height: 64px;
-    max-width: 64px;
-    max-height: 64px;
-    image-rendering: auto;
-    object-fit: contain;
+  background: #f5f7fa;
+  border: 1px solid rgba(74, 144, 226, 0.35);
+  border-bottom: none;
+
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+
+  transition:
+    background 0.2s ease,
+    transform 0.1s ease;
+}
+
+.tabLink:hover {
+  background: lighten($primary-color, 40%);
+}
+
+/* ACTIVE TAB = visually connected to page */
+.active {
+  background: #ffffff !important;
+  color: $primary-color !important;
+  font-weight: 800;
+
+  position: relative;
+  top: 1px;
+
+  border-color: rgba(74, 144, 226, 0.6);
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.06);
+  z-index: 2;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .headerBar {
+    flex-direction: column;
   }
+
+  .headerRight {
+    justify-content: space-between;
+  }
+
+  .tabList {
+    overflow-x: auto;
+  }
+}
+
+/* ✅ Admin tab: subtle standout */
+.adminTab {
+  border-color: rgba(231, 76, 60, 0.55) !important;
+  background: rgba(231, 76, 60, 0.08) !important;
+  color: #b42318 !important;
+}
+
+.adminTab:hover {
+  background: rgba(231, 76, 60, 0.14) !important;
+}
+
+/* If Admin is active, keep it “admin-colored” while active */
+.active.adminTab {
+  border-color: rgba(231, 76, 60, 0.75) !important;
+  color: #b42318 !important;
 }
