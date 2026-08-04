@@ -14,7 +14,7 @@ import { createAuthFetch, safeReadJson } from "../../../utils/http";
 
 import styles from "./LogoSettings.module.scss";
 
-const MAX_FILE_SIZE = 2 * 1024 * 1024;
+const MAX_FILE_SIZE = 4 * 1024 * 1024;
 
 const ALLOWED_TYPES = ["image/png", "image/jpeg"];
 
@@ -45,7 +45,7 @@ function LogoSettings() {
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      return "The logo must be smaller than 2 MB.";
+      return "The logo must be smaller than 4 MB.";
     }
 
     return null;
