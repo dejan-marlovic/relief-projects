@@ -298,7 +298,7 @@ function LogoSettings() {
               )}
 
               <span className={styles.dropzoneHint}>
-                PNG or JPG, maximum 2 MB
+                PNG or JPG, maximum 4 MB
               </span>
             </div>
           </div>
@@ -347,7 +347,7 @@ function LogoSettings() {
                   Maximum file size
                 </span>
 
-                <span className={styles.requirementValue}>2 MB</span>
+                <span className={styles.requirementValue}>4 MB</span>
               </div>
             </div>
 
