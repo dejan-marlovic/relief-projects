@@ -83,7 +83,7 @@ const Layout = () => {
             <img
               src={logoUrl}
               alt="Relief Projects logo"
-              className={styles.yourExistingLogoClass}
+              className={styles.logo}
               onError={(event) => {
                 event.currentTarget.onerror = null;
                 event.currentTarget.src = "/logo.png";
