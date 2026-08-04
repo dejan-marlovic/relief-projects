@@ -101,6 +101,7 @@ import RestorePaymentOrder from "../Admin/RestorePaymentOrder/RestorePaymentOrde
 import RestoreEmployee from "../Admin/RestoreEmployee/RestoreEmployee";
 
 import RegisterProject from "../RegisterProject/RegisterProject";
+import LogoSettings from "./LogoSettings/LogoSettings";
 
 const ENTITY_OPTIONS = [
   { value: "position", label: "Position (master data)" },
@@ -601,121 +602,152 @@ const Admin = () => {
         <div className={styles.selectorRow}>
           <div className={styles.selectorText}>
             <div className={styles.selectorTitle}>Admin</div>
+
             <div className={styles.selectorSubtitle}>
-              Choose an action first, then search or choose an entity.
-            </div>
-          </div>
-
-          <div className={styles.selectorControl}>
-            <div className={styles.toolbarRow}>
-              <div className={styles.actionCard}>
-                <span className={styles.selectorLabel}>Action:</span>
-
-                <div className={styles.actionOptions}>
-                  <label className={styles.radioOption}>
-                    <input
-                      type="radio"
-                      name="adminAction"
-                      value="create"
-                      checked={action === "create"}
-                      onChange={handleActionChange}
-                    />
-                    <span>Create</span>
-                  </label>
-
-                  <label className={styles.radioOption}>
-                    <input
-                      type="radio"
-                      name="adminAction"
-                      value="delete"
-                      checked={action === "delete"}
-                      onChange={handleActionChange}
-                    />
-                    <span>Delete</span>
-                  </label>
-
-                  <label className={styles.radioOption}>
-                    <input
-                      type="radio"
-                      name="adminAction"
-                      value="update"
-                      checked={action === "update"}
-                      onChange={handleActionChange}
-                    />
-                    <span>Update</span>
-                  </label>
-
-                  <label className={styles.radioOption}>
-                    <input
-                      type="radio"
-                      name="adminAction"
-                      value="restore"
-                      checked={action === "restore"}
-                      onChange={handleActionChange}
-                    />
-                    <span>Restore</span>
-                  </label>
-                </div>
-              </div>
-
-              <label
-                className={styles.selectorLabel}
-                htmlFor="adminEntityLookup"
-              >
-                {action === "create" && "Create entity:"}
-                {action === "delete" && "Delete entity:"}
-                {action === "update" && "Update entity:"}
-                {action === "restore" && "Restore entity:"}
-              </label>
-
-              <div className={styles.entityLookupWrap}>
-                <input
-                  id="adminEntityLookup"
-                  className={styles.selectInput}
-                  value={entitySearch}
-                  onFocus={handleEntityLookupFocus}
-                  onChange={handleEntityLookupChange}
-                  onBlur={handleEntityLookupBlur}
-                  placeholder="Type to search entity..."
-                  autoComplete="off"
-                />
-
-                {entityMenuOpen && (
-                  <div className={styles.entityLookupMenu}>
-                    {filteredEntityOptions.length > 0 ? (
-                      filteredEntityOptions.map((option) => (
-                        <button
-                          key={`${action}-${option.value}`}
-                          type="button"
-                          className={`${styles.entityLookupOption} ${
-                            option.value === selectedEntity
-                              ? styles.entityLookupOptionActive
-                              : ""
-                          }`}
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            handleEntityOptionSelect(option);
-                          }}
-                        >
-                          {option.label}
-                        </button>
-                      ))
-                    ) : (
-                      <div className={styles.entityLookupEmpty}>
-                        No matching entity
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+              Manage application settings and system data.
             </div>
           </div>
         </div>
       </div>
 
-      <div className={styles.content}>
+      <section
+        className={styles.content}
+        aria-labelledby="application-settings-heading"
+      >
+        <h2 id="application-settings-heading">Application settings</h2>
+
+        <LogoSettings />
+      </section>
+
+      <section
+        className={styles.content}
+        aria-labelledby="data-management-heading"
+      >
+        <h2 id="data-management-heading">Data management</h2>
+
+        <div className={styles.selectorCard}>
+          <div className={styles.selectorRow}>
+            <div className={styles.selectorText}>
+              <div className={styles.selectorTitle}>Manage system data</div>
+
+              <div className={styles.selectorSubtitle}>
+                Choose an action first, then search or choose an entity.
+              </div>
+            </div>
+
+            <div className={styles.selectorControl}>
+              <div className={styles.toolbarRow}>
+                <div className={styles.actionCard}>
+                  <span className={styles.selectorLabel}>Action:</span>
+
+                  <div className={styles.actionOptions}>
+                    <label className={styles.radioOption}>
+                      <input
+                        type="radio"
+                        name="adminAction"
+                        value="create"
+                        checked={action === "create"}
+                        onChange={handleActionChange}
+                      />
+
+                      <span>Create</span>
+                    </label>
+
+                    <label className={styles.radioOption}>
+                      <input
+                        type="radio"
+                        name="adminAction"
+                        value="delete"
+                        checked={action === "delete"}
+                        onChange={handleActionChange}
+                      />
+
+                      <span>Delete</span>
+                    </label>
+
+                    <label className={styles.radioOption}>
+                      <input
+                        type="radio"
+                        name="adminAction"
+                        value="update"
+                        checked={action === "update"}
+                        onChange={handleActionChange}
+                      />
+
+                      <span>Update</span>
+                    </label>
+
+                    <label className={styles.radioOption}>
+                      <input
+                        type="radio"
+                        name="adminAction"
+                        value="restore"
+                        checked={action === "restore"}
+                        onChange={handleActionChange}
+                      />
+
+                      <span>Restore</span>
+                    </label>
+                  </div>
+                </div>
+
+                <label
+                  className={styles.selectorLabel}
+                  htmlFor="adminEntityLookup"
+                >
+                  {action === "create" && "Create entity:"}
+                  {action === "delete" && "Delete entity:"}
+                  {action === "update" && "Update entity:"}
+                  {action === "restore" && "Restore entity:"}
+                </label>
+
+                <div className={styles.entityLookupWrap}>
+                  <input
+                    id="adminEntityLookup"
+                    className={styles.selectInput}
+                    value={entitySearch}
+                    onFocus={handleEntityLookupFocus}
+                    onChange={handleEntityLookupChange}
+                    onBlur={handleEntityLookupBlur}
+                    placeholder="Type to search entity..."
+                    autoComplete="off"
+                  />
+
+                  {entityMenuOpen && (
+                    <div className={styles.entityLookupMenu}>
+                      {filteredEntityOptions.length > 0 ? (
+                        filteredEntityOptions.map((option) => (
+                          <button
+                            key={`${action}-${option.value}`}
+                            type="button"
+                            className={`${styles.entityLookupOption} ${
+                              option.value === selectedEntity
+                                ? styles.entityLookupOptionActive
+                                : ""
+                            }`}
+                            onMouseDown={(event) => {
+                              event.preventDefault();
+                              handleEntityOptionSelect(option);
+                            }}
+                          >
+                            {option.label}
+                          </button>
+                        ))
+                      ) : (
+                        <div className={styles.entityLookupEmpty}>
+                          No matching entity
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <SelectedComponent key={`${action}-${selectedEntity}`} />
-      </div>
+      </section>
     </div>
   );
 };

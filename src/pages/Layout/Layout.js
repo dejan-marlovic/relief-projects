@@ -3,10 +3,12 @@ import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import styles from "./Layout.module.scss";
 import { ProjectContext } from "../../context/ProjectContext";
 import { FiLogOut, FiLayers } from "react-icons/fi";
+import { useBranding } from "../../context/BrandingContext";
 
 const Layout = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { logoUrl } = useBranding();
 
   const { projects, selectedProjectId, setSelectedProjectId } =
     useContext(ProjectContext);
@@ -79,9 +81,13 @@ const Layout = () => {
 
           <div className={styles.logoWrap}>
             <img
-              src="/logo.png"
+              src={logoUrl}
               alt="Relief Projects logo"
-              className={styles.logo}
+              className={styles.yourExistingLogoClass}
+              onError={(event) => {
+                event.currentTarget.onerror = null;
+                event.currentTarget.src = "/logo.png";
+              }}
             />
           </div>
 

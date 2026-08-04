@@ -25,50 +25,53 @@ import NoPage from "./pages/NoPage/NoPage"; // Catch-all for undefined routes (4
 
 // Import the context provider to share state across all components
 import { ProjectProvider } from "./context/ProjectContext";
+import { BrandingProvider } from "./context/BrandingContext";
 
 import "./styles/global.scss";
 
 // ✅ Main App component: this sets up routing and wraps everything in context
 export default function App() {
   return (
-    <ProjectProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Public route: login is outside the main layout */}
-          <Route path="/login" element={<Login />} />
+    <BrandingProvider>
+      <ProjectProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public route: login is outside the main layout */}
+            <Route path="/login" element={<Login />} />
 
-          {/* Main route with Layout wrapper */}
-          <Route path="/" element={<Layout />}>
-            {/* Default route */}
-            <Route index element={<Project />} />
+            {/* Main route with Layout wrapper */}
+            <Route path="/" element={<Layout />}>
+              {/* Default route */}
+              <Route index element={<Project />} />
 
-            {/* Other sections/tabs */}
-            <Route path="project" element={<Project />} />
-            <Route path="budgets" element={<Budgets />} />
-            <Route path="transactions" element={<Transactions />} />
-            <Route path="payments" element={<PaymentOrders />} />
-            <Route path="signatures" element={<Signatures />} />
-            <Route path="recipients" element={<Recipients />} />
-            <Route path="documents" element={<Documents />} />
-            <Route path="statistics" element={<Statistics />} />
-            <Route path="organizations" element={<Organizations />} />
-            <Route path="register-project" element={<RegisterProject />} />
+              {/* Other sections/tabs */}
+              <Route path="project" element={<Project />} />
+              <Route path="budgets" element={<Budgets />} />
+              <Route path="transactions" element={<Transactions />} />
+              <Route path="payments" element={<PaymentOrders />} />
+              <Route path="signatures" element={<Signatures />} />
+              <Route path="recipients" element={<Recipients />} />
+              <Route path="documents" element={<Documents />} />
+              <Route path="statistics" element={<Statistics />} />
+              <Route path="organizations" element={<Organizations />} />
+              <Route path="register-project" element={<RegisterProject />} />
 
-            {/* ✅ Operational Guide */}
-            <Route path="operational-guide" element={<OperationalGuide />} />
+              {/* ✅ Operational Guide */}
+              <Route path="operational-guide" element={<OperationalGuide />} />
 
-            {/* ✅ About */}
-            <Route path="about" element={<About />} />
+              {/* ✅ About */}
+              <Route path="about" element={<About />} />
 
-            {/* ✅ NEW: Admin placeholder */}
-            <Route path="admin" element={<Admin />} />
+              {/* ✅ NEW: Admin placeholder */}
+              <Route path="admin" element={<Admin />} />
 
-            {/* Catch-all route */}
-            <Route path="*" element={<NoPage />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </ProjectProvider>
+              {/* Catch-all route */}
+              <Route path="*" element={<NoPage />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </ProjectProvider>
+    </BrandingProvider>
   );
 }
 

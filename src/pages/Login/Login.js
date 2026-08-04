@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import styles from "./Login.module.scss";
 import { ProjectContext } from "../../context/ProjectContext";
 import { BASE_URL } from "../../config/api"; // adjust path if needed
+import { useBranding } from "../../context/BrandingContext";
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -11,6 +12,7 @@ function Login() {
 
   const navigate = useNavigate();
   const { refreshProjects } = useContext(ProjectContext);
+  const { logoUrl } = useBranding();
 
   const loginUser = async (credentials) => {
     const response = await fetch(`${BASE_URL}/api/auth/login`, {
@@ -52,9 +54,13 @@ function Login() {
       {/* Centered logo above input fields */}
       <div className={styles.logoWrapper}>
         <img
-          src="/logo.png"
+          src={logoUrl}
           alt="Relief Projects logo"
           className={styles.logo}
+          onError={(event) => {
+            event.currentTarget.onerror = null;
+            event.currentTarget.src = "/logo.png";
+          }}
         />
       </div>
 

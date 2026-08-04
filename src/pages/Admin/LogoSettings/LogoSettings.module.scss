@@ -1,0 +1,55 @@
+.logoStatus {
+  display: block;
+  margin-top: 0.6rem;
+  color: #64747c;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.selectButton,
+.uploadButton,
+.restoreButton {
+  min-height: 42px;
+  padding: 0.65rem 1rem;
+  border-radius: 7px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+}
+
+.selectButton {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #176b87;
+  background: #ffffff;
+  color: #176b87;
+
+  input {
+    display: none;
+  }
+}
+
+.uploadButton {
+  border: 1px solid #176b87;
+  background: #176b87;
+  color: #ffffff;
+
+  &:hover:not(:disabled) {
+    background: #125970;
+  }
+}
+
+.restoreButton {
+  border: 1px solid #aebbc2;
+  background: #ffffff;
+  color: #344b57;
+
+  &:hover:not(:disabled) {
+    background: #f3f6f7;
+  }
+}
