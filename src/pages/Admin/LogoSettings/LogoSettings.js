@@ -1,6 +1,12 @@
 import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiUploadCloud } from "react-icons/fi";
+import {
+  FiAlertCircle,
+  FiCheckCircle,
+  FiImage,
+  FiRefreshCw,
+  FiUploadCloud,
+} from "react-icons/fi";
 
 import { BASE_URL } from "../../../config/api";
 import { useBranding } from "../../../context/BrandingContext";
@@ -76,7 +82,7 @@ function LogoSettings() {
 
       await refreshBranding();
 
-      setMessage("The logo was updated for all users and devices.");
+      setMessage("The application logo was updated successfully.");
     } catch (uploadError) {
       setError(uploadError.message || "The logo could not be uploaded.");
     } finally {
@@ -169,19 +175,39 @@ function LogoSettings() {
   };
 
   return (
-    <section className={styles.container}>
-      <div className={styles.heading}>
-        <h2>Application logo</h2>
+    <section className={styles.logoSettings}>
+      <header className={styles.pageHeader}>
+        <div className={styles.pageHeaderText}>
+          <h2 className={styles.pageTitle}>Application logo</h2>
 
-        <p>
-          Upload the logo displayed in the application header and on the login
-          page.
-        </p>
-      </div>
+          <p className={styles.pageSubtitle}>
+            Manage the logo displayed in the application header and on the login
+            page.
+          </p>
+        </div>
 
-      <div className={styles.content}>
-        <div className={styles.previewPanel}>
-          <span className={styles.previewLabel}>Current logo</span>
+        <div
+          className={`${styles.statusBadge} ${
+            customLogo ? styles.statusBadgeCustom : styles.statusBadgeDefault
+          }`}
+        >
+          <FiImage aria-hidden="true" />
+
+          <span>{customLogo ? "Custom logo" : "Default logo"}</span>
+        </div>
+      </header>
+
+      <div className={styles.settingsGrid}>
+        <article className={styles.card}>
+          <div className={styles.cardHeader}>
+            <div>
+              <h3 className={styles.cardTitle}>Current logo</h3>
+
+              <p className={styles.cardSubtitle}>
+                Preview of the logo currently visible to users.
+              </p>
+            </div>
+          </div>
 
           <div className={styles.preview}>
             <img
@@ -194,31 +220,46 @@ function LogoSettings() {
             />
           </div>
 
-          <span className={styles.logoStatus}>
-            {customLogo ? "Custom logo" : "Default logo"}
-          </span>
-        </div>
+          <div className={styles.previewFooter}>
+            <span
+              className={`${styles.logoIndicator} ${
+                customLogo
+                  ? styles.logoIndicatorCustom
+                  : styles.logoIndicatorDefault
+              }`}
+            />
 
-        <div className={styles.instructions}>
-          <h3>Recommended format</h3>
+            <span>
+              {customLogo
+                ? "A custom logo is currently active."
+                : "The original Relief Projects logo is active."}
+            </span>
+          </div>
 
-          <ul>
-            <li>
-              Use a PNG image with a transparent background for the best result.
-            </li>
+          {customLogo && (
+            <button
+              type="button"
+              className={styles.restoreButton}
+              disabled={saving}
+              onClick={handleRestoreDefault}
+            >
+              <FiRefreshCw aria-hidden="true" />
 
-            <li>JPG and JPEG images are also supported.</li>
+              <span>{saving ? "Please wait..." : "Restore default logo"}</span>
+            </button>
+          )}
+        </article>
 
-            <li>Use a horizontal logo with approximately a 2:1 ratio.</li>
+        <article className={styles.card}>
+          <div className={styles.cardHeader}>
+            <div>
+              <h3 className={styles.cardTitle}>Upload a new logo</h3>
 
-            <li>Recommended resolution: 600 × 300 pixels.</li>
-
-            <li>Minimum recommended resolution: 200 × 100 pixels.</li>
-
-            <li>Maximum file size: 2 MB.</li>
-
-            <li>Avoid unnecessary empty space around the logo.</li>
-          </ul>
+              <p className={styles.cardSubtitle}>
+                The new logo will be used for all users and devices.
+              </p>
+            </div>
+          </div>
 
           <div
             className={`${styles.dropzone} ${
@@ -234,20 +275,30 @@ function LogoSettings() {
             aria-disabled={saving}
             aria-label="Select or drop an application logo"
           >
-            <FiUploadCloud className={styles.dropzoneIcon} aria-hidden="true" />
+            <div className={styles.dropzoneIconWrap}>
+              <FiUploadCloud
+                className={styles.dropzoneIcon}
+                aria-hidden="true"
+              />
+            </div>
 
             <div className={styles.dropzoneText}>
               {saving ? (
-                <strong>Uploading logo…</strong>
+                <>
+                  <strong>Uploading logo...</strong>
+
+                  <span>Please wait while the new logo is saved.</span>
+                </>
               ) : (
                 <>
-                  <strong>Drag & drop</strong>
-                  <span>or click to select a logo</span>
+                  <strong>Drag and drop your logo here</strong>
+
+                  <span>or click anywhere in this area to select a file</span>
                 </>
               )}
 
               <span className={styles.dropzoneHint}>
-                PNG or JPG · maximum 2 MB
+                PNG or JPG, maximum 2 MB
               </span>
             </div>
           </div>
@@ -261,31 +312,76 @@ function LogoSettings() {
             onChange={handleFileInput}
           />
 
-          {customLogo && (
-            <div className={styles.restoreArea}>
-              <button
-                type="button"
-                className={styles.restoreButton}
-                disabled={saving}
-                onClick={handleRestoreDefault}
-              >
-                Restore default logo
-              </button>
+          <div className={styles.formatGuide}>
+            <h4 className={styles.formatGuideTitle}>Recommended format</h4>
+
+            <div className={styles.requirementGrid}>
+              <div className={styles.requirement}>
+                <span className={styles.requirementLabel}>File type</span>
+
+                <span className={styles.requirementValue}>
+                  Transparent PNG preferred
+                </span>
+              </div>
+
+              <div className={styles.requirement}>
+                <span className={styles.requirementLabel}>
+                  Recommended size
+                </span>
+
+                <span className={styles.requirementValue}>
+                  600 x 300 pixels
+                </span>
+              </div>
+
+              <div className={styles.requirement}>
+                <span className={styles.requirementLabel}>Shape</span>
+
+                <span className={styles.requirementValue}>
+                  Horizontal, approximately 2:1
+                </span>
+              </div>
+
+              <div className={styles.requirement}>
+                <span className={styles.requirementLabel}>
+                  Maximum file size
+                </span>
+
+                <span className={styles.requirementValue}>2 MB</span>
+              </div>
+            </div>
+
+            <p className={styles.formatNote}>
+              For the clearest result, avoid unnecessary empty space around the
+              logo.
+            </p>
+          </div>
+
+          {error && (
+            <div className={`${styles.feedback} ${styles.error}`} role="alert">
+              <FiAlertCircle
+                className={styles.feedbackIcon}
+                aria-hidden="true"
+              />
+
+              <span>{error}</span>
             </div>
           )}
 
-          {error && (
-            <p className={styles.error} role="alert">
-              {error}
-            </p>
-          )}
-
           {message && (
-            <p className={styles.success} role="status">
-              {message}
-            </p>
+            <div
+              className={`${styles.feedback} ${styles.success}`}
+              role="status"
+            >
+              <FiCheckCircle
+                className={styles.feedbackIcon}
+                aria-hidden="true"
+              />
+
+              <span>{message}</span>
+            </div>
           )}
-        </div>
+        </article>
       </div>
     </section>
   );
