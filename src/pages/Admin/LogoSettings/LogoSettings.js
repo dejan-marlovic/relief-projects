@@ -14,143 +14,101 @@ import { createAuthFetch, safeReadJson } from "../../../utils/http";
 
 import styles from "./LogoSettings.module.scss";
 
-const MAX_FILE_SIZE = 4 * 1024 * 1024;
-
-const ALLOWED_TYPES = ["image/png", "image/jpeg"];
+const ASSETS = {
+  logo: {
+    endpoint: "logo",
+    label: "logo",
+    maxSize: 2 * 1024 * 1024,
+    accept: ".png,.jpg,.jpeg,image/png,image/jpeg",
+    types: ["image/png", "image/jpeg"],
+  },
+  favicon: {
+    endpoint: "favicon",
+    label: "favicon",
+    maxSize: 512 * 1024,
+    accept: ".png,.ico,image/png,image/x-icon,image/vnd.microsoft.icon",
+    types: ["image/png", "image/x-icon", "image/vnd.microsoft.icon"],
+  },
+};
 
 function LogoSettings() {
   const navigate = useNavigate();
   const authFetch = createAuthFetch(navigate);
-  const fileInputRef = useRef(null);
 
-  const { logoUrl, customLogo, refreshBranding } = useBranding();
+  const logoInputRef = useRef(null);
+  const faviconInputRef = useRef(null);
 
-  const [saving, setSaving] = useState(false);
-  const [dragActive, setDragActive] = useState(false);
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
+  const { logoUrl, faviconUrl, customLogo, customFavicon, refreshBranding } =
+    useBranding();
 
-  const resetMessages = () => {
-    setError("");
-    setMessage("");
+  const [busyAsset, setBusyAsset] = useState(null);
+  const [dragAsset, setDragAsset] = useState(null);
+  const [feedback, setFeedback] = useState({
+    type: "",
+    message: "",
+  });
+
+  const clearFeedback = () => {
+    setFeedback({
+      type: "",
+      message: "",
+    });
   };
 
-  const validateLogo = (file) => {
+  const getInputRef = (asset) =>
+    asset === "logo" ? logoInputRef : faviconInputRef;
+
+  const validateFile = (asset, file) => {
+    const config = ASSETS[asset];
+
     if (!file) {
-      return "Please select a logo image.";
+      return `Please select a ${config.label} file.`;
     }
 
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      return "Please select a PNG, JPG, or JPEG image.";
+    const isIco =
+      asset === "favicon" && file.name.toLowerCase().endsWith(".ico");
+
+    if (!config.types.includes(file.type) && !isIco) {
+      return asset === "logo"
+        ? "Please select a PNG, JPG, or JPEG image."
+        : "Please select a PNG or ICO favicon.";
     }
 
-    if (file.size > MAX_FILE_SIZE) {
-      return "The logo must be smaller than 4 MB.";
+    if (file.size > config.maxSize) {
+      return asset === "logo"
+        ? "The logo must be smaller than 2 MB."
+        : "The favicon must be smaller than 512 KB.";
     }
 
     return null;
   };
 
-  const uploadLogo = async (file) => {
-    resetMessages();
+  const uploadAsset = async (asset, file) => {
+    clearFeedback();
 
-    const validationError = validateLogo(file);
+    const validationError = validateFile(asset, file);
 
     if (validationError) {
-      setError(validationError);
+      setFeedback({
+        type: "error",
+        message: validationError,
+      });
       return;
     }
 
     const formData = new FormData();
     formData.append("file", file);
 
-    setSaving(true);
+    setBusyAsset(asset);
 
     try {
-      const response = await authFetch(`${BASE_URL}/api/branding/logo`, {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await safeReadJson(response);
-
-      if (!response.ok) {
-        throw new Error(
-          data?.message || data?.detail || "The logo could not be uploaded.",
-        );
-      }
-
-      await refreshBranding();
-
-      setMessage("The application logo was updated successfully.");
-    } catch (uploadError) {
-      setError(uploadError.message || "The logo could not be uploaded.");
-    } finally {
-      setSaving(false);
-
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-    }
-  };
-
-  const handleFileInput = (event) => {
-    const file = event.target.files?.[0];
-
-    if (file) {
-      uploadLogo(file);
-    }
-  };
-
-  const handleDrop = (event) => {
-    event.preventDefault();
-    setDragActive(false);
-
-    if (saving) {
-      return;
-    }
-
-    const file = event.dataTransfer.files?.[0];
-
-    if (file) {
-      uploadLogo(file);
-    }
-  };
-
-  const handleDragOver = (event) => {
-    event.preventDefault();
-
-    if (!saving) {
-      setDragActive(true);
-    }
-  };
-
-  const handleDragLeave = (event) => {
-    event.preventDefault();
-    setDragActive(false);
-  };
-
-  const openFilePicker = () => {
-    if (!saving) {
-      fileInputRef.current?.click();
-    }
-  };
-
-  const handlePickerKeyDown = (event) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      openFilePicker();
-    }
-  };
-
-  const handleRestoreDefault = async () => {
-    resetMessages();
-    setSaving(true);
-
-    try {
-      const response = await authFetch(`${BASE_URL}/api/branding/logo`, {
-        method: "DELETE",
-      });
+      const response = await authFetch(
+        `${BASE_URL}/api/branding/${ASSETS[asset].endpoint}`,
+        {
+          method: "POST",
+          body: formData,
+        },
+      );
 
       const data = await safeReadJson(response);
 
@@ -158,231 +116,338 @@ function LogoSettings() {
         throw new Error(
           data?.message ||
             data?.detail ||
-            "The default logo could not be restored.",
+            `The ${ASSETS[asset].label} could not be uploaded.`,
         );
       }
 
       await refreshBranding();
 
-      setMessage("The default Relief Projects logo was restored.");
-    } catch (restoreError) {
-      setError(
-        restoreError.message || "The default logo could not be restored.",
-      );
+      setFeedback({
+        type: "success",
+        message: `The application ${ASSETS[asset].label} was updated successfully.`,
+      });
+    } catch (uploadError) {
+      setFeedback({
+        type: "error",
+        message:
+          uploadError.message ||
+          `The ${ASSETS[asset].label} could not be uploaded.`,
+      });
     } finally {
-      setSaving(false);
+      setBusyAsset(null);
+
+      const inputRef = getInputRef(asset);
+
+      if (inputRef.current) {
+        inputRef.current.value = "";
+      }
     }
+  };
+
+  const restoreAsset = async (asset) => {
+    clearFeedback();
+    setBusyAsset(asset);
+
+    try {
+      const response = await authFetch(
+        `${BASE_URL}/api/branding/${ASSETS[asset].endpoint}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      const data = await safeReadJson(response);
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message ||
+            data?.detail ||
+            `The default ${ASSETS[asset].label} could not be restored.`,
+        );
+      }
+
+      await refreshBranding();
+
+      setFeedback({
+        type: "success",
+        message: `The default ${ASSETS[asset].label} was restored.`,
+      });
+    } catch (restoreError) {
+      setFeedback({
+        type: "error",
+        message:
+          restoreError.message ||
+          `The default ${ASSETS[asset].label} could not be restored.`,
+      });
+    } finally {
+      setBusyAsset(null);
+    }
+  };
+
+  const handleFileInput = (asset, event) => {
+    const file = event.target.files?.[0];
+
+    if (file) {
+      uploadAsset(asset, file);
+    }
+  };
+
+  const handleDrop = (asset, event) => {
+    event.preventDefault();
+    setDragAsset(null);
+
+    if (busyAsset) {
+      return;
+    }
+
+    const file = event.dataTransfer.files?.[0];
+
+    if (file) {
+      uploadAsset(asset, file);
+    }
+  };
+
+  const handleDragOver = (asset, event) => {
+    event.preventDefault();
+
+    if (!busyAsset) {
+      setDragAsset(asset);
+    }
+  };
+
+  const handleDragLeave = (event) => {
+    event.preventDefault();
+    setDragAsset(null);
+  };
+
+  const openFilePicker = (asset) => {
+    if (!busyAsset) {
+      getInputRef(asset).current?.click();
+    }
+  };
+
+  const handlePickerKeyDown = (asset, event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openFilePicker(asset);
+    }
+  };
+
+  const renderUploader = (asset) => {
+    const config = ASSETS[asset];
+    const isBusy = busyAsset === asset;
+
+    return (
+      <>
+        <div
+          className={`${styles.dropzone} ${
+            dragAsset === asset ? styles.dropzoneActive : ""
+          } ${busyAsset ? styles.dropzoneDisabled : ""}`}
+          onClick={() => openFilePicker(asset)}
+          onKeyDown={(event) => handlePickerKeyDown(asset, event)}
+          onDrop={(event) => handleDrop(asset, event)}
+          onDragOver={(event) => handleDragOver(asset, event)}
+          onDragLeave={handleDragLeave}
+          role="button"
+          tabIndex={busyAsset ? -1 : 0}
+          aria-disabled={Boolean(busyAsset)}
+        >
+          <div className={styles.dropzoneIconWrap}>
+            <FiUploadCloud className={styles.dropzoneIcon} aria-hidden="true" />
+          </div>
+
+          <div className={styles.dropzoneText}>
+            {isBusy ? (
+              <>
+                <strong>Uploading {config.label}...</strong>
+
+                <span>Please wait while the file is saved.</span>
+              </>
+            ) : (
+              <>
+                <strong>Drag and drop your {config.label} here</strong>
+
+                <span>or click to select a file</span>
+              </>
+            )}
+
+            <span className={styles.dropzoneHint}>
+              {asset === "logo"
+                ? "PNG or JPG, maximum 2 MB"
+                : "PNG or ICO, maximum 512 KB"}
+            </span>
+          </div>
+        </div>
+
+        <input
+          ref={getInputRef(asset)}
+          type="file"
+          accept={config.accept}
+          className={styles.fileInput}
+          disabled={Boolean(busyAsset)}
+          onChange={(event) => handleFileInput(asset, event)}
+        />
+      </>
+    );
   };
 
   return (
     <section className={styles.logoSettings}>
       <header className={styles.pageHeader}>
         <div className={styles.pageHeaderText}>
-          <h2 className={styles.pageTitle}>Application logo</h2>
+          <h2 className={styles.pageTitle}>Application branding</h2>
 
           <p className={styles.pageSubtitle}>
-            Manage the logo displayed in the application header and on the login
-            page.
+            Manage the application logo and browser favicon.
           </p>
-        </div>
-
-        <div
-          className={`${styles.statusBadge} ${
-            customLogo ? styles.statusBadgeCustom : styles.statusBadgeDefault
-          }`}
-        >
-          <FiImage aria-hidden="true" />
-
-          <span>{customLogo ? "Custom logo" : "Default logo"}</span>
         </div>
       </header>
 
-      <div className={styles.settingsGrid}>
-        <article className={styles.card}>
-          <div className={styles.cardHeader}>
-            <div>
-              <h3 className={styles.cardTitle}>Current logo</h3>
+      <div className={styles.assetSection}>
+        <div className={styles.assetSectionHeader}>
+          <div>
+            <h3 className={styles.assetSectionTitle}>Application logo</h3>
 
-              <p className={styles.cardSubtitle}>
-                Preview of the logo currently visible to users.
-              </p>
-            </div>
-          </div>
-
-          <div className={styles.preview}>
-            <img
-              src={logoUrl}
-              alt="Current application logo"
-              onError={(event) => {
-                event.currentTarget.onerror = null;
-                event.currentTarget.src = "/logo.png";
-              }}
-            />
-          </div>
-
-          <div className={styles.previewFooter}>
-            <span
-              className={`${styles.logoIndicator} ${
-                customLogo
-                  ? styles.logoIndicatorCustom
-                  : styles.logoIndicatorDefault
-              }`}
-            />
-
-            <span>
-              {customLogo
-                ? "A custom logo is currently active."
-                : "The original Relief Projects logo is active."}
-            </span>
-          </div>
-
-          {customLogo && (
-            <button
-              type="button"
-              className={styles.restoreButton}
-              disabled={saving}
-              onClick={handleRestoreDefault}
-            >
-              <FiRefreshCw aria-hidden="true" />
-
-              <span>{saving ? "Please wait..." : "Restore default logo"}</span>
-            </button>
-          )}
-        </article>
-
-        <article className={styles.card}>
-          <div className={styles.cardHeader}>
-            <div>
-              <h3 className={styles.cardTitle}>Upload a new logo</h3>
-
-              <p className={styles.cardSubtitle}>
-                The new logo will be used for all users and devices.
-              </p>
-            </div>
-          </div>
-
-          <div
-            className={`${styles.dropzone} ${
-              dragActive ? styles.dropzoneActive : ""
-            } ${saving ? styles.dropzoneDisabled : ""}`}
-            onClick={openFilePicker}
-            onKeyDown={handlePickerKeyDown}
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            role="button"
-            tabIndex={saving ? -1 : 0}
-            aria-disabled={saving}
-            aria-label="Select or drop an application logo"
-          >
-            <div className={styles.dropzoneIconWrap}>
-              <FiUploadCloud
-                className={styles.dropzoneIcon}
-                aria-hidden="true"
-              />
-            </div>
-
-            <div className={styles.dropzoneText}>
-              {saving ? (
-                <>
-                  <strong>Uploading logo...</strong>
-
-                  <span>Please wait while the new logo is saved.</span>
-                </>
-              ) : (
-                <>
-                  <strong>Drag and drop your logo here</strong>
-
-                  <span>or click anywhere in this area to select a file</span>
-                </>
-              )}
-
-              <span className={styles.dropzoneHint}>
-                PNG or JPG, maximum 4 MB
-              </span>
-            </div>
-          </div>
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".png,.jpg,.jpeg,image/png,image/jpeg"
-            className={styles.fileInput}
-            disabled={saving}
-            onChange={handleFileInput}
-          />
-
-          <div className={styles.formatGuide}>
-            <h4 className={styles.formatGuideTitle}>Recommended format</h4>
-
-            <div className={styles.requirementGrid}>
-              <div className={styles.requirement}>
-                <span className={styles.requirementLabel}>File type</span>
-
-                <span className={styles.requirementValue}>
-                  Transparent PNG preferred
-                </span>
-              </div>
-
-              <div className={styles.requirement}>
-                <span className={styles.requirementLabel}>
-                  Recommended size
-                </span>
-
-                <span className={styles.requirementValue}>
-                  600 x 300 pixels
-                </span>
-              </div>
-
-              <div className={styles.requirement}>
-                <span className={styles.requirementLabel}>Shape</span>
-
-                <span className={styles.requirementValue}>
-                  Horizontal, approximately 2:1
-                </span>
-              </div>
-
-              <div className={styles.requirement}>
-                <span className={styles.requirementLabel}>
-                  Maximum file size
-                </span>
-
-                <span className={styles.requirementValue}>4 MB</span>
-              </div>
-            </div>
-
-            <p className={styles.formatNote}>
-              For the clearest result, avoid unnecessary empty space around the
-              logo.
+            <p className={styles.assetSectionSubtitle}>
+              Displayed on the login page and in the application header.
             </p>
           </div>
+        </div>
 
-          {error && (
-            <div className={`${styles.feedback} ${styles.error}`} role="alert">
-              <FiAlertCircle
-                className={styles.feedbackIcon}
-                aria-hidden="true"
-              />
+        <div className={styles.settingsGrid}>
+          <article className={styles.card}>
+            <div className={styles.cardHeader}>
+              <h4 className={styles.cardTitle}>Current logo</h4>
 
-              <span>{error}</span>
+              <span className={styles.statusBadge}>
+                <FiImage aria-hidden="true" />
+
+                {customLogo ? "Custom" : "Default"}
+              </span>
             </div>
-          )}
 
-          {message && (
-            <div
-              className={`${styles.feedback} ${styles.success}`}
-              role="status"
-            >
-              <FiCheckCircle
-                className={styles.feedbackIcon}
-                aria-hidden="true"
+            <div className={styles.preview}>
+              <img
+                src={logoUrl}
+                alt="Current application logo"
+                onError={(event) => {
+                  event.currentTarget.onerror = null;
+                  event.currentTarget.src = "/logo.png";
+                }}
               />
-
-              <span>{message}</span>
             </div>
-          )}
-        </article>
+
+            {customLogo && (
+              <button
+                type="button"
+                className={styles.restoreButton}
+                disabled={Boolean(busyAsset)}
+                onClick={() => restoreAsset("logo")}
+              >
+                <FiRefreshCw aria-hidden="true" />
+                Restore default logo
+              </button>
+            )}
+          </article>
+
+          <article className={styles.card}>
+            <div className={styles.cardHeader}>
+              <div>
+                <h4 className={styles.cardTitle}>Upload a new logo</h4>
+
+                <p className={styles.cardSubtitle}>
+                  Recommended size: 600 x 300 pixels.
+                </p>
+              </div>
+            </div>
+
+            {renderUploader("logo")}
+          </article>
+        </div>
       </div>
+
+      <div className={styles.assetDivider} />
+
+      <div className={styles.assetSection}>
+        <div className={styles.assetSectionHeader}>
+          <div>
+            <h3 className={styles.assetSectionTitle}>Browser favicon</h3>
+
+            <p className={styles.assetSectionSubtitle}>
+              Displayed in browser tabs, bookmarks, and browser history.
+            </p>
+          </div>
+        </div>
+
+        <div className={styles.settingsGrid}>
+          <article className={styles.card}>
+            <div className={styles.cardHeader}>
+              <h4 className={styles.cardTitle}>Current favicon</h4>
+
+              <span className={styles.statusBadge}>
+                <FiImage aria-hidden="true" />
+
+                {customFavicon ? "Custom" : "Default"}
+              </span>
+            </div>
+
+            <div className={`${styles.preview} ${styles.faviconPreview}`}>
+              <img
+                src={faviconUrl}
+                alt="Current browser favicon"
+                onError={(event) => {
+                  event.currentTarget.onerror = null;
+                  event.currentTarget.src = "/favicon.ico";
+                }}
+              />
+            </div>
+
+            {customFavicon && (
+              <button
+                type="button"
+                className={styles.restoreButton}
+                disabled={Boolean(busyAsset)}
+                onClick={() => restoreAsset("favicon")}
+              >
+                <FiRefreshCw aria-hidden="true" />
+                Restore default favicon
+              </button>
+            )}
+          </article>
+
+          <article className={styles.card}>
+            <div className={styles.cardHeader}>
+              <div>
+                <h4 className={styles.cardTitle}>Upload a new favicon</h4>
+
+                <p className={styles.cardSubtitle}>
+                  Use a square PNG or ICO file. Recommended: 32 x 32 or 64 x 64
+                  pixels.
+                </p>
+              </div>
+            </div>
+
+            {renderUploader("favicon")}
+          </article>
+        </div>
+      </div>
+
+      {feedback.message && (
+        <div
+          className={`${styles.feedback} ${
+            feedback.type === "error" ? styles.error : styles.success
+          }`}
+          role={feedback.type === "error" ? "alert" : "status"}
+        >
+          {feedback.type === "error" ? (
+            <FiAlertCircle aria-hidden="true" />
+          ) : (
+            <FiCheckCircle aria-hidden="true" />
+          )}
+
+          <span>{feedback.message}</span>
+        </div>
+      )}
     </section>
   );
 }

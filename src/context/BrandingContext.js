@@ -6,13 +6,17 @@ import React, {
   useMemo,
   useState,
 } from "react";
+
 import { BASE_URL } from "../config/api";
 
 const DEFAULT_LOGO_URL = "/logo.png";
+const DEFAULT_FAVICON_URL = "/favicon.ico";
 
 const BrandingContext = createContext({
   logoUrl: DEFAULT_LOGO_URL,
+  faviconUrl: DEFAULT_FAVICON_URL,
   customLogo: false,
+  customFavicon: false,
   brandingLoading: true,
   refreshBranding: async () => {},
 });
@@ -20,8 +24,11 @@ const BrandingContext = createContext({
 export function BrandingProvider({ children }) {
   const [branding, setBranding] = useState({
     logoUrl: DEFAULT_LOGO_URL,
+    faviconUrl: DEFAULT_FAVICON_URL,
     customLogo: false,
+    customFavicon: false,
     updatedAt: null,
+    faviconUpdatedAt: null,
   });
 
   const [brandingLoading, setBrandingLoading] = useState(true);
@@ -40,28 +47,40 @@ export function BrandingProvider({ children }) {
 
       const data = await response.json();
 
-      const baseLogoUrl = data.customLogo
-        ? `${BASE_URL}${data.logoUrl}`
-        : DEFAULT_LOGO_URL;
-
-      const version = data.updatedAt
+      const logoVersion = data.updatedAt
         ? encodeURIComponent(data.updatedAt)
         : Date.now();
 
+      const faviconVersion = data.faviconUpdatedAt
+        ? encodeURIComponent(data.faviconUpdatedAt)
+        : Date.now();
+
+      const logoUrl = data.customLogo
+        ? `${BASE_URL}${data.logoUrl}?v=${logoVersion}`
+        : DEFAULT_LOGO_URL;
+
+      const faviconUrl = data.customFavicon
+        ? `${BASE_URL}${data.faviconUrl}?v=${faviconVersion}`
+        : `${DEFAULT_FAVICON_URL}?v=${faviconVersion}`;
+
       setBranding({
         customLogo: Boolean(data.customLogo),
-        logoUrl: data.customLogo
-          ? `${baseLogoUrl}?v=${version}`
-          : DEFAULT_LOGO_URL,
+        customFavicon: Boolean(data.customFavicon),
+        logoUrl,
+        faviconUrl,
         updatedAt: data.updatedAt || null,
+        faviconUpdatedAt: data.faviconUpdatedAt || null,
       });
     } catch (error) {
       console.error("Failed to load application branding:", error);
 
       setBranding({
         customLogo: false,
+        customFavicon: false,
         logoUrl: DEFAULT_LOGO_URL,
+        faviconUrl: DEFAULT_FAVICON_URL,
         updatedAt: null,
+        faviconUpdatedAt: null,
       });
     } finally {
       setBrandingLoading(false);
@@ -71,6 +90,18 @@ export function BrandingProvider({ children }) {
   useEffect(() => {
     refreshBranding();
   }, [refreshBranding]);
+
+  useEffect(() => {
+    let faviconLink = document.querySelector('link[rel~="icon"]');
+
+    if (!faviconLink) {
+      faviconLink = document.createElement("link");
+      faviconLink.rel = "icon";
+      document.head.appendChild(faviconLink);
+    }
+
+    faviconLink.href = branding.faviconUrl || DEFAULT_FAVICON_URL;
+  }, [branding.faviconUrl]);
 
   const value = useMemo(
     () => ({
