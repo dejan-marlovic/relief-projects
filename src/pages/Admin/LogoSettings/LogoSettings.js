@@ -18,14 +18,15 @@ const ASSETS = {
   logo: {
     endpoint: "logo",
     label: "logo",
-    maxSize: 2 * 1024 * 1024,
+    maxSize: 4 * 1024 * 1024,
     accept: ".png,.jpg,.jpeg,image/png,image/jpeg",
     types: ["image/png", "image/jpeg"],
   },
+
   favicon: {
     endpoint: "favicon",
     label: "favicon",
-    maxSize: 512 * 1024,
+    maxSize: 2 * 1024 * 1024,
     accept: ".png,.ico,image/png,image/x-icon,image/vnd.microsoft.icon",
     types: ["image/png", "image/x-icon", "image/vnd.microsoft.icon"],
   },
@@ -76,8 +77,8 @@ function LogoSettings() {
 
     if (file.size > config.maxSize) {
       return asset === "logo"
-        ? "The logo must be smaller than 2 MB."
-        : "The favicon must be smaller than 512 KB.";
+        ? "The logo must be smaller than 4 MB."
+        : "The favicon must be smaller than 2 MB.";
     }
 
     return null;
@@ -273,8 +274,8 @@ function LogoSettings() {
 
             <span className={styles.dropzoneHint}>
               {asset === "logo"
-                ? "PNG or JPG, maximum 2 MB"
-                : "PNG or ICO, maximum 512 KB"}
+                ? "PNG or JPG, maximum 4 MB"
+                : "PNG or ICO, maximum 2 MB"}
             </span>
           </div>
         </div>
