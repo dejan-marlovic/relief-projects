@@ -1,7 +1,8 @@
 @use "../../styles/forms" as forms;
+@use "../../styles/colors" as colors;
 
-$primary: #4a90e2;
-$danger: #e74c3c;
+$primary: colors.$primary;
+$danger: colors.$danger;
 
 .projectContainer {
   padding: 1.25rem;
@@ -10,7 +11,7 @@ $danger: #e74c3c;
 }
 
 .formContainer {
-  background: #fff;
+  background: colors.$surface;
   border-radius: 14px;
   border: 1px solid rgba(74, 144, 226, 0.18);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
