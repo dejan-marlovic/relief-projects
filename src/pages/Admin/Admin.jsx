@@ -102,6 +102,7 @@ import RestoreEmployee from "../Admin/RestoreEmployee/RestoreEmployee";
 
 import RegisterProject from "../RegisterProject/RegisterProject";
 import LogoSettings from "./LogoSettings/LogoSettings";
+import ThemeSettings from "./ThemeSettings/ThemeSettings";
 
 const ENTITY_OPTIONS = [
   { value: "position", label: "Position (master data)" },
@@ -615,6 +616,8 @@ const Admin = () => {
         aria-labelledby="application-settings-heading"
       >
         <h2 id="application-settings-heading">Application settings</h2>
+
+        <ThemeSettings />
 
         <LogoSettings />
       </section>

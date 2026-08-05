@@ -26,8 +26,11 @@ import NoPage from "./pages/NoPage/NoPage"; // Catch-all for undefined routes (4
 // Import the context provider to share state across all components
 import { ProjectProvider } from "./context/ProjectContext";
 import { BrandingProvider } from "./context/BrandingContext";
+import { applyTheme, getStoredTheme } from "./utils/theme";
 
 import "./styles/global.scss";
+
+applyTheme(getStoredTheme());
 
 // ✅ Main App component: this sets up routing and wraps everything in context
 export default function App() {
