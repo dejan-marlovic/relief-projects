@@ -1,35 +1,102 @@
 /* src/styles/global.scss */
 
-body {
-  margin: 0;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background-color: white; // or whatever your page bg is
+@use "./colors" as colors;
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
-/* generic headings */
+html {
+  min-height: 100%;
+  background: colors.$background;
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  background: colors.$background;
+  color: colors.$text;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
 h1,
 h2,
 h3 {
-  color: #4a90e2;
+  color: colors.$primary;
 }
 
-/* generic buttons (if you want app-wide classnames) */
+a {
+  color: colors.$primary;
+}
+
 .btn-primary {
   padding: 0.75rem 1.5rem;
-  background-color: #4a90e2;
-  color: #fff;
   border: none;
   border-radius: 8px;
+  background: colors.$primary;
+  color: colors.$text-on-primary;
   font-weight: 600;
   cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.12s ease;
+
+  &:hover:not(:disabled) {
+    background: colors.$primary-hover;
+    box-shadow: colors.$shadow-card;
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: colors.$shadow-focus;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
 }
 
 .btn-danger {
   padding: 0.75rem 1.5rem;
-  background-color: #e74c3c;
-  color: #fff;
   border: none;
   border-radius: 8px;
+  background: colors.$danger;
+  color: colors.$text-on-primary;
   font-weight: 600;
   cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.12s ease;
+
+  &:hover:not(:disabled) {
+    box-shadow: colors.$shadow-card;
+    filter: brightness(0.95);
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px colors.$danger-focus;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
 }
