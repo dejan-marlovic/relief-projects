@@ -1,3 +1,4 @@
+@use "../../../styles/colors" as colors;
 /* ==========================================================================
    Stylesheet structure overview
    - Uses a shared "forms" SCSS module for consistent input/label/button styles.
@@ -8,8 +9,6 @@
 
 @use "../../../styles/forms" as forms; // Imports shared form mixins/vars; referenced as forms.<name>
 
-$primary: #4a90e2; // Primary theme color (used for headings/buttons)
-$danger: #e74c3c; // Danger theme color (used for destructive actions)
 
 /* .projectContainer: outer page wrapper that sets overall spacing + base typography */
 .projectContainer {
@@ -21,10 +20,10 @@ $danger: #e74c3c; // Danger theme color (used for destructive actions)
 
 /* .formContainer: main form "panel" with card look (white bg, rounded, border, shadow) */
 .formContainer {
-  background: #fff; // White background to contrast with page background
+  background: colors.$surface; // White background to contrast with page background
   border-radius: 14px; // Rounded corners for a modern card feel
-  border: 1px solid rgba(74, 144, 226, 0.18); // Subtle blue-tinted border (alpha = 0.18)
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06); // Soft shadow: x=0, y=10px, blur=24px, 6% black
+  border: 1px solid colors.$primary-focus; // Subtle blue-tinted border (alpha = 0.18)
+  box-shadow: 0 10px 24px colors.$border-subtle; // Soft shadow: x=0, y=10px, blur=24px, 6% black
   padding: 1.25rem; // Inner spacing so content doesn't touch the edges
 }
 
@@ -49,7 +48,7 @@ label {
   gap: 1rem; // Space between left and right groups if they wrap/stack
   margin-bottom: 1rem; // Space below the header before the next section
   padding-bottom: 1rem; // Adds breathing room above the bottom border line
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06); // Very light divider line under the header
+  border-bottom: 1px solid colors.$border-subtle; // Very light divider line under the header
 }
 
 /* .pageHeaderText: stacks title + subtitle vertically with a small gap */
@@ -63,14 +62,14 @@ label {
 .pageTitle {
   margin: 0; // Removes default h* margin for predictable spacing
   font-size: 1.2rem; // Slightly larger text for emphasis
-  color: $primary; // Uses theme primary color for brand consistency
+  color: colors.$primary; // Uses theme primary color for brand consistency
 }
 
 /* .pageSubtitle: secondary heading text under the title */
 .pageSubtitle {
   margin: 0; // Removes default margin so spacing is controlled by gaps above
   font-size: 0.9rem; // Smaller than title to indicate lower hierarchy
-  color: #6b7280; // Muted gray for secondary text (less visual weight)
+  color: colors.$text-muted; // Muted gray for secondary text (less visual weight)
 }
 
 /* .headerActions: container for buttons/controls in the header */
@@ -82,10 +81,10 @@ label {
 
 /* .card: reusable card surface for content blocks (similar to formContainer but slightly lighter) */
 .card {
-  background: #fff; // White surface for content
-  border: 1px solid rgba(74, 144, 226, 0.14); // Subtle border, slightly lighter alpha than formContainer
+  background: colors.$surface; // White surface for content
+  border: 1px solid colors.$primary-soft-active; // Subtle border, slightly lighter alpha than formContainer
   border-radius: 14px; // Rounded corners
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05); // Soft shadow: smaller offset + blur than formContainer
+  box-shadow: colors.$shadow-card; // Soft shadow: smaller offset + blur than formContainer
   padding: 1rem; // Inner spacing inside the card
 }
 
@@ -101,13 +100,13 @@ label {
 /* .cardTitle: prominent label/title for the card section */
 .cardTitle {
   font-weight: 700; // Bold title for emphasis
-  color: #1f2937; // Dark gray for strong readability
+  color: colors.$text-strong; // Dark gray for strong readability
 }
 
 /* .cardMeta: small, muted metadata text (e.g., date, id, status) */
 .cardMeta {
   font-size: 0.8rem; // Smaller text for metadata
-  color: #6b7280; // Muted gray to reduce prominence
+  color: colors.$text-muted; // Muted gray to reduce prominence
 }
 
 /* .formGroup: wraps a label + input + error text as a vertical block */
@@ -120,13 +119,13 @@ label {
 
 /* .errorBanner: prominent, inline-flex alert area for form/page errors */
 .errorBanner {
-  background-color: #ffe6e6; // Light red background to indicate error state
-  color: #b00000; // Dark red text for contrast and clarity
+  background-color: colors.$danger-soft-strong; // Light red background to indicate error state
+  color: colors.$danger-text; // Dark red text for contrast and clarity
   padding: 10px 14px; // Inner spacing around the banner content
   border-radius: 10px; // Rounded corners for a friendly alert style
   margin: 0.75rem 0; // Vertical spacing above and below the banner
   font-size: 0.9rem; // Slightly smaller than body text; still readable
-  border: 1px solid #ffb3b3; // Border to define the banner edge against white backgrounds
+  border: 1px solid colors.$danger-border-strong; // Border to define the banner edge against white backgrounds
   display: flex; // Aligns icon + text nicely in a row
   gap: 8px; // Space between icon and message text
   align-items: center; // Vertically centers icon and text
@@ -134,7 +133,7 @@ label {
 
 /* .fieldError: small helper text under an input for field-level validation messages */
 .fieldError {
-  color: #b00000; // Dark red to match error theme
+  color: colors.$danger-text; // Dark red to match error theme
   font-size: 0.8rem; // Smaller text so it reads as helper/error note
   margin-top: 4px; // Small spacing from the input above
   font-weight: 500; // Medium weight to make it noticeable without being too heavy
@@ -142,8 +141,8 @@ label {
 
 /* .inputError: applied to an input to visually indicate invalid state */
 .inputError {
-  border-color: #b00000 !important; // Forces red border even if other styles compete (important overrides)
-  box-shadow: 0 0 4px rgba(176, 0, 0, 0.35); // Red glow to reinforce the error state
+  border-color: colors.$danger-text !important; // Forces red border even if other styles compete (important overrides)
+  box-shadow: 0 0 4px colors.$danger-focus; // Red glow to reinforce the error state
   outline: none; // Removes default focus outline (relies on custom border/shadow instead)
 }
 

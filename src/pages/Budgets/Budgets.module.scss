@@ -1,6 +1,6 @@
+@use "../../styles/colors" as colors;
 @use "../../styles/forms" as forms;
 
-$primary: #4a90e2;
 
 .page {
   padding: 1.25rem;
@@ -10,10 +10,10 @@ $primary: #4a90e2;
 
 /* Big white card shell like Transactions/Signatures */
 .shell {
-  background: #fff;
+  background: colors.$surface;
   border-radius: 14px;
-  border: 1px solid rgba(74, 144, 226, 0.18);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+  border: 1px solid colors.$primary-focus;
+  box-shadow: 0 10px 24px colors.$border-subtle;
   padding: 1.25rem;
 }
 
@@ -36,10 +36,10 @@ $primary: #4a90e2;
   margin: -1.25rem -1.25rem 1rem;
   padding: 1rem 1.25rem;
 
-  background: rgba(255, 255, 255, 0.96);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  background: colors.$surface-a96;
+  border-bottom: 1px solid colors.$neutral-a08;
   border-radius: 14px 14px 0 0;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 18px colors.$border-subtle;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
@@ -54,14 +54,14 @@ $primary: #4a90e2;
 .pageTitle {
   margin: 0;
   font-size: 1.2rem;
-  color: $primary;
+  color: colors.$primary;
   font-weight: 700;
 }
 
 .pageSubtitle {
   margin: 0;
   font-size: 0.9rem;
-  color: #6b7280;
+  color: colors.$text-muted;
 }
 
 .headerActions {
@@ -102,7 +102,7 @@ $primary: #4a90e2;
 
 .noData {
   padding: 12px;
-  color: #666;
+  color: colors.$text-neutral;
 }
 
 @media (max-width: 760px) {

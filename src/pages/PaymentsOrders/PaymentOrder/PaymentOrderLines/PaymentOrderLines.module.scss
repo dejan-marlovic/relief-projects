@@ -1,15 +1,14 @@
+@use "../../../../styles/colors" as colors;
 @use "../../../../styles/forms" as forms;
 
-$primary: #4a90e2;
-$danger: #e74c3c;
 
 .wrap {
-  border: 1px solid rgba(74, 144, 226, 0.14);
+  border: 1px solid colors.$primary-soft-active;
   border-radius: 14px;
   padding: 12px;
   margin: 10px 0 0 0;
-  background: rgba(74, 144, 226, 0.04);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
+  background: colors.$primary-a04;
+  box-shadow: 0 6px 16px colors.$neutral-a04;
 }
 
 .header {
@@ -22,18 +21,18 @@ $danger: #e74c3c;
 
 .title {
   font-weight: 700;
-  color: #1f2937;
+  color: colors.$text-strong;
 }
 
 .sub {
   font-size: 12px;
-  color: #6b7280;
+  color: colors.$text-muted;
   margin-top: 2px;
 }
 
 /* Buttons */
 .iconPillBtn {
-  @include forms.ghost-button($primary);
+  @include forms.ghost-button(colors.$primary);
   padding: 0.6rem 0.85rem;
   font-size: 0.92rem;
 }
@@ -47,17 +46,17 @@ $danger: #e74c3c;
   border-radius: 999px;
   width: 34px;
   height: 34px;
-  border: 1px solid rgba(74, 144, 226, 0.25);
+  border: 1px solid colors.$primary-a25;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  background: #fff;
+  background: colors.$surface;
   transition: transform 0.12s ease, box-shadow 0.2s ease;
-  color: #1f2937;
+  color: colors.$text-strong;
 
   &:hover {
-    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 8px 18px colors.$neutral-a08;
     transform: translateY(-1px);
   }
 
@@ -79,8 +78,8 @@ $danger: #e74c3c;
 
 .dangerIconBtn {
   border: none;
-  background: $danger;
-  color: #fff;
+  background: colors.$danger;
+  color: colors.$surface;
   border-radius: 10px;
   padding: 0.45rem 0.55rem;
   cursor: pointer;
@@ -106,13 +105,13 @@ $danger: #e74c3c;
 
 /* Errors like Project */
 .errorBanner {
-  background-color: #ffe6e6;
-  color: #b00000;
+  background-color: colors.$danger-soft-strong;
+  color: colors.$danger-text;
   padding: 10px 14px;
   border-radius: 10px;
   margin: 0.75rem 0;
   font-size: 0.9rem;
-  border: 1px solid #ffb3b3;
+  border: 1px solid colors.$danger-border-strong;
   display: flex;
   gap: 8px;
   align-items: center;
@@ -126,15 +125,15 @@ $danger: #e74c3c;
   align-items: end;
   padding: 10px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(74, 144, 226, 0.12);
+  background: colors.$surface-a70;
+  border: 1px solid colors.$primary-a12;
   margin-bottom: 12px;
 }
 
 .field label {
   display: block;
   font-size: 12px;
-  color: #6b7280;
+  color: colors.$text-muted;
   margin-bottom: 4px;
   font-weight: 700;
 }
@@ -152,14 +151,14 @@ $danger: #e74c3c;
 
 /* Validation */
 .inputError {
-  border-color: #b00000 !important;
-  box-shadow: 0 0 4px rgba(176, 0, 0, 0.35);
+  border-color: colors.$danger-text !important;
+  box-shadow: 0 0 4px colors.$danger-focus;
   outline: none;
 }
 
 .fieldError {
   font-size: 12px;
-  color: #b00020;
+  color: colors.$danger-dark;
   margin-top: 4px;
 }
 
@@ -178,14 +177,14 @@ $danger: #e74c3c;
 
 .thead {
   font-size: 12px;
-  color: #6b7280;
+  color: colors.$text-muted;
   padding: 6px 8px;
   font-weight: 700;
 }
 
 .trow {
   padding: 10px 8px;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  border-top: 1px solid colors.$border-subtle;
 }
 
 .rowActions {
@@ -196,11 +195,11 @@ $danger: #e74c3c;
 
 .empty {
   padding: 10px;
-  color: #6b7280;
+  color: colors.$text-muted;
 }
 
 .rowError {
   margin-top: 6px;
   font-size: 0.85rem;
-  color: #b00000;
+  color: colors.$danger-text;
 }

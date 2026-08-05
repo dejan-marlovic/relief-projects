@@ -1,8 +1,7 @@
+@use "../../../styles/colors" as colors;
 @use "../../../styles/tables" as tables;
 @use "../../../styles/forms" as forms;
 
-$primary: #4a90e2;
-$danger: #e74c3c;
 
 /* Use same grid declaration as header (via CSS var) */
 .gridRow {
@@ -24,7 +23,7 @@ $danger: #e74c3c;
   @include tables.table-cell;
 }
 
-/* ✅ Inputs/selects: Project-like focus/hover (same as PaymentOrder) */
+/* ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ Inputs/selects: Project-like focus/hover (same as PaymentOrder) */
 .input {
   @include forms.text-input;
   padding: 0.45rem 0.6rem;
@@ -33,8 +32,8 @@ $danger: #e74c3c;
 
 /* Invalid */
 .inputError {
-  border-color: #b00000 !important;
-  box-shadow: 0 0 4px rgba(176, 0, 0, 0.35);
+  border-color: colors.$danger-text !important;
+  box-shadow: 0 0 4px colors.$danger-focus;
   outline: none;
 }
 
@@ -42,7 +41,7 @@ $danger: #e74c3c;
 .fieldError {
   margin-top: 2px;
   font-size: 0.78rem;
-  color: #b00000;
+  color: colors.$danger-text;
 }
 
 /* Actions area */
@@ -54,13 +53,13 @@ $danger: #e74c3c;
   white-space: nowrap;
 }
 
-/* Sticky actions col: ✅ inherit zebra/hover background (like PaymentOrder) */
+/* Sticky actions col: ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ inherit zebra/hover background (like PaymentOrder) */
 .stickyCol {
   @include tables.table-sticky-col;
   background: inherit;
-  box-shadow: 2px 0 0 rgba(0, 0, 0, 0.04);
+  box-shadow: 2px 0 0 colors.$neutral-a04;
 
-  /* ✅ prevent icon clipping */
+  /* ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ prevent icon clipping */
   overflow: visible;
 }
 
@@ -69,24 +68,24 @@ $danger: #e74c3c;
   @include tables.table-hidden-col;
 }
 
-/* ✅ Round normal icon buttons: edit/save */
+/* ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ Round normal icon buttons: edit/save */
 .iconCircleBtn {
   border-radius: 999px;
   width: 34px;
   height: 34px;
-  border: 1px solid rgba(74, 144, 226, 0.25);
+  border: 1px solid colors.$primary-a25;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  background: #fff;
+  background: colors.$surface;
   transition:
     transform 0.12s ease,
     box-shadow 0.2s ease;
-  color: #1f2937;
+  color: colors.$text-strong;
 
   &:hover {
-    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 8px 18px colors.$neutral-a08;
     transform: translateY(-1px);
   }
 
@@ -107,15 +106,15 @@ $danger: #e74c3c;
 }
 
 .iconCircleBtnActive {
-  background: rgba(74, 144, 226, 0.1);
-  border-color: rgba(74, 144, 226, 0.35);
+  background: colors.$primary-soft-hover;
+  border-color: colors.$primary-a35;
 }
 
 /* Existing solid danger button: still used for Cancel while editing */
 .dangerIconBtn {
   border: none;
-  background: $danger;
-  color: #fff;
+  background: colors.$danger;
+  color: colors.$surface;
   border-radius: 10px;
   padding: 0.45rem 0.55rem;
   cursor: pointer;
@@ -139,11 +138,11 @@ $danger: #e74c3c;
   }
 }
 
-/* ✅ Project-style trash-can icon button */
+/* ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ Project-style trash-can icon button */
 .actionBtn {
-  background: #fff;
-  color: #1f2937;
-  border: 1px solid #e6e6e6;
+  background: colors.$surface;
+  color: colors.$text-strong;
+  border: 1px solid colors.$border-muted;
   border-radius: 8px;
   padding: 6px 10px;
   cursor: pointer;
@@ -162,7 +161,7 @@ $danger: #e74c3c;
   }
 
   &:hover {
-    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 8px 18px colors.$neutral-a08;
     transform: translateY(-1px);
   }
 
@@ -179,9 +178,9 @@ $danger: #e74c3c;
 }
 
 .actionBtnDanger {
-  background: #fff5f5;
-  color: #d33;
-  border-color: #f3c0c0;
+  background: colors.$danger-soft-alt;
+  color: colors.$danger;
+  border-color: colors.$danger-border-strong;
 }
 
 .iconOnlyBtn {

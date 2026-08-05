@@ -1,7 +1,7 @@
+@use "../../styles/colors" as colors;
 /* src/components/Recipients/Recipients.module.scss */
 @use "../../styles/forms" as forms;
 
-$primary: #4a90e2;
 
 /* Page padding like Transactions */
 .page {
@@ -12,10 +12,10 @@ $primary: #4a90e2;
 
 /* Card shell like Transactions/Project */
 .shell {
-  background: #fff;
+  background: colors.$surface;
   border-radius: 14px;
-  border: 1px solid rgba(74, 144, 226, 0.18);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+  border: 1px solid colors.$primary-focus;
+  box-shadow: 0 10px 24px colors.$border-subtle;
   padding: 1.25rem;
 }
 
@@ -26,7 +26,7 @@ $primary: #4a90e2;
   gap: 1rem;
   margin-bottom: 1rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid colors.$border-subtle;
 }
 
 .pageHeaderText {
@@ -39,14 +39,14 @@ $primary: #4a90e2;
 .pageTitle {
   margin: 0;
   font-size: 1.2rem;
-  color: $primary;
+  color: colors.$primary;
   font-weight: 700;
 }
 
 .pageSubtitle {
   margin: 0;
   font-size: 0.9rem;
-  color: #6b7280;
+  color: colors.$text-muted;
 }
 
 .headerActions {
@@ -64,7 +64,7 @@ $primary: #4a90e2;
 
 /* Match Transactions "Columns" pill */
 .columnsBtn {
-  @include forms.ghost-button($primary);
+  @include forms.ghost-button(colors.$primary);
   padding: 0.6rem 0.85rem;
   font-size: 0.92rem;
 
@@ -77,11 +77,11 @@ $primary: #4a90e2;
   position: absolute;
   top: 46px;
   right: 0;
-  background: #fff;
-  border: 1px solid #e6e6e6;
+  background: colors.$surface;
+  border: 1px solid colors.$border-muted;
   border-radius: 12px;
   padding: 10px 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 30px colors.$neutral-a08;
   max-height: 320px;
   overflow: auto;
   z-index: 10;
@@ -94,12 +94,12 @@ $primary: #4a90e2;
   gap: 8px;
   padding: 4px 2px;
   white-space: nowrap;
-  color: #374151;
+  color: colors.$text-secondary;
 }
 
 .lockNote {
   font-style: normal;
-  color: #888;
+  color: colors.$text-muted;
   font-size: 0.85em;
 }
 
@@ -111,7 +111,7 @@ $primary: #4a90e2;
 
 /* Excel export button */
 .exportInlineBtn {
-  background: #fff;
+  background: colors.$surface;
   color: #217346;
   border: 1px solid rgba(33, 115, 70, 0.35);
   border-radius: 8px;
@@ -131,7 +131,7 @@ $primary: #4a90e2;
   &:hover:not(:disabled) {
     background: rgba(33, 115, 70, 0.08);
     border-color: rgba(33, 115, 70, 0.55);
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.07);
+    box-shadow: 0 6px 14px colors.$neutral-a07;
     transform: translateY(-1px);
   }
 
@@ -149,13 +149,13 @@ $primary: #4a90e2;
 
 /* Error banner like Transactions */
 .errorBanner {
-  background-color: #ffe6e6;
-  color: #b00000;
+  background-color: colors.$danger-soft-strong;
+  color: colors.$danger-text;
   padding: 10px 14px;
   border-radius: 10px;
   margin: 0.75rem 0;
   font-size: 0.9rem;
-  border: 1px solid #ffb3b3;
+  border: 1px solid colors.$danger-border-strong;
 }
 
 /* Table container */
@@ -164,12 +164,12 @@ $primary: #4a90e2;
   isolation: isolate;
   overflow: auto;
   max-height: 60vh;
-  border: 1px solid rgba(74, 144, 226, 0.14);
+  border: 1px solid colors.$primary-soft-active;
   border-radius: 14px;
-  background: #fff;
+  background: colors.$surface;
 
-  --rec-header-bg: #f6f7fb;
-  --rec-header-border: #e5e7eb;
+  --rec-header-bg: colors.$surface-tint;
+  --rec-header-border: colors.$border-muted;
   --rec-grid-cols: 160px;
 }
 
@@ -190,7 +190,7 @@ $primary: #4a90e2;
   background: var(--rec-header-bg);
   border-bottom: 1px solid var(--rec-header-border);
   padding: 10px 12px;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 0 colors.$neutral-a04;
   font-weight: 700;
   font-size: 0.92rem;
 }
@@ -198,7 +198,7 @@ $primary: #4a90e2;
 .headerCell {
   padding-right: 4px;
   white-space: nowrap;
-  color: #30323a;
+  color: colors.$text-secondary;
   background: var(--rec-header-bg);
 }
 
@@ -208,7 +208,7 @@ $primary: #4a90e2;
   left: 0;
   z-index: 6;
   background: var(--rec-header-bg);
-  box-shadow: 2px 0 0 rgba(0, 0, 0, 0.04);
+  box-shadow: 2px 0 0 colors.$neutral-a04;
   overflow: visible;
 }
 
@@ -224,7 +224,7 @@ $primary: #4a90e2;
 
 .noData {
   padding: 12px;
-  color: #666;
+  color: colors.$text-neutral;
 }
 
 .dangerInlineBtn {

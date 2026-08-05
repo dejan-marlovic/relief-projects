@@ -1,4 +1,4 @@
-$primary: #4a90e2;
+@use "../../styles/colors" as colors;
 
 /* Page padding like other pages */
 .page {
@@ -12,10 +12,10 @@ $primary: #4a90e2;
 .shell {
   max-width: 1720px;
   margin: 0 auto;
-  background: #fff;
+  background: colors.$surface;
   border-radius: 14px;
-  border: 1px solid rgba(74, 144, 226, 0.18);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+  border: 1px solid colors.$primary-focus;
+  box-shadow: 0 10px 24px colors.$border-subtle;
   padding: 1.25rem;
   overflow: visible;
 }
@@ -28,7 +28,7 @@ $primary: #4a90e2;
   gap: 1rem;
   margin-bottom: 1rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid colors.$border-subtle;
 }
 
 .pageHeaderText {
@@ -41,14 +41,14 @@ $primary: #4a90e2;
 .pageTitle {
   margin: 0;
   font-size: 1.2rem;
-  color: $primary;
+  color: colors.$primary;
   font-weight: 700;
 }
 
 .pageSubtitle {
   margin: 0;
   font-size: 0.9rem;
-  color: #6b7280;
+  color: colors.$text-muted;
 }
 
 .headerActions {
@@ -61,20 +61,20 @@ $primary: #4a90e2;
 
 /* Error banner */
 .errorBanner {
-  background-color: #ffe6e6;
-  color: #b00000;
+  background-color: colors.$danger-soft-strong;
+  color: colors.$danger-text;
   padding: 10px 14px;
   border-radius: 10px;
   margin: 0.75rem 0 1rem;
   font-size: 0.9rem;
-  border: 1px solid #ffb3b3;
+  border: 1px solid colors.$danger-border-strong;
 }
 
 /* Info banner (non-error) */
 .infoBanner {
-  background: #f8fafc;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  color: #374151;
+  background: colors.$surface-secondary;
+  border: 1px solid colors.$border-subtle;
+  color: colors.$text-secondary;
   padding: 10px 14px;
   border-radius: 10px;
   margin: 0.5rem 0 1rem;
@@ -84,7 +84,7 @@ $primary: #4a90e2;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
       "Liberation Mono", "Courier New", monospace;
     font-size: 0.85em;
-    background: rgba(0, 0, 0, 0.04);
+    background: colors.$neutral-a04;
     padding: 2px 6px;
     border-radius: 6px;
   }
@@ -92,17 +92,17 @@ $primary: #4a90e2;
 
 /* Empty + info */
 .emptyText {
-  color: #555;
+  color: colors.$text-muted;
   margin: 0.5rem 0 0.75rem;
 }
 
 /* Loading skeleton box */
 .loadingSkeleton {
-  background: #f3f4f6;
+  background: colors.$surface-muted;
   border-radius: 12px;
   margin: 0.25rem 0 0.5rem 0;
   height: 560px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  border: 1px solid colors.$border-subtle;
 }
 
 /* Chart wrapper row */
@@ -149,19 +149,19 @@ $primary: #4a90e2;
 
 /* Tooltip */
 .tooltipBox {
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: colors.$surface;
+  border: 1px solid colors.$border-muted;
   border-radius: 12px;
   padding: 10px 12px;
   max-width: 360px;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 24px colors.$neutral-a10;
   line-height: 1.25;
 }
 
 .tooltipTitle {
   font-weight: 700;
   margin-bottom: 6px;
-  color: #111827;
+  color: colors.$text;
 }
 
 .tooltipCount {
@@ -180,20 +180,20 @@ $primary: #4a90e2;
 
 .tooltipMore {
   font-size: 12px;
-  color: #6b7280;
+  color: colors.$text-muted;
   margin-top: 4px;
 }
 
 .tooltipEmpty {
   font-size: 13px;
-  color: #6b7280;
+  color: colors.$text-muted;
 }
 
 /* Meta counters row */
 .meta {
   margin-top: 0.9rem;
   font-size: 0.8rem;
-  color: #777;
+  color: colors.$text-muted;
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
@@ -202,7 +202,7 @@ $primary: #4a90e2;
 
 /* Labels & connectors on the SVG chart */
 .sliceConnector {
-  stroke: #c7c7c7;
+  stroke: colors.$border-muted;
 }
 
 .sliceLabel {
@@ -225,19 +225,19 @@ $primary: #4a90e2;
 
 .sectionTitle {
   font-weight: 800;
-  color: #111827;
+  color: colors.$text;
   font-size: 1.05rem;
 }
 
 .sectionSubtitle {
-  color: #6b7280;
+  color: colors.$text-muted;
   font-size: 0.9rem;
 
   code {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
       "Liberation Mono", "Courier New", monospace;
     font-size: 0.85em;
-    background: rgba(0, 0, 0, 0.04);
+    background: colors.$neutral-a04;
     padding: 2px 6px;
     border-radius: 6px;
   }
@@ -247,9 +247,9 @@ $primary: #4a90e2;
 .barCard {
   margin-top: 0.5rem;
   border-radius: 14px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
-  background: #fff;
+  border: 1px solid colors.$border-subtle;
+  box-shadow: colors.$shadow-raised;
+  background: colors.$surface;
   padding: 10px 12px 14px;
 }
 
@@ -258,13 +258,13 @@ $primary: #4a90e2;
   min-height: 420px;
 }
 
-/* ✅ NEW: Donut chart card */
+/* ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ NEW: Donut chart card */
 .donutCard {
   margin-top: 0.5rem;
   border-radius: 14px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
-  background: #fff;
+  border: 1px solid colors.$border-subtle;
+  box-shadow: colors.$shadow-raised;
+  background: colors.$surface;
   padding: 10px 12px 14px;
 }
 
@@ -275,7 +275,7 @@ $primary: #4a90e2;
 
 /* Center label inside donut */
 .donutCenterText {
-  fill: #111827;
+  fill: colors.$text;
 }
 
 .donutCenterValue {
@@ -285,5 +285,5 @@ $primary: #4a90e2;
 
 .donutCenterSub {
   font-size: 13px;
-  fill: #6b7280;
+  fill: colors.$text-muted;
 }

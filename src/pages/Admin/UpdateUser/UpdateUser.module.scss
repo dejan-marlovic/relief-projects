@@ -1,7 +1,6 @@
+@use "../../../styles/colors" as colors;
 @use "../../../styles/forms" as forms;
 
-$primary: #4a90e2;
-$success: #1f9d55;
 
 .updateContainer {
   padding: 1.25rem;
@@ -10,10 +9,10 @@ $success: #1f9d55;
 }
 
 .formContainer {
-  background: #fff;
+  background: colors.$surface;
   border-radius: 14px;
-  border: 1px solid rgba(74, 144, 226, 0.18);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+  border: 1px solid colors.$primary-focus;
+  box-shadow: 0 10px 24px colors.$border-subtle;
   padding: 1.25rem;
 }
 
@@ -35,7 +34,7 @@ label {
   gap: 1rem;
   margin-bottom: 1rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid colors.$border-subtle;
 }
 
 .pageHeaderText {
@@ -47,20 +46,20 @@ label {
 .pageTitle {
   margin: 0;
   font-size: 1.2rem;
-  color: $primary;
+  color: colors.$primary;
 }
 
 .pageSubtitle {
   margin: 0;
   font-size: 0.9rem;
-  color: #6b7280;
+  color: colors.$text-muted;
 }
 
 .card {
-  background: #fff;
-  border: 1px solid rgba(74, 144, 226, 0.14);
+  background: colors.$surface;
+  border: 1px solid colors.$primary-soft-active;
   border-radius: 14px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+  box-shadow: colors.$shadow-card;
   padding: 1rem;
 }
 
@@ -74,12 +73,12 @@ label {
 
 .cardTitle {
   font-weight: 700;
-  color: #1f2937;
+  color: colors.$text-strong;
 }
 
 .cardMeta {
   font-size: 0.8rem;
-  color: #6b7280;
+  color: colors.$text-muted;
 }
 
 .formGroup {
@@ -133,34 +132,34 @@ label {
 }
 
 .errorBanner {
-  background-color: #ffe6e6;
-  color: #b00000;
+  background-color: colors.$danger-soft-strong;
+  color: colors.$danger-text;
   padding: 10px 14px;
   border-radius: 10px;
   margin: 0.75rem 0;
   font-size: 0.9rem;
-  border: 1px solid #ffb3b3;
+  border: 1px solid colors.$danger-border-strong;
   display: flex;
   gap: 8px;
   align-items: center;
 }
 
 .successBanner {
-  background-color: #eafaf1;
-  color: #166534;
+  background-color: colors.$success-soft;
+  color: colors.$success-dark;
   padding: 10px 14px;
   border-radius: 10px;
   margin: 0.75rem 0;
   font-size: 0.9rem;
-  border: 1px solid #b7ebc6;
+  border: 1px solid colors.$success-border;
   display: flex;
   gap: 8px;
   align-items: center;
 }
 
 .errorList {
-  background-color: #fff7f0;
-  border: 1px solid #ffd5a3;
+  background-color: colors.$warning-soft-alt;
+  border: 1px solid colors.$warning-border-alt;
   border-radius: 10px;
   padding: 8px 14px;
   margin-bottom: 12px;
@@ -177,35 +176,35 @@ label {
 }
 
 .fieldError {
-  color: #b00000;
+  color: colors.$danger-text;
   font-size: 0.8rem;
   margin-top: 4px;
   font-weight: 500;
 }
 
 .inputError {
-  border-color: #b00000 !important;
-  box-shadow: 0 0 4px rgba(176, 0, 0, 0.35);
+  border-color: colors.$danger-text !important;
+  box-shadow: 0 0 4px colors.$danger-focus;
   outline: none;
 }
 
 .mutedHint {
   font-size: 0.8rem;
-  color: #6b7280;
+  color: colors.$text-muted;
   margin-top: 0.25rem;
 }
 
 .skeletonWrap {
   padding: 1rem;
   border-radius: 14px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  background: #fafafa;
+  border: 1px solid colors.$border-subtle;
+  background: colors.$surface-striped;
 }
 
 .skeletonLine {
   height: 12px;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.08);
+  background: colors.$neutral-a08;
   margin-bottom: 10px;
 }
 
@@ -213,5 +212,5 @@ label {
   height: 12px;
   width: 55%;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.08);
+  background: colors.$neutral-a08;
 }

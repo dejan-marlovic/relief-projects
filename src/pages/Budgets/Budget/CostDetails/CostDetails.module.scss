@@ -1,7 +1,8 @@
+@use "../../../../styles/colors" as colors;
 .noDataMessage {
   padding: 16px;
   font-style: italic;
-  color: #555;
+  color: colors.$text-muted;
 }
 
 /* Shared layout variables for header + row grid */
@@ -26,11 +27,11 @@
   align-items: center;
 
   padding-bottom: 8px;
-  border-bottom: 2px solid #000;
+  border-bottom: 2px solid colors.$text;
 
   position: sticky;
   top: 0;
-  background: #fff;
+  background: colors.$surface;
   z-index: 2;
 }
 
@@ -49,8 +50,8 @@
 .typeTitle {
   font-size: 22px;
   font-weight: 800;
-  color: #222;
-  border-bottom: 2px solid #333;
+  color: colors.$text;
+  border-bottom: 2px solid colors.$text-secondary;
   padding-bottom: 6px;
   margin-bottom: 8px;
 }
@@ -61,7 +62,7 @@
 }
 
 .categoryTitle {
-  border-bottom: 1px dashed #aaa;
+  border-bottom: 1px dashed colors.$text-muted;
   padding-bottom: 2px;
   font-size: 20px;
 }
@@ -81,14 +82,14 @@
 .addBtn {
   padding: 8px 12px;
   border: none;
-  background: #007bff;
-  color: #fff;
+  background: colors.$primary;
+  color: colors.$surface;
   border-radius: 8px;
   font-weight: 700;
   cursor: pointer;
 
   &:hover {
-    background: #0056b3;
+    background: colors.$primary-hover;
   }
 
   &:disabled {

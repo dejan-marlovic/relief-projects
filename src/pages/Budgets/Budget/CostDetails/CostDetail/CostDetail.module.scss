@@ -1,3 +1,4 @@
+@use "../../../../../styles/colors" as colors;
 .rowForm,
 .viewRow {
   display: grid;
@@ -6,7 +7,7 @@
   align-items: center;
 
   padding: 8px 0;
-  border-bottom: 1px solid #e3e3e3;
+  border-bottom: 1px solid colors.$border-muted;
 
   /* remove row-level horizontal scrolling */
   overflow-x: hidden;
@@ -38,18 +39,18 @@
   min-width: 0; /* key: allow shrink, stops horizontal overflow */
   padding: 4px 8px;
   font-size: 14px;
-  border: 1px solid #ccc;
+  border: 1px solid colors.$border;
   border-radius: 6px;
   height: 32px;
-  background: #fff;
+  background: colors.$surface;
   box-sizing: border-box;
 }
 
 .select {
   appearance: none;
-  background-image: linear-gradient(45deg, transparent 50%, #999 50%),
-    linear-gradient(135deg, #999 50%, transparent 50%),
-    linear-gradient(to right, #ddd, #ddd);
+  background-image: linear-gradient(45deg, transparent 50%, colors.$text-muted 50%),
+    linear-gradient(135deg, colors.$text-muted 50%, transparent 50%),
+    linear-gradient(to right, colors.$border-muted, colors.$border-muted);
   background-position: calc(100% - 16px) calc(50% + 1px),
     calc(100% - 11px) calc(50% + 1px), calc(100% - 32px) 50%;
   background-size: 5px 5px, 5px 5px, 1px 60%;
@@ -71,7 +72,7 @@
 
 .actionBtn {
   background: transparent;
-  border: 1px solid #ccc;
+  border: 1px solid colors.$border;
   border-radius: 8px;
   padding: 6px 8px;
   cursor: pointer;
@@ -81,17 +82,17 @@
   line-height: 1;
 
   &:hover {
-    border-color: #007bff;
-    color: #007bff;
+    border-color: colors.$primary;
+    color: colors.$primary;
   }
 }
 
 .danger {
-  border-color: #e74c3c;
-  color: #e74c3c;
+  border-color: colors.$danger;
+  color: colors.$danger;
 
   &:hover {
-    color: #fff;
-    background: #e74c3c;
+    color: colors.$surface;
+    background: colors.$danger;
   }
 }

@@ -1,6 +1,6 @@
+@use "../../styles/colors" as colors;
 @use "../../styles/forms" as forms;
 
-$primary: #4a90e2;
 
 .adminContainer {
   padding: 1.25rem;
@@ -9,10 +9,10 @@ $primary: #4a90e2;
 }
 
 .selectorCard {
-  background: #fff;
+  background: colors.$surface;
   border-radius: 14px;
-  border: 1px solid rgba(74, 144, 226, 0.18);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+  border: 1px solid colors.$primary-focus;
+  box-shadow: 0 10px 24px colors.$border-subtle;
   padding: 1rem;
   margin-bottom: 1rem;
 }
@@ -33,12 +33,12 @@ $primary: #4a90e2;
 .selectorTitle {
   font-size: 1.1rem;
   font-weight: 700;
-  color: $primary;
+  color: colors.$primary;
 }
 
 .selectorSubtitle {
   font-size: 0.9rem;
-  color: #6b7280;
+  color: colors.$text-muted;
 }
 
 .selectorControl {
@@ -68,10 +68,10 @@ $primary: #4a90e2;
   align-items: baseline;
   gap: 0.9rem;
   padding: 0.45rem 0.8rem;
-  border: 1px solid rgba(74, 144, 226, 0.16);
+  border: 1px solid colors.$primary-focus;
   border-radius: 12px;
-  background: rgba(74, 144, 226, 0.04);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  background: colors.$primary-a04;
+  box-shadow: colors.$shadow-small;
   flex: 0 0 auto;
 }
 
@@ -88,13 +88,13 @@ $primary: #4a90e2;
   gap: 0.45rem;
   white-space: nowrap;
   cursor: pointer;
-  color: #374151;
+  color: colors.$text-secondary;
   font-size: 0.95rem;
   line-height: 1.2;
 
   input[type="radio"] {
     margin: 0;
-    accent-color: $primary;
+    accent-color: colors.$primary;
     cursor: pointer;
     align-self: baseline;
   }
@@ -108,7 +108,7 @@ $primary: #4a90e2;
 .selectInput {
   @include forms.text-input;
   margin-bottom: 0;
-  background: #fff;
+  background: colors.$surface;
   min-width: 280px;
   flex: 1 1 auto;
   align-self: baseline;
@@ -134,10 +134,10 @@ $primary: #4a90e2;
   max-height: 280px;
   overflow-y: auto;
   padding: 0.35rem;
-  border: 1px solid rgba(74, 144, 226, 0.25);
+  border: 1px solid colors.$primary-a25;
   border-radius: 12px;
-  background: #ffffff;
-  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.16);
+  background: colors.$text-on-primary;
+  box-shadow: colors.$shadow-raised;
 }
 
 .entityLookupOption {
@@ -147,7 +147,7 @@ $primary: #4a90e2;
   border: 0;
   border-radius: 8px;
   background: transparent;
-  color: #111827;
+  color: colors.$text;
   text-align: left;
   font: inherit;
   line-height: 1.25;
@@ -155,18 +155,18 @@ $primary: #4a90e2;
 }
 
 .entityLookupOption:hover {
-  background: rgba(74, 144, 226, 0.08);
+  background: colors.$primary-a08;
 }
 
 .entityLookupOptionActive {
-  background: rgba(74, 144, 226, 0.14);
-  color: #1f2937;
+  background: colors.$primary-soft-active;
+  color: colors.$text-strong;
   font-weight: 700;
 }
 
 .entityLookupEmpty {
   padding: 0.65rem 0.75rem;
-  color: #6b7280;
+  color: colors.$text-muted;
   font-size: 0.9rem;
 }
 

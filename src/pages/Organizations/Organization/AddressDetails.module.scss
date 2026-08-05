@@ -1,9 +1,8 @@
+@use "../../../styles/colors" as colors;
 /* src/pages/Organizations/Organization/AddressDetails.module.scss */
 @use "../../../styles/tables" as tables;
 @use "../../../styles/forms" as forms;
 
-$primary: #4a90e2;
-$danger: #e74c3c;
 
 .container {
 }
@@ -19,7 +18,7 @@ $danger: #e74c3c;
 
 .title {
   font-weight: 700;
-  color: #1f2937;
+  color: colors.$text-strong;
   font-size: 0.95rem;
 }
 
@@ -43,23 +42,23 @@ $danger: #e74c3c;
 }
 
 .secondaryBtn {
-  @include forms.ghost-button($primary);
+  @include forms.ghost-button(colors.$primary);
   padding: 0.65rem 0.85rem;
 }
 
 .errorBanner {
-  background-color: #ffe6e6;
-  color: #b00000;
+  background-color: colors.$danger-soft-strong;
+  color: colors.$danger-text;
   padding: 10px 14px;
   border-radius: 10px;
   margin: 0.5rem 0 0.75rem;
   font-size: 0.9rem;
-  border: 1px solid #ffb3b3;
+  border: 1px solid colors.$danger-border-strong;
 }
 
 .noData {
   padding: 8px 0 0;
-  color: #666;
+  color: colors.$text-neutral;
   margin: 0;
 }
 
@@ -67,13 +66,13 @@ $danger: #e74c3c;
   position: relative;
   isolation: isolate;
   overflow: auto;
-  border: 1px solid rgba(74, 144, 226, 0.14);
+  border: 1px solid colors.$primary-soft-active;
   border-radius: 14px;
-  background: #fff;
+  background: colors.$surface;
 
   --addr-grid-cols: 190px 1.6fr 1.2fr 1fr 1fr 1fr;
-  --addr-header-bg: #f6f7fb;
-  --addr-header-border: #e5e7eb;
+  --addr-header-bg: colors.$surface-tint;
+  --addr-header-border: colors.$border-muted;
 }
 
 .gridRow {
@@ -88,7 +87,7 @@ $danger: #e74c3c;
   background: var(--addr-header-bg);
   border-bottom: 1px solid var(--addr-header-border);
   padding: 10px 12px;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 0 colors.$neutral-a04;
   font-weight: 700;
   font-size: 0.92rem;
 }
@@ -96,7 +95,7 @@ $danger: #e74c3c;
 .headerCell {
   padding-right: 4px;
   white-space: nowrap;
-  color: #30323a;
+  color: colors.$text-secondary;
   background: var(--addr-header-bg);
 }
 
@@ -116,13 +115,13 @@ $danger: #e74c3c;
   left: 0;
   z-index: 6;
   background: var(--addr-header-bg);
-  box-shadow: 2px 0 0 rgba(0, 0, 0, 0.04);
+  box-shadow: 2px 0 0 colors.$neutral-a04;
 }
 
 .stickyCol {
   @include tables.table-sticky-col;
   background: inherit;
-  box-shadow: 2px 0 0 rgba(0, 0, 0, 0.04);
+  box-shadow: 2px 0 0 colors.$neutral-a04;
 }
 
 /* Inputs */
@@ -133,15 +132,15 @@ $danger: #e74c3c;
 }
 
 .inputError {
-  border-color: #b00000 !important;
-  box-shadow: 0 0 4px rgba(176, 0, 0, 0.35);
+  border-color: colors.$danger-text !important;
+  box-shadow: 0 0 4px colors.$danger-focus;
   outline: none;
 }
 
 .fieldError {
   margin-top: 2px;
   font-size: 0.78rem;
-  color: #b00000;
+  color: colors.$danger-text;
 }
 
 /* Actions */
@@ -156,17 +155,17 @@ $danger: #e74c3c;
   border-radius: 999px;
   width: 34px;
   height: 34px;
-  border: 1px solid rgba(74, 144, 226, 0.25);
+  border: 1px solid colors.$primary-a25;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  background: #fff;
+  background: colors.$surface;
   transition: transform 0.12s ease, box-shadow 0.2s ease;
-  color: #1f2937;
+  color: colors.$text-strong;
 
   &:hover {
-    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 8px 18px colors.$neutral-a08;
     transform: translateY(-1px);
   }
 
@@ -188,8 +187,8 @@ $danger: #e74c3c;
 
 .dangerIconBtn {
   border: none;
-  background: $danger;
-  color: #fff;
+  background: colors.$danger;
+  color: colors.$surface;
   border-radius: 10px;
   padding: 0.45rem 0.55rem;
   cursor: pointer;
