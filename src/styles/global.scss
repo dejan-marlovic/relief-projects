@@ -2,6 +2,91 @@
 
 @use "./colors" as colors;
 
+/*
+ * Default runtime theme.
+ *
+ * These declarations are loaded once through global.scss.
+ * Future themes can override the same custom properties using:
+ *
+ * [data-theme="green"] { ... }
+ * [data-theme="purple"] { ... }
+ */
+
+:root,
+[data-theme="default"] {
+  color-scheme: light;
+
+  /* Brand */
+
+  --color-primary: #4a90e2;
+  --color-primary-hover: #357abd;
+  --color-primary-dark: #286aa8;
+
+  --color-primary-soft: rgba(74, 144, 226, 0.05);
+  --color-primary-soft-hover: rgba(74, 144, 226, 0.1);
+  --color-primary-soft-active: rgba(74, 144, 226, 0.14);
+
+  --color-primary-border: rgba(74, 144, 226, 0.22);
+  --color-primary-border-strong: rgba(74, 144, 226, 0.55);
+  --color-primary-focus: rgba(74, 144, 226, 0.18);
+
+  /* Text */
+
+  --color-text: #111827;
+  --color-text-secondary: #374151;
+  --color-text-muted: #6b7280;
+  --color-text-disabled: rgba(17, 24, 39, 0.55);
+  --color-text-on-primary: #ffffff;
+
+  /* Surfaces */
+
+  --color-background: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-secondary: #f8fafc;
+  --color-surface-muted: #f6f7f9;
+  --color-surface-hover: #f5faff;
+  --color-surface-striped: #fafafa;
+
+  /* Borders */
+
+  --color-border: rgba(0, 0, 0, 0.18);
+  --color-border-soft: rgba(0, 0, 0, 0.12);
+  --color-border-subtle: rgba(0, 0, 0, 0.06);
+  --color-divider: #f1f1f1;
+
+  /* Danger */
+
+  --color-danger: #e74c3c;
+  --color-danger-dark: #b00020;
+  --color-danger-text: #b00000;
+  --color-danger-soft: rgba(231, 76, 60, 0.08);
+  --color-danger-border: rgba(231, 76, 60, 0.25);
+  --color-danger-focus: rgba(231, 76, 60, 0.18);
+
+  /* Success */
+
+  --color-success: #1f9d55;
+  --color-success-dark: #166534;
+  --color-success-soft: #eafaf1;
+  --color-success-border: #b7ebc6;
+
+  /* Warning */
+
+  --color-warning: #f59e0b;
+  --color-warning-dark: #9a3412;
+  --color-warning-soft: #fff7ed;
+  --color-warning-border: #fed7aa;
+
+  /* Shadows */
+
+  --shadow-small: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 6px 16px rgba(0, 0, 0, 0.05);
+  --shadow-raised: 0 10px 24px rgba(0, 0, 0, 0.06);
+  --shadow-focus: 0 0 0 4px var(--color-primary-focus);
+}
+
+/* Global foundation */
+
 *,
 *::before,
 *::after {
@@ -16,9 +101,12 @@ html {
 body {
   min-height: 100%;
   margin: 0;
+
   background: colors.$background;
   color: colors.$text;
+
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+
   transition:
     background-color 0.2s ease,
     color 0.2s ease;
@@ -31,6 +119,8 @@ textarea {
   font: inherit;
 }
 
+/* Generic headings and links */
+
 h1,
 h2,
 h3 {
@@ -41,14 +131,19 @@ a {
   color: colors.$primary;
 }
 
+/* Generic primary button */
+
 .btn-primary {
   padding: 0.75rem 1.5rem;
+
   border: none;
   border-radius: 8px;
   background: colors.$primary;
   color: colors.$text-on-primary;
+
   font-weight: 600;
   cursor: pointer;
+
   transition:
     background-color 0.2s ease,
     box-shadow 0.2s ease,
@@ -65,23 +160,32 @@ a {
     box-shadow: colors.$shadow-focus;
   }
 
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
   &:disabled {
     cursor: not-allowed;
     opacity: 0.65;
   }
 }
 
+/* Generic danger button */
+
 .btn-danger {
   padding: 0.75rem 1.5rem;
+
   border: none;
   border-radius: 8px;
   background: colors.$danger;
   color: colors.$text-on-primary;
+
   font-weight: 600;
   cursor: pointer;
+
   transition:
-    background-color 0.2s ease,
     box-shadow 0.2s ease,
+    filter 0.2s ease,
     transform 0.12s ease;
 
   &:hover:not(:disabled) {
@@ -93,6 +197,10 @@ a {
   &:focus-visible {
     outline: none;
     box-shadow: 0 0 0 4px colors.$danger-focus;
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
   }
 
   &:disabled {
