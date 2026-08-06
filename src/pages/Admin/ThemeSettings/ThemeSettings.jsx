@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import {
   FiCheck,
   FiDroplet,
+  FiEdit2,
   FiPlus,
   FiRefreshCw,
   FiTrash2,
@@ -13,6 +14,7 @@ import {
   getAvailableThemes,
   getStoredTheme,
   saveCustomTheme,
+  updateCustomTheme,
 } from "../../../utils/theme";
 
 import styles from "./ThemeSettings.module.scss";
@@ -42,6 +44,7 @@ function ThemeSettings() {
   const [themes, setThemes] = useState(getAvailableThemes);
   const [selectedTheme, setSelectedTheme] = useState(getStoredTheme);
   const [showCreator, setShowCreator] = useState(false);
+  const [editingThemeId, setEditingThemeId] = useState(null);
   const [form, setForm] = useState(INITIAL_FORM);
   const [formError, setFormError] = useState("");
 
@@ -60,19 +63,38 @@ function ThemeSettings() {
     setFormError("");
   };
 
-  const handleCreateTheme = (event) => {
+  const closeCreator = () => {
+    setShowCreator(false);
+    setEditingThemeId(null);
+    setForm(INITIAL_FORM);
+    setFormError("");
+  };
+
+  const handleSaveTheme = (event) => {
     event.preventDefault();
 
     try {
-      const newTheme = saveCustomTheme(form);
+      const savedTheme = editingThemeId
+        ? updateCustomTheme(editingThemeId, form)
+        : saveCustomTheme(form);
+
       setThemes(getAvailableThemes());
-      setSelectedTheme(applyTheme(newTheme.id));
-      setForm(INITIAL_FORM);
-      setFormError("");
-      setShowCreator(false);
+
+      if (!editingThemeId || selectedTheme === editingThemeId) {
+        setSelectedTheme(applyTheme(savedTheme.id));
+      }
+
+      closeCreator();
     } catch (error) {
       setFormError(error.message || "The custom theme could not be saved.");
     }
+  };
+
+  const handleEditTheme = (theme) => {
+    setForm({ name: theme.name, ...theme.themeColors });
+    setEditingThemeId(theme.id);
+    setShowCreator(true);
+    setFormError("");
   };
 
   const handleDeleteTheme = (theme) => {
@@ -86,6 +108,7 @@ function ThemeSettings() {
 
     setThemes(getAvailableThemes());
     if (wasSelected) setSelectedTheme("default");
+    if (editingThemeId === theme.id) closeCreator();
   };
 
   return (
@@ -113,21 +136,29 @@ function ThemeSettings() {
             type="button"
             className={styles.createButton}
             onClick={() => {
-              setShowCreator((visible) => !visible);
-              setFormError("");
+              if (showCreator) {
+                closeCreator();
+              } else {
+                setEditingThemeId(null);
+                setForm(INITIAL_FORM);
+                setShowCreator(true);
+                setFormError("");
+              }
             }}
             aria-expanded={showCreator}
           >
             <FiPlus aria-hidden="true" />
-            {showCreator ? "Close creator" : "Create custom theme"}
+            {showCreator ? "Close editor" : "Create custom theme"}
           </button>
         </div>
 
         {showCreator && (
-          <form className={styles.creator} onSubmit={handleCreateTheme}>
+          <form className={styles.creator} onSubmit={handleSaveTheme}>
             <div className={styles.creatorHeader}>
               <div>
-                <h3>Create a custom theme</h3>
+                <h3>
+                  {editingThemeId ? "Edit custom theme" : "Create a custom theme"}
+                </h3>
                 <p>Interaction shades and readable supporting colors are generated automatically.</p>
               </div>
               <div className={styles.livePreview} aria-label="Theme color preview">
@@ -176,7 +207,7 @@ function ThemeSettings() {
             <div className={styles.creatorActions}>
               <button type="submit" className={styles.saveThemeButton}>
                 <FiCheck aria-hidden="true" />
-                Save and apply theme
+                {editingThemeId ? "Save theme changes" : "Save and apply theme"}
               </button>
             </div>
           </form>
@@ -230,15 +261,26 @@ function ThemeSettings() {
                 </button>
 
                 {theme.custom && (
-                  <button
-                    type="button"
-                    className={styles.deleteThemeButton}
-                    onClick={() => handleDeleteTheme(theme)}
-                    aria-label={`Delete ${theme.name}`}
-                    title="Delete custom theme"
-                  >
-                    <FiTrash2 aria-hidden="true" />
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      className={styles.editThemeButton}
+                      onClick={() => handleEditTheme(theme)}
+                      aria-label={`Edit ${theme.name}`}
+                      title="Edit custom theme"
+                    >
+                      <FiEdit2 aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.deleteThemeButton}
+                      onClick={() => handleDeleteTheme(theme)}
+                      aria-label={`Delete ${theme.name}`}
+                      title="Delete custom theme"
+                    >
+                      <FiTrash2 aria-hidden="true" />
+                    </button>
+                  </>
                 )}
               </div>
             );

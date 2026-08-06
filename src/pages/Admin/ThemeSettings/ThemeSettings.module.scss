@@ -266,9 +266,9 @@
   }
 }
 
+.editThemeButton,
 .deleteThemeButton {
   position: absolute;
-  right: 0.75rem;
   bottom: 0.75rem;
   z-index: 1;
   display: inline-flex;
@@ -277,18 +277,36 @@
   align-items: center;
   justify-content: center;
   padding: 0;
-  border: 1px solid colors.$danger-border;
+  border: 1px solid colors.$primary-border;
   border-radius: 8px;
   background: colors.$surface;
-  color: colors.$danger;
+  color: colors.$primary;
   cursor: pointer;
+
+  &:hover {
+    background: colors.$primary-soft;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: colors.$shadow-focus;
+  }
+}
+
+.editThemeButton {
+  right: 3.1rem;
+}
+
+.deleteThemeButton {
+  right: 0.75rem;
+  border-color: colors.$danger-border;
+  color: colors.$danger;
 
   &:hover {
     background: colors.$danger-soft;
   }
 
   &:focus-visible {
-    outline: none;
     box-shadow: 0 0 0 4px colors.$danger-focus;
   }
 }

@@ -343,6 +343,58 @@ export const saveCustomTheme = ({ name, ...themeColors }) => {
   return newTheme;
 };
 
+export const updateCustomTheme = (themeId, { name, ...themeColors }) => {
+  const existingThemes = getCustomThemes();
+  const themeIndex = existingThemes.findIndex((theme) => theme.id === themeId);
+
+  if (themeIndex < 0) throw new Error("The custom theme could not be found.");
+
+  const safeName = typeof name === "string" ? name.trim() : "";
+  if (!safeName) throw new Error("Enter a theme name.");
+  if (safeName.length > MAX_THEME_NAME_LENGTH) {
+    throw new Error(
+      `Theme names can contain at most ${MAX_THEME_NAME_LENGTH} characters.`,
+    );
+  }
+
+  if (
+    getAvailableThemes().some(
+      (theme) =>
+        theme.id !== themeId &&
+        theme.name.toLowerCase() === safeName.toLowerCase(),
+    )
+  ) {
+    throw new Error("A theme with that name already exists.");
+  }
+
+  const normalizedColors = {};
+  for (const key of CUSTOM_COLOR_KEYS) {
+    const color = normalizeHex(themeColors[key]);
+    if (!color) throw new Error("Choose a valid color for every field.");
+    normalizedColors[key] = color;
+  }
+
+  const updatedTheme = normalizeCustomTheme({
+    id: themeId,
+    name: safeName,
+    themeColors: normalizedColors,
+  });
+
+  const updatedThemes = [...existingThemes];
+  updatedThemes[themeIndex] = updatedTheme;
+
+  try {
+    window.localStorage.setItem(
+      CUSTOM_THEMES_STORAGE_KEY,
+      JSON.stringify(updatedThemes),
+    );
+  } catch {
+    throw new Error("The custom theme could not be updated in this browser.");
+  }
+
+  return updatedTheme;
+};
+
 export const deleteCustomTheme = (themeId) => {
   let selectedThemeId = "default";
   try {
