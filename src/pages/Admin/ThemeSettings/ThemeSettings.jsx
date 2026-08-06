@@ -7,15 +7,12 @@ import {
   FiRefreshCw,
   FiTrash2,
 } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 
-import {
-  applyTheme,
-  deleteCustomTheme,
-  getAvailableThemes,
-  getStoredTheme,
-  saveCustomTheme,
-  updateCustomTheme,
-} from "../../../utils/theme";
+import { BASE_URL } from "../../../config/api";
+import { useBranding } from "../../../context/BrandingContext";
+import { createAuthFetch, safeReadJson } from "../../../utils/http";
+import { getAvailableThemes } from "../../../utils/theme";
 
 import styles from "./ThemeSettings.module.scss";
 
@@ -41,20 +38,64 @@ const COLOR_FIELDS = [
 ];
 
 function ThemeSettings() {
-  const [themes, setThemes] = useState(getAvailableThemes);
-  const [selectedTheme, setSelectedTheme] = useState(getStoredTheme);
+  const navigate = useNavigate();
+  const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
+  const { colorTheme, customThemes, refreshBranding } = useBranding();
+
   const [showCreator, setShowCreator] = useState(false);
   const [editingThemeId, setEditingThemeId] = useState(null);
   const [form, setForm] = useState(INITIAL_FORM);
   const [formError, setFormError] = useState("");
+  const [actionError, setActionError] = useState("");
+  const [busyAction, setBusyAction] = useState("");
 
-  const customThemeCount = useMemo(
-    () => themes.filter((theme) => theme.custom).length,
-    [themes],
+  const themes = useMemo(
+    () => getAvailableThemes(customThemes),
+    [customThemes],
   );
 
-  const handleThemeChange = (themeId) => {
-    setSelectedTheme(applyTheme(themeId));
+  const customThemeCount = customThemes.length;
+  const selectedTheme = colorTheme || "default";
+  const isBusy = Boolean(busyAction);
+
+  const readError = (data, fallback) =>
+    data?.message || data?.detail || data?.error || fallback;
+
+  const requestThemeChange = async (url, options, fallbackMessage) => {
+    const response = await authFetch(url, options);
+    const data = await safeReadJson(response);
+
+    if (!response.ok) {
+      throw new Error(readError(data, fallbackMessage));
+    }
+
+    await refreshBranding();
+    return data;
+  };
+
+  const handleThemeChange = async (themeId) => {
+    if (isBusy || themeId === selectedTheme) return;
+
+    setBusyAction(`select-${themeId}`);
+    setActionError("");
+
+    try {
+      await requestThemeChange(
+        `${BASE_URL}/api/branding/theme`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ themeId }),
+        },
+        "The selected theme could not be applied.",
+      );
+    } catch (error) {
+      setActionError(
+        error.message || "The selected theme could not be applied.",
+      );
+    } finally {
+      setBusyAction("");
+    }
   };
 
   const handleFieldChange = (event) => {
@@ -70,45 +111,70 @@ function ThemeSettings() {
     setFormError("");
   };
 
-  const handleSaveTheme = (event) => {
+  const handleSaveTheme = async (event) => {
     event.preventDefault();
+    if (isBusy) return;
+
+    const isEditing = Boolean(editingThemeId);
+    setBusyAction(isEditing ? `update-${editingThemeId}` : "create");
+    setFormError("");
+    setActionError("");
 
     try {
-      const savedTheme = editingThemeId
-        ? updateCustomTheme(editingThemeId, form)
-        : saveCustomTheme(form);
-
-      setThemes(getAvailableThemes());
-
-      if (!editingThemeId || selectedTheme === editingThemeId) {
-        setSelectedTheme(applyTheme(savedTheme.id));
-      }
+      await requestThemeChange(
+        isEditing
+          ? `${BASE_URL}/api/branding/themes/${encodeURIComponent(editingThemeId)}`
+          : `${BASE_URL}/api/branding/themes`,
+        {
+          method: isEditing ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        },
+        isEditing
+          ? "The custom theme could not be updated."
+          : "The custom theme could not be created.",
+      );
 
       closeCreator();
     } catch (error) {
       setFormError(error.message || "The custom theme could not be saved.");
+    } finally {
+      setBusyAction("");
     }
   };
 
   const handleEditTheme = (theme) => {
+    if (isBusy) return;
+
     setForm({ name: theme.name, ...theme.themeColors });
     setEditingThemeId(theme.id);
     setShowCreator(true);
     setFormError("");
+    setActionError("");
   };
 
-  const handleDeleteTheme = (theme) => {
-    if (!window.confirm(`Delete the custom theme “${theme.name}”?`)) return;
+  const handleDeleteTheme = async (theme) => {
+    if (isBusy) return;
+    if (!window.confirm(`Delete the custom theme "${theme.name}"?`)) return;
 
-    const wasSelected = selectedTheme === theme.id;
-    if (!deleteCustomTheme(theme.id)) {
-      setFormError("The custom theme could not be deleted.");
-      return;
+    setBusyAction(`delete-${theme.id}`);
+    setActionError("");
+
+    try {
+      await requestThemeChange(
+        `${BASE_URL}/api/branding/themes/${encodeURIComponent(theme.id)}`,
+        { method: "DELETE" },
+        "The custom theme could not be deleted.",
+      );
+
+      if (editingThemeId === theme.id) closeCreator();
+    } catch (error) {
+      setActionError(
+        error.message || "The custom theme could not be deleted.",
+      );
+    } finally {
+      setBusyAction("");
     }
-
-    setThemes(getAvailableThemes());
-    if (wasSelected) setSelectedTheme("default");
-    if (editingThemeId === theme.id) closeCreator();
   };
 
   return (
@@ -121,13 +187,13 @@ function ThemeSettings() {
         <div className={styles.pageHeaderText}>
           <h2 className={styles.pageTitle}>Application color theme</h2>
           <p className={styles.pageSubtitle}>
-            Select a built-in theme or create a custom theme for this browser.
-            Changes are applied immediately.
+            Select a built-in theme or create a custom theme for the whole
+            application. Changes apply to every user and device.
           </p>
         </div>
       </header>
 
-      <div className={styles.content}>
+      <div className={styles.content} aria-busy={isBusy}>
         <div className={styles.toolbar}>
           <p className={styles.customThemeCount}>
             {customThemeCount} custom {customThemeCount === 1 ? "theme" : "themes"}
@@ -143,14 +209,18 @@ function ThemeSettings() {
                 setForm(INITIAL_FORM);
                 setShowCreator(true);
                 setFormError("");
+                setActionError("");
               }
             }}
             aria-expanded={showCreator}
+            disabled={isBusy}
           >
             <FiPlus aria-hidden="true" />
             {showCreator ? "Close editor" : "Create custom theme"}
           </button>
         </div>
+
+        {actionError && <div className={styles.formError}>{actionError}</div>}
 
         {showCreator && (
           <form className={styles.creator} onSubmit={handleSaveTheme}>
@@ -159,7 +229,10 @@ function ThemeSettings() {
                 <h3>
                   {editingThemeId ? "Edit custom theme" : "Create a custom theme"}
                 </h3>
-                <p>Interaction shades and readable supporting colors are generated automatically.</p>
+                <p>
+                  Interaction shades and readable supporting colors are generated
+                  automatically.
+                </p>
               </div>
               <div className={styles.livePreview} aria-label="Theme color preview">
                 {[form.primary, form.text, form.surface].map((color, index) => (
@@ -181,6 +254,7 @@ function ThemeSettings() {
                 maxLength={40}
                 placeholder="For example: Ocean Blue"
                 required
+                disabled={isBusy}
               />
             </label>
 
@@ -195,6 +269,7 @@ function ThemeSettings() {
                       value={form[name]}
                       onChange={handleFieldChange}
                       aria-label={label}
+                      disabled={isBusy}
                     />
                     <code>{form[name].toUpperCase()}</code>
                   </span>
@@ -205,9 +280,13 @@ function ThemeSettings() {
             {formError && <div className={styles.formError}>{formError}</div>}
 
             <div className={styles.creatorActions}>
-              <button type="submit" className={styles.saveThemeButton}>
+              <button
+                type="submit"
+                className={styles.saveThemeButton}
+                disabled={isBusy}
+              >
                 <FiCheck aria-hidden="true" />
-                {editingThemeId ? "Save theme changes" : "Save and apply theme"}
+                {editingThemeId ? "Save theme changes" : "Save custom theme"}
               </button>
             </div>
           </form>
@@ -231,6 +310,7 @@ function ThemeSettings() {
                   role="radio"
                   aria-checked={isSelected}
                   onClick={() => handleThemeChange(theme.id)}
+                  disabled={isBusy}
                 >
                   <span className={styles.themeCardTop}>
                     <span className={styles.colorPreview} aria-hidden="true">
@@ -268,6 +348,7 @@ function ThemeSettings() {
                       onClick={() => handleEditTheme(theme)}
                       aria-label={`Edit ${theme.name}`}
                       title="Edit custom theme"
+                      disabled={isBusy}
                     >
                       <FiEdit2 aria-hidden="true" />
                     </button>
@@ -277,6 +358,7 @@ function ThemeSettings() {
                       onClick={() => handleDeleteTheme(theme)}
                       aria-label={`Delete ${theme.name}`}
                       title="Delete custom theme"
+                      disabled={isBusy}
                     >
                       <FiTrash2 aria-hidden="true" />
                     </button>
@@ -289,9 +371,9 @@ function ThemeSettings() {
 
         <div className={styles.footer}>
           <div className={styles.helpText}>
-            <strong>Browser-local setting:</strong> Custom themes and the current
-            selection are stored only in this browser until server-managed themes
-            are implemented.
+            <strong>Server-managed setting:</strong> The selected theme and custom
+            themes are shared by every user and device. Browser storage is used
+            only as a startup cache.
           </div>
 
           {selectedTheme !== "default" && (
@@ -299,6 +381,7 @@ function ThemeSettings() {
               type="button"
               className={styles.restoreButton}
               onClick={() => handleThemeChange("default")}
+              disabled={isBusy}
             >
               <FiRefreshCw aria-hidden="true" />
               Restore default theme

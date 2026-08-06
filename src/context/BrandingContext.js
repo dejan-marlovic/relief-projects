@@ -8,6 +8,11 @@ import React, {
 } from "react";
 
 import { BASE_URL } from "../config/api";
+import {
+  getCustomThemes,
+  getStoredTheme,
+  hydrateServerThemes,
+} from "../utils/theme";
 
 const DEFAULT_LOGO_URL = "/logo.png";
 const DEFAULT_FAVICON_URL = "/favicon.ico";
@@ -17,6 +22,9 @@ const BrandingContext = createContext({
   faviconUrl: DEFAULT_FAVICON_URL,
   customLogo: false,
   customFavicon: false,
+  colorTheme: "default",
+  customThemes: [],
+  themeUpdatedAt: null,
   brandingLoading: true,
   refreshBranding: async () => {},
 });
@@ -29,6 +37,9 @@ export function BrandingProvider({ children }) {
     customFavicon: false,
     updatedAt: null,
     faviconUpdatedAt: null,
+    colorTheme: getStoredTheme(),
+    customThemes: getCustomThemes(),
+    themeUpdatedAt: null,
   });
 
   const [brandingLoading, setBrandingLoading] = useState(true);
@@ -63,6 +74,11 @@ export function BrandingProvider({ children }) {
         ? `${BASE_URL}${data.faviconUrl}?v=${faviconVersion}`
         : `${DEFAULT_FAVICON_URL}?v=${faviconVersion}`;
 
+      const themeConfiguration = hydrateServerThemes(
+        data.colorTheme,
+        data.customThemes,
+      );
+
       setBranding({
         customLogo: Boolean(data.customLogo),
         customFavicon: Boolean(data.customFavicon),
@@ -70,18 +86,22 @@ export function BrandingProvider({ children }) {
         faviconUrl,
         updatedAt: data.updatedAt || null,
         faviconUpdatedAt: data.faviconUpdatedAt || null,
+        colorTheme: themeConfiguration.colorTheme,
+        customThemes: themeConfiguration.customThemes,
+        themeUpdatedAt: data.themeUpdatedAt || null,
       });
     } catch (error) {
       console.error("Failed to load application branding:", error);
 
-      setBranding({
+      setBranding((current) => ({
+        ...current,
         customLogo: false,
         customFavicon: false,
         logoUrl: DEFAULT_LOGO_URL,
         faviconUrl: DEFAULT_FAVICON_URL,
         updatedAt: null,
         faviconUpdatedAt: null,
-      });
+      }));
     } finally {
       setBrandingLoading(false);
     }
