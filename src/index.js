@@ -19,8 +19,8 @@ import RegisterProject from "./pages/RegisterProject/RegisterProject";
 import Organizations from "./pages/Organizations/Organizations";
 import OperationalGuide from "./pages/OperationalGuide/OperationalGuide";
 import About from "./pages/About/About";
-import AdminPlaceholder from "./pages/Admin/AdminPlaceholder"; // ✅ NEW
 import Admin from "./pages/Admin/Admin";
+import RequireRole from "./utils/RequireRole";
 import NoPage from "./pages/NoPage/NoPage"; // Catch-all for undefined routes (404)
 
 // Import the context provider to share state across all components
@@ -68,7 +68,14 @@ export default function App() {
               <Route path="about" element={<About />} />
 
               {/* ✅ NEW: Admin placeholder */}
-              <Route path="admin" element={<Admin />} />
+              <Route
+                path="admin"
+                element={
+                  <RequireRole role="ADMIN">
+                    <Admin />
+                  </RequireRole>
+                }
+              />
 
                 {/* Catch-all route */}
                 <Route path="*" element={<NoPage />} />

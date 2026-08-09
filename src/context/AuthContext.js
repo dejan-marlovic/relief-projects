@@ -13,6 +13,7 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const roles = useMemo(() => user?.roles ?? [], [user]);
 
   const clearAuth = useCallback(() => {
     localStorage.removeItem("authToken");
@@ -58,9 +59,32 @@ export const AuthProvider = ({ children }) => {
     });
   }, [refreshUser]);
 
+  const hasRole = useCallback((role) => roles.includes(role), [roles]);
+
+  const hasAnyRole = useCallback(
+    (...requiredRoles) => requiredRoles.some((role) => roles.includes(role)),
+    [roles]
+  );
+
   const value = useMemo(
-    () => ({ user, roles: user?.roles ?? [], isLoading, refreshUser, clearAuth }),
-    [user, isLoading, refreshUser, clearAuth]
+    () => ({
+      user,
+      roles,
+      isLoading,
+      refreshUser,
+      clearAuth,
+      hasRole,
+      hasAnyRole,
+    }),
+    [
+      user,
+      roles,
+      isLoading,
+      refreshUser,
+      clearAuth,
+      hasRole,
+      hasAnyRole,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
