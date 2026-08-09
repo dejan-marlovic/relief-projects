@@ -10,7 +10,7 @@ const Layout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { logoUrl } = useBranding();
-  const { clearAuth, hasRole } = useAuth();
+  const { clearAuth, hasRole, hasAnyRole } = useAuth();
 
   const { projects, selectedProjectId, setSelectedProjectId } =
     useContext(ProjectContext);
@@ -127,7 +127,13 @@ const Layout = () => {
             // ✅ NEW: Admin (placeholder)
             ["/admin", "Admin"],
           ]
-            .filter(([path]) => path !== "/admin" || hasRole("ADMIN"))
+            .filter(([path]) => {
+              if (path === "/admin") return hasRole("ADMIN");
+              if (path === "/register-project") {
+                return hasAnyRole("ADMIN", "PROJECT_MANAGER");
+              }
+              return true;
+            })
             .map(([path, label]) => {
             const isAdminTab = path === "/admin";
 

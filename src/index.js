@@ -59,7 +59,14 @@ export default function App() {
               <Route path="documents" element={<Documents />} />
               <Route path="statistics" element={<Statistics />} />
               <Route path="organizations" element={<Organizations />} />
-              <Route path="register-project" element={<RegisterProject />} />
+                <Route
+                  path="register-project"
+                  element={
+                    <RequireRole roles={["ADMIN", "PROJECT_MANAGER"]}>
+                      <RegisterProject />
+                    </RequireRole>
+                  }
+                />
 
               {/* ✅ Operational Guide */}
               <Route path="operational-guide" element={<OperationalGuide />} />

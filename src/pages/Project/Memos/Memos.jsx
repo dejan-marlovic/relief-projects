@@ -44,7 +44,7 @@ const empLabel = (e = {}) =>
 const posLabel = (p = {}) =>
   p.positionName ?? p.position_name ?? p.name ?? `Position #${p.id}`;
 
-export default function Memos() {
+export default function Memos({ canEdit = false }) {
   const { selectedProjectId } = useContext(ProjectContext);
 
   // state
@@ -308,20 +308,22 @@ export default function Memos() {
     <div className={styles.container}>
       <div className={styles.headerRow}>
         <h4>Memos</h4>
-        <button
-          className={styles.addBtn}
-          onClick={startCreate}
-          disabled={!selectedProjectId || editingId === "new"}
-          title={
-            !selectedProjectId
-              ? "Select a project first"
-              : editingId === "new"
-                ? "Finish the current draft first"
-                : "Create new memo"
-          }
-        >
-          + New Memo
-        </button>
+        {canEdit && (
+          <button
+            className={styles.addBtn}
+            onClick={startCreate}
+            disabled={!selectedProjectId || editingId === "new"}
+            title={
+              !selectedProjectId
+                ? "Select a project first"
+                : editingId === "new"
+                  ? "Finish the current draft first"
+                  : "Create new memo"
+            }
+          >
+            + New Memo
+          </button>
+        )}
       </div>
 
       {loading && <p className={styles.note}>Loading…</p>}
@@ -364,7 +366,7 @@ export default function Memos() {
                 </label>
               </div>
 
-              <div className={styles.actions}>
+              {canEdit && <div className={styles.actions}>
                 <button
                   className={styles.actionBtn}
                   onClick={save}
@@ -379,7 +381,7 @@ export default function Memos() {
                 >
                   <FiX />
                 </button>
-              </div>
+              </div>}
             </>
           ) : (
             <>
@@ -393,7 +395,7 @@ export default function Memos() {
                   <span> • {positionNameById(m.positionId)}</span>
                 )}
               </div>
-              <div className={styles.actions}>
+              {canEdit && <div className={styles.actions}>
                 <button
                   className={styles.actionBtn}
                   onClick={() => startEdit(m)}
@@ -408,13 +410,13 @@ export default function Memos() {
                 >
                   <FiTrash2 />
                 </button>
-              </div>
+              </div>}
             </>
           )}
         </div>
       ))}
 
-      {editingId === "new" && (
+      {canEdit && editingId === "new" && (
         <div className={styles.memoCard}>
           <textarea
             ref={newMemoTextareaRef} // ✅ NEW: focus target

@@ -1,9 +1,9 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-const RequireRole = ({ role, children }) => {
+const RequireRole = ({ role, roles, children }) => {
   const location = useLocation();
-  const { isLoading, user, hasRole } = useAuth();
+  const { isLoading, user, hasAnyRole } = useAuth();
 
   if (isLoading) return null;
 
@@ -11,7 +11,9 @@ const RequireRole = ({ role, children }) => {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
-  if (!hasRole(role)) {
+  const requiredRoles = roles ?? [role];
+
+  if (!hasAnyRole(...requiredRoles)) {
     return <Navigate to="/project" replace />;
   }
 

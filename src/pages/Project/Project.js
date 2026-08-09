@@ -7,6 +7,7 @@ import styles from "./Project.module.scss";
 import Memos from "../Project/Memos/Memos.jsx";
 
 import { ProjectContext } from "../../context/ProjectContext";
+import { useAuth } from "../../context/AuthContext";
 
 // ✅ Use ImageZoomModal again
 import ImageZoomModal from "./ImageZoomModal/ImageZoomModal.jsx";
@@ -1441,6 +1442,9 @@ Approximately:
 
   const { selectedProjectId, setSelectedProjectId, projects, setProjects } =
     useContext(ProjectContext);
+  const { hasRole, hasAnyRole } = useAuth();
+  const canEditProject = hasAnyRole("ADMIN", "PROJECT_MANAGER");
+  const canDeleteProject = hasRole("ADMIN");
 
   const [projectDetails, setProjectDetails] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -1922,6 +1926,7 @@ Approximately:
 
   // ✅ Upload cover image via FormData (appends on backend)
   const uploadCoverImage = async (file) => {
+    if (!canEditProject) return;
     if (!file || !projectDetails?.id) return;
 
     setUploadError("");
@@ -1990,6 +1995,7 @@ Approximately:
 
   // ✅ Delete image + preserve captions even if backend wipes them
   const handleDeleteImage = async (filename) => {
+    if (!canEditProject) return;
     if (!projectDetails?.id) return;
     if (!window.confirm(`Delete image "${filename}" from this project?`))
       return;
@@ -2296,6 +2302,7 @@ Approximately:
   };
 
   const handleDelete = async () => {
+    if (!canDeleteProject) return;
     if (!window.confirm("Are you sure you want to delete this project?"))
       return;
 
@@ -2396,6 +2403,7 @@ Approximately:
   };
 
   const handleSave = async () => {
+    if (!canEditProject) return;
     try {
       setFormError("");
       setFieldErrors({});
@@ -2617,24 +2625,28 @@ Approximately:
                 <FiDownload />
                 {exportingProject ? "Exporting..." : "Export to Excel"}
               </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                className={styles.saveButton}
-                disabled={loading}
-              >
-                <FiSave />
-                Save
-              </button>
-              <button
-                type="button"
-                onClick={handleDelete}
-                className={styles.deleteButton}
-                disabled={loading}
-              >
-                <FiTrash2 />
-                Delete
-              </button>
+              {canEditProject && (
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  className={styles.saveButton}
+                  disabled={loading}
+                >
+                  <FiSave />
+                  Save
+                </button>
+              )}
+              {canDeleteProject && (
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className={styles.deleteButton}
+                  disabled={loading}
+                >
+                  <FiTrash2 />
+                  Delete
+                </button>
+              )}
             </div>
           </div>
 
@@ -2671,7 +2683,7 @@ Approximately:
                 </div>
 
                 {/* ✅ MOVED HERE: Upload block above the cover image */}
-                <div className={styles.sectionRowStack}>
+                {canEditProject && <div className={styles.sectionRowStack}>
                   <div className={styles.sectionTitle}>
                     <FiUploadCloud />
                     <span>Cover image upload</span>
@@ -2713,7 +2725,7 @@ Approximately:
                   {uploadError && (
                     <div className={styles.inlineError}>{uploadError}</div>
                   )}
-                </div>
+                </div>}
 
                 <div className={styles.divider} />
 
@@ -2786,6 +2798,7 @@ Approximately:
                         placeholder="Write a caption for this image..."
                         className={styles.textareaInput}
                         style={{ minHeight: 64 }}
+                        disabled={!canEditProject}
                       />
 
                       <div
@@ -2810,7 +2823,7 @@ Approximately:
                             >
                               {name}
                             </span>
-                            <button
+                            {canEditProject && <button
                               type="button"
                               onClick={() => handleDeleteImage(name)}
                               className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.iconOnlyBtn}`}
@@ -2818,7 +2831,7 @@ Approximately:
                               title={`Delete image ${name}`}
                             >
                               <FiTrash2 />
-                            </button>
+                            </button>}
                           </li>
                         ))}
                       </ul>
@@ -2839,7 +2852,7 @@ Approximately:
                 <div className={styles.divider} />
 
                 <div className={styles.memosWrap}>
-                  <Memos />
+                  <Memos canEdit={canEditProject} />
                 </div>
               </div>
             </aside>
@@ -2854,6 +2867,10 @@ Approximately:
                 </div>
               ) : (
                 <form>
+                  <fieldset
+                    disabled={!canEditProject}
+                    style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}
+                  >
                   {/* Description */}
                   <div className={styles.card}>
                     <div className={styles.cardHeader}>
@@ -3497,6 +3514,7 @@ Approximately:
                       </div>
                     </div>
                   </div>
+                  </fieldset>
                 </form>
               )}
             </section>
