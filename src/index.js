@@ -26,6 +26,7 @@ import NoPage from "./pages/NoPage/NoPage"; // Catch-all for undefined routes (4
 // Import the context provider to share state across all components
 import { ProjectProvider } from "./context/ProjectContext";
 import { BrandingProvider } from "./context/BrandingContext";
+import { AuthProvider } from "./context/AuthContext";
 import { applyTheme, getStoredTheme } from "./utils/theme";
 
 import "./styles/global.scss";
@@ -38,14 +39,15 @@ export default function App() {
     <BrandingProvider>
       <ProjectProvider>
         <BrowserRouter>
-          <Routes>
-            {/* Public route: login is outside the main layout */}
-            <Route path="/login" element={<Login />} />
+          <AuthProvider>
+            <Routes>
+              {/* Public route: login is outside the main layout */}
+              <Route path="/login" element={<Login />} />
 
-            {/* Main route with Layout wrapper */}
-            <Route path="/" element={<Layout />}>
-              {/* Default route */}
-              <Route index element={<Project />} />
+              {/* Main route with Layout wrapper */}
+              <Route path="/" element={<Layout />}>
+                {/* Default route */}
+                <Route index element={<Project />} />
 
               {/* Other sections/tabs */}
               <Route path="project" element={<Project />} />
@@ -68,10 +70,11 @@ export default function App() {
               {/* ✅ NEW: Admin placeholder */}
               <Route path="admin" element={<Admin />} />
 
-              {/* Catch-all route */}
-              <Route path="*" element={<NoPage />} />
-            </Route>
-          </Routes>
+                {/* Catch-all route */}
+                <Route path="*" element={<NoPage />} />
+              </Route>
+            </Routes>
+          </AuthProvider>
         </BrowserRouter>
       </ProjectProvider>
     </BrandingProvider>

@@ -4,11 +4,13 @@ import styles from "./Layout.module.scss";
 import { ProjectContext } from "../../context/ProjectContext";
 import { FiLogOut, FiLayers } from "react-icons/fi";
 import { useBranding } from "../../context/BrandingContext";
+import { useAuth } from "../../context/AuthContext";
 
 const Layout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { logoUrl } = useBranding();
+  const { clearAuth } = useAuth();
 
   const { projects, selectedProjectId, setSelectedProjectId } =
     useContext(ProjectContext);
@@ -18,7 +20,7 @@ const Layout = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("authToken");
+    clearAuth();
     localStorage.removeItem("selectedProjectId");
     navigate("/login");
   };
