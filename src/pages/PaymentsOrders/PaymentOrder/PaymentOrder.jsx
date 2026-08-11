@@ -49,6 +49,8 @@ const PaymentOrder = ({
   isSelected = false,
   onSelectChange,
   selectionDisabled = false,
+  canEdit = false,
+  canDelete = false,
 }) => {
   const ev = editedValues || {};
   const isCreate = (po?.id ?? "") === "new";
@@ -202,20 +204,22 @@ const PaymentOrder = ({
                 className={styles.rowCheckbox}
               />
             )}
-            <button
-              type="button"
-              className={styles.iconCircleBtn}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onEdit();
-              }}
-              title={locked ? lockedTitle : "Edit"}
-              aria-label="Edit"
-              disabled={locked}
-            >
-              <FiEdit />
-            </button>
+            {canEdit && (
+              <button
+                type="button"
+                className={styles.iconCircleBtn}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onEdit();
+                }}
+                title={locked ? lockedTitle : "Edit"}
+                aria-label="Edit"
+                disabled={locked}
+              >
+                <FiEdit />
+              </button>
+            )}
 
             {!isCreate && (
               <button
@@ -233,7 +237,7 @@ const PaymentOrder = ({
               </button>
             )}
 
-            {!isCreate && (
+            {!isCreate && canDelete && (
               <button
                 type="button"
                 className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.iconOnlyBtn}`}

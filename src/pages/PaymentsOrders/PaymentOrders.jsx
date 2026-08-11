@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import ExcelJS from "exceljs";
 import { ProjectContext } from "../../context/ProjectContext";
+import { useAuth } from "../../context/AuthContext";
 import PaymentOrder from "./PaymentOrder/PaymentOrder";
 import styles from "./PaymentOrders.module.scss";
 import PaymentOrderLines from "./PaymentOrder/PaymentOrderLines/PaymentOrderLines";
@@ -102,6 +103,10 @@ function normalizePO(po) {
 
 function PaymentOrders() {
   const { selectedProjectId, projects } = useContext(ProjectContext);
+  const { hasRole, hasAnyRole } = useAuth();
+  const canEditPaymentOrders = hasAnyRole("ADMIN", "FINANCE");
+  const canDeletePaymentOrders = hasRole("ADMIN");
+  const canManagePaymentOrderLines = hasAnyRole("ADMIN", "FINANCE");
 
   const [orders, setOrders] = useState([]);
   const [editingId, setEditingId] = useState(null);
@@ -302,6 +307,7 @@ function PaymentOrders() {
   }, [editingId]);
 
   const startEdit = (po) => {
+    if (!canEditPaymentOrders) return;
     setEditingId(po?.id ?? null);
     setEditedValues((prev) => ({
       ...prev,
@@ -325,6 +331,7 @@ function PaymentOrders() {
   };
 
   const startCreate = () => {
+    if (!canEditPaymentOrders) return;
     setEditingId("new");
     setEditedValues((prev) => ({ ...prev, new: { ...blankPO } }));
 
@@ -379,6 +386,7 @@ function PaymentOrders() {
   };
 
   const save = async () => {
+    if (!canEditPaymentOrders) return;
     const id = editingId;
     const v = editedValues[id];
     if (!v) return;
@@ -455,6 +463,7 @@ function PaymentOrders() {
   };
 
   const remove = async (id) => {
+    if (!canDeletePaymentOrders) return;
     if (!id) return;
     if (!window.confirm("Delete this payment order?")) return;
 
@@ -566,6 +575,7 @@ function PaymentOrders() {
 
   //This function will be called when the user clicks “Delete selected” button.
   const removeSelected = async () => {
+    if (!canDeletePaymentOrders) return;
     const activeIds = new Set(selectablePaymentOrders.map((po) => po.id));
     const ids = [...selectedPoIds].filter((id) => activeIds.has(id));
 
@@ -1113,17 +1123,19 @@ function PaymentOrders() {
                 : `Export selected${selectedPoCount > 0 ? ` (${selectedPoCount})` : ""}`}
             </button>
 
-            <button
-              type="button"
-              className={styles.dangerInlineBtn}
-              onClick={removeSelected}
-              disabled={selectedPoCount === 0 || exportingSelected}
-              title="Delete selected payment orders"
-            >
-              <FiTrash2></FiTrash2>
-              Delete selected{" "}
-              {selectedPoCount > 0 ? `(${selectedPoCount})` : ""}
-            </button>
+            {canDeletePaymentOrders && (
+              <button
+                type="button"
+                className={styles.dangerInlineBtn}
+                onClick={removeSelected}
+                disabled={selectedPoCount === 0 || exportingSelected}
+                title="Delete selected payment orders"
+              >
+                <FiTrash2 />
+                Delete selected{" "}
+                {selectedPoCount > 0 ? `(${selectedPoCount})` : ""}
+              </button>
+            )}
             <div className={styles.columnsBox}>
               <button
                 type="button"
@@ -1156,21 +1168,23 @@ function PaymentOrders() {
               )}
             </div>
 
-            <button
-              className={styles.primaryBtn}
-              onClick={startCreate}
-              disabled={!selectedProjectId || editingId === "new"}
-              title={
-                !selectedProjectId
-                  ? "Select a project first"
-                  : editingId === "new"
-                    ? "Finish the current draft first"
-                    : "Create new payment order"
-              }
-            >
-              <FiPlus />
-              New
-            </button>
+            {canEditPaymentOrders && (
+              <button
+                className={styles.primaryBtn}
+                onClick={startCreate}
+                disabled={!selectedProjectId || editingId === "new"}
+                title={
+                  !selectedProjectId
+                    ? "Select a project first"
+                    : editingId === "new"
+                      ? "Finish the current draft first"
+                      : "Create new payment order"
+                }
+              >
+                <FiPlus />
+                New
+              </button>
+            )}
           </div>
         </div>
 
@@ -1249,6 +1263,8 @@ function PaymentOrders() {
                   isSelected={selectedPoIds.has(po.id)}
                   onSelectChange={toggleSelectedPo}
                   selectionDisabled={editingId === po.id}
+                  canEdit={canEditPaymentOrders}
+                  canDelete={canDeletePaymentOrders}
                 />
 
                 {expandedPoId === po.id && (
@@ -1258,6 +1274,7 @@ function PaymentOrders() {
                       txOptions={txOptions}
                       orgOptions={orgOptions}
                       costDetailOptions={costDetailOptions}
+                      canManage={canManagePaymentOrderLines}
                     />
                   </div>
                 )}
