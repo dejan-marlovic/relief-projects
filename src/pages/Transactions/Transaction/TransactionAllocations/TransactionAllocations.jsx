@@ -43,6 +43,7 @@ const TransactionAllocations = ({
   costDetailOptions = [],
   budgetOptions = [],
   fallbackCurrencyLabel = "",
+  canManage = false,
 }) => {
   const token = useMemo(() => localStorage.getItem("authToken"), []);
   const authHeaders = useMemo(
@@ -248,6 +249,7 @@ const TransactionAllocations = ({
   };
 
   const onAdd = async () => {
+    if (!canManage) return;
     setFormError("");
     setFieldErrors({});
 
@@ -283,6 +285,7 @@ const TransactionAllocations = ({
   };
 
   const onInlineUpdate = async (row, patch) => {
+    if (!canManage) return;
     setRowErrorsById((prev) => {
       const next = { ...prev };
       delete next[row.id];
@@ -330,6 +333,7 @@ const TransactionAllocations = ({
   };
 
   const onDelete = async (id) => {
+    if (!canManage) return;
     if (!window.confirm("Delete this allocation?")) return;
 
     setFormError("");
@@ -461,7 +465,7 @@ const TransactionAllocations = ({
         </div>
       )}
 
-      <div className={styles.addCard}>
+      {canManage && <div className={styles.addCard}>
         <div className={styles.addGrid}>
           <div className={styles.field}>
             <label>Cost detail</label>
@@ -533,7 +537,7 @@ const TransactionAllocations = ({
             </button>
           </div>
         </div>
-      </div>
+      </div>}
 
       <div className={styles.table}>
         <div className={styles.thead}>
@@ -579,6 +583,7 @@ const TransactionAllocations = ({
               }
               onSave={(patch) => onInlineUpdate(r, patch)}
               onDelete={() => onDelete(r.id)}
+              canManage={canManage}
             />
           ))
         )}
@@ -595,6 +600,7 @@ const AllocationRow = ({
   rowError,
   clearRowError,
   currencyLabel = "",
+  canManage = false,
 }) => {
   const [plannedAmount, setPlannedAmount] = useState(row.plannedAmount ?? "");
   const [note, setNote] = useState(row.note ?? "");
@@ -618,7 +624,8 @@ const AllocationRow = ({
             }`}
             type="number"
             step="0.01"
-            value={plannedAmount}
+          value={plannedAmount}
+          disabled={!canManage}
             onChange={(e) => {
               setPlannedAmount(e.target.value);
               clearRowError?.();
@@ -645,6 +652,7 @@ const AllocationRow = ({
           className={styles.textInput}
           type="text"
           value={note}
+          disabled={!canManage}
           onChange={(e) => {
             setNote(e.target.value);
             clearRowError?.();
@@ -652,7 +660,7 @@ const AllocationRow = ({
         />
       </div>
 
-      <div className={styles.rowActions}>
+      {canManage && <div className={styles.rowActions}>
         <button
           type="button"
           className={styles.iconCircleBtn}
@@ -672,7 +680,7 @@ const AllocationRow = ({
         >
           <FiTrash2 />
         </button>
-      </div>
+      </div>}
     </div>
   );
 };

@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import ExcelJS from "exceljs";
 import { ProjectContext } from "../../context/ProjectContext";
+import { useAuth } from "../../context/AuthContext";
 import Transaction from "./Transaction/Transaction";
 import styles from "./Transactions.module.scss";
 import {
@@ -72,6 +73,10 @@ const BASE_COL_WIDTHS = [
 
 const Transactions = ({ refreshTrigger }) => {
   const { selectedProjectId } = useContext(ProjectContext);
+  const { hasRole, hasAnyRole } = useAuth();
+  const canEditTransactions = hasAnyRole("ADMIN", "FINANCE");
+  const canDeleteTransactions = hasRole("ADMIN");
+  const canManageAllocations = hasAnyRole("ADMIN", "FINANCE");
 
   const [transactions, setTransactions] = useState([]);
   const [selectedTxIds, setSelectedTxIds] = useState(() => new Set());
@@ -253,6 +258,7 @@ const Transactions = ({ refreshTrigger }) => {
   }, [selectedProjectId]);
 
   const startEdit = (tx) => {
+    if (!canEditTransactions) return;
     setEditingId(tx?.id ?? null);
     setExpandedTxId((cur) => (cur === tx.id ? null : cur));
 
@@ -283,6 +289,7 @@ const Transactions = ({ refreshTrigger }) => {
   };
 
   const startCreate = () => {
+    if (!canEditTransactions) return;
     setEditingId("new");
     setExpandedTxId(null);
 
@@ -316,6 +323,7 @@ const Transactions = ({ refreshTrigger }) => {
   };
 
   const save = async () => {
+    if (!canEditTransactions) return;
     const id = editingId;
     const values = editedValues[id];
     if (!values) return;
@@ -422,6 +430,7 @@ const Transactions = ({ refreshTrigger }) => {
   };
 
   const remove = async (id) => {
+    if (!canDeleteTransactions) return;
     if (!id) return;
     if (!window.confirm("Delete this transaction?")) return;
 
@@ -498,6 +507,7 @@ const Transactions = ({ refreshTrigger }) => {
   };
 
   const removeSelected = async () => {
+    if (!canDeleteTransactions) return;
     const ids = [...selectedTxIds];
 
     if (ids.length === 0) return;
@@ -1346,7 +1356,7 @@ const Transactions = ({ refreshTrigger }) => {
                 : `Export selected${selectedCount > 0 ? ` (${selectedCount})` : ""}`}
             </button>
 
-            <button
+            {canDeleteTransactions && <button
               type="button"
               className={styles.dangerInlineBtn}
               onClick={removeSelected}
@@ -1355,7 +1365,7 @@ const Transactions = ({ refreshTrigger }) => {
             >
               <FiTrash2></FiTrash2>
               Delete selected {selectedCount > 0 ? `(${selectedCount})` : ""}
-            </button>
+            </button>}
             <div className={styles.columnsBox}>
               <button
                 type="button"
@@ -1387,7 +1397,7 @@ const Transactions = ({ refreshTrigger }) => {
                 </div>
               )}
             </div>
-            <button
+            {canEditTransactions && <button
               type="button"
               className={styles.primaryInlineBtn}
               onClick={startCreate}
@@ -1396,7 +1406,7 @@ const Transactions = ({ refreshTrigger }) => {
             >
               <FiPlus />
               New
-            </button>
+            </button>}
           </div>
         </div>
 
@@ -1474,11 +1484,14 @@ const Transactions = ({ refreshTrigger }) => {
                   setExpandedTxId((cur) => (cur === tx.id ? null : tx.id))
                 }
                 costDetailOptions={costDetailOptions}
+                canEdit={canEditTransactions}
+                canDelete={canDeleteTransactions}
+                canManageAllocations={canManageAllocations}
               />
             ))
           )}
 
-          {editingId === "new" && (
+          {canEditTransactions && editingId === "new" && (
             <Transaction
               tx={{
                 id: "new",
@@ -1502,6 +1515,9 @@ const Transactions = ({ refreshTrigger }) => {
               isEven={false}
               fieldErrors={fieldErrors.new || {}}
               rowRef={newRowRef}
+              canEdit={canEditTransactions}
+              canDelete={canDeleteTransactions}
+              canManageAllocations={canManageAllocations}
             />
           )}
         </div>

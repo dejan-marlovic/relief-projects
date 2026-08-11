@@ -50,6 +50,9 @@ const Transaction = ({
   expanded = false,
   onToggleAllocations,
   costDetailOptions = [],
+  canEdit = false,
+  canDelete = false,
+  canManageAllocations = false,
 }) => {
   const ev = editedValues || {};
   const isCreate = (tx?.id ?? "") === "new";
@@ -230,7 +233,7 @@ const Transaction = ({
         <Cell className={`${styles.stickyCol} ${styles.actionsCol} ${hc(0)}`}>
           {isEditing ? (
             <div className={styles.actions}>
-              <button
+              {canEdit && <button
                 type="button"
                 className={styles.iconCircleBtn}
                 onClick={submit}
@@ -238,7 +241,7 @@ const Transaction = ({
                 aria-label="Save"
               >
                 <FiSave />
-              </button>
+              </button>}
               <button
                 type="button"
                 className={styles.iconCircleBtn}
@@ -267,7 +270,7 @@ const Transaction = ({
                 />
               )}
 
-              <button
+              {canEdit && <button
                 type="button"
                 className={styles.iconCircleBtn}
                 onClick={(e) => {
@@ -279,7 +282,7 @@ const Transaction = ({
                 aria-label="Edit"
               >
                 <FiEdit />
-              </button>
+              </button>}
 
               {!isCreate && (
                 <button
@@ -299,7 +302,7 @@ const Transaction = ({
                 </button>
               )}
 
-              {!isCreate && (
+              {canDelete && !isCreate && (
                 <button
                   type="button"
                   className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.iconOnlyBtn}`}
@@ -393,6 +396,7 @@ const Transaction = ({
             txId={tx.id}
             costDetailOptions={costDetailOptions}
             budgetOptions={budgets}
+            canManage={canManageAllocations}
           />
         </div>
       )}
