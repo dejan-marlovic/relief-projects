@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import ExcelJS from "exceljs";
 import { ProjectContext } from "../../context/ProjectContext";
+import { useAuth } from "../../context/AuthContext";
 import SignatureRow from "./Signature/Signature";
 import styles from "./Signatures.module.scss";
 import { FiPlus, FiColumns, FiTrash2, FiDownload } from "react-icons/fi";
@@ -85,6 +86,8 @@ function normalizeSignature(s) {
 
 function Signatures() {
   const { selectedProjectId } = useContext(ProjectContext);
+  const { hasAnyRole } = useAuth();
+  const canManageSignatures = hasAnyRole("ADMIN", "APPROVER");
 
   const [items, setItems] = useState([]);
   const [editingId, setEditingId] = useState(null);
@@ -320,6 +323,7 @@ function Signatures() {
   };
 
   const startEdit = (row) => {
+    if (!canManageSignatures) return;
     setEditingId(row?.id ?? null);
     setEditedValues((prev) => ({
       ...prev,
@@ -343,6 +347,7 @@ function Signatures() {
   };
 
   const startCreate = () => {
+    if (!canManageSignatures) return;
     setEditingId("new");
     setEditedValues((prev) => ({ ...prev, new: { ...blankSignature } }));
 
@@ -402,6 +407,7 @@ function Signatures() {
   };
 
   const save = async () => {
+    if (!canManageSignatures) return;
     const id = editingId;
     const v = editedValues[id];
     if (!v) return;
@@ -496,6 +502,7 @@ function Signatures() {
   };
 
   const remove = async (id) => {
+    if (!canManageSignatures) return;
     if (!id) return;
     if (!window.confirm("Delete this signature?")) return;
 
@@ -532,6 +539,7 @@ function Signatures() {
   };
 
   const removeSelected = async () => {
+    if (!canManageSignatures) return;
     const ids = [...selectedSignatureIds];
 
     if (ids.length === 0) return;
@@ -1026,17 +1034,21 @@ function Signatures() {
                   }`}
             </button>
 
-            <button
-              type="button"
-              className={styles.dangerInlineBtn}
-              onClick={removeSelected}
-              disabled={selectedSignatureCount === 0 || exportingSelected}
-              title="Delete selected signatures"
-            >
-              <FiTrash2 />
-              Delete selected{" "}
-              {selectedSignatureCount > 0 ? `(${selectedSignatureCount})` : ""}
-            </button>
+            {canManageSignatures && (
+              <button
+                type="button"
+                className={styles.dangerInlineBtn}
+                onClick={removeSelected}
+                disabled={selectedSignatureCount === 0 || exportingSelected}
+                title="Delete selected signatures"
+              >
+                <FiTrash2 />
+                Delete selected{" "}
+                {selectedSignatureCount > 0
+                  ? `(${selectedSignatureCount})`
+                  : ""}
+              </button>
+            )}
             <div className={styles.columnsBox}>
               <button
                 className={styles.columnsBtn}
@@ -1068,24 +1080,26 @@ function Signatures() {
               )}
             </div>
 
-            <button
-              className={styles.primaryBtn}
-              onClick={startCreate}
-              disabled={
-                !selectedProjectId || editingId === "new" || exportingSelected
-              }
-              title={
-                !selectedProjectId
-                  ? "Select a project first"
-                  : editingId === "new"
-                    ? "Finish the current draft first"
-                    : "Create new signature"
-              }
-              type="button"
-            >
-              <FiPlus />
-              New
-            </button>
+            {canManageSignatures && (
+              <button
+                className={styles.primaryBtn}
+                onClick={startCreate}
+                disabled={
+                  !selectedProjectId || editingId === "new" || exportingSelected
+                }
+                title={
+                  !selectedProjectId
+                    ? "Select a project first"
+                    : editingId === "new"
+                      ? "Finish the current draft first"
+                      : "Create new signature"
+                }
+                type="button"
+              >
+                <FiPlus />
+                New
+              </button>
+            )}
           </div>
         </div>
 
@@ -1146,6 +1160,7 @@ function Signatures() {
                 employeeOptions={employeeOptions}
                 visibleCols={visibleCols}
                 fieldErrors={fieldErrors[s.id] || {}}
+                canManage={canManageSignatures}
               />
             ))
           )}
@@ -1176,6 +1191,7 @@ function Signatures() {
               isEven={false}
               fieldErrors={fieldErrors.new || {}}
               rowRef={newRowRef}
+              canManage={canManageSignatures}
             />
           )}
         </div>

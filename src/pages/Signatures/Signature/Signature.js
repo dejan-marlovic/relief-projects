@@ -42,6 +42,7 @@ const SignatureRow = ({
   isEven = false,
   fieldErrors = {},
   rowRef = null,
+  canManage = false,
 }) => {
   const ev = editedValues || {};
   const isCreate = (row?.id ?? "") === "new";
@@ -242,21 +243,23 @@ const SignatureRow = ({
                 className={styles.rowCheckbox}
               ></input>
             )}
-            <button
-              type="button"
-              className={styles.iconCircleBtn}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onEdit();
-              }}
-              title="Edit"
-              aria-label="Edit"
-            >
-              <FiEdit />
-            </button>
+            {canManage && (
+              <button
+                type="button"
+                className={styles.iconCircleBtn}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onEdit();
+                }}
+                title="Edit"
+                aria-label="Edit"
+              >
+                <FiEdit />
+              </button>
+            )}
 
-            {!isCreate && (
+            {!isCreate && canManage && (
               <button
                 type="button"
                 className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.iconOnlyBtn}`}
