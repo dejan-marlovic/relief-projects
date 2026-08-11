@@ -7,8 +7,12 @@ import CostDetails from "./CostDetails/CostDetails";
 import { FiSave, FiTrash2, FiAlertCircle, FiDownload } from "react-icons/fi";
 
 import { BASE_URL } from "../../../config/api"; // adjust path if needed
+import { useAuth } from "../../../context/AuthContext";
 
 const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
+  const { hasRole, hasAnyRole } = useAuth();
+  const canEditBudget = hasAnyRole("ADMIN", "FINANCE");
+  const canDeleteBudget = hasRole("ADMIN");
   const formatDate = (dateString) =>
     dateString ? dateString.slice(0, 16) : "";
 
@@ -1077,6 +1081,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
 
   // 💾 Save/Update Budget
   const handleSave = async () => {
+    if (!canEditBudget) return;
     try {
       setLoading(true);
       const token = localStorage.getItem("authToken");
@@ -1231,6 +1236,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
 
   // 🗑️ Delete Budget
   const handleDelete = async () => {
+    if (!canDeleteBudget) return;
     if (!window.confirm("Are you sure you want to delete this budget?")) return;
 
     try {
@@ -1339,6 +1345,10 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
             </div>
           ) : (
             <>
+              <fieldset
+                disabled={!canEditBudget}
+                style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}
+              >
               <div className={styles.grid}>
                 {/* Left card */}
                 <div className={styles.card}>
@@ -1510,6 +1520,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                   </div>
                 </div>
               </div>
+              </fieldset>
 
               <div className={styles.bottomActions}>
                 <button
@@ -1522,7 +1533,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                   {exportingBudget ? "Exporting..." : "Export to Excel"}
                 </button>
 
-                <button
+                {canEditBudget && <button
                   type="button"
                   onClick={handleSave}
                   className={styles.saveButton}
@@ -1530,8 +1541,8 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                 >
                   <FiSave />
                   Save changes
-                </button>
-                <button
+                </button>}
+                {canDeleteBudget && <button
                   type="button"
                   onClick={handleDelete}
                   className={styles.deleteButton}
@@ -1539,7 +1550,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                 >
                   <FiTrash2 />
                   Delete budget
-                </button>
+                </button>}
               </div>
             </>
           )}

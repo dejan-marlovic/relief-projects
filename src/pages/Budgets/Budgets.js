@@ -1,5 +1,6 @@
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ProjectContext } from "../../context/ProjectContext";
+import { useAuth } from "../../context/AuthContext";
 
 import Budget from "../Budgets/Budget/Budget";
 import CreateNewBudget from "../Budgets/CreateNewBudget/CreateNewBudget";
@@ -11,6 +12,8 @@ import { BASE_URL } from "../../config/api";
 
 const Budgets = () => {
   const { selectedProjectId } = useContext(ProjectContext);
+  const { hasAnyRole } = useAuth();
+  const canEditBudgets = hasAnyRole("ADMIN", "FINANCE");
 
   const [budgets, setBudgets] = useState([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -60,6 +63,7 @@ const Budgets = () => {
    * the DOM update and layout.
    */
   const handleOpenCreateForm = () => {
+    if (!canEditBudgets) return;
     setShowCreateForm(true);
 
     window.requestAnimationFrame(() => {
@@ -110,7 +114,7 @@ const Budgets = () => {
             <p className={styles.pageSubtitle}>{subtitle}</p>
           </div>
 
-          <div className={styles.headerActions}>
+          {canEditBudgets && <div className={styles.headerActions}>
             <button
               type="button"
               className={styles.primaryBtn}
@@ -127,10 +131,10 @@ const Budgets = () => {
               <FiPlus />
               New Budget
             </button>
-          </div>
+          </div>}
         </div>
 
-        {showCreateForm && (
+        {canEditBudgets && showCreateForm && (
           <div ref={createFormRef} className={styles.createFormSection}>
             <CreateNewBudget
               onClose={() => setShowCreateForm(false)}
