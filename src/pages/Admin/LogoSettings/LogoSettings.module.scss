@@ -1,0 +1,468 @@
+@use "../../../styles/colors" as colors;
+$text-dark: colors.$text-strong;
+$text-muted: colors.$text-muted;
+$border-color: colors.$primary-soft-active;
+$error: colors.$danger-dark;
+
+.logoSettings {
+  margin: 0 0 1rem;
+  overflow: hidden;
+  border: 1px solid $border-color;
+  border-radius: 14px;
+  background: colors.$text-on-primary;
+  box-shadow: 0 10px 24px colors.$border-subtle;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid colors.$neutral-a08;
+  background: colors.$surface;
+  box-shadow: 0 6px 14px colors.$neutral-a04;
+}
+
+.pageHeaderText {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.pageTitle {
+  margin: 0;
+  color: colors.$primary;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.pageSubtitle {
+  margin: 0;
+  color: $text-muted;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.statusBadge {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.statusBadgeCustom {
+  border-color: colors.$success-border;
+  background: colors.$success-soft;
+  color: colors.$success;
+}
+
+.statusBadgeDefault {
+  border-color: colors.$primary-border;
+  background: colors.$primary-a08;
+  color: colors.$primary-dark;
+}
+
+.settingsGrid {
+  display: grid;
+  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+  gap: 1rem;
+  padding: 1rem;
+  align-items: start;
+}
+
+.card {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid $border-color;
+  border-radius: 14px;
+  background: colors.$text-on-primary;
+  box-shadow: colors.$shadow-card;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.cardTitle {
+  margin: 0;
+  color: $text-dark;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.cardSubtitle {
+  margin: 0.25rem 0 0;
+  color: $text-muted;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.preview {
+  display: flex;
+  min-height: 140px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 1rem;
+  border: 1px solid colors.$primary-focus;
+  border-radius: 12px;
+  background:
+    linear-gradient(45deg, colors.$primary-a04 25%, transparent 25%),
+    linear-gradient(-45deg, colors.$primary-a04 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, colors.$primary-a04 75%),
+    linear-gradient(-45deg, transparent 75%, colors.$primary-a04 75%),
+    colors.$surface-secondary;
+  background-position:
+    0 0,
+    0 10px,
+    10px -10px,
+    -10px 0;
+  background-size: 20px 20px;
+
+  img {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 220px;
+    max-height: 90px;
+    object-fit: contain;
+  }
+}
+
+.previewFooter {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.75rem;
+  color: $text-muted;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.logoIndicator {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+}
+
+.logoIndicatorCustom {
+  background: colors.$success;
+  box-shadow: 0 0 0 3px colors.$success-soft;
+}
+
+.logoIndicatorDefault {
+  background: colors.$primary;
+  box-shadow: 0 0 0 3px colors.$primary-a12;
+}
+
+.dropzone {
+  display: flex;
+  min-height: 130px;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 2px dashed colors.$primary-a35;
+  border-radius: 14px;
+  background: colors.$primary-soft;
+  cursor: pointer;
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.12s ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: colors.$primary-border-strong;
+    background: colors.$primary-soft-hover;
+    box-shadow: 0 10px 20px colors.$border-subtle;
+    transform: translateY(-1px);
+  }
+}
+
+.dropzoneActive {
+  border-color: colors.$primary;
+  background: colors.$primary-soft-active;
+  box-shadow: 0 0 0 4px colors.$primary-a08;
+}
+
+.dropzoneDisabled {
+  cursor: wait;
+  opacity: 0.65;
+
+  &:hover {
+    box-shadow: none;
+    transform: none;
+  }
+}
+
+.dropzoneIconWrap {
+  display: flex;
+  width: 52px;
+  height: 52px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid colors.$primary-focus;
+  border-radius: 14px;
+  background: colors.$text-on-primary;
+  box-shadow: 0 4px 10px colors.$neutral-a04;
+}
+
+.dropzoneIcon {
+  color: colors.$primary;
+  font-size: 1.7rem;
+}
+
+.dropzoneText {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.2rem;
+  color: $text-dark;
+  line-height: 1.35;
+
+  strong {
+    font-size: 0.95rem;
+  }
+
+  > span:not(.dropzoneHint) {
+    color: $text-muted;
+    font-size: 0.86rem;
+  }
+}
+
+.dropzoneHint {
+  margin-top: 0.2rem;
+  color: $text-muted;
+  font-size: 0.78rem;
+}
+
+.fileInput {
+  display: none;
+}
+
+.formatGuide {
+  margin-top: 1rem;
+  padding: 0.9rem;
+  border: 1px solid colors.$primary-a12;
+  border-radius: 12px;
+  background: colors.$primary-soft;
+}
+
+.formatGuideTitle {
+  margin: 0 0 0.75rem;
+  color: $text-dark;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.requirementGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+}
+
+.requirement {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.requirementLabel {
+  color: $text-muted;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.requirementValue {
+  color: colors.$text-secondary;
+  font-size: 0.84rem;
+  line-height: 1.35;
+}
+
+.formatNote {
+  margin: 0.75rem 0 0;
+  color: $text-muted;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.restoreButton {
+  display: inline-flex;
+  width: 100%;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  margin-top: 1rem;
+  padding: 0.65rem 1rem;
+  border: 1px solid colors.$primary-a35;
+  border-radius: 10px;
+  background: colors.$text-on-primary;
+  color: colors.$primary-dark;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &:hover:not(:disabled) {
+    border-color: colors.$primary-border-strong;
+    background: colors.$primary-a06;
+    box-shadow: colors.$shadow-card;
+  }
+
+  &:focus-visible {
+    outline: 3px solid colors.$primary-border;
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+}
+
+.feedback {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin-top: 1rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+.feedbackIcon {
+  flex: 0 0 auto;
+  margin-top: 0.08rem;
+  font-size: 1rem;
+}
+
+.error {
+  border-color: colors.$danger-border;
+  background: colors.$danger-soft;
+  color: $error;
+}
+
+.success {
+  border-color: colors.$success-border;
+  background: colors.$success-soft;
+  color: colors.$success;
+}
+
+@media (max-width: 900px) {
+  .settingsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .pageHeader {
+    flex-direction: column;
+  }
+
+  .settingsGrid {
+    padding: 0.75rem;
+  }
+
+  .dropzone {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .requirementGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .preview img {
+    max-width: 100%;
+  }
+}
+
+.assetSection {
+  padding: 1rem;
+}
+
+.assetSectionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.assetSectionTitle {
+  margin: 0;
+  color: colors.$text-strong;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.assetSectionSubtitle {
+  margin: 0.25rem 0 0;
+  color: colors.$text-muted;
+  font-size: 0.85rem;
+}
+
+.assetDivider {
+  height: 1px;
+  margin: 0 1rem;
+  background: colors.$primary-soft-active;
+}
+
+.assetSection .settingsGrid {
+  padding: 0;
+}
+
+.statusBadge {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid colors.$primary-border;
+  border-radius: 999px;
+  background: colors.$primary-a08;
+  color: colors.$primary-dark;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.faviconPreview {
+  min-height: 140px;
+
+  img {
+    width: 64px;
+    height: 64px;
+    max-width: 64px;
+    max-height: 64px;
+    image-rendering: auto;
+    object-fit: contain;
+  }
+}

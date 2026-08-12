@@ -1,130 +1,124 @@
 /* src/styles/_forms.scss */
 
-/* Design tokens (keep your existing scheme) */
-$primary: #4a90e2;
-$danger: #e74c3c;
-
-$border: rgba(0, 0, 0, 0.18);
-$border-soft: rgba(0, 0, 0, 0.12);
-$text: #111827;
-$muted: #6b7280;
+@use "./colors" as colors;
 
 $radius: 10px;
 
-/* ------------------------------
-   Inputs
---------------------------------- */
+/* Inputs */
 
 @mixin text-input {
   width: 100%;
   padding: 0.7rem 0.8rem;
-  border: 1px solid $border;
+  border: 1px solid colors.$border;
   border-radius: $radius;
-  font-size: 0.95rem;
-  font-family: inherit;
+  background: colors.$surface;
+  color: colors.$text;
   box-sizing: border-box;
-  background: #fff;
-  color: $text;
+  font-family: inherit;
+  font-size: 0.95rem;
 
-  transition: border-color 0.18s ease, box-shadow 0.18s ease,
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease,
+    color 0.18s ease,
     transform 0.08s ease;
 
   &::placeholder {
-    color: $muted;
+    color: colors.$text-muted;
     opacity: 0.9;
   }
 
-  &:hover {
-    border-color: rgba(74, 144, 226, 0.35);
+  &:hover:not(:disabled) {
+    border-color: colors.$primary-border-strong;
   }
 
   &:focus {
     outline: none;
-    border-color: rgba(74, 144, 226, 0.55);
-    box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.14);
+    border-color: colors.$primary-border-strong;
+    box-shadow: colors.$shadow-focus;
   }
 
   &:disabled {
-    background: #f6f7f9;
-    color: rgba(17, 24, 39, 0.55);
+    border-color: colors.$border-soft;
+    background: colors.$surface-muted;
+    color: colors.$text-disabled;
     cursor: not-allowed;
-    border-color: $border-soft;
   }
 }
 
 @mixin textarea-input {
   width: 100%;
-  padding: 0.7rem 0.8rem;
-  border: 1px solid $border;
-  border-radius: $radius;
-  font-size: 0.95rem;
-  font-family: inherit;
-  box-sizing: border-box;
-  background: #fff;
-  color: $text;
-
-  resize: vertical;
   min-height: 120px;
+  padding: 0.7rem 0.8rem;
+  resize: vertical;
+
+  border: 1px solid colors.$border;
+  border-radius: $radius;
+  background: colors.$surface;
+  color: colors.$text;
+
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 0.95rem;
   line-height: 1.45;
 
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease,
+    color 0.18s ease;
 
   &::placeholder {
-    color: $muted;
+    color: colors.$text-muted;
     opacity: 0.9;
   }
 
-  &:hover {
-    border-color: rgba(74, 144, 226, 0.35);
+  &:hover:not(:disabled) {
+    border-color: colors.$primary-border-strong;
   }
 
   &:focus {
     outline: none;
-    border-color: rgba(74, 144, 226, 0.55);
-    box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.14);
+    border-color: colors.$primary-border-strong;
+    box-shadow: colors.$shadow-focus;
   }
 
   &:disabled {
-    background: #f6f7f9;
-    color: rgba(17, 24, 39, 0.55);
+    border-color: colors.$border-soft;
+    background: colors.$surface-muted;
+    color: colors.$text-disabled;
     cursor: not-allowed;
-    border-color: $border-soft;
   }
 }
 
-/* Make selects match inputs visually */
 @mixin select-input {
   @include text-input;
+
   appearance: none;
-
-  /* lightweight dropdown chevron (no color scheme change) */
-  background-image: linear-gradient(
-      45deg,
-      transparent 50%,
-      rgba(0, 0, 0, 0.45) 50%
-    ),
-    linear-gradient(135deg, rgba(0, 0, 0, 0.45) 50%, transparent 50%);
-  background-position: calc(100% - 18px) calc(1em + 2px),
-    calc(100% - 13px) calc(1em + 2px);
-  background-size: 5px 5px, 5px 5px;
-  background-repeat: no-repeat;
-
   padding-right: 2.2rem;
+
+  background-image:
+    linear-gradient(45deg, transparent 50%, colors.$text-muted 50%),
+    linear-gradient(135deg, colors.$text-muted 50%, transparent 50%);
+
+  background-position:
+    calc(100% - 18px) calc(1em + 2px),
+    calc(100% - 13px) calc(1em + 2px);
+
+  background-repeat: no-repeat;
+  background-size: 5px 5px;
 }
 
-/* ------------------------------
-   Labels
---------------------------------- */
+/* Labels */
 
 @mixin form-label {
-  font-weight: 700;
   margin-bottom: 0.35rem;
-  color: #374151;
+  color: colors.$text-secondary;
+  font-weight: 700;
 }
 
-/* ------------------------------
-   Buttons
---------------------------------- */
+/* Buttons */
 
 @mixin _btn-base {
   display: inline-flex;
@@ -134,80 +128,88 @@ $radius: 10px;
 
   padding: 0.75rem 1.1rem;
   border-radius: 12px;
-  font-weight: 700;
+
   font-family: inherit;
   font-size: 0.95rem;
+  font-weight: 700;
   line-height: 1;
 
   cursor: pointer;
   user-select: none;
 
-  transition: transform 0.12s ease, box-shadow 0.2s ease, filter 0.2s ease,
-    background-color 0.2s ease;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
 
-  &:hover {
-    box-shadow: 0 10px 18px rgba(0, 0, 0, 0.08);
+  &:hover:not(:disabled) {
+    box-shadow: colors.$shadow-raised;
     transform: translateY(-1px);
   }
 
-  &:active {
+  &:active:not(:disabled) {
+    box-shadow: colors.$shadow-card;
     transform: translateY(0);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.07);
   }
 
   &:disabled {
-    opacity: 0.65;
     cursor: not-allowed;
     box-shadow: none;
+    opacity: 0.65;
     transform: none;
   }
 }
 
 @mixin primary-button {
   @include _btn-base;
-  background-color: $primary;
-  color: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.06);
 
-  &:hover {
-    filter: brightness(0.98);
+  border: 1px solid colors.$border-subtle;
+  background: colors.$primary;
+  color: colors.$text-on-primary;
+
+  &:hover:not(:disabled) {
+    background: colors.$primary-hover;
   }
 
-  &:focus {
+  &:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.18);
+    box-shadow: colors.$shadow-focus;
   }
 }
 
 @mixin danger-button {
   @include _btn-base;
-  background-color: $danger;
-  color: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.06);
 
-  &:hover {
-    filter: brightness(0.98);
+  border: 1px solid colors.$border-subtle;
+  background: colors.$danger;
+  color: colors.$text-on-primary;
+
+  &:hover:not(:disabled) {
+    filter: brightness(0.95);
   }
 
-  &:focus {
+  &:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.18);
+    box-shadow: 0 0 0 4px colors.$danger-focus;
   }
 }
 
-/* Optional: subtle "ghost" button style if you ever want it */
-@mixin ghost-button($tint: $primary) {
+@mixin ghost-button($tint: colors.$primary) {
   @include _btn-base;
-  background: rgba(74, 144, 226, 0.08);
-  color: $tint;
-  border: 1px solid rgba(74, 144, 226, 0.22);
 
-  &:hover {
-    background: rgba(74, 144, 226, 0.12);
+  border: 1px solid colors.$primary-border;
+  background: colors.$primary-soft;
+  color: $tint;
+
+  &:hover:not(:disabled) {
+    background: colors.$primary-soft-hover;
   }
 
-  &:focus {
+  &:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.14);
+    box-shadow: colors.$shadow-focus;
   }
 }

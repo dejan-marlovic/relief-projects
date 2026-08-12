@@ -3,10 +3,14 @@ import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import styles from "./Layout.module.scss";
 import { ProjectContext } from "../../context/ProjectContext";
 import { FiLogOut, FiLayers } from "react-icons/fi";
+import { useBranding } from "../../context/BrandingContext";
+import { useAuth } from "../../context/AuthContext";
 
 const Layout = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { logoUrl } = useBranding();
+  const { clearAuth, hasRole, hasAnyRole } = useAuth();
 
   const { projects, selectedProjectId, setSelectedProjectId } =
     useContext(ProjectContext);
@@ -16,7 +20,7 @@ const Layout = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("authToken");
+    clearAuth();
     localStorage.removeItem("selectedProjectId");
     navigate("/login");
   };
@@ -79,9 +83,13 @@ const Layout = () => {
 
           <div className={styles.logoWrap}>
             <img
-              src="/logo.png"
+              src={logoUrl}
               alt="Relief Projects logo"
               className={styles.logo}
+              onError={(event) => {
+                event.currentTarget.onerror = null;
+                event.currentTarget.src = "/logo.png";
+              }}
             />
           </div>
 
@@ -118,7 +126,15 @@ const Layout = () => {
 
             // ✅ NEW: Admin (placeholder)
             ["/admin", "Admin"],
-          ].map(([path, label]) => {
+          ]
+            .filter(([path]) => {
+              if (path === "/admin") return hasRole("ADMIN");
+              if (path === "/register-project") {
+                return hasAnyRole("ADMIN", "PROJECT_MANAGER");
+              }
+              return true;
+            })
+            .map(([path, label]) => {
             const isAdminTab = path === "/admin";
 
             return (
@@ -133,7 +149,7 @@ const Layout = () => {
                 </Link>
               </li>
             );
-          })}
+            })}
         </ul>
       </nav>
 

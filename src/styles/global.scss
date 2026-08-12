@@ -1,35 +1,283 @@
 /* src/styles/global.scss */
 
-body {
-  margin: 0;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background-color: white; // or whatever your page bg is
+@use "./colors" as colors;
+
+/*
+ * Default runtime theme.
+ *
+ * These declarations are loaded once through global.scss.
+ * Future themes can override the same custom properties using:
+ *
+ * [data-theme="green"] { ... }
+ * [data-theme="purple"] { ... }
+ */
+
+:root,
+[data-theme="default"] {
+  color-scheme: light;
+
+  /* Brand */
+
+  --color-primary: #4a90e2;
+  --color-primary-hover: #357abd;
+  --color-primary-dark: #286aa8;
+
+  --color-primary-soft: rgba(74, 144, 226, 0.05);
+  --color-primary-soft-hover: rgba(74, 144, 226, 0.1);
+  --color-primary-soft-active: rgba(74, 144, 226, 0.14);
+
+  --color-primary-border: rgba(74, 144, 226, 0.22);
+  --color-primary-border-strong: rgba(74, 144, 226, 0.55);
+  --color-primary-focus: rgba(74, 144, 226, 0.18);
+  --color-primary-a04: color-mix(in srgb, var(--color-primary) 4%, transparent);
+  --color-primary-a06: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  --color-primary-a08: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  --color-primary-a12: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  --color-primary-a25: color-mix(in srgb, var(--color-primary) 25%, transparent);
+  --color-primary-a35: color-mix(in srgb, var(--color-primary) 35%, transparent);
+  --color-primary-a45: color-mix(in srgb, var(--color-primary) 45%, transparent);
+  --color-primary-a60: color-mix(in srgb, var(--color-primary) 60%, transparent);
+
+  /* Text */
+
+  --color-text: #111827;
+  --color-text-secondary: #374151;
+  --color-text-muted: #6b7280;
+  --color-text-disabled: rgba(17, 24, 39, 0.55);
+  --color-text-on-primary: #ffffff;
+  --color-text-strong: #1f2937;
+  --color-text-neutral: #666666;
+
+  /* Surfaces */
+
+  --color-background: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-secondary: #f8fafc;
+  --color-surface-muted: #f6f7f9;
+  --color-surface-hover: #f5faff;
+  --color-surface-striped: #fafafa;
+  --color-surface-tint: #f6f7fb;
+
+  /* Borders */
+
+  --color-border: rgba(0, 0, 0, 0.18);
+  --color-border-soft: rgba(0, 0, 0, 0.12);
+  --color-border-subtle: rgba(0, 0, 0, 0.06);
+  --color-divider: #f1f1f1;
+  --color-border-muted: #d1d5db;
+  --color-border-pale: #eef2f7;
+  --color-neutral-a04: rgba(0, 0, 0, 0.04);
+  --color-neutral-a07: rgba(0, 0, 0, 0.07);
+  --color-neutral-a08: rgba(0, 0, 0, 0.08);
+  --color-neutral-a10: rgba(0, 0, 0, 0.1);
+  --color-surface-a55: rgba(255, 255, 255, 0.55);
+  --color-surface-a70: rgba(255, 255, 255, 0.7);
+  --color-surface-a96: rgba(255, 255, 255, 0.96);
+
+  /* Danger */
+
+  --color-danger: #e74c3c;
+  --color-danger-dark: #b00020;
+  --color-danger-text: #b00000;
+  --color-danger-soft: rgba(231, 76, 60, 0.08);
+  --color-danger-border: rgba(231, 76, 60, 0.25);
+  --color-danger-focus: rgba(231, 76, 60, 0.18);
+  --color-danger-soft-strong: #ffe6e6;
+  --color-danger-border-strong: #ffb3b3;
+  --color-danger-soft-alt: #fff5f5;
+
+  /* Success */
+
+  --color-success: #1f9d55;
+  --color-success-dark: #166534;
+  --color-success-soft: #eafaf1;
+  --color-success-border: #b7ebc6;
+
+  /* Warning */
+
+  --color-warning: #f59e0b;
+  --color-warning-dark: #9a3412;
+  --color-warning-soft: #fff7ed;
+  --color-warning-border: #fed7aa;
+  --color-warning-soft-alt: #fff7f0;
+  --color-warning-border-alt: #ffd5a3;
+
+  /* Shadows */
+
+  --shadow-small: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 6px 16px rgba(0, 0, 0, 0.05);
+  --shadow-raised: 0 10px 24px rgba(0, 0, 0, 0.06);
+  --shadow-focus: 0 0 0 4px var(--color-primary-focus);
 }
 
-/* generic headings */
+[data-theme="forest"] {
+  --color-primary: #16866f;
+  --color-primary-hover: #116b59;
+  --color-primary-dark: #0d5749;
+
+  --color-primary-soft: rgba(22, 134, 111, 0.05);
+  --color-primary-soft-hover: rgba(22, 134, 111, 0.1);
+  --color-primary-soft-active: rgba(22, 134, 111, 0.14);
+
+  --color-primary-border: rgba(22, 134, 111, 0.22);
+  --color-primary-border-strong: rgba(22, 134, 111, 0.55);
+  --color-primary-focus: rgba(22, 134, 111, 0.18);
+
+  --color-surface-hover: #f2fbf8;
+}
+
+[data-theme="purple"] {
+  --color-primary: #7656c9;
+  --color-primary-hover: #6245b2;
+  --color-primary-dark: #52389b;
+
+  --color-primary-soft: rgba(118, 86, 201, 0.05);
+  --color-primary-soft-hover: rgba(118, 86, 201, 0.1);
+  --color-primary-soft-active: rgba(118, 86, 201, 0.14);
+
+  --color-primary-border: rgba(118, 86, 201, 0.22);
+  --color-primary-border-strong: rgba(118, 86, 201, 0.55);
+  --color-primary-focus: rgba(118, 86, 201, 0.18);
+
+  --color-surface-hover: #f8f5ff;
+}
+
+[data-theme="rose"] {
+  --color-primary: #c4516c;
+  --color-primary-hover: #aa425b;
+  --color-primary-dark: #92364c;
+
+  --color-primary-soft: rgba(196, 81, 108, 0.05);
+  --color-primary-soft-hover: rgba(196, 81, 108, 0.1);
+  --color-primary-soft-active: rgba(196, 81, 108, 0.14);
+
+  --color-primary-border: rgba(196, 81, 108, 0.22);
+  --color-primary-border-strong: rgba(196, 81, 108, 0.55);
+  --color-primary-focus: rgba(196, 81, 108, 0.18);
+
+  --color-surface-hover: #fff6f8;
+}
+
+/* Global foundation */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: colors.$background;
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+
+  background: colors.$background;
+  color: colors.$text;
+
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+/* Generic headings and links */
+
 h1,
 h2,
 h3 {
-  color: #4a90e2;
+  color: colors.$primary;
 }
 
-/* generic buttons (if you want app-wide classnames) */
+a {
+  color: colors.$primary;
+}
+
+/* Generic primary button */
+
 .btn-primary {
   padding: 0.75rem 1.5rem;
-  background-color: #4a90e2;
-  color: #fff;
+
   border: none;
   border-radius: 8px;
+  background: colors.$primary;
+  color: colors.$text-on-primary;
+
   font-weight: 600;
   cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.12s ease;
+
+  &:hover:not(:disabled) {
+    background: colors.$primary-hover;
+    box-shadow: colors.$shadow-card;
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: colors.$shadow-focus;
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
 }
+
+/* Generic danger button */
 
 .btn-danger {
   padding: 0.75rem 1.5rem;
-  background-color: #e74c3c;
-  color: #fff;
+
   border: none;
   border-radius: 8px;
+  background: colors.$danger;
+  color: colors.$text-on-primary;
+
   font-weight: 600;
   cursor: pointer;
+
+  transition:
+    box-shadow 0.2s ease,
+    filter 0.2s ease,
+    transform 0.12s ease;
+
+  &:hover:not(:disabled) {
+    box-shadow: colors.$shadow-card;
+    filter: brightness(0.95);
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px colors.$danger-focus;
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
 }

@@ -22,7 +22,7 @@ async function safeParseJsonResponse(res) {
   }
 }
 
-const BankDetails = ({ organizationId }) => {
+const BankDetails = ({ organizationId, canManage = false, canDelete = false }) => {
   const [rows, setRows] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
@@ -81,6 +81,7 @@ const BankDetails = ({ organizationId }) => {
   const evForRow = (row) => editedValues[rowKeyOf(row)] || {};
 
   const startEdit = (row) => {
+    if (!canManage) return;
     const id = rowKeyOf(row);
     setEditingId(id);
     setEditedValues((prev) => ({
@@ -102,6 +103,7 @@ const BankDetails = ({ organizationId }) => {
   };
 
   const startCreate = () => {
+    if (!canManage) return;
     setEditingId("new");
     setEditedValues((prev) => ({ ...prev, new: { ...blankBank } }));
 
@@ -145,6 +147,7 @@ const BankDetails = ({ organizationId }) => {
   };
 
   const save = async () => {
+    if (!canManage) return;
     const id = editingId;
     const values = editedValues[id];
     if (!values) return;
@@ -198,6 +201,7 @@ const BankDetails = ({ organizationId }) => {
   };
 
   const remove = async (id) => {
+    if (!canDelete) return;
     if (!id) return;
     if (!window.confirm("Delete this bank detail?")) return;
 
@@ -242,14 +246,14 @@ const BankDetails = ({ organizationId }) => {
           Bank details for organization #{organizationId}
         </div>
 
-        <button
+        {canManage && <button
           type="button"
           className={styles.primaryBtn}
           onClick={startCreate}
           disabled={editingId === "new"}
         >
           <FiPlus /> New Bank Detail
-        </button>
+        </button>}
       </div>
 
       {formError && <div className={styles.errorBanner}>{formError}</div>}
@@ -285,7 +289,7 @@ const BankDetails = ({ organizationId }) => {
               <div className={`${styles.cell} ${styles.stickyCol}`}>
                 {edit ? (
                   <div className={styles.actions}>
-                    <button
+                    {canManage && <button
                       type="button"
                       className={styles.iconCircleBtn}
                       onClick={save}
@@ -293,7 +297,7 @@ const BankDetails = ({ organizationId }) => {
                       aria-label="Save"
                     >
                       <FiSave />
-                    </button>
+                    </button>}
                     <button
                       type="button"
                       className={styles.dangerIconBtn}
@@ -306,7 +310,7 @@ const BankDetails = ({ organizationId }) => {
                   </div>
                 ) : (
                   <div className={styles.actions}>
-                    <button
+                    {canManage && <button
                       type="button"
                       className={styles.iconCircleBtn}
                       onClick={() => startEdit(row)}
@@ -314,8 +318,8 @@ const BankDetails = ({ organizationId }) => {
                       aria-label="Edit"
                     >
                       <FiEdit />
-                    </button>
-                    <button
+                    </button>}
+                    {canDelete && <button
                       type="button"
                       className={styles.dangerIconBtn}
                       onClick={() => remove(rowId)}
@@ -323,7 +327,7 @@ const BankDetails = ({ organizationId }) => {
                       aria-label="Delete"
                     >
                       <FiTrash2 />
-                    </button>
+                    </button>}
                   </div>
                 )}
               </div>

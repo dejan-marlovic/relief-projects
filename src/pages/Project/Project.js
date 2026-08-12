@@ -1,11 +1,13 @@
 // Project.jsx
 import React, { useEffect, useState, useContext, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import ExcelJS from "exceljs";
 
 import styles from "./Project.module.scss";
 import Memos from "../Project/Memos/Memos.jsx";
 
 import { ProjectContext } from "../../context/ProjectContext";
+import { useAuth } from "../../context/AuthContext";
 
 // ✅ Use ImageZoomModal again
 import ImageZoomModal from "./ImageZoomModal/ImageZoomModal.jsx";
@@ -20,6 +22,7 @@ import {
   FiUploadCloud,
   FiImage,
   FiAlertCircle,
+  FiDownload,
 } from "react-icons/fi";
 
 import { BASE_URL, ASSETS_URL } from "../../config/api";
@@ -31,7 +34,1374 @@ const CAPTION_DELIM = "|||";
 const Project = () => {
   const navigate = useNavigate();
 
-  // 🔐 Helper: fetch with auth + automatic 401 handling
+  const excelColors = {
+    darkBlue: "1F4E78",
+    mediumBlue: "5B9BD5",
+    lightBlue: "D9EAF7",
+    lightGray: "F3F4F6",
+    borderGray: "D1D5DB",
+    white: "FFFFFF",
+    text: "1F2937",
+  };
+
+  const safeExcelValue = (value) => {
+    if (value == null || value === undefined || value === "") {
+      return "Not specified";
+    }
+    return value;
+  };
+
+  const formatExcelDate = (value) => {
+    //checks whether value is falsy.
+    if (!value) return "Not specified";
+
+    const date = new Date(value);
+
+    //date.getTime() returns the date as the number of milliseconds since January 1, 1970.
+    //valid date example: 1785141000000
+    //invalid date example: new Date("hello").getTime() retuns NaN not a number
+    //formatExcelDate("Unknown date") returns  Unknown date
+    if (Number.isNaN(date.getTime())) {
+      return String(value);
+    }
+
+    //If the date is valid, it is formatted as a readable string.
+    return date.toLocaleString("sv-SE", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  // Returns a memo date without an unnecessary time component.
+  // Memo dates come from an HTML date input and normally have the shape YYYY-MM-DD.
+  const formatExcelDateOnly = (value) => {
+    if (!value) return "Not specified";
+
+    const normalizedValue = String(value).slice(0, 10);
+    const date = new Date(`${normalizedValue}T00:00:00`);
+
+    if (Number.isNaN(date.getTime())) {
+      return String(value);
+    }
+
+    return date.toLocaleDateString("sv-SE", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+  };
+
+  // Memo DTOs have used a few different property names over time.
+  // This helper returns the first available memo-text value.
+  const getMemoText = (memo = {}) =>
+    memo.message ??
+    memo.text ??
+    memo.content ??
+    memo.body ??
+    memo.memoText ??
+    "";
+
+  const sanitizeExcelFilename = (value) => {
+    const cleaned = String(value || "project")
+      .trim()
+      //character class: [<>:"/\\|?*]
+      .replace(/[<>:"/\\|?*\s]+/g, "_")
+      .replace(/^_+|_+$/g, "");
+
+    return cleaned || "project";
+  };
+
+  //cell is an object provided by ExcelJS. It represents one Excel cell.
+  /*
+  we are doing this: 
+      const fontSettings = {
+      bold: true,
+      size: 18,
+      color: {
+        argb: excelColors.white,
+      },
+    };
+
+    cell.font = fontSettings;
+  */
+  //receives one ExcelJS cell object: cell
+  /*
+  Example:
+  const titleCell = worksheet.getCell("A1");
+  applyTitleStyle(titleCell);
+
+
+  How the title will look
+
+The title cell will look approximately like this:
+
+┌────────────────────────────────────────┐
+│ PROJECT REPORT                         │
+└────────────────────────────────────────┘
+
+  With:
+
+  dark-blue background;
+  white text;
+  bold font;
+  18-point font;
+  left alignment;
+  vertical centering.
+  */
+  const applyTitleStyle = (cell) => {
+    cell.font = {
+      bold: true,
+      size: 18,
+      color: { argb: excelColors.white },
+    };
+
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: excelColors.darkBlue },
+    };
+
+    cell.alignment = {
+      vertical: "middle",
+      horizontal: "left",
+    };
+  };
+
+  /*
+  How the section heading will look
+
+Approximately:
+
+  ┌────────────────────────────────────────┐
+  │ Project Information                    │
+  └────────────────────────────────────────┘
+
+  With:
+
+  medium-blue background;
+  white bold text;
+  12-point font;
+  left alignment;
+  vertical centering.
+  */
+  const applySectionStyle = (cell) => {
+    cell.font = {
+      bold: true,
+      size: 12,
+      color: { argb: excelColors.white },
+    };
+
+    //sets the background fill of the cell.
+    //fill should be one solid color rather than stripes, dots, gradients, or another pattern
+    //fgColor means foreground color.
+    //With a solid pattern, this is effectively the cell background color.
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: excelColors.mediumBlue },
+    };
+
+    //This controls how the text is positioned inside the cell.
+    cell.alignment = {
+      vertical: "middle",
+      horizontal: "left",
+    };
+  };
+
+  //This creates a helper that styles an entire Excel row rather than one cell.
+  /*
+    const headerRow = worksheet.addRow([
+    "Name",
+    "Status",
+    "Amount",
+    "Created",
+  ]);
+
+  applyTableHeaderStyle(headerRow);
+
+  Each header cell gets a solid dark-blue background.
+
+  So the entire header row appears as one dark-blue band.
+
+  How the table header will look
+
+Approximately:
+
+  ┌──────────────┬──────────────┬──────────────┐
+  │ Name         │ Status       │ Amount       │
+  └──────────────┴──────────────┴──────────────┘
+
+  With:
+
+  dark-blue background;
+  white bold text;
+  left alignment;
+  vertical centering;
+  wrapped long headings;
+  thin gray borders around every cell
+  */
+  const applyTableHeaderStyle = (row) => {
+    //row.eachCell() is an ExcelJS method.
+    row.eachCell((cell) => {
+      cell.font = {
+        bold: true,
+        color: { argb: excelColors.white },
+      };
+
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: excelColors.darkBlue },
+      };
+
+      cell.alignment = {
+        vertical: "middle",
+        horizontal: "left",
+        wrapText: true,
+      };
+
+      cell.border = {
+        top: {
+          style: "thin",
+          color: { argb: excelColors.borderGray },
+        },
+        left: {
+          style: "thin",
+          color: { argb: excelColors.borderGray },
+        },
+        bottom: {
+          style: "thin",
+          color: { argb: excelColors.borderGray },
+        },
+        right: {
+          style: "thin",
+          color: { argb: excelColors.borderGray },
+        },
+      };
+    });
+  };
+
+  const applyDataRowStyle = (row, index) => {
+    row.eachCell((cell) => {
+      cell.alignment = {
+        vertical: "top",
+        horizontal: "left",
+        wrapText: true,
+      };
+
+      cell.border = {
+        top: {
+          style: "thin",
+          color: { argb: excelColors.borderGray },
+        },
+        left: {
+          style: "thin",
+          color: { argb: excelColors.borderGray },
+        },
+        bottom: {
+          style: "thin",
+          color: { argb: excelColors.borderGray },
+        },
+        right: {
+          style: "thin",
+          color: { argb: excelColors.borderGray },
+        },
+      };
+
+      if (index % 2 === 1) {
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: excelColors.lightGray },
+        };
+      }
+    });
+  };
+
+  //takes in id and returns readable status
+  const getProjectStatusLabel = (id) => {
+    const status = (projectStatuses || []).find(
+      (item) => String(item.id) === String(id),
+    );
+
+    return status?.statusName || (id ? `Status ${id}` : "Not specified");
+  };
+
+  const getProjectTypeLabel = (id) => {
+    const type = (projectTypes || []).find(
+      (item) => String(item.id) === String(id),
+    );
+
+    return type?.projectTypeName || (id ? `Type ${id}` : "Not specified");
+  };
+
+  const getAddressLabel = (id) => {
+    const address = (addresses || []).find(
+      (item) => String(item.id) === String(id),
+    );
+
+    if (!address) {
+      return id ? `Address ${id}` : "Not specified";
+    }
+
+    const cityLine = [address.postalCode, address.city, address.state]
+      //.filter(Boolean) removes empty values such as:  state: ""
+      .filter(Boolean)
+      .join(" ");
+
+    return [address.street, cityLine, address.country]
+      .filter(Boolean)
+      .join(", ");
+  };
+
+  const getParentProjectLabel = (id) => {
+    if (!id) return "Not specified";
+
+    const allProjects = [
+      ...(Array.isArray(projects) ? projects : []),
+      ...(Array.isArray(availableParentProjects)
+        ? availableParentProjects
+        : []),
+    ];
+
+    const parentProject = allProjects.find(
+      (project) => String(project.id) === String(id),
+    );
+
+    if (!parentProject) return `Project ${id}`;
+
+    const parentCode = parentProject.projectCode || "";
+    const parentName = parentProject.projectName || parentProject.name || "";
+    const parentLabel = [parentCode, parentName].filter(Boolean).join(" — ");
+
+    return parentLabel || `Project ${id}`;
+  };
+
+  const addWorksheetTitle = (worksheet, title, subtitle, lastColumn) => {
+    //lastColumn combines into one large cell, example: A1  B1  C1  D1  E1  F1  G1  H1. From A to H:
+    // worksheet.mergeCells("A1:H1");
+    //lastColumn = The final column across which the title should stretch.
+    /*
+           A       B       C       D       E       F       G       H
+    ┌───────────────────────────────────────────────────────────────┐
+1   │                       Project Report                          │
+    ├───────────────────────────────────────────────────────────────┤
+2   │ Generated on 31 July 2026                                    │
+    ├───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┤
+3   │ A3    │ B3    │ C3    │ D3    │ E3    │ F3    │ G3    │ H3    │
+    └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘
+    */
+    worksheet.mergeCells(`A1:${lastColumn}1`);
+
+    //Because A1:H1 has been merged, the title appears across that entire merged area.
+    worksheet.getCell("A1").value = title;
+
+    applyTitleStyle(worksheet.getCell("A1"));
+
+    //getRow(1) retrieves the ExcelJS row object for row 1.
+    worksheet.getRow(1).height = 28;
+
+    //same for: A2  B2  C2  D2  E2  F2  G2  H2
+    worksheet.mergeCells(`A2:${lastColumn}2`);
+
+    //Because A2:H2 is merged, the value appears across the merged subtitle area.
+    worksheet.getCell("A2").value = subtitle;
+
+    worksheet.getCell("A2").font = {
+      italic: true,
+      color: { argb: "6B7280" },
+    };
+
+    worksheet.getCell("A2").alignment = {
+      vertical: "middle",
+      horizontal: "left",
+    };
+
+    /*
+    That creates a visual hierarchy:
+
+    Larger row for the main title
+    Smaller row for the subtitle
+    */
+    worksheet.getRow(2).height = 22;
+  };
+
+  const handleExportProject = async () => {
+    if (!projectDetails?.id) {
+      setFormError("Please select a project before exporting.");
+      return;
+    }
+
+    try {
+      setExportingProject(true);
+      setFormError("");
+
+      // Fetch the latest saved memos from the backend.
+      // Memos.jsx uses the same endpoint and filters the returned data by project.
+      const memoResponse = await authFetch(`${BASE_URL}/api/memos/active`, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!memoResponse.ok && memoResponse.status !== 204) {
+        throw new Error("Failed to load project memos for export.");
+      }
+
+      // safeReadJson handles 204 responses and empty response bodies.
+      const memoData =
+        memoResponse.status === 204 ? [] : await safeReadJson(memoResponse);
+
+      // Normalize the response so the rest of the export always works with an array.
+      const allMemos = Array.isArray(memoData)
+        ? memoData
+        : memoData
+          ? [memoData]
+          : [];
+
+      // Keep only memos that belong to the currently selected project.
+      const projectMemos = allMemos.filter(
+        (memo) => String(memo.projectId) === String(projectDetails.id),
+      );
+
+      // Sort newest memo first without mutating the original array.
+      const sortedProjectMemos = [...projectMemos].sort((a, b) => {
+        const dateA = a.memoDate
+          ? new Date(`${String(a.memoDate).slice(0, 10)}T00:00:00`)
+          : null;
+
+        const dateB = b.memoDate
+          ? new Date(`${String(b.memoDate).slice(0, 10)}T00:00:00`)
+          : null;
+
+        if (!dateA && !dateB) return 0;
+        if (!dateA) return 1;
+        if (!dateB) return -1;
+
+        return dateB.getTime() - dateA.getTime();
+      });
+
+      // The workbook represents the entire Excel file.
+      const workbook = new ExcelJS.Workbook();
+
+      // Workbook metadata.
+      workbook.creator = "Relief Projects";
+      workbook.lastModifiedBy = "Relief Projects";
+
+      // Sets the workbook's creation date to the current date and time.
+      workbook.created = new Date();
+
+      // Sets the workbook's last-modified date to the current date and time.
+      workbook.modified = new Date();
+
+      workbook.title = projectDetails.projectName || "Project Export";
+
+      workbook.subject = `Project export: ${projectDetails.projectName || ""}`;
+
+      // =====================================================
+      // SHEET 1: COMPLETE PROJECT REPORT
+      // =====================================================
+
+      // Adds a worksheet to the workbook. Its Excel tab is named
+      // "Complete Project Report".
+      //
+      // workbook
+      // └── reportSheet
+      //     └── "Complete Project Report"
+      //
+      // ExcelJS allows worksheet configuration to be passed as the
+      // second argument to addWorksheet().
+      const reportSheet = workbook.addWorksheet("Complete Project Report", {
+        // The views property controls how the worksheet is displayed
+        // when it is opened.
+        views: [
+          {
+            // Frozen rows remain visible while the user scrolls.
+            state: "frozen",
+
+            // Freeze the first two rows:
+            // Rows 1 and 2 remain visible.
+            // Rows 3 onward scroll normally.
+            ySplit: 2,
+          },
+        ],
+
+        properties: {
+          // Give worksheet rows a default height of 20.
+          defaultRowHeight: 20,
+        },
+
+        // Print and page configuration. This controls how the worksheet
+        // is laid out when printed or viewed in print-related modes.
+        pageSetup: {
+          // Portrait is taller than it is wide.
+          orientation: "portrait",
+
+          // Enable fit-to-page printing so Excel scales the sheet using
+          // the width and height limits below.
+          fitToPage: true,
+
+          // Fit all columns onto one printed page horizontally.
+          // Width: one page. Height: as many pages as necessary.
+          fitToWidth: 1,
+
+          // Allow the worksheet to use as many vertical pages as needed.
+          fitToHeight: 0,
+
+          // ExcelJS paper-size code 9 represents A4 paper.
+          paperSize: 9,
+        },
+      });
+
+      /*
+       * At this point, reportSheet is a newly created ExcelJS worksheet with:
+       * - the name "Complete Project Report";
+       * - two frozen rows;
+       * - a default row height of 20;
+       * - portrait A4 printing;
+       * - fit-to-page settings.
+       */
+
+      // Each object in this array describes one worksheet column.
+      // Because there are four objects, columns A through D are configured.
+      reportSheet.columns = [
+        // Column A: narrow column. The key is a programmatic identifier
+        // that can be used when adding object-based rows.
+        { key: "columnA", width: 8 },
+
+        // The second object represents Excel column B.
+        { key: "columnB", width: 31 },
+
+        // Column C is the widest of the four columns.
+        { key: "columnC", width: 42 },
+
+        // Column D has a medium width.
+        { key: "columnD", width: 26 },
+      ];
+
+      /*
+       * ExcelJS matches object properties to the configured column keys:
+       *
+       * reportSheet.addRow({
+       *   columnA: "1",
+       *   columnB: "Project Name",
+       *   columnC: projectDetails.projectName,
+       *   columnD: "Active",
+       * });
+       *
+       * columnA -> Excel column A
+       * columnB -> Excel column B
+       * columnC -> Excel column C
+       * columnD -> Excel column D
+       *
+       * Column widths:
+       * A: 8, B: 31, C: 42, D: 26
+       */
+
+      addWorksheetTitle(
+        reportSheet,
+        projectDetails.projectName || "Project Report",
+        `Project code: ${
+          projectDetails.projectCode || "Not specified"
+        } | Exported: ${new Date().toLocaleString("sv-SE")}`,
+        "D",
+      );
+
+      // Start at row 4 because:
+      // Row 1: title
+      // Row 2: subtitle
+      // Row 3: spacing
+      // Row 4: first report section
+      let currentRow = 4;
+
+      // Adds a full-width section heading at the current row.
+      // This inner helper can directly access reportSheet and currentRow
+      // from the surrounding handleExportProject function.
+      const addReportSection = (sectionName) => {
+        reportSheet.mergeCells(`A${currentRow}:D${currentRow}`);
+
+        const cell = reportSheet.getCell(`A${currentRow}`);
+
+        cell.value = sectionName;
+        applySectionStyle(cell);
+
+        reportSheet.getRow(currentRow).height = 22;
+
+        // Move the row pointer down so the next item is written
+        // to the following row.
+        currentRow += 1;
+      };
+
+      // Adds one label/value row. Column A contains the label, while
+      // columns B through D are merged into one wider value area.
+      const addReportField = (label, value) => {
+        reportSheet.mergeCells(`B${currentRow}:D${currentRow}`);
+
+        const labelCell = reportSheet.getCell(`A${currentRow}`);
+
+        const valueCell = reportSheet.getCell(`B${currentRow}`);
+
+        labelCell.value = label;
+        valueCell.value = safeExcelValue(value);
+
+        labelCell.font = {
+          bold: true,
+          color: { argb: excelColors.text },
+        };
+
+        labelCell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: excelColors.lightBlue },
+        };
+
+        [labelCell, valueCell].forEach((cell) => {
+          cell.alignment = {
+            vertical: "top",
+            horizontal: "left",
+            wrapText: true,
+          };
+
+          cell.border = {
+            top: {
+              style: "thin",
+              color: { argb: excelColors.borderGray },
+            },
+            left: {
+              style: "thin",
+              color: { argb: excelColors.borderGray },
+            },
+            bottom: {
+              style: "thin",
+              color: { argb: excelColors.borderGray },
+            },
+            right: {
+              style: "thin",
+              color: { argb: excelColors.borderGray },
+            },
+          };
+        });
+
+        currentRow += 1;
+      };
+
+      // Adds a table at the current row, styles its header and data rows,
+      // and leaves one blank row after the table.
+      const addReportTable = (headers, rows) => {
+        const headerRow = reportSheet.getRow(currentRow);
+
+        headers.forEach((header, index) => {
+          headerRow.getCell(index + 1).value = header;
+        });
+
+        applyTableHeaderStyle(headerRow);
+        currentRow += 1;
+
+        rows.forEach((values, index) => {
+          const row = reportSheet.getRow(currentRow);
+
+          values.forEach((value, cellIndex) => {
+            row.getCell(cellIndex + 1).value = safeExcelValue(value);
+          });
+
+          applyDataRowStyle(row, index);
+          currentRow += 1;
+        });
+
+        currentRow += 1;
+      };
+
+      // ------------------------
+      // Basic information
+      // ------------------------
+
+      addReportSection("Basic Information");
+
+      addReportField("Project ID", projectDetails.id);
+      addReportField("Project Code", projectDetails.projectCode);
+
+      addReportField("Reference Number", projectDetails.refProjectNo);
+
+      addReportField("Project Name", projectDetails.projectName);
+
+      addReportField("Funding Source", projectDetails.fundingSource);
+
+      addReportField(
+        "Project Status",
+        getProjectStatusLabel(projectDetails.projectStatusId),
+      );
+
+      addReportField(
+        "Project Type",
+        getProjectTypeLabel(projectDetails.projectTypeId),
+      );
+
+      addReportField(
+        "Parent Project",
+        getParentProjectLabel(projectDetails.partOfId),
+      );
+
+      addReportField("Address", getAddressLabel(projectDetails.addressId));
+
+      addReportField("Approved", projectDetails.approved);
+
+      // ------------------------
+      // Dates
+      // ------------------------
+
+      addReportSection("Project Period");
+
+      addReportField(
+        "Project Date",
+        formatExcelDate(projectDetails.projectDate),
+      );
+
+      addReportField(
+        "Project Start",
+        formatExcelDate(projectDetails.projectStart),
+      );
+
+      addReportField("Project End", formatExcelDate(projectDetails.projectEnd));
+
+      addReportField(
+        "Revised Start",
+        formatExcelDate(projectDetails.projectStartRev),
+      );
+
+      addReportField(
+        "Revised End",
+        formatExcelDate(projectDetails.projectEndRev),
+      );
+
+      addReportField("Period in Months", projectDetails.projectPeriodMonths);
+
+      // ------------------------
+      // Costs
+      // ------------------------
+
+      addReportSection("Support Costs");
+
+      addReportField(
+        "FO Support Cost",
+        projectDetails.foSupportCostPercent !== null &&
+          projectDetails.foSupportCostPercent !== undefined
+          ? `${projectDetails.foSupportCostPercent}%`
+          : null,
+      );
+
+      addReportField(
+        "Own organization Support Cost",
+        projectDetails.irwSupportCostPercent !== null &&
+          projectDetails.irwSupportCostPercent !== undefined
+          ? `${projectDetails.irwSupportCostPercent}%`
+          : null,
+      );
+
+      // ------------------------
+      // Description
+      // ------------------------
+
+      addReportSection("Project Description");
+
+      const descriptionRow = currentRow;
+
+      addReportField("Description", projectDetails.projectDescription);
+
+      reportSheet.getRow(descriptionRow).height = 80;
+
+      /*
+       * PIN code is deliberately excluded because downloaded
+       * spreadsheets can be forwarded or stored outside the system.
+       *
+       * Uncomment this when you explicitly want it included:
+       */
+      // addReportField("PIN Code", projectDetails.pinCode);
+
+      // ------------------------
+      // Sectors in main report
+      // ------------------------
+
+      addReportSection("Sectors");
+
+      const reportSectorRows =
+        selectedSectorIds.length > 0
+          ? selectedSectorIds.map((sectorId, index) => [
+              index + 1,
+              getSectorLabel(sectorId),
+              sectorId,
+              "",
+            ])
+          : [["", "No sectors assigned", "", ""]];
+
+      addReportTable(["Number", "Sector", "Sector ID", ""], reportSectorRows);
+
+      // ------------------------
+      // Organizations in report
+      // ------------------------
+
+      addReportSection("Related Organizations");
+
+      const reportOrganizationRows =
+        projectOrganizations.length > 0
+          ? projectOrganizations.map((organization, index) => [
+              index + 1,
+              getOrgLabel(organization.organizationId),
+              getOrgStatusLabel(organization.organizationStatusId),
+              organization.organizationId,
+            ])
+          : [["", "No related organizations", "", ""]];
+
+      addReportTable(
+        ["Number", "Organization", "Organization Status", "Organization ID"],
+        reportOrganizationRows,
+      );
+
+      // ------------------------
+      // Participants in report
+      // ------------------------
+
+      addReportSection("Project Participants");
+
+      const reportParticipantRows =
+        projectParticipants.length > 0
+          ? projectParticipants.map((participant, index) => [
+              index + 1,
+              getEmployeeLabel(participant.employeeId),
+              getPositionLabel(participant.positionId),
+              participant.employeeId,
+            ])
+          : [["", "No participants added", "", ""]];
+
+      addReportTable(
+        ["Number", "Participant", "Position", "Employee ID"],
+        reportParticipantRows,
+      );
+
+      // ------------------------
+      // Memos in report
+      // ------------------------
+
+      addReportSection("Project Memos");
+
+      const reportMemoRows =
+        sortedProjectMemos.length > 0
+          ? sortedProjectMemos.map((memo, index) => [
+              index + 1,
+              formatExcelDateOnly(memo.memoDate),
+              getEmployeeLabel(memo.employeeId),
+              getPositionLabel(memo.positionId),
+            ])
+          : [["", "No memos available", "", ""]];
+
+      // This compact table makes it easy to scan memo metadata.
+      addReportTable(
+        ["Number", "Memo Date", "Employee", "Position"],
+        reportMemoRows,
+      );
+
+      // Add each memo again as a readable full-width text block.
+      if (sortedProjectMemos.length > 0) {
+        sortedProjectMemos.forEach((memo, index) => {
+          reportSheet.mergeCells(`A${currentRow}:D${currentRow}`);
+
+          const memoHeadingCell = reportSheet.getCell(`A${currentRow}`);
+
+          memoHeadingCell.value =
+            `Memo ${index + 1} — ` +
+            `${formatExcelDateOnly(memo.memoDate)} — ` +
+            `${getEmployeeLabel(memo.employeeId)}`;
+
+          memoHeadingCell.font = {
+            bold: true,
+            color: { argb: excelColors.text },
+          };
+
+          memoHeadingCell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: excelColors.lightBlue },
+          };
+
+          memoHeadingCell.alignment = {
+            vertical: "middle",
+            horizontal: "left",
+            wrapText: true,
+          };
+
+          memoHeadingCell.border = {
+            top: {
+              style: "thin",
+              color: { argb: excelColors.borderGray },
+            },
+            left: {
+              style: "thin",
+              color: { argb: excelColors.borderGray },
+            },
+            bottom: {
+              style: "thin",
+              color: { argb: excelColors.borderGray },
+            },
+            right: {
+              style: "thin",
+              color: { argb: excelColors.borderGray },
+            },
+          };
+
+          reportSheet.getRow(currentRow).height = 24;
+          currentRow += 1;
+
+          reportSheet.mergeCells(`A${currentRow}:D${currentRow}`);
+
+          const memoTextCell = reportSheet.getCell(`A${currentRow}`);
+          const memoText = getMemoText(memo) || "(Empty memo)";
+
+          memoTextCell.value = memoText;
+          memoTextCell.alignment = {
+            vertical: "top",
+            horizontal: "left",
+            wrapText: true,
+          };
+
+          memoTextCell.border = {
+            top: {
+              style: "thin",
+              color: { argb: excelColors.borderGray },
+            },
+            left: {
+              style: "thin",
+              color: { argb: excelColors.borderGray },
+            },
+            bottom: {
+              style: "thin",
+              color: { argb: excelColors.borderGray },
+            },
+            right: {
+              style: "thin",
+              color: { argb: excelColors.borderGray },
+            },
+          };
+
+          // Estimate a readable row height while limiting extremely long memos.
+          const estimatedLines = Math.max(
+            2,
+            Math.ceil(String(memoText).length / 95),
+          );
+
+          reportSheet.getRow(currentRow).height = Math.min(
+            180,
+            estimatedLines * 18,
+          );
+
+          // Leave a blank row before the next memo or report section.
+          currentRow += 2;
+        });
+      }
+
+      // ------------------------
+      // Images in report
+      // ------------------------
+
+      addReportSection("Project Images");
+
+      const reportImageRows =
+        imageNames.length > 0
+          ? imageNames.map((filename, index) => [
+              index + 1,
+              filename,
+              imageCaptions[index] || "",
+              `${coverImagePath}${filename}`,
+            ])
+          : [["", "No project images", "", ""]];
+
+      const imageHeaderRow = reportSheet.getRow(currentRow);
+
+      ["Number", "Filename", "Caption", "Image URL"].forEach(
+        (header, index) => {
+          imageHeaderRow.getCell(index + 1).value = header;
+        },
+      );
+
+      applyTableHeaderStyle(imageHeaderRow);
+      currentRow += 1;
+
+      reportImageRows.forEach((values, index) => {
+        const row = reportSheet.getRow(currentRow);
+
+        values.forEach((value, cellIndex) => {
+          row.getCell(cellIndex + 1).value = safeExcelValue(value);
+        });
+
+        const imageUrl = values[3];
+
+        if (imageUrl) {
+          const urlCell = row.getCell(4);
+
+          urlCell.value = {
+            text: imageUrl,
+            hyperlink: imageUrl,
+          };
+
+          urlCell.font = {
+            color: { argb: "0563C1" },
+            underline: true,
+          };
+        }
+
+        applyDataRowStyle(row, index);
+
+        /*
+         * applyDataRowStyle sets the standard font, so we restore
+         * hyperlink styling after applying the row style.
+         */
+        if (imageUrl) {
+          row.getCell(4).font = {
+            color: { argb: "0563C1" },
+            underline: true,
+          };
+        }
+
+        currentRow += 1;
+      });
+
+      // =====================================================
+      // SHEET 2: SECTORS
+      // =====================================================
+
+      const sectorSheet = workbook.addWorksheet("Sectors", {
+        views: [
+          {
+            state: "frozen",
+            ySplit: 3,
+          },
+        ],
+      });
+
+      sectorSheet.columns = [
+        { key: "number", width: 12 },
+        { key: "sector", width: 55 },
+        { key: "sectorId", width: 18 },
+      ];
+
+      addWorksheetTitle(
+        sectorSheet,
+        "Project Sectors",
+        projectDetails.projectName || "",
+        "C",
+      );
+
+      const sectorHeader = sectorSheet.getRow(3);
+
+      sectorHeader.values = ["Number", "Sector", "Sector ID"];
+
+      applyTableHeaderStyle(sectorHeader);
+
+      const sectorRows =
+        selectedSectorIds.length > 0
+          ? selectedSectorIds.map((sectorId, index) => ({
+              number: index + 1,
+              sector: getSectorLabel(sectorId),
+              sectorId,
+            }))
+          : [
+              {
+                number: "",
+                sector: "No sectors assigned",
+                sectorId: "",
+              },
+            ];
+
+      sectorRows.forEach((sector, index) => {
+        const row = sectorSheet.addRow(sector);
+        applyDataRowStyle(row, index);
+      });
+
+      sectorSheet.autoFilter = {
+        from: "A3",
+        to: "C3",
+      };
+
+      // =====================================================
+      // SHEET 3: ORGANIZATIONS
+      // =====================================================
+
+      const organizationSheet = workbook.addWorksheet("Organizations", {
+        views: [
+          {
+            state: "frozen",
+            ySplit: 3,
+          },
+        ],
+      });
+
+      organizationSheet.columns = [
+        { key: "number", width: 12 },
+        { key: "organization", width: 45 },
+        { key: "status", width: 30 },
+        { key: "organizationId", width: 20 },
+      ];
+
+      addWorksheetTitle(
+        organizationSheet,
+        "Related Organizations",
+        projectDetails.projectName || "",
+        "D",
+      );
+
+      const organizationHeader = organizationSheet.getRow(3);
+
+      organizationHeader.values = [
+        "Number",
+        "Organization",
+        "Status",
+        "Organization ID",
+      ];
+
+      applyTableHeaderStyle(organizationHeader);
+
+      const organizationRows =
+        projectOrganizations.length > 0
+          ? projectOrganizations.map((organization, index) => ({
+              number: index + 1,
+              organization: getOrgLabel(organization.organizationId),
+              status: getOrgStatusLabel(organization.organizationStatusId),
+              organizationId: organization.organizationId,
+            }))
+          : [
+              {
+                number: "",
+                organization: "No related organizations",
+                status: "",
+                organizationId: "",
+              },
+            ];
+
+      organizationRows.forEach((organization, index) => {
+        const row = organizationSheet.addRow(organization);
+
+        applyDataRowStyle(row, index);
+      });
+
+      organizationSheet.autoFilter = {
+        from: "A3",
+        to: "D3",
+      };
+
+      // =====================================================
+      // SHEET 4: PARTICIPANTS
+      // =====================================================
+
+      const participantSheet = workbook.addWorksheet("Participants", {
+        views: [
+          {
+            state: "frozen",
+            ySplit: 3,
+          },
+        ],
+      });
+
+      participantSheet.columns = [
+        { key: "number", width: 12 },
+        { key: "participant", width: 42 },
+        { key: "position", width: 34 },
+        { key: "employeeId", width: 18 },
+      ];
+
+      addWorksheetTitle(
+        participantSheet,
+        "Project Participants",
+        projectDetails.projectName || "",
+        "D",
+      );
+
+      const participantHeader = participantSheet.getRow(3);
+
+      participantHeader.values = [
+        "Number",
+        "Participant",
+        "Position",
+        "Employee ID",
+      ];
+
+      applyTableHeaderStyle(participantHeader);
+
+      const participantRows =
+        projectParticipants.length > 0
+          ? projectParticipants.map((participant, index) => ({
+              number: index + 1,
+              participant: getEmployeeLabel(participant.employeeId),
+              position: getPositionLabel(participant.positionId),
+              employeeId: participant.employeeId,
+            }))
+          : [
+              {
+                number: "",
+                participant: "No participants added",
+                position: "",
+                employeeId: "",
+              },
+            ];
+
+      participantRows.forEach((participant, index) => {
+        const row = participantSheet.addRow(participant);
+
+        applyDataRowStyle(row, index);
+      });
+
+      participantSheet.autoFilter = {
+        from: "A3",
+        to: "D3",
+      };
+
+      // =====================================================
+      // SHEET 5: MEMOS
+      // =====================================================
+
+      const memoSheet = workbook.addWorksheet("Memos", {
+        views: [
+          {
+            state: "frozen",
+            ySplit: 3,
+          },
+        ],
+        properties: {
+          defaultRowHeight: 20,
+        },
+        pageSetup: {
+          // Landscape gives the memo-text column more horizontal room.
+          orientation: "landscape",
+          fitToPage: true,
+          fitToWidth: 1,
+          fitToHeight: 0,
+          paperSize: 9,
+        },
+      });
+
+      memoSheet.columns = [
+        { key: "number", width: 10 },
+        { key: "memoDate", width: 18 },
+        { key: "employee", width: 30 },
+        { key: "position", width: 28 },
+        { key: "message", width: 85 },
+        { key: "memoId", width: 14 },
+      ];
+
+      addWorksheetTitle(
+        memoSheet,
+        "Project Memos",
+        projectDetails.projectName || "",
+        "F",
+      );
+
+      const memoHeader = memoSheet.getRow(3);
+
+      memoHeader.values = [
+        "Number",
+        "Memo Date",
+        "Employee",
+        "Position",
+        "Memo",
+        "Memo ID",
+      ];
+
+      applyTableHeaderStyle(memoHeader);
+
+      const memoRows =
+        sortedProjectMemos.length > 0
+          ? sortedProjectMemos.map((memo, index) => ({
+              number: index + 1,
+              memoDate: formatExcelDateOnly(memo.memoDate),
+              employee: getEmployeeLabel(memo.employeeId),
+              position: getPositionLabel(memo.positionId),
+              message: getMemoText(memo) || "(Empty memo)",
+              memoId: memo.id,
+            }))
+          : [
+              {
+                number: "",
+                memoDate: "",
+                employee: "",
+                position: "",
+                message: "No memos available for this project",
+                memoId: "",
+              },
+            ];
+
+      memoRows.forEach((memo, index) => {
+        const row = memoSheet.addRow(memo);
+
+        applyDataRowStyle(row, index);
+
+        // Increase the row height according to the approximate memo length.
+        const estimatedLines = Math.max(
+          2,
+          Math.ceil(String(memo.message || "").length / 75),
+        );
+
+        row.height = Math.min(180, estimatedLines * 18);
+      });
+
+      memoSheet.autoFilter = {
+        from: "A3",
+        to: "F3",
+      };
+
+      // =====================================================
+      // GENERATE THE FILE
+      // =====================================================
+
+      // Convert the in-memory ExcelJS workbook into an XLSX buffer.
+      const buffer = await workbook.xlsx.writeBuffer();
+
+      // Wrap the generated buffer in a browser Blob with the correct
+      // MIME type for an .xlsx file.
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      // Create a temporary browser URL pointing to the Blob.
+      const downloadUrl = URL.createObjectURL(blob);
+
+      // Create a temporary HTML anchor element that will start
+      // the download when clicked.
+      const downloadLink = document.createElement("a");
+
+      // Use the project code first. Fall back to the project ID,
+      // and finally to the generic word "project".
+      const projectCode =
+        projectDetails.projectCode || projectDetails.id || "project";
+
+      const projectName = projectDetails.projectName || "project";
+
+      downloadLink.href = downloadUrl;
+
+      // Create a safe filename by removing or replacing characters
+      // that are invalid in file names.
+      downloadLink.download =
+        `${sanitizeExcelFilename(projectCode)}_` +
+        `${sanitizeExcelFilename(projectName)}.xlsx`;
+
+      // Add the temporary link to the page, click it programmatically,
+      // and remove it again.
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      downloadLink.remove();
+
+      // Release the temporary Blob URL because it is no longer needed.
+      URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error("Failed to export project:", error);
+
+      setFormError("Failed to export the selected project to Excel.");
+    } finally {
+      // This runs whether the export succeeds or fails.
+      setExportingProject(false);
+    }
+  };
+
+  //Helper: fetch with auth + automatic 401 handling
   const authFetch = async (url, options = {}) => {
     const token = localStorage.getItem("authToken");
 
@@ -72,9 +1442,13 @@ const Project = () => {
 
   const { selectedProjectId, setSelectedProjectId, projects, setProjects } =
     useContext(ProjectContext);
+  const { hasRole, hasAnyRole } = useAuth();
+  const canEditProject = hasAnyRole("ADMIN", "PROJECT_MANAGER");
+  const canDeleteProject = hasRole("ADMIN");
 
   const [projectDetails, setProjectDetails] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [exportingProject, setExportingProject] = useState(false);
 
   const [projectStatuses, setProjectStatuses] = useState([]);
   const [projectTypes, setProjectTypes] = useState([]);
@@ -552,6 +1926,7 @@ const Project = () => {
 
   // ✅ Upload cover image via FormData (appends on backend)
   const uploadCoverImage = async (file) => {
+    if (!canEditProject) return;
     if (!file || !projectDetails?.id) return;
 
     setUploadError("");
@@ -620,6 +1995,7 @@ const Project = () => {
 
   // ✅ Delete image + preserve captions even if backend wipes them
   const handleDeleteImage = async (filename) => {
+    if (!canEditProject) return;
     if (!projectDetails?.id) return;
     if (!window.confirm(`Delete image "${filename}" from this project?`))
       return;
@@ -926,6 +2302,7 @@ const Project = () => {
   };
 
   const handleDelete = async () => {
+    if (!canDeleteProject) return;
     if (!window.confirm("Are you sure you want to delete this project?"))
       return;
 
@@ -1026,6 +2403,7 @@ const Project = () => {
   };
 
   const handleSave = async () => {
+    if (!canEditProject) return;
     try {
       setFormError("");
       setFieldErrors({});
@@ -1240,22 +2618,35 @@ const Project = () => {
             <div className={styles.headerActions}>
               <button
                 type="button"
-                onClick={handleSave}
-                className={styles.saveButton}
-                disabled={loading}
+                onClick={handleExportProject}
+                className={styles.exportButton}
+                disabled={loading || exportingProject || !projectDetails}
               >
-                <FiSave />
-                Save
+                <FiDownload />
+                {exportingProject ? "Exporting..." : "Export to Excel"}
               </button>
-              <button
-                type="button"
-                onClick={handleDelete}
-                className={styles.deleteButton}
-                disabled={loading}
-              >
-                <FiTrash2 />
-                Delete
-              </button>
+              {canEditProject && (
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  className={styles.saveButton}
+                  disabled={loading}
+                >
+                  <FiSave />
+                  Save
+                </button>
+              )}
+              {canDeleteProject && (
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className={styles.deleteButton}
+                  disabled={loading}
+                >
+                  <FiTrash2 />
+                  Delete
+                </button>
+              )}
             </div>
           </div>
 
@@ -1292,7 +2683,7 @@ const Project = () => {
                 </div>
 
                 {/* ✅ MOVED HERE: Upload block above the cover image */}
-                <div className={styles.sectionRowStack}>
+                {canEditProject && <div className={styles.sectionRowStack}>
                   <div className={styles.sectionTitle}>
                     <FiUploadCloud />
                     <span>Cover image upload</span>
@@ -1334,7 +2725,7 @@ const Project = () => {
                   {uploadError && (
                     <div className={styles.inlineError}>{uploadError}</div>
                   )}
-                </div>
+                </div>}
 
                 <div className={styles.divider} />
 
@@ -1407,6 +2798,7 @@ const Project = () => {
                         placeholder="Write a caption for this image..."
                         className={styles.textareaInput}
                         style={{ minHeight: 64 }}
+                        disabled={!canEditProject}
                       />
 
                       <div
@@ -1431,7 +2823,7 @@ const Project = () => {
                             >
                               {name}
                             </span>
-                            <button
+                            {canEditProject && <button
                               type="button"
                               onClick={() => handleDeleteImage(name)}
                               className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.iconOnlyBtn}`}
@@ -1439,7 +2831,7 @@ const Project = () => {
                               title={`Delete image ${name}`}
                             >
                               <FiTrash2 />
-                            </button>
+                            </button>}
                           </li>
                         ))}
                       </ul>
@@ -1460,7 +2852,7 @@ const Project = () => {
                 <div className={styles.divider} />
 
                 <div className={styles.memosWrap}>
-                  <Memos />
+                  <Memos canEdit={canEditProject} />
                 </div>
               </div>
             </aside>
@@ -1475,6 +2867,10 @@ const Project = () => {
                 </div>
               ) : (
                 <form>
+                  <fieldset
+                    disabled={!canEditProject}
+                    style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}
+                  >
                   {/* Description */}
                   <div className={styles.card}>
                     <div className={styles.cardHeader}>
@@ -2118,28 +3514,7 @@ const Project = () => {
                       </div>
                     </div>
                   </div>
-
-                  {/* Bottom actions */}
-                  <div className={styles.bottomActions}>
-                    <button
-                      type="button"
-                      onClick={handleSave}
-                      className={styles.saveButton}
-                      disabled={loading}
-                    >
-                      <FiSave />
-                      Save changes
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleDelete}
-                      className={styles.deleteButton}
-                      disabled={loading}
-                    >
-                      <FiTrash2 />
-                      Delete project
-                    </button>
-                  </div>
+                  </fieldset>
                 </form>
               )}
             </section>

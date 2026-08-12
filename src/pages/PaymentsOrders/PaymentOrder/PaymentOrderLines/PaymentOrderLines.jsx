@@ -77,6 +77,7 @@ const PaymentOrderLines = ({
   txOptions = [],
   orgOptions = [],
   costDetailOptions = [],
+  canManage = false,
 }) => {
   const token = useMemo(() => localStorage.getItem("authToken"), []);
   const authHeaders = useMemo(
@@ -255,7 +256,7 @@ const PaymentOrderLines = ({
   };
 
   const onAdd = async () => {
-    if (isLocked) return;
+    if (!canManage || isLocked) return;
 
     setFormError("");
     setFieldErrors({});
@@ -302,7 +303,7 @@ const PaymentOrderLines = ({
   };
 
   const onInlineSave = async (rowId, patch) => {
-    if (isLocked) return;
+    if (!canManage || isLocked) return;
 
     // clear only this row’s error
     setRowErrorsById((prev) => {
@@ -373,7 +374,7 @@ const PaymentOrderLines = ({
   };
 
   const onDelete = async (id) => {
-    if (isLocked) return;
+    if (!canManage || isLocked) return;
     if (!window.confirm("Delete this payment order line?")) return;
 
     setFormError("");
@@ -436,8 +437,9 @@ const PaymentOrderLines = ({
       )}
 
       {/* Add row */}
-      <div className={styles.addRow}>
-        <div className={styles.field}>
+      {canManage && (
+        <div className={styles.addRow}>
+          <div className={styles.field}>
           <label>Transaction override</label>
           <select
             value={draft.transactionId}
@@ -544,8 +546,9 @@ const PaymentOrderLines = ({
             <FiPlus />
             Add
           </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Table */}
       <div className={styles.table}>
@@ -570,7 +573,8 @@ const PaymentOrderLines = ({
               txOptions={txOptions}
               orgOptions={orgOptions}
               costDetailOptions={costDetailOptions}
-              locked={isLocked}
+              locked={isLocked || !canManage}
+              canManage={canManage}
               rowError={rowErrorsById[r.id] || null}
               clearRowError={() =>
                 setRowErrorsById((prev) => {
@@ -595,6 +599,7 @@ const LineRow = ({
   orgOptions,
   costDetailOptions,
   locked = false,
+  canManage = false,
   onSave,
   onDelete,
   rowError,
@@ -720,8 +725,9 @@ const LineRow = ({
         />
       </div>
 
-      <div className={styles.rowActions}>
-        <button
+      {canManage && (
+        <div className={styles.rowActions}>
+          <button
           className={styles.iconCircleBtn}
           disabled={locked}
           title={
@@ -738,9 +744,9 @@ const LineRow = ({
           }
         >
           <FiSave />
-        </button>
+          </button>
 
-        <button
+          <button
           className={styles.dangerIconBtn}
           disabled={locked}
           title={
@@ -749,8 +755,9 @@ const LineRow = ({
           onClick={onDelete}
         >
           <FiTrash2 />
-        </button>
-      </div>
+          </button>
+        </div>
+      )}
     </div>
   );
 };

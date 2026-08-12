@@ -1,0 +1,113 @@
+/* src/styles/_colors.scss */
+
+/*
+ * Sass aliases for the runtime CSS custom properties.
+ *
+ * This file intentionally contains no CSS selectors. That prevents
+ * theme declarations from being emitted repeatedly when page-level
+ * SCSS modules import this file.
+ *
+ * Example:
+ *
+ * @use "../../styles/colors" as colors;
+ *
+ * .title {
+ *   color: colors.$primary;
+ * }
+ *
+ * Do not pass these values to Sass functions such as lighten() or
+ * darken(). CSS custom properties are resolved by the browser.
+ */
+
+/* Brand */
+
+$primary: var(--color-primary);
+$primary-hover: var(--color-primary-hover);
+$primary-dark: var(--color-primary-dark);
+
+$primary-soft: var(--color-primary-soft);
+$primary-soft-hover: var(--color-primary-soft-hover);
+$primary-soft-active: var(--color-primary-soft-active);
+
+$primary-border: var(--color-primary-border);
+$primary-border-strong: var(--color-primary-border-strong);
+$primary-focus: var(--color-primary-focus);
+$primary-a04: var(--color-primary-a04);
+$primary-a06: var(--color-primary-a06);
+$primary-a08: var(--color-primary-a08);
+$primary-a12: var(--color-primary-a12);
+$primary-a25: var(--color-primary-a25);
+$primary-a35: var(--color-primary-a35);
+$primary-a45: var(--color-primary-a45);
+$primary-a60: var(--color-primary-a60);
+
+/* Text */
+
+$text: var(--color-text);
+$text-secondary: var(--color-text-secondary);
+$text-muted: var(--color-text-muted);
+$text-disabled: var(--color-text-disabled);
+$text-on-primary: var(--color-text-on-primary);
+$text-strong: var(--color-text-strong);
+$text-neutral: var(--color-text-neutral);
+
+/* Surfaces */
+
+$background: var(--color-background);
+$surface: var(--color-surface);
+$surface-secondary: var(--color-surface-secondary);
+$surface-muted: var(--color-surface-muted);
+$surface-hover: var(--color-surface-hover);
+$surface-striped: var(--color-surface-striped);
+$surface-tint: var(--color-surface-tint);
+
+/* Borders */
+
+$border: var(--color-border);
+$border-soft: var(--color-border-soft);
+$border-subtle: var(--color-border-subtle);
+$divider: var(--color-divider);
+$border-muted: var(--color-border-muted);
+$border-pale: var(--color-border-pale);
+$neutral-a04: var(--color-neutral-a04);
+$neutral-a07: var(--color-neutral-a07);
+$neutral-a08: var(--color-neutral-a08);
+$neutral-a10: var(--color-neutral-a10);
+$surface-a55: var(--color-surface-a55);
+$surface-a70: var(--color-surface-a70);
+$surface-a96: var(--color-surface-a96);
+
+/* Danger */
+
+$danger: var(--color-danger);
+$danger-dark: var(--color-danger-dark);
+$danger-text: var(--color-danger-text);
+$danger-soft: var(--color-danger-soft);
+$danger-border: var(--color-danger-border);
+$danger-focus: var(--color-danger-focus);
+$danger-soft-strong: var(--color-danger-soft-strong);
+$danger-border-strong: var(--color-danger-border-strong);
+$danger-soft-alt: var(--color-danger-soft-alt);
+
+/* Success */
+
+$success: var(--color-success);
+$success-dark: var(--color-success-dark);
+$success-soft: var(--color-success-soft);
+$success-border: var(--color-success-border);
+
+/* Warning */
+
+$warning: var(--color-warning);
+$warning-dark: var(--color-warning-dark);
+$warning-soft: var(--color-warning-soft);
+$warning-border: var(--color-warning-border);
+$warning-soft-alt: var(--color-warning-soft-alt);
+$warning-border-alt: var(--color-warning-border-alt);
+
+/* Shadows */
+
+$shadow-small: var(--shadow-small);
+$shadow-card: var(--shadow-card);
+$shadow-raised: var(--shadow-raised);
+$shadow-focus: var(--shadow-focus);

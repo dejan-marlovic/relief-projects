@@ -1,7 +1,7 @@
+@use "../../styles/colors" as colors;
 /* src/components/Transactions/Transactions.module.scss */
 @use "../../styles/forms" as forms;
 
-$primary: #4a90e2;
 
 /* Outer wrapper */
 .container {
@@ -12,10 +12,10 @@ $primary: #4a90e2;
 
 /* Card wrapper like Project */
 .card {
-  background: #fff;
+  background: colors.$surface;
   border-radius: 14px;
-  border: 1px solid rgba(74, 144, 226, 0.18);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+  border: 1px solid colors.$primary-focus;
+  box-shadow: 0 10px 24px colors.$border-subtle;
   padding: 1.25rem;
 }
 
@@ -26,7 +26,7 @@ $primary: #4a90e2;
   gap: 1rem;
   margin-bottom: 1rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid colors.$border-subtle;
 }
 
 .headerText {
@@ -38,14 +38,14 @@ $primary: #4a90e2;
 .cardTitle {
   margin: 0;
   font-size: 1.2rem;
-  color: $primary;
+  color: colors.$primary;
   font-weight: 700;
 }
 
 .cardMeta {
   margin: 0;
   font-size: 0.9rem;
-  color: #6b7280;
+  color: colors.$text-muted;
 }
 
 .headerActions {
@@ -62,7 +62,7 @@ $primary: #4a90e2;
   align-items: center;
   gap: 8px;
   font-size: 0.92rem;
-  color: #374151;
+  color: colors.$text-secondary;
 
   input {
     transform: translateY(1px);
@@ -74,7 +74,7 @@ $primary: #4a90e2;
 }
 
 .iconPillBtn {
-  @include forms.ghost-button($primary);
+  @include forms.ghost-button(colors.$primary);
   padding: 0.6rem 0.85rem;
   font-size: 0.92rem;
 }
@@ -83,11 +83,11 @@ $primary: #4a90e2;
   position: absolute;
   top: 46px;
   right: 0;
-  background: #fff;
-  border: 1px solid #e6e6e6;
+  background: colors.$surface;
+  border: 1px solid colors.$border-muted;
   border-radius: 12px;
   padding: 10px 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 30px colors.$neutral-a08;
   max-height: 320px;
   overflow: auto;
   z-index: 10;
@@ -100,12 +100,12 @@ $primary: #4a90e2;
   gap: 8px;
   padding: 4px 2px;
   white-space: nowrap;
-  color: #374151;
+  color: colors.$text-secondary;
 }
 
 .lockNote {
   font-style: normal;
-  color: #888;
+  color: colors.$text-muted;
   font-size: 0.85em;
 }
 
@@ -115,15 +115,53 @@ $primary: #4a90e2;
   padding: 0.7rem 1rem;
 }
 
+/* Excel export button */
+.exportInlineBtn {
+  background: colors.$surface;
+  color: #217346;
+  border: 1px solid rgba(33, 115, 70, 0.35);
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: rgba(33, 115, 70, 0.08);
+    border-color: rgba(33, 115, 70, 0.55);
+    box-shadow: 0 6px 14px colors.$neutral-a07;
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
 /* Error banner like Project */
 .errorBanner {
-  background-color: #ffe6e6;
-  color: #b00000;
+  background-color: colors.$danger-soft-strong;
+  color: colors.$danger-text;
   padding: 10px 14px;
   border-radius: 10px;
   margin: 0.75rem 0 1rem;
   font-size: 0.9rem;
-  border: 1px solid #ffb3b3;
+  border: 1px solid colors.$danger-border-strong;
   display: flex;
   gap: 8px;
   align-items: center;
@@ -135,15 +173,15 @@ $primary: #4a90e2;
   isolation: isolate;
   overflow: auto;
   max-height: 60vh;
-  border: 1px solid rgba(74, 144, 226, 0.14);
+  border: 1px solid colors.$primary-soft-active;
   border-radius: 14px;
-  background: #fff;
+  background: colors.$surface;
 
-  --tx-header-bg: #f6f7fb;
-  --tx-header-border: #e5e7eb;
+  --tx-header-bg: colors.$surface-tint;
+  --tx-header-border: colors.$border-muted;
 
-  /* ✅ widened Actions column so the trash icon never clips */
-  --tx-grid-cols: 140px;
+  /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ widened Actions column so the trash icon never clips */
+  --tx-grid-cols: 190px;
 }
 
 /* Compact */
@@ -175,7 +213,7 @@ $primary: #4a90e2;
   background: var(--tx-header-bg);
   border-bottom: 1px solid var(--tx-header-border);
   padding: 10px 12px;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 0 colors.$neutral-a04;
   font-weight: 700;
   font-size: 0.92rem;
 }
@@ -183,7 +221,7 @@ $primary: #4a90e2;
 .headerCell {
   padding-right: 4px;
   white-space: nowrap;
-  color: #30323a;
+  color: colors.$text-secondary;
   background: var(--tx-header-bg);
 }
 
@@ -193,9 +231,9 @@ $primary: #4a90e2;
   left: 0;
   z-index: 6;
   background: var(--tx-header-bg);
-  box-shadow: 2px 0 0 rgba(0, 0, 0, 0.04);
+  box-shadow: 2px 0 0 colors.$neutral-a04;
 
-  /* ✅ prevent edge clipping */
+  /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ prevent edge clipping */
   overflow: visible;
 }
 
@@ -212,5 +250,50 @@ $primary: #4a90e2;
 /* Empty */
 .noData {
   padding: 12px;
-  color: #666;
+  color: colors.$text-neutral;
+}
+
+.dangerInlineBtn {
+  @include forms.danger-button;
+  padding: 0.7rem 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.headerActionsCell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+
+  input {
+    transform: translateY(1px);
+  }
+}
+
+@media (max-width: 760px) {
+  .cardHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .headerActions {
+    justify-content: flex-start;
+  }
+
+  .headerActions > button,
+  .columnsBox {
+    flex: 1 1 auto;
+  }
+
+  .columnsBox > button {
+    width: 100%;
+    justify-content: center;
+  }
 }

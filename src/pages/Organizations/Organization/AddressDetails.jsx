@@ -31,7 +31,7 @@ const formatAddressLabel = (a) => {
   return parts.join(", ");
 };
 
-const AddressDetails = ({ organizationId }) => {
+const AddressDetails = ({ organizationId, canManage = false, canDelete = false }) => {
   const [org, setOrg] = useState(null); // OrganizationDTO
   const [address, setAddress] = useState(null); // AddressDTO
   const [addressOptions, setAddressOptions] = useState([]); // active addresses
@@ -114,6 +114,7 @@ const AddressDetails = ({ organizationId }) => {
   }, [organizationId]);
 
   const startEdit = () => {
+    if (!canManage) return;
     if (!address?.id) return;
     const id = address.id;
 
@@ -138,6 +139,7 @@ const AddressDetails = ({ organizationId }) => {
   };
 
   const startCreate = () => {
+    if (!canManage) return;
     setEditingId("new");
     setEditedValues((prev) => ({ ...prev, new: { ...blankAddress } }));
 
@@ -196,6 +198,7 @@ const AddressDetails = ({ organizationId }) => {
   };
 
   const save = async () => {
+    if (!canManage) return;
     const id = editingId;
     const values = editedValues[id];
     if (!values) return;
@@ -268,6 +271,7 @@ const AddressDetails = ({ organizationId }) => {
   };
 
   const remove = async () => {
+    if (!canDelete) return;
     if (!address?.id) return;
     if (
       !window.confirm(
@@ -298,6 +302,7 @@ const AddressDetails = ({ organizationId }) => {
   };
 
   const doSwitch = async () => {
+    if (!canManage) return;
     if (!switchToId) return;
     setFormError("");
     try {
@@ -333,7 +338,7 @@ const AddressDetails = ({ organizationId }) => {
           Address for organization #{organizationId}
         </div>
 
-        <div className={styles.headerRight}>
+        {canManage && <div className={styles.headerRight}>
           <select
             className={styles.select}
             value={switchToId}
@@ -371,7 +376,7 @@ const AddressDetails = ({ organizationId }) => {
           >
             <FiPlus /> New Address
           </button>
-        </div>
+        </div>}
       </div>
 
       {formError && <div className={styles.errorBanner}>{formError}</div>}
@@ -401,7 +406,7 @@ const AddressDetails = ({ organizationId }) => {
             <div className={`${styles.cell} ${styles.stickyCol}`}>
               {isEditingCurrent ? (
                 <div className={styles.actions}>
-                  <button
+                  {canManage && <button
                     type="button"
                     className={styles.iconCircleBtn}
                     onClick={save}
@@ -409,7 +414,7 @@ const AddressDetails = ({ organizationId }) => {
                     aria-label="Save"
                   >
                     <FiSave />
-                  </button>
+                  </button>}
                   <button
                     type="button"
                     className={styles.dangerIconBtn}
@@ -422,7 +427,7 @@ const AddressDetails = ({ organizationId }) => {
                 </div>
               ) : (
                 <div className={styles.actions}>
-                  <button
+                  {canManage && <button
                     type="button"
                     className={styles.iconCircleBtn}
                     onClick={startEdit}
@@ -431,8 +436,8 @@ const AddressDetails = ({ organizationId }) => {
                     disabled={editingId === "new"}
                   >
                     <FiEdit />
-                  </button>
-                  <button
+                  </button>}
+                  {canDelete && <button
                     type="button"
                     className={styles.dangerIconBtn}
                     onClick={remove}
@@ -441,7 +446,7 @@ const AddressDetails = ({ organizationId }) => {
                     disabled={editingId === "new"}
                   >
                     <FiTrash2 />
-                  </button>
+                  </button>}
                 </div>
               )}
             </div>

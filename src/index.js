@@ -19,56 +19,79 @@ import RegisterProject from "./pages/RegisterProject/RegisterProject";
 import Organizations from "./pages/Organizations/Organizations";
 import OperationalGuide from "./pages/OperationalGuide/OperationalGuide";
 import About from "./pages/About/About";
-import AdminPlaceholder from "./pages/Admin/AdminPlaceholder"; // ✅ NEW
 import Admin from "./pages/Admin/Admin";
+import RequireRole from "./utils/RequireRole";
 import NoPage from "./pages/NoPage/NoPage"; // Catch-all for undefined routes (404)
 
 // Import the context provider to share state across all components
 import { ProjectProvider } from "./context/ProjectContext";
+import { BrandingProvider } from "./context/BrandingContext";
+import { AuthProvider } from "./context/AuthContext";
+import { applyTheme, getStoredTheme } from "./utils/theme";
 
 import "./styles/global.scss";
+
+applyTheme(getStoredTheme());
 
 // ✅ Main App component: this sets up routing and wraps everything in context
 export default function App() {
   return (
-    <ProjectProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Public route: login is outside the main layout */}
-          <Route path="/login" element={<Login />} />
+    <BrandingProvider>
+      <ProjectProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              {/* Public route: login is outside the main layout */}
+              <Route path="/login" element={<Login />} />
 
-          {/* Main route with Layout wrapper */}
-          <Route path="/" element={<Layout />}>
-            {/* Default route */}
-            <Route index element={<Project />} />
+              {/* Main route with Layout wrapper */}
+              <Route path="/" element={<Layout />}>
+                {/* Default route */}
+                <Route index element={<Project />} />
 
-            {/* Other sections/tabs */}
-            <Route path="project" element={<Project />} />
-            <Route path="budgets" element={<Budgets />} />
-            <Route path="transactions" element={<Transactions />} />
-            <Route path="payments" element={<PaymentOrders />} />
-            <Route path="signatures" element={<Signatures />} />
-            <Route path="recipients" element={<Recipients />} />
-            <Route path="documents" element={<Documents />} />
-            <Route path="statistics" element={<Statistics />} />
-            <Route path="organizations" element={<Organizations />} />
-            <Route path="register-project" element={<RegisterProject />} />
+              {/* Other sections/tabs */}
+              <Route path="project" element={<Project />} />
+              <Route path="budgets" element={<Budgets />} />
+              <Route path="transactions" element={<Transactions />} />
+              <Route path="payments" element={<PaymentOrders />} />
+              <Route path="signatures" element={<Signatures />} />
+              <Route path="recipients" element={<Recipients />} />
+              <Route path="documents" element={<Documents />} />
+              <Route path="statistics" element={<Statistics />} />
+              <Route path="organizations" element={<Organizations />} />
+                <Route
+                  path="register-project"
+                  element={
+                    <RequireRole roles={["ADMIN", "PROJECT_MANAGER"]}>
+                      <RegisterProject />
+                    </RequireRole>
+                  }
+                />
 
-            {/* ✅ Operational Guide */}
-            <Route path="operational-guide" element={<OperationalGuide />} />
+              {/* ✅ Operational Guide */}
+              <Route path="operational-guide" element={<OperationalGuide />} />
 
-            {/* ✅ About */}
-            <Route path="about" element={<About />} />
+              {/* ✅ About */}
+              <Route path="about" element={<About />} />
 
-            {/* ✅ NEW: Admin placeholder */}
-            <Route path="admin" element={<Admin />} />
+              {/* ✅ NEW: Admin placeholder */}
+              <Route
+                path="admin"
+                element={
+                  <RequireRole role="ADMIN">
+                    <Admin />
+                  </RequireRole>
+                }
+              />
 
-            {/* Catch-all route */}
-            <Route path="*" element={<NoPage />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </ProjectProvider>
+                {/* Catch-all route */}
+                <Route path="*" element={<NoPage />} />
+              </Route>
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      </ProjectProvider>
+    </BrandingProvider>
   );
 }
 

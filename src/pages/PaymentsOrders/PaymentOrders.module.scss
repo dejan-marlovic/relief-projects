@@ -1,6 +1,6 @@
+@use "../../styles/colors" as colors;
 @use "../../styles/forms" as forms;
 
-$primary: #4a90e2;
 
 /* Page padding */
 .page {
@@ -11,10 +11,10 @@ $primary: #4a90e2;
 
 /* Card shell */
 .shell {
-  background: #fff;
+  background: colors.$surface;
   border-radius: 14px;
-  border: 1px solid rgba(74, 144, 226, 0.18);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+  border: 1px solid colors.$primary-focus;
+  box-shadow: 0 10px 24px colors.$border-subtle;
   padding: 1.25rem;
 }
 
@@ -26,7 +26,7 @@ $primary: #4a90e2;
   gap: 1rem;
   margin-bottom: 1rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid colors.$border-subtle;
 }
 
 .pageHeaderText {
@@ -38,14 +38,14 @@ $primary: #4a90e2;
 .pageTitle {
   margin: 0;
   font-size: 1.2rem;
-  color: $primary;
+  color: colors.$primary;
   font-weight: 700;
 }
 
 .pageSubtitle {
   margin: 0;
   font-size: 0.9rem;
-  color: #6b7280;
+  color: colors.$text-muted;
 }
 
 .headerActions {
@@ -56,14 +56,13 @@ $primary: #4a90e2;
   justify-content: flex-end;
 }
 
-/* Columns UI (✅ EXACT match to Transactions) */
+/* Columns UI (EXACT match to Transactions) */
 .columnsBox {
   position: relative;
 }
 
-/* ✅ This is the important fix */
 .iconPillBtn {
-  @include forms.ghost-button($primary);
+  @include forms.ghost-button(colors.$primary);
   padding: 0.6rem 0.85rem;
   font-size: 0.92rem;
 }
@@ -72,11 +71,11 @@ $primary: #4a90e2;
   position: absolute;
   top: 46px;
   right: 0;
-  background: #fff;
-  border: 1px solid #e6e6e6;
+  background: colors.$surface;
+  border: 1px solid colors.$border-muted;
   border-radius: 12px;
   padding: 10px 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 30px colors.$neutral-a08;
   max-height: 320px;
   overflow: auto;
   z-index: 10;
@@ -89,12 +88,12 @@ $primary: #4a90e2;
   gap: 8px;
   padding: 4px 2px;
   white-space: nowrap;
-  color: #374151;
+  color: colors.$text-secondary;
 }
 
 .lockNote {
   font-style: normal;
-  color: #888;
+  color: colors.$text-muted;
   font-size: 0.85em;
 }
 
@@ -104,16 +103,53 @@ $primary: #4a90e2;
   padding: 0.78rem 1rem;
 }
 
-/* Error (✅ make it match PaymentOrderLines banner) */
+/* Excel export button */
+.exportInlineBtn {
+  background: colors.$surface;
+  color: #217346;
+  border: 1px solid rgba(33, 115, 70, 0.35);
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: rgba(33, 115, 70, 0.08);
+    border-color: rgba(33, 115, 70, 0.55);
+    box-shadow: 0 6px 14px colors.$neutral-a07;
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+/* Error (make it match PaymentOrderLines banner) */
 .errorBanner {
-  background-color: #ffe6e6;
-  color: #b00000;
+  background-color: colors.$danger-soft-strong;
+  color: colors.$danger-text;
   padding: 10px 14px;
   border-radius: 10px;
   margin: 0.75rem 0;
   font-size: 0.9rem;
-  border: 1px solid #ffb3b3;
-
+  border: 1px solid colors.$danger-border-strong;
   display: flex;
   gap: 8px;
   align-items: center;
@@ -125,18 +161,15 @@ $primary: #4a90e2;
   isolation: isolate;
   overflow: auto;
   max-height: 60vh;
-  border: 1px solid rgba(74, 144, 226, 0.14);
+  border: 1px solid colors.$primary-soft-active;
   border-radius: 14px;
-  background: #fff;
+  background: colors.$surface;
 
-  --po-header-bg: #f6f7fb;
-  --po-header-border: #e5e7eb;
-
-  /* Default (overridden inline by --po-grid-cols) */
-  --po-grid-cols: 160px;
+  --po-header-bg: colors.$surface-tint;
+  --po-header-border: colors.$border-muted;
+  --po-grid-cols: 190px;
 }
 
-/* Grid row */
 .gridRow {
   display: grid;
   grid-template-columns: var(--po-grid-cols);
@@ -145,7 +178,6 @@ $primary: #4a90e2;
   min-width: 1000px;
 }
 
-/* Header row */
 .headerRow {
   position: sticky;
   top: 0;
@@ -153,7 +185,7 @@ $primary: #4a90e2;
   background: var(--po-header-bg);
   border-bottom: 1px solid var(--po-header-border);
   padding: 10px 12px;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 0 colors.$neutral-a04;
   font-weight: 700;
   font-size: 0.92rem;
 }
@@ -161,21 +193,19 @@ $primary: #4a90e2;
 .headerCell {
   padding-right: 4px;
   white-space: nowrap;
-  color: #30323a;
+  color: colors.$text-secondary;
   background: var(--po-header-bg);
 }
 
-/* Sticky header col */
 .stickyColHeader {
   position: sticky;
   left: 0;
   z-index: 6;
   background: var(--po-header-bg);
-  box-shadow: 2px 0 0 rgba(0, 0, 0, 0.04);
+  box-shadow: 2px 0 0 colors.$neutral-a04;
   overflow: visible;
 }
 
-/* Hidden col */
 .hiddenCol {
   width: 0 !important;
   padding: 0 !important;
@@ -185,18 +215,62 @@ $primary: #4a90e2;
   pointer-events: none;
 }
 
-/* Empty */
 .noData {
   padding: 12px;
-  color: #666;
+  color: colors.$text-neutral;
+}
+
+.dangerInlineBtn {
+  @include forms.danger-button;
+  padding: 0.7rem 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.headerActionsCell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+
+  input {
+    transform: translateY(1px);
+  }
 }
 
 /* Lines panel */
 .linesPanel {
   margin: 10px 12px 12px;
-  border: 1px solid rgba(74, 144, 226, 0.14);
+  border: 1px solid colors.$primary-soft-active;
   border-radius: 14px;
-  background: rgba(74, 144, 226, 0.04);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
+  background: colors.$primary-a04;
+  box-shadow: 0 6px 16px colors.$neutral-a04;
   padding: 10px 12px 12px;
+}
+
+@media (max-width: 760px) {
+  .pageHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .headerActions {
+    justify-content: flex-start;
+  }
+
+  .headerActions > button,
+  .columnsBox {
+    flex: 1 1 auto;
+  }
+
+  .columnsBox > button {
+    width: 100%;
+    justify-content: center;
+  }
 }

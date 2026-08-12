@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState, useContext } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ProjectContext } from "../../context/ProjectContext";
+import { useAuth } from "../../context/AuthContext";
 
 import Budget from "../Budgets/Budget/Budget";
 import CreateNewBudget from "../Budgets/CreateNewBudget/CreateNewBudget";
@@ -7,15 +8,23 @@ import CreateNewBudget from "../Budgets/CreateNewBudget/CreateNewBudget";
 import styles from "./Budgets.module.scss";
 import { FiPlus } from "react-icons/fi";
 
-import { BASE_URL } from "../../config/api"; // adjust path if needed
+import { BASE_URL } from "../../config/api";
 
 const Budgets = () => {
   const { selectedProjectId } = useContext(ProjectContext);
+  const { hasAnyRole } = useAuth();
+  const canEditBudgets = hasAnyRole("ADMIN", "FINANCE");
 
   const [budgets, setBudgets] = useState([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
 
-  // 🔄 Fetch: Budgets for selected project
+  /*
+   * Points to the wrapper around the create-budget form.
+   * We scroll to this element after React has rendered the form.
+   */
+  const createFormRef = useRef(null);
+
+  // Fetch budgets for the selected project.
   const fetchBudgets = async (projectId, token) => {
     try {
       const res = await fetch(`${BASE_URL}/api/budgets/project/${projectId}`, {
@@ -25,6 +34,10 @@ const Budgets = () => {
           "Content-Type": "application/json",
         },
       });
+
+      if (!res.ok) {
+        throw new Error(`Failed to fetch budgets. Status: ${res.status}`);
+      }
 
       const data = await res.json();
       setBudgets(Array.isArray(data) ? data : []);
@@ -36,9 +49,33 @@ const Budgets = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
-    if (selectedProjectId) fetchBudgets(selectedProjectId, token);
-    else setBudgets([]);
+
+    if (selectedProjectId) {
+      fetchBudgets(selectedProjectId, token);
+    } else {
+      setBudgets([]);
+      setShowCreateForm(false);
+    }
   }, [selectedProjectId]);
+
+  /*
+   * Opens the form and scrolls to it after React and the browser have completed
+   * the DOM update and layout.
+   */
+  const handleOpenCreateForm = () => {
+    if (!canEditBudgets) return;
+    setShowCreateForm(true);
+
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        createFormRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+          inline: "nearest",
+        });
+      });
+    });
+  };
 
   const handleNewBudget = (newBudget) => {
     setBudgets((prev) => [...prev, newBudget]);
@@ -46,18 +83,23 @@ const Budgets = () => {
 
   const handleBudgetUpdate = (updatedBudget) => {
     setBudgets((prevBudgets) =>
-      prevBudgets.map((b) => (b.id === updatedBudget.id ? updatedBudget : b))
+      prevBudgets.map((budget) =>
+        budget.id === updatedBudget.id ? updatedBudget : budget,
+      ),
     );
   };
 
   const handleBudgetDelete = (deletedBudgetId) => {
     setBudgets((prevBudgets) =>
-      prevBudgets.filter((b) => b.id !== deletedBudgetId)
+      prevBudgets.filter((budget) => budget.id !== deletedBudgetId),
     );
   };
 
   const subtitle = useMemo(() => {
-    if (!selectedProjectId) return "Select a project to see budgets";
+    if (!selectedProjectId) {
+      return "Select a project to see budgets";
+    }
+
     return `Project #${selectedProjectId} • ${budgets.length} budget${
       budgets.length === 1 ? "" : "s"
     }`;
@@ -66,38 +108,39 @@ const Budgets = () => {
   return (
     <div className={styles.page}>
       <div className={styles.shell}>
-        {/* Header (same feel as Signatures) */}
         <div className={styles.pageHeader}>
           <div className={styles.pageHeaderText}>
             <h3 className={styles.pageTitle}>Budgets</h3>
             <p className={styles.pageSubtitle}>{subtitle}</p>
           </div>
 
-          <div className={styles.headerActions}>
+          {canEditBudgets && <div className={styles.headerActions}>
             <button
               type="button"
               className={styles.primaryBtn}
-              onClick={() => setShowCreateForm(true)}
+              onClick={handleOpenCreateForm}
               disabled={!selectedProjectId || showCreateForm}
               title={
                 !selectedProjectId
                   ? "Select a project first"
                   : showCreateForm
-                  ? "Finish the current draft first"
-                  : "Create new budget"
+                    ? "Finish the current draft first"
+                    : "Create new budget"
               }
             >
               <FiPlus />
               New Budget
             </button>
-          </div>
+          </div>}
         </div>
 
-        {showCreateForm && (
-          <CreateNewBudget
-            onClose={() => setShowCreateForm(false)}
-            onBudgetCreated={handleNewBudget}
-          />
+        {canEditBudgets && showCreateForm && (
+          <div ref={createFormRef} className={styles.createFormSection}>
+            <CreateNewBudget
+              onClose={() => setShowCreateForm(false)}
+              onBudgetCreated={handleNewBudget}
+            />
+          </div>
         )}
 
         <div className={styles.budgetList}>

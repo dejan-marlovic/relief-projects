@@ -3,6 +3,7 @@ import CostDetail from "./CostDetail/CostDetail";
 import styles from "./CostDetails.module.scss";
 
 import { BASE_URL } from "../../../../config/api"; // adjust path if needed
+import { useAuth } from "../../../../context/AuthContext";
 
 const blankCostDetail = {
   costDescription: "",
@@ -32,6 +33,9 @@ const isValidNew = (v) =>
   v.amountEuro !== "";
 
 const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
+  const { hasAnyRole } = useAuth();
+  const canEditCostDetails = hasAnyRole("ADMIN", "FINANCE");
+  const canDeleteCostDetails = canEditCostDetails;
   const [costTypes, setCostTypes] = useState([]);
   const [costs, setCosts] = useState([]);
   const [costDetails, setCostDetails] = useState([]);
@@ -225,6 +229,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
   }, [fetchCostDetails, recalcAllForBudget, refreshTrigger, budget]);
 
   const handleEdit = (cost) => {
+    if (!canEditCostDetails) return;
     setEditingId(cost.costDetailId);
     setEditedValues((prev) => ({
       ...prev,
@@ -244,6 +249,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
   };
 
   const handleCreate = () => {
+    if (!canEditCostDetails) return;
     setEditingId("new");
     setEditedValues((prev) => ({
       ...prev,
@@ -288,6 +294,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
   };
 
   const handleSave = async (costId) => {
+    if (!canEditCostDetails) return;
     const isCreate = costId === "new";
     const values = editedValues[costId];
     if (!values) return;
@@ -410,6 +417,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
   };
 
   const handleDelete = async (costId) => {
+    if (!canDeleteCostDetails) return;
     if (!window.confirm("Are you sure you want to delete this cost detail?"))
       return;
 
@@ -514,6 +522,8 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
                           onSave={() => handleSave(cost.costDetailId)}
                           onCancel={handleCancel}
                           onDelete={handleDelete}
+                          canEdit={canEditCostDetails}
+                          canDelete={canDeleteCostDetails}
                         />
                       ))}
 
@@ -532,7 +542,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
       )}
 
       {/* --- CREATE ROW placed ABOVE the button --- */}
-      {editingId === "new" && (
+      {canEditCostDetails && editingId === "new" && (
         <CostDetail
           cost={{ costDetailId: "new", ...blankCostDetail }}
           isEditing
@@ -544,11 +554,13 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
           onCancel={handleCancel}
           onEdit={() => {}}
           onDelete={() => {}}
+          canEdit={canEditCostDetails}
+          canDelete={canDeleteCostDetails}
         />
       )}
 
       {/* Add New button stays visible below; disabled while create row is open */}
-      <div className={styles.createBar}>
+      {canEditCostDetails && <div className={styles.createBar}>
         <button
           className={styles.addBtn}
           onClick={handleCreate}
@@ -556,7 +568,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
         >
           + New Cost Detail
         </button>
-      </div>
+      </div>}
     </div>
   );
 };

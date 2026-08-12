@@ -31,6 +31,12 @@ const Organization = ({
   visibleCols = [],
   isEven = false,
   fieldErrors = {},
+  canManage = false,
+  canManageAddresses = false,
+  canDeleteAddresses = false,
+  canViewBankDetails = false,
+  canManageBankDetails = false,
+  canDeleteBankDetails = false,
 }) => {
   const ev = editedValues || {};
   const isCreate = (link?.id ?? "") === "new";
@@ -116,7 +122,7 @@ const Organization = ({
         <Cell className={`${styles.stickyCol} ${styles.actionsCol} ${hc(0)}`}>
           {isEditing ? (
             <div className={styles.actions}>
-              <button
+              {canManage && <button
                 type="button"
                 className={styles.iconCircleBtn}
                 onClick={submit}
@@ -124,7 +130,8 @@ const Organization = ({
                 aria-label="Save"
               >
                 <FiSave />
-              </button>
+              </button>}
+
               <button
                 type="button"
                 className={styles.dangerIconBtn}
@@ -137,7 +144,7 @@ const Organization = ({
             </div>
           ) : (
             <div className={styles.actions}>
-              <button
+              {canManage && <button
                 type="button"
                 className={styles.iconCircleBtn}
                 onClick={(e) => {
@@ -149,21 +156,23 @@ const Organization = ({
                 aria-label="Edit"
               >
                 <FiEdit />
-              </button>
+              </button>}
 
-              <button
-                type="button"
-                className={styles.dangerIconBtn}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onDelete(link.id);
-                }}
-                title="Delete"
-                aria-label="Delete"
-              >
-                <FiTrash2 />
-              </button>
+              {!isCreate && canManage && (
+                <button
+                  type="button"
+                  className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.iconOnlyBtn}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onDelete(link.id);
+                  }}
+                  title="Delete"
+                  aria-label="Delete organization relation"
+                >
+                  <FiTrash2 />
+                </button>
+              )}
 
               {/* toggle address details */}
               {link.organizationId && (
@@ -193,7 +202,7 @@ const Organization = ({
               )}
 
               {/* toggle bank details */}
-              {link.organizationId && (
+              {link.organizationId && canViewBankDetails && (
                 <button
                   type="button"
                   className={`${styles.iconCircleBtn} ${
@@ -232,14 +241,22 @@ const Organization = ({
       {/* Inline address details panel */}
       {showAddressDetails && link.organizationId && (
         <div className={styles.detailsWrapperRow}>
-          <AddressDetails organizationId={link.organizationId} />
+          <AddressDetails
+            organizationId={link.organizationId}
+            canManage={canManageAddresses}
+            canDelete={canDeleteAddresses}
+          />
         </div>
       )}
 
       {/* Inline bank details panel */}
       {showBankDetails && link.organizationId && (
         <div className={styles.detailsWrapperRow}>
-          <BankDetails organizationId={link.organizationId} />
+          <BankDetails
+            organizationId={link.organizationId}
+            canManage={canManageBankDetails}
+            canDelete={canDeleteBankDetails}
+          />
         </div>
       )}
     </>

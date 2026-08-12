@@ -1,15 +1,14 @@
+@use "../../../../styles/colors" as colors;
 @use "../../../../styles/forms" as forms;
 
-$primary: #4a90e2;
-$danger: #e74c3c;
 
 .wrap {
-  border: 1px solid rgba(74, 144, 226, 0.14);
+  border: 1px solid colors.$primary-soft-active;
   border-radius: 14px;
   padding: 12px;
   margin: 10px 0 0 0;
-  background: #fff;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+  background: colors.$surface;
+  box-shadow: colors.$shadow-card;
 }
 
 .header {
@@ -22,24 +21,73 @@ $danger: #e74c3c;
 
 .title {
   font-weight: 700;
-  color: #1f2937;
+  color: colors.$text-strong;
 }
 
 .sub {
   font-size: 12px;
-  color: #6b7280;
+  color: colors.$text-muted;
   margin-top: 2px;
+}
+
+/* Allocation summary and progress */
+.allocationProgressWrap {
+  margin-top: 8px;
+  width: min(440px, 100%);
+}
+
+.allocationTextOver {
+  color: colors.$danger-dark;
+  font-weight: 600;
+}
+
+.progressMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-top: 7px;
+  margin-bottom: 4px;
+  font-size: 11px;
+  color: colors.$text-muted;
+
+  strong {
+    color: colors.$text-secondary;
+    font-size: 11px;
+  }
+}
+
+.progressTrack {
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: colors.$border-muted;
+  box-shadow: inset 0 1px 2px colors.$neutral-a08;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: inherit;
+  background: colors.$primary;
+  transition:
+    width 0.3s ease,
+    background-color 0.2s ease;
+}
+
+.progressFillOver {
+  background: colors.$danger;
 }
 
 /* Error banner like Project */
 .errorBanner {
-  background-color: #ffe6e6;
-  color: #b00000;
+  background-color: colors.$danger-soft-strong;
+  color: colors.$danger-text;
   padding: 10px 14px;
   border-radius: 10px;
   margin: 0.75rem 0;
   font-size: 0.9rem;
-  border: 1px solid #ffb3b3;
+  border: 1px solid colors.$danger-border-strong;
   display: flex;
   gap: 8px;
   align-items: center;
@@ -47,7 +95,7 @@ $danger: #e74c3c;
 
 /* Buttons */
 .iconPillBtn {
-  @include forms.ghost-button($primary);
+  @include forms.ghost-button(colors.$primary);
   padding: 0.6rem 0.85rem;
   font-size: 0.92rem;
 }
@@ -59,10 +107,10 @@ $danger: #e74c3c;
 
 /* Add card */
 .addCard {
-  border: 1px dashed rgba(74, 144, 226, 0.35);
+  border: 1px dashed colors.$primary-a35;
   border-radius: 14px;
   padding: 12px;
-  background: rgba(74, 144, 226, 0.06);
+  background: colors.$primary-a06;
   margin-bottom: 12px;
 }
 
@@ -119,19 +167,19 @@ $danger: #e74c3c;
 
 .thead {
   font-size: 12px;
-  color: #6b7280;
+  color: colors.$text-muted;
   padding: 6px 8px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid colors.$border-subtle;
 }
 
 .trow {
   padding: 10px 8px;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  border-top: 1px solid colors.$border-subtle;
 }
 
 .cdLabel {
   font-weight: 600;
-  color: #1f2937;
+  color: colors.$text-strong;
 }
 
 .rowActions {
@@ -145,17 +193,19 @@ $danger: #e74c3c;
   border-radius: 999px;
   width: 34px;
   height: 34px;
-  border: 1px solid rgba(74, 144, 226, 0.25);
+  border: 1px solid colors.$primary-a25;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  background: #fff;
-  transition: transform 0.12s ease, box-shadow 0.2s ease;
-  color: #1f2937;
+  background: colors.$surface;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.2s ease;
+  color: colors.$text-strong;
 
   &:hover {
-    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 8px 18px colors.$neutral-a08;
     transform: translateY(-1px);
   }
 
@@ -170,8 +220,8 @@ $danger: #e74c3c;
 
 .dangerIconBtn {
   border: none;
-  background: $danger;
-  color: #fff;
+  background: colors.$danger;
+  color: colors.$surface;
   border-radius: 10px;
   padding: 0.45rem 0.55rem;
   cursor: pointer;
@@ -190,21 +240,21 @@ $danger: #e74c3c;
 
 .fieldError {
   font-size: 12px;
-  color: #b00020;
+  color: colors.$danger-dark;
   margin-top: 4px;
 }
 
 .empty {
   padding: 10px;
-  color: #6b7280;
+  color: colors.$text-muted;
 }
 
 .rowError {
   margin-top: 6px;
   font-size: 0.85rem;
-  color: #b00000;
+  color: colors.$danger-text;
 }
 
 .inputError {
-  border-color: #b00020 !important;
+  border-color: colors.$danger-dark !important;
 }
