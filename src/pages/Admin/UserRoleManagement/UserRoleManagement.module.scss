@@ -1,0 +1,101 @@
+@use "../../../styles/colors" as colors;
+@use "../../../styles/forms" as forms;
+
+.panel {
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid colors.$primary-focus;
+  border-radius: 14px;
+  background: colors.$surface;
+  box-shadow: 0 10px 24px colors.$border-subtle;
+}
+
+.panelHeader,
+.matrixHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+
+  h3 { margin: 0; color: colors.$primary; display: flex; align-items: center; gap: 0.5rem; }
+  p { margin: 0.35rem 0 0; color: colors.$text-muted; }
+}
+
+.panelHeader button,
+.rowActions button {
+  @include forms.primary-button;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.errorBanner,
+.successBanner {
+  margin-top: 1rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 10px;
+  font-weight: 600;
+}
+.errorBanner { color: colors.$danger-text; background: colors.$danger-soft; border: 1px solid colors.$danger-border; }
+.successBanner { color: colors.$primary; background: colors.$primary-a08; border: 1px solid colors.$primary-a25; }
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(110px, 1fr));
+  gap: 0.65rem;
+  margin: 1rem 0;
+}
+.summaryCard {
+  padding: 0.75rem;
+  border: 1px solid colors.$primary-focus;
+  border-radius: 10px;
+  background: colors.$primary-a04;
+  strong { display: block; color: colors.$primary; font-size: 1.25rem; }
+  span { color: colors.$text-muted; font-size: 0.8rem; }
+}
+
+.roleGuide {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(180px, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+  article { padding: 0.75rem; border: 1px solid colors.$border-subtle; border-radius: 10px; }
+  article > div { display: flex; align-items: center; gap: 0.4rem; color: colors.$text-strong; }
+  p { margin: 0.4rem 0 0; color: colors.$text-muted; font-size: 0.82rem; line-height: 1.4; }
+}
+
+.tableScroll { overflow-x: auto; border: 1px solid colors.$border-subtle; border-radius: 10px; }
+.userTable,
+.matrixTable {
+  width: 100%;
+  border-collapse: collapse;
+  background: colors.$surface;
+  th, td { padding: 0.7rem; border-bottom: 1px solid colors.$border-subtle; text-align: center; }
+  th { background: colors.$primary-a08; color: colors.$text-strong; font-size: 0.8rem; white-space: nowrap; }
+  td:first-child, th:first-child { text-align: left; }
+  tbody tr:last-child td { border-bottom: 0; }
+}
+.userTable td:first-child {
+  min-width: 210px;
+  strong, span { display: block; }
+  span { margin-top: 0.2rem; color: colors.$text-muted; font-size: 0.8rem; }
+}
+.userTable input[type="checkbox"] { width: 18px; height: 18px; accent-color: colors.$primary; cursor: pointer; }
+.dirtyRow { background: colors.$primary-a04; }
+.rowActions { display: flex; gap: 0.45rem; justify-content: flex-end; }
+.rowActions .resetButton { @include forms.ghost-button(colors.$primary); }
+.safetyNote { color: colors.$text-muted; font-size: 0.85rem; line-height: 1.45; }
+.matrixHeader { margin: 1.5rem 0 0.75rem; }
+.matrixTable td { min-width: 120px; font-size: 0.84rem; }
+.matrixTable td:first-child { min-width: 220px; font-weight: 600; color: colors.$text-strong; }
+
+@media (max-width: 1200px) {
+  .summaryGrid { grid-template-columns: repeat(3, minmax(120px, 1fr)); }
+  .roleGuide { grid-template-columns: repeat(2, minmax(220px, 1fr)); }
+}
+
+@media (max-width: 700px) {
+  .panelHeader { flex-direction: column; }
+  .summaryGrid, .roleGuide { grid-template-columns: 1fr; }
+}

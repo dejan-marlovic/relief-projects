@@ -99,6 +99,7 @@ import RestoreBankDetail from "../Admin/RestoreBankDetail/RestoreBankDetail";
 import RestoreTransaction from "../Admin/RestoreTransaction/RestoreTransaction";
 import RestorePaymentOrder from "../Admin/RestorePaymentOrder/RestorePaymentOrder";
 import RestoreEmployee from "../Admin/RestoreEmployee/RestoreEmployee";
+import UserRoleManagement from "./UserRoleManagement/UserRoleManagement";
 
 import RegisterProject from "../RegisterProject/RegisterProject";
 import LogoSettings from "./LogoSettings/LogoSettings";
@@ -620,6 +621,14 @@ const Admin = () => {
         <ThemeSettings />
 
         <LogoSettings />
+      </section>
+
+      <section
+        className={styles.content}
+        aria-labelledby="user-access-heading"
+      >
+        <h2 id="user-access-heading">User access</h2>
+        <UserRoleManagement />
       </section>
 
       <section
