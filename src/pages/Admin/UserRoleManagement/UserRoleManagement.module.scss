@@ -85,6 +85,15 @@
 .dirtyRow { background: colors.$primary-a04; }
 .rowActions { display: flex; gap: 0.45rem; justify-content: flex-end; }
 .rowActions .resetButton { @include forms.ghost-button(colors.$primary); }
+.rowError {
+  display: block;
+  margin-top: 0.4rem;
+  color: colors.$danger-text;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+}
 .safetyNote { color: colors.$text-muted; font-size: 0.85rem; line-height: 1.45; }
 .matrixHeader { margin: 1.5rem 0 0.75rem; }
 .matrixTable td { min-width: 120px; font-size: 0.84rem; }

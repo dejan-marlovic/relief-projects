@@ -65,6 +65,7 @@ const UserRoleManagement = () => {
   const [draftRoles, setDraftRoles] = useState({});
   const [loading, setLoading] = useState(true);
   const [savingUserId, setSavingUserId] = useState(null);
+  const [roleErrorUserId, setRoleErrorUserId] = useState(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -141,6 +142,7 @@ const UserRoleManagement = () => {
   const toggleRole = (userId, roleName) => {
     setError("");
     setSuccess("");
+    setRoleErrorUserId(null);
     setDraftRoles((current) => {
       const next = new Set(current[userId] || []);
       if (next.has(roleName)) next.delete(roleName);
@@ -156,18 +158,21 @@ const UserRoleManagement = () => {
     }));
     setError("");
     setSuccess("");
+    setRoleErrorUserId(null);
   };
 
   const saveUser = async (user) => {
     const nextRoles = sortRoles(draftRoles[user.id]);
     if (nextRoles.length === 0) {
       setError(`At least one role is required for ${user.username}.`);
+      setRoleErrorUserId(user.id);
       return;
     }
 
     setSavingUserId(user.id);
     setError("");
     setSuccess("");
+    setRoleErrorUserId(null);
 
     try {
       const response = await authFetch(
@@ -278,6 +283,11 @@ const UserRoleManagement = () => {
                         Reset
                       </button>
                     </div>
+                    {roleErrorUserId === user.id && (
+                      <span className={styles.rowError} role="alert">
+                        Select at least one role.
+                      </span>
+                    )}
                   </td>
                 </tr>
               );
