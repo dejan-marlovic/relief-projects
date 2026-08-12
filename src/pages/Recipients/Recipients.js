@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import ExcelJS from "exceljs";
 import { ProjectContext } from "../../context/ProjectContext";
+import { useAuth } from "../../context/AuthContext";
 import RecipientRow from "./Recipient/Recipient";
 import styles from "./Recipients.module.scss";
 import { FiColumns, FiPlus, FiTrash2, FiDownload } from "react-icons/fi";
@@ -80,6 +81,9 @@ function normalizeRecipient(r) {
 
 function Recipients() {
   const { selectedProjectId } = useContext(ProjectContext);
+  const { hasRole, hasAnyRole } = useAuth();
+  const canManageRecipients = hasAnyRole("ADMIN", "FINANCE");
+  const canBulkDeleteRecipients = hasRole("ADMIN");
 
   const [items, setItems] = useState([]);
   const [editingId, setEditingId] = useState(null);
@@ -298,6 +302,7 @@ function Recipients() {
   };
 
   const startEdit = (row) => {
+    if (!canManageRecipients) return;
     setEditingId(row?.id ?? null);
     setEditedValues((prev) => ({
       ...prev,
@@ -318,6 +323,7 @@ function Recipients() {
   };
 
   const startCreate = () => {
+    if (!canManageRecipients) return;
     setEditingId("new");
     setEditedValues((prev) => ({ ...prev, new: { ...blankRecipient } }));
 
@@ -363,6 +369,7 @@ function Recipients() {
   };
 
   const save = async () => {
+    if (!canManageRecipients) return;
     const id = editingId;
     const v = editedValues[id];
     if (!v) return;
@@ -447,6 +454,7 @@ function Recipients() {
   };
 
   const remove = async (id) => {
+    if (!canManageRecipients) return;
     if (!id) return;
     if (!window.confirm("Delete this recipient?")) return;
 
@@ -522,6 +530,7 @@ function Recipients() {
   };
 
   const removeSelected = async () => {
+    if (!canBulkDeleteRecipients) return;
     const ids = [...selectedRecipientIds];
 
     if (ids.length === 0) return;
@@ -1002,17 +1011,21 @@ function Recipients() {
                   }`}
             </button>
 
-            <button
-              type="button"
-              className={styles.dangerInlineBtn}
-              onClick={removeSelected}
-              disabled={selectedRecipientCount === 0 || exportingSelected}
-              title="Delete selected recipients"
-            >
-              <FiTrash2 />
-              Delete selected{" "}
-              {selectedRecipientCount > 0 ? `(${selectedRecipientCount})` : ""}
-            </button>
+            {canBulkDeleteRecipients && (
+              <button
+                type="button"
+                className={styles.dangerInlineBtn}
+                onClick={removeSelected}
+                disabled={selectedRecipientCount === 0 || exportingSelected}
+                title="Delete selected recipients"
+              >
+                <FiTrash2 />
+                Delete selected{" "}
+                {selectedRecipientCount > 0
+                  ? `(${selectedRecipientCount})`
+                  : ""}
+              </button>
+            )}
 
             <div className={styles.columnsBox}>
               <button
@@ -1045,24 +1058,26 @@ function Recipients() {
               )}
             </div>
 
-            <button
-              className={styles.primaryBtn}
-              onClick={startCreate}
-              disabled={
-                !selectedProjectId || editingId === "new" || exportingSelected
-              }
-              title={
-                !selectedProjectId
-                  ? "Select a project first"
-                  : editingId === "new"
-                    ? "Finish the current draft first"
-                    : "Create new recipient"
-              }
-              type="button"
-            >
-              <FiPlus />
-              New
-            </button>
+            {canManageRecipients && (
+              <button
+                className={styles.primaryBtn}
+                onClick={startCreate}
+                disabled={
+                  !selectedProjectId || editingId === "new" || exportingSelected
+                }
+                title={
+                  !selectedProjectId
+                    ? "Select a project first"
+                    : editingId === "new"
+                      ? "Finish the current draft first"
+                      : "Create new recipient"
+                }
+                type="button"
+              >
+                <FiPlus />
+                New
+              </button>
+            )}
           </div>
         </div>
         {/*If lockedBanner is a non-empty string, the <div> is rendered.*/}
@@ -1126,6 +1141,7 @@ function Recipients() {
                 orgOptions={orgOptions}
                 visibleCols={visibleCols}
                 fieldErrors={fieldErrors[r.id] || {}}
+                canManage={canManageRecipients}
               />
             ))
           )}
@@ -1154,6 +1170,7 @@ function Recipients() {
               fieldErrors={fieldErrors.new || {}}
               rowRef={newRowRef}
               locked={false}
+              canManage={canManageRecipients}
             />
           )}
         </div>

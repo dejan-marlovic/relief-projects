@@ -26,6 +26,7 @@ const RecipientRow = ({
   isEven = false,
   fieldErrors = {},
   rowRef = null,
+  canManage = false,
 }) => {
   const ev = editedValues || {};
   const isCreate = (row?.id ?? "") === "new";
@@ -185,22 +186,24 @@ const RecipientRow = ({
               />
             )}
 
-            <button
-              type="button"
-              className={styles.iconCircleBtn}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onEdit();
-              }}
-              title={locked ? lockedTitle : "Edit"}
-              aria-label="Edit"
-              disabled={locked}
-            >
-              <FiEdit />
-            </button>
+            {canManage && (
+              <button
+                type="button"
+                className={styles.iconCircleBtn}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onEdit();
+                }}
+                title={locked ? lockedTitle : "Edit"}
+                aria-label="Edit"
+                disabled={locked}
+              >
+                <FiEdit />
+              </button>
+            )}
 
-            {!isCreate && (
+            {!isCreate && canManage && (
               <button
                 type="button"
                 className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.iconOnlyBtn}`}
