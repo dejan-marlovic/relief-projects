@@ -14,6 +14,9 @@ import styles from "./Signatures.module.scss";
 import { FiPlus, FiColumns, FiTrash2, FiDownload } from "react-icons/fi";
 import SortableHeader from "../../components/SortableHeader/SortableHeader";
 import { sortRows, toSortableDate, toSortableNumber } from "../../utils/tableSorting";
+import { matchesDateRange, matchesNumberRange, matchesSelect, matchesText } from "../../utils/tableSorting";
+import ColumnFilter from "../../components/ColumnFilter/ColumnFilter";
+import ClearFiltersButton from "../../components/ClearFiltersButton/ClearFiltersButton";
 
 import { BASE_URL } from "../../config/api"; // adjust path if needed
 
@@ -106,6 +109,9 @@ function Signatures() {
 
   const [exportingSelected, setExportingSelected] = useState(false);
   const [sortConfig, setSortConfig] = useState(null);
+  const emptyFilters = () => ({status:"",employee:"",paymentOrderId:{min:"",max:""},signature:"",date:{from:"",to:""}});
+  const [filters, setFilters] = useState(emptyFilters);
+  const hasActiveFilters = JSON.stringify(filters) !== JSON.stringify(emptyFilters());
 
   // dropdown data
   const [poOptions, setPoOptions] = useState([]);
@@ -995,8 +1001,13 @@ function Signatures() {
     () => new Map(employeeOptions.map((employee) => [String(employee.id), employee.label])),
     [employeeOptions],
   );
+  useEffect(() => setFilters(emptyFilters()), [selectedProjectId]);
+  const filteredItems = useMemo(() => items.filter((s) =>
+    matchesSelect(s.signatureStatusId, filters.status) && matchesText(employeeNames.get(String(s.employeeId)), filters.employee) &&
+    matchesNumberRange(s.paymentOrderId, filters.paymentOrderId) && matchesText(s.signature, filters.signature) && matchesDateRange(s.signatureDate, filters.date)
+  ), [employeeNames, filters, items]);
   const displayedItems = useMemo(() => {
-    if (!sortConfig) return items;
+    if (!sortConfig) return filteredItems;
     const getters = {
       status: (s) => s?.signatureStatusId == null ? null : statusNames.get(String(s.signatureStatusId)) || `Status ${s.signatureStatusId}`,
       employee: (s) => s?.employeeId == null ? null : employeeNames.get(String(s.employeeId)) || `Employee ${s.employeeId}`,
@@ -1004,8 +1015,8 @@ function Signatures() {
       signature: (s) => s?.signature || null,
       date: (s) => toSortableDate(s?.signatureDate),
     };
-    return sortRows(items, getters[sortConfig.key], sortConfig.direction);
-  }, [employeeNames, items, sortConfig, statusNames]);
+    return sortRows(filteredItems, getters[sortConfig.key], sortConfig.direction);
+  }, [employeeNames, filteredItems, sortConfig, statusNames]);
   const toggleSort = (key) => setSortConfig((current) => ({ key, direction: current?.key === key && current.direction === "asc" ? "desc" : "asc" }));
 
   const selectableSignatures = useMemo(
@@ -1042,6 +1053,7 @@ function Signatures() {
           </div>
 
           <div className={styles.headerActions}>
+            {hasActiveFilters && <ClearFiltersButton onClick={() => setFilters(emptyFilters())} />}
             <button
               type="button"
               className={styles.exportInlineBtn}
@@ -1152,7 +1164,7 @@ function Signatures() {
                     <span>{h}</span>
                   </div>
                 ) : (
-                  <SortableHeader label={h} sortKey={HEADER_SORT_KEYS[i]} sortConfig={sortConfig} onSort={toggleSort} />
+                  <div className={styles.sortAndFilterHeader}><SortableHeader label={h} sortKey={HEADER_SORT_KEYS[i]} sortConfig={sortConfig} onSort={toggleSort} /><ColumnFilter label={h} type={HEADER_SORT_KEYS[i] === "status" ? "select" : HEADER_SORT_KEYS[i] === "paymentOrderId" ? "number" : HEADER_SORT_KEYS[i] === "date" ? "date" : "text"} value={filters[HEADER_SORT_KEYS[i]]} options={HEADER_SORT_KEYS[i] === "status" ? statusOptions.map((s)=>({value:s.id,label:s.label})) : []} onApply={(v)=>setFilters((c)=>({...c,[HEADER_SORT_KEYS[i]]:v}))} onClear={()=>setFilters((c)=>({...c,[HEADER_SORT_KEYS[i]]:emptyFilters()[HEADER_SORT_KEYS[i]]}))} /></div>
                 )}
               </div>
             ))}

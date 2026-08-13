@@ -12,6 +12,9 @@ import styles from "./Organizations.module.scss";
 import { FiColumns, FiPlus } from "react-icons/fi";
 import SortableHeader from "../../components/SortableHeader/SortableHeader";
 import { sortRows } from "../../utils/tableSorting";
+import { matchesSelect, matchesText } from "../../utils/tableSorting";
+import ColumnFilter from "../../components/ColumnFilter/ColumnFilter";
+import ClearFiltersButton from "../../components/ClearFiltersButton/ClearFiltersButton";
 
 import { BASE_URL } from "../../config/api"; // adjust path if needed
 
@@ -67,6 +70,9 @@ const Organizations = () => {
     Array(headerLabels.length).fill(true)
   );
   const [sortConfig, setSortConfig] = useState(null);
+  const emptyFilters = () => ({organization:"",status:""});
+  const [filters, setFilters] = useState(emptyFilters);
+  const hasActiveFilters = JSON.stringify(filters) !== JSON.stringify(emptyFilters());
 
   // errors
   const [formError, setFormError] = useState("");
@@ -339,14 +345,19 @@ const Organizations = () => {
 
   const organizationNames = useMemo(() => new Map(orgOptions.map((o) => [String(o.id), o.name])), [orgOptions]);
   const statusNames = useMemo(() => new Map(statusOptions.map((s) => [String(s.id), s.organizationStatusName])), [statusOptions]);
+  useEffect(() => setFilters(emptyFilters()), [selectedProjectId]);
+  const filteredLinks = useMemo(() => links.filter((link) =>
+    matchesText(organizationNames.get(String(link.organizationId)), filters.organization) &&
+    matchesSelect(link.organizationStatusId, filters.status)
+  ), [filters, links, organizationNames]);
   const displayedLinks = useMemo(() => {
-    if (!sortConfig) return links;
+    if (!sortConfig) return filteredLinks;
     const getters = {
       organization: (link) => link?.organizationId == null ? null : organizationNames.get(String(link.organizationId)) || `Organization ${link.organizationId}`,
       status: (link) => link?.organizationStatusId == null ? null : statusNames.get(String(link.organizationStatusId)) || `Status ${link.organizationStatusId}`,
     };
-    return sortRows(links, getters[sortConfig.key], sortConfig.direction);
-  }, [links, organizationNames, sortConfig, statusNames]);
+    return sortRows(filteredLinks, getters[sortConfig.key], sortConfig.direction);
+  }, [filteredLinks, organizationNames, sortConfig, statusNames]);
   const toggleSort = (key) => setSortConfig((current) => ({ key, direction: current?.key === key && current.direction === "asc" ? "desc" : "asc" }));
 
   const totalCount = links.length;
@@ -367,6 +378,7 @@ const Organizations = () => {
           </div>
 
           <div className={styles.headerActions}>
+            {hasActiveFilters && <ClearFiltersButton onClick={() => setFilters(emptyFilters())} />}
             <div className={styles.columnsBox}>
               <button
                 className={styles.columnsBtn}
@@ -428,7 +440,7 @@ const Organizations = () => {
                   ${i === 0 ? styles.stickyColHeader : ""}
                   ${!visibleCols[i] ? styles.hiddenCol : ""}`}
               >
-                {i === 0 ? h : <SortableHeader label={h} sortKey={HEADER_SORT_KEYS[i]} sortConfig={sortConfig} onSort={toggleSort} />}
+                {i === 0 ? h : <div className={styles.sortAndFilterHeader}><SortableHeader label={h} sortKey={HEADER_SORT_KEYS[i]} sortConfig={sortConfig} onSort={toggleSort} /><ColumnFilter label={h} type={HEADER_SORT_KEYS[i] === "status" ? "select" : "text"} value={filters[HEADER_SORT_KEYS[i]]} options={HEADER_SORT_KEYS[i] === "status" ? statusOptions.map((s)=>({value:s.id,label:s.organizationStatusName})) : []} onApply={(v)=>setFilters((c)=>({...c,[HEADER_SORT_KEYS[i]]:v}))} onClear={()=>setFilters((c)=>({...c,[HEADER_SORT_KEYS[i]]:emptyFilters()[HEADER_SORT_KEYS[i]]}))} /></div>}
               </div>
             ))}
           </div>

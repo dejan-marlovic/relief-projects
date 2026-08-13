@@ -23,6 +23,9 @@ import {
 
 import { BASE_URL } from "../../config/api"; // adjust path if needed
 import { sortRows } from "../../utils/tableSorting";
+import ColumnFilter from "../../components/ColumnFilter/ColumnFilter";
+import ClearFiltersButton from "../../components/ClearFiltersButton/ClearFiltersButton";
+import { matchesDateRange, matchesNumberRange, matchesSelect, matchesText } from "../../utils/tableSorting";
 
 const blankTx = {
   organizationId: "",
@@ -117,6 +120,9 @@ const Transactions = ({ refreshTrigger }) => {
   const [expandedTxId, setExpandedTxId] = useState(null);
   const [exportingSelected, setExportingSelected] = useState(false);
   const [sortConfig, setSortConfig] = useState(null);
+  const emptyFilters = () => ({ id:{min:"",max:""}, organization:"", project:"", budget:"", financier:"", status:"", appliedForAmount:{min:"",max:""}, firstShareAmount:{min:"",max:""}, approvedAmount:{min:"",max:""}, secondShareAmount:{min:"",max:""}, ownContribution:"", datePlanned:{from:"",to:""}, okStatus:"" });
+  const [filters, setFilters] = useState(emptyFilters);
+  const hasActiveFilters = JSON.stringify(filters) !== JSON.stringify(emptyFilters());
 
   // dropdown data
   const [orgOptions, setOrgOptions] = useState([]);
@@ -230,6 +236,10 @@ const Transactions = ({ refreshTrigger }) => {
   useEffect(() => {
     fetchTransactions(selectedProjectId);
   }, [fetchTransactions, selectedProjectId, refreshTrigger]);
+
+  useEffect(() => {
+    setFilters(emptyFilters());
+  }, [selectedProjectId]);
 
   useEffect(() => {
     if (editingId === "new" && newRowRef.current) {
@@ -545,8 +555,26 @@ const Transactions = ({ refreshTrigger }) => {
     [budgetOptions],
   );
 
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter((tx) =>
+      matchesNumberRange(tx.id, filters.id) &&
+      matchesText(organizationNamesById.get(String(tx.organizationId)), filters.organization) &&
+      matchesText(projectNamesById.get(String(tx.projectId)), filters.project) &&
+      matchesText(budgetLabelsById.get(String(tx.budgetId)), filters.budget) &&
+      matchesText(organizationNamesById.get(String(tx.financierOrganizationId)), filters.financier) &&
+      matchesSelect(tx.transactionStatusId, filters.status) &&
+      matchesNumberRange(tx.appliedForAmount, filters.appliedForAmount) &&
+      matchesNumberRange(tx.firstShareAmount, filters.firstShareAmount) &&
+      matchesNumberRange(tx.approvedAmount, filters.approvedAmount) &&
+      matchesNumberRange(tx.secondShareAmount, filters.secondShareAmount) &&
+      matchesSelect(tx.ownContribution, filters.ownContribution) &&
+      matchesDateRange(tx.datePlanned, filters.datePlanned) &&
+      matchesSelect(tx.okStatus, filters.okStatus)
+    );
+  }, [budgetLabelsById, filters, organizationNamesById, projectNamesById, transactions]);
+
   const displayedTransactions = useMemo(() => {
-    if (!sortConfig) return transactions;
+    if (!sortConfig) return filteredTransactions;
 
     const valueGetters = {
       id: (tx) => (tx?.id == null || tx.id === "" ? null : Number(tx.id)),
@@ -592,15 +620,15 @@ const Transactions = ({ refreshTrigger }) => {
 
     const getValue = valueGetters[sortConfig.key];
     return getValue
-      ? sortRows(transactions, getValue, sortConfig.direction)
-      : transactions;
+      ? sortRows(filteredTransactions, getValue, sortConfig.direction)
+      : filteredTransactions;
   }, [
     budgetLabelsById,
+    filteredTransactions,
     organizationNamesById,
     projectNamesById,
     sortConfig,
     statusNamesById,
-    transactions,
   ]);
 
   const toggleSort = (key) => {
@@ -612,20 +640,30 @@ const Transactions = ({ refreshTrigger }) => {
   };
 
   const renderSortHeader = (label, key) => (
-    <button
-      type="button"
-      className={styles.sortHeaderButton}
-      onClick={() => toggleSort(key)}
-      aria-label={`Sort by ${label}${
-        sortConfig?.key === key
-          ? `, currently ${sortConfig.direction === "asc" ? "ascending" : "descending"}`
-          : ""
-      }`}
-    >
-      <span>{label}</span>
-      {sortConfig?.key === key &&
-        (sortConfig.direction === "asc" ? <FiChevronUp /> : <FiChevronDown />)}
-    </button>
+    <div className={styles.sortAndFilterHeader}>
+      <button
+        type="button"
+        className={styles.sortHeaderButton}
+        onClick={() => toggleSort(key)}
+        aria-label={`Sort by ${label}${
+          sortConfig?.key === key
+            ? `, currently ${sortConfig.direction === "asc" ? "ascending" : "descending"}`
+            : ""
+        }`}
+      >
+        <span>{label}</span>
+        {sortConfig?.key === key &&
+          (sortConfig.direction === "asc" ? <FiChevronUp /> : <FiChevronDown />)}
+      </button>
+      <ColumnFilter
+        label={label}
+        type={(["id","appliedForAmount","firstShareAmount","approvedAmount","secondShareAmount"].includes(key) ? "number" : key === "datePlanned" ? "date" : ["status","ownContribution","okStatus"].includes(key) ? "select" : "text")}
+        value={filters[key]}
+        options={key === "status" ? statusOptions.map((s) => ({value:s.id,label:s.transactionStatusName})) : ["ownContribution","okStatus"].includes(key) ? [{value:"Yes",label:"Yes"},{value:"No",label:"No"}] : []}
+        onApply={(value) => setFilters((current) => ({...current,[key]:value}))}
+        onClear={() => setFilters((current) => ({...current,[key]:emptyFilters()[key]}))}
+      />
+    </div>
   );
 
   const selectableTransactions = useMemo(
@@ -1507,6 +1545,7 @@ const Transactions = ({ refreshTrigger }) => {
           </div>
 
           <div className={styles.headerActions}>
+            {hasActiveFilters && <ClearFiltersButton onClick={() => setFilters(emptyFilters())} />}
             <button
               type="button"
               className={styles.exportInlineBtn}

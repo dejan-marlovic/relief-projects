@@ -201,6 +201,7 @@
   color: colors.$text-secondary;
   background: var(--rec-header-bg);
 }
+.sortAndFilterHeader { display: inline-flex; align-items: center; gap: 0.25rem; }
 
 /* Sticky header first col */
 .stickyColHeader {

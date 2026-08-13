@@ -39,3 +39,38 @@ export const toSortableDate = (value) => {
   const timestamp = new Date(value).getTime();
   return Number.isFinite(timestamp) ? timestamp : null;
 };
+
+export const filterNumberRange = (rows, getValue, range) => {
+  const min = toSortableNumber(range?.min);
+  const max = toSortableNumber(range?.max);
+  if (min == null && max == null) return rows;
+
+  return rows.filter((row) => {
+    const value = toSortableNumber(getValue(row));
+    if (value == null) return false;
+    return (min == null || value >= min) && (max == null || value <= max);
+  });
+};
+
+export const matchesText = (value, query) =>
+  !query || String(value ?? "").toLocaleLowerCase().includes(query.trim().toLocaleLowerCase());
+
+export const matchesSelect = (value, selected) =>
+  !selected || String(value ?? "") === String(selected);
+
+export const matchesNumberRange = (value, range) => {
+  const min = toSortableNumber(range?.min);
+  const max = toSortableNumber(range?.max);
+  if (min == null && max == null) return true;
+  const numeric = toSortableNumber(value);
+  return numeric != null && (min == null || numeric >= min) && (max == null || numeric <= max);
+};
+
+export const matchesDateRange = (value, range) => {
+  if (!range?.from && !range?.to) return true;
+  const timestamp = toSortableDate(value);
+  if (timestamp == null) return false;
+  const from = range.from ? new Date(`${range.from}T00:00:00`).getTime() : null;
+  const to = range.to ? new Date(`${range.to}T23:59:59.999`).getTime() : null;
+  return (from == null || timestamp >= from) && (to == null || timestamp <= to);
+};

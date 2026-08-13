@@ -1,4 +1,11 @@
-import { sortRows } from "./tableSorting";
+import {
+  filterNumberRange,
+  matchesDateRange,
+  matchesNumberRange,
+  matchesSelect,
+  matchesText,
+  sortRows,
+} from "./tableSorting";
 
 describe("sortRows", () => {
   const rows = [{ id: 20 }, { id: 3 }, { id: 11 }, { id: null }];
@@ -63,5 +70,32 @@ describe("sortRows", () => {
       "2026-02-01T10:00:00Z",
       "2026-12-01T10:00:00Z",
     ]);
+  });
+
+  test("filters a numeric range inclusively", () => {
+    expect(
+      filterNumberRange(rows, (row) => row.id, { min: "4", max: "20" }).map(
+        (row) => row.id,
+      ),
+    ).toEqual([20, 11]);
+  });
+
+  test("returns all rows when a numeric range is empty", () => {
+    expect(filterNumberRange(rows, (row) => row.id, { min: "", max: "" })).toBe(rows);
+  });
+
+  test("matches text case-insensitively", () => {
+    expect(matchesText("American Red Cross", "red cross")).toBe(true);
+    expect(matchesText("UNICEF", "cross")).toBe(false);
+  });
+
+  test("matches selected values by their string representation", () => {
+    expect(matchesSelect(4, "4")).toBe(true);
+    expect(matchesSelect(4, "3")).toBe(false);
+  });
+
+  test("matches inclusive numeric and date ranges", () => {
+    expect(matchesNumberRange("25.5", { min: "20", max: "25.5" })).toBe(true);
+    expect(matchesDateRange("2026-08-13T15:00:00", { from: "2026-08-13", to: "2026-08-13" })).toBe(true);
   });
 });
