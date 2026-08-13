@@ -18,6 +18,11 @@ function toDateTimeLocal(iso) {
   );
 }
 
+/**
+ * Renders one signature row and receives selection state from the parent.
+ * The parent controls whether the row is selected, how selection changes,
+ * and whether selection should be disabled while the row is being edited.
+ */
 const SignatureRow = ({
   row,
   isEditing = false,
@@ -27,6 +32,9 @@ const SignatureRow = ({
   onSave,
   onCancel,
   onDelete,
+  isSelected = false,
+  onSelectChange,
+  selectionDisabled = false,
   poOptions = [],
   statusOptions = [],
   employeeOptions = [],
@@ -34,6 +42,7 @@ const SignatureRow = ({
   isEven = false,
   fieldErrors = {},
   rowRef = null,
+  canManage = false,
 }) => {
   const ev = editedValues || {};
   const isCreate = (row?.id ?? "") === "new";
@@ -143,7 +152,7 @@ const SignatureRow = ({
         onChange={(e) =>
           onChange(
             "signatureDate",
-            e.target.value ? new Date(e.target.value).toISOString() : ""
+            e.target.value ? new Date(e.target.value).toISOString() : "",
           )
         }
         onBlur={autoSave ? submit : undefined}
@@ -155,12 +164,12 @@ const SignatureRow = ({
 
   const statusLabelById = (id) => {
     const hit = statusOptions.find((s) => String(s.id) === String(id));
-    return hit ? hit.label : id ?? "-";
+    return hit ? hit.label : (id ?? "-");
   };
 
   const employeeLabelById = (id) => {
     const hit = employeeOptions.find((e) => String(e.id) === String(id));
-    return hit ? hit.label : id ?? "-";
+    return hit ? hit.label : (id ?? "-");
   };
 
   const hc = (i) => (!visibleCols[i] ? styles.hiddenCol : "");
@@ -177,45 +186,94 @@ const SignatureRow = ({
         {isEditing ? (
           <div className={styles.actions}>
             <button
+              type="button"
               className={styles.iconCircleBtn}
               onClick={submit}
               title="Save"
+              aria-label="Save"
             >
               <FiSave />
             </button>
+
             <button
+              type="button"
               className={styles.dangerIconBtn}
               onClick={onCancel}
               title="Cancel"
+              aria-label="Cancel"
             >
               <FiX />
             </button>
           </div>
         ) : (
           <div className={styles.actions}>
-            <button
-              className={styles.iconCircleBtn}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onEdit();
-              }}
-              title="Edit"
-            >
-              <FiEdit />
-            </button>
+            {!isCreate && (
+              <input
+                type="checkbox"
+                //The row itself does not decide if it is checked. The parent decides by passing:
+                //isSelected={selectedSignatureIds.has(s.id)}
+                checked={isSelected}
+                //This disables the checkbox when the parent says selection should be disabled.
+                //the parent sends: selectionDisabled={editingId === s.id}
+                disabled={selectionDisabled}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  //This calls the function passed from the parent.
+                  onSelectChange?.(row.id, e.target.checked);
+                }}
+                //Stop this event here. Do not let it bubble up to parent elements.
+                /*
+                1. Browser fires click/change event.
+                2. stopPropagation prevents the event from triggering parent row click handlers.
+                3. e.target.checked tells us whether the checkbox is now checked.
+                4. onSelectChange(row.id, checked) calls the parent function.
+                5. Parent updates selectedSignatureIds.
+                6. Parent re-renders the row with updated isSelected.
+                7. Checkbox shows the correct checked/unchecked state.
 
-            <button
-              className={styles.dangerIconBtn}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onDelete(row.id);
-              }}
-              title="Delete"
-            >
-              <FiTrash2 />
-            </button>
+                So this checkbox is controlled by the parent, but the row is responsible for reporting:
+
+                My checkbox changed.
+                Here is my row ID.
+                Here is the new checked value.
+                */
+                onClick={(e) => e.stopPropagation()}
+                title="Select signature"
+                aria-label={`Select signature ${row.id}`}
+                className={styles.rowCheckbox}
+              ></input>
+            )}
+            {canManage && (
+              <button
+                type="button"
+                className={styles.iconCircleBtn}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onEdit();
+                }}
+                title="Edit"
+                aria-label="Edit"
+              >
+                <FiEdit />
+              </button>
+            )}
+
+            {!isCreate && canManage && (
+              <button
+                type="button"
+                className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.iconOnlyBtn}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onDelete(row.id);
+                }}
+                title="Delete"
+                aria-label="Delete signature"
+              >
+                <FiTrash2 />
+              </button>
+            )}
           </div>
         )}
       </Cell>
@@ -232,12 +290,12 @@ const SignatureRow = ({
 
       {/* 3: Payment Order */}
       <Cell className={hc(3)}>
-        {isEditing ? selectPO : row.paymentOrderId ?? "-"}
+        {isEditing ? selectPO : (row.paymentOrderId ?? "-")}
       </Cell>
 
       {/* 4: Signature */}
       <Cell className={hc(4)}>
-        {isEditing ? inputText("signature") : row.signature ?? "-"}
+        {isEditing ? inputText("signature") : (row.signature ?? "-")}
       </Cell>
 
       {/* 5: Date */}
@@ -245,8 +303,8 @@ const SignatureRow = ({
         {isEditing
           ? inputDate
           : row.signatureDate
-          ? new Date(row.signatureDate).toLocaleString()
-          : "-"}
+            ? new Date(row.signatureDate).toLocaleString()
+            : "-"}
       </Cell>
     </div>
   );

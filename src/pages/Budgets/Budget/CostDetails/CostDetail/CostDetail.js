@@ -15,6 +15,8 @@ const CostDetail = ({
   onSave,
   onCancel,
   onDelete,
+  canEdit = false,
+  canDelete = false,
 }) => {
   const ev = editedValues || {};
   const isCreate = (cost.costDetailId ?? "") === "new";
@@ -198,7 +200,7 @@ const CostDetail = ({
       <div className={styles.vcell}>{displayCost.amountEuro ?? "-"}</div>
 
       <div className={styles.vcell}>
-        <button
+        {canEdit && <button
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -208,8 +210,8 @@ const CostDetail = ({
           title="Edit"
         >
           <FiEdit />
-        </button>
-        <button
+        </button>}
+        {canDelete && <button
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -219,7 +221,7 @@ const CostDetail = ({
           title="Delete"
         >
           <FiTrash2 />
-        </button>
+        </button>}
       </div>
     </div>
   );

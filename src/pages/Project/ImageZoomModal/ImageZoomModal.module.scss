@@ -1,3 +1,4 @@
+@use "../../../styles/colors" as colors;
 .backdrop {
   position: fixed;
   inset: 0;
@@ -12,7 +13,7 @@
 .modal {
   width: min(1100px, 100%);
   height: min(82vh, 900px);
-  background: #fff;
+  background: colors.$surface;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
@@ -26,14 +27,14 @@
   justify-content: space-between;
   gap: 12px;
   padding: 10px 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid colors.$neutral-a08;
   flex-shrink: 0;
 }
 
 .title {
   font-weight: 700;
   font-size: 14px;
-  color: #222;
+  color: colors.$text;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -52,7 +53,7 @@
 
 .iconBtn {
   border: 1px solid rgba(0, 0, 0, 0.14);
-  background: #fff;
+  background: colors.$surface;
   border-radius: 10px;
   padding: 8px 10px;
   cursor: pointer;
@@ -143,7 +144,7 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
-/* ✅ NEW: Caption styling */
+/* ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ NEW: Caption styling */
 .caption {
   padding: 10px 12px;
   font-size: 13px;

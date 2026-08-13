@@ -17,7 +17,7 @@ function toDateTimeLocal(iso) {
   const d = new Date(iso);
   const pad = (n) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
-    d.getHours()
+    d.getHours(),
   )}:${pad(d.getMinutes())}`;
 }
 
@@ -34,6 +34,9 @@ const Transaction = ({
   onSave,
   onCancel,
   onDelete,
+  isSelected = false,
+  onSelectChange,
+  selectionDisabled = false,
   organizations = [],
   projects = [],
   statuses = [],
@@ -47,6 +50,9 @@ const Transaction = ({
   expanded = false,
   onToggleAllocations,
   costDetailOptions = [],
+  canEdit = false,
+  canDelete = false,
+  canManageAllocations = false,
 }) => {
   const ev = editedValues || {};
   const isCreate = (tx?.id ?? "") === "new";
@@ -194,7 +200,7 @@ const Transaction = ({
   const budgetName = (id) =>
     budgets.find((b) => b.id === id)
       ? budgetLabel(budgets.find((b) => b.id === id))
-      : id ?? "-";
+      : (id ?? "-");
 
   const inputDate = (
     <>
@@ -227,7 +233,7 @@ const Transaction = ({
         <Cell className={`${styles.stickyCol} ${styles.actionsCol} ${hc(0)}`}>
           {isEditing ? (
             <div className={styles.actions}>
-              <button
+              {canEdit && <button
                 type="button"
                 className={styles.iconCircleBtn}
                 onClick={submit}
@@ -235,7 +241,7 @@ const Transaction = ({
                 aria-label="Save"
               >
                 <FiSave />
-              </button>
+              </button>}
               <button
                 type="button"
                 className={styles.iconCircleBtn}
@@ -248,7 +254,23 @@ const Transaction = ({
             </div>
           ) : (
             <div className={styles.actions}>
-              <button
+              {!isCreate && (
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  disabled={selectionDisabled}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    onSelectChange?.(tx.id, e.target.checked);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  title="Select transaction"
+                  aria-label={`Select transaction ${tx.id}`}
+                  className={styles.rowCheckbox}
+                />
+              )}
+
+              {canEdit && <button
                 type="button"
                 className={styles.iconCircleBtn}
                 onClick={(e) => {
@@ -260,7 +282,7 @@ const Transaction = ({
                 aria-label="Edit"
               >
                 <FiEdit />
-              </button>
+              </button>}
 
               {!isCreate && (
                 <button
@@ -280,19 +302,21 @@ const Transaction = ({
                 </button>
               )}
 
-              <button
-                type="button"
-                className={styles.dangerIconBtn}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onDelete(tx.id);
-                }}
-                title="Delete"
-                aria-label="Delete"
-              >
-                <FiTrash2 />
-              </button>
+              {canDelete && !isCreate && (
+                <button
+                  type="button"
+                  className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.iconOnlyBtn}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onDelete(tx.id);
+                  }}
+                  title="Delete"
+                  aria-label="Delete"
+                >
+                  <FiTrash2 />
+                </button>
+              )}
             </div>
           )}
         </Cell>
@@ -326,43 +350,43 @@ const Transaction = ({
         <Cell className={hc(7)}>
           {isEditing
             ? inputNum("appliedForAmount", "1")
-            : tx.appliedForAmount ?? "-"}
+            : (tx.appliedForAmount ?? "-")}
         </Cell>
 
         <Cell className={hc(8)}>
           {isEditing
             ? inputNum("firstShareAmount", "0.01")
-            : tx.firstShareAmount ?? "-"}
+            : (tx.firstShareAmount ?? "-")}
         </Cell>
 
         <Cell className={hc(9)}>
           {isEditing
             ? inputNum("approvedAmount", "1")
-            : tx.approvedAmount ?? "-"}
+            : (tx.approvedAmount ?? "-")}
         </Cell>
 
         <Cell className={hc(10)}>
           {isEditing
             ? inputNum("secondShareAmount", "0.01")
-            : tx.secondShareAmount ?? "-"}
+            : (tx.secondShareAmount ?? "-")}
         </Cell>
 
         <Cell className={hc(11)}>
           {isEditing
             ? selectYesNo("ownContribution")
-            : tx.ownContribution ?? "-"}
+            : (tx.ownContribution ?? "-")}
         </Cell>
 
         <Cell className={hc(12)}>
           {isEditing
             ? inputDate
             : tx.datePlanned
-            ? new Date(tx.datePlanned).toLocaleString()
-            : "-"}
+              ? new Date(tx.datePlanned).toLocaleString()
+              : "-"}
         </Cell>
 
         <Cell className={hc(13)}>
-          {isEditing ? selectYesNo("okStatus") : tx.okStatus ?? "-"}
+          {isEditing ? selectYesNo("okStatus") : (tx.okStatus ?? "-")}
         </Cell>
       </div>
 
@@ -372,6 +396,7 @@ const Transaction = ({
             txId={tx.id}
             costDetailOptions={costDetailOptions}
             budgetOptions={budgets}
+            canManage={canManageAllocations}
           />
         </div>
       )}

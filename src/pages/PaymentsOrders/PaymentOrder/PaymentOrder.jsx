@@ -46,6 +46,11 @@ const PaymentOrder = ({
 
   // optional: lock UI (disable edit/delete if locked)
   locked = false,
+  isSelected = false,
+  onSelectChange,
+  selectionDisabled = false,
+  canEdit = false,
+  canDelete = false,
 }) => {
   const ev = editedValues || {};
   const isCreate = (po?.id ?? "") === "new";
@@ -89,7 +94,7 @@ const PaymentOrder = ({
         onChange={(e) =>
           onChange(
             "transactionId",
-            e.target.value ? Number(e.target.value) : null
+            e.target.value ? Number(e.target.value) : null,
           )
         }
         onBlur={autoSave ? submit : undefined}
@@ -113,7 +118,7 @@ const PaymentOrder = ({
         onChange={(e) =>
           onChange(
             "paymentOrderDate",
-            e.target.value ? new Date(e.target.value).toISOString() : ""
+            e.target.value ? new Date(e.target.value).toISOString() : "",
           )
         }
         onBlur={autoSave ? submit : undefined}
@@ -126,13 +131,13 @@ const PaymentOrder = ({
 
   const hc = (i) => (!visibleCols[i] ? styles.hiddenCol : "");
 
-  // ✅ amount is computed by backend, display only
+  // amount is computed by backend, display only
   const computedAmount =
     po?.amount == null || Number.isNaN(Number(po.amount))
       ? 0
       : Number(po.amount);
 
-  // ✅ PO ID label (read-only)
+  // PO ID label (read-only)
   const poIdLabel = isCreate ? "(new)" : po?.id != null ? `PO#${po.id}` : "-";
   const poIdWithLock =
     !isCreate && locked ? `${poIdLabel} (Booked)` : poIdLabel;
@@ -154,35 +159,67 @@ const PaymentOrder = ({
         {isEditing ? (
           <div className={styles.actions}>
             <button
+              type="button"
               className={styles.iconCircleBtn}
               onClick={submit}
               title={locked ? lockedTitle : "Save"}
+              aria-label="Save"
               disabled={locked}
             >
               <FiSave />
             </button>
+
             <button
+              type="button"
               className={styles.dangerIconBtn}
               onClick={onCancel}
               title="Cancel"
+              aria-label="Cancel"
             >
               <FiX />
             </button>
           </div>
         ) : (
           <div className={styles.actions}>
-            <button
-              className={styles.iconCircleBtn}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onEdit();
-              }}
-              title={locked ? lockedTitle : "Edit"}
-              disabled={locked}
-            >
-              <FiEdit />
-            </button>
+            {!isCreate && (
+              <input
+                type="checkbox"
+                checked={isSelected}
+                /*
+                 * Locked payment orders remain selectable because selection is
+                 * used for Excel export. Editing and deleting are still blocked.
+                 */
+                disabled={selectionDisabled}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  onSelectChange?.(po.id, e.target.checked);
+                }}
+                onClick={(e) => e.stopPropagation()}
+                title={
+                  locked
+                    ? "Select this locked payment order for export or bulk-delete review"
+                    : "Select payment order"
+                }
+                aria-label={`Select payment order ${po.id}`}
+                className={styles.rowCheckbox}
+              />
+            )}
+            {canEdit && (
+              <button
+                type="button"
+                className={styles.iconCircleBtn}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onEdit();
+                }}
+                title={locked ? lockedTitle : "Edit"}
+                aria-label="Edit"
+                disabled={locked}
+              >
+                <FiEdit />
+              </button>
+            )}
 
             {!isCreate && (
               <button
@@ -200,18 +237,22 @@ const PaymentOrder = ({
               </button>
             )}
 
-            <button
-              className={styles.dangerIconBtn}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onDelete(po.id);
-              }}
-              title={locked ? lockedTitle : "Delete"}
-              disabled={locked}
-            >
-              <FiTrash2 />
-            </button>
+            {!isCreate && canDelete && (
+              <button
+                type="button"
+                className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.iconOnlyBtn}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onDelete(po.id);
+                }}
+                title={locked ? lockedTitle : "Delete"}
+                aria-label="Delete payment order"
+                disabled={locked}
+              >
+                <FiTrash2 />
+              </button>
+            )}
           </div>
         )}
       </Cell>
@@ -221,7 +262,7 @@ const PaymentOrder = ({
 
       {/* 2: Transaction */}
       <Cell className={hc(2)}>
-        {isEditing ? selectTransaction : po.transactionId ?? "-"}
+        {isEditing ? selectTransaction : (po.transactionId ?? "-")}
       </Cell>
 
       {/* 3: Date */}
@@ -229,15 +270,15 @@ const PaymentOrder = ({
         {isEditing
           ? inputDate
           : po.paymentOrderDate
-          ? new Date(po.paymentOrderDate).toLocaleString()
-          : "-"}
+            ? new Date(po.paymentOrderDate).toLocaleString()
+            : "-"}
       </Cell>
 
       {/* 4: Description */}
       <Cell className={hc(4)}>
         {isEditing
           ? inputText("paymentOrderDescription")
-          : po.paymentOrderDescription ?? "-"}
+          : (po.paymentOrderDescription ?? "-")}
       </Cell>
 
       {/* 5: Amount (computed, not editable) */}
@@ -245,12 +286,12 @@ const PaymentOrder = ({
 
       {/* 6: Message */}
       <Cell className={hc(6)}>
-        {isEditing ? inputText("message") : po.message ?? "-"}
+        {isEditing ? inputText("message") : (po.message ?? "-")}
       </Cell>
 
       {/* 7: Pin Code */}
       <Cell className={hc(7)}>
-        {isEditing ? inputText("pinCode") : po.pinCode ?? "-"}
+        {isEditing ? inputText("pinCode") : (po.pinCode ?? "-")}
       </Cell>
     </div>
   );

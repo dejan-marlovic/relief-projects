@@ -1,11 +1,8 @@
+@use "../../styles/colors" as colors;
 @use "../../styles/forms" as forms;
 
-$primary: #4a90e2;
-$danger: #e74c3c;
 
-// ✅ NEW (for nicer upload messages)
-$success: #16a34a;
-$warning: #b45309;
+// ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ NEW (for nicer upload messages)
 
 /* Page padding like other pages */
 .page {
@@ -16,10 +13,10 @@ $warning: #b45309;
 
 /* Big white card shell like Project/Transactions */
 .shell {
-  background: #fff;
+  background: colors.$surface;
   border-radius: 14px;
-  border: 1px solid rgba(74, 144, 226, 0.18);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+  border: 1px solid colors.$primary-focus;
+  box-shadow: 0 10px 24px colors.$border-subtle;
   padding: 1.25rem;
 }
 
@@ -31,7 +28,7 @@ $warning: #b45309;
   gap: 1rem;
   margin-bottom: 1rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid colors.$border-subtle;
 }
 
 .pageHeaderText {
@@ -44,14 +41,14 @@ $warning: #b45309;
 .pageTitle {
   margin: 0;
   font-size: 1.2rem;
-  color: $primary;
+  color: colors.$primary;
   font-weight: 700;
 }
 
 .pageSubtitle {
   margin: 0;
   font-size: 0.9rem;
-  color: #6b7280;
+  color: colors.$text-muted;
 }
 
 .headerActions {
@@ -66,11 +63,11 @@ $warning: #b45309;
 .infoText,
 .loadingText,
 .emptyText {
-  color: #555;
+  color: colors.$text-muted;
   margin: 0.5rem 0;
 }
 
-/* ✅ NEW: status banner (non-error) */
+/* ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ NEW: status banner (non-error) */
 .statusBanner {
   padding: 10px 14px;
   border-radius: 10px;
@@ -81,37 +78,37 @@ $warning: #b45309;
 
 /* variants */
 .statusInfo {
-  background: rgba(74, 144, 226, 0.08);
-  color: #1f3b77;
-  border-color: rgba(74, 144, 226, 0.22);
+  background: colors.$primary-a08;
+  color: colors.$primary-dark;
+  border-color: colors.$primary-border;
 }
 
 .statusSuccess {
-  background: rgba(22, 163, 74, 0.1);
-  color: #0f5132;
-  border-color: rgba(22, 163, 74, 0.28);
+  background: colors.$success-soft;
+  color: colors.$success-dark;
+  border-color: colors.$success-border;
 }
 
 .statusWarning {
-  background: rgba(180, 83, 9, 0.1);
-  color: #7c2d12;
-  border-color: rgba(180, 83, 9, 0.28);
+  background: colors.$warning-soft;
+  color: colors.$warning-dark;
+  border-color: colors.$warning-border;
 }
 
 /* Error banner like Project */
 .errorBanner {
-  background-color: #ffe6e6;
-  color: #b00000;
+  background-color: colors.$danger-soft-strong;
+  color: colors.$danger-text;
   padding: 10px 14px;
   border-radius: 10px;
   margin: 0.75rem 0 1rem;
   font-size: 0.9rem;
-  border: 1px solid #ffb3b3;
+  border: 1px solid colors.$danger-border-strong;
 }
 
-/* Upload area – Project-like */
+/* Upload area ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ Project-like */
 .uploadArea {
-  border: 2px dashed rgba(0, 0, 0, 0.18);
+  border: 2px dashed colors.$border;
   border-radius: 14px;
   padding: 18px 16px;
   text-align: center;
@@ -121,21 +118,21 @@ $warning: #b45309;
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  color: #374151;
-  background: rgba(74, 144, 226, 0.04);
+  color: colors.$text-secondary;
+  background: colors.$primary-a04;
   transition: border-color 0.18s ease, box-shadow 0.18s ease,
     background-color 0.18s ease, transform 0.08s ease;
 
   &:hover {
-    border-color: rgba(74, 144, 226, 0.45);
-    background: rgba(74, 144, 226, 0.06);
-    box-shadow: 0 10px 18px rgba(0, 0, 0, 0.06);
+    border-color: colors.$primary-a45;
+    background: colors.$primary-a06;
+    box-shadow: 0 10px 18px colors.$border-subtle;
     transform: translateY(-1px);
   }
 
   &:active {
     transform: translateY(0);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+    box-shadow: colors.$shadow-card;
   }
 }
 
@@ -151,7 +148,7 @@ $warning: #b45309;
 /* Section title */
 .sectionTitle {
   margin: 1.1rem 0 0.75rem;
-  color: #30323a;
+  color: colors.$text-secondary;
   font-weight: 700;
 }
 
@@ -160,22 +157,22 @@ $warning: #b45309;
   list-style: none;
   padding-left: 0;
   margin: 0;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid colors.$neutral-a08;
   border-radius: 12px;
   overflow: hidden;
 }
 
 .documentItem {
   padding: 10px 12px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid colors.$divider;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  background: #fff;
+  background: colors.$surface;
 
   &:nth-child(even) {
-    background: #fafafa;
+    background: colors.$surface-striped;
   }
 
   &:last-child {
@@ -186,7 +183,7 @@ $warning: #b45309;
 .docName {
   font-size: 0.95rem;
   word-break: break-word;
-  color: #111827;
+  color: colors.$text;
 }
 
 /* Right side actions */
@@ -203,14 +200,14 @@ $warning: #b45309;
   align-items: center;
   gap: 6px;
   text-decoration: none;
-  color: $primary;
+  color: colors.$primary;
   padding: 0.55rem 0.75rem;
-  border: 1px solid rgba(74, 144, 226, 0.22);
+  border: 1px solid colors.$primary-border;
   border-radius: 12px;
-  background: rgba(74, 144, 226, 0.08);
+  background: colors.$primary-a08;
 
   &:hover {
-    background: rgba(74, 144, 226, 0.12);
+    background: colors.$primary-a12;
   }
 
   svg {
@@ -221,8 +218,8 @@ $warning: #b45309;
 /* Danger icon button like Transactions/Payments */
 .dangerIconBtn {
   border: none;
-  background: $danger;
-  color: #fff;
+  background: colors.$danger;
+  color: colors.$surface;
   border-radius: 10px;
   padding: 0.55rem 0.6rem;
   cursor: pointer;

@@ -1,14 +1,13 @@
+@use "../../styles/colors" as colors;
 /*Login.module.scss*/
 
 // Variables (if you want to extract these later)
-$primary-color: #4a90e2;
-$background-color: #ffffff;
-$input-border-color: #ccc;
-$input-focus-color: $primary-color;
-$error-color: #e74c3c;
-$success-color: #27ae60;
+$background-color: colors.$text-on-primary;
+$input-border-color: colors.$border;
+$input-focus-color: colors.$primary;
+$error-color: colors.$danger;
 $border-radius: 8px;
-$box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+$box-shadow: 0 4px 10px colors.$neutral-a10;
 
 .container {
   max-width: 400px;
@@ -23,7 +22,7 @@ $box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   h2 {
     text-align: center;
     margin-bottom: 1.5rem;
-    color: #333;
+    color: colors.$text-secondary;
   }
 
   form {
@@ -34,7 +33,7 @@ $box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       font-weight: 500;
       margin-bottom: 0.25rem;
       display: block;
-      color: #333;
+      color: colors.$text-secondary;
     }
 
     input {
@@ -73,7 +72,7 @@ $box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 .button {
   margin-top: 1.5rem;
   padding: 0.75rem;
-  background-color: $primary-color;
+  background-color: colors.$primary;
   color: white;
   border: none;
   border-radius: $border-radius;
@@ -82,7 +81,7 @@ $box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   transition: background-color 0.3s;
 
   &:hover {
-    background-color: darken($primary-color, 10%);
+    background-color: colors.$primary-hover;
   }
 
   &:active {
@@ -95,14 +94,14 @@ $box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   padding: 0.5rem;
   text-align: center;
   border-radius: $border-radius;
-  color: #4a90e2;
+  color: colors.$primary;
 
   &::before {
-    content: "⚠ ";
+    content: "ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  ";
   }
 
   &.success {
-    background-color: $success-color;
+    background-color: colors.$success;
   }
 
   &.error {

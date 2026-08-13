@@ -6,6 +6,7 @@ import React, {
   useState,
 } from "react";
 import { ProjectContext } from "../../context/ProjectContext";
+import { useAuth } from "../../context/AuthContext";
 import OrganizationRow from "./Organization/Organization";
 import styles from "./Organizations.module.scss";
 import { FiColumns, FiPlus } from "react-icons/fi";
@@ -40,6 +41,13 @@ async function safeParseJsonResponse(res) {
 
 const Organizations = () => {
   const { selectedProjectId } = useContext(ProjectContext);
+  const { hasRole, hasAnyRole } = useAuth();
+  const canManageOrganizationLinks = hasAnyRole("ADMIN", "PROJECT_MANAGER");
+  const canManageAddresses = canManageOrganizationLinks;
+  const canDeleteAddresses = hasRole("ADMIN");
+  const canViewBankDetails = hasAnyRole("ADMIN", "FINANCE", "APPROVER");
+  const canManageBankDetails = hasAnyRole("ADMIN", "FINANCE");
+  const canDeleteBankDetails = hasRole("ADMIN");
 
   const [links, setLinks] = useState([]); // project_organization rows
   const [editingId, setEditingId] = useState(null);
@@ -162,6 +170,7 @@ const Organizations = () => {
   }, [fetchProjectOrganizations, selectedProjectId]);
 
   const startEdit = (link) => {
+    if (!canManageOrganizationLinks) return;
     setEditingId(link?.id ?? null);
     setEditedValues((prev) => ({
       ...prev,
@@ -181,6 +190,7 @@ const Organizations = () => {
   };
 
   const startCreate = () => {
+    if (!canManageOrganizationLinks) return;
     setEditingId("new");
     setEditedValues((prev) => ({
       ...prev,
@@ -209,6 +219,7 @@ const Organizations = () => {
   };
 
   const save = async () => {
+    if (!canManageOrganizationLinks) return;
     const id = editingId;
     const values = editedValues[id];
     if (!values) return;
@@ -290,6 +301,7 @@ const Organizations = () => {
   };
 
   const remove = async (id) => {
+    if (!canManageOrganizationLinks) return;
     if (!id) return;
     if (!window.confirm("Remove this organization from the project?")) return;
 
@@ -370,7 +382,7 @@ const Organizations = () => {
               )}
             </div>
 
-            <button
+            {canManageOrganizationLinks && <button
               className={styles.primaryBtn}
               onClick={startCreate}
               disabled={!selectedProjectId || editingId === "new"}
@@ -385,7 +397,7 @@ const Organizations = () => {
             >
               <FiPlus />
               New
-            </button>
+            </button>}
           </div>
         </div>
 
@@ -431,6 +443,12 @@ const Organizations = () => {
                 visibleCols={visibleCols}
                 isEven={idx % 2 === 0}
                 fieldErrors={fieldErrors[link.id] || {}}
+                canManage={canManageOrganizationLinks}
+                canManageAddresses={canManageAddresses}
+                canDeleteAddresses={canDeleteAddresses}
+                canViewBankDetails={canViewBankDetails}
+                canManageBankDetails={canManageBankDetails}
+                canDeleteBankDetails={canDeleteBankDetails}
               />
             ))
           )}
@@ -454,6 +472,12 @@ const Organizations = () => {
               visibleCols={visibleCols}
               isEven={false}
               fieldErrors={fieldErrors.new || {}}
+              canManage={canManageOrganizationLinks}
+              canManageAddresses={canManageAddresses}
+              canDeleteAddresses={canDeleteAddresses}
+              canViewBankDetails={canViewBankDetails}
+              canManageBankDetails={canManageBankDetails}
+              canDeleteBankDetails={canDeleteBankDetails}
             />
           )}
         </div>

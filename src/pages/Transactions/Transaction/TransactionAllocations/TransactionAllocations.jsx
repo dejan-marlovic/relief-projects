@@ -43,6 +43,7 @@ const TransactionAllocations = ({
   costDetailOptions = [],
   budgetOptions = [],
   fallbackCurrencyLabel = "",
+  canManage = false,
 }) => {
   const token = useMemo(() => localStorage.getItem("authToken"), []);
   const authHeaders = useMemo(
@@ -53,10 +54,11 @@ const TransactionAllocations = ({
             "Content-Type": "application/json",
           }
         : { "Content-Type": "application/json" },
-    [token]
+    [token],
   );
 
   const [rows, setRows] = useState([]);
+  const [currencies, setCurrencies] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const [draft, setDraft] = useState({
@@ -104,32 +106,79 @@ const TransactionAllocations = ({
     }
   }, [txId, authHeaders]);
 
-  const currencyLabel = useMemo(() => {
-    // 1) explicit fallback if provided
-    if (fallbackCurrencyLabel) return fallbackCurrencyLabel;
+  /*
+   * Fetch the active currency lookup once when this allocations component
+   * mounts. This lets us convert a budget's localCurrencyId, for example 10,
+   * into a readable currency code such as INR.
+   *
+   * This lookup is non-fatal: allocations can still be viewed and edited if
+   * the currency endpoint is temporarily unavailable.
+   */
+  const fetchCurrencies = useCallback(async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/currencies/active`, {
+        headers: authHeaders,
+      });
 
-    // 2) try from budgetOptions by txMeta.budgetId
-    const bId =
+      if (!res.ok) {
+        throw new Error(`Failed to fetch currencies (${res.status}).`);
+      }
+
+      const data = await res.json().catch(() => []);
+      setCurrencies(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.warn("Failed to fetch currencies:", e);
+      setCurrencies([]);
+    }
+  }, [authHeaders]);
+
+  const currencyLabel = useMemo(() => {
+    // 1) Prefer a label explicitly supplied by the parent.
+    if (fallbackCurrencyLabel) {
+      return fallbackCurrencyLabel;
+    }
+
+    // 2) Find the budget connected to this transaction.
+    const budgetId =
       typeof txMeta.budgetId === "string"
         ? Number(txMeta.budgetId)
         : txMeta.budgetId;
 
-    if (bId && Array.isArray(budgetOptions) && budgetOptions.length) {
-      const b = budgetOptions.find((x) => Number(x.id) === Number(bId));
-      if (b) {
-        // be defensive: different DTOs might have different shapes
-        const name =
-          b?.localCurrency?.name ||
-          b?.localCurrencyName ||
-          b?.localCurrencyCode ||
-          b?.localCurrencyId ||
-          "";
-        if (name) return String(name);
-      }
+    const budget = budgetOptions.find(
+      (item) => Number(item.id) === Number(budgetId),
+    );
+
+    if (!budget) {
+      return "";
     }
 
-    return ""; // unknown is ok
-  }, [fallbackCurrencyLabel, budgetOptions, txMeta.budgetId]);
+    // 3) Prefer a readable currency already included in the budget DTO.
+    const embeddedCurrencyName =
+      budget?.localCurrency?.name ||
+      budget?.localCurrencyName ||
+      budget?.localCurrencyCode ||
+      "";
+
+    if (embeddedCurrencyName) {
+      return String(embeddedCurrencyName);
+    }
+
+    // 4) Otherwise resolve localCurrencyId through /api/currencies/active.
+    const localCurrencyId =
+      budget.localCurrencyId == null || budget.localCurrencyId === ""
+        ? null
+        : Number(budget.localCurrencyId);
+
+    if (localCurrencyId == null || !Number.isFinite(localCurrencyId)) {
+      return "";
+    }
+
+    const matchingCurrency = currencies.find(
+      (currency) => Number(currency.id) === localCurrencyId,
+    );
+
+    return matchingCurrency?.name || "";
+  }, [fallbackCurrencyLabel, budgetOptions, currencies, txMeta.budgetId]);
 
   const currencySuffix = currencyLabel ? ` ${currencyLabel}` : "";
 
@@ -144,7 +193,7 @@ const TransactionAllocations = ({
     try {
       const res = await fetch(
         `${BASE_URL}/api/cost-allocations/transaction/${txId}`,
-        { headers: authHeaders }
+        { headers: authHeaders },
       );
       if (!res.ok) {
         const data = await safeParseJsonResponse(res);
@@ -164,7 +213,8 @@ const TransactionAllocations = ({
   useEffect(() => {
     fetchTxMeta();
     fetchRows();
-  }, [fetchTxMeta, fetchRows]);
+    fetchCurrencies();
+  }, [fetchTxMeta, fetchRows, fetchCurrencies]);
 
   const allocatedTotal = useMemo(() => {
     return rows.reduce((acc, r) => acc + (Number(r.plannedAmount) || 0), 0);
@@ -199,6 +249,7 @@ const TransactionAllocations = ({
   };
 
   const onAdd = async () => {
+    if (!canManage) return;
     setFormError("");
     setFieldErrors({});
 
@@ -234,6 +285,7 @@ const TransactionAllocations = ({
   };
 
   const onInlineUpdate = async (row, patch) => {
+    if (!canManage) return;
     setRowErrorsById((prev) => {
       const next = { ...prev };
       delete next[row.id];
@@ -281,6 +333,7 @@ const TransactionAllocations = ({
   };
 
   const onDelete = async (id) => {
+    if (!canManage) return;
     if (!window.confirm("Delete this allocation?")) return;
 
     setFormError("");
@@ -310,17 +363,33 @@ const TransactionAllocations = ({
 
   const capHint = useMemo(() => {
     if (approvedAmountNum == null) return null;
+
     const remaining = approvedAmountNum - allocatedTotal;
     const ok = remaining >= 0;
+
+    const rawPercent =
+      approvedAmountNum > 0
+        ? (allocatedTotal / approvedAmountNum) * 100
+        : allocatedTotal > 0
+          ? 100
+          : 0;
+
+    /*
+     * The text can show a percentage above 100%, but the visual bar itself is
+     * capped at 100% so it does not overflow its container.
+     */
+    const progressPercent = Math.min(Math.max(rawPercent, 0), 100);
 
     const fmt = (n) => (Number.isFinite(n) ? Number(n).toFixed(2) : String(n));
 
     return {
       ok,
+      percent: rawPercent,
+      progressPercent,
       text: `Allocated: ${fmt(
-        allocatedTotal
+        allocatedTotal,
       )}${currencySuffix} / Approved: ${fmt(
-        approvedAmountNum
+        approvedAmountNum,
       )}${currencySuffix} (Remaining: ${fmt(remaining)}${currencySuffix})`,
     };
   }, [approvedAmountNum, allocatedTotal, currencySuffix]);
@@ -341,11 +410,36 @@ const TransactionAllocations = ({
           </div>
 
           {capHint ? (
-            <div
-              className={`${styles.sub} ${capHint.ok ? "" : styles.inputError}`}
-              style={{ marginTop: 6 }}
-            >
-              {capHint.text}
+            <div className={styles.allocationProgressWrap}>
+              <div
+                className={`${styles.sub} ${
+                  capHint.ok ? "" : styles.allocationTextOver
+                }`}
+              >
+                {capHint.text}
+              </div>
+
+              <div className={styles.progressMeta}>
+                <span>Allocation progress</span>
+                <strong>{capHint.percent.toFixed(1)}%</strong>
+              </div>
+
+              <div
+                className={styles.progressTrack}
+                role="progressbar"
+                aria-label="Allocation progress"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow={Math.round(capHint.progressPercent)}
+                aria-valuetext={`${capHint.percent.toFixed(1)}% allocated`}
+              >
+                <div
+                  className={`${styles.progressFill} ${
+                    capHint.ok ? "" : styles.progressFillOver
+                  }`}
+                  style={{ width: `${capHint.progressPercent}%` }}
+                />
+              </div>
             </div>
           ) : null}
         </div>
@@ -354,8 +448,7 @@ const TransactionAllocations = ({
           type="button"
           className={styles.iconPillBtn}
           onClick={async () => {
-            await fetchTxMeta();
-            await fetchRows();
+            await Promise.all([fetchTxMeta(), fetchRows(), fetchCurrencies()]);
           }}
           disabled={loading}
           title="Refresh allocations"
@@ -372,7 +465,7 @@ const TransactionAllocations = ({
         </div>
       )}
 
-      <div className={styles.addCard}>
+      {canManage && <div className={styles.addCard}>
         <div className={styles.addGrid}>
           <div className={styles.field}>
             <label>Cost detail</label>
@@ -444,7 +537,7 @@ const TransactionAllocations = ({
             </button>
           </div>
         </div>
-      </div>
+      </div>}
 
       <div className={styles.table}>
         <div className={styles.thead}>
@@ -471,7 +564,7 @@ const TransactionAllocations = ({
                     ? Number(r.costDetailId)
                     : r.costDetailId;
                 const cd = costDetailOptions.find(
-                  (x) => Number(x.costDetailId) === n
+                  (x) => Number(x.costDetailId) === n,
                 );
                 return cd
                   ? `${cd.costDescription || "No description"} (CD#${
@@ -490,6 +583,7 @@ const TransactionAllocations = ({
               }
               onSave={(patch) => onInlineUpdate(r, patch)}
               onDelete={() => onDelete(r.id)}
+              canManage={canManage}
             />
           ))
         )}
@@ -506,6 +600,7 @@ const AllocationRow = ({
   rowError,
   clearRowError,
   currencyLabel = "",
+  canManage = false,
 }) => {
   const [plannedAmount, setPlannedAmount] = useState(row.plannedAmount ?? "");
   const [note, setNote] = useState(row.note ?? "");
@@ -529,7 +624,8 @@ const AllocationRow = ({
             }`}
             type="number"
             step="0.01"
-            value={plannedAmount}
+          value={plannedAmount}
+          disabled={!canManage}
             onChange={(e) => {
               setPlannedAmount(e.target.value);
               clearRowError?.();
@@ -556,6 +652,7 @@ const AllocationRow = ({
           className={styles.textInput}
           type="text"
           value={note}
+          disabled={!canManage}
           onChange={(e) => {
             setNote(e.target.value);
             clearRowError?.();
@@ -563,7 +660,7 @@ const AllocationRow = ({
         />
       </div>
 
-      <div className={styles.rowActions}>
+      {canManage && <div className={styles.rowActions}>
         <button
           type="button"
           className={styles.iconCircleBtn}
@@ -583,7 +680,7 @@ const AllocationRow = ({
         >
           <FiTrash2 />
         </button>
-      </div>
+      </div>}
     </div>
   );
 };

@@ -1,0 +1,471 @@
+@use "../../../styles/colors" as colors;
+
+.themeSettings {
+  margin: 0 0 1rem;
+  overflow: hidden;
+  border: 1px solid colors.$primary-border;
+  border-radius: 14px;
+  background: colors.$surface;
+  box-shadow: colors.$shadow-raised;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid colors.$border-soft;
+  background: colors.$surface;
+}
+
+.headerIcon {
+  display: flex;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid colors.$primary-border;
+  border-radius: 12px;
+  background: colors.$primary-soft;
+  color: colors.$primary;
+  font-size: 1.25rem;
+}
+
+.pageHeaderText {
+  min-width: 0;
+}
+
+.pageTitle {
+  margin: 0;
+  color: colors.$primary;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.pageSubtitle {
+  margin: 0.25rem 0 0;
+  color: colors.$text-muted;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.content {
+  padding: 1rem;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.customThemeCount {
+  margin: 0;
+  color: colors.$text-muted;
+  font-size: 0.84rem;
+}
+
+.createButton,
+.saveThemeButton {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid colors.$primary-border-strong;
+  border-radius: 9px;
+  background: colors.$primary;
+  color: colors.$text-on-primary;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    background: colors.$primary-hover;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: colors.$shadow-focus;
+  }
+}
+
+.creator {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border: 1px solid colors.$primary-border;
+  border-radius: 13px;
+  background: colors.$primary-soft;
+}
+
+.creatorHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  h3 {
+    margin: 0;
+    color: colors.$text;
+    font-size: 1rem;
+  }
+
+  p {
+    margin: 0.25rem 0 0;
+    color: colors.$text-muted;
+    font-size: 0.82rem;
+  }
+}
+
+.livePreview {
+  display: flex;
+
+  span {
+    width: 32px;
+    height: 32px;
+    border: 3px solid colors.$surface;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px colors.$border-soft;
+
+    &:not(:first-child) {
+      margin-left: -8px;
+    }
+  }
+}
+
+.nameField,
+.colorField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: colors.$text-secondary;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.nameField {
+  max-width: 420px;
+  margin-bottom: 1rem;
+
+  input {
+    min-height: 42px;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid colors.$border-soft;
+    border-radius: 9px;
+    background: colors.$surface;
+    color: colors.$text;
+    font: inherit;
+
+    &:focus {
+      border-color: colors.$primary;
+      outline: none;
+      box-shadow: colors.$shadow-focus;
+    }
+  }
+}
+
+.colorFields {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.colorInputWrap {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid colors.$border-soft;
+  border-radius: 9px;
+  background: colors.$surface;
+
+  input {
+    width: 34px;
+    height: 30px;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  code {
+    color: colors.$text-secondary;
+    font-size: 0.75rem;
+  }
+}
+
+.formError {
+  margin-top: 0.85rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid colors.$danger-border;
+  border-radius: 9px;
+  background: colors.$danger-soft;
+  color: colors.$danger-text;
+  font-size: 0.82rem;
+}
+
+.creatorActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.themeGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.themeCardWrap {
+  position: relative;
+  min-width: 0;
+}
+
+.themeCard {
+  display: flex;
+  min-width: 0;
+  min-height: 180px;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 1rem;
+  border: 1px solid colors.$border-soft;
+  border-radius: 13px;
+  background: colors.$surface;
+  color: colors.$text;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.12s ease;
+
+  &:hover {
+    border-color: colors.$primary-border-strong;
+    background: colors.$primary-soft;
+    box-shadow: colors.$shadow-card;
+    transform: translateY(-2px);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: colors.$shadow-focus;
+  }
+}
+
+.editThemeButton,
+.deleteThemeButton {
+  position: absolute;
+  bottom: 0.75rem;
+  z-index: 1;
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid colors.$primary-border;
+  border-radius: 8px;
+  background: colors.$surface;
+  color: colors.$primary;
+  cursor: pointer;
+
+  &:hover {
+    background: colors.$primary-soft;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: colors.$shadow-focus;
+  }
+}
+
+.editThemeButton {
+  right: 3.1rem;
+}
+
+.deleteThemeButton {
+  right: 0.75rem;
+  border-color: colors.$danger-border;
+  color: colors.$danger;
+
+  &:hover {
+    background: colors.$danger-soft;
+  }
+
+  &:focus-visible {
+    box-shadow: 0 0 0 4px colors.$danger-focus;
+  }
+}
+
+.themeCardSelected {
+  border-color: colors.$primary;
+  background: colors.$primary-soft;
+  box-shadow: colors.$shadow-card;
+}
+
+.themeCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.colorPreview {
+  display: flex;
+  align-items: center;
+}
+
+.colorCircle {
+  width: 30px;
+  height: 30px;
+  border: 3px solid colors.$surface;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px colors.$border-soft;
+
+  &:not(:first-child) {
+    margin-left: -8px;
+  }
+}
+
+.checkmark {
+  display: flex;
+  width: 25px;
+  height: 25px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid colors.$border;
+  border-radius: 50%;
+  background: colors.$surface;
+  color: colors.$text-on-primary;
+}
+
+.checkmarkSelected {
+  border-color: colors.$primary;
+  background: colors.$primary;
+}
+
+.themeName {
+  color: colors.$text;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.themeDescription {
+  flex: 1;
+  margin-top: 0.35rem;
+  color: colors.$text-muted;
+  font-size: 0.83rem;
+  line-height: 1.4;
+}
+
+.selectionStatus {
+  margin-top: 0.85rem;
+  color: colors.$primary-dark;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 0.9rem;
+  border: 1px solid colors.$primary-border;
+  border-radius: 11px;
+  background: colors.$primary-soft;
+}
+
+.helpText {
+  color: colors.$text-secondary;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.restoreButton {
+  display: inline-flex;
+  min-height: 40px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid colors.$primary-border-strong;
+  border-radius: 9px;
+  background: colors.$surface;
+  color: colors.$primary-dark;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    background: colors.$primary-soft-hover;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: colors.$shadow-focus;
+  }
+}
+
+@media (max-width: 1100px) {
+  .themeGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .colorFields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .themeGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .toolbar,
+  .creatorHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .createButton,
+  .saveThemeButton {
+    width: 100%;
+  }
+
+  .colorFields {
+    grid-template-columns: 1fr;
+  }
+
+  .creatorActions {
+    justify-content: stretch;
+  }
+
+  .restoreButton {
+    width: 100%;
+  }
+}

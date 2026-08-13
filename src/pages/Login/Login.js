@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import styles from "./Login.module.scss";
 import { ProjectContext } from "../../context/ProjectContext";
 import { BASE_URL } from "../../config/api"; // adjust path if needed
+import { useBranding } from "../../context/BrandingContext";
+import { useAuth } from "../../context/AuthContext";
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -11,6 +13,8 @@ function Login() {
 
   const navigate = useNavigate();
   const { refreshProjects } = useContext(ProjectContext);
+  const { logoUrl } = useBranding();
+  const { refreshUser, clearAuth } = useAuth();
 
   const loginUser = async (credentials) => {
     const response = await fetch(`${BASE_URL}/api/auth/login`, {
@@ -32,6 +36,7 @@ function Login() {
 
       // 1️⃣ Store token
       localStorage.setItem("authToken", tokenJson.token);
+      await refreshUser();
       setMessage("Login successful!");
 
       // 2️⃣ Now that token exists, fetch projects so context is populated
@@ -42,6 +47,7 @@ function Login() {
       // 3️⃣ Navigate to project page
       navigate("/project");
     } catch (error) {
+      clearAuth();
       console.error("Error:", error);
       setMessage("Login failed. Please try again.");
     }
@@ -52,9 +58,13 @@ function Login() {
       {/* Centered logo above input fields */}
       <div className={styles.logoWrapper}>
         <img
-          src="/logo.png"
+          src={logoUrl}
           alt="Relief Projects logo"
           className={styles.logo}
+          onError={(event) => {
+            event.currentTarget.onerror = null;
+            event.currentTarget.src = "/logo.png";
+          }}
         />
       </div>
 
