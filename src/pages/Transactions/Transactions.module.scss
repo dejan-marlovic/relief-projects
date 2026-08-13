@@ -251,6 +251,12 @@
   }
 }
 
+.sortAndFilterHeader {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
 /* Sticky header col */
 .stickyColHeader {
   position: sticky;

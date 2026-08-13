@@ -200,6 +200,7 @@
   color: colors.$text-secondary;
   background: var(--sig-header-bg);
 }
+.sortAndFilterHeader { display: inline-flex; align-items: center; gap: 0.25rem; }
 
 /* Sticky first col in header */
 .stickyColHeader {
