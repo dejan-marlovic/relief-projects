@@ -21,6 +21,8 @@ import {
 } from "react-icons/fi";
 
 import { BASE_URL } from "../../config/api"; // adjust path if needed
+import SortableHeader from "../../components/SortableHeader/SortableHeader";
+import { sortRows, toSortableDate, toSortableNumber } from "../../utils/tableSorting";
 
 const headerLabels = [
   "Actions",
@@ -32,6 +34,7 @@ const headerLabels = [
   "Message",
   "Pin Code",
 ];
+const HEADER_SORT_KEYS = [null, "id", "transactionId", "date", "description", "amount", "message", "pinCode"];
 
 // ✅ match number of columns above
 const BASE_COL_WIDTHS = [
@@ -131,6 +134,7 @@ function PaymentOrders() {
 
   const [selectedPoIds, setSelectedPoIds] = useState(() => new Set());
   const [exportingSelected, setExportingSelected] = useState(false);
+  const [sortConfig, setSortConfig] = useState(null);
 
   const [orgOptions, setOrgOptions] = useState([]);
   const [costDetailOptions, setCostDetailOptions] = useState([]);
@@ -519,12 +523,31 @@ function PaymentOrders() {
     return parts.join(" ");
   }, [visibleCols]);
 
+  const displayedOrders = useMemo(() => {
+    if (!sortConfig) return orders;
+    const getters = {
+      id: (po) => toSortableNumber(po?.id),
+      transactionId: (po) => toSortableNumber(po?.transactionId),
+      date: (po) => toSortableDate(po?.paymentOrderDate),
+      description: (po) => po?.paymentOrderDescription || null,
+      amount: (po) => toSortableNumber(po?.amount),
+      message: (po) => po?.message || null,
+      pinCode: (po) => po?.pinCode || null,
+    };
+    return sortRows(orders, getters[sortConfig.key], sortConfig.direction);
+  }, [orders, sortConfig]);
+
+  const toggleSort = (key) => setSortConfig((current) => ({
+    key,
+    direction: current?.key === key && current.direction === "asc" ? "desc" : "asc",
+  }));
+
   const selectablePaymentOrders = useMemo(
     // All active payment orders with an ID are selectable, including locked ones.
     // Locked orders can be exported and may be sent to bulk delete, where the
     // backend safely skips them and reports which IDs were not deleted.
-    () => orders.filter((po) => po?.id != null),
-    [orders],
+    () => displayedOrders.filter((po) => po?.id != null),
+    [displayedOrders],
   );
 
   const selectedPoCount = [...selectedPoIds].filter((id) =>
@@ -1227,7 +1250,7 @@ function PaymentOrders() {
                     <span>{h}</span>
                   </div>
                 ) : (
-                  h
+                  <SortableHeader label={h} sortKey={HEADER_SORT_KEYS[i]} sortConfig={sortConfig} onSort={toggleSort} />
                 )}
               </div>
             ))}
@@ -1240,7 +1263,7 @@ function PaymentOrders() {
           ) : orders.length === 0 ? (
             <p className={styles.noData}>No payment orders for this project.</p>
           ) : (
-            orders.map((po, idx) => (
+            displayedOrders.map((po, idx) => (
               <React.Fragment key={po.id}>
                 <PaymentOrder
                   po={po}

@@ -225,6 +225,32 @@
   background: var(--tx-header-bg);
 }
 
+.sortHeaderButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+
+  &:hover {
+    color: colors.$primary;
+  }
+
+  &:focus-visible {
+    border-radius: 4px;
+    outline: 2px solid colors.$primary;
+    outline-offset: 3px;
+  }
+
+  svg {
+    flex: 0 0 auto;
+  }
+}
+
 /* Sticky header col */
 .stickyColHeader {
   position: sticky;

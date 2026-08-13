@@ -17,9 +17,12 @@ import {
   FiColumns,
   FiTrash2,
   FiDownload,
+  FiChevronUp,
+  FiChevronDown,
 } from "react-icons/fi";
 
 import { BASE_URL } from "../../config/api"; // adjust path if needed
+import { sortRows } from "../../utils/tableSorting";
 
 const blankTx = {
   organizationId: "",
@@ -53,6 +56,23 @@ const headerLabels = [
   "OK Status",
 ];
 
+const HEADER_SORT_KEYS = [
+  null,
+  "id",
+  "organization",
+  "project",
+  "budget",
+  "financier",
+  "status",
+  "appliedForAmount",
+  "firstShareAmount",
+  "approvedAmount",
+  "secondShareAmount",
+  "ownContribution",
+  "datePlanned",
+  "okStatus",
+];
+
 // Added one width for Tx ID
 const BASE_COL_WIDTHS = [
   190, // Actions
@@ -71,6 +91,18 @@ const BASE_COL_WIDTHS = [
   100, // OK Status
 ];
 
+const toSortableNumber = (value) => {
+  if (value == null || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+};
+
+const toSortableDate = (value) => {
+  if (!value) return null;
+  const timestamp = new Date(value).getTime();
+  return Number.isFinite(timestamp) ? timestamp : null;
+};
+
 const Transactions = ({ refreshTrigger }) => {
   const { selectedProjectId } = useContext(ProjectContext);
   const { hasRole, hasAnyRole } = useAuth();
@@ -84,6 +116,7 @@ const Transactions = ({ refreshTrigger }) => {
   const [editedValues, setEditedValues] = useState({});
   const [expandedTxId, setExpandedTxId] = useState(null);
   const [exportingSelected, setExportingSelected] = useState(false);
+  const [sortConfig, setSortConfig] = useState(null);
 
   // dropdown data
   const [orgOptions, setOrgOptions] = useState([]);
@@ -464,9 +497,140 @@ const Transactions = ({ refreshTrigger }) => {
 
   const selectedCount = selectedTxIds.size;
 
+  const organizationNamesById = useMemo(
+    () =>
+      new Map(
+        orgOptions.map((organization) => [
+          String(organization.id),
+          organization.name,
+        ]),
+      ),
+    [orgOptions],
+  );
+
+  const projectNamesById = useMemo(
+    () =>
+      new Map(
+        projectOptions.map((project) => [
+          String(project.id),
+          project.projectName || project.name,
+        ]),
+      ),
+    [projectOptions],
+  );
+
+  const statusNamesById = useMemo(
+    () =>
+      new Map(
+        statusOptions.map((status) => [
+          String(status.id),
+          status.transactionStatusName || status.statusName,
+        ]),
+      ),
+    [statusOptions],
+  );
+
+  const budgetLabelsById = useMemo(
+    () =>
+      new Map(
+        budgetOptions.map((budget) => {
+          const description =
+            budget.budgetDescription || budget.description || "";
+          return [
+            String(budget.id),
+            description ? `${budget.id} — ${description}` : String(budget.id),
+          ];
+        }),
+      ),
+    [budgetOptions],
+  );
+
+  const displayedTransactions = useMemo(() => {
+    if (!sortConfig) return transactions;
+
+    const valueGetters = {
+      id: (tx) => (tx?.id == null || tx.id === "" ? null : Number(tx.id)),
+      organization: (tx) => {
+        const organizationId = tx?.organizationId;
+        if (organizationId == null || organizationId === "") return null;
+        return (
+          organizationNamesById.get(String(organizationId)) ||
+          `Organization ${organizationId}`
+        );
+      },
+      project: (tx) => {
+        const projectId = tx?.projectId;
+        if (projectId == null || projectId === "") return null;
+        return projectNamesById.get(String(projectId)) || `Project ${projectId}`;
+      },
+      budget: (tx) => {
+        const budgetId = tx?.budgetId;
+        if (budgetId == null || budgetId === "") return null;
+        return budgetLabelsById.get(String(budgetId)) || `Budget ${budgetId}`;
+      },
+      financier: (tx) => {
+        const organizationId = tx?.financierOrganizationId;
+        if (organizationId == null || organizationId === "") return null;
+        return (
+          organizationNamesById.get(String(organizationId)) ||
+          `Organization ${organizationId}`
+        );
+      },
+      status: (tx) => {
+        const statusId = tx?.transactionStatusId;
+        if (statusId == null || statusId === "") return null;
+        return statusNamesById.get(String(statusId)) || `Status ${statusId}`;
+      },
+      appliedForAmount: (tx) => toSortableNumber(tx?.appliedForAmount),
+      firstShareAmount: (tx) => toSortableNumber(tx?.firstShareAmount),
+      approvedAmount: (tx) => toSortableNumber(tx?.approvedAmount),
+      secondShareAmount: (tx) => toSortableNumber(tx?.secondShareAmount),
+      ownContribution: (tx) => tx?.ownContribution || null,
+      datePlanned: (tx) => toSortableDate(tx?.datePlanned),
+      okStatus: (tx) => tx?.okStatus || null,
+    };
+
+    const getValue = valueGetters[sortConfig.key];
+    return getValue
+      ? sortRows(transactions, getValue, sortConfig.direction)
+      : transactions;
+  }, [
+    budgetLabelsById,
+    organizationNamesById,
+    projectNamesById,
+    sortConfig,
+    statusNamesById,
+    transactions,
+  ]);
+
+  const toggleSort = (key) => {
+    setSortConfig((current) => ({
+      key,
+      direction:
+        current?.key === key && current.direction === "asc" ? "desc" : "asc",
+    }));
+  };
+
+  const renderSortHeader = (label, key) => (
+    <button
+      type="button"
+      className={styles.sortHeaderButton}
+      onClick={() => toggleSort(key)}
+      aria-label={`Sort by ${label}${
+        sortConfig?.key === key
+          ? `, currently ${sortConfig.direction === "asc" ? "ascending" : "descending"}`
+          : ""
+      }`}
+    >
+      <span>{label}</span>
+      {sortConfig?.key === key &&
+        (sortConfig.direction === "asc" ? <FiChevronUp /> : <FiChevronDown />)}
+    </button>
+  );
+
   const selectableTransactions = useMemo(
-    () => transactions.filter((tx) => tx?.id != null),
-    [transactions],
+    () => displayedTransactions.filter((tx) => tx?.id != null),
+    [displayedTransactions],
   );
 
   const allVisibleSelected =
@@ -1444,6 +1608,8 @@ const Transactions = ({ refreshTrigger }) => {
                     />
                     <span>{h}</span>
                   </div>
+                ) : HEADER_SORT_KEYS[i] ? (
+                  renderSortHeader(h, HEADER_SORT_KEYS[i])
                 ) : (
                   h
                 )}
@@ -1458,7 +1624,7 @@ const Transactions = ({ refreshTrigger }) => {
           ) : transactions.length === 0 ? (
             <p className={styles.noData}>No transactions for this project.</p>
           ) : (
-            transactions.map((tx, idx) => (
+            displayedTransactions.map((tx, idx) => (
               <Transaction
                 key={tx.id}
                 tx={tx}
