@@ -14,8 +14,11 @@ import styles from "./Recipients.module.scss";
 import { FiColumns, FiPlus, FiTrash2, FiDownload } from "react-icons/fi";
 
 import { BASE_URL } from "../../config/api"; // adjust path if needed
+import SortableHeader from "../../components/SortableHeader/SortableHeader";
+import { sortRows, toSortableNumber } from "../../utils/tableSorting";
 
 const headerLabels = ["Actions", "Organization", "Payment Order", "Amount"];
+const HEADER_SORT_KEYS = [null, "organization", "paymentOrderId", "amount"];
 
 // ✅ add width for Amount column
 const BASE_COL_WIDTHS = [
@@ -99,6 +102,7 @@ function Recipients() {
   const [lockedRecipientIds, setLockedRecipientIds] = useState(() => new Set());
   const [lockedBanner, setLockedBanner] = useState("");
   const [exportingSelected, setExportingSelected] = useState(false);
+  const [sortConfig, setSortConfig] = useState(null);
 
   // dropdown data
   const [poOptions, setPoOptions] = useState([]);
@@ -961,13 +965,34 @@ function Recipients() {
     return parts.join(" ");
   }, [visibleCols]);
 
+  const organizationNames = useMemo(
+    () =>
+      new Map(
+        orgOptions.map((organization) => [
+          String(organization.id),
+          organization.label || organization.name,
+        ]),
+      ),
+    [orgOptions],
+  );
+  const displayedItems = useMemo(() => {
+    if (!sortConfig) return items;
+    const getters = {
+      organization: (r) => r?.organizationId == null ? null : organizationNames.get(String(r.organizationId)) || `Organization ${r.organizationId}`,
+      paymentOrderId: (r) => toSortableNumber(r?.paymentOrderId),
+      amount: (r) => toSortableNumber(r?.amount),
+    };
+    return sortRows(items, getters[sortConfig.key], sortConfig.direction);
+  }, [items, organizationNames, sortConfig]);
+  const toggleSort = (key) => setSortConfig((current) => ({ key, direction: current?.key === key && current.direction === "asc" ? "desc" : "asc" }));
+
   const selectableRecipients = useMemo(
     /*
      * Locked recipients are selectable for Excel export and bulk delete.
      * Their edit and individual delete controls remain disabled.
      */
-    () => items.filter((r) => r?.id != null),
-    [items],
+    () => displayedItems.filter((r) => r?.id != null),
+    [displayedItems],
   );
 
   const selectedRecipientCount = selectedRecipientIds.size;
@@ -1108,7 +1133,7 @@ function Recipients() {
                     <span>{h}</span>
                   </div>
                 ) : (
-                  h
+                  <SortableHeader label={h} sortKey={HEADER_SORT_KEYS[i]} sortConfig={sortConfig} onSort={toggleSort} />
                 )}
               </div>
             ))}
@@ -1121,7 +1146,7 @@ function Recipients() {
           ) : items.length === 0 ? (
             <p className={styles.noData}>No recipients for this project.</p>
           ) : (
-            items.map((r, idx) => (
+            displayedItems.map((r, idx) => (
               <RecipientRow
                 key={r.id}
                 row={r}

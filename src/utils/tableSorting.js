@@ -27,3 +27,15 @@ export const sortRows = (rows, getValue, direction = "asc") => {
     })
     .map(({ row }) => row);
 };
+
+export const toSortableNumber = (value) => {
+  if (value == null || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+};
+
+export const toSortableDate = (value) => {
+  if (!value) return null;
+  const timestamp = new Date(value).getTime();
+  return Number.isFinite(timestamp) ? timestamp : null;
+};

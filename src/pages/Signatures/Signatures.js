@@ -12,6 +12,8 @@ import { useAuth } from "../../context/AuthContext";
 import SignatureRow from "./Signature/Signature";
 import styles from "./Signatures.module.scss";
 import { FiPlus, FiColumns, FiTrash2, FiDownload } from "react-icons/fi";
+import SortableHeader from "../../components/SortableHeader/SortableHeader";
+import { sortRows, toSortableDate, toSortableNumber } from "../../utils/tableSorting";
 
 import { BASE_URL } from "../../config/api"; // adjust path if needed
 
@@ -23,6 +25,7 @@ const headerLabels = [
   "Signature",
   "Date",
 ];
+const HEADER_SORT_KEYS = [null, "status", "employee", "paymentOrderId", "signature", "date"];
 
 const BASE_COL_WIDTHS = [
   110, // Actions
@@ -102,6 +105,7 @@ function Signatures() {
   );
 
   const [exportingSelected, setExportingSelected] = useState(false);
+  const [sortConfig, setSortConfig] = useState(null);
 
   // dropdown data
   const [poOptions, setPoOptions] = useState([]);
@@ -983,9 +987,30 @@ function Signatures() {
     return parts.join(" ");
   }, [visibleCols]);
 
+  const statusNames = useMemo(
+    () => new Map(statusOptions.map((status) => [String(status.id), status.label])),
+    [statusOptions],
+  );
+  const employeeNames = useMemo(
+    () => new Map(employeeOptions.map((employee) => [String(employee.id), employee.label])),
+    [employeeOptions],
+  );
+  const displayedItems = useMemo(() => {
+    if (!sortConfig) return items;
+    const getters = {
+      status: (s) => s?.signatureStatusId == null ? null : statusNames.get(String(s.signatureStatusId)) || `Status ${s.signatureStatusId}`,
+      employee: (s) => s?.employeeId == null ? null : employeeNames.get(String(s.employeeId)) || `Employee ${s.employeeId}`,
+      paymentOrderId: (s) => toSortableNumber(s?.paymentOrderId),
+      signature: (s) => s?.signature || null,
+      date: (s) => toSortableDate(s?.signatureDate),
+    };
+    return sortRows(items, getters[sortConfig.key], sortConfig.direction);
+  }, [employeeNames, items, sortConfig, statusNames]);
+  const toggleSort = (key) => setSortConfig((current) => ({ key, direction: current?.key === key && current.direction === "asc" ? "desc" : "asc" }));
+
   const selectableSignatures = useMemo(
-    () => items.filter((s) => s?.id != null),
-    [items],
+    () => displayedItems.filter((s) => s?.id != null),
+    [displayedItems],
   );
 
   const selectedSignatureCount = selectedSignatureIds.size;
@@ -1127,7 +1152,7 @@ function Signatures() {
                     <span>{h}</span>
                   </div>
                 ) : (
-                  h
+                  <SortableHeader label={h} sortKey={HEADER_SORT_KEYS[i]} sortConfig={sortConfig} onSort={toggleSort} />
                 )}
               </div>
             ))}
@@ -1140,7 +1165,7 @@ function Signatures() {
           ) : items.length === 0 ? (
             <p className={styles.noData}>No signatures for this project.</p>
           ) : (
-            items.map((s, idx) => (
+            displayedItems.map((s, idx) => (
               <SignatureRow
                 key={s.id}
                 row={s}

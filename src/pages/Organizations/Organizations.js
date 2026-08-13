@@ -10,6 +10,8 @@ import { useAuth } from "../../context/AuthContext";
 import OrganizationRow from "./Organization/Organization";
 import styles from "./Organizations.module.scss";
 import { FiColumns, FiPlus } from "react-icons/fi";
+import SortableHeader from "../../components/SortableHeader/SortableHeader";
+import { sortRows } from "../../utils/tableSorting";
 
 import { BASE_URL } from "../../config/api"; // adjust path if needed
 
@@ -21,6 +23,7 @@ const blankLink = {
 
 // Only 3 columns: Actions, Organization, Status
 const headerLabels = ["Actions", "Organization", "Status"];
+const HEADER_SORT_KEYS = [null, "organization", "status"];
 
 // ✅ Actions wider: edit/delete/address/bank
 const BASE_COL_WIDTHS = [
@@ -63,6 +66,7 @@ const Organizations = () => {
   const [visibleCols, setVisibleCols] = useState(() =>
     Array(headerLabels.length).fill(true)
   );
+  const [sortConfig, setSortConfig] = useState(null);
 
   // errors
   const [formError, setFormError] = useState("");
@@ -333,6 +337,18 @@ const Organizations = () => {
     return parts.join(" ");
   }, [visibleCols]);
 
+  const organizationNames = useMemo(() => new Map(orgOptions.map((o) => [String(o.id), o.name])), [orgOptions]);
+  const statusNames = useMemo(() => new Map(statusOptions.map((s) => [String(s.id), s.organizationStatusName])), [statusOptions]);
+  const displayedLinks = useMemo(() => {
+    if (!sortConfig) return links;
+    const getters = {
+      organization: (link) => link?.organizationId == null ? null : organizationNames.get(String(link.organizationId)) || `Organization ${link.organizationId}`,
+      status: (link) => link?.organizationStatusId == null ? null : statusNames.get(String(link.organizationStatusId)) || `Status ${link.organizationStatusId}`,
+    };
+    return sortRows(links, getters[sortConfig.key], sortConfig.direction);
+  }, [links, organizationNames, sortConfig, statusNames]);
+  const toggleSort = (key) => setSortConfig((current) => ({ key, direction: current?.key === key && current.direction === "asc" ? "desc" : "asc" }));
+
   const totalCount = links.length;
 
   const subtitle = selectedProjectId
@@ -412,7 +428,7 @@ const Organizations = () => {
                   ${i === 0 ? styles.stickyColHeader : ""}
                   ${!visibleCols[i] ? styles.hiddenCol : ""}`}
               >
-                {h}
+                {i === 0 ? h : <SortableHeader label={h} sortKey={HEADER_SORT_KEYS[i]} sortConfig={sortConfig} onSort={toggleSort} />}
               </div>
             ))}
           </div>
@@ -426,7 +442,7 @@ const Organizations = () => {
               No organizations linked to this project.
             </p>
           ) : (
-            links.map((link, idx) => (
+            displayedLinks.map((link, idx) => (
               <OrganizationRow
                 key={link.id}
                 link={link}
