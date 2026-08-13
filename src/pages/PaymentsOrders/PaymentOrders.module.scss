@@ -196,6 +196,7 @@
   color: colors.$text-secondary;
   background: var(--po-header-bg);
 }
+.sortAndFilterHeader { display: inline-flex; align-items: center; gap: 0.25rem; }
 
 .stickyColHeader {
   position: sticky;

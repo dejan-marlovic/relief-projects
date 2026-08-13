@@ -23,6 +23,9 @@ import {
 import { BASE_URL } from "../../config/api"; // adjust path if needed
 import SortableHeader from "../../components/SortableHeader/SortableHeader";
 import { sortRows, toSortableDate, toSortableNumber } from "../../utils/tableSorting";
+import { matchesDateRange, matchesNumberRange, matchesText } from "../../utils/tableSorting";
+import ColumnFilter from "../../components/ColumnFilter/ColumnFilter";
+import ClearFiltersButton from "../../components/ClearFiltersButton/ClearFiltersButton";
 
 const headerLabels = [
   "Actions",
@@ -135,6 +138,9 @@ function PaymentOrders() {
   const [selectedPoIds, setSelectedPoIds] = useState(() => new Set());
   const [exportingSelected, setExportingSelected] = useState(false);
   const [sortConfig, setSortConfig] = useState(null);
+  const emptyFilters = () => ({id:{min:"",max:""},transactionId:{min:"",max:""},date:{from:"",to:""},description:"",amount:{min:"",max:""},message:"",pinCode:""});
+  const [filters, setFilters] = useState(emptyFilters);
+  const hasActiveFilters = JSON.stringify(filters) !== JSON.stringify(emptyFilters());
 
   const [orgOptions, setOrgOptions] = useState([]);
   const [costDetailOptions, setCostDetailOptions] = useState([]);
@@ -523,8 +529,14 @@ function PaymentOrders() {
     return parts.join(" ");
   }, [visibleCols]);
 
+  useEffect(() => setFilters(emptyFilters()), [selectedProjectId]);
+  const filteredOrders = useMemo(() => orders.filter((po) =>
+    matchesNumberRange(po.id, filters.id) && matchesNumberRange(po.transactionId, filters.transactionId) &&
+    matchesDateRange(po.paymentOrderDate, filters.date) && matchesText(po.paymentOrderDescription, filters.description) &&
+    matchesNumberRange(po.amount, filters.amount) && matchesText(po.message, filters.message) && matchesText(po.pinCode, filters.pinCode)
+  ), [filters, orders]);
   const displayedOrders = useMemo(() => {
-    if (!sortConfig) return orders;
+    if (!sortConfig) return filteredOrders;
     const getters = {
       id: (po) => toSortableNumber(po?.id),
       transactionId: (po) => toSortableNumber(po?.transactionId),
@@ -534,8 +546,8 @@ function PaymentOrders() {
       message: (po) => po?.message || null,
       pinCode: (po) => po?.pinCode || null,
     };
-    return sortRows(orders, getters[sortConfig.key], sortConfig.direction);
-  }, [orders, sortConfig]);
+    return sortRows(filteredOrders, getters[sortConfig.key], sortConfig.direction);
+  }, [filteredOrders, sortConfig]);
 
   const toggleSort = (key) => setSortConfig((current) => ({
     key,
@@ -1133,6 +1145,7 @@ function PaymentOrders() {
           </div>
 
           <div className={styles.headerActions}>
+            {hasActiveFilters && <ClearFiltersButton onClick={() => setFilters(emptyFilters())} />}
             <button
               type="button"
               className={styles.exportInlineBtn}
@@ -1250,7 +1263,7 @@ function PaymentOrders() {
                     <span>{h}</span>
                   </div>
                 ) : (
-                  <SortableHeader label={h} sortKey={HEADER_SORT_KEYS[i]} sortConfig={sortConfig} onSort={toggleSort} />
+                  <div className={styles.sortAndFilterHeader}><SortableHeader label={h} sortKey={HEADER_SORT_KEYS[i]} sortConfig={sortConfig} onSort={toggleSort} /><ColumnFilter label={h} type={["id","transactionId","amount"].includes(HEADER_SORT_KEYS[i]) ? "number" : HEADER_SORT_KEYS[i] === "date" ? "date" : "text"} value={filters[HEADER_SORT_KEYS[i]]} onApply={(v)=>setFilters((c)=>({...c,[HEADER_SORT_KEYS[i]]:v}))} onClear={()=>setFilters((c)=>({...c,[HEADER_SORT_KEYS[i]]:emptyFilters()[HEADER_SORT_KEYS[i]]}))} /></div>
                 )}
               </div>
             ))}

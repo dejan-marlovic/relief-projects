@@ -16,6 +16,9 @@ import { FiColumns, FiPlus, FiTrash2, FiDownload } from "react-icons/fi";
 import { BASE_URL } from "../../config/api"; // adjust path if needed
 import SortableHeader from "../../components/SortableHeader/SortableHeader";
 import { sortRows, toSortableNumber } from "../../utils/tableSorting";
+import { matchesNumberRange, matchesText } from "../../utils/tableSorting";
+import ColumnFilter from "../../components/ColumnFilter/ColumnFilter";
+import ClearFiltersButton from "../../components/ClearFiltersButton/ClearFiltersButton";
 
 const headerLabels = ["Actions", "Organization", "Payment Order", "Amount"];
 const HEADER_SORT_KEYS = [null, "organization", "paymentOrderId", "amount"];
@@ -103,6 +106,9 @@ function Recipients() {
   const [lockedBanner, setLockedBanner] = useState("");
   const [exportingSelected, setExportingSelected] = useState(false);
   const [sortConfig, setSortConfig] = useState(null);
+  const emptyFilters = () => ({organization:"",paymentOrderId:{min:"",max:""},amount:{min:"",max:""}});
+  const [filters, setFilters] = useState(emptyFilters);
+  const hasActiveFilters = JSON.stringify(filters) !== JSON.stringify(emptyFilters());
 
   // dropdown data
   const [poOptions, setPoOptions] = useState([]);
@@ -975,15 +981,20 @@ function Recipients() {
       ),
     [orgOptions],
   );
+  useEffect(() => setFilters(emptyFilters()), [selectedProjectId]);
+  const filteredItems = useMemo(() => items.filter((r) =>
+    matchesText(organizationNames.get(String(r.organizationId)), filters.organization) &&
+    matchesNumberRange(r.paymentOrderId, filters.paymentOrderId) && matchesNumberRange(r.amount, filters.amount)
+  ), [filters, items, organizationNames]);
   const displayedItems = useMemo(() => {
-    if (!sortConfig) return items;
+    if (!sortConfig) return filteredItems;
     const getters = {
       organization: (r) => r?.organizationId == null ? null : organizationNames.get(String(r.organizationId)) || `Organization ${r.organizationId}`,
       paymentOrderId: (r) => toSortableNumber(r?.paymentOrderId),
       amount: (r) => toSortableNumber(r?.amount),
     };
-    return sortRows(items, getters[sortConfig.key], sortConfig.direction);
-  }, [items, organizationNames, sortConfig]);
+    return sortRows(filteredItems, getters[sortConfig.key], sortConfig.direction);
+  }, [filteredItems, organizationNames, sortConfig]);
   const toggleSort = (key) => setSortConfig((current) => ({ key, direction: current?.key === key && current.direction === "asc" ? "desc" : "asc" }));
 
   const selectableRecipients = useMemo(
@@ -1019,6 +1030,7 @@ function Recipients() {
           </div>
 
           <div className={styles.headerActions}>
+            {hasActiveFilters && <ClearFiltersButton onClick={() => setFilters(emptyFilters())} />}
             <button
               type="button"
               className={styles.exportInlineBtn}
@@ -1133,7 +1145,7 @@ function Recipients() {
                     <span>{h}</span>
                   </div>
                 ) : (
-                  <SortableHeader label={h} sortKey={HEADER_SORT_KEYS[i]} sortConfig={sortConfig} onSort={toggleSort} />
+                  <div className={styles.sortAndFilterHeader}><SortableHeader label={h} sortKey={HEADER_SORT_KEYS[i]} sortConfig={sortConfig} onSort={toggleSort} /><ColumnFilter label={h} type={HEADER_SORT_KEYS[i] === "organization" ? "text" : "number"} value={filters[HEADER_SORT_KEYS[i]]} onApply={(v)=>setFilters((c)=>({...c,[HEADER_SORT_KEYS[i]]:v}))} onClear={()=>setFilters((c)=>({...c,[HEADER_SORT_KEYS[i]]:emptyFilters()[HEADER_SORT_KEYS[i]]}))} /></div>
                 )}
               </div>
             ))}
