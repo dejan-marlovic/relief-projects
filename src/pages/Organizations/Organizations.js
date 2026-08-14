@@ -50,7 +50,6 @@ const Organizations = () => {
   const { hasRole, hasAnyRole } = useAuth();
   const canManageOrganizationLinks = hasAnyRole("ADMIN", "PROJECT_MANAGER");
   const canManageAddresses = canManageOrganizationLinks;
-  const canDeleteAddresses = hasRole("ADMIN");
   const canViewBankDetails = hasAnyRole("ADMIN", "FINANCE", "APPROVER");
   const canManageBankDetails = hasAnyRole("ADMIN", "FINANCE");
   const canDeleteBankDetails = hasRole("ADMIN");
@@ -473,7 +472,6 @@ const Organizations = () => {
                 fieldErrors={fieldErrors[link.id] || {}}
                 canManage={canManageOrganizationLinks}
                 canManageAddresses={canManageAddresses}
-                canDeleteAddresses={canDeleteAddresses}
                 canViewBankDetails={canViewBankDetails}
                 canManageBankDetails={canManageBankDetails}
                 canDeleteBankDetails={canDeleteBankDetails}
@@ -502,7 +500,6 @@ const Organizations = () => {
               fieldErrors={fieldErrors.new || {}}
               canManage={canManageOrganizationLinks}
               canManageAddresses={canManageAddresses}
-              canDeleteAddresses={canDeleteAddresses}
               canViewBankDetails={canViewBankDetails}
               canManageBankDetails={canManageBankDetails}
               canDeleteBankDetails={canDeleteBankDetails}

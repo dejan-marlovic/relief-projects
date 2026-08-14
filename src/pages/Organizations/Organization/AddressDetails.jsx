@@ -1,9 +1,7 @@
-// src/pages/Organizations/Organization/AddressDetails.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { FiEdit, FiLink, FiPlus, FiSave, FiStar, FiX } from "react-icons/fi";
+import { BASE_URL } from "../../../config/api";
 import styles from "./AddressDetails.module.scss";
-import { FiEdit, FiTrash2, FiSave, FiX, FiPlus } from "react-icons/fi";
-
-import { BASE_URL } from "../../../config/api"; // adjust path if needed
 
 const blankAddress = {
   street: "",
@@ -13,8 +11,8 @@ const blankAddress = {
   country: "",
 };
 
-async function safeParseJsonResponse(res) {
-  const raw = await res.text().catch(() => "");
+async function safeParseJsonResponse(response) {
+  const raw = await response.text().catch(() => "");
   if (!raw) return null;
   try {
     return JSON.parse(raw);
@@ -23,86 +21,56 @@ async function safeParseJsonResponse(res) {
   }
 }
 
-const formatAddressLabel = (a) => {
-  if (!a) return "";
-  const parts = [a.street, a.city, a.state, a.postalCode, a.country].filter(
-    Boolean
-  );
-  return parts.join(", ");
-};
+const formatAddressLabel = (address) =>
+  [address?.street, address?.city, address?.state, address?.postalCode, address?.country]
+    .filter(Boolean)
+    .join(", ");
 
-const AddressDetails = ({ organizationId, canManage = false, canDelete = false }) => {
-  const [org, setOrg] = useState(null); // OrganizationDTO
-  const [address, setAddress] = useState(null); // AddressDTO
-  const [addressOptions, setAddressOptions] = useState([]); // active addresses
-
-  const [switchToId, setSwitchToId] = useState("");
-
-  const [editingId, setEditingId] = useState(null); // address.id or "new"
+const AddressDetails = ({ organizationId, canManage = false }) => {
+  const [associations, setAssociations] = useState([]);
+  const [addressOptions, setAddressOptions] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState("");
+  const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
-
   const [formError, setFormError] = useState("");
-  const [fieldErrors, setFieldErrors] = useState({}); // { [rowKey]: { fieldName: msg } }
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [busyAction, setBusyAction] = useState("");
 
   const token = useMemo(() => localStorage.getItem("authToken"), []);
   const authHeaders = useMemo(
-    () =>
-      token
-        ? {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          }
-        : { "Content-Type": "application/json" },
+    () => ({
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      "Content-Type": "application/json",
+    }),
     [token]
   );
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!organizationId) return;
-
     setFormError("");
 
     try {
-      // org (to know current addressId)
-      const orgRes = await fetch(
-        `${BASE_URL}/api/organizations/${organizationId}`,
-        { headers: authHeaders }
-      );
-      if (!orgRes.ok) throw new Error("Failed to load organization");
-      const orgDto = await orgRes.json();
-      setOrg(orgDto);
+      const [linkedResponse, optionsResponse] = await Promise.all([
+        fetch(`${BASE_URL}/api/organizations/${organizationId}/addresses`, {
+          headers: authHeaders,
+        }),
+        fetch(`${BASE_URL}/api/addresses/active`, { headers: authHeaders }),
+      ]);
 
-      // address options
-      const optionsRes = await fetch(`${BASE_URL}/api/addresses/active`, {
-        headers: authHeaders,
-      });
-      const options = optionsRes.ok ? await optionsRes.json() : [];
-      setAddressOptions(
-        Array.isArray(options) ? options : options ? [options] : []
-      );
-
-      // current address
-      if (orgDto?.addressId) {
-        const addrRes = await fetch(
-          `${BASE_URL}/api/addresses/${orgDto.addressId}`,
-          { headers: authHeaders }
-        );
-        if (addrRes.ok) {
-          setAddress(await addrRes.json());
-        } else {
-          setAddress(null);
-        }
-      } else {
-        setAddress(null);
+      if (!linkedResponse.ok) {
+        throw new Error("Failed to load addresses for this organization.");
       }
 
-      setSwitchToId("");
-    } catch (e) {
-      console.error(e);
-      setFormError(
-        e.message || "Failed to load address for this organization."
-      );
+      const linked = await linkedResponse.json();
+      const options = optionsResponse.ok ? await optionsResponse.json() : [];
+      setAssociations(Array.isArray(linked) ? linked : []);
+      setAddressOptions(Array.isArray(options) ? options : options ? [options] : []);
+      setSelectedAddressId("");
+    } catch (error) {
+      console.error(error);
+      setFormError(error.message || "Failed to load addresses for this organization.");
     }
-  };
+  }, [authHeaders, organizationId]);
 
   useEffect(() => {
     setEditingId(null);
@@ -110,512 +78,257 @@ const AddressDetails = ({ organizationId, canManage = false, canDelete = false }
     setFieldErrors({});
     setFormError("");
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [organizationId]);
+  }, [load]);
 
-  const startEdit = () => {
+  const linkedIds = useMemo(
+    () => new Set(associations.map((association) => String(association.addressId))),
+    [associations]
+  );
+  const availableOptions = addressOptions.filter(
+    (address) => !linkedIds.has(String(address.id))
+  );
+
+  const startEdit = (address) => {
     if (!canManage) return;
-    if (!address?.id) return;
-    const id = address.id;
-
-    setEditingId(id);
-    setEditedValues((prev) => ({
-      ...prev,
-      [id]: {
+    setEditingId(address.id);
+    setEditedValues({
+      [address.id]: {
         street: address.street || "",
         city: address.city || "",
         state: address.state || "",
         postalCode: address.postalCode || "",
         country: address.country || "",
       },
-    }));
-
-    setFieldErrors((prev) => {
-      const next = { ...prev };
-      delete next[id];
-      return next;
     });
+    setFieldErrors({});
     setFormError("");
   };
 
   const startCreate = () => {
     if (!canManage) return;
     setEditingId("new");
-    setEditedValues((prev) => ({ ...prev, new: { ...blankAddress } }));
+    setEditedValues({ new: { ...blankAddress } });
+    setFieldErrors({});
+    setFormError("");
+  };
 
-    setFieldErrors((prev) => {
-      const next = { ...prev };
-      delete next.new;
-      return next;
-    });
+  const cancel = () => {
+    setEditingId(null);
+    setEditedValues({});
+    setFieldErrors({});
     setFormError("");
   };
 
   const onChange = (field, value) => {
-    setEditedValues((prev) => ({
-      ...prev,
-      [editingId]: {
-        ...prev[editingId],
-        [field]: value,
-      },
+    setEditedValues((current) => ({
+      ...current,
+      [editingId]: { ...current[editingId], [field]: value },
     }));
   };
 
-  const cancel = () => {
-    const id = editingId;
-    setEditingId(null);
-
-    setEditedValues((prev) => {
-      const next = { ...prev };
-      delete next.new;
-      if (id && next[id]) delete next[id];
-      return next;
-    });
-
-    setFieldErrors((prev) => {
-      const next = { ...prev };
-      delete next.new;
-      if (id && next[id]) delete next[id];
-      return next;
-    });
-
-    setFormError("");
-  };
-
-  // ✅ Uses the NEW backend endpoint
-  const assignAddressToOrg = async (addressId) => {
-    const res = await fetch(
-      `${BASE_URL}/api/organizations/${organizationId}/address/${addressId}`,
-      { method: "PUT", headers: authHeaders }
-    );
-
-    if (!res.ok) {
-      const data = await safeParseJsonResponse(res);
-      throw new Error(
-        data?.message || `Failed to assign address (${res.status}).`
-      );
+  const request = async (url, options, fallbackMessage) => {
+    const response = await fetch(url, options);
+    if (!response.ok) {
+      const data = await safeParseJsonResponse(response);
+      const error = new Error(data?.message || fallbackMessage);
+      error.fieldErrors = data?.fieldErrors;
+      throw error;
     }
+    return response;
   };
 
   const save = async () => {
-    if (!canManage) return;
-    const id = editingId;
-    const values = editedValues[id];
+    if (!canManage || !editingId) return;
+    const rowKey = editingId;
+    const values = editedValues[rowKey];
     if (!values) return;
 
+    setBusyAction(`save-${rowKey}`);
     setFormError("");
-    setFieldErrors((prev) => ({ ...prev, [id]: {} }));
+    setFieldErrors({});
 
     try {
-      if (id === "new") {
-        // create new address then assign it
-        const createRes = await fetch(`${BASE_URL}/api/addresses`, {
-          method: "POST",
-          headers: authHeaders,
-          body: JSON.stringify({
-            street: values.street || "",
-            city: values.city || "",
-            state: values.state || null,
-            postalCode: values.postalCode || null,
-            country: values.country || null,
-          }),
-        });
-
-        if (!createRes.ok) {
-          const data = await safeParseJsonResponse(createRes);
-          if (data?.fieldErrors) {
-            setFieldErrors((prev) => ({ ...prev, [id]: data.fieldErrors }));
-          }
-          throw new Error(data?.message || "Failed to create address.");
-        }
-
-        const created = await createRes.json();
-        if (!created?.id)
-          throw new Error("Address created but no id returned.");
-
-        await assignAddressToOrg(created.id);
-
-        await load();
-        cancel();
-        return;
-      }
-
-      // update existing address fields
-      const updateRes = await fetch(`${BASE_URL}/api/addresses/${id}`, {
-        method: "PUT",
-        headers: authHeaders,
-        body: JSON.stringify({
-          id,
-          street: values.street || "",
-          city: values.city || "",
-          state: values.state || null,
-          postalCode: values.postalCode || null,
-          country: values.country || null,
-        }),
+      const body = JSON.stringify({
+        ...(rowKey === "new" ? {} : { id: rowKey }),
+        street: values.street || "",
+        city: values.city || "",
+        state: values.state || null,
+        postalCode: values.postalCode || null,
+        country: values.country || null,
       });
 
-      if (!updateRes.ok) {
-        const data = await safeParseJsonResponse(updateRes);
-        if (data?.fieldErrors) {
-          setFieldErrors((prev) => ({ ...prev, [id]: data.fieldErrors }));
-        }
-        throw new Error(data?.message || "Failed to update address.");
+      if (rowKey === "new") {
+        await request(
+          `${BASE_URL}/api/organizations/${organizationId}/addresses`,
+          { method: "POST", headers: authHeaders, body },
+          "Failed to create and link address."
+        );
+      } else {
+        await request(
+          `${BASE_URL}/api/addresses/${rowKey}`,
+          { method: "PUT", headers: authHeaders, body },
+          "Failed to update address."
+        );
       }
 
-      await load();
       cancel();
-    } catch (e) {
-      console.error(e);
-      setFormError(e.message || "Failed to save address.");
+      await load();
+    } catch (error) {
+      console.error(error);
+      if (error.fieldErrors) setFieldErrors({ [rowKey]: error.fieldErrors });
+      setFormError(error.message || "Failed to save address.");
+    } finally {
+      setBusyAction("");
     }
   };
 
-  const remove = async () => {
-    if (!canDelete) return;
-    if (!address?.id) return;
-    if (
-      !window.confirm(
-        "Delete this address? (Organizations/projects may be reassigned to default address)"
-      )
-    )
-      return;
-
+  const addExisting = async () => {
+    if (!canManage || !selectedAddressId) return;
+    setBusyAction("link");
     setFormError("");
-
     try {
-      const res = await fetch(`${BASE_URL}/api/addresses/${address.id}`, {
-        method: "DELETE",
-        headers: authHeaders,
-      });
-
-      if (!res.ok) {
-        const data = await safeParseJsonResponse(res);
-        throw new Error(data?.message || "Failed to delete address.");
-      }
-
+      await request(
+        `${BASE_URL}/api/organizations/${organizationId}/addresses/${selectedAddressId}`,
+        { method: "POST", headers: authHeaders },
+        "Failed to link address."
+      );
       await load();
-      cancel();
-    } catch (e) {
-      console.error(e);
-      setFormError(e.message || "Failed to delete address.");
+    } catch (error) {
+      console.error(error);
+      setFormError(error.message || "Failed to link address.");
+    } finally {
+      setBusyAction("");
     }
   };
 
-  const doSwitch = async () => {
+  const makePrimary = async (addressId) => {
     if (!canManage) return;
-    if (!switchToId) return;
+    setBusyAction(`primary-${addressId}`);
     setFormError("");
     try {
-      await assignAddressToOrg(switchToId);
+      await request(
+        `${BASE_URL}/api/organizations/${organizationId}/addresses/${addressId}/primary`,
+        { method: "PUT", headers: authHeaders },
+        "Failed to make address primary."
+      );
       await load();
-    } catch (e) {
-      console.error(e);
-      setFormError(e.message || "Failed to switch address.");
+    } catch (error) {
+      console.error(error);
+      setFormError(error.message || "Failed to make address primary.");
+    } finally {
+      setBusyAction("");
     }
   };
 
-  const getRowFieldError = (rowKey, name) =>
-    fieldErrors?.[rowKey] ? fieldErrors[rowKey][name] : undefined;
-
-  const hasRowError = (rowKey, name) => Boolean(getRowFieldError(rowKey, name));
-
-  const inputClassFor = (rowKey, name) =>
-    `${styles.input} ${hasRowError(rowKey, name) ? styles.inputError : ""}`;
-
-  const FieldError = ({ rowKey, name }) => {
-    const msg = getRowFieldError(rowKey, name);
-    return msg ? <div className={styles.fieldError}>{msg}</div> : null;
+  const unlink = async (addressId) => {
+    if (!canManage) return;
+    if (!window.confirm("Remove this address from the organization? The address record will remain available.")) return;
+    setBusyAction(`unlink-${addressId}`);
+    setFormError("");
+    try {
+      await request(
+        `${BASE_URL}/api/organizations/${organizationId}/addresses/${addressId}`,
+        { method: "DELETE", headers: authHeaders },
+        "Failed to remove address from organization."
+      );
+      await load();
+    } catch (error) {
+      console.error(error);
+      setFormError(error.message || "Failed to remove address from organization.");
+    } finally {
+      setBusyAction("");
+    }
   };
 
-  const isEditingCurrent =
-    editingId && address?.id && String(editingId) === String(address.id);
-  const ev = editedValues[editingId] || {};
+  const getFieldError = (rowKey, field) => fieldErrors?.[rowKey]?.[field];
+  const inputClassFor = (rowKey, field) =>
+    `${styles.input} ${getFieldError(rowKey, field) ? styles.inputError : ""}`;
+
+  const renderField = (rowKey, address, field, placeholder) => {
+    const editing = String(editingId) === String(rowKey);
+    if (!editing) return address?.[field] || "-";
+    return <>
+      <input
+        className={inputClassFor(rowKey, field)}
+        type="text"
+        value={editedValues[rowKey]?.[field] ?? ""}
+        onChange={(event) => onChange(field, event.target.value)}
+        placeholder={placeholder}
+      />
+      {getFieldError(rowKey, field) && (
+        <div className={styles.fieldError}>{getFieldError(rowKey, field)}</div>
+      )}
+    </>;
+  };
+
+  const renderRow = (association, isNew = false) => {
+    const address = isNew ? blankAddress : association.address;
+    const rowKey = isNew ? "new" : address.id;
+    const editing = String(editingId) === String(rowKey);
+    const primary = !isNew && association.primary;
+    const disabled = Boolean(busyAction);
+
+    return (
+      <div key={rowKey} className={`${styles.gridRow} ${styles.dataRow} ${styles.hoverable} ${primary ? styles.primaryRow : ""}`}>
+        <div className={`${styles.cell} ${styles.stickyCol}`}>
+          {editing ? (
+            <div className={styles.actions}>
+              <button type="button" className={styles.iconCircleBtn} onClick={save} disabled={disabled} title="Save" aria-label={`Save address ${rowKey}`}><FiSave /></button>
+              <button type="button" className={styles.dangerIconBtn} onClick={cancel} disabled={disabled} title="Cancel" aria-label={`Cancel address ${rowKey}`}><FiX /></button>
+            </div>
+          ) : (
+            <div className={styles.actions}>
+              {canManage && <button type="button" className={styles.iconCircleBtn} onClick={() => startEdit(address)} disabled={Boolean(editingId) || disabled} title="Edit address" aria-label={`Edit address ${address.id}`}><FiEdit /></button>}
+              {canManage && !primary && <button type="button" className={styles.iconCircleBtn} onClick={() => makePrimary(address.id)} disabled={Boolean(editingId) || disabled} title="Make primary" aria-label={`Make address ${address.id} primary`}><FiStar /></button>}
+              {canManage && <button type="button" className={styles.unlinkBtn} onClick={() => unlink(address.id)} disabled={associations.length <= 1 || Boolean(editingId) || disabled} title={associations.length <= 1 ? "An organization must keep one address" : "Remove from organization"} aria-label={`Remove address ${address.id} from organization`}><FiLink /></button>}
+            </div>
+          )}
+        </div>
+        <div className={styles.cell}>{primary ? <span className={styles.primaryBadge}><FiStar /> Primary</span> : isNew ? "New" : "Additional"}</div>
+        <div className={styles.cell}>{renderField(rowKey, address, "street", "Street")}</div>
+        <div className={styles.cell}>{renderField(rowKey, address, "city", "City")}</div>
+        <div className={styles.cell}>{renderField(rowKey, address, "state", "State")}</div>
+        <div className={styles.cell}>{renderField(rowKey, address, "postalCode", "Postal code")}</div>
+        <div className={styles.cell}>{renderField(rowKey, address, "country", "Country")}</div>
+      </div>
+    );
+  };
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <div className={styles.title}>
-          Address for organization #{organizationId}
+        <div>
+          <div className={styles.title}>Addresses for organization #{organizationId}</div>
+          <div className={styles.subtitle}>{associations.length} linked address{associations.length === 1 ? "" : "es"}</div>
         </div>
 
-        {canManage && <div className={styles.headerRight}>
-          <select
-            className={styles.select}
-            value={switchToId}
-            onChange={(e) => setSwitchToId(e.target.value)}
-            disabled={!addressOptions?.length || editingId === "new"}
-            title="Switch to an existing address"
-          >
-            <option value="">Switch to existing address…</option>
-            {addressOptions.map((a) => (
-              <option key={a.id} value={a.id}>
-                #{a.id} — {formatAddressLabel(a)}
-              </option>
-            ))}
-          </select>
-
-          <button
-            type="button"
-            className={styles.secondaryBtn}
-            onClick={doSwitch}
-            disabled={
-              !switchToId ||
-              String(switchToId) === String(org?.addressId) ||
-              editingId === "new"
-            }
-            title="Assign selected address to this organization"
-          >
-            Assign
-          </button>
-
-          <button
-            type="button"
-            className={styles.primaryBtn}
-            onClick={startCreate}
-            disabled={editingId === "new"}
-          >
-            <FiPlus /> New Address
-          </button>
-        </div>}
+        {canManage && (
+          <div className={styles.headerRight}>
+            <select className={styles.select} value={selectedAddressId} onChange={(event) => setSelectedAddressId(event.target.value)} disabled={!availableOptions.length || Boolean(editingId) || Boolean(busyAction)} aria-label="Existing address">
+              <option value="">Add an existing address…</option>
+              {availableOptions.map((address) => <option key={address.id} value={address.id}>#{address.id} — {formatAddressLabel(address)}</option>)}
+            </select>
+            <button type="button" className={styles.secondaryBtn} onClick={addExisting} disabled={!selectedAddressId || Boolean(editingId) || Boolean(busyAction)}><FiLink /> Add existing</button>
+            <button type="button" className={styles.primaryBtn} onClick={startCreate} disabled={Boolean(editingId) || Boolean(busyAction)}><FiPlus /> New Address</button>
+          </div>
+        )}
       </div>
 
-      {formError && <div className={styles.errorBanner}>{formError}</div>}
-
-      {!address && editingId !== "new" && (
-        <p className={styles.noData}>
-          No address loaded for this organization.
-        </p>
-      )}
+      {formError && <div className={styles.errorBanner} role="alert">{formError}</div>}
+      {!associations.length && editingId !== "new" && <p className={styles.noData}>No active addresses linked to this organization.</p>}
 
       <div className={styles.table}>
         <div className={`${styles.gridRow} ${styles.headerRow}`}>
-          <div className={`${styles.headerCell} ${styles.stickyColHeader}`}>
-            Actions
-          </div>
+          <div className={`${styles.headerCell} ${styles.stickyColHeader}`}>Actions</div>
+          <div className={styles.headerCell}>Type</div>
           <div className={styles.headerCell}>Street</div>
           <div className={styles.headerCell}>City</div>
           <div className={styles.headerCell}>State</div>
           <div className={styles.headerCell}>Postal</div>
           <div className={styles.headerCell}>Country</div>
         </div>
-
-        {address?.id && (
-          <div
-            className={`${styles.gridRow} ${styles.dataRow} ${styles.hoverable}`}
-          >
-            <div className={`${styles.cell} ${styles.stickyCol}`}>
-              {isEditingCurrent ? (
-                <div className={styles.actions}>
-                  {canManage && <button
-                    type="button"
-                    className={styles.iconCircleBtn}
-                    onClick={save}
-                    title="Save"
-                    aria-label="Save"
-                  >
-                    <FiSave />
-                  </button>}
-                  <button
-                    type="button"
-                    className={styles.dangerIconBtn}
-                    onClick={cancel}
-                    title="Cancel"
-                    aria-label="Cancel"
-                  >
-                    <FiX />
-                  </button>
-                </div>
-              ) : (
-                <div className={styles.actions}>
-                  {canManage && <button
-                    type="button"
-                    className={styles.iconCircleBtn}
-                    onClick={startEdit}
-                    title="Edit"
-                    aria-label="Edit"
-                    disabled={editingId === "new"}
-                  >
-                    <FiEdit />
-                  </button>}
-                  {canDelete && <button
-                    type="button"
-                    className={styles.dangerIconBtn}
-                    onClick={remove}
-                    title="Delete"
-                    aria-label="Delete"
-                    disabled={editingId === "new"}
-                  >
-                    <FiTrash2 />
-                  </button>}
-                </div>
-              )}
-            </div>
-
-            <div className={styles.cell}>
-              {isEditingCurrent ? (
-                <>
-                  <input
-                    className={inputClassFor(address.id, "street")}
-                    type="text"
-                    value={ev.street ?? address.street ?? ""}
-                    onChange={(e) => onChange("street", e.target.value)}
-                  />
-                  <FieldError rowKey={address.id} name="street" />
-                </>
-              ) : (
-                address.street || "-"
-              )}
-            </div>
-
-            <div className={styles.cell}>
-              {isEditingCurrent ? (
-                <>
-                  <input
-                    className={inputClassFor(address.id, "city")}
-                    type="text"
-                    value={ev.city ?? address.city ?? ""}
-                    onChange={(e) => onChange("city", e.target.value)}
-                  />
-                  <FieldError rowKey={address.id} name="city" />
-                </>
-              ) : (
-                address.city || "-"
-              )}
-            </div>
-
-            <div className={styles.cell}>
-              {isEditingCurrent ? (
-                <>
-                  <input
-                    className={inputClassFor(address.id, "state")}
-                    type="text"
-                    value={ev.state ?? address.state ?? ""}
-                    onChange={(e) => onChange("state", e.target.value)}
-                  />
-                  <FieldError rowKey={address.id} name="state" />
-                </>
-              ) : (
-                address.state || "-"
-              )}
-            </div>
-
-            <div className={styles.cell}>
-              {isEditingCurrent ? (
-                <>
-                  <input
-                    className={inputClassFor(address.id, "postalCode")}
-                    type="text"
-                    value={ev.postalCode ?? address.postalCode ?? ""}
-                    onChange={(e) => onChange("postalCode", e.target.value)}
-                  />
-                  <FieldError rowKey={address.id} name="postalCode" />
-                </>
-              ) : (
-                address.postalCode || "-"
-              )}
-            </div>
-
-            <div className={styles.cell}>
-              {isEditingCurrent ? (
-                <>
-                  <input
-                    className={inputClassFor(address.id, "country")}
-                    type="text"
-                    value={ev.country ?? address.country ?? ""}
-                    onChange={(e) => onChange("country", e.target.value)}
-                  />
-                  <FieldError rowKey={address.id} name="country" />
-                </>
-              ) : (
-                address.country || "-"
-              )}
-            </div>
-          </div>
-        )}
-
-        {editingId === "new" && (
-          <div
-            className={`${styles.gridRow} ${styles.dataRow} ${styles.hoverable}`}
-          >
-            <div className={`${styles.cell} ${styles.stickyCol}`}>
-              <div className={styles.actions}>
-                <button
-                  type="button"
-                  className={styles.iconCircleBtn}
-                  onClick={save}
-                  title="Save"
-                  aria-label="Save"
-                >
-                  <FiSave />
-                </button>
-                <button
-                  type="button"
-                  className={styles.dangerIconBtn}
-                  onClick={cancel}
-                  title="Cancel"
-                  aria-label="Cancel"
-                >
-                  <FiX />
-                </button>
-              </div>
-            </div>
-
-            <div className={styles.cell}>
-              <input
-                className={inputClassFor("new", "street")}
-                type="text"
-                value={editedValues.new?.street ?? ""}
-                onChange={(e) => onChange("street", e.target.value)}
-                placeholder="Street"
-              />
-              <FieldError rowKey="new" name="street" />
-            </div>
-
-            <div className={styles.cell}>
-              <input
-                className={inputClassFor("new", "city")}
-                type="text"
-                value={editedValues.new?.city ?? ""}
-                onChange={(e) => onChange("city", e.target.value)}
-                placeholder="City"
-              />
-              <FieldError rowKey="new" name="city" />
-            </div>
-
-            <div className={styles.cell}>
-              <input
-                className={inputClassFor("new", "state")}
-                type="text"
-                value={editedValues.new?.state ?? ""}
-                onChange={(e) => onChange("state", e.target.value)}
-                placeholder="State"
-              />
-              <FieldError rowKey="new" name="state" />
-            </div>
-
-            <div className={styles.cell}>
-              <input
-                className={inputClassFor("new", "postalCode")}
-                type="text"
-                value={editedValues.new?.postalCode ?? ""}
-                onChange={(e) => onChange("postalCode", e.target.value)}
-                placeholder="Postal code"
-              />
-              <FieldError rowKey="new" name="postalCode" />
-            </div>
-
-            <div className={styles.cell}>
-              <input
-                className={inputClassFor("new", "country")}
-                type="text"
-                value={editedValues.new?.country ?? ""}
-                onChange={(e) => onChange("country", e.target.value)}
-                placeholder="Country"
-              />
-              <FieldError rowKey="new" name="country" />
-            </div>
-          </div>
-        )}
+        {associations.map((association) => renderRow(association))}
+        {editingId === "new" && renderRow(null, true)}
       </div>
     </div>
   );
