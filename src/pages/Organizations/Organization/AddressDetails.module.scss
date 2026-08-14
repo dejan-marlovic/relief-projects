@@ -22,6 +22,12 @@
   font-size: 0.95rem;
 }
 
+.subtitle {
+  margin-top: 2px;
+  color: colors.$text-muted;
+  font-size: 0.8rem;
+}
+
 .headerRight {
   display: flex;
   align-items: center;
@@ -70,7 +76,7 @@
   border-radius: 14px;
   background: colors.$surface;
 
-  --addr-grid-cols: 190px 1.6fr 1.2fr 1fr 1fr 1fr;
+  --addr-grid-cols: 210px 110px 1.6fr 1.2fr 1fr 1fr 1fr;
   --addr-header-bg: colors.$surface-tint;
   --addr-header-border: colors.$border-muted;
 }
@@ -100,6 +106,22 @@
 }
 
 .dataRow {
+}
+
+.primaryRow {
+  background: colors.$primary-a04;
+}
+
+.primaryBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  background: colors.$primary-a08;
+  color: colors.$primary;
+  font-size: 0.78rem;
+  font-weight: 700;
 }
 
 .hoverable {
@@ -210,4 +232,10 @@
   svg {
     font-size: 16px;
   }
+}
+
+.unlinkBtn {
+  @extend .iconCircleBtn;
+  color: colors.$warning-dark;
+  border-color: colors.$warning-border;
 }

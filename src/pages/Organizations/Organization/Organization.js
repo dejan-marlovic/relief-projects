@@ -33,7 +33,6 @@ const Organization = ({
   fieldErrors = {},
   canManage = false,
   canManageAddresses = false,
-  canDeleteAddresses = false,
   canViewBankDetails = false,
   canManageBankDetails = false,
   canDeleteBankDetails = false,
@@ -244,7 +243,6 @@ const Organization = ({
           <AddressDetails
             organizationId={link.organizationId}
             canManage={canManageAddresses}
-            canDelete={canDeleteAddresses}
           />
         </div>
       )}
