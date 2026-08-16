@@ -8,6 +8,7 @@ import Memos from "../Project/Memos/Memos.jsx";
 
 import { ProjectContext } from "../../context/ProjectContext";
 import { getSelectedProjectName } from "../../utils/projectDisplay";
+import ProjectSnapshot from "./ProjectSnapshot/ProjectSnapshot";
 import { useAuth } from "../../context/AuthContext";
 
 // ✅ Use ImageZoomModal again
@@ -2669,6 +2670,13 @@ Approximately:
               </ul>
             </div>
           )}
+
+          <ProjectSnapshot
+            projectId={selectedProjectId}
+            projectName={getSelectedProjectName(projects, selectedProjectId)}
+            participants={projectParticipants}
+            employees={employeeOptions}
+          />
 
           <div className={styles.imageAndFormWrapper}>
             {/* Left: media card */}
