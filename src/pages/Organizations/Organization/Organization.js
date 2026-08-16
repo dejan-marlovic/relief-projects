@@ -35,7 +35,6 @@ const Organization = ({
   canManageAddresses = false,
   canViewBankDetails = false,
   canManageBankDetails = false,
-  canDeleteBankDetails = false,
 }) => {
   const ev = editedValues || {};
   const isCreate = (link?.id ?? "") === "new";
@@ -253,7 +252,6 @@ const Organization = ({
           <BankDetails
             organizationId={link.organizationId}
             canManage={canManageBankDetails}
-            canDelete={canDeleteBankDetails}
           />
         </div>
       )}

@@ -47,12 +47,11 @@ async function safeParseJsonResponse(res) {
 
 const Organizations = () => {
   const { selectedProjectId } = useContext(ProjectContext);
-  const { hasRole, hasAnyRole } = useAuth();
+  const { hasAnyRole } = useAuth();
   const canManageOrganizationLinks = hasAnyRole("ADMIN", "PROJECT_MANAGER");
   const canManageAddresses = canManageOrganizationLinks;
   const canViewBankDetails = hasAnyRole("ADMIN", "FINANCE", "APPROVER");
   const canManageBankDetails = hasAnyRole("ADMIN", "FINANCE");
-  const canDeleteBankDetails = hasRole("ADMIN");
 
   const [links, setLinks] = useState([]); // project_organization rows
   const [editingId, setEditingId] = useState(null);
@@ -474,7 +473,6 @@ const Organizations = () => {
                 canManageAddresses={canManageAddresses}
                 canViewBankDetails={canViewBankDetails}
                 canManageBankDetails={canManageBankDetails}
-                canDeleteBankDetails={canDeleteBankDetails}
               />
             ))
           )}
@@ -502,7 +500,6 @@ const Organizations = () => {
               canManageAddresses={canManageAddresses}
               canViewBankDetails={canViewBankDetails}
               canManageBankDetails={canManageBankDetails}
-              canDeleteBankDetails={canDeleteBankDetails}
             />
           )}
         </div>
