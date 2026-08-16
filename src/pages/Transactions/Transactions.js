@@ -25,6 +25,7 @@ import { BASE_URL } from "../../config/api"; // adjust path if needed
 import { sortRows } from "../../utils/tableSorting";
 import ColumnFilter from "../../components/ColumnFilter/ColumnFilter";
 import ClearFiltersButton from "../../components/ClearFiltersButton/ClearFiltersButton";
+import { getSelectedProjectName } from "../../utils/projectDisplay";
 import { matchesDateRange, matchesNumberRange, matchesSelect, matchesText } from "../../utils/tableSorting";
 
 const blankTx = {
@@ -107,7 +108,7 @@ const toSortableDate = (value) => {
 };
 
 const Transactions = ({ refreshTrigger }) => {
-  const { selectedProjectId } = useContext(ProjectContext);
+  const { selectedProjectId, projects } = useContext(ProjectContext);
   const { hasRole, hasAnyRole } = useAuth();
   const canEditTransactions = hasAnyRole("ADMIN", "FINANCE");
   const canDeleteTransactions = hasRole("ADMIN");
@@ -1540,7 +1541,9 @@ const Transactions = ({ refreshTrigger }) => {
           <div className={styles.headerText}>
             <div className={styles.cardTitle}>Transactions</div>
             <div className={styles.cardMeta}>
-              View, edit and allocate planned amounts per transaction.
+              {selectedProjectId
+                ? `${getSelectedProjectName(projects, selectedProjectId)} • ${transactions.length} transaction${transactions.length === 1 ? "" : "s"}`
+                : "Select a project to see transactions"}
             </div>
           </div>
 

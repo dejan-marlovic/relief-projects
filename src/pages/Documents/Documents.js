@@ -5,6 +5,7 @@ import { FiTrash2, FiDownload, FiUploadCloud } from "react-icons/fi";
 import styles from "./Documents.module.scss";
 
 import { BASE_URL, ASSETS_URL } from "../../config/api";
+import { getSelectedProjectName } from "../../utils/projectDisplay";
 const DOCUMENTS_BASE_PATH = `${ASSETS_URL}/documents/`;
 
 // 🔹 TODO: replace with real current employee ID from your auth/user context
@@ -16,7 +17,7 @@ const MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024;
 const formatMB = (bytes) => `${(bytes / 1024 / 1024).toFixed(1)}MB`;
 
 const Documents = () => {
-  const { selectedProjectId } = useContext(ProjectContext);
+  const { selectedProjectId, projects } = useContext(ProjectContext);
   const { user, hasRole, hasAnyRole } = useAuth();
   const canUploadDocuments = hasAnyRole("ADMIN", "PROJECT_MANAGER");
   const canDeleteDocuments = hasRole("ADMIN");
@@ -236,8 +237,9 @@ const Documents = () => {
           <div className={styles.pageHeaderText}>
             <h2 className={styles.pageTitle}>Documents</h2>
             <p className={styles.pageSubtitle}>
-              Upload and manage files for the selected project. Max{" "}
-              {MAX_UPLOAD_MB}MB.
+              {selectedProjectId
+                ? `${getSelectedProjectName(projects, selectedProjectId)} • ${documents.length} document${documents.length === 1 ? "" : "s"}`
+                : "Select a project to see documents"}
             </p>
           </div>
 

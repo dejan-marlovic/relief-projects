@@ -15,6 +15,7 @@ import { sortRows } from "../../utils/tableSorting";
 import { matchesSelect, matchesText } from "../../utils/tableSorting";
 import ColumnFilter from "../../components/ColumnFilter/ColumnFilter";
 import ClearFiltersButton from "../../components/ClearFiltersButton/ClearFiltersButton";
+import { getSelectedProjectName } from "../../utils/projectDisplay";
 
 import { BASE_URL } from "../../config/api"; // adjust path if needed
 
@@ -46,7 +47,7 @@ async function safeParseJsonResponse(res) {
 }
 
 const Organizations = () => {
-  const { selectedProjectId } = useContext(ProjectContext);
+  const { selectedProjectId, projects } = useContext(ProjectContext);
   const { hasAnyRole } = useAuth();
   const canManageOrganizationLinks = hasAnyRole("ADMIN", "PROJECT_MANAGER");
   const canManageAddresses = canManageOrganizationLinks;
@@ -361,7 +362,7 @@ const Organizations = () => {
   const totalCount = links.length;
 
   const subtitle = selectedProjectId
-    ? `Project #${selectedProjectId} • ${totalCount} link${
+    ? `${getSelectedProjectName(projects, selectedProjectId)} • ${totalCount} link${
         totalCount === 1 ? "" : "s"
       }`
     : "Select a project to see linked organizations.";

@@ -1,6 +1,7 @@
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ProjectContext } from "../../context/ProjectContext";
 import { useAuth } from "../../context/AuthContext";
+import { getSelectedProjectName } from "../../utils/projectDisplay";
 
 import Budget from "../Budgets/Budget/Budget";
 import CreateNewBudget from "../Budgets/CreateNewBudget/CreateNewBudget";
@@ -11,7 +12,7 @@ import { FiPlus } from "react-icons/fi";
 import { BASE_URL } from "../../config/api";
 
 const Budgets = () => {
-  const { selectedProjectId } = useContext(ProjectContext);
+  const { selectedProjectId, projects } = useContext(ProjectContext);
   const { hasAnyRole } = useAuth();
   const canEditBudgets = hasAnyRole("ADMIN", "FINANCE");
 
@@ -100,10 +101,10 @@ const Budgets = () => {
       return "Select a project to see budgets";
     }
 
-    return `Project #${selectedProjectId} • ${budgets.length} budget${
+    return `${getSelectedProjectName(projects, selectedProjectId)} • ${budgets.length} budget${
       budgets.length === 1 ? "" : "s"
     }`;
-  }, [selectedProjectId, budgets.length]);
+  }, [selectedProjectId, projects, budgets.length]);
 
   return (
     <div className={styles.page}>
