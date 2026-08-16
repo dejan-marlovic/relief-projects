@@ -186,6 +186,18 @@
   color: colors.$text;
 }
 
+.docInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.uploadedBy {
+  color: colors.$text-muted;
+  font-size: 0.8rem;
+}
+
 /* Right side actions */
 .docActions {
   display: flex;

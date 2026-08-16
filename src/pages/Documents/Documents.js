@@ -23,6 +23,7 @@ const Documents = () => {
   const canDeleteDocuments = hasRole("ADMIN");
 
   const [documents, setDocuments] = useState([]);
+  const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
   const [listError, setListError] = useState("");
 
@@ -44,6 +45,47 @@ const Documents = () => {
         : {},
     [token]
   );
+
+  const employeeNamesById = useMemo(
+    () =>
+      new Map(
+        employees.map((employee) => [
+          String(employee.id ?? employee.employeeId),
+          [employee.firstName, employee.lastName].filter(Boolean).join(" ") ||
+            employee.name ||
+            `Employee #${employee.id ?? employee.employeeId}`,
+        ])
+      ),
+    [employees]
+  );
+
+  const getUploaderLabel = (document) => {
+    const employeeId =
+      document.employeeId ?? document.employee?.id ?? document.employee?.employeeId;
+    if (!employeeId) return "Unknown employee";
+    return employeeNamesById.get(String(employeeId)) || `Employee #${employeeId}`;
+  };
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const res = await fetch(`${BASE_URL}/api/employees/active`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...authHeaders,
+          },
+        });
+        if (!res.ok) throw new Error("Failed to load employee names");
+        const data = await res.json();
+        setEmployees(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Failed to load document uploader names:", error);
+        setEmployees([]);
+      }
+    };
+
+    fetchEmployees();
+  }, [authHeaders]);
 
   // Fetch documents for selected project
   useEffect(() => {
@@ -307,7 +349,12 @@ const Documents = () => {
               <ul className={styles.documentsList}>
                 {documents.map((doc) => (
                   <li key={doc.id} className={styles.documentItem}>
-                    <span className={styles.docName}>{doc.documentName}</span>
+                    <div className={styles.docInfo}>
+                      <span className={styles.docName}>{doc.documentName}</span>
+                      <span className={styles.uploadedBy}>
+                        Uploaded by {getUploaderLabel(doc)}
+                      </span>
+                    </div>
 
                     <div className={styles.docActions}>
                       <a
