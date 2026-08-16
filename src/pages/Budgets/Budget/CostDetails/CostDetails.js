@@ -18,19 +18,24 @@ const blankCostDetail = {
   amountEuro: "",
 };
 
-// helper: Required fields for creating a new cost detail
-const isValidNew = (v) =>
-  v &&
-  v.costDescription &&
-  v.costTypeId !== "" &&
-  v.costId !== "" &&
-  v.noOfUnits !== "" &&
-  v.unitPrice !== "" &&
-  v.percentageCharging !== "" &&
-  v.amountLocalCurrency !== "" &&
-  v.amountReportingCurrency !== "" &&
-  v.amountGBP !== "" &&
-  v.amountEuro !== "";
+const REQUIRED_FIELDS_MESSAGE =
+  "Please fill in Description, Type, Category, Units, Unit price, % Charged and all Amounts before saving.";
+
+// Required fields are the same for both new and edited cost details.
+export const isValidCostDetail = (v) =>
+  Boolean(
+    v &&
+      v.costDescription &&
+      v.costTypeId !== "" &&
+      v.costId !== "" &&
+      v.noOfUnits !== "" &&
+      v.unitPrice !== "" &&
+      v.percentageCharging !== "" &&
+      v.amountLocalCurrency !== "" &&
+      v.amountReportingCurrency !== "" &&
+      v.amountGBP !== "" &&
+      v.amountEuro !== ""
+  );
 
 const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
   const { hasAnyRole } = useAuth();
@@ -302,10 +307,8 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
     const token = localStorage.getItem("authToken");
 
     if (isCreate) {
-      if (!isValidNew(values)) {
-        alert(
-          "Please fill in Description, Type, Category, Units, Unit price, % Charged and all Amounts before saving."
-        );
+      if (!isValidCostDetail(values)) {
+        alert(REQUIRED_FIELDS_MESSAGE);
         return;
       }
 
@@ -360,6 +363,11 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
     if (!original) return;
 
     const merged = { ...original, ...values };
+
+    if (!isValidCostDetail(merged)) {
+      alert(REQUIRED_FIELDS_MESSAGE);
+      return;
+    }
 
     const fullPayload = {
       ...merged,

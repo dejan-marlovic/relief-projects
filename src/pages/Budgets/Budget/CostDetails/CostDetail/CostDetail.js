@@ -19,11 +19,8 @@ const CostDetail = ({
   canDelete = false,
 }) => {
   const ev = editedValues || {};
-  const isCreate = (cost.costDetailId ?? "") === "new";
-  const autoSave = isEditing && !isCreate;
-  const formId = `cost-detail-form-${cost.costDetailId || "new"}`;
 
-  const handleSubmit = (e) => {
+  const handleSaveClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
     onSave();
@@ -34,12 +31,11 @@ const CostDetail = ({
   if (isEditing) {
     // single-row create/edit form
     return (
-      <form id={formId} onSubmit={handleSubmit} className={styles.rowForm}>
+      <div className={styles.rowForm}>
         <input
           type="text"
           value={ev.costDescription ?? cost.costDescription ?? ""}
           onChange={(e) => onChange("costDescription", e.target.value)}
-          onBlur={autoSave ? handleSubmit : undefined}
           className={`${styles.input} ${styles.cell}`}
           placeholder="Description"
         />
@@ -47,7 +43,6 @@ const CostDetail = ({
         <select
           value={ev.costTypeId ?? cost.costTypeId ?? ""}
           onChange={(e) => onChange("costTypeId", toNum(e.target.value))}
-          onBlur={autoSave ? handleSubmit : undefined}
           className={`${styles.select} ${styles.cell}`}
         >
           <option value="">Type</option>
@@ -61,7 +56,6 @@ const CostDetail = ({
         <select
           value={ev.costId ?? cost.costId ?? ""}
           onChange={(e) => onChange("costId", toNum(e.target.value))}
-          onBlur={autoSave ? handleSubmit : undefined}
           className={`${styles.select} ${styles.cell}`}
         >
           <option value="">Category</option>
@@ -77,7 +71,6 @@ const CostDetail = ({
           step="0.001"
           value={ev.noOfUnits ?? cost.noOfUnits ?? ""}
           onChange={(e) => onChange("noOfUnits", toNum(e.target.value))}
-          onBlur={autoSave ? handleSubmit : undefined}
           className={`${styles.input} ${styles.cell}`}
           placeholder="Units"
         />
@@ -87,7 +80,6 @@ const CostDetail = ({
           step="0.001"
           value={ev.unitPrice ?? cost.unitPrice ?? ""}
           onChange={(e) => onChange("unitPrice", toNum(e.target.value))}
-          onBlur={autoSave ? handleSubmit : undefined}
           className={`${styles.input} ${styles.cell}`}
           placeholder="Price"
         />
@@ -99,7 +91,6 @@ const CostDetail = ({
           onChange={(e) =>
             onChange("percentageCharging", toNum(e.target.value))
           }
-          onBlur={autoSave ? handleSubmit : undefined}
           className={`${styles.input} ${styles.cell}`}
           placeholder="%"
         />
@@ -124,7 +115,6 @@ const CostDetail = ({
           onChange={(e) =>
             onChange("amountReportingCurrency", toNum(e.target.value))
           }
-          onBlur={autoSave ? handleSubmit : undefined}
           className={`${styles.input} ${styles.cell}`}
           placeholder="SEK"
         />
@@ -134,7 +124,6 @@ const CostDetail = ({
           step="0.001"
           value={ev.amountGBP ?? cost.amountGBP ?? ""}
           onChange={(e) => onChange("amountGBP", toNum(e.target.value))}
-          onBlur={autoSave ? handleSubmit : undefined}
           className={`${styles.input} ${styles.cell}`}
           placeholder="GBP"
         />
@@ -144,13 +133,17 @@ const CostDetail = ({
           step="0.001"
           value={ev.amountEuro ?? cost.amountEuro ?? ""}
           onChange={(e) => onChange("amountEuro", toNum(e.target.value))}
-          onBlur={autoSave ? handleSubmit : undefined}
           className={`${styles.input} ${styles.cell}`}
           placeholder="EUR"
         />
 
         <div className={`${styles.actions} ${styles.cellActions}`}>
-          <button type="submit" className={styles.actionBtn} title="Save">
+          <button
+            type="button"
+            onClick={handleSaveClick}
+            className={styles.actionBtn}
+            title="Save"
+          >
             <FiSave />
           </button>
           <button
@@ -162,7 +155,7 @@ const CostDetail = ({
             <FiX />
           </button>
         </div>
-      </form>
+      </div>
     );
   }
 
