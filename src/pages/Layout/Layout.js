@@ -15,6 +15,12 @@ const Layout = () => {
   const { projects, selectedProjectId, setSelectedProjectId } =
     useContext(ProjectContext);
 
+  const selectedProject = projects?.find(
+    (project) => String(project.id) === String(selectedProjectId)
+  );
+  const projectTabLabel =
+    selectedProject?.projectName || selectedProject?.name || "Project";
+
   const handleSelectChange = (e) => {
     setSelectedProjectId(e.target.value);
   };
@@ -107,7 +113,7 @@ const Layout = () => {
       <nav className={styles.nav}>
         <ul className={styles.tabList}>
           {[
-            ["/project", "Project"],
+            ["/project", projectTabLabel],
             ["/budgets", "Budgets"],
             ["/transactions", "Transactions"],
             ["/payments", "Payments"],
@@ -136,6 +142,7 @@ const Layout = () => {
             })
             .map(([path, label]) => {
             const isAdminTab = path === "/admin";
+            const isProjectTab = path === "/project";
 
             return (
               <li key={path} className={styles.tabItem}>
@@ -143,7 +150,9 @@ const Layout = () => {
                   to={path}
                   className={`${styles.tabLink} ${
                     isActive(path) ? styles.active : ""
-                  } ${isAdminTab ? styles.adminTab : ""}`}
+                  } ${isAdminTab ? styles.adminTab : ""} ${
+                    isProjectTab ? styles.projectTab : ""
+                  }`}
                 >
                   {label}
                 </Link>

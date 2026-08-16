@@ -151,6 +151,21 @@ $secondary-color: colors.$danger;
   background: colors.$primary-soft;
 }
 
+/* Keep the selected-project tab slightly raised like a folder label. */
+.projectTab {
+  position: relative;
+  z-index: 3;
+  transform: translateY(-4px);
+  background: colors.$surface;
+  color: colors.$primary;
+  border-color: colors.$primary-a60;
+  box-shadow: 0 -4px 10px colors.$border-subtle;
+}
+
+.projectTab:hover {
+  transform: translateY(-5px);
+}
+
 /* ACTIVE TAB = visually connected to page */
 .active {
   background: colors.$text-on-primary !important;
@@ -163,6 +178,11 @@ $secondary-color: colors.$danger;
   border-color: colors.$primary-a60;
   box-shadow: 0 -2px 6px colors.$border-subtle;
   z-index: 2;
+}
+
+.active.projectTab {
+  transform: translateY(-4px);
+  box-shadow: 0 -5px 12px colors.$border-subtle;
 }
 
 /* Responsive */
