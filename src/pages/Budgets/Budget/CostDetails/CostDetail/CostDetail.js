@@ -17,6 +17,7 @@ const CostDetail = ({
   onDelete,
   canEdit = false,
   canDelete = false,
+  fieldErrors = {},
 }) => {
   const ev = editedValues || {};
 
@@ -27,23 +28,44 @@ const CostDetail = ({
   };
 
   const toNum = (v) => (v === "" ? "" : Number(v));
+  const renderField = (name, control) => (
+    <div className={styles.cell}>
+      {React.cloneElement(control, {
+        className: `${control.props.className || ""} ${
+          fieldErrors[name] ? styles.inputError : ""
+        }`,
+        "aria-invalid": Boolean(fieldErrors[name]),
+        "aria-describedby": fieldErrors[name]
+          ? `cost-detail-${cost.costDetailId}-${name}-error`
+          : undefined,
+      })}
+      {fieldErrors[name] && (
+        <div
+          id={`cost-detail-${cost.costDetailId}-${name}-error`}
+          className={styles.fieldError}
+        >
+          {fieldErrors[name]}
+        </div>
+      )}
+    </div>
+  );
 
   if (isEditing) {
     // single-row create/edit form
     return (
       <div className={styles.rowForm}>
-        <input
+        {renderField("costDescription", <input
           type="text"
           value={ev.costDescription ?? cost.costDescription ?? ""}
           onChange={(e) => onChange("costDescription", e.target.value)}
-          className={`${styles.input} ${styles.cell}`}
+          className={styles.input}
           placeholder="Description"
-        />
+        />)}
 
-        <select
+        {renderField("costTypeId", <select
           value={ev.costTypeId ?? cost.costTypeId ?? ""}
           onChange={(e) => onChange("costTypeId", toNum(e.target.value))}
-          className={`${styles.select} ${styles.cell}`}
+          className={styles.select}
         >
           <option value="">Type</option>
           {costTypes.map((type) => (
@@ -51,12 +73,12 @@ const CostDetail = ({
               {type.costTypeName}
             </option>
           ))}
-        </select>
+        </select>)}
 
-        <select
+        {renderField("costId", <select
           value={ev.costId ?? cost.costId ?? ""}
           onChange={(e) => onChange("costId", toNum(e.target.value))}
-          className={`${styles.select} ${styles.cell}`}
+          className={styles.select}
         >
           <option value="">Category</option>
           {costs.map((c) => (
@@ -64,49 +86,49 @@ const CostDetail = ({
               {c.costName}
             </option>
           ))}
-        </select>
+        </select>)}
 
-        <input
+        {renderField("noOfUnits", <input
           type="number"
           step="0.001"
           value={ev.noOfUnits ?? cost.noOfUnits ?? ""}
           onChange={(e) => onChange("noOfUnits", toNum(e.target.value))}
-          className={`${styles.input} ${styles.cell}`}
+          className={styles.input}
           placeholder="Units"
-        />
+        />)}
 
-        <input
+        {renderField("unitPrice", <input
           type="number"
           step="0.001"
           value={ev.unitPrice ?? cost.unitPrice ?? ""}
           onChange={(e) => onChange("unitPrice", toNum(e.target.value))}
-          className={`${styles.input} ${styles.cell}`}
+          className={styles.input}
           placeholder="Price"
-        />
+        />)}
 
-        <input
+        {renderField("percentageCharging", <input
           type="number"
           step="0.001"
           value={ev.percentageCharging ?? cost.percentageCharging ?? ""}
           onChange={(e) =>
             onChange("percentageCharging", toNum(e.target.value))
           }
-          className={`${styles.input} ${styles.cell}`}
+          className={styles.input}
           placeholder="%"
-        />
+        />)}
 
         {/* Local amount calculated; read-only */}
-        <input
+        {renderField("amountLocalCurrency", <input
           type="number"
           step="0.001"
           value={ev.amountLocalCurrency ?? cost.amountLocalCurrency ?? ""}
           readOnly
-          className={`${styles.input} ${styles.cell}`}
+          className={styles.input}
           placeholder="Local"
-        />
+        />)}
 
         {/* SEK amount */}
-        <input
+        {renderField("amountReportingCurrency", <input
           type="number"
           step="0.001"
           value={
@@ -115,27 +137,27 @@ const CostDetail = ({
           onChange={(e) =>
             onChange("amountReportingCurrency", toNum(e.target.value))
           }
-          className={`${styles.input} ${styles.cell}`}
+          className={styles.input}
           placeholder="SEK"
-        />
+        />)}
 
-        <input
+        {renderField("amountGBP", <input
           type="number"
           step="0.001"
           value={ev.amountGBP ?? cost.amountGBP ?? ""}
           onChange={(e) => onChange("amountGBP", toNum(e.target.value))}
-          className={`${styles.input} ${styles.cell}`}
+          className={styles.input}
           placeholder="GBP"
-        />
+        />)}
 
-        <input
+        {renderField("amountEuro", <input
           type="number"
           step="0.001"
           value={ev.amountEuro ?? cost.amountEuro ?? ""}
           onChange={(e) => onChange("amountEuro", toNum(e.target.value))}
-          className={`${styles.input} ${styles.cell}`}
+          className={styles.input}
           placeholder="EUR"
-        />
+        />)}
 
         <div className={`${styles.actions} ${styles.cellActions}`}>
           <button

@@ -1,4 +1,4 @@
-import { isValidCostDetail } from "./CostDetails";
+import { isValidCostDetail, validateCostDetail } from "./CostDetails";
 
 const completeCostDetail = {
   costDescription: "Emergency shelter",
@@ -33,5 +33,13 @@ describe("cost-detail required-field validation", () => {
     expect(
       isValidCostDetail({ ...completeCostDetail, [field]: "" })
     ).toBe(false);
+  });
+
+  test("returns field-specific messages for incomplete rows", () => {
+    expect(validateCostDetail({ ...completeCostDetail, costDescription: "", costId: "" }))
+      .toEqual({
+        costDescription: "Description is required.",
+        costId: "Category is required.",
+      });
   });
 });

@@ -63,4 +63,24 @@ describe("CostDetail explicit editing", () => {
 
     expect(props.onSave).toHaveBeenCalledTimes(1);
   });
+
+  test("shows inline field errors and marks invalid controls", () => {
+    renderEditableRow({
+      fieldErrors: {
+        costDescription: "Description is required.",
+        noOfUnits: "Units is required.",
+      },
+    });
+
+    expect(screen.getByText("Description is required.")).toBeInTheDocument();
+    expect(screen.getByText("Units is required.")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Description")).toHaveAttribute(
+      "aria-invalid",
+      "true"
+    );
+    expect(screen.getByPlaceholderText("Units")).toHaveAttribute(
+      "aria-invalid",
+      "true"
+    );
+  });
 });
