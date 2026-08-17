@@ -124,11 +124,13 @@ $secondary-color: colors.$danger;
 
 .tabItem {
   margin: 0;
+  flex: 0 0 auto;
 }
 
 /* TAB look: top-rounded, flat bottom */
 .tabLink {
   display: inline-block;
+  white-space: nowrap;
   padding: 0.9rem 1.35rem;
   font-size: 1rem;
   font-weight: 700;
