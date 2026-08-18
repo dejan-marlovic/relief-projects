@@ -140,6 +140,13 @@
   margin-bottom: 2px;
 }
 
+.uploadFormats {
+  max-width: 720px;
+  color: colors.$text-muted;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
 /* Hidden file input */
 .hiddenFileInput {
   display: none;
