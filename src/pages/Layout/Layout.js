@@ -40,6 +40,13 @@ const Layout = () => {
   const isStatisticsPage = location.pathname === "/statistics";
   const isOperationalGuidePage = location.pathname === "/operational-guide";
   const isAboutPage = location.pathname === "/about";
+  const usesInternalTableScroll = [
+    "/transactions",
+    "/payments",
+    "/signatures",
+    "/recipients",
+    "/organizations",
+  ].includes(location.pathname);
 
   // ✅ NEW: Admin page is global (no project context needed)
   const isAdminPage = location.pathname.startsWith("/admin");
@@ -55,7 +62,11 @@ const Layout = () => {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div className={styles.layoutShell}>
+    <div
+      className={`${styles.layoutShell} ${
+        usesInternalTableScroll ? styles.fixedTableViewport : ""
+      }`}
+    >
       <header className={styles.headerBar}>
         <div className={styles.headerTitleBlock}>
           <div className={styles.brandRow}>

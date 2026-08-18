@@ -166,7 +166,11 @@
   margin: 0;
   border: 1px solid colors.$neutral-a08;
   border-radius: 12px;
-  overflow: hidden;
+  max-height: clamp(260px, 48vh, 640px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
 }
 
 .documentItem {
