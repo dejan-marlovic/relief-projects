@@ -8,14 +8,23 @@ jest.mock("../../context/AuthContext", () => ({ useAuth: jest.fn() }));
 const { useAuth } = require("../../context/AuthContext");
 
 const documentFixture = { id: 7, documentName: "report.pdf", documentPath: "report.pdf", employeeId: 2, projectId: 1 };
+const employees = [{ id: 2, firstName: "Dario", lastName: "Marlovic" }];
 
-const renderDocuments = (roles) => {
+const renderDocuments = (roles, employeeRows = employees) => {
   useAuth.mockReturnValue({
     user: makeUser(roles),
     hasRole: (role) => roles.includes(role),
     hasAnyRole: (...required) => required.some((role) => roles.includes(role)),
   });
-  fetch.mockReturnValueOnce(jsonResponse([documentFixture]));
+  fetch.mockImplementation((url) => {
+    if (url.includes("/api/employees/active")) {
+      return Promise.resolve(jsonResponse(employeeRows));
+    }
+    if (url.includes("/api/documents/project/1")) {
+      return Promise.resolve(jsonResponse([documentFixture]));
+    }
+    return Promise.resolve(jsonResponse([]));
+  });
   return render(
     <MemoryRouter>
       <ProjectContext.Provider value={{ selectedProjectId: "1" }}><Documents /></ProjectContext.Provider>
@@ -30,6 +39,9 @@ describe("Documents permissions", () => {
   test("ADMIN can upload, download, and delete", async () => {
     renderDocuments(["ADMIN"]);
     expect(await screen.findByText("report.pdf")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Uploaded by Dario Marlovic")
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Upload document" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Download/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Delete" })).toBeInTheDocument();
@@ -49,6 +61,11 @@ describe("Documents permissions", () => {
     expect(screen.getByRole("link", { name: /Download/ })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Upload document" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Delete" })).not.toBeInTheDocument();
-    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+  });
+
+  test("falls back to the employee ID when the employee is unavailable", async () => {
+    renderDocuments(["VIEWER"], []);
+    expect(await screen.findByText("Uploaded by Employee #2")).toBeInTheDocument();
   });
 });

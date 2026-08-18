@@ -13,6 +13,7 @@
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 10px;
+  flex-wrap: wrap;
 }
 
 .title {
@@ -21,8 +22,33 @@
   font-size: 0.95rem;
 }
 
+.subtitle {
+  margin-top: 2px;
+  color: colors.$text-muted;
+  font-size: 0.8rem;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.select {
+  @include forms.text-input;
+  padding: 0.55rem 0.65rem;
+  font-size: 0.92rem;
+  min-width: 280px;
+}
+
 .primaryBtn {
   @include forms.primary-button;
+  padding: 0.65rem 0.85rem;
+}
+
+.secondaryBtn {
+  @include forms.ghost-button(colors.$primary);
   padding: 0.65rem 0.85rem;
 }
 
@@ -194,4 +220,10 @@
   svg {
     font-size: 16px;
   }
+}
+
+.unlinkBtn {
+  @extend .iconCircleBtn;
+  color: colors.$warning-dark;
+  border-color: colors.$warning-border;
 }

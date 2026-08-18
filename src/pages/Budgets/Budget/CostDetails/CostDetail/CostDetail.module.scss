@@ -46,6 +46,18 @@
   box-sizing: border-box;
 }
 
+.inputError {
+  border-color: colors.$danger-text;
+  box-shadow: 0 0 0 2px colors.$danger-focus;
+}
+
+.fieldError {
+  margin-top: 3px;
+  color: colors.$danger-text;
+  font-size: 0.72rem;
+  line-height: 1.2;
+}
+
 .select {
   appearance: none;
   background-image: linear-gradient(45deg, transparent 50%, colors.$text-muted 50%),

@@ -19,6 +19,7 @@ import { sortRows, toSortableNumber } from "../../utils/tableSorting";
 import { matchesNumberRange, matchesText } from "../../utils/tableSorting";
 import ColumnFilter from "../../components/ColumnFilter/ColumnFilter";
 import ClearFiltersButton from "../../components/ClearFiltersButton/ClearFiltersButton";
+import { getSelectedProjectName } from "../../utils/projectDisplay";
 
 const headerLabels = ["Actions", "Organization", "Payment Order", "Amount"];
 const HEADER_SORT_KEYS = [null, "organization", "paymentOrderId", "amount"];
@@ -86,7 +87,7 @@ function normalizeRecipient(r) {
 }
 
 function Recipients() {
-  const { selectedProjectId } = useContext(ProjectContext);
+  const { selectedProjectId, projects } = useContext(ProjectContext);
   const { hasRole, hasAnyRole } = useAuth();
   const canManageRecipients = hasAnyRole("ADMIN", "FINANCE");
   const canBulkDeleteRecipients = hasRole("ADMIN");
@@ -355,6 +356,20 @@ function Recipients() {
         [field]: typeof value === "string" && value.trim() === "" ? "" : value,
       },
     }));
+
+    // Clear a server-side field error as soon as the user corrects that field.
+    setFieldErrors((prev) => {
+      const rowErrors = prev[editingId];
+      if (!rowErrors?.[field]) return prev;
+
+      const nextRowErrors = { ...rowErrors };
+      delete nextRowErrors[field];
+
+      return {
+        ...prev,
+        [editingId]: nextRowErrors,
+      };
+    });
   };
 
   const cancel = () => {
@@ -1015,7 +1030,7 @@ function Recipients() {
   const totalCount = items.length;
 
   const subtitle = selectedProjectId
-    ? `Project #${selectedProjectId} • ${totalCount} recipient${
+    ? `${getSelectedProjectName(projects, selectedProjectId)} • ${totalCount} recipient${
         totalCount === 1 ? "" : "s"
       }`
     : "Select a project to see recipients.";

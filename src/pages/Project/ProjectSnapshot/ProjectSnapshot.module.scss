@@ -1,0 +1,108 @@
+@use "../../../styles/colors" as colors;
+
+.snapshot {
+  margin: 0 0 1.25rem;
+  padding: 1.15rem;
+  border: 1px solid colors.$primary-focus;
+  border-radius: 14px;
+  background: colors.$surface;
+  box-shadow: 0 10px 24px colors.$border-subtle;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.sectionTitle { margin: 0; color: colors.$primary; font-size: 1.15rem; }
+.sectionSubtitle, .chartSubtitle { margin: 0.25rem 0 0; color: colors.$text-muted; font-size: 0.85rem; }
+
+.liveLabel {
+  padding: 0.35rem 0.65rem;
+  border: 1px solid colors.$success-border;
+  border-radius: 999px;
+  color: colors.$success-dark;
+  background: colors.$success-soft;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.kpiGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.85rem; }
+
+.kpiCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.9rem;
+  border: 1px solid colors.$border-subtle;
+  border-radius: 12px;
+  background: colors.$surface-secondary;
+}
+
+.iconWrap {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  color: colors.$primary;
+  background: colors.$primary-a08;
+  font-size: 1.1rem;
+}
+
+.kpiContent { display: flex; flex-direction: column; min-width: 0; }
+.kpiLabel { color: colors.$text-secondary; font-size: 0.78rem; font-weight: 700; }
+.kpiValue { margin-top: 0.15rem; color: colors.$text-strong; font-size: 1.25rem; line-height: 1.2; overflow-wrap: anywhere; }
+.kpiHint { margin-top: 0.2rem; color: colors.$text-muted; font-size: 0.72rem; }
+
+.chartCard { margin-top: 0.9rem; padding: 1rem; border: 1px solid colors.$border-subtle; border-radius: 12px; }
+.chartTitle { color: colors.$text-strong; font-weight: 700; }
+.chartWrap { margin-top: 0.5rem; width: 100%; }
+
+.tooltipBox {
+  width: min(280px, calc(100vw - 2rem));
+  max-width: 280px;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid colors.$primary-border;
+  border-radius: 10px;
+  background: colors.$surface;
+  box-shadow: 0 10px 24px colors.$border-subtle;
+  overflow: hidden;
+}
+
+.tooltipTitle { color: colors.$text-strong; font-weight: 800; }
+.tooltipCount { margin-top: 0.15rem; color: colors.$text-secondary; font-size: 0.82rem; }
+.tooltipList { margin: 0.5rem 0 0; padding-left: 1.1rem; color: colors.$text-secondary; font-size: 0.78rem; }
+.tooltipList li { overflow-wrap: anywhere; word-break: break-word; }
+.tooltipList li + li { margin-top: 0.2rem; }
+.tooltipMore { margin-top: 0.4rem; color: colors.$text-muted; font-size: 0.75rem; font-weight: 700; }
+
+.loadingSkeleton {
+  height: 210px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, colors.$surface-secondary, colors.$primary-a08, colors.$surface-secondary);
+  background-size: 200% 100%;
+  animation: shimmer 1.3s infinite;
+}
+
+.errorBanner {
+  padding: 0.75rem 1rem;
+  border: 1px solid colors.$danger-border-strong;
+  border-radius: 10px;
+  color: colors.$danger-text;
+  background: colors.$danger-soft-strong;
+}
+
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+@media (max-width: 900px) { .kpiGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) {
+  .sectionHeader { flex-direction: column; }
+  .kpiGrid { grid-template-columns: 1fr; }
+}

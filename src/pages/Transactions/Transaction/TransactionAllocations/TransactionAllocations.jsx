@@ -16,6 +16,13 @@ const toNumOrNull = (v) => {
   return Number.isFinite(n) ? n : null;
 };
 
+export const getCostDetailPlannedAmount = (costDetail) => {
+  const value = costDetail?.amountLocalCurrency;
+  if (value === "" || value == null) return "";
+  const amount = Number(value);
+  return Number.isFinite(amount) ? amount : "";
+};
+
 async function safeParseJsonResponse(res) {
   const raw = await res.text().catch(() => "");
   if (!raw) return null;
@@ -66,6 +73,7 @@ const TransactionAllocations = ({
     plannedAmount: "",
     note: "",
   });
+  const [plannedAmountEdited, setPlannedAmountEdited] = useState(false);
 
   // add-form errors
   const [formError, setFormError] = useState("");
@@ -275,6 +283,7 @@ const TransactionAllocations = ({
       });
 
       setDraft({ costDetailId: "", plannedAmount: "", note: "" });
+      setPlannedAmountEdited(false);
       await fetchRows();
       await fetchTxMeta();
     } catch (e) {
@@ -471,9 +480,24 @@ const TransactionAllocations = ({
             <label>Cost detail</label>
             <select
               value={draft.costDetailId}
-              onChange={(e) =>
-                setDraft((p) => ({ ...p, costDetailId: e.target.value }))
-              }
+              onChange={(e) => {
+                const costDetailId = e.target.value;
+                const selectedCostDetail = costDetailOptions.find(
+                  (option) => String(option.costDetailId) === String(costDetailId)
+                );
+                setDraft((current) => ({
+                  ...current,
+                  costDetailId,
+                  plannedAmount: plannedAmountEdited
+                    ? current.plannedAmount
+                    : getCostDetailPlannedAmount(selectedCostDetail),
+                }));
+                setFieldErrors((current) => ({
+                  ...current,
+                  costDetailId: undefined,
+                  plannedAmount: undefined,
+                }));
+              }}
               className={styles.textInput}
             >
               <option value="">Select…</option>
@@ -500,7 +524,14 @@ const TransactionAllocations = ({
               step="0.01"
               value={draft.plannedAmount}
               onChange={(e) =>
-                setDraft((p) => ({ ...p, plannedAmount: e.target.value }))
+                {
+                  setDraft((p) => ({ ...p, plannedAmount: e.target.value }));
+                  setPlannedAmountEdited(true);
+                  setFieldErrors((current) => ({
+                    ...current,
+                    plannedAmount: undefined,
+                  }));
+                }
               }
               className={styles.textInput}
             />

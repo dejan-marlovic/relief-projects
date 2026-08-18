@@ -5,6 +5,20 @@ $secondary-color: colors.$danger;
   padding: 1rem;
 }
 
+/* List-heavy pages keep scrolling inside their tables, not on the document. */
+.fixedTableViewport {
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+
+  .content {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+}
+
 .content {
   padding: 0.25rem;
 }
@@ -117,20 +131,22 @@ $secondary-color: colors.$danger;
 .tabList {
   list-style: none;
   display: flex;
-  gap: 0.25rem;
+  gap: 0.35rem;
   margin: 0;
   padding: 0;
 }
 
 .tabItem {
   margin: 0;
+  flex: 0 0 auto;
 }
 
 /* TAB look: top-rounded, flat bottom */
 .tabLink {
   display: inline-block;
-  padding: 0.75rem 1.2rem;
-  font-size: 0.95rem;
+  white-space: nowrap;
+  padding: 0.9rem 1.35rem;
+  font-size: 1rem;
   font-weight: 700;
   text-decoration: none;
   color: colors.$text-secondary;
@@ -151,6 +167,21 @@ $secondary-color: colors.$danger;
   background: colors.$primary-soft;
 }
 
+/* Keep the selected-project tab slightly raised like a folder label. */
+.projectTab {
+  position: relative;
+  z-index: 3;
+  transform: translateY(-4px);
+  background: colors.$surface;
+  color: colors.$primary;
+  border-color: colors.$primary-a60;
+  box-shadow: 0 -4px 10px colors.$border-subtle;
+}
+
+.projectTab:hover {
+  transform: translateY(-5px);
+}
+
 /* ACTIVE TAB = visually connected to page */
 .active {
   background: colors.$text-on-primary !important;
@@ -163,6 +194,11 @@ $secondary-color: colors.$danger;
   border-color: colors.$primary-a60;
   box-shadow: 0 -2px 6px colors.$border-subtle;
   z-index: 2;
+}
+
+.active.projectTab {
+  transform: translateY(-4px);
+  box-shadow: 0 -5px 12px colors.$border-subtle;
 }
 
 /* Responsive */

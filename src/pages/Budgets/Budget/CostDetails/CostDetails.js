@@ -18,19 +18,52 @@ const blankCostDetail = {
   amountEuro: "",
 };
 
-// helper: Required fields for creating a new cost detail
-const isValidNew = (v) =>
-  v &&
-  v.costDescription &&
-  v.costTypeId !== "" &&
-  v.costId !== "" &&
-  v.noOfUnits !== "" &&
-  v.unitPrice !== "" &&
-  v.percentageCharging !== "" &&
-  v.amountLocalCurrency !== "" &&
-  v.amountReportingCurrency !== "" &&
-  v.amountGBP !== "" &&
-  v.amountEuro !== "";
+export const validateCostDetail = (values) => {
+  const errors = {};
+  const requiredNumber = (field, label, { minimum = 0 } = {}) => {
+    const value = values?.[field];
+    if (value === "" || value == null) {
+      errors[field] = `${label} is required.`;
+      return;
+    }
+    const number = Number(value);
+    if (!Number.isFinite(number) || number < minimum) {
+      errors[field] = `${label} must be a number of at least ${minimum}.`;
+    }
+  };
+
+  if (!values?.costDescription?.trim()) {
+    errors.costDescription = "Description is required.";
+  }
+  if (values?.costTypeId === "" || values?.costTypeId == null) {
+    errors.costTypeId = "Type is required.";
+  }
+  if (values?.costId === "" || values?.costId == null) {
+    errors.costId = "Category is required.";
+  }
+
+  requiredNumber("noOfUnits", "Units");
+  requiredNumber("unitPrice", "Unit price");
+  requiredNumber("percentageCharging", "% charged");
+  requiredNumber("amountLocalCurrency", "Local amount");
+  requiredNumber("amountReportingCurrency", "SEK amount");
+  requiredNumber("amountGBP", "GBP amount");
+  requiredNumber("amountEuro", "EUR amount");
+  return errors;
+};
+
+export const isValidCostDetail = (values) =>
+  Object.keys(validateCostDetail(values)).length === 0;
+
+async function safeParseJsonResponse(response) {
+  const raw = await response.text().catch(() => "");
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
 
 const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
   const { hasAnyRole } = useAuth();
@@ -41,6 +74,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
   const [costDetails, setCostDetails] = useState([]);
   const [editingId, setEditingId] = useState(null); // number | "new" | null
   const [editedValues, setEditedValues] = useState({});
+  const [fieldErrorsById, setFieldErrorsById] = useState({});
 
   const fetchCostDetails = useCallback(async () => {
     if (!budgetId) return [];
@@ -231,6 +265,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
   const handleEdit = (cost) => {
     if (!canEditCostDetails) return;
     setEditingId(cost.costDetailId);
+    setFieldErrorsById((current) => ({ ...current, [cost.costDetailId]: {} }));
     setEditedValues((prev) => ({
       ...prev,
       [cost.costDetailId]: {
@@ -251,6 +286,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
   const handleCreate = () => {
     if (!canEditCostDetails) return;
     setEditingId("new");
+    setFieldErrorsById((current) => ({ ...current, new: {} }));
     setEditedValues((prev) => ({
       ...prev,
       new: { ...blankCostDetail },
@@ -258,6 +294,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
   };
 
   const handleChange = (field, value) => {
+    setFieldErrorsById((current) => ({ ...current, [editingId]: {} }));
     const toNumOrBlank = (v) =>
       v === "" ? "" : Number.isNaN(Number(v)) ? v : Number(v);
 
@@ -302,10 +339,9 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
     const token = localStorage.getItem("authToken");
 
     if (isCreate) {
-      if (!isValidNew(values)) {
-        alert(
-          "Please fill in Description, Type, Category, Units, Unit price, % Charged and all Amounts before saving."
-        );
+      const localErrors = validateCostDetail(values);
+      if (Object.keys(localErrors).length > 0) {
+        setFieldErrorsById((current) => ({ ...current, new: localErrors }));
         return;
       }
 
@@ -337,8 +373,12 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
         });
 
         if (!response.ok) {
-          const msg = await response.text().catch(() => "");
-          throw new Error(`Failed to create cost detail. ${msg}`);
+          const data = await safeParseJsonResponse(response);
+          if (data?.fieldErrors) {
+            setFieldErrorsById((current) => ({ ...current, new: data.fieldErrors }));
+            return;
+          }
+          throw new Error(data?.message || "Failed to create cost detail.");
         }
 
         await fetchCostDetails();
@@ -360,6 +400,12 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
     if (!original) return;
 
     const merged = { ...original, ...values };
+
+    const localErrors = validateCostDetail(merged);
+    if (Object.keys(localErrors).length > 0) {
+      setFieldErrorsById((current) => ({ ...current, [costId]: localErrors }));
+      return;
+    }
 
     const fullPayload = {
       ...merged,
@@ -391,7 +437,17 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
         body: JSON.stringify(fullPayload),
       });
 
-      if (!response.ok) throw new Error("Failed to update cost detail");
+      if (!response.ok) {
+        const data = await safeParseJsonResponse(response);
+        if (data?.fieldErrors) {
+          setFieldErrorsById((current) => ({
+            ...current,
+            [costId]: data.fieldErrors,
+          }));
+          return;
+        }
+        throw new Error(data?.message || "Failed to update cost detail");
+      }
 
       await fetchCostDetails();
       setEditingId(null);
@@ -407,6 +463,11 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
   };
 
   const handleCancel = () => {
+    setFieldErrorsById((current) => {
+      const next = { ...current };
+      delete next[editingId];
+      return next;
+    });
     setEditingId(null);
     setEditedValues((prev) => {
       const next = { ...prev };
@@ -524,6 +585,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
                           onDelete={handleDelete}
                           canEdit={canEditCostDetails}
                           canDelete={canDeleteCostDetails}
+                          fieldErrors={fieldErrorsById[cost.costDetailId] || {}}
                         />
                       ))}
 
@@ -556,6 +618,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
           onDelete={() => {}}
           canEdit={canEditCostDetails}
           canDelete={canDeleteCostDetails}
+          fieldErrors={fieldErrorsById.new || {}}
         />
       )}
 
