@@ -1,71 +1,60 @@
-// src/pages/Organizations/Organization/BankDetails.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { FiEdit, FiLink, FiPlus, FiSave, FiX } from "react-icons/fi";
+import { BASE_URL } from "../../../config/api";
 import styles from "./BankDetails.module.scss";
-import { FiEdit, FiTrash2, FiSave, FiX, FiPlus } from "react-icons/fi";
 
-import { BASE_URL } from "../../../config/api"; // adjust path if needed
+const blankBankDetail = { bankName: "", accountNumber: "", branchName: "", swiftCode: "" };
 
-const blankBank = {
-  bankName: "",
-  accountNumber: "",
-  branchName: "",
-  swiftCode: "",
-};
-
-async function safeParseJsonResponse(res) {
-  const raw = await res.text().catch(() => "");
+async function safeParseJsonResponse(response) {
+  const raw = await response.text().catch(() => "");
   if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
+  try { return JSON.parse(raw); } catch { return null; }
 }
 
-const BankDetails = ({ organizationId, canManage = false, canDelete = false }) => {
+const formatBankDetailLabel = (value) =>
+  [value?.bankName, value?.accountNumber, value?.branchName].filter(Boolean).join(" — ");
+
+const BankDetails = ({ organizationId, canManage = false }) => {
   const [rows, setRows] = useState([]);
+  const [unlinkedOptions, setUnlinkedOptions] = useState([]);
+  const [selectedId, setSelectedId] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
-
   const [formError, setFormError] = useState("");
-  const [fieldErrors, setFieldErrors] = useState({}); // { [rowId]: { fieldName: message } }
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [busyAction, setBusyAction] = useState("");
 
   const token = useMemo(() => localStorage.getItem("authToken"), []);
-  const authHeaders = useMemo(
-    () =>
-      token
-        ? {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          }
-        : { "Content-Type": "application/json" },
-    [token]
-  );
+  const authHeaders = useMemo(() => ({
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    "Content-Type": "application/json",
+  }), [token]);
 
-  const loadForOrg = async () => {
-    if (!organizationId) {
-      setRows([]);
-      return;
-    }
+  const loadForOrg = useCallback(async () => {
+    if (!organizationId) return;
+    setFormError("");
     try {
-      const res = await fetch(`${BASE_URL}/api/bank-details/active`, {
-        headers: authHeaders,
-      });
-      if (!res.ok) throw new Error("Failed to fetch bank details");
-      const data = await res.json();
-      const list = Array.isArray(data) ? data : data ? [data] : [];
-      const byOrg = list.filter(
-        (b) => String(b.organizationId) === String(organizationId)
-      );
-      setRows(byOrg);
-    } catch (e) {
-      console.error("Error fetching bank details:", e);
+      const requests = [fetch(`${BASE_URL}/api/organizations/${organizationId}/bank-details`, { headers: authHeaders })];
+      if (canManage) requests.push(fetch(`${BASE_URL}/api/bank-details/unlinked`, { headers: authHeaders }));
+      const [linkedResponse, unlinkedResponse] = await Promise.all(requests);
+      if (!linkedResponse.ok) {
+        const data = await safeParseJsonResponse(linkedResponse);
+        throw new Error(data?.message || "Failed to load bank details for this organization.");
+      }
+      const linked = await linkedResponse.json();
+      setRows(Array.isArray(linked) ? linked : []);
+      if (unlinkedResponse?.ok) {
+        const unlinked = await unlinkedResponse.json();
+        setUnlinkedOptions(Array.isArray(unlinked) ? unlinked : []);
+      } else setUnlinkedOptions([]);
+      setSelectedId("");
+    } catch (error) {
+      console.error("Error fetching bank details:", error);
       setRows([]);
-      setFormError(
-        e.message || "Failed to load bank details for this organization."
-      );
+      setUnlinkedOptions([]);
+      setFormError(error.message || "Failed to load bank details for this organization.");
     }
-  };
+  }, [authHeaders, canManage, organizationId]);
 
   useEffect(() => {
     setEditingId(null);
@@ -73,413 +62,155 @@ const BankDetails = ({ organizationId, canManage = false, canDelete = false }) =
     setFieldErrors({});
     setFormError("");
     loadForOrg();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [organizationId]);
+  }, [loadForOrg]);
 
   const rowKeyOf = (row) => row.bankId ?? row.id;
-  const isRowEditing = (row) => rowKeyOf(row) === editingId;
-  const evForRow = (row) => editedValues[rowKeyOf(row)] || {};
-
   const startEdit = (row) => {
     if (!canManage) return;
     const id = rowKeyOf(row);
     setEditingId(id);
-    setEditedValues((prev) => ({
-      ...prev,
-      [id]: {
-        bankName: row.bankName || "",
-        accountNumber: row.accountNumber || "",
-        branchName: row.branchName || "",
-        swiftCode: row.swiftCode || "",
-      },
-    }));
-
-    setFieldErrors((prev) => {
-      const next = { ...prev };
-      delete next[id];
-      return next;
-    });
+    setEditedValues({ [id]: {
+      bankName: row.bankName || "", accountNumber: row.accountNumber || "",
+      branchName: row.branchName || "", swiftCode: row.swiftCode || "",
+    } });
+    setFieldErrors({});
     setFormError("");
   };
-
   const startCreate = () => {
     if (!canManage) return;
     setEditingId("new");
-    setEditedValues((prev) => ({ ...prev, new: { ...blankBank } }));
-
-    setFieldErrors((prev) => {
-      const next = { ...prev };
-      delete next.new;
-      return next;
-    });
+    setEditedValues({ new: { ...blankBankDetail } });
+    setFieldErrors({});
     setFormError("");
   };
-
-  const onChange = (field, value) => {
-    setEditedValues((prev) => ({
-      ...prev,
-      [editingId]: {
-        ...prev[editingId],
-        [field]: value,
-      },
-    }));
-  };
-
   const cancel = () => {
-    const id = editingId;
-    setEditingId(null);
+    setEditingId(null); setEditedValues({}); setFieldErrors({}); setFormError("");
+  };
+  const onChange = (field, value) => setEditedValues((current) => ({
+    ...current, [editingId]: { ...current[editingId], [field]: value },
+  }));
 
-    setEditedValues((prev) => {
-      const next = { ...prev };
-      delete next.new;
-      if (id && next[id]) delete next[id];
-      return next;
-    });
-
-    setFieldErrors((prev) => {
-      const next = { ...prev };
-      delete next.new;
-      if (id && next[id]) delete next[id];
-      return next;
-    });
-
-    setFormError("");
+  const request = async (url, options, fallbackMessage) => {
+    const response = await fetch(url, options);
+    if (!response.ok) {
+      const data = await safeParseJsonResponse(response);
+      const error = new Error(data?.message || fallbackMessage);
+      error.fieldErrors = data?.fieldErrors;
+      throw error;
+    }
+    return response;
   };
 
   const save = async () => {
-    if (!canManage) return;
+    if (!canManage || !editingId) return;
     const id = editingId;
     const values = editedValues[id];
     if (!values) return;
-
-    const isCreate = id === "new";
-
-    const payload = {
-      bankName: values.bankName || "",
-      accountNumber: values.accountNumber || "",
-      branchName: values.branchName || null,
-      swiftCode: values.swiftCode || null,
-      organizationId: Number(organizationId),
-      bankId: isCreate ? undefined : id,
-    };
-
-    setFormError("");
-    setFieldErrors((prev) => ({ ...prev, [id]: {} }));
-
+    setBusyAction(`save-${id}`); setFormError(""); setFieldErrors({});
     try {
-      const res = await fetch(
-        isCreate
-          ? `${BASE_URL}/api/bank-details`
-          : `${BASE_URL}/api/bank-details/${id}`,
-        {
-          method: isCreate ? "POST" : "PUT",
-          headers: authHeaders,
-          body: JSON.stringify(payload),
-        }
-      );
-
-      if (!res.ok) {
-        const data = await safeParseJsonResponse(res);
-        if (data?.fieldErrors) {
-          setFieldErrors((prev) => ({ ...prev, [id]: data.fieldErrors }));
-        }
-        setFormError(
-          data?.message ||
-            `Failed to ${isCreate ? "create" : "update"} bank detail.`
-        );
-        return;
-      }
-
-      await loadForOrg();
-      cancel();
-    } catch (e) {
-      console.error(e);
-      setFormError(
-        e.message || `Failed to ${isCreate ? "create" : "update"} bank detail.`
-      );
-    }
-  };
-
-  const remove = async (id) => {
-    if (!canDelete) return;
-    if (!id) return;
-    if (!window.confirm("Delete this bank detail?")) return;
-
-    setFormError("");
-
-    try {
-      const res = await fetch(`${BASE_URL}/api/bank-details/${id}`, {
-        method: "DELETE",
-        headers: authHeaders,
+      const body = JSON.stringify({
+        ...(id === "new" ? {} : { bankId: id, organizationId: Number(organizationId) }),
+        bankName: values.bankName || "", accountNumber: values.accountNumber || "",
+        branchName: values.branchName || null, swiftCode: values.swiftCode || null,
       });
-
-      if (!res.ok) {
-        const data = await safeParseJsonResponse(res);
-        setFormError(data?.message || "Failed to delete bank detail.");
-        return;
+      if (id === "new") {
+        await request(`${BASE_URL}/api/organizations/${organizationId}/bank-details`,
+          { method: "POST", headers: authHeaders, body }, "Failed to create and link bank detail.");
+      } else {
+        await request(`${BASE_URL}/api/bank-details/${id}`,
+          { method: "PUT", headers: authHeaders, body }, "Failed to update bank detail.");
       }
+      cancel(); await loadForOrg();
+    } catch (error) {
+      console.error(error);
+      if (error.fieldErrors) setFieldErrors({ [id]: error.fieldErrors });
+      setFormError(error.message || "Failed to save bank detail.");
+    } finally { setBusyAction(""); }
+  };
 
+  const addExisting = async () => {
+    if (!canManage || !selectedId) return;
+    setBusyAction("link"); setFormError("");
+    try {
+      await request(`${BASE_URL}/api/organizations/${organizationId}/bank-details/${selectedId}`,
+        { method: "POST", headers: authHeaders }, "Failed to link bank detail.");
       await loadForOrg();
-    } catch (e) {
-      console.error(e);
-      setFormError("Failed to delete bank detail.");
-    }
+    } catch (error) {
+      console.error(error); setFormError(error.message || "Failed to link bank detail.");
+    } finally { setBusyAction(""); }
   };
 
-  const getRowFieldError = (rowKey, name) =>
-    fieldErrors?.[rowKey] ? fieldErrors[rowKey][name] : undefined;
-
-  const hasRowError = (rowKey, name) => Boolean(getRowFieldError(rowKey, name));
-
-  const inputClassFor = (rowKey, name) =>
-    `${styles.input} ${hasRowError(rowKey, name) ? styles.inputError : ""}`;
-
-  const FieldError = ({ rowKey, name }) => {
-    const msg = getRowFieldError(rowKey, name);
-    return msg ? <div className={styles.fieldError}>{msg}</div> : null;
+  const unlink = async (id) => {
+    if (!canManage) return;
+    if (!window.confirm("Remove this bank detail from the organization? The bank-detail record will remain available.")) return;
+    setBusyAction(`unlink-${id}`); setFormError("");
+    try {
+      await request(`${BASE_URL}/api/organizations/${organizationId}/bank-details/${id}`,
+        { method: "DELETE", headers: authHeaders }, "Failed to remove bank detail from organization.");
+      await loadForOrg();
+    } catch (error) {
+      console.error(error); setFormError(error.message || "Failed to remove bank detail from organization.");
+    } finally { setBusyAction(""); }
   };
 
-  return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <div className={styles.title}>
-          Bank details for organization #{organizationId}
-        </div>
+  const getFieldError = (id, field) => fieldErrors?.[id]?.[field];
+  const inputClassFor = (id, field) => `${styles.input} ${getFieldError(id, field) ? styles.inputError : ""}`;
+  const renderField = (id, row, field, placeholder) => {
+    if (String(editingId) !== String(id)) return row?.[field] || "-";
+    return <>
+      <input className={inputClassFor(id, field)} value={editedValues[id]?.[field] ?? ""}
+        onChange={(event) => onChange(field, event.target.value)} placeholder={placeholder} />
+      {getFieldError(id, field) && <div className={styles.fieldError}>{getFieldError(id, field)}</div>}
+    </>;
+  };
 
-        {canManage && <button
-          type="button"
-          className={styles.primaryBtn}
-          onClick={startCreate}
-          disabled={editingId === "new"}
-        >
-          <FiPlus /> New Bank Detail
-        </button>}
+  const renderRow = (row, index, isNew = false) => {
+    const id = isNew ? "new" : rowKeyOf(row);
+    const editing = String(editingId) === String(id);
+    const disabled = Boolean(busyAction);
+    return <div key={id} className={`${styles.gridRow} ${styles.dataRow} ${index % 2 === 0 ? styles.zebraEven : ""} ${styles.hoverable}`}>
+      <div className={`${styles.cell} ${styles.stickyCol}`}>
+        {editing ? <div className={styles.actions}>
+          <button type="button" className={styles.iconCircleBtn} onClick={save} disabled={disabled} aria-label={`Save bank detail ${id}`}><FiSave /></button>
+          <button type="button" className={styles.dangerIconBtn} onClick={cancel} disabled={disabled} aria-label={`Cancel bank detail ${id}`}><FiX /></button>
+        </div> : <div className={styles.actions}>
+          {canManage && <button type="button" className={styles.iconCircleBtn} onClick={() => startEdit(row)} disabled={Boolean(editingId) || disabled} aria-label={`Edit bank detail ${id}`}><FiEdit /></button>}
+          {canManage && <button type="button" className={styles.unlinkBtn} onClick={() => unlink(id)} disabled={Boolean(editingId) || disabled} title="Remove from organization" aria-label={`Remove bank detail ${id} from organization`}><FiLink /></button>}
+        </div>}
       </div>
+      <div className={styles.cell}>{renderField(id, row, "bankName", "Bank name")}</div>
+      <div className={styles.cell}>{renderField(id, row, "accountNumber", "Account number")}</div>
+      <div className={styles.cell}>{renderField(id, row, "branchName", "Branch")}</div>
+      <div className={styles.cell}>{renderField(id, row, "swiftCode", "SWIFT")}</div>
+    </div>;
+  };
 
-      {formError && <div className={styles.errorBanner}>{formError}</div>}
-
-      {rows.length === 0 && editingId !== "new" && (
-        <p className={styles.noData}>No bank details for this organization.</p>
-      )}
-
-      <div className={styles.table}>
-        <div className={`${styles.gridRow} ${styles.headerRow}`}>
-          <div className={`${styles.headerCell} ${styles.stickyColHeader}`}>
-            Actions
-          </div>
-          <div className={styles.headerCell}>Bank name</div>
-          <div className={styles.headerCell}>Account number</div>
-          <div className={styles.headerCell}>Branch</div>
-          <div className={styles.headerCell}>SWIFT</div>
-        </div>
-
-        {rows.map((row, idx) => {
-          const rowId = rowKeyOf(row);
-          const edit = isRowEditing(row);
-          const ev = evForRow(row);
-
-          return (
-            <div
-              key={rowId}
-              className={`${styles.gridRow} ${styles.dataRow} ${
-                idx % 2 === 0 ? styles.zebraEven : ""
-              } ${styles.hoverable}`}
-            >
-              {/* actions */}
-              <div className={`${styles.cell} ${styles.stickyCol}`}>
-                {edit ? (
-                  <div className={styles.actions}>
-                    {canManage && <button
-                      type="button"
-                      className={styles.iconCircleBtn}
-                      onClick={save}
-                      title="Save"
-                      aria-label="Save"
-                    >
-                      <FiSave />
-                    </button>}
-                    <button
-                      type="button"
-                      className={styles.dangerIconBtn}
-                      onClick={cancel}
-                      title="Cancel"
-                      aria-label="Cancel"
-                    >
-                      <FiX />
-                    </button>
-                  </div>
-                ) : (
-                  <div className={styles.actions}>
-                    {canManage && <button
-                      type="button"
-                      className={styles.iconCircleBtn}
-                      onClick={() => startEdit(row)}
-                      title="Edit"
-                      aria-label="Edit"
-                    >
-                      <FiEdit />
-                    </button>}
-                    {canDelete && <button
-                      type="button"
-                      className={styles.dangerIconBtn}
-                      onClick={() => remove(rowId)}
-                      title="Delete"
-                      aria-label="Delete"
-                    >
-                      <FiTrash2 />
-                    </button>}
-                  </div>
-                )}
-              </div>
-
-              {/* bank name */}
-              <div className={styles.cell}>
-                {edit ? (
-                  <>
-                    <input
-                      className={inputClassFor(rowId, "bankName")}
-                      type="text"
-                      value={ev.bankName ?? row.bankName ?? ""}
-                      onChange={(e) => onChange("bankName", e.target.value)}
-                    />
-                    <FieldError rowKey={rowId} name="bankName" />
-                  </>
-                ) : (
-                  row.bankName || "-"
-                )}
-              </div>
-
-              {/* account */}
-              <div className={styles.cell}>
-                {edit ? (
-                  <>
-                    <input
-                      className={inputClassFor(rowId, "accountNumber")}
-                      type="text"
-                      value={ev.accountNumber ?? row.accountNumber ?? ""}
-                      onChange={(e) =>
-                        onChange("accountNumber", e.target.value)
-                      }
-                    />
-                    <FieldError rowKey={rowId} name="accountNumber" />
-                  </>
-                ) : (
-                  row.accountNumber || "-"
-                )}
-              </div>
-
-              {/* branch */}
-              <div className={styles.cell}>
-                {edit ? (
-                  <>
-                    <input
-                      className={inputClassFor(rowId, "branchName")}
-                      type="text"
-                      value={ev.branchName ?? row.branchName ?? ""}
-                      onChange={(e) => onChange("branchName", e.target.value)}
-                    />
-                    <FieldError rowKey={rowId} name="branchName" />
-                  </>
-                ) : (
-                  row.branchName || "-"
-                )}
-              </div>
-
-              {/* swift */}
-              <div className={styles.cell}>
-                {edit ? (
-                  <>
-                    <input
-                      className={inputClassFor(rowId, "swiftCode")}
-                      type="text"
-                      value={ev.swiftCode ?? row.swiftCode ?? ""}
-                      onChange={(e) => onChange("swiftCode", e.target.value)}
-                    />
-                    <FieldError rowKey={rowId} name="swiftCode" />
-                  </>
-                ) : (
-                  row.swiftCode || "-"
-                )}
-              </div>
-            </div>
-          );
-        })}
-
-        {editingId === "new" && (
-          <div
-            className={`${styles.gridRow} ${styles.dataRow} ${styles.hoverable}`}
-          >
-            <div className={`${styles.cell} ${styles.stickyCol}`}>
-              <div className={styles.actions}>
-                <button
-                  type="button"
-                  className={styles.iconCircleBtn}
-                  onClick={save}
-                  title="Save"
-                  aria-label="Save"
-                >
-                  <FiSave />
-                </button>
-                <button
-                  type="button"
-                  className={styles.dangerIconBtn}
-                  onClick={cancel}
-                  title="Cancel"
-                  aria-label="Cancel"
-                >
-                  <FiX />
-                </button>
-              </div>
-            </div>
-
-            <div className={styles.cell}>
-              <input
-                className={inputClassFor("new", "bankName")}
-                type="text"
-                value={editedValues.new?.bankName ?? ""}
-                onChange={(e) => onChange("bankName", e.target.value)}
-                placeholder="Bank name"
-              />
-              <FieldError rowKey="new" name="bankName" />
-            </div>
-
-            <div className={styles.cell}>
-              <input
-                className={inputClassFor("new", "accountNumber")}
-                type="text"
-                value={editedValues.new?.accountNumber ?? ""}
-                onChange={(e) => onChange("accountNumber", e.target.value)}
-                placeholder="Account number"
-              />
-              <FieldError rowKey="new" name="accountNumber" />
-            </div>
-
-            <div className={styles.cell}>
-              <input
-                className={inputClassFor("new", "branchName")}
-                type="text"
-                value={editedValues.new?.branchName ?? ""}
-                onChange={(e) => onChange("branchName", e.target.value)}
-                placeholder="Branch"
-              />
-              <FieldError rowKey="new" name="branchName" />
-            </div>
-
-            <div className={styles.cell}>
-              <input
-                className={inputClassFor("new", "swiftCode")}
-                type="text"
-                value={editedValues.new?.swiftCode ?? ""}
-                onChange={(e) => onChange("swiftCode", e.target.value)}
-                placeholder="SWIFT"
-              />
-              <FieldError rowKey="new" name="swiftCode" />
-            </div>
-          </div>
-        )}
-      </div>
+  return <div className={styles.container}>
+    <div className={styles.header}>
+      <div><div className={styles.title}>Bank details for organization #{organizationId}</div>
+        <div className={styles.subtitle}>{rows.length} linked bank detail{rows.length === 1 ? "" : "s"}</div></div>
+      {canManage && <div className={styles.headerRight}>
+        <select className={styles.select} value={selectedId} onChange={(event) => setSelectedId(event.target.value)}
+          disabled={!unlinkedOptions.length || Boolean(editingId) || Boolean(busyAction)} aria-label="Existing bank detail">
+          <option value="">Add an existing bank detail…</option>
+          {unlinkedOptions.map((value) => <option key={value.bankId} value={value.bankId}>#{value.bankId} — {formatBankDetailLabel(value)}</option>)}
+        </select>
+        <button type="button" className={styles.secondaryBtn} onClick={addExisting} disabled={!selectedId || Boolean(editingId) || Boolean(busyAction)}><FiLink /> Add existing</button>
+        <button type="button" className={styles.primaryBtn} onClick={startCreate} disabled={Boolean(editingId) || Boolean(busyAction)}><FiPlus /> New Bank Detail</button>
+      </div>}
     </div>
-  );
+    {formError && <div className={styles.errorBanner} role="alert">{formError}</div>}
+    {!rows.length && editingId !== "new" && <p className={styles.noData}>No bank details linked to this organization.</p>}
+    <div className={styles.table}>
+      <div className={`${styles.gridRow} ${styles.headerRow}`}>
+        <div className={`${styles.headerCell} ${styles.stickyColHeader}`}>Actions</div>
+        <div className={styles.headerCell}>Bank name</div><div className={styles.headerCell}>Account number</div>
+        <div className={styles.headerCell}>Branch</div><div className={styles.headerCell}>SWIFT</div>
+      </div>
+      {rows.map((row, index) => renderRow(row, index))}
+      {editingId === "new" && renderRow(blankBankDetail, rows.length, true)}
+    </div>
+  </div>;
 };
 
 export default BankDetails;

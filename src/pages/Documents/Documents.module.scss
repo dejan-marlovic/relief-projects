@@ -140,6 +140,13 @@
   margin-bottom: 2px;
 }
 
+.uploadFormats {
+  max-width: 720px;
+  color: colors.$text-muted;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
 /* Hidden file input */
 .hiddenFileInput {
   display: none;
@@ -159,7 +166,11 @@
   margin: 0;
   border: 1px solid colors.$neutral-a08;
   border-radius: 12px;
-  overflow: hidden;
+  max-height: clamp(260px, 48vh, 640px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
 }
 
 .documentItem {
@@ -184,6 +195,18 @@
   font-size: 0.95rem;
   word-break: break-word;
   color: colors.$text;
+}
+
+.docInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.uploadedBy {
+  color: colors.$text-muted;
+  font-size: 0.8rem;
 }
 
 /* Right side actions */

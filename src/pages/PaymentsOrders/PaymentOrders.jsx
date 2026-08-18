@@ -26,6 +26,7 @@ import { sortRows, toSortableDate, toSortableNumber } from "../../utils/tableSor
 import { matchesDateRange, matchesNumberRange, matchesText } from "../../utils/tableSorting";
 import ColumnFilter from "../../components/ColumnFilter/ColumnFilter";
 import ClearFiltersButton from "../../components/ClearFiltersButton/ClearFiltersButton";
+import { getSelectedProjectName } from "../../utils/projectDisplay";
 
 const headerLabels = [
   "Actions",
@@ -1128,7 +1129,7 @@ function PaymentOrders() {
   };
 
   const subtitle = selectedProjectId
-    ? `${getProjectName(selectedProjectId)} • ${orders.length} order${
+    ? `${getSelectedProjectName(projects, selectedProjectId)} • ${orders.length} order${
         orders.length === 1 ? "" : "s"
       }`
     : "Select a project to see payment orders";

@@ -7,6 +7,8 @@
   padding: 1.25rem;
   margin-top: 1rem;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  height: calc(100% - 1rem);
+  min-height: 0;
 }
 
 /* Card shell */
@@ -16,6 +18,10 @@
   border: 1px solid colors.$primary-focus;
   box-shadow: 0 10px 24px colors.$border-subtle;
   padding: 1.25rem;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Header */
@@ -160,7 +166,9 @@
   position: relative;
   isolation: isolate;
   overflow: auto;
-  max-height: 60vh;
+  max-height: none;
+  min-height: 0;
+  flex: 1 1 auto;
   border: 1px solid colors.$primary-soft-active;
   border-radius: 14px;
   background: colors.$surface;

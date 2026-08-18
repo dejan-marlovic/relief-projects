@@ -17,6 +17,7 @@ import { sortRows, toSortableDate, toSortableNumber } from "../../utils/tableSor
 import { matchesDateRange, matchesNumberRange, matchesSelect, matchesText } from "../../utils/tableSorting";
 import ColumnFilter from "../../components/ColumnFilter/ColumnFilter";
 import ClearFiltersButton from "../../components/ClearFiltersButton/ClearFiltersButton";
+import { getSelectedProjectName } from "../../utils/projectDisplay";
 
 import { BASE_URL } from "../../config/api"; // adjust path if needed
 
@@ -91,7 +92,7 @@ function normalizeSignature(s) {
 }
 
 function Signatures() {
-  const { selectedProjectId } = useContext(ProjectContext);
+  const { selectedProjectId, projects } = useContext(ProjectContext);
   const { hasAnyRole } = useAuth();
   const canManageSignatures = hasAnyRole("ADMIN", "APPROVER");
 
@@ -1038,7 +1039,7 @@ function Signatures() {
     selectableSignatures.every((s) => selectedSignatureIds.has(s.id));
 
   const subtitle = selectedProjectId
-    ? `Project #${selectedProjectId} • ${items.length} signature${
+    ? `${getSelectedProjectName(projects, selectedProjectId)} • ${items.length} signature${
         items.length === 1 ? "" : "s"
       }`
     : "Select a project to see signatures";

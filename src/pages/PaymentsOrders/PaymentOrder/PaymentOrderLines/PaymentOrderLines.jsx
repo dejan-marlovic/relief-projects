@@ -16,6 +16,29 @@ const toNumOrNull = (v) => {
   return Number.isFinite(n) ? n : null;
 };
 
+export const validatePaymentOrderLine = (payload) => {
+  const fieldErrors = {};
+
+  if (!payload.transactionId) {
+    fieldErrors.transactionId = "Transaction is required.";
+  }
+  if (!payload.organizationId) {
+    fieldErrors.organizationId = "Organization is required.";
+  }
+  if (!payload.costDetailId) {
+    fieldErrors.costDetailId = "Cost detail is required.";
+  }
+  if (
+    payload.amount == null ||
+    !Number.isFinite(payload.amount) ||
+    payload.amount <= 0
+  ) {
+    fieldErrors.amount = "Amount must be a number > 0.";
+  }
+
+  return fieldErrors;
+};
+
 async function safeParseJsonResponse(res) {
   const raw = await res.text().catch(() => "");
   if (!raw) return null;
@@ -110,6 +133,16 @@ const PaymentOrderLines = ({
   // ✅ only for CREATE row
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
+
+  const updateDraftField = (field, value) => {
+    setDraft((previous) => ({ ...previous, [field]: value }));
+    setFieldErrors((previous) => {
+      if (!previous[field]) return previous;
+      const next = { ...previous };
+      delete next[field];
+      return next;
+    });
+  };
 
   // ✅ row-scoped errors for inline updates, keyed by rowId
   // { [rowId]: { message: string, fieldErrors: {amount?: string, ...} } }
@@ -270,16 +303,7 @@ const PaymentOrderLines = ({
       memo: draft.memo || null,
     };
 
-    const fe = {};
-    if (!payload.organizationId)
-      fe.organizationId = "Organization is required.";
-    if (
-      payload.amount == null ||
-      !Number.isFinite(payload.amount) ||
-      payload.amount <= 0
-    ) {
-      fe.amount = "Amount must be a number > 0.";
-    }
+    const fe = validatePaymentOrderLine(payload);
     if (Object.keys(fe).length) {
       setFieldErrors(fe);
       setFormError("Please fix the highlighted fields.");
@@ -334,17 +358,7 @@ const PaymentOrderLines = ({
     };
 
     // simple client-side guards per-row (put them into row error too)
-    const localFe = {};
-    if (
-      payload.amount == null ||
-      !Number.isFinite(payload.amount) ||
-      payload.amount <= 0
-    ) {
-      localFe.amount = "Amount must be a number > 0.";
-    }
-    if (!payload.organizationId) {
-      localFe.organizationId = "Organization is required.";
-    }
+    const localFe = validatePaymentOrderLine(payload);
     if (Object.keys(localFe).length) {
       setRowErrorsById((prev) => ({
         ...prev,
@@ -440,22 +454,27 @@ const PaymentOrderLines = ({
       {canManage && (
         <div className={styles.addRow}>
           <div className={styles.field}>
-          <label>Transaction override</label>
+          <label>Transaction *</label>
           <select
             value={draft.transactionId}
             disabled={loading || isLocked}
-            onChange={(e) =>
-              setDraft((p) => ({ ...p, transactionId: e.target.value }))
-            }
-            className={styles.input}
+            onChange={(e) => updateDraftField("transactionId", e.target.value)}
+            className={`${styles.input} ${
+              fieldErrors.transactionId ? styles.inputError : ""
+            }`}
           >
-            <option value="">(use header)</option>
+            <option value="">Select…</option>
             {txOptions.map((t) => (
               <option key={t.id} value={t.id}>
                 TX#{t.id}
               </option>
             ))}
           </select>
+          {fieldErrors.transactionId && (
+            <div className={styles.fieldError}>
+              {fieldErrors.transactionId}
+            </div>
+          )}
         </div>
 
         <div className={styles.field}>
@@ -463,9 +482,7 @@ const PaymentOrderLines = ({
           <select
             value={draft.organizationId}
             disabled={loading || isLocked}
-            onChange={(e) =>
-              setDraft((p) => ({ ...p, organizationId: e.target.value }))
-            }
+            onChange={(e) => updateDraftField("organizationId", e.target.value)}
             className={`${styles.input} ${
               fieldErrors.organizationId ? styles.inputError : ""
             }`}
@@ -485,22 +502,25 @@ const PaymentOrderLines = ({
         </div>
 
         <div className={styles.field}>
-          <label>Cost detail</label>
+          <label>Cost detail *</label>
           <select
             value={draft.costDetailId}
             disabled={loading || isLocked}
-            onChange={(e) =>
-              setDraft((p) => ({ ...p, costDetailId: e.target.value }))
-            }
-            className={styles.input}
+            onChange={(e) => updateDraftField("costDetailId", e.target.value)}
+            className={`${styles.input} ${
+              fieldErrors.costDetailId ? styles.inputError : ""
+            }`}
           >
-            <option value="">(none)</option>
+            <option value="">Select…</option>
             {costDetailOptions.map((cd) => (
               <option key={cd.costDetailId} value={cd.costDetailId}>
                 {cd.costDescription || "No description"} (CD#{cd.costDetailId})
               </option>
             ))}
           </select>
+          {fieldErrors.costDetailId && (
+            <div className={styles.fieldError}>{fieldErrors.costDetailId}</div>
+          )}
         </div>
 
         <div className={styles.field}>
@@ -510,9 +530,7 @@ const PaymentOrderLines = ({
             step="0.01"
             value={draft.amount}
             disabled={loading || isLocked}
-            onChange={(e) =>
-              setDraft((p) => ({ ...p, amount: e.target.value }))
-            }
+            onChange={(e) => updateDraftField("amount", e.target.value)}
             className={`${styles.input} ${
               fieldErrors.amount ? styles.inputError : ""
             }`}
@@ -630,6 +648,8 @@ const LineRow = ({
 
   const amountError = rowError?.fieldErrors?.amount || "";
   const orgError = rowError?.fieldErrors?.organizationId || "";
+  const transactionError = rowError?.fieldErrors?.transactionId || "";
+  const costDetailError = rowError?.fieldErrors?.costDetailId || "";
 
   return (
     <div className={styles.trow}>
@@ -641,15 +661,20 @@ const LineRow = ({
             setTransactionId(e.target.value);
             clearRowError?.();
           }}
-          className={styles.input}
+          className={`${styles.input} ${
+            transactionError ? styles.inputError : ""
+          }`}
         >
-          <option value="">(header)</option>
+          <option value="">Select…</option>
           {txOptions.map((t) => (
             <option key={t.id} value={t.id}>
               TX#{t.id}
             </option>
           ))}
         </select>
+        {transactionError ? (
+          <div className={styles.fieldError}>{transactionError}</div>
+        ) : null}
       </div>
 
       <div>
@@ -680,15 +705,20 @@ const LineRow = ({
             setCostDetailId(e.target.value);
             clearRowError?.();
           }}
-          className={styles.input}
+          className={`${styles.input} ${
+            costDetailError ? styles.inputError : ""
+          }`}
         >
-          <option value="">(none)</option>
+          <option value="">Select…</option>
           {costDetailOptions.map((cd) => (
             <option key={cd.costDetailId} value={cd.costDetailId}>
               {cd.costDescription || "No description"} (CD#{cd.costDetailId})
             </option>
           ))}
         </select>
+        {costDetailError ? (
+          <div className={styles.fieldError}>{costDetailError}</div>
+        ) : null}
       </div>
 
       <div>

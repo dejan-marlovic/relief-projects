@@ -7,6 +7,8 @@ import styles from "./Project.module.scss";
 import Memos from "../Project/Memos/Memos.jsx";
 
 import { ProjectContext } from "../../context/ProjectContext";
+import { getSelectedProjectName } from "../../utils/projectDisplay";
+import ProjectSnapshot from "./ProjectSnapshot/ProjectSnapshot";
 import { useAuth } from "../../context/AuthContext";
 
 // ✅ Use ImageZoomModal again
@@ -2610,8 +2612,8 @@ Approximately:
             <div className={styles.pageHeaderText}>
               <h3 className={styles.pageTitle}>Project Details</h3>
               <p className={styles.pageSubtitle}>
-                Update project info, sectors, images, organizations, and
-                participants.
+                {getSelectedProjectName(projects, selectedProjectId)} • Update
+                project info, sectors, images, organizations, and participants.
               </p>
             </div>
 
@@ -2668,6 +2670,13 @@ Approximately:
               </ul>
             </div>
           )}
+
+          <ProjectSnapshot
+            projectId={selectedProjectId}
+            projectName={getSelectedProjectName(projects, selectedProjectId)}
+            participants={projectParticipants}
+            employees={employeeOptions}
+          />
 
           <div className={styles.imageAndFormWrapper}>
             {/* Left: media card */}
