@@ -356,6 +356,20 @@ function Recipients() {
         [field]: typeof value === "string" && value.trim() === "" ? "" : value,
       },
     }));
+
+    // Clear a server-side field error as soon as the user corrects that field.
+    setFieldErrors((prev) => {
+      const rowErrors = prev[editingId];
+      if (!rowErrors?.[field]) return prev;
+
+      const nextRowErrors = { ...rowErrors };
+      delete nextRowErrors[field];
+
+      return {
+        ...prev,
+        [editingId]: nextRowErrors,
+      };
+    });
   };
 
   const cancel = () => {
