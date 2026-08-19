@@ -66,10 +66,7 @@
 }
 
 .tableScroll {
-  max-height: clamp(320px, 55vh, 680px);
-  overflow: auto;
-  scrollbar-gutter: stable;
-  overscroll-behavior: contain;
+  overflow-x: auto;
   border: 1px solid colors.$border-subtle;
   border-radius: 10px;
 }
@@ -80,9 +77,6 @@
   background: colors.$surface;
   th, td { padding: 0.7rem; border-bottom: 1px solid colors.$border-subtle; text-align: center; }
   th {
-    position: sticky;
-    top: 0;
-    z-index: 1;
     background: colors.$primary-a08;
     color: colors.$text-strong;
     font-size: 0.8rem;
