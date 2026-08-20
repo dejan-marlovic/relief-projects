@@ -269,20 +269,28 @@ const Transactions = ({ refreshTrigger }) => {
           `${BASE_URL}/api/budgets/project/${selectedProjectId}`,
           { headers },
         );
-        const budgets = bRes.ok ? await bRes.json() : [];
+        const budgets =
+          bRes.ok && bRes.status !== 204 ? await bRes.json() : [];
         const budgetList = Array.isArray(budgets) ? budgets : [];
 
         if (!cancelled) setBudgetOptions(budgetList);
 
         const all = [];
         for (const b of budgetList) {
-          const cdRes = await fetch(
-            `${BASE_URL}/api/cost-details/by-budget/${b.id}`,
-            { headers },
-          );
-          if (!cdRes.ok) continue;
-          const cds = await cdRes.json();
-          if (Array.isArray(cds)) all.push(...cds);
+          try {
+            const cdRes = await fetch(
+              `${BASE_URL}/api/cost-details/by-budget/${b.id}`,
+              { headers },
+            );
+            if (!cdRes.ok || cdRes.status === 204) continue;
+            const cds = await cdRes.json();
+            if (Array.isArray(cds)) all.push(...cds);
+          } catch (error) {
+            console.error(
+              `Failed to load cost details for budget ${b.id}:`,
+              error,
+            );
+          }
         }
 
         if (!cancelled) setCostDetailOptions(all);
@@ -1659,6 +1667,36 @@ const Transactions = ({ refreshTrigger }) => {
             ))}
           </div>
 
+          {canEditTransactions && editingId === "new" && (
+            <Transaction
+              tx={{
+                id: "new",
+                ...blankTx,
+                projectId: selectedProjectId || "",
+              }}
+              isEditing
+              editedValues={editedValues.new}
+              onChange={onChange}
+              onSave={save}
+              onCancel={cancel}
+              onDelete={() => {}}
+              isSelected={false}
+              onSelectChange={() => {}}
+              selectionDisabled
+              organizations={orgOptions}
+              projects={projectOptions}
+              statuses={statusOptions}
+              budgets={budgetOptions}
+              visibleCols={visibleCols}
+              isEven={false}
+              fieldErrors={fieldErrors.new || {}}
+              rowRef={newRowRef}
+              canEdit={canEditTransactions}
+              canDelete={canDeleteTransactions}
+              canManageAllocations={canManageAllocations}
+            />
+          )}
+
           {!selectedProjectId ? (
             <p className={styles.noData}>
               Select a project to see transactions.
@@ -1699,35 +1737,6 @@ const Transactions = ({ refreshTrigger }) => {
             ))
           )}
 
-          {canEditTransactions && editingId === "new" && (
-            <Transaction
-              tx={{
-                id: "new",
-                ...blankTx,
-                projectId: selectedProjectId || "",
-              }}
-              isEditing
-              editedValues={editedValues.new}
-              onChange={onChange}
-              onSave={save}
-              onCancel={cancel}
-              onDelete={() => {}}
-              isSelected={false}
-              onSelectChange={() => {}}
-              selectionDisabled
-              organizations={orgOptions}
-              projects={projectOptions}
-              statuses={statusOptions}
-              budgets={budgetOptions}
-              visibleCols={visibleCols}
-              isEven={false}
-              fieldErrors={fieldErrors.new || {}}
-              rowRef={newRowRef}
-              canEdit={canEditTransactions}
-              canDelete={canDeleteTransactions}
-              canManageAllocations={canManageAllocations}
-            />
-          )}
         </div>
       </div>
     </div>
