@@ -2,14 +2,14 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiRotateCcw,
-  FiRefreshCw,
-  FiAlertCircle,
-  FiDollarSign,
+  FiRefreshCw,  FiDollarSign,
 } from "react-icons/fi";
 
 import styles from "./RestoreBudget.module.scss";
 import { BASE_URL } from "../../../config/api";
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
+import { formatApiError } from "../../../utils/apiErrors";
 
 const RestoreBudget = () => {
   const navigate = useNavigate();
@@ -226,9 +226,10 @@ const RestoreBudget = () => {
       if (!res.ok) {
         const data = await safeReadJson(res);
         setFormError(
-          data?.message ||
-            data?.detail ||
+          formatApiError(
+            data,
             "Failed to restore the budget. Backend support may be missing.",
+          ),
         );
         return;
       }
@@ -267,10 +268,7 @@ const RestoreBudget = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {successMessage && (

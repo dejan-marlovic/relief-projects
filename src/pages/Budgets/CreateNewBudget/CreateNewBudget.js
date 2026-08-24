@@ -3,9 +3,10 @@ import styles from "../Budget/Budget.module.scss"; // ✅ reuse Budget styling
 import { ProjectContext } from "../../../context/ProjectContext";
 
 // ✅ Icons to match Budget/Project vibe
-import { FiSave, FiX, FiAlertCircle } from "react-icons/fi";
+import { FiSave, FiX } from "react-icons/fi";
 
-import { BASE_URL } from "../../../config/api"; // adjust path if needed
+import { BASE_URL } from "../../../config/api";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner"; // adjust path if needed
 
 const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
   const { selectedProjectId } = useContext(ProjectContext);
@@ -372,10 +373,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {loading ? (

@@ -22,12 +22,12 @@ import {
   FiSave,
   FiPlus,
   FiUploadCloud,
-  FiImage,
-  FiAlertCircle,
-  FiDownload,
+  FiImage,  FiDownload,
 } from "react-icons/fi";
 
 import { BASE_URL, ASSETS_URL } from "../../config/api";
+import ErrorBanner from "../../components/ErrorBanner/ErrorBanner";
+import { readApiError } from "../../utils/apiErrors";
 const coverImagePath = `${ASSETS_URL}/images/projects/`;
 
 // ✅ caption delimiter (must match backend)
@@ -2314,7 +2314,11 @@ Approximately:
         { method: "DELETE" },
       );
 
-      if (!response.ok) throw new Error("Failed to delete project");
+      if (!response.ok) {
+        throw new Error(
+          await readApiError(response, "Failed to delete project."),
+        );
+      }
 
       alert("Project deleted successfully!");
 
@@ -2653,10 +2657,7 @@ Approximately:
           </div>
 
           {formError && (
-            <div className={styles.errorBanner}>
-              <FiAlertCircle />
-              <span>{formError}</span>
-            </div>
+            <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
           )}
 
           {Object.keys(fieldErrors).length > 0 && (

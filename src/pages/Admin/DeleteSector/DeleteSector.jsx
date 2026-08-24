@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiTrash2, FiRefreshCw, FiAlertCircle, FiGrid } from "react-icons/fi";
+import { FiTrash2, FiRefreshCw, FiGrid } from "react-icons/fi";
 
 import styles from "./DeleteSector.module.scss";
 import { BASE_URL } from "../../../config/api";
 
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const DeleteSector = () => {
   const navigate = useNavigate();
@@ -148,10 +149,7 @@ const DeleteSector = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {successMessage && (

@@ -2,14 +2,13 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiRotateCcw,
-  FiRefreshCw,
-  FiAlertCircle,
-  FiGrid,
+  FiRefreshCw,  FiGrid,
 } from "react-icons/fi";
 
 import styles from "./RestoreSector.module.scss";
 import { BASE_URL } from "../../../config/api";
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const RestoreSector = () => {
   const navigate = useNavigate();
@@ -141,10 +140,7 @@ const RestoreSector = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {successMessage && (

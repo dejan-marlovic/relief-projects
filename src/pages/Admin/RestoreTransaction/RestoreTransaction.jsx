@@ -2,14 +2,14 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiRotateCcw,
-  FiRefreshCw,
-  FiAlertCircle,
-  FiRepeat,
+  FiRefreshCw,  FiRepeat,
 } from "react-icons/fi";
 
 import styles from "./RestoreTransaction.module.scss";
 import { BASE_URL } from "../../../config/api";
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
+import { formatApiError } from "../../../utils/apiErrors";
 
 const RestoreTransaction = () => {
   const navigate = useNavigate();
@@ -272,9 +272,10 @@ const RestoreTransaction = () => {
       if (!res.ok) {
         const data = await safeReadJson(res);
         setFormError(
-          data?.message ||
-            data?.detail ||
+          formatApiError(
+            data,
             "Failed to restore the transaction. Backend support may be missing.",
+          ),
         );
         return;
       }
@@ -311,10 +312,7 @@ const RestoreTransaction = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {successMessage && (

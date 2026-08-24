@@ -3,6 +3,7 @@ import { FiBriefcase, FiCreditCard, FiFileText, FiPenTool, FiTrendingUp, FiUsers
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { BASE_URL } from "../../../config/api";
 import styles from "./ProjectSnapshot.module.scss";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const emptySnapshot = {
   reportingBudgetSek: 0,
@@ -242,7 +243,9 @@ const ProjectSnapshot = ({ projectId, projectName, participants = [], employees 
       </div>
 
       {loading && <div className={styles.loadingSkeleton} aria-label="Loading project statistics" />}
-      {!loading && error && <div className={styles.errorBanner}>{error}</div>}
+      {!loading && error && (
+        <ErrorBanner message={error} onDismiss={() => setError("")} />
+      )}
 
       {!loading && !error && <>
         <div className={styles.kpiGrid}>

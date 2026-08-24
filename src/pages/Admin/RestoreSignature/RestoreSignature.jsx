@@ -2,14 +2,13 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiRotateCcw,
-  FiRefreshCw,
-  FiAlertCircle,
-  FiEdit3,
+  FiRefreshCw,  FiEdit3,
 } from "react-icons/fi";
 
 import styles from "./RestoreSignature.module.scss";
 import { BASE_URL } from "../../../config/api";
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const RestoreSignature = () => {
   const navigate = useNavigate();
@@ -281,10 +280,7 @@ const RestoreSignature = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {successMessage && (

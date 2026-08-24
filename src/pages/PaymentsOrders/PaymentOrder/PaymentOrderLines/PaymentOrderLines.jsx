@@ -4,11 +4,11 @@ import {
   FiRefreshCw,
   FiSave,
   FiTrash2,
-  FiPlus,
-  FiAlertCircle,
-} from "react-icons/fi";
+  FiPlus,} from "react-icons/fi";
 
-import { BASE_URL } from "../../../../config/api"; // adjust path if needed
+import { BASE_URL } from "../../../../config/api";
+import ErrorBanner from "../../../../components/ErrorBanner/ErrorBanner"; // adjust path if needed
+import { formatApiError } from "../../../../utils/apiErrors";
 
 const toNumOrNull = (v) => {
   if (v === "" || v == null) return null;
@@ -132,6 +132,7 @@ const PaymentOrderLines = ({
 
   // ✅ only for CREATE row
   const [formError, setFormError] = useState("");
+  const [lockBannerDismissed, setLockBannerDismissed] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
 
   const updateDraftField = (field, value) => {
@@ -279,10 +280,12 @@ const PaymentOrderLines = ({
         );
       }
 
-      const msg =
-        data?.message ||
-        (res.status === 409 ? "Conflict: payment order is locked." : null) ||
-        "Failed to delete line.";
+      const msg = formatApiError(
+        data,
+        res.status === 409
+          ? "Conflict: payment order is locked."
+          : "Failed to delete line.",
+      );
 
       throw new Error(msg);
     }
@@ -414,6 +417,10 @@ const PaymentOrderLines = ({
   const lockedBanner =
     isLocked && (lockMessage || "This payment order is Booked (locked).");
 
+  useEffect(() => {
+    setLockBannerDismissed(false);
+  }, [paymentOrderId, isLocked]);
+
   return (
     <div className={styles.wrap}>
       <div className={styles.header}>
@@ -435,19 +442,16 @@ const PaymentOrderLines = ({
         </button>
       </div>
 
-      {lockedBanner && (
-        <div className={styles.errorBanner}>
-          <FiAlertCircle />
-          <span>{lockedBanner} (Editing disabled)</span>
-        </div>
+      {lockedBanner && !lockBannerDismissed && (
+        <ErrorBanner
+          message={`${lockedBanner} (Editing disabled)`}
+          onDismiss={() => setLockBannerDismissed(true)}
+        />
       )}
 
       {/* page-level banner for fetch/create/delete errors */}
       {formError && (
-        <div className={styles.errorBanner}>
-          <FiAlertCircle />
-          <span>{formError}</span>
-        </div>
+        <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
       )}
 
       {/* Add row */}

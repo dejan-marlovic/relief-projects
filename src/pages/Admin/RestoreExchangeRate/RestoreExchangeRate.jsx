@@ -2,14 +2,13 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiRotateCcw,
-  FiRefreshCw,
-  FiAlertCircle,
-  FiTrendingUp,
+  FiRefreshCw,  FiTrendingUp,
 } from "react-icons/fi";
 
 import styles from "./RestoreExchangeRate.module.scss";
 import { BASE_URL } from "../../../config/api";
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const RestoreExchangeRate = () => {
   const navigate = useNavigate();
@@ -209,10 +208,7 @@ const RestoreExchangeRate = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {successMessage && (

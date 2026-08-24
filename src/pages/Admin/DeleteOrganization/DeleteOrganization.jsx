@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiTrash2, FiRefreshCw, FiAlertCircle, FiHome } from "react-icons/fi";
+import { FiTrash2, FiRefreshCw, FiHome } from "react-icons/fi";
 
 import styles from "./DeleteOrganization.module.scss";
 import { BASE_URL } from "../../../config/api";
 
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const DeleteOrganization = () => {
   const navigate = useNavigate();
@@ -202,10 +203,7 @@ const DeleteOrganization = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {successMessage && (

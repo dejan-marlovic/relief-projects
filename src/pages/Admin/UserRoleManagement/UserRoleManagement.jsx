@@ -5,6 +5,7 @@ import { FiRefreshCw, FiSave, FiShield, FiUsers } from "react-icons/fi";
 import { BASE_URL } from "../../../config/api";
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
 import styles from "./UserRoleManagement.module.scss";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const ROLE_ORDER = [
   "ADMIN",
@@ -217,7 +218,7 @@ const UserRoleManagement = () => {
         </button>
       </div>
 
-      {error && <div className={styles.errorBanner}>{error}</div>}
+      {error && <ErrorBanner message={error} onDismiss={() => setError("")} />}
       {success && <div className={styles.successBanner}>{success}</div>}
 
       <div className={styles.summaryGrid}>

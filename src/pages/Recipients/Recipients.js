@@ -20,6 +20,8 @@ import { matchesNumberRange, matchesText } from "../../utils/tableSorting";
 import ColumnFilter from "../../components/ColumnFilter/ColumnFilter";
 import ClearFiltersButton from "../../components/ClearFiltersButton/ClearFiltersButton";
 import { getSelectedProjectName } from "../../utils/projectDisplay";
+import ErrorBanner from "../../components/ErrorBanner/ErrorBanner";
+import { formatApiError } from "../../utils/apiErrors";
 
 const headerLabels = ["Actions", "Organization", "Payment Order", "Amount"];
 const HEADER_SORT_KEYS = [null, "organization", "paymentOrderId", "amount"];
@@ -582,7 +584,7 @@ function Recipients() {
 
       if (!res.ok) {
         throw new Error(
-          data?.message || "Failed to delete selected recipients.",
+          formatApiError(data, "Failed to delete selected recipients."),
         );
       }
 
@@ -1134,9 +1136,9 @@ function Recipients() {
         </div>
         {/*If lockedBanner is a non-empty string, the <div> is rendered.*/}
         {lockedBanner && (
-          <div className={styles.errorBanner}>{lockedBanner}</div>
+          <ErrorBanner message={lockedBanner} onDismiss={() => setLockedBanner("")} />
         )}
-        {formError && <div className={styles.errorBanner}>{formError}</div>}
+        {formError && <ErrorBanner message={formError} onDismiss={() => setFormError("")} />}
 
         <div className={styles.table} style={{ ["--rec-grid-cols"]: gridCols }}>
           <div className={`${styles.gridRow} ${styles.headerRow}`}>

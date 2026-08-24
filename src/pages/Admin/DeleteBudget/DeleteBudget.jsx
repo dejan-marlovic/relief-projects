@@ -2,15 +2,15 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiTrash2,
-  FiRefreshCw,
-  FiAlertCircle,
-  FiDollarSign,
+  FiRefreshCw,  FiDollarSign,
 } from "react-icons/fi";
 
 import styles from "./DeleteBudget.module.scss";
 import { BASE_URL } from "../../../config/api";
 
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
+import { formatApiError } from "../../../utils/apiErrors";
 
 const DeleteBudget = () => {
   const navigate = useNavigate();
@@ -183,9 +183,7 @@ const DeleteBudget = () => {
 
       if (!res.ok) {
         const data = await safeReadJson(res);
-        setFormError(
-          data?.message || data?.detail || "Failed to delete the budget.",
-        );
+        setFormError(formatApiError(data, "Failed to delete the budget."));
         return;
       }
 
@@ -222,10 +220,7 @@ const DeleteBudget = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {successMessage && (

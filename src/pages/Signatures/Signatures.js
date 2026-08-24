@@ -19,7 +19,9 @@ import ColumnFilter from "../../components/ColumnFilter/ColumnFilter";
 import ClearFiltersButton from "../../components/ClearFiltersButton/ClearFiltersButton";
 import { getSelectedProjectName } from "../../utils/projectDisplay";
 
-import { BASE_URL } from "../../config/api"; // adjust path if needed
+import { BASE_URL } from "../../config/api";
+import ErrorBanner from "../../components/ErrorBanner/ErrorBanner"; // adjust path if needed
+import { formatApiError } from "../../utils/apiErrors";
 
 const headerLabels = [
   "Actions",
@@ -527,11 +529,12 @@ function Signatures() {
 
       if (!res.ok) {
         const data = await safeParseJsonResponse(res);
-        const msg =
-          data?.message ||
-          (res.status === 409
+        const msg = formatApiError(
+          data,
+          res.status === 409
             ? "Conflict: this item is locked."
-            : "Delete failed.");
+            : "Delete failed.",
+        );
         setFormError(msg);
         return;
       }
@@ -576,7 +579,7 @@ function Signatures() {
       if (!res.ok) {
         const data = await safeParseJsonResponse(res);
         throw new Error(
-          data?.message || "Failed to delete selected signatures.",
+          formatApiError(data, "Failed to delete selected signatures."),
         );
       }
       setSelectedSignatureIds(new Set());
@@ -1141,7 +1144,7 @@ function Signatures() {
           </div>
         </div>
 
-        {formError && <div className={styles.errorBanner}>{formError}</div>}
+        {formError && <ErrorBanner message={formError} onDismiss={() => setFormError("")} />}
 
         <div className={styles.table} style={{ ["--sig-grid-cols"]: gridCols }}>
           <div className={`${styles.gridRow} ${styles.headerRow}`}>

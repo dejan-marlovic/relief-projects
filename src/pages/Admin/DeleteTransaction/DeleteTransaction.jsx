@@ -1,11 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiTrash2, FiRefreshCw, FiAlertCircle, FiRepeat } from "react-icons/fi";
+import { FiTrash2, FiRefreshCw, FiRepeat } from "react-icons/fi";
 
 import styles from "./DeleteTransaction.module.scss";
 import { BASE_URL } from "../../../config/api";
 
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
+import { formatApiError } from "../../../utils/apiErrors";
 
 const DeleteTransaction = () => {
   const navigate = useNavigate();
@@ -264,7 +266,7 @@ const DeleteTransaction = () => {
       if (!res.ok) {
         const data = await safeReadJson(res);
         setFormError(
-          data?.message || data?.detail || "Failed to delete the transaction.",
+          formatApiError(data, "Failed to delete the transaction."),
         );
         return;
       }
@@ -305,10 +307,7 @@ const DeleteTransaction = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {successMessage && (

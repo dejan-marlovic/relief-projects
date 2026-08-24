@@ -1,12 +1,13 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiTrash2, FiRefreshCw, FiAlertCircle, FiFolder } from "react-icons/fi";
+import { FiTrash2, FiRefreshCw, FiFolder } from "react-icons/fi";
 
 import styles from "./DeleteProject.module.scss";
 import { BASE_URL } from "../../../config/api";
 import { ProjectContext } from "../../../context/ProjectContext";
 
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const DeleteProject = () => {
   const navigate = useNavigate();
@@ -171,10 +172,7 @@ const DeleteProject = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {successMessage && (

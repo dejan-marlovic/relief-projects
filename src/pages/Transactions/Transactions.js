@@ -11,9 +11,7 @@ import { ProjectContext } from "../../context/ProjectContext";
 import { useAuth } from "../../context/AuthContext";
 import Transaction from "./Transaction/Transaction";
 import styles from "./Transactions.module.scss";
-import {
-  FiAlertCircle,
-  FiPlus,
+import {  FiPlus,
   FiColumns,
   FiTrash2,
   FiDownload,
@@ -27,6 +25,8 @@ import ColumnFilter from "../../components/ColumnFilter/ColumnFilter";
 import ClearFiltersButton from "../../components/ClearFiltersButton/ClearFiltersButton";
 import { getSelectedProjectName } from "../../utils/projectDisplay";
 import { matchesDateRange, matchesNumberRange, matchesSelect, matchesText } from "../../utils/tableSorting";
+import { formatApiError, readApiError } from "../../utils/apiErrors";
+import ErrorBanner from "../../components/ErrorBanner/ErrorBanner";
 
 const blankTx = {
   organizationId: "",
@@ -443,8 +443,10 @@ const Transactions = ({ refreshTrigger }) => {
         }
 
         setFormError(
-          data?.message ||
+          formatApiError(
+            data,
             `Failed to ${isCreate ? "create" : "update"} transaction.`,
+          ),
         );
         return;
       }
@@ -491,7 +493,11 @@ const Transactions = ({ refreshTrigger }) => {
         method: "DELETE",
         headers: authHeaders,
       });
-      if (!res.ok) throw new Error("Failed to delete transaction");
+      if (!res.ok) {
+        throw new Error(
+          await readApiError(res, "Failed to delete transaction."),
+        );
+      }
 
       setSelectedTxIds((prev) => {
         const next = new Set(prev);
@@ -503,7 +509,7 @@ const Transactions = ({ refreshTrigger }) => {
       setExpandedTxId((cur) => (cur === id ? null : cur));
     } catch (err) {
       console.error(err);
-      alert("Failed to delete transaction.");
+      setFormError(err.message || "Failed to delete transaction.");
     }
   };
 
@@ -739,8 +745,9 @@ const Transactions = ({ refreshTrigger }) => {
       });
 
       if (!res.ok) {
-        const raw = await res.text().catch(() => "");
-        throw new Error(raw || "Failed to delete selected transactions.");
+        throw new Error(
+          await readApiError(res, "Failed to delete selected transactions."),
+        );
       }
 
       setSelectedTxIds(new Set());
@@ -748,7 +755,7 @@ const Transactions = ({ refreshTrigger }) => {
       await fetchTransactions(selectedProjectId);
     } catch (err) {
       console.error(err);
-      alert(err.message || "Failed to delete selected transactions.");
+      setFormError(err.message || "Failed to delete selected transactions.");
     }
   };
 
@@ -1625,10 +1632,7 @@ const Transactions = ({ refreshTrigger }) => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         <div

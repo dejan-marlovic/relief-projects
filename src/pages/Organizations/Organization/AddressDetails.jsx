@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { FiEdit, FiLink, FiPlus, FiSave, FiStar, FiX } from "react-icons/fi";
 import { BASE_URL } from "../../../config/api";
 import styles from "./AddressDetails.module.scss";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const blankAddress = {
   street: "",
@@ -314,7 +315,7 @@ const AddressDetails = ({ organizationId, canManage = false }) => {
         )}
       </div>
 
-      {formError && <div className={styles.errorBanner} role="alert">{formError}</div>}
+      {formError && <ErrorBanner message={formError} onDismiss={() => setFormError("")} />}
       {!associations.length && editingId !== "new" && <p className={styles.noData}>No active addresses linked to this organization.</p>}
 
       <div className={styles.table}>

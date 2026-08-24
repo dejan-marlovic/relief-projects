@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { FiSave, FiX, FiUser, FiAlertCircle } from "react-icons/fi";
+import { FiSave, FiX, FiUser } from "react-icons/fi";
 import styles from "./CreateEmployee.module.scss";
 import { useNavigate } from "react-router-dom";
 import { BASE_URL } from "../../../config/api";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const CreateEmployee = () => {
   const navigate = useNavigate();
@@ -277,10 +278,7 @@ const CreateEmployee = () => {
 
         {formError && (
           // ✅ icon is not a wrapper; it should be a sibling element
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         <div className={styles.card}>

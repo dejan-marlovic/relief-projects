@@ -17,7 +17,9 @@ import ColumnFilter from "../../components/ColumnFilter/ColumnFilter";
 import ClearFiltersButton from "../../components/ClearFiltersButton/ClearFiltersButton";
 import { getSelectedProjectName } from "../../utils/projectDisplay";
 
-import { BASE_URL } from "../../config/api"; // adjust path if needed
+import { BASE_URL } from "../../config/api";
+import ErrorBanner from "../../components/ErrorBanner/ErrorBanner"; // adjust path if needed
+import { formatApiError } from "../../utils/apiErrors";
 
 const blankLink = {
   projectId: "",
@@ -324,7 +326,9 @@ const Organizations = () => {
 
       if (!res.ok) {
         const data = await safeParseJsonResponse(res);
-        setFormError(data?.message || "Failed to delete project organization.");
+        setFormError(
+          formatApiError(data, "Failed to delete project organization."),
+        );
         return;
       }
 
@@ -428,7 +432,7 @@ const Organizations = () => {
           </div>
         </div>
 
-        {formError && <div className={styles.errorBanner}>{formError}</div>}
+        {formError && <ErrorBanner message={formError} onDismiss={() => setFormError("")} />}
 
         <div className={styles.table} style={{ ["--org-grid-cols"]: gridCols }}>
           <div className={`${styles.gridRow} ${styles.headerRow}`}>

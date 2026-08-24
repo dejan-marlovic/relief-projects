@@ -12,6 +12,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import styles from "./Statistics.module.scss";
+import ErrorBanner from "../../components/ErrorBanner/ErrorBanner";
 
 import { BASE_URL } from "../../config/api"; // adjust path if needed
 const tokenFromStorage = () => localStorage.getItem("authToken");
@@ -521,7 +522,9 @@ const Statistics = () => {
 
         {loading && <div className={styles.loadingSkeleton} />}
 
-        {!loading && error && <div className={styles.errorBanner}>{error}</div>}
+        {!loading && error && (
+          <ErrorBanner message={error} onDismiss={() => setError("")} />
+        )}
 
         {!loading && !error && (
           <>

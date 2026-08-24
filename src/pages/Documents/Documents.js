@@ -6,6 +6,8 @@ import styles from "./Documents.module.scss";
 
 import { BASE_URL, ASSETS_URL } from "../../config/api";
 import { getSelectedProjectName } from "../../utils/projectDisplay";
+import ErrorBanner from "../../components/ErrorBanner/ErrorBanner";
+import { readApiError } from "../../utils/apiErrors";
 const DOCUMENTS_BASE_PATH = `${ASSETS_URL}/documents/`;
 
 // 🔹 TODO: replace with real current employee ID from your auth/user context
@@ -179,27 +181,7 @@ const Documents = () => {
   }, [selectedProjectId, authHeaders]);
 
   // ✅ Parse API errors nicely (supports your ApiError { message, fieldErrors... })
-  const readApiErrorMessage = async (res) => {
-    const contentType = res.headers.get("content-type") || "";
-
-    // If backend returns JSON (ApiError)
-    if (contentType.includes("application/json")) {
-      const json = await res.json().catch(() => null);
-
-      // Your ApiError has "message"
-      if (json?.message) return json.message;
-
-      // fallback keys if you ever return other shapes
-      if (json?.error) return json.error;
-      if (json?.details) return json.details;
-
-      return "Request failed.";
-    }
-
-    // Fallback to text
-    const text = await res.text().catch(() => "");
-    return text || "Request failed.";
-  };
+  const readApiErrorMessage = (res) => readApiError(res, "Request failed.");
 
   const uploadDocument = async (file) => {
     if (!canUploadDocuments || !file || !selectedProjectId) return;
@@ -342,7 +324,16 @@ const Documents = () => {
         {selectedProjectId && (
           <>
             {/* Error banner */}
-            {anyError && <div className={styles.errorBanner}>{anyError}</div>}
+            {anyError && (
+              <ErrorBanner
+                message={anyError}
+                onDismiss={() => {
+                  setUploadError("");
+                  setDeleteError("");
+                  setListError("");
+                }}
+              />
+            )}
 
             {/* Optional small info line */}
             {uploadInfo && !uploadError && (

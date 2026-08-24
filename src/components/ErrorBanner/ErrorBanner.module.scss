@@ -1,0 +1,47 @@
+@use "../../styles/colors" as colors;
+
+.banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0.75rem 0 1rem;
+  padding: 10px 14px;
+  border: 1px solid colors.$danger-border-strong;
+  border-radius: 10px;
+  background: colors.$danger-soft-strong;
+  color: colors.$danger-text;
+  font-size: 0.9rem;
+}
+
+.icon {
+  flex: 0 0 auto;
+  margin-top: 0.15em;
+}
+
+.message {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: pre-line;
+}
+
+.closeButton {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.06);
+  }
+
+  &:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+}

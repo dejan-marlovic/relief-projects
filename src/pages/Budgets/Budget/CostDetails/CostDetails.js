@@ -4,6 +4,7 @@ import styles from "./CostDetails.module.scss";
 
 import { BASE_URL } from "../../../../config/api"; // adjust path if needed
 import { useAuth } from "../../../../context/AuthContext";
+import { readApiError } from "../../../../utils/apiErrors";
 
 const blankCostDetail = {
   costDescription: "",
@@ -499,13 +500,16 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!response.ok)
-        throw new Error(`Failed to delete cost detail with ID ${costId}`);
+      if (!response.ok) {
+        throw new Error(
+          await readApiError(response, "Failed to delete cost detail."),
+        );
+      }
 
       await fetchCostDetails();
     } catch (err) {
       console.error("Error deleting cost detail:", err);
-      alert("Failed to delete cost detail.");
+      alert(err.message || "Failed to delete cost detail.");
     }
   };
 

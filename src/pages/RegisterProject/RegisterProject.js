@@ -9,12 +9,11 @@ import {
   FiSave,
   FiX,
   FiUploadCloud,
-  FiImage,
-  FiAlertCircle,
-} from "react-icons/fi";
+  FiImage,} from "react-icons/fi";
 
 // ✅ IMPORTANT: use shared config (works in IDE dev + Docker + AWS)
 import { BASE_URL } from "../../config/api";
+import ErrorBanner from "../../components/ErrorBanner/ErrorBanner";
 
 // Optional: initial state helper to avoid resetting to {}
 const initialProjectDetails = {
@@ -425,10 +424,7 @@ const RegisterProject = () => {
 
         {/* Errors */}
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {hasAnyFieldErrors && (

@@ -14,6 +14,8 @@ import {
 
 import { BASE_URL } from "../../../config/api"; // adjust path if needed
 import { useAuth } from "../../../context/AuthContext";
+import { formatApiError, readApiError } from "../../../utils/apiErrors";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
   const { hasRole, hasAnyRole } = useAuth();
@@ -1279,7 +1281,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
 
       if (!response.ok) {
         setFormError(
-          data?.message || "There was a problem submitting the budget.",
+          formatApiError(data, "There was a problem submitting the budget."),
         );
         return;
       }
@@ -1314,14 +1316,16 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!response.ok) throw new Error("Failed to delete budget");
+      if (!response.ok) {
+        throw new Error(await readApiError(response, "Failed to delete budget."));
+      }
 
       alert("Budget deleted successfully!");
       onDelete?.(budget.id);
       setBudget({});
     } catch (error) {
       console.error("Error deleting budget:", error);
-      alert("Error deleting budget.");
+      setFormError(error.message || "Error deleting budget.");
     } finally {
       setLoading(false);
     }
@@ -1402,10 +1406,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
           </div>
 
           {formError && (
-            <div className={styles.errorBanner}>
-              <FiAlertCircle />
-              <span>{formError}</span>
-            </div>
+            <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
           )}
 
           {loading ? (

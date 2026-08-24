@@ -1,10 +1,11 @@
 // src/components/Admin/CreateUser/CreateUser.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiSave, FiX, FiAlertCircle } from "react-icons/fi";
+import { FiSave, FiX } from "react-icons/fi";
 
 import styles from "./CreateUser.module.scss";
 import { BASE_URL } from "../../../config/api";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const initialUserDetails = {
   employeeId: "",
@@ -242,10 +243,7 @@ const CreateUser = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {hasAnyFieldErrors && (

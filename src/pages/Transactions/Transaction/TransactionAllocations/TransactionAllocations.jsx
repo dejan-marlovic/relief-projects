@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./TransactionAllocations.module.scss";
-import {
-  FiAlertCircle,
-  FiPlus,
+import {  FiPlus,
   FiRefreshCw,
   FiSave,
   FiTrash2,
 } from "react-icons/fi";
 
-import { BASE_URL } from "../../../../config/api"; // adjust path if needed
+import { BASE_URL } from "../../../../config/api";
+import ErrorBanner from "../../../../components/ErrorBanner/ErrorBanner"; // adjust path if needed
+import { formatApiError } from "../../../../utils/apiErrors";
 
 const toNumOrNull = (v) => {
   if (v === "" || v == null) return null;
@@ -360,7 +360,7 @@ const TransactionAllocations = ({
       });
       if (!res.ok) {
         const data = await safeParseJsonResponse(res);
-        throw new Error(data?.message || "Failed to delete allocation.");
+        throw new Error(formatApiError(data, "Failed to delete allocation."));
       }
       await fetchRows();
       await fetchTxMeta();
@@ -468,10 +468,7 @@ const TransactionAllocations = ({
       </div>
 
       {formError && (
-        <div className={styles.errorBanner}>
-          <FiAlertCircle />
-          <span>{formError}</span>
-        </div>
+        <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
       )}
 
       {canManage && <div className={styles.addCard}>

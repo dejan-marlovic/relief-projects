@@ -14,9 +14,7 @@ import styles from "./PaymentOrders.module.scss";
 import PaymentOrderLines from "./PaymentOrder/PaymentOrderLines/PaymentOrderLines";
 import {
   FiPlus,
-  FiColumns,
-  FiAlertCircle,
-  FiTrash2,
+  FiColumns,  FiTrash2,
   FiDownload,
 } from "react-icons/fi";
 
@@ -27,6 +25,8 @@ import { matchesDateRange, matchesNumberRange, matchesText } from "../../utils/t
 import ColumnFilter from "../../components/ColumnFilter/ColumnFilter";
 import ClearFiltersButton from "../../components/ClearFiltersButton/ClearFiltersButton";
 import { getSelectedProjectName } from "../../utils/projectDisplay";
+import ErrorBanner from "../../components/ErrorBanner/ErrorBanner";
+import { formatApiError } from "../../utils/apiErrors";
 
 const headerLabels = [
   "Actions",
@@ -642,7 +642,7 @@ function PaymentOrders() {
 
       if (!res.ok) {
         throw new Error(
-          data?.message || "Failed to remove selected payment orders",
+          formatApiError(data, "Failed to remove selected payment orders"),
         );
       }
 
@@ -1227,18 +1227,15 @@ function PaymentOrders() {
 
         {/* ✅ Locked banner (same style as PaymentOrderLines) */}
         {lockedBannerText && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{lockedBannerText}</span>
-          </div>
+          <ErrorBanner
+            message={lockedBannerText}
+            onDismiss={() => setLockedBanner("")}
+          />
         )}
 
         {/* Other errors */}
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         <div className={styles.table} style={{ ["--po-grid-cols"]: gridCols }}>

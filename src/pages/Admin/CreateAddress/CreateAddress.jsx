@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiSave, FiX, FiAlertCircle } from "react-icons/fi";
+import { FiSave, FiX } from "react-icons/fi";
 
 import styles from "./CreateAddress.module.scss";
 import { BASE_URL } from "../../../config/api";
@@ -12,6 +12,7 @@ import {
   safeReadJson,
   extractFieldErrors,
 } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 // Intial form state
 const initialAddressDetails = {
@@ -176,10 +177,7 @@ const CreateAddress = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {hasAnyFieldErrors && (
