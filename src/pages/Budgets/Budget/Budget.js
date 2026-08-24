@@ -4,7 +4,13 @@ import styles from "./Budget.module.scss";
 import CostDetails from "./CostDetails/CostDetails";
 
 // ✅ Icons (same style as Project)
-import { FiSave, FiTrash2, FiAlertCircle, FiDownload } from "react-icons/fi";
+import {
+  FiSave,
+  FiTrash2,
+  FiAlertCircle,
+  FiDownload,
+  FiSend,
+} from "react-icons/fi";
 
 import { BASE_URL } from "../../../config/api"; // adjust path if needed
 import { useAuth } from "../../../context/AuthContext";
@@ -22,11 +28,24 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
   const [refreshCostDetailsTrigger, setRefreshCostDetailsTrigger] = useState(0);
 
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [exportingBudget, setExportingBudget] = useState(false);
 
   // 🔴 form-level + field-level errors
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({}); // { fieldName: "Message" }
+
+  const lifecycleStatus = budget.lifecycleStatus || "DRAFT";
+  const canSubmitBudget =
+    canEditBudget && ["DRAFT", "RETURNED"].includes(lifecycleStatus);
+  const lifecycleLabel =
+    {
+      DRAFT: "Draft",
+      SUBMITTED: "Submitted",
+      APPROVED: "Approved",
+      RETURNED: "Returned",
+    }[lifecycleStatus] || lifecycleStatus;
 
   const triggerRefreshCostDetails = () =>
     setRefreshCostDetailsTrigger((prev) => prev + 1);
@@ -1217,6 +1236,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
 
       const updated = await response.json();
       setBudget(updated);
+      setHasUnsavedChanges(false);
       onUpdate?.(updated);
 
       const freshRates = await fetchExchangeRates(token);
@@ -1231,6 +1251,52 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
       setFormError("Unexpected error while saving budget.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSubmitBudget = async () => {
+    if (!canSubmitBudget || submitting) return;
+
+    try {
+      setSubmitting(true);
+      setFormError("");
+      const token = localStorage.getItem("authToken");
+      const response = await fetch(
+        `${BASE_URL}/api/budgets/${budget.id}/submit`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      const raw = await response.text().catch(() => "");
+      let data = null;
+      try {
+        data = raw ? JSON.parse(raw) : null;
+      } catch (parseError) {
+        console.warn("Failed to parse budget submit response:", parseError);
+      }
+
+      if (!response.ok) {
+        setFormError(
+          data?.message || "There was a problem submitting the budget.",
+        );
+        return;
+      }
+
+      if (!data) {
+        setFormError("The budget was submitted but no updated budget was returned.");
+        return;
+      }
+
+      setBudget(data);
+      onUpdate?.(data);
+      setFieldErrors({});
+    } catch (error) {
+      console.error("Error submitting budget:", error);
+      setFormError("Unexpected error while submitting the budget.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -1299,6 +1365,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
     }
 
     setBudget((prev) => ({ ...prev, [name]: castValue }));
+    setHasUnsavedChanges(true);
   };
 
   const hasBudget = Boolean(budget?.id);
@@ -1326,8 +1393,12 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                 Update description, totals, currencies, and exchange rates.
               </p>
             </div>
-
-            {/* ✅ Removed duplicate Save/Delete buttons from the top header */}
+            <div
+              className={`${styles.statusBadge} ${styles[`status${lifecycleStatus}`] || ""}`}
+              aria-label={`Budget status: ${lifecycleLabel}`}
+            >
+              {lifecycleLabel}
+            </div>
           </div>
 
           {formError && (
@@ -1541,6 +1612,25 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                 >
                   <FiSave />
                   Save changes
+                </button>}
+                {canSubmitBudget && <button
+                  type="button"
+                  onClick={handleSubmitBudget}
+                  className={styles.submitButton}
+                  disabled={
+                    loading ||
+                    exportingBudget ||
+                    submitting ||
+                    hasUnsavedChanges
+                  }
+                  title={
+                    hasUnsavedChanges
+                      ? "Save budget changes before submitting"
+                      : "Submit this budget for approval"
+                  }
+                >
+                  <FiSend />
+                  {submitting ? "Submitting..." : "Submit for approval"}
                 </button>}
                 {canDeleteBudget && <button
                   type="button"

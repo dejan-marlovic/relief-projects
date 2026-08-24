@@ -18,7 +18,7 @@ const blankCostDetail = {
   amountEuro: "",
 };
 
-export const validateCostDetail = (values) => {
+export const validateCostDetail = (values, costs = []) => {
   const errors = {};
   const requiredNumber = (field, label, { minimum = 0 } = {}) => {
     const value = values?.[field];
@@ -40,6 +40,15 @@ export const validateCostDetail = (values) => {
   }
   if (values?.costId === "" || values?.costId == null) {
     errors.costId = "Category is required.";
+  } else if (costs.length > 0 && values?.costTypeId !== "" && values?.costTypeId != null) {
+    const selectedCost = costs.find(
+      (cost) => Number(cost.id) === Number(values.costId),
+    );
+    if (!selectedCost) {
+      errors.costId = "Selected category is unavailable.";
+    } else if (Number(selectedCost.costTypeId) !== Number(values.costTypeId)) {
+      errors.costId = "Category must belong to the selected type.";
+    }
   }
 
   requiredNumber("noOfUnits", "Units");
@@ -52,8 +61,8 @@ export const validateCostDetail = (values) => {
   return errors;
 };
 
-export const isValidCostDetail = (values) =>
-  Object.keys(validateCostDetail(values)).length === 0;
+export const isValidCostDetail = (values, costs = []) =>
+  Object.keys(validateCostDetail(values, costs)).length === 0;
 
 async function safeParseJsonResponse(response) {
   const raw = await response.text().catch(() => "");
@@ -339,7 +348,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
     const token = localStorage.getItem("authToken");
 
     if (isCreate) {
-      const localErrors = validateCostDetail(values);
+      const localErrors = validateCostDetail(values, costs);
       if (Object.keys(localErrors).length > 0) {
         setFieldErrorsById((current) => ({ ...current, new: localErrors }));
         return;
@@ -401,7 +410,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
 
     const merged = { ...original, ...values };
 
-    const localErrors = validateCostDetail(merged);
+    const localErrors = validateCostDetail(merged, costs);
     if (Object.keys(localErrors).length > 0) {
       setFieldErrorsById((current) => ({ ...current, [costId]: localErrors }));
       return;

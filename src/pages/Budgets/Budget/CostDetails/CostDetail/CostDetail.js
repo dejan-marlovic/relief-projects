@@ -20,6 +20,12 @@ const CostDetail = ({
   fieldErrors = {},
 }) => {
   const ev = editedValues || {};
+  const selectedCostTypeId = ev.costTypeId ?? cost.costTypeId ?? "";
+  const compatibleCosts = costs.filter(
+    (candidate) =>
+      selectedCostTypeId !== "" &&
+      Number(candidate.costTypeId) === Number(selectedCostTypeId),
+  );
 
   const handleSaveClick = (e) => {
     e.preventDefault();
@@ -63,8 +69,11 @@ const CostDetail = ({
         />)}
 
         {renderField("costTypeId", <select
-          value={ev.costTypeId ?? cost.costTypeId ?? ""}
-          onChange={(e) => onChange("costTypeId", toNum(e.target.value))}
+          value={selectedCostTypeId}
+          onChange={(e) => {
+            onChange("costTypeId", toNum(e.target.value));
+            onChange("costId", "");
+          }}
           className={styles.select}
         >
           <option value="">Type</option>
@@ -81,7 +90,7 @@ const CostDetail = ({
           className={styles.select}
         >
           <option value="">Category</option>
-          {costs.map((c) => (
+          {compatibleCosts.map((c) => (
             <option key={c.id} value={c.id}>
               {c.costName}
             </option>

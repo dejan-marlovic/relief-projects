@@ -19,7 +19,10 @@ const renderEditableRow = (overrides = {}) => {
   const props = {
     cost,
     costTypes: [{ id: 1, costTypeName: "Direct" }],
-    costs: [{ id: 2, costName: "Shelter" }],
+    costs: [
+      { id: 2, costName: "Shelter", costTypeId: 1 },
+      { id: 3, costName: "Monitoring", costTypeId: 2 },
+    ],
     isEditing: true,
     editedValues: { ...cost },
     onEdit: jest.fn(),
@@ -82,5 +85,28 @@ describe("CostDetail explicit editing", () => {
       "aria-invalid",
       "true"
     );
+  });
+
+  test("only offers categories belonging to the selected type", () => {
+    renderEditableRow();
+
+    expect(screen.getByRole("option", { name: "Shelter" })).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: "Monitoring" })).not.toBeInTheDocument();
+  });
+
+  test("changing type clears the selected category", () => {
+    const props = renderEditableRow({
+      costTypes: [
+        { id: 1, costTypeName: "Direct" },
+        { id: 2, costTypeName: "Indirect" },
+      ],
+    });
+
+    fireEvent.change(screen.getAllByRole("combobox")[0], {
+      target: { value: "2" },
+    });
+
+    expect(props.onChange).toHaveBeenCalledWith("costTypeId", 2);
+    expect(props.onChange).toHaveBeenCalledWith("costId", "");
   });
 });

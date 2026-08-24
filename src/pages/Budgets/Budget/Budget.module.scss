@@ -74,6 +74,43 @@ label {
   gap: 0.6rem;
 }
 
+.statusBadge {
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border: 1px solid colors.$border-subtle;
+  background: colors.$surface-striped;
+  color: colors.$text-muted;
+  white-space: nowrap;
+}
+
+.statusDRAFT {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #4b5563;
+}
+
+.statusSUBMITTED {
+  background: #fff7d6;
+  border-color: #e7c75d;
+  color: #755b00;
+}
+
+.statusAPPROVED {
+  background: #e5f6ec;
+  border-color: #86c99f;
+  color: #176b3a;
+}
+
+.statusRETURNED {
+  background: #fdeaea;
+  border-color: #e7a0a0;
+  color: #9b2c2c;
+}
+
 /* Cards */
 .card {
   background: colors.$surface;
@@ -141,6 +178,18 @@ label {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.submitButton {
+  @include forms.primary-button;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 }
 
 .exportButton {
