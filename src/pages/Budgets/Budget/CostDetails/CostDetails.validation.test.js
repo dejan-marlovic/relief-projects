@@ -1,4 +1,8 @@
-import { isValidCostDetail, validateCostDetail } from "./CostDetails";
+import {
+  isValidCostDetail,
+  readCostDetailsResponse,
+  validateCostDetail,
+} from "./CostDetails";
 
 const completeCostDetail = {
   costDescription: "Emergency shelter",
@@ -57,5 +61,16 @@ describe("cost-detail required-field validation", () => {
 
   test("accepts a category belonging to the selected type", () => {
     expect(isValidCostDetail(completeCostDetail, costs)).toBe(true);
+  });
+});
+
+describe("cost-detail list responses", () => {
+  test("treats 204 No Content as an empty list without parsing JSON", async () => {
+    const json = jest.fn();
+
+    await expect(
+      readCostDetailsResponse({ status: 204, ok: true, json }),
+    ).resolves.toEqual([]);
+    expect(json).not.toHaveBeenCalled();
   });
 });

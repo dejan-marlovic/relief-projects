@@ -65,6 +65,14 @@ export const validateCostDetail = (values, costs = []) => {
 export const isValidCostDetail = (values, costs = []) =>
   Object.keys(validateCostDetail(values, costs)).length === 0;
 
+export const readCostDetailsResponse = async (response) => {
+  if (response.status === 204) return [];
+  if (!response.ok) throw new Error("Failed to fetch cost details");
+
+  const data = await response.json();
+  return Array.isArray(data) ? data : [];
+};
+
 async function safeParseJsonResponse(response) {
   const raw = await response.text().catch(() => "");
   if (!raw) return null;
@@ -96,8 +104,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
         `${BASE_URL}/api/cost-details/by-budget/${budgetId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      if (!response.ok) throw new Error("Failed to fetch cost details");
-      const data = await response.json();
+      const data = await readCostDetailsResponse(response);
       setCostDetails(data);
       return data;
     } catch (error) {
