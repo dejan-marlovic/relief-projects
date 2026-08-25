@@ -71,7 +71,15 @@ async function safeParseJsonResponse(res) {
 }
 
 function isLockedResponse(res, data) {
-  if (res?.status === 409) return true;
+  // Dependency-integrity conflicts are retryable after the listed dependent
+  // records are removed. They must not turn the payment order into a locally
+  // locked/read-only row merely because they also use HTTP 409.
+  if (data?.dependencies && Object.keys(data.dependencies).length > 0) {
+    return false;
+  }
+
+  if (res?.status !== 409) return false;
+
   const msg = (data?.message || "").toLowerCase();
   return (
     msg.includes("locked") ||
@@ -500,7 +508,7 @@ function PaymentOrders() {
           return;
         }
 
-        setFormError(data?.message || "Delete failed.");
+        setFormError(formatApiError(data, "Delete failed."));
         return;
       }
 
