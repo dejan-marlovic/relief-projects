@@ -2,6 +2,10 @@ import { fireEvent, render, screen } from "@testing-library/react";
 
 import ErrorBanner from "./ErrorBanner";
 
+beforeEach(() => {
+  Element.prototype.scrollIntoView = jest.fn();
+});
+
 test("renders a multiline error and dismisses it", () => {
   const onDismiss = jest.fn();
 
@@ -20,4 +24,14 @@ test("renders a multiline error and dismisses it", () => {
 test("renders nothing without a message", () => {
   const { container } = render(<ErrorBanner message="" />);
   expect(container).toBeEmptyDOMElement();
+  expect(Element.prototype.scrollIntoView).not.toHaveBeenCalled();
+});
+
+test("scrolls a newly displayed error into view", () => {
+  render(<ErrorBanner message="Delete failed." />);
+
+  expect(Element.prototype.scrollIntoView).toHaveBeenCalledWith({
+    behavior: "smooth",
+    block: "start",
+  });
 });

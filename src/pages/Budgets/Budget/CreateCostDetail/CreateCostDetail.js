@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 import styles from "./CreateCostDetail.module.scss";
 
 import { BASE_URL } from "../../../../config/api"; // adjust path if needed
+import ErrorBanner from "../../../../components/ErrorBanner/ErrorBanner";
 
 const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
+  const [formError, setFormError] = useState("");
   const [costTypes, setCostTypes] = useState([]);
   const [costs, setCosts] = useState([]);
   const [form, setForm] = useState({
@@ -116,13 +118,20 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
       });
     } catch (error) {
       console.error("Error creating cost detail:", error);
-      alert("Failed to create cost detail.");
+      setFormError(error.message || "Failed to create cost detail.");
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className={styles.formContainer}>
       <h4 className={styles.formTitle}>Add New Cost Detail Row</h4>
+
+      {formError && (
+        <ErrorBanner
+          message={formError}
+          onDismiss={() => setFormError("")}
+        />
+      )}
 
       <div className={styles.formRow}>
         <div className={styles.formGroup}>

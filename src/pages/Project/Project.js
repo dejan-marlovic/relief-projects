@@ -2094,7 +2094,7 @@ Approximately:
       );
     } catch (err) {
       console.error(err);
-      alert(err.message || "Error deleting image.");
+      setFormError(err.message || "Error deleting image.");
     }
   };
 
@@ -2137,14 +2137,19 @@ Approximately:
       );
     } catch (e) {
       console.error(e);
-      alert("Failed to delete sector link.");
+      setFormError("Failed to delete sector link.");
     }
   };
 
   const handleAddProjectOrganization = async () => {
-    if (!projectDetails?.id) return alert("No project is selected.");
-    if (!selectedOrgId || !selectedOrgStatusId)
-      return alert("Please select both organization and status.");
+    if (!projectDetails?.id) {
+      setFormError("No project is selected.");
+      return;
+    }
+    if (!selectedOrgId || !selectedOrgStatusId) {
+      setFormError("Please select both organization and status.");
+      return;
+    }
 
     try {
       const res = await authFetch(`${BASE_URL}/api/project-organizations`, {
@@ -2180,7 +2185,7 @@ Approximately:
       setSelectedOrgStatusId("");
     } catch (e) {
       console.error(e);
-      alert(e.message || "Error adding organization to project.");
+      setFormError(e.message || "Error adding organization to project.");
     }
   };
 
@@ -2199,7 +2204,7 @@ Approximately:
       );
     } catch (e) {
       console.error(e);
-      alert(e.message || "Error deleting project organization.");
+      setFormError(e.message || "Error deleting project organization.");
     }
   };
 
@@ -2293,7 +2298,7 @@ Approximately:
       );
     } catch (e) {
       console.error(e);
-      alert(e.message || "Error deleting participant.");
+      setFormError(e.message || "Error deleting participant.");
     }
   };
 
@@ -2342,7 +2347,7 @@ Approximately:
       setFieldErrors({});
     } catch (error) {
       console.error("Delete error:", error);
-      alert("Error deleting project.");
+      setFormError(error.message || "Error deleting project.");
     }
   };
 
@@ -2376,7 +2381,7 @@ Approximately:
         }
       } catch (e) {
         console.error(e);
-        alert(e.message || "Failed to add sector link.");
+        setFormError(e.message || "Failed to add sector link.");
       }
     }
 
@@ -2389,7 +2394,7 @@ Approximately:
         if (!res.ok) throw new Error("Failed to delete sector link");
       } catch (e) {
         console.error(e);
-        alert("Failed to delete sector link.");
+        setFormError("Failed to delete sector link.");
       }
     }
 

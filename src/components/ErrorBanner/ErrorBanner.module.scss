@@ -1,6 +1,8 @@
 @use "../../styles/colors" as colors;
 
 .banner {
+  /* Keep the banner below the sticky application header after scrollIntoView. */
+  scroll-margin-top: 6rem;
   display: flex;
   align-items: flex-start;
   gap: 8px;

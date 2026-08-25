@@ -5,6 +5,7 @@ import styles from "./CostDetails.module.scss";
 import { BASE_URL } from "../../../../config/api"; // adjust path if needed
 import { useAuth } from "../../../../context/AuthContext";
 import { readApiError } from "../../../../utils/apiErrors";
+import ErrorBanner from "../../../../components/ErrorBanner/ErrorBanner";
 
 const blankCostDetail = {
   costDescription: "",
@@ -93,6 +94,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
   const [editingId, setEditingId] = useState(null); // number | "new" | null
   const [editedValues, setEditedValues] = useState({});
   const [fieldErrorsById, setFieldErrorsById] = useState({});
+  const [formError, setFormError] = useState("");
 
   const fetchCostDetails = useCallback(async () => {
     if (!budgetId) return [];
@@ -407,7 +409,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
         });
       } catch (err) {
         console.error("Error creating cost detail:", err);
-        alert("Failed to create cost detail.");
+        setFormError("Failed to create cost detail.");
       }
       return;
     }
@@ -475,7 +477,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
       });
     } catch (err) {
       console.error("Error updating cost detail:", err);
-      alert("Failed to save cost detail.");
+      setFormError("Failed to save cost detail.");
     }
   };
 
@@ -516,7 +518,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
       await fetchCostDetails();
     } catch (err) {
       console.error("Error deleting cost detail:", err);
-      alert(err.message || "Failed to delete cost detail.");
+      setFormError(err.message || "Failed to delete cost detail.");
     }
   };
 
@@ -536,6 +538,13 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
 
   return (
     <div className={styles.gridContainer}>
+      {formError && (
+        <ErrorBanner
+          message={formError}
+          onDismiss={() => setFormError("")}
+        />
+      )}
+
       {/* Header */}
       <div className={styles.headerRow}>
         <div>Description</div>
