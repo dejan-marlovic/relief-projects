@@ -823,28 +823,6 @@ const RegisterProject = () => {
               </div>
             </div>
 
-            {/* Bottom actions */}
-            <div className={styles.bottomActions}>
-              <button
-                type="button"
-                onClick={handleRegister}
-                className={styles.saveButton}
-                disabled={loading || uploadingCover}
-              >
-                <FiSave />
-                Register project
-              </button>
-
-              <button
-                type="button"
-                onClick={resetForm}
-                className={styles.deleteButton}
-                disabled={loading || uploadingCover}
-              >
-                <FiX />
-                Reset form
-              </button>
-            </div>
           </>
         )}
       </div>
