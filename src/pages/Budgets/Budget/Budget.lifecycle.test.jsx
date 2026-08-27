@@ -133,3 +133,51 @@ test("shows a structured backend conflict inline", async () => {
   ).toBeInTheDocument();
   expect(screen.getByLabelText("Budget status: Draft")).toBeInTheDocument();
 });
+
+test.each([
+  ["approve", "Approve budget", "APPROVED", "Approved"],
+  ["return", "Return budget", "RETURNED", "Returned"],
+])(
+  "APPROVER can %s a submitted budget",
+  async (action, buttonName, nextStatus, nextLabel) => {
+    const updated = { ...budget, lifecycleStatus: nextStatus };
+    const onUpdate = jest.fn();
+    await renderBudget(
+      ["APPROVER"],
+      { lifecycleStatus: "SUBMITTED" },
+      onUpdate,
+    );
+    fetch.mockResolvedValueOnce(jsonResponse(updated));
+
+    fireEvent.click(screen.getByRole("button", { name: buttonName }));
+
+    await waitFor(() =>
+      expect(
+        screen.getByLabelText(`Budget status: ${nextLabel}`),
+      ).toBeInTheDocument(),
+    );
+    expect(fetch).toHaveBeenLastCalledWith(
+      expect.stringContaining(`/api/budgets/7/${action}`),
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(onUpdate).toHaveBeenCalledWith(updated);
+  },
+);
+
+test("review controls are restricted to submitted budgets and reviewer roles", async () => {
+  await renderBudget(["FINANCE"], { lifecycleStatus: "SUBMITTED" });
+  expect(screen.queryByRole("button", { name: "Approve budget" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Return budget" })).not.toBeInTheDocument();
+});
+
+test.each(["SUBMITTED", "APPROVED"])(
+  "%s budgets are read-only and cannot be deleted",
+  async (status) => {
+    await renderBudget(["ADMIN"], { lifecycleStatus: status });
+    expect(
+      screen.getByPlaceholderText("Write a short note about this budget..."),
+    ).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Save changes" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Delete budget" })).not.toBeInTheDocument();
+  },
+);

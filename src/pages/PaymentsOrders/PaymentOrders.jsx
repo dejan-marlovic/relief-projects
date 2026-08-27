@@ -9,6 +9,7 @@ import React, {
 import ExcelJS from "exceljs";
 import { ProjectContext } from "../../context/ProjectContext";
 import { useAuth } from "../../context/AuthContext";
+import { useUnsavedChange } from "../../context/UnsavedChangesContext";
 import PaymentOrder from "./PaymentOrder/PaymentOrder";
 import styles from "./PaymentOrders.module.scss";
 import PaymentOrderLines from "./PaymentOrder/PaymentOrderLines/PaymentOrderLines";
@@ -126,6 +127,7 @@ function PaymentOrders() {
   const [orders, setOrders] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
+  useUnsavedChange("payment-orders-editor", editingId !== null);
   const [txOptions, setTxOptions] = useState([]);
 
   // UI

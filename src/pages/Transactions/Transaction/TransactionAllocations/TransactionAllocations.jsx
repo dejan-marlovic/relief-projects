@@ -9,6 +9,7 @@ import {  FiPlus,
 import { BASE_URL } from "../../../../config/api";
 import ErrorBanner from "../../../../components/ErrorBanner/ErrorBanner"; // adjust path if needed
 import { formatApiError } from "../../../../utils/apiErrors";
+import { useUnsavedChange } from "../../../../context/UnsavedChangesContext";
 
 const toNumOrNull = (v) => {
   if (v === "" || v == null) return null;
@@ -73,6 +74,10 @@ const TransactionAllocations = ({
     plannedAmount: "",
     note: "",
   });
+  useUnsavedChange(
+    `transaction-allocations-new-${txId}`,
+    Object.values(draft).some((value) => String(value ?? "").trim() !== ""),
+  );
   const [plannedAmountEdited, setPlannedAmountEdited] = useState(false);
 
   // add-form errors

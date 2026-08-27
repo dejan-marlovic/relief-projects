@@ -28,6 +28,7 @@ import {
 import { BASE_URL, ASSETS_URL } from "../../config/api";
 import ErrorBanner from "../../components/ErrorBanner/ErrorBanner";
 import { readApiError } from "../../utils/apiErrors";
+import { useUnsavedChange } from "../../context/UnsavedChangesContext";
 const coverImagePath = `${ASSETS_URL}/images/projects/`;
 
 // ✅ caption delimiter (must match backend)
@@ -1449,6 +1450,11 @@ Approximately:
   const canDeleteProject = hasRole("ADMIN");
 
   const [projectDetails, setProjectDetails] = useState(null);
+  const [hasUnsavedProjectChanges, setHasUnsavedProjectChanges] = useState(false);
+  useUnsavedChange(
+    `project-${selectedProjectId || "none"}`,
+    hasUnsavedProjectChanges,
+  );
   const [loading, setLoading] = useState(false);
   const [exportingProject, setExportingProject] = useState(false);
 
@@ -1554,6 +1560,7 @@ Approximately:
 
   // ✅ Update caption for a specific image index (writes back to delimiter-string)
   const setCaptionAtIndex = (idx, captionText) => {
+    setHasUnsavedProjectChanges(true);
     setProjectDetails((prev) => {
       if (!prev) return prev;
 
@@ -1625,6 +1632,7 @@ Approximately:
 
         // ✅ normalize captions length to match images
         setProjectDetails(normalizeProjectCaptions(projectDetailsData));
+        setHasUnsavedProjectChanges(false);
       } catch (error) {
         console.error("Error fetching project details:", error);
         setFormError("Failed to load project details.");
@@ -1924,6 +1932,7 @@ Approximately:
       ...prev,
       [name]: value,
     }));
+    setHasUnsavedProjectChanges(true);
   };
 
   // ✅ Upload cover image via FormData (appends on backend)
@@ -2099,6 +2108,7 @@ Approximately:
   };
 
   const handleToggleSector = (sectorIdStr, checked) => {
+    setHasUnsavedProjectChanges(true);
     setSelectedSectorIds((prev) => {
       if (checked)
         return prev.includes(sectorIdStr) ? prev : [...prev, sectorIdStr];
@@ -2465,6 +2475,8 @@ Approximately:
       }
 
       await syncProjectSectors(projectDetails.id);
+
+      setHasUnsavedProjectChanges(false);
 
       setFormError("");
       setFieldErrors({});

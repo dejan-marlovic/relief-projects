@@ -192,6 +192,41 @@ label {
   }
 }
 
+.approveButton {
+  @include forms.primary-button;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: colors.$success;
+
+  &:hover:not(:disabled) {
+    background: colors.$success-dark;
+  }
+}
+
+.returnButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 8px 14px;
+  border: 1px solid colors.$warning-border;
+  border-radius: 8px;
+  background: colors.$warning-soft;
+  color: colors.$warning-dark;
+  cursor: pointer;
+  font-weight: 600;
+
+  &:hover:not(:disabled) {
+    background: colors.$warning-soft-alt;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
 .exportButton {
   background: colors.$surface;
   color: #217346;

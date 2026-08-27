@@ -27,6 +27,15 @@ import { getSelectedProjectName } from "../../utils/projectDisplay";
 import { matchesDateRange, matchesNumberRange, matchesSelect, matchesText } from "../../utils/tableSorting";
 import { formatApiError, readApiError } from "../../utils/apiErrors";
 import ErrorBanner from "../../components/ErrorBanner/ErrorBanner";
+import { useUnsavedChange } from "../../context/UnsavedChangesContext";
+
+export const approvedBudgetOptions = (budgets = [], currentBudgetId = null) =>
+  budgets.filter(
+    (budget) =>
+      budget.lifecycleStatus === "APPROVED" ||
+      (currentBudgetId != null &&
+        String(budget.id) === String(currentBudgetId)),
+  );
 
 const blankTx = {
   organizationId: "",
@@ -118,6 +127,7 @@ const Transactions = ({ refreshTrigger }) => {
   const [selectedTxIds, setSelectedTxIds] = useState(() => new Set());
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
+  useUnsavedChange("transactions-editor", editingId !== null);
   const [expandedTxId, setExpandedTxId] = useState(null);
   const [exportingSelected, setExportingSelected] = useState(false);
   const [sortConfig, setSortConfig] = useState(null);
@@ -345,7 +355,9 @@ const Transactions = ({ refreshTrigger }) => {
     setEditingId("new");
     setExpandedTxId(null);
 
-    const autoBudgetId = budgetOptions.length === 1 ? budgetOptions[0].id : "";
+    const eligibleBudgets = approvedBudgetOptions(budgetOptions);
+    const autoBudgetId =
+      eligibleBudgets.length === 1 ? eligibleBudgets[0].id : "";
 
     setEditedValues((prev) => ({
       ...prev,
@@ -1690,7 +1702,7 @@ const Transactions = ({ refreshTrigger }) => {
               organizations={orgOptions}
               projects={projectOptions}
               statuses={statusOptions}
-              budgets={budgetOptions}
+              budgets={approvedBudgetOptions(budgetOptions)}
               visibleCols={visibleCols}
               isEven={false}
               fieldErrors={fieldErrors.new || {}}
@@ -1726,7 +1738,7 @@ const Transactions = ({ refreshTrigger }) => {
                 organizations={orgOptions}
                 projects={projectOptions}
                 statuses={statusOptions}
-                budgets={budgetOptions}
+                budgets={approvedBudgetOptions(budgetOptions, tx.budgetId)}
                 visibleCols={visibleCols}
                 fieldErrors={fieldErrors[tx.id] || {}}
                 expanded={expandedTxId === tx.id}

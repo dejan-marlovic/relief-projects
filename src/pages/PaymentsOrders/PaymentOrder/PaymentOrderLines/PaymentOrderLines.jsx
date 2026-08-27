@@ -9,6 +9,7 @@ import {
 import { BASE_URL } from "../../../../config/api";
 import ErrorBanner from "../../../../components/ErrorBanner/ErrorBanner"; // adjust path if needed
 import { formatApiError } from "../../../../utils/apiErrors";
+import { useUnsavedChange } from "../../../../context/UnsavedChangesContext";
 
 const toNumOrNull = (v) => {
   if (v === "" || v == null) return null;
@@ -129,6 +130,10 @@ const PaymentOrderLines = ({
     amount: "",
     memo: "",
   });
+  useUnsavedChange(
+    `payment-order-lines-new-${paymentOrderId}`,
+    Object.values(draft).some((value) => String(value ?? "").trim() !== ""),
+  );
 
   // ✅ only for CREATE row
   const [formError, setFormError] = useState("");

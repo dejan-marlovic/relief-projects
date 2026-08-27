@@ -1,14 +1,25 @@
-import { render, screen } from "@testing-library/react";
+import { useEffect } from "react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import Layout from "./Layout";
 import styles from "./Layout.module.scss";
 import { ProjectContext } from "../../context/ProjectContext";
+import { useUnsavedChanges } from "../../context/UnsavedChangesContext";
 
 jest.mock("../../context/AuthContext", () => ({ useAuth: jest.fn() }));
 jest.mock("../../context/BrandingContext", () => ({ useBranding: () => ({ logoUrl: "/logo.png" }) }));
 const { useAuth } = require("../../context/AuthContext");
 
-const renderLayout = (roles, projectContext = {}) => {
+const DirtyProject = () => {
+  const { setUnsavedChange } = useUnsavedChanges();
+  useEffect(() => {
+    setUnsavedChange("budget-7", true);
+    return () => setUnsavedChange("budget-7", false);
+  }, [setUnsavedChange]);
+  return <div>Project with unsaved changes</div>;
+};
+
+const renderLayout = (roles, projectContext = {}, projectElement = <div>Project</div>) => {
   localStorage.setItem("authToken", "token");
   useAuth.mockReturnValue({
     clearAuth: jest.fn(),
@@ -23,14 +34,14 @@ const renderLayout = (roles, projectContext = {}) => {
       ...projectContext,
     }}>
       <MemoryRouter initialEntries={["/project"]}>
-        <Routes><Route path="/" element={<Layout />}><Route path="project" element={<div>Project</div>} /></Route></Routes>
+        <Routes><Route path="/" element={<Layout />}><Route path="project" element={projectElement} /></Route></Routes>
       </MemoryRouter>
     </ProjectContext.Provider>,
   );
 };
 
 describe("role-aware navigation", () => {
-  afterEach(() => { localStorage.clear(); jest.clearAllMocks(); });
+  afterEach(() => { localStorage.clear(); jest.restoreAllMocks(); });
 
   test("ADMIN sees Admin and New Project", () => {
     renderLayout(["ADMIN"]);
@@ -70,5 +81,17 @@ describe("role-aware navigation", () => {
   test("uses Project while no selected project name is available", () => {
     renderLayout(["VIEWER"]);
     expect(screen.getByRole("link", { name: "Project" })).toBeInTheDocument();
+  });
+
+  test("keeps the user on the current tab when unsaved budget changes are not discarded", () => {
+    const confirm = jest.spyOn(window, "confirm").mockReturnValue(false);
+    renderLayout(["FINANCE"], {}, <DirtyProject />);
+
+    fireEvent.click(screen.getByRole("link", { name: "Transactions" }));
+
+    expect(confirm).toHaveBeenCalledWith(
+      "You have unsaved changes. Leave this page without saving them?",
+    );
+    expect(screen.getByText("Project with unsaved changes")).toBeInTheDocument();
   });
 });

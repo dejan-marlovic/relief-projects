@@ -13,6 +13,7 @@ import projectStyles from "../Project.module.scss"; // ← reuse Project form st
 import { FiEdit, FiTrash2, FiSave, FiX } from "react-icons/fi";
 
 import { BASE_URL } from "../../../config/api"; // adjust path if needed
+import { useUnsavedChange } from "../../../context/UnsavedChangesContext";
 
 // Text getter
 const getText = (m = {}) =>
@@ -54,6 +55,7 @@ export default function Memos({ canEdit = false }) {
   const [error, setError] = useState("");
   const [drafts, setDrafts] = useState({}); // { [id|'new']: { text, positionId, employeeId, memoDate } }
   const [editingId, setEditingId] = useState(null);
+  useUnsavedChange("memos-editor", editingId !== null);
 
   // ✅ NEW: ref for new memo textarea
   const newMemoTextareaRef = useRef(null);

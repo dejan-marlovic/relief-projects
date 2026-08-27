@@ -3,6 +3,7 @@ import { FiEdit, FiLink, FiPlus, FiSave, FiX } from "react-icons/fi";
 import { BASE_URL } from "../../../config/api";
 import styles from "./BankDetails.module.scss";
 import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
+import { useUnsavedChange } from "../../../context/UnsavedChangesContext";
 
 const blankBankDetail = { bankName: "", accountNumber: "", branchName: "", swiftCode: "" };
 
@@ -21,6 +22,7 @@ const BankDetails = ({ organizationId, canManage = false }) => {
   const [selectedId, setSelectedId] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
+  useUnsavedChange(`bank-details-${organizationId}`, editingId !== null);
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
   const [busyAction, setBusyAction] = useState("");

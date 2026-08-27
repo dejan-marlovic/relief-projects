@@ -9,6 +9,7 @@ import React, {
 import ExcelJS from "exceljs";
 import { ProjectContext } from "../../context/ProjectContext";
 import { useAuth } from "../../context/AuthContext";
+import { useUnsavedChange } from "../../context/UnsavedChangesContext";
 import SignatureRow from "./Signature/Signature";
 import styles from "./Signatures.module.scss";
 import { FiPlus, FiColumns, FiTrash2, FiDownload } from "react-icons/fi";
@@ -101,6 +102,7 @@ function Signatures() {
   const [items, setItems] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
+  useUnsavedChange("signatures-editor", editingId !== null);
   //React allows a lazy initializer function
   //runs only when the component is first created.
   //So React says: I will call this function once to get the initial state.

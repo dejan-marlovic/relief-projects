@@ -100,6 +100,10 @@
   gap: 1rem;
 }
 
+.budgetSection {
+  scroll-margin-top: 100px;
+}
+
 .noData {
   padding: 12px;
   color: colors.$text-neutral;
@@ -132,6 +136,10 @@
   }
 
   .createFormSection {
+    scroll-margin-top: 155px;
+  }
+
+  .budgetSection {
     scroll-margin-top: 155px;
   }
 }

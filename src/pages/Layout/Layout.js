@@ -1,16 +1,48 @@
-import React, { useContext, useEffect } from "react";
+import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import styles from "./Layout.module.scss";
 import { ProjectContext } from "../../context/ProjectContext";
 import { FiLogOut, FiLayers } from "react-icons/fi";
 import { useBranding } from "../../context/BrandingContext";
 import { useAuth } from "../../context/AuthContext";
+import { UnsavedChangesContext } from "../../context/UnsavedChangesContext";
 
 const Layout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { logoUrl } = useBranding();
   const { clearAuth, hasRole, hasAnyRole } = useAuth();
+  const [unsavedChangeKeys, setUnsavedChangeKeys] = useState(() => new Set());
+  const hasUnsavedChanges = unsavedChangeKeys.size > 0;
+
+  const setUnsavedChange = useCallback((key, isUnsaved) => {
+    setUnsavedChangeKeys((current) => {
+      const alreadyTracked = current.has(key);
+      if (alreadyTracked === isUnsaved) return current;
+      const next = new Set(current);
+      if (isUnsaved) next.add(key);
+      else next.delete(key);
+      return next;
+    });
+  }, []);
+
+  const confirmDiscardUnsavedChanges = useCallback(
+    () =>
+      !hasUnsavedChanges ||
+      window.confirm(
+        "You have unsaved changes. Leave this page without saving them?",
+      ),
+    [hasUnsavedChanges],
+  );
+
+  const unsavedChangesContextValue = useMemo(
+    () => ({
+      setUnsavedChange,
+      hasUnsavedChanges,
+      confirmDiscardUnsavedChanges,
+    }),
+    [confirmDiscardUnsavedChanges, hasUnsavedChanges, setUnsavedChange],
+  );
 
   const { projects, selectedProjectId, setSelectedProjectId } =
     useContext(ProjectContext);
@@ -22,10 +54,17 @@ const Layout = () => {
     selectedProject?.projectName || selectedProject?.name || "Project";
 
   const handleSelectChange = (e) => {
+    if (
+      String(e.target.value) !== String(selectedProjectId) &&
+      !confirmDiscardUnsavedChanges()
+    ) {
+      return;
+    }
     setSelectedProjectId(e.target.value);
   };
 
   const handleLogout = () => {
+    if (!confirmDiscardUnsavedChanges()) return;
     clearAuth();
     localStorage.removeItem("selectedProjectId");
     navigate("/login");
@@ -35,6 +74,16 @@ const Layout = () => {
     const token = localStorage.getItem("authToken");
     if (!token) navigate("/login");
   }, [navigate]);
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) return undefined;
+    const warnBeforeUnload = (event) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warnBeforeUnload);
+    return () => window.removeEventListener("beforeunload", warnBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   const isRegisterPage = location.pathname === "/register-project";
   const isStatisticsPage = location.pathname === "/statistics";
@@ -159,6 +208,14 @@ const Layout = () => {
               <li key={path} className={styles.tabItem}>
                 <Link
                   to={path}
+                  onClick={(event) => {
+                    if (
+                      !isActive(path) &&
+                      !confirmDiscardUnsavedChanges()
+                    ) {
+                      event.preventDefault();
+                    }
+                  }}
                   className={`${styles.tabLink} ${
                     isActive(path) ? styles.active : ""
                   } ${isAdminTab ? styles.adminTab : ""} ${
@@ -174,7 +231,9 @@ const Layout = () => {
       </nav>
 
       <main className={styles.content}>
-        <Outlet />
+        <UnsavedChangesContext.Provider value={unsavedChangesContextValue}>
+          <Outlet />
+        </UnsavedChangesContext.Provider>
       </main>
     </div>
   );

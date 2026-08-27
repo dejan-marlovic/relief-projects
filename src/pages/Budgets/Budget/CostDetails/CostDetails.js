@@ -6,6 +6,7 @@ import { BASE_URL } from "../../../../config/api"; // adjust path if needed
 import { useAuth } from "../../../../context/AuthContext";
 import { readApiError } from "../../../../utils/apiErrors";
 import ErrorBanner from "../../../../components/ErrorBanner/ErrorBanner";
+import { useUnsavedChange } from "../../../../context/UnsavedChangesContext";
 
 const blankCostDetail = {
   costDescription: "",
@@ -86,15 +87,27 @@ async function safeParseJsonResponse(response) {
 
 const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
   const { hasAnyRole } = useAuth();
-  const canEditCostDetails = hasAnyRole("ADMIN", "FINANCE");
+  const isBudgetEditable = ["DRAFT", "RETURNED"].includes(
+    budget?.lifecycleStatus || "DRAFT",
+  );
+  const canEditCostDetails =
+    hasAnyRole("ADMIN", "FINANCE") && isBudgetEditable;
   const canDeleteCostDetails = canEditCostDetails;
   const [costTypes, setCostTypes] = useState([]);
   const [costs, setCosts] = useState([]);
   const [costDetails, setCostDetails] = useState([]);
   const [editingId, setEditingId] = useState(null); // number | "new" | null
   const [editedValues, setEditedValues] = useState({});
+  useUnsavedChange(`cost-details-${budgetId}`, editingId !== null);
   const [fieldErrorsById, setFieldErrorsById] = useState({});
   const [formError, setFormError] = useState("");
+
+  useEffect(() => {
+    if (canEditCostDetails) return;
+    setEditingId(null);
+    setEditedValues({});
+    setFieldErrorsById({});
+  }, [canEditCostDetails]);
 
   const fetchCostDetails = useCallback(async () => {
     if (!budgetId) return [];
@@ -409,7 +422,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
         });
       } catch (err) {
         console.error("Error creating cost detail:", err);
-        setFormError("Failed to create cost detail.");
+        setFormError(err.message || "Failed to create cost detail.");
       }
       return;
     }
@@ -477,7 +490,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
       });
     } catch (err) {
       console.error("Error updating cost detail:", err);
-      setFormError("Failed to save cost detail.");
+      setFormError(err.message || "Failed to save cost detail.");
     }
   };
 

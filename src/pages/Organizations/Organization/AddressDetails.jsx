@@ -3,6 +3,7 @@ import { FiEdit, FiLink, FiPlus, FiSave, FiStar, FiX } from "react-icons/fi";
 import { BASE_URL } from "../../../config/api";
 import styles from "./AddressDetails.module.scss";
 import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
+import { useUnsavedChange } from "../../../context/UnsavedChangesContext";
 
 const blankAddress = {
   street: "",
@@ -33,6 +34,7 @@ const AddressDetails = ({ organizationId, canManage = false }) => {
   const [selectedAddressId, setSelectedAddressId] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
+  useUnsavedChange(`address-details-${organizationId}`, editingId !== null);
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
   const [busyAction, setBusyAction] = useState("");

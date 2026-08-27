@@ -10,17 +10,20 @@ import {
   FiAlertCircle,
   FiDownload,
   FiSend,
+  FiCheck,
+  FiCornerUpLeft,
 } from "react-icons/fi";
 
 import { BASE_URL } from "../../../config/api"; // adjust path if needed
 import { useAuth } from "../../../context/AuthContext";
 import { formatApiError, readApiError } from "../../../utils/apiErrors";
 import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
+import { useUnsavedChange } from "../../../context/UnsavedChangesContext";
 
 const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
   const { hasRole, hasAnyRole } = useAuth();
-  const canEditBudget = hasAnyRole("ADMIN", "FINANCE");
-  const canDeleteBudget = hasRole("ADMIN");
+  const hasBudgetEditorRole = hasAnyRole("ADMIN", "FINANCE");
+  const hasBudgetReviewerRole = hasAnyRole("ADMIN", "APPROVER");
   const formatDate = (dateString) =>
     dateString ? dateString.slice(0, 16) : "";
 
@@ -31,6 +34,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
 
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [reviewAction, setReviewAction] = useState("");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [exportingBudget, setExportingBudget] = useState(false);
 
@@ -39,8 +43,13 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
   const [fieldErrors, setFieldErrors] = useState({}); // { fieldName: "Message" }
 
   const lifecycleStatus = budget.lifecycleStatus || "DRAFT";
+  const isBudgetEditable = ["DRAFT", "RETURNED"].includes(lifecycleStatus);
+  const canEditBudget = hasBudgetEditorRole && isBudgetEditable;
+  const canDeleteBudget = hasRole("ADMIN") && isBudgetEditable;
   const canSubmitBudget =
-    canEditBudget && ["DRAFT", "RETURNED"].includes(lifecycleStatus);
+    canEditBudget;
+  const canReviewBudget =
+    hasBudgetReviewerRole && lifecycleStatus === "SUBMITTED";
   const lifecycleLabel =
     {
       DRAFT: "Draft",
@@ -48,6 +57,8 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
       APPROVED: "Approved",
       RETURNED: "Returned",
     }[lifecycleStatus] || lifecycleStatus;
+
+  useUnsavedChange(`budget-${budget?.id || "unknown"}`, hasUnsavedChanges);
 
   const triggerRefreshCostDetails = () =>
     setRefreshCostDetailsTrigger((prev) => prev + 1);
@@ -1294,11 +1305,67 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
       setBudget(data);
       onUpdate?.(data);
       setFieldErrors({});
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error("Error submitting budget:", error);
       setFormError("Unexpected error while submitting the budget.");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleReviewTransition = async (action) => {
+    if (!canReviewBudget || reviewAction) return;
+    const actionInProgress = action === "approve" ? "approving" : "returning";
+
+    try {
+      setReviewAction(action);
+      setFormError("");
+      const token = localStorage.getItem("authToken");
+      const response = await fetch(
+        `${BASE_URL}/api/budgets/${budget.id}/${action}`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      const raw = await response.text().catch(() => "");
+      let data = null;
+      try {
+        data = raw ? JSON.parse(raw) : null;
+      } catch (parseError) {
+        console.warn(`Failed to parse budget ${action} response:`, parseError);
+      }
+
+      if (!response.ok) {
+        setFormError(
+          formatApiError(
+            data,
+            `There was a problem ${actionInProgress} the budget.`,
+          ),
+        );
+        return;
+      }
+
+      if (!data) {
+        setFormError(
+          `The budget was ${action === "approve" ? "approved" : "returned"}, but no updated budget was returned.`,
+        );
+        return;
+      }
+
+      setBudget(data);
+      setHasUnsavedChanges(false);
+      setFieldErrors({});
+      onUpdate?.(data);
+    } catch (error) {
+      console.error(`Error ${actionInProgress} budget:`, error);
+      setFormError(
+        `Unexpected error while ${actionInProgress} the budget.`,
+      );
+    } finally {
+      setReviewAction("");
     }
   };
 
@@ -1632,6 +1699,24 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                 >
                   <FiSend />
                   {submitting ? "Submitting..." : "Submit for approval"}
+                </button>}
+                {canReviewBudget && <button
+                  type="button"
+                  onClick={() => handleReviewTransition("approve")}
+                  className={styles.approveButton}
+                  disabled={loading || exportingBudget || Boolean(reviewAction)}
+                >
+                  <FiCheck />
+                  {reviewAction === "approve" ? "Approving..." : "Approve budget"}
+                </button>}
+                {canReviewBudget && <button
+                  type="button"
+                  onClick={() => handleReviewTransition("return")}
+                  className={styles.returnButton}
+                  disabled={loading || exportingBudget || Boolean(reviewAction)}
+                >
+                  <FiCornerUpLeft />
+                  {reviewAction === "return" ? "Returning..." : "Return budget"}
                 </button>}
                 {canDeleteBudget && <button
                   type="button"

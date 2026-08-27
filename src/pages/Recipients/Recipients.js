@@ -9,6 +9,7 @@ import React, {
 import ExcelJS from "exceljs";
 import { ProjectContext } from "../../context/ProjectContext";
 import { useAuth } from "../../context/AuthContext";
+import { useUnsavedChange } from "../../context/UnsavedChangesContext";
 import RecipientRow from "./Recipient/Recipient";
 import styles from "./Recipients.module.scss";
 import { FiColumns, FiPlus, FiTrash2, FiDownload } from "react-icons/fi";
@@ -97,6 +98,7 @@ function Recipients() {
   const [items, setItems] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
+  useUnsavedChange("recipients-editor", editingId !== null);
 
   // Lazy initializer function.
   // React calls this once when the component first mounts

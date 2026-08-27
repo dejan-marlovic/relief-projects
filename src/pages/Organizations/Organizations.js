@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { ProjectContext } from "../../context/ProjectContext";
 import { useAuth } from "../../context/AuthContext";
+import { useUnsavedChange } from "../../context/UnsavedChangesContext";
 import OrganizationRow from "./Organization/Organization";
 import styles from "./Organizations.module.scss";
 import { FiColumns, FiPlus } from "react-icons/fi";
@@ -59,6 +60,7 @@ const Organizations = () => {
   const [links, setLinks] = useState([]); // project_organization rows
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
+  useUnsavedChange("project-organizations-editor", editingId !== null);
 
   // dropdown data
   const [orgOptions, setOrgOptions] = useState([]); // /organizations/active/options
