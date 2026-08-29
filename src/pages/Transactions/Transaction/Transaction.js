@@ -7,6 +7,7 @@ import {
   FiX,
   FiChevronDown,
   FiChevronUp,
+  FiSend,
 } from "react-icons/fi";
 import TransactionAllocations from "./TransactionAllocations/TransactionAllocations";
 
@@ -53,6 +54,9 @@ const Transaction = ({
   canEdit = false,
   canDelete = false,
   canManageAllocations = false,
+  canSubmitLifecycle = false,
+  onSubmitLifecycle,
+  isSubmittingLifecycle = false,
 }) => {
   const ev = editedValues || {};
   const isCreate = (tx?.id ?? "") === "new";
@@ -220,6 +224,11 @@ const Transaction = ({
   const hc = (i) => (!visibleCols[i] ? styles.hiddenCol : "");
 
   const txIdLabel = isCreate ? "(new)" : tx?.id != null ? `TX#${tx.id}` : "-";
+  const lifecycleStatus = tx?.lifecycleStatus || "DRAFT";
+  const showSubmitLifecycle =
+    !isCreate &&
+    canSubmitLifecycle &&
+    ["DRAFT", "RETURNED"].includes(lifecycleStatus);
 
   return (
     <>
@@ -242,6 +251,7 @@ const Transaction = ({
               >
                 <FiSave />
               </button>}
+
               <button
                 type="button"
                 className={styles.iconCircleBtn}
@@ -284,6 +294,23 @@ const Transaction = ({
                 <FiEdit />
               </button>}
 
+              {showSubmitLifecycle && (
+                <button
+                  type="button"
+                  className={`${styles.iconCircleBtn} ${styles.submitBtn}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onSubmitLifecycle?.();
+                  }}
+                  disabled={isSubmittingLifecycle}
+                  title="Submit for approval"
+                  aria-label={`Submit transaction ${tx.id} for approval`}
+                >
+                  <FiSend />
+                </button>
+              )}
+
               {!isCreate && (
                 <button
                   type="button"
@@ -322,7 +349,19 @@ const Transaction = ({
         </Cell>
 
         {/* 1: Tx ID (read-only, never editable) */}
-        <Cell className={hc(1)}>{txIdLabel}</Cell>
+        <Cell className={hc(1)}>
+          <div className={styles.txIdentity}>
+            <span>{txIdLabel}</span>
+            {!isCreate && (
+              <span
+                className={`${styles.statusBadge} ${styles[`status${lifecycleStatus}`] || ""}`}
+                aria-label={`Transaction lifecycle status: ${lifecycleStatus}`}
+              >
+                {lifecycleStatus}
+              </span>
+            )}
+          </div>
+        </Cell>
 
         {/* 2..: rest */}
         <Cell className={hc(2)}>

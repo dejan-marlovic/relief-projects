@@ -224,3 +224,51 @@
     opacity: 0.55;
   }
 }
+
+.txIdentity {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+}
+
+.statusBadge {
+  border-radius: 999px;
+  padding: 0.2rem 0.45rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border: 1px solid colors.$border-subtle;
+}
+
+.statusDRAFT {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #4b5563;
+}
+
+.statusSUBMITTED {
+  background: #fff7d6;
+  border-color: #e7c75d;
+  color: #755b00;
+}
+
+.statusAPPROVED {
+  background: #e5f6ec;
+  border-color: #86c99f;
+  color: #176b3a;
+}
+
+.statusRETURNED {
+  background: #fdeaea;
+  border-color: #e7a0a0;
+  color: #9b2c2c;
+}
+
+.submitBtn {
+  color: colors.$primary;
+  border-color: colors.$primary-a25;
+}

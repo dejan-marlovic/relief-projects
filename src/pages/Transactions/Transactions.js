@@ -37,6 +37,20 @@ export const approvedBudgetOptions = (budgets = [], currentBudgetId = null) =>
         String(budget.id) === String(currentBudgetId)),
   );
 
+export const transactionLifecycleStatus = (transaction) =>
+  transaction?.lifecycleStatus || "DRAFT";
+
+export const canSubmitTransactionLifecycle = (transaction, canSubmit) =>
+  Boolean(canSubmit) &&
+  ["DRAFT", "RETURNED"].includes(transactionLifecycleStatus(transaction));
+
+export const costDetailsForBudget = (costDetails = [], budgetId = null) => {
+  if (budgetId == null || budgetId === "") return [];
+  return costDetails.filter(
+    (costDetail) => String(costDetail.budgetId) === String(budgetId),
+  );
+};
+
 const blankTx = {
   organizationId: "",
   projectId: "",
@@ -129,6 +143,7 @@ const Transactions = ({ refreshTrigger }) => {
   const [editedValues, setEditedValues] = useState({});
   useUnsavedChange("transactions-editor", editingId !== null);
   const [expandedTxId, setExpandedTxId] = useState(null);
+  const [submittingTxId, setSubmittingTxId] = useState(null);
   const [exportingSelected, setExportingSelected] = useState(false);
   const [sortConfig, setSortConfig] = useState(null);
   const emptyFilters = () => ({ id:{min:"",max:""}, organization:"", project:"", budget:"", financier:"", status:"", appliedForAmount:{min:"",max:""}, firstShareAmount:{min:"",max:""}, approvedAmount:{min:"",max:""}, secondShareAmount:{min:"",max:""}, ownContribution:"", datePlanned:{from:"",to:""}, okStatus:"" });
@@ -522,6 +537,56 @@ const Transactions = ({ refreshTrigger }) => {
     } catch (err) {
       console.error(err);
       setFormError(err.message || "Failed to delete transaction.");
+    }
+  };
+
+  const submitForApproval = async (tx) => {
+    if (!canSubmitTransactionLifecycle(tx, canEditTransactions)) return;
+
+    setFormError("");
+    setSubmittingTxId(tx.id);
+
+    try {
+      const response = await fetch(
+        `${BASE_URL}/api/transactions/${tx.id}/submit`,
+        {
+          method: "POST",
+          headers: authHeaders,
+        },
+      );
+      const raw = await response.text().catch(() => "");
+      let data = null;
+
+      try {
+        data = raw ? JSON.parse(raw) : null;
+      } catch {
+        // Keep the fallback error message when the response is not JSON.
+      }
+
+      if (!response.ok) {
+        setFormError(
+          formatApiError(data, "Failed to submit transaction for approval."),
+        );
+        return;
+      }
+
+      if (!data) {
+        setFormError(
+          "The transaction was submitted, but no updated transaction was returned.",
+        );
+        return;
+      }
+
+      setTransactions((current) =>
+        current.map((item) => (item.id === data.id ? data : item)),
+      );
+    } catch (error) {
+      console.error("Error submitting transaction:", error);
+      setFormError(
+        error?.message || "Unexpected error while submitting transaction.",
+      );
+    } finally {
+      setSubmittingTxId(null);
     }
   };
 
@@ -1745,10 +1810,16 @@ const Transactions = ({ refreshTrigger }) => {
                 onToggleAllocations={() =>
                   setExpandedTxId((cur) => (cur === tx.id ? null : tx.id))
                 }
-                costDetailOptions={costDetailOptions}
+                costDetailOptions={costDetailsForBudget(
+                  costDetailOptions,
+                  tx.budgetId,
+                )}
                 canEdit={canEditTransactions}
                 canDelete={canDeleteTransactions}
                 canManageAllocations={canManageAllocations}
+                canSubmitLifecycle={canEditTransactions}
+                onSubmitLifecycle={() => submitForApproval(tx)}
+                isSubmittingLifecycle={submittingTxId === tx.id}
               />
             ))
           )}
