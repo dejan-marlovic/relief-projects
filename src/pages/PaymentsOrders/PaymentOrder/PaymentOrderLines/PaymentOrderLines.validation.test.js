@@ -1,5 +1,6 @@
 import {
   approvedTransactionOptions,
+  allocationCostDetailOptions,
   validatePaymentOrderLine,
 } from "./PaymentOrderLines";
 
@@ -38,6 +39,26 @@ describe("payment order line validation", () => {
     expect(
       validatePaymentOrderLine({ ...validLine, transactionId: null }),
     ).toEqual({ transactionId: "Transaction is required." });
+  });
+
+  test("offers only positively allocated cost details and keeps a fallback label", () => {
+    const options = allocationCostDetailOptions(
+      [
+        { costDetailId: 115, plannedAmount: 500 },
+        { costDetailId: 116, plannedAmount: 0 },
+        { costDetailId: 117, plannedAmount: -1 },
+      ],
+      [{ costDetailId: 115, costDescription: "test2" }],
+    );
+
+    expect(options).toEqual([
+      { costDetailId: 115, costDescription: "test2" },
+    ]);
+    expect(
+      allocationCostDetailOptions([{ costDetailId: 118, plannedAmount: 1 }]),
+    ).toEqual([
+      { costDetailId: 118, costDescription: "Cost detail 118" },
+    ]);
   });
 
   test("requires a cost detail", () => {

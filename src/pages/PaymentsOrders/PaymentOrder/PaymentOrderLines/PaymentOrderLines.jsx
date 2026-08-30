@@ -51,6 +51,36 @@ export const approvedTransactionOptions = (
         String(transaction.id) === String(currentTransactionId)),
   );
 
+export const allocationCostDetailOptions = (
+  allocations = [],
+  costDetails = [],
+) =>
+  allocations
+    .filter((allocation) => Number(allocation?.plannedAmount) > 0)
+    .map((allocation) => {
+      const costDetailId =
+        allocation.costDetailId ??
+        allocation.cost_detail_id ??
+        allocation.costDetail?.costDetailId ??
+        allocation.costDetail?.id;
+      const detail = costDetails.find(
+        (candidate) =>
+          String(candidate.costDetailId) === String(costDetailId),
+      );
+      return costDetailId == null
+        ? null
+        : {
+            ...(detail || {}),
+            costDetailId,
+            costDescription:
+              detail?.costDescription ||
+              allocation.costDescription ||
+              allocation.costDetail?.costDescription ||
+              `Cost detail ${costDetailId}`,
+          };
+    })
+    .filter(Boolean);
+
 async function safeParseJsonResponse(res) {
   const raw = await res.text().catch(() => "");
   if (!raw) return null;
@@ -128,6 +158,8 @@ const PaymentOrderLines = ({
 
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [eligibleCostDetailsByTransaction, setEligibleCostDetailsByTransaction] =
+    useState({});
 
   // lock state
   const [isLocked, setIsLocked] = useState(false);
@@ -164,6 +196,65 @@ const PaymentOrderLines = ({
   // ✅ row-scoped errors for inline updates, keyed by rowId
   // { [rowId]: { message: string, fieldErrors: {amount?: string, ...} } }
   const [rowErrorsById, setRowErrorsById] = useState({});
+
+  const loadEligibleCostDetails = useCallback(
+    async (transactionId) => {
+      if (!transactionId) return [];
+      const res = await fetch(
+        `${BASE_URL}/api/cost-allocations/transaction/${transactionId}`,
+        { headers: authHeaders },
+      );
+      const data = await safeParseJsonResponse(res);
+      if (!res.ok) {
+        throw new Error(
+          formatApiError(
+            data,
+            `Failed to load cost details for transaction ${transactionId}.`,
+          ),
+        );
+      }
+
+      const options = allocationCostDetailOptions(
+        Array.isArray(data) ? data : [],
+        costDetailOptions,
+      );
+
+      setEligibleCostDetailsByTransaction((current) => ({
+        ...current,
+        [String(transactionId)]: options,
+      }));
+      return options;
+    },
+    [authHeaders, costDetailOptions],
+  );
+
+  const eligibleCostDetails = useCallback(
+    (transactionId, currentCostDetailId = null) => {
+      const options =
+        eligibleCostDetailsByTransaction[String(transactionId)] || [];
+      if (
+        currentCostDetailId == null ||
+        options.some(
+          (detail) =>
+            String(detail.costDetailId) === String(currentCostDetailId),
+        )
+      ) {
+        return options;
+      }
+      const historical = costDetailOptions.find(
+        (detail) =>
+          String(detail.costDetailId) === String(currentCostDetailId),
+      );
+      return [
+        ...options,
+        historical || {
+          costDetailId: currentCostDetailId,
+          costDescription: `Cost detail ${currentCostDetailId}`,
+        },
+      ];
+    },
+    [costDetailOptions, eligibleCostDetailsByTransaction],
+  );
 
   const fetchRows = useCallback(async () => {
     if (!paymentOrderId) return;
@@ -203,7 +294,20 @@ const PaymentOrderLines = ({
 
       const data = await res.json();
       const arr = Array.isArray(data) ? data : data ? [data] : [];
-      setRows(arr.map(normalizeLine).filter(Boolean));
+      const normalized = arr.map(normalizeLine).filter(Boolean);
+      setRows(normalized);
+      const transactionIds = [
+        ...new Set(normalized.map((row) => row.transactionId).filter(Boolean)),
+      ];
+      const results = await Promise.allSettled(
+        transactionIds.map(loadEligibleCostDetails),
+      );
+      const failed = results.find((result) => result.status === "rejected");
+      if (failed) {
+        setFormError(
+          failed.reason?.message || "Failed to load eligible cost details.",
+        );
+      }
     } catch (e) {
       console.error(e);
       setRows([]);
@@ -211,11 +315,19 @@ const PaymentOrderLines = ({
     } finally {
       setLoading(false);
     }
-  }, [paymentOrderId, authHeaders]);
+  }, [paymentOrderId, authHeaders, loadEligibleCostDetails]);
 
   useEffect(() => {
     fetchRows();
   }, [fetchRows]);
+
+  useEffect(() => {
+    if (!draft.transactionId) return;
+    loadEligibleCostDetails(draft.transactionId).catch((error) => {
+      console.error(error);
+      setFormError(error.message || "Failed to load eligible cost details.");
+    });
+  }, [draft.transactionId, loadEligibleCostDetails]);
 
   const apiCreate = async (payload) => {
     const res = await fetch(`${BASE_URL}/api/payment-order-lines`, {
@@ -478,7 +590,10 @@ const PaymentOrderLines = ({
           <select
             value={draft.transactionId}
             disabled={loading || isLocked}
-            onChange={(e) => updateDraftField("transactionId", e.target.value)}
+            onChange={(e) => {
+              updateDraftField("transactionId", e.target.value);
+              updateDraftField("costDetailId", "");
+            }}
             className={`${styles.input} ${
               fieldErrors.transactionId ? styles.inputError : ""
             }`}
@@ -532,7 +647,7 @@ const PaymentOrderLines = ({
             }`}
           >
             <option value="">Select…</option>
-            {costDetailOptions.map((cd) => (
+            {eligibleCostDetails(draft.transactionId).map((cd) => (
               <option key={cd.costDetailId} value={cd.costDetailId}>
                 {cd.costDescription || "No description"} (CD#{cd.costDetailId})
               </option>
@@ -610,7 +725,16 @@ const PaymentOrderLines = ({
               row={r}
               txOptions={txOptions}
               orgOptions={orgOptions}
-              costDetailOptions={costDetailOptions}
+              costDetailOptions={eligibleCostDetails(
+                r.transactionId,
+                r.costDetailId,
+              )}
+              loadEligibleCostDetails={loadEligibleCostDetails}
+              onEligibleLoadError={(error) =>
+                setFormError(
+                  error?.message || "Failed to load eligible cost details.",
+                )
+              }
               locked={isLocked || !canManage}
               canManage={canManage}
               rowError={rowErrorsById[r.id] || null}
@@ -636,6 +760,8 @@ const LineRow = ({
   txOptions,
   orgOptions,
   costDetailOptions,
+  loadEligibleCostDetails,
+  onEligibleLoadError,
   locked = false,
   canManage = false,
   onSave,
@@ -679,6 +805,10 @@ const LineRow = ({
           disabled={locked}
           onChange={(e) => {
             setTransactionId(e.target.value);
+            setCostDetailId("");
+            loadEligibleCostDetails?.(e.target.value).catch((error) =>
+              onEligibleLoadError?.(error),
+            );
             clearRowError?.();
           }}
           className={`${styles.input} ${
