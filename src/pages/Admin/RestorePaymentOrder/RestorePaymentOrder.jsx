@@ -9,6 +9,7 @@ import styles from "./RestorePaymentOrder.module.scss";
 import { BASE_URL } from "../../../config/api";
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
 import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
+import { formatApiError } from "../../../utils/apiErrors";
 
 const RestorePaymentOrder = () => {
   const navigate = useNavigate();
@@ -273,9 +274,7 @@ const RestorePaymentOrder = () => {
       if (!res.ok) {
         const data = await safeReadJson(res);
         setFormError(
-          data?.message ||
-            data?.detail ||
-            "Failed to restore the payment order. Backend support may be missing.",
+          formatApiError(data, "Failed to restore the payment order."),
         );
         return;
       }

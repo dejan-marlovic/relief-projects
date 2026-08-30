@@ -9,6 +9,7 @@ import styles from "./RestoreRecipient.module.scss";
 import { BASE_URL } from "../../../config/api";
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
 import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
+import { formatApiError } from "../../../utils/apiErrors";
 
 const RestoreRecipient = () => {
   const navigate = useNavigate();
@@ -213,9 +214,7 @@ const RestoreRecipient = () => {
       if (!res.ok) {
         const data = await safeReadJson(res);
         setFormError(
-          data?.message ||
-            data?.detail ||
-            "Failed to restore the recipient. Backend support may be missing.",
+          formatApiError(data, "Failed to restore the recipient."),
         );
         return;
       }

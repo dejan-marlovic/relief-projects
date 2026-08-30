@@ -9,6 +9,7 @@ import styles from "./RestoreSignature.module.scss";
 import { BASE_URL } from "../../../config/api";
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
 import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
+import { formatApiError } from "../../../utils/apiErrors";
 
 const RestoreSignature = () => {
   const navigate = useNavigate();
@@ -241,9 +242,7 @@ const RestoreSignature = () => {
       if (!res.ok) {
         const data = await safeReadJson(res);
         setFormError(
-          data?.message ||
-            data?.detail ||
-            "Failed to restore the signature. Backend support may be missing.",
+          formatApiError(data, "Failed to restore the signature."),
         );
         return;
       }
