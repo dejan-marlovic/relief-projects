@@ -51,6 +51,9 @@ export const costDetailsForBudget = (costDetails = [], budgetId = null) => {
   );
 };
 
+export const isTransactionLifecycleEditable = (transaction) =>
+  ["DRAFT", "RETURNED"].includes(transactionLifecycleStatus(transaction));
+
 const blankTx = {
   organizationId: "",
   projectId: "",
@@ -136,6 +139,7 @@ const Transactions = ({ refreshTrigger }) => {
   const canEditTransactions = hasAnyRole("ADMIN", "FINANCE");
   const canDeleteTransactions = hasRole("ADMIN");
   const canManageAllocations = hasAnyRole("ADMIN", "FINANCE");
+  const canReviewTransactions = hasAnyRole("ADMIN", "APPROVER");
 
   const [transactions, setTransactions] = useState([]);
   const [selectedTxIds, setSelectedTxIds] = useState(() => new Set());
@@ -144,6 +148,7 @@ const Transactions = ({ refreshTrigger }) => {
   useUnsavedChange("transactions-editor", editingId !== null);
   const [expandedTxId, setExpandedTxId] = useState(null);
   const [submittingTxId, setSubmittingTxId] = useState(null);
+  const [reviewingTxId, setReviewingTxId] = useState(null);
   const [exportingSelected, setExportingSelected] = useState(false);
   const [sortConfig, setSortConfig] = useState(null);
   const emptyFilters = () => ({ id:{min:"",max:""}, organization:"", project:"", budget:"", financier:"", status:"", appliedForAmount:{min:"",max:""}, firstShareAmount:{min:"",max:""}, approvedAmount:{min:"",max:""}, secondShareAmount:{min:"",max:""}, ownContribution:"", datePlanned:{from:"",to:""}, okStatus:"" });
@@ -590,6 +595,45 @@ const Transactions = ({ refreshTrigger }) => {
     }
   };
 
+  const reviewTransaction = async (tx, action) => {
+    if (!canReviewTransactions || tx.lifecycleStatus !== "SUBMITTED") return;
+    setFormError("");
+    setReviewingTxId(tx.id);
+    try {
+      const response = await fetch(
+        `${BASE_URL}/api/transactions/${tx.id}/${action}`,
+        { method: "POST", headers: authHeaders },
+      );
+      const raw = await response.text().catch(() => "");
+      let data = null;
+      try {
+        data = raw ? JSON.parse(raw) : null;
+      } catch {
+        // Use the fallback message for non-JSON responses.
+      }
+      if (!response.ok) {
+        setFormError(
+          formatApiError(data, `Failed to ${action} transaction.`),
+        );
+        return;
+      }
+      if (!data) {
+        setFormError(
+          `The transaction was ${action === "approve" ? "approved" : "returned"}, but no updated transaction was returned.`,
+        );
+        return;
+      }
+      setTransactions((current) =>
+        current.map((item) => (item.id === data.id ? data : item)),
+      );
+    } catch (error) {
+      console.error(`Error reviewing transaction (${action}):`, error);
+      setFormError(error?.message || `Unexpected error while trying to ${action} transaction.`);
+    } finally {
+      setReviewingTxId(null);
+    }
+  };
+
   const gridCols = useMemo(() => {
     const parts = BASE_COL_WIDTHS.map((w, i) =>
       visibleCols[i] ? `${w}px` : "0px",
@@ -598,6 +642,11 @@ const Transactions = ({ refreshTrigger }) => {
   }, [visibleCols]);
 
   const selectedCount = selectedTxIds.size;
+  const selectedContainsLifecycleLocked = transactions.some(
+    (transaction) =>
+      selectedTxIds.has(transaction.id) &&
+      !isTransactionLifecycleEditable(transaction),
+  );
 
   const organizationNamesById = useMemo(
     () =>
@@ -1658,8 +1707,16 @@ const Transactions = ({ refreshTrigger }) => {
               type="button"
               className={styles.dangerInlineBtn}
               onClick={removeSelected}
-              disabled={selectedCount === 0 || exportingSelected}
-              title="Delete selected transactions"
+              disabled={
+                selectedCount === 0 ||
+                exportingSelected ||
+                selectedContainsLifecycleLocked
+              }
+              title={
+                selectedContainsLifecycleLocked
+                  ? "Submitted and approved transactions cannot be deleted"
+                  : "Delete selected transactions"
+              }
             >
               <FiTrash2></FiTrash2>
               Delete selected {selectedCount > 0 ? `(${selectedCount})` : ""}
@@ -1814,12 +1871,16 @@ const Transactions = ({ refreshTrigger }) => {
                   costDetailOptions,
                   tx.budgetId,
                 )}
-                canEdit={canEditTransactions}
-                canDelete={canDeleteTransactions}
-                canManageAllocations={canManageAllocations}
+                canEdit={canEditTransactions && isTransactionLifecycleEditable(tx)}
+                canDelete={canDeleteTransactions && isTransactionLifecycleEditable(tx)}
+                canManageAllocations={canManageAllocations && isTransactionLifecycleEditable(tx)}
                 canSubmitLifecycle={canEditTransactions}
                 onSubmitLifecycle={() => submitForApproval(tx)}
                 isSubmittingLifecycle={submittingTxId === tx.id}
+                canReviewLifecycle={canReviewTransactions}
+                onApproveLifecycle={() => reviewTransaction(tx, "approve")}
+                onReturnLifecycle={() => reviewTransaction(tx, "return")}
+                isReviewingLifecycle={reviewingTxId === tx.id}
               />
             ))
           )}

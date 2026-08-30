@@ -40,6 +40,17 @@ export const validatePaymentOrderLine = (payload) => {
   return fieldErrors;
 };
 
+export const approvedTransactionOptions = (
+  transactions = [],
+  currentTransactionId = null,
+) =>
+  transactions.filter(
+    (transaction) =>
+      transaction.lifecycleStatus === "APPROVED" ||
+      (currentTransactionId != null &&
+        String(transaction.id) === String(currentTransactionId)),
+  );
+
 async function safeParseJsonResponse(res) {
   const raw = await res.text().catch(() => "");
   if (!raw) return null;
@@ -473,7 +484,7 @@ const PaymentOrderLines = ({
             }`}
           >
             <option value="">Select…</option>
-            {txOptions.map((t) => (
+            {approvedTransactionOptions(txOptions).map((t) => (
               <option key={t.id} value={t.id}>
                 TX#{t.id}
               </option>
@@ -675,7 +686,7 @@ const LineRow = ({
           }`}
         >
           <option value="">Select…</option>
-          {txOptions.map((t) => (
+          {approvedTransactionOptions(txOptions, row.transactionId).map((t) => (
             <option key={t.id} value={t.id}>
               TX#{t.id}
             </option>

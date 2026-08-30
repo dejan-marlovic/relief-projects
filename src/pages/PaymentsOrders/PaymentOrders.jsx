@@ -61,6 +61,17 @@ const blankPO = {
   pinCode: "",
 };
 
+export const approvedTransactionOptions = (
+  transactions = [],
+  currentTransactionId = null,
+) =>
+  transactions.filter(
+    (transaction) =>
+      transaction.lifecycleStatus === "APPROVED" ||
+      (currentTransactionId != null &&
+        String(transaction.id) === String(currentTransactionId)),
+  );
+
 async function safeParseJsonResponse(res) {
   const raw = await res.text().catch(() => "");
   if (!raw) return null;
@@ -1297,7 +1308,10 @@ function PaymentOrders() {
                   onSave={save}
                   onCancel={cancel}
                   onDelete={remove}
-                  transactions={txOptions}
+                  transactions={approvedTransactionOptions(
+                    txOptions,
+                    po.transactionId,
+                  )}
                   visibleCols={visibleCols}
                   fieldErrors={fieldErrors[po.id] || {}}
                   expanded={expandedPoId === po.id}
@@ -1335,7 +1349,7 @@ function PaymentOrders() {
               onSave={save}
               onCancel={cancel}
               onDelete={() => {}}
-              transactions={txOptions}
+              transactions={approvedTransactionOptions(txOptions)}
               visibleCols={visibleCols}
               isEven={false}
               fieldErrors={fieldErrors.new || {}}

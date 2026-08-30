@@ -1,4 +1,7 @@
-import { validatePaymentOrderLine } from "./PaymentOrderLines";
+import {
+  approvedTransactionOptions,
+  validatePaymentOrderLine,
+} from "./PaymentOrderLines";
 
 const validLine = {
   paymentOrderId: 1,
@@ -12,6 +15,23 @@ const validLine = {
 describe("payment order line validation", () => {
   test("accepts a complete line", () => {
     expect(validatePaymentOrderLine(validLine)).toEqual({});
+  });
+
+  test("new relationships offer only approved transactions while preserving a historical selection", () => {
+    const transactions = [
+      { id: 1, lifecycleStatus: "DRAFT" },
+      { id: 2, lifecycleStatus: "SUBMITTED" },
+      { id: 3, lifecycleStatus: "APPROVED" },
+    ];
+
+    expect(
+      approvedTransactionOptions(transactions).map((transaction) => transaction.id),
+    ).toEqual([3]);
+    expect(
+      approvedTransactionOptions(transactions, 2).map(
+        (transaction) => transaction.id,
+      ),
+    ).toEqual([2, 3]);
   });
 
   test("requires an explicit transaction", () => {

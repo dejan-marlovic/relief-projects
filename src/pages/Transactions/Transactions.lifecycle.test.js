@@ -2,6 +2,7 @@ import {
   approvedBudgetOptions,
   canSubmitTransactionLifecycle,
   costDetailsForBudget,
+  isTransactionLifecycleEditable,
   transactionLifecycleStatus,
 } from "./Transactions";
 
@@ -59,4 +60,11 @@ test("allocation options include only cost details from the transaction budget",
     costDetailsForBudget(costDetails, 2).map((detail) => detail.costDetailId),
   ).toEqual([20, 21]);
   expect(costDetailsForBudget(costDetails, null)).toEqual([]);
+});
+
+test("only draft and returned transactions are editable", () => {
+  expect(isTransactionLifecycleEditable({ lifecycleStatus: "DRAFT" })).toBe(true);
+  expect(isTransactionLifecycleEditable({ lifecycleStatus: "RETURNED" })).toBe(true);
+  expect(isTransactionLifecycleEditable({ lifecycleStatus: "SUBMITTED" })).toBe(false);
+  expect(isTransactionLifecycleEditable({ lifecycleStatus: "APPROVED" })).toBe(false);
 });

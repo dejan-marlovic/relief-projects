@@ -8,6 +8,8 @@ import {
   FiChevronDown,
   FiChevronUp,
   FiSend,
+  FiCheck,
+  FiCornerUpLeft,
 } from "react-icons/fi";
 import TransactionAllocations from "./TransactionAllocations/TransactionAllocations";
 
@@ -57,6 +59,10 @@ const Transaction = ({
   canSubmitLifecycle = false,
   onSubmitLifecycle,
   isSubmittingLifecycle = false,
+  canReviewLifecycle = false,
+  onApproveLifecycle,
+  onReturnLifecycle,
+  isReviewingLifecycle = false,
 }) => {
   const ev = editedValues || {};
   const isCreate = (tx?.id ?? "") === "new";
@@ -229,6 +235,8 @@ const Transaction = ({
     !isCreate &&
     canSubmitLifecycle &&
     ["DRAFT", "RETURNED"].includes(lifecycleStatus);
+  const showReviewLifecycle =
+    !isCreate && canReviewLifecycle && lifecycleStatus === "SUBMITTED";
 
   return (
     <>
@@ -309,6 +317,39 @@ const Transaction = ({
                 >
                   <FiSend />
                 </button>
+              )}
+
+              {showReviewLifecycle && (
+                <>
+                  <button
+                    type="button"
+                    className={`${styles.iconCircleBtn} ${styles.approveBtn}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onApproveLifecycle?.();
+                    }}
+                    disabled={isReviewingLifecycle}
+                    title="Approve transaction"
+                    aria-label={`Approve transaction ${tx.id}`}
+                  >
+                    <FiCheck />
+                  </button>
+                  <button
+                    type="button"
+                    className={`${styles.iconCircleBtn} ${styles.returnBtn}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onReturnLifecycle?.();
+                    }}
+                    disabled={isReviewingLifecycle}
+                    title="Return transaction"
+                    aria-label={`Return transaction ${tx.id}`}
+                  >
+                    <FiCornerUpLeft />
+                  </button>
+                </>
               )}
 
               {!isCreate && (
