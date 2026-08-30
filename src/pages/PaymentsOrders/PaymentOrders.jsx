@@ -72,6 +72,14 @@ export const approvedTransactionOptions = (
         String(transaction.id) === String(currentTransactionId)),
   );
 
+export const paymentOrderLifecycleStatus = (paymentOrder) =>
+  paymentOrder?.lifecycleStatus || "DRAFT";
+
+export const canSubmitPaymentOrderLifecycle = (paymentOrder, canSubmit) =>
+  Boolean(canSubmit) &&
+  !paymentOrder?.locked &&
+  ["DRAFT", "RETURNED"].includes(paymentOrderLifecycleStatus(paymentOrder));
+
 async function safeParseJsonResponse(res) {
   const raw = await res.text().catch(() => "");
   if (!raw) return null;
@@ -125,6 +133,7 @@ function normalizePO(po) {
     message: po.message ?? "",
     pinCode: po.pinCode ?? po.pin_code ?? "",
     locked: Boolean(po.locked ?? po.isLocked ?? false),
+    lifecycleStatus: po.lifecycleStatus || "DRAFT",
   };
 }
 
@@ -169,6 +178,7 @@ function PaymentOrders() {
 
   // Track which POs are known locked (based on a 409 response)
   const [lockedPoIds, setLockedPoIds] = useState(() => new Set());
+  const [submittingPoId, setSubmittingPoId] = useState(null);
 
   const newRowRef = useRef(null);
 
@@ -541,6 +551,48 @@ function PaymentOrders() {
     } catch (e) {
       console.error(e);
       setFormError("Delete failed.");
+    }
+  };
+
+  const submitForApproval = async (po) => {
+    if (!canSubmitPaymentOrderLifecycle(po, canEditPaymentOrders)) return;
+    setFormError("");
+    setLockedBanner("");
+    setSubmittingPoId(po.id);
+
+    try {
+      const response = await fetch(
+        `${BASE_URL}/api/payment-orders/${po.id}/submit`,
+        { method: "POST", headers: authHeaders },
+      );
+      const data = await safeParseJsonResponse(response);
+
+      if (!response.ok) {
+        setFormError(
+          formatApiError(data, "Failed to submit payment order for approval."),
+        );
+        return;
+      }
+
+      const updated = normalizePO(data);
+      if (!updated) {
+        setFormError(
+          "The payment order was submitted, but no updated payment order was returned.",
+        );
+        return;
+      }
+
+      setOrders((current) =>
+        current.map((item) => (item.id === updated.id ? updated : item)),
+      );
+      if (updated.locked) markLocked(updated.id);
+    } catch (error) {
+      console.error("Error submitting payment order:", error);
+      setFormError(
+        error?.message || "Unexpected error while submitting payment order.",
+      );
+    } finally {
+      setSubmittingPoId(null);
     }
   };
 
@@ -1323,6 +1375,9 @@ function PaymentOrders() {
                   selectionDisabled={editingId === po.id}
                   canEdit={canEditPaymentOrders}
                   canDelete={canDeletePaymentOrders}
+                  canSubmitLifecycle={canEditPaymentOrders}
+                  onSubmitLifecycle={() => submitForApproval(po)}
+                  isSubmittingLifecycle={submittingPoId === po.id}
                 />
 
                 {expandedPoId === po.id && (

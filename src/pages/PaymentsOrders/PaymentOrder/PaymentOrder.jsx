@@ -7,6 +7,7 @@ import {
   FiX,
   FiChevronDown,
   FiChevronUp,
+  FiSend,
 } from "react-icons/fi";
 
 const Cell = ({ children, className }) => (
@@ -51,6 +52,9 @@ const PaymentOrder = ({
   selectionDisabled = false,
   canEdit = false,
   canDelete = false,
+  canSubmitLifecycle = false,
+  onSubmitLifecycle,
+  isSubmittingLifecycle = false,
 }) => {
   const ev = editedValues || {};
   const isCreate = (po?.id ?? "") === "new";
@@ -141,6 +145,12 @@ const PaymentOrder = ({
   const poIdLabel = isCreate ? "(new)" : po?.id != null ? `PO#${po.id}` : "-";
   const poIdWithLock =
     !isCreate && locked ? `${poIdLabel} (Booked)` : poIdLabel;
+  const lifecycleStatus = po?.lifecycleStatus || "DRAFT";
+  const showSubmitLifecycle =
+    !isCreate &&
+    !locked &&
+    canSubmitLifecycle &&
+    ["DRAFT", "RETURNED"].includes(lifecycleStatus);
 
   const lockedTitle =
     "Booked (final signature) — this payment order is read-only. Undo/remove the Booked signature to edit.";
@@ -221,6 +231,23 @@ const PaymentOrder = ({
               </button>
             )}
 
+            {showSubmitLifecycle && (
+              <button
+                type="button"
+                className={`${styles.iconCircleBtn} ${styles.submitBtn}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onSubmitLifecycle?.();
+                }}
+                disabled={isSubmittingLifecycle}
+                title="Submit for approval"
+                aria-label={`Submit payment order ${po.id} for approval`}
+              >
+                <FiSend />
+              </button>
+            )}
+
             {!isCreate && (
               <button
                 type="button"
@@ -258,7 +285,19 @@ const PaymentOrder = ({
       </Cell>
 
       {/* 1: PO ID (read-only) */}
-      <Cell className={hc(1)}>{poIdWithLock}</Cell>
+      <Cell className={hc(1)}>
+        <div className={styles.poIdentity}>
+          <span>{poIdWithLock}</span>
+          {!isCreate && (
+            <span
+              className={`${styles.statusBadge} ${styles[`status${lifecycleStatus}`] || ""}`}
+              aria-label={`Payment order lifecycle status: ${lifecycleStatus}`}
+            >
+              {lifecycleStatus}
+            </span>
+          )}
+        </div>
+      </Cell>
 
       {/* 2: Transaction */}
       <Cell className={hc(2)}>
