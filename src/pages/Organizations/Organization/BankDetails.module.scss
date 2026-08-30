@@ -77,8 +77,8 @@
   background: colors.$surface;
 
   --bank-grid-cols: 190px 1.3fr 1.3fr 1fr 1fr;
-  --bank-header-bg: colors.$surface-tint;
-  --bank-header-border: colors.$border-muted;
+  --bank-header-bg: #{colors.$surface-tint};
+  --bank-header-border: #{colors.$border-muted};
 }
 
 .gridRow {

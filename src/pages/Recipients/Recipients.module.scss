@@ -176,8 +176,8 @@
   border-radius: 14px;
   background: colors.$surface;
 
-  --rec-header-bg: colors.$surface-tint;
-  --rec-header-border: colors.$border-muted;
+  --rec-header-bg: #{colors.$surface-tint};
+  --rec-header-border: #{colors.$border-muted};
   --rec-grid-cols: 160px;
 }
 

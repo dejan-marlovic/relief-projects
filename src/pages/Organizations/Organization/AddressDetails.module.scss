@@ -77,8 +77,8 @@
   background: colors.$surface;
 
   --addr-grid-cols: 210px 110px 1.6fr 1.2fr 1fr 1fr 1fr;
-  --addr-header-bg: colors.$surface-tint;
-  --addr-header-border: colors.$border-muted;
+  --addr-header-bg: #{colors.$surface-tint};
+  --addr-header-border: #{colors.$border-muted};
 }
 
 .gridRow {

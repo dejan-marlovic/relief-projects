@@ -175,8 +175,8 @@
   border-radius: 14px;
   background: colors.$surface;
 
-  --sig-header-bg: colors.$surface-tint;
-  --sig-header-border: colors.$border-muted;
+  --sig-header-bg: #{colors.$surface-tint};
+  --sig-header-border: #{colors.$border-muted};
   --sig-grid-cols: 110px; /* fallback */
 }
 

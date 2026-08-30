@@ -136,8 +136,8 @@
   border-radius: 14px;
   background: colors.$surface;
 
-  --org-header-bg: colors.$surface-tint;
-  --org-header-border: colors.$border-muted;
+  --org-header-bg: #{colors.$surface-tint};
+  --org-header-border: #{colors.$border-muted};
   --org-grid-cols: 230px; /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ fallback (Actions col) */
 }
 

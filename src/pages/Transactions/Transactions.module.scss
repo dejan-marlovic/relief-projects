@@ -185,8 +185,8 @@
   border-radius: 14px;
   background: colors.$surface;
 
-  --tx-header-bg: colors.$surface-tint;
-  --tx-header-border: colors.$border-muted;
+  --tx-header-bg: #{colors.$surface-tint};
+  --tx-header-border: #{colors.$border-muted};
 
   /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ widened Actions column so the trash icon never clips */
   --tx-grid-cols: 190px;

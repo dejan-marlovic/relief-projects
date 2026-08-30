@@ -173,8 +173,8 @@
   border-radius: 14px;
   background: colors.$surface;
 
-  --po-header-bg: colors.$surface-tint;
-  --po-header-border: colors.$border-muted;
+  --po-header-bg: #{colors.$surface-tint};
+  --po-header-border: #{colors.$border-muted};
   --po-grid-cols: 190px;
 }
 
