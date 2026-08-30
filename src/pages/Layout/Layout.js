@@ -208,6 +208,7 @@ const Layout = () => {
               <li key={path} className={styles.tabItem}>
                 <Link
                   to={path}
+                  title={isProjectTab ? label : undefined}
                   onClick={(event) => {
                     if (
                       !isActive(path) &&

@@ -171,8 +171,11 @@ $secondary-color: colors.$danger;
 .projectTab {
   position: relative;
   z-index: 3;
+  max-width: 18rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transform: translateY(-4px);
-  background: colors.$surface;
+  background: colors.$primary-soft;
   color: colors.$primary;
   border-color: colors.$primary-a60;
   box-shadow: 0 -4px 10px colors.$border-subtle;
@@ -180,6 +183,7 @@ $secondary-color: colors.$danger;
 
 .projectTab:hover {
   transform: translateY(-5px);
+  background: colors.$primary-soft-hover;
 }
 
 /* ACTIVE TAB = visually connected to page */
@@ -197,6 +201,7 @@ $secondary-color: colors.$danger;
 }
 
 .active.projectTab {
+  background: colors.$primary-soft !important;
   transform: translateY(-4px);
   box-shadow: 0 -5px 12px colors.$border-subtle;
 }
