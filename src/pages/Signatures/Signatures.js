@@ -94,6 +94,16 @@ function normalizeSignature(s) {
   };
 }
 
+export const isSignaturePaymentOrderApproved = (paymentOrder) =>
+  paymentOrder?.lifecycleStatus === "APPROVED";
+
+export const approvedSignaturePaymentOrders = (paymentOrders = [], currentId = null) =>
+  paymentOrders.filter(
+    (paymentOrder) =>
+      isSignaturePaymentOrderApproved(paymentOrder) ||
+      (currentId != null && String(paymentOrder.id) === String(currentId)),
+  );
+
 function Signatures() {
   const { selectedProjectId, projects } = useContext(ProjectContext);
   const { hasAnyRole } = useAuth();
@@ -246,6 +256,7 @@ function Signatures() {
               po.paymentOrderDate ?? po.payment_order_date ?? null,
             amount: po.amount ?? 0,
             locked: Boolean(po.locked ?? po.isLocked ?? false),
+            lifecycleStatus: po.lifecycleStatus || "DRAFT",
           }))
           .filter((x) => x.id != null);
 
@@ -1128,7 +1139,9 @@ function Signatures() {
                 className={styles.primaryBtn}
                 onClick={startCreate}
                 disabled={
-                  !selectedProjectId || editingId === "new" || exportingSelected
+                  !selectedProjectId ||
+                  editingId === "new" ||
+                  exportingSelected
                 }
                 title={
                   !selectedProjectId
@@ -1198,12 +1211,18 @@ function Signatures() {
                 isSelected={selectedSignatureIds.has(s.id)}
                 onSelectChange={toggleSelectedSignature}
                 selectionDisabled={editingId === s.id}
-                poOptions={poOptions}
+                poOptions={approvedSignaturePaymentOrders(poOptions, s.paymentOrderId)}
                 statusOptions={statusOptions}
                 employeeOptions={employeeOptions}
                 visibleCols={visibleCols}
                 fieldErrors={fieldErrors[s.id] || {}}
-                canManage={canManageSignatures}
+                canEdit={
+                  canManageSignatures &&
+                  isSignaturePaymentOrderApproved(
+                    poOptions.find((po) => String(po.id) === String(s.paymentOrderId)),
+                  )
+                }
+                canDelete={canManageSignatures}
               />
             ))
           )}
@@ -1227,14 +1246,15 @@ function Signatures() {
               isSelected={false}
               onSelectChange={() => {}}
               selectionDisabled
-              poOptions={poOptions}
+              poOptions={approvedSignaturePaymentOrders(poOptions)}
               statusOptions={statusOptions}
               employeeOptions={employeeOptions}
               visibleCols={visibleCols}
               isEven={false}
               fieldErrors={fieldErrors.new || {}}
               rowRef={newRowRef}
-              canManage={canManageSignatures}
+              canEdit={canManageSignatures}
+              canDelete={false}
             />
           )}
         </div>

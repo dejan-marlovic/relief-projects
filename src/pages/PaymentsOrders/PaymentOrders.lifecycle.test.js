@@ -1,5 +1,6 @@
 import {
   canSubmitPaymentOrderLifecycle,
+  isPaymentOrderLifecycleEditable,
   paymentOrderLifecycleStatus,
 } from "./PaymentOrders";
 
@@ -8,6 +9,13 @@ test("payment order lifecycle safely defaults to draft", () => {
   expect(paymentOrderLifecycleStatus({ lifecycleStatus: "SUBMITTED" })).toBe(
     "SUBMITTED",
   );
+});
+
+test("only draft and returned payment orders are lifecycle editable", () => {
+  expect(isPaymentOrderLifecycleEditable({ lifecycleStatus: "DRAFT" })).toBe(true);
+  expect(isPaymentOrderLifecycleEditable({ lifecycleStatus: "RETURNED" })).toBe(true);
+  expect(isPaymentOrderLifecycleEditable({ lifecycleStatus: "SUBMITTED" })).toBe(false);
+  expect(isPaymentOrderLifecycleEditable({ lifecycleStatus: "APPROVED" })).toBe(false);
 });
 
 test("admin and finance can submit only unlocked draft or returned payment orders", () => {

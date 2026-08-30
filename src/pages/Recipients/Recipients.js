@@ -89,6 +89,21 @@ function normalizeRecipient(r) {
   };
 }
 
+export const isRecipientPaymentOrderEditable = (paymentOrder) =>
+  Boolean(paymentOrder) &&
+  !paymentOrder.locked &&
+  ["DRAFT", "RETURNED"].includes(paymentOrder.lifecycleStatus || "DRAFT");
+
+export const editableRecipientPaymentOrders = (
+  paymentOrders = [],
+  currentId = null,
+) =>
+  paymentOrders.filter(
+    (paymentOrder) =>
+      isRecipientPaymentOrderEditable(paymentOrder) ||
+      (currentId != null && String(paymentOrder.id) === String(currentId)),
+  );
+
 function Recipients() {
   const { selectedProjectId, projects } = useContext(ProjectContext);
   const { hasRole, hasAnyRole } = useAuth();
@@ -235,7 +250,15 @@ function Recipients() {
         if (!res.ok) throw new Error(`Failed ${res.status}`);
 
         const data = await res.json();
-        setPoOptions(Array.isArray(data) ? data : data ? [data] : []);
+        const options = (Array.isArray(data) ? data : data ? [data] : [])
+          .map((po) => ({
+            ...po,
+            id: po.id ?? po.paymentOrderId ?? po.payment_order_id,
+            locked: Boolean(po.locked ?? po.isLocked ?? false),
+            lifecycleStatus: po.lifecycleStatus || "DRAFT",
+          }))
+          .filter((po) => po.id != null);
+        setPoOptions(options);
       } catch (e) {
         console.error(e);
         setPoOptions([]);
@@ -1026,6 +1049,13 @@ function Recipients() {
   );
 
   const selectedRecipientCount = selectedRecipientIds.size;
+  const selectedContainsLifecycleLocked = items.some((recipient) => {
+    if (!selectedRecipientIds.has(recipient.id)) return false;
+    const paymentOrder = poOptions.find(
+      (po) => String(po.id) === String(recipient.paymentOrderId),
+    );
+    return !isRecipientPaymentOrderEditable(paymentOrder);
+  });
 
   const allVisibleSelected =
     selectableRecipients.length > 0 &&
@@ -1072,8 +1102,16 @@ function Recipients() {
                 type="button"
                 className={styles.dangerInlineBtn}
                 onClick={removeSelected}
-                disabled={selectedRecipientCount === 0 || exportingSelected}
-                title="Delete selected recipients"
+                disabled={
+                  selectedRecipientCount === 0 ||
+                  exportingSelected ||
+                  selectedContainsLifecycleLocked
+                }
+                title={
+                  selectedContainsLifecycleLocked
+                    ? "Recipients on submitted or approved payment orders cannot be deleted"
+                    : "Delete selected recipients"
+                }
               >
                 <FiTrash2 />
                 Delete selected{" "}
@@ -1119,7 +1157,9 @@ function Recipients() {
                 className={styles.primaryBtn}
                 onClick={startCreate}
                 disabled={
-                  !selectedProjectId || editingId === "new" || exportingSelected
+                  !selectedProjectId ||
+                  editingId === "new" ||
+                  exportingSelected
                 }
                 title={
                   !selectedProjectId
@@ -1193,11 +1233,21 @@ function Recipients() {
                 onSelectChange={toggleSelectedRecipient}
                 selectionDisabled={editingId === r.id}
                 locked={lockedRecipientIds.has(r.id)}
-                poOptions={poOptions}
+                poOptions={editableRecipientPaymentOrders(
+                  poOptions,
+                  r.paymentOrderId,
+                )}
                 orgOptions={orgOptions}
                 visibleCols={visibleCols}
                 fieldErrors={fieldErrors[r.id] || {}}
-                canManage={canManageRecipients}
+                canManage={
+                  canManageRecipients &&
+                  isRecipientPaymentOrderEditable(
+                    poOptions.find(
+                      (po) => String(po.id) === String(r.paymentOrderId),
+                    ),
+                  )
+                }
               />
             ))
           )}
@@ -1219,7 +1269,7 @@ function Recipients() {
               isSelected={false}
               onSelectChange={() => {}}
               selectionDisabled
-              poOptions={poOptions}
+              poOptions={editableRecipientPaymentOrders(poOptions)}
               orgOptions={orgOptions}
               visibleCols={visibleCols}
               isEven={false}

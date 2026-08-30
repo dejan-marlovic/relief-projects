@@ -8,6 +8,8 @@ import {
   FiChevronDown,
   FiChevronUp,
   FiSend,
+  FiCheck,
+  FiCornerUpLeft,
 } from "react-icons/fi";
 
 const Cell = ({ children, className }) => (
@@ -55,6 +57,10 @@ const PaymentOrder = ({
   canSubmitLifecycle = false,
   onSubmitLifecycle,
   isSubmittingLifecycle = false,
+  canReviewLifecycle = false,
+  onApproveLifecycle,
+  onReturnLifecycle,
+  isReviewingLifecycle = false,
 }) => {
   const ev = editedValues || {};
   const isCreate = (po?.id ?? "") === "new";
@@ -151,6 +157,11 @@ const PaymentOrder = ({
     !locked &&
     canSubmitLifecycle &&
     ["DRAFT", "RETURNED"].includes(lifecycleStatus);
+  const showReviewLifecycle =
+    !isCreate &&
+    !locked &&
+    canReviewLifecycle &&
+    lifecycleStatus === "SUBMITTED";
 
   const lockedTitle =
     "Booked (final signature) — this payment order is read-only. Undo/remove the Booked signature to edit.";
@@ -246,6 +257,39 @@ const PaymentOrder = ({
               >
                 <FiSend />
               </button>
+            )}
+
+            {showReviewLifecycle && (
+              <>
+                <button
+                  type="button"
+                  className={`${styles.iconCircleBtn} ${styles.submitBtn}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onApproveLifecycle?.();
+                  }}
+                  disabled={isReviewingLifecycle}
+                  title="Approve payment order"
+                  aria-label={`Approve payment order ${po.id}`}
+                >
+                  <FiCheck />
+                </button>
+                <button
+                  type="button"
+                  className={styles.iconCircleBtn}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onReturnLifecycle?.();
+                  }}
+                  disabled={isReviewingLifecycle}
+                  title="Return payment order"
+                  aria-label={`Return payment order ${po.id}`}
+                >
+                  <FiCornerUpLeft />
+                </button>
+              </>
             )}
 
             {!isCreate && (

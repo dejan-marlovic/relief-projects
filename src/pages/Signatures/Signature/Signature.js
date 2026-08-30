@@ -43,6 +43,8 @@ const SignatureRow = ({
   fieldErrors = {},
   rowRef = null,
   canManage = false,
+  canEdit = canManage,
+  canDelete = canManage,
 }) => {
   const ev = editedValues || {};
   const isCreate = (row?.id ?? "") === "new";
@@ -243,7 +245,7 @@ const SignatureRow = ({
                 className={styles.rowCheckbox}
               ></input>
             )}
-            {canManage && (
+            {canEdit && (
               <button
                 type="button"
                 className={styles.iconCircleBtn}
@@ -259,7 +261,7 @@ const SignatureRow = ({
               </button>
             )}
 
-            {!isCreate && canManage && (
+            {!isCreate && canDelete && (
               <button
                 type="button"
                 className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.iconOnlyBtn}`}

@@ -75,6 +75,9 @@ export const approvedTransactionOptions = (
 export const paymentOrderLifecycleStatus = (paymentOrder) =>
   paymentOrder?.lifecycleStatus || "DRAFT";
 
+export const isPaymentOrderLifecycleEditable = (paymentOrder) =>
+  ["DRAFT", "RETURNED"].includes(paymentOrderLifecycleStatus(paymentOrder));
+
 export const canSubmitPaymentOrderLifecycle = (paymentOrder, canSubmit) =>
   Boolean(canSubmit) &&
   !paymentOrder?.locked &&
@@ -143,6 +146,7 @@ function PaymentOrders() {
   const canEditPaymentOrders = hasAnyRole("ADMIN", "FINANCE");
   const canDeletePaymentOrders = hasRole("ADMIN");
   const canManagePaymentOrderLines = hasAnyRole("ADMIN", "FINANCE");
+  const canReviewPaymentOrders = hasAnyRole("ADMIN", "APPROVER");
 
   const [orders, setOrders] = useState([]);
   const [editingId, setEditingId] = useState(null);
@@ -179,6 +183,7 @@ function PaymentOrders() {
   // Track which POs are known locked (based on a 409 response)
   const [lockedPoIds, setLockedPoIds] = useState(() => new Set());
   const [submittingPoId, setSubmittingPoId] = useState(null);
+  const [reviewingPoId, setReviewingPoId] = useState(null);
 
   const newRowRef = useRef(null);
 
@@ -596,6 +601,37 @@ function PaymentOrders() {
     }
   };
 
+  const reviewPaymentOrder = async (po, action) => {
+    if (!canReviewPaymentOrders || paymentOrderLifecycleStatus(po) !== "SUBMITTED") return;
+    setFormError("");
+    setLockedBanner("");
+    setReviewingPoId(po.id);
+    try {
+      const response = await fetch(
+        `${BASE_URL}/api/payment-orders/${po.id}/${action}`,
+        { method: "POST", headers: authHeaders },
+      );
+      const data = await safeParseJsonResponse(response);
+      if (!response.ok) {
+        setFormError(formatApiError(data, `Failed to ${action} payment order.`));
+        return;
+      }
+      const updated = normalizePO(data);
+      if (!updated) {
+        const completedAction = action === "approve" ? "approved" : "returned";
+        setFormError(`The payment order was ${completedAction}, but no updated payment order was returned.`);
+        return;
+      }
+      setOrders((current) => current.map((item) => item.id === updated.id ? updated : item));
+      if (updated.locked) markLocked(updated.id);
+    } catch (error) {
+      console.error(`Error ${action}ing payment order:`, error);
+      setFormError(error?.message || `Unexpected error while ${action}ing payment order.`);
+    } finally {
+      setReviewingPoId(null);
+    }
+  };
+
   const gridCols = useMemo(() => {
     const parts = BASE_COL_WIDTHS.map((w, i) =>
       visibleCols[i] ? `${w}px` : "0px",
@@ -639,6 +675,9 @@ function PaymentOrders() {
   const selectedPoCount = [...selectedPoIds].filter((id) =>
     selectablePaymentOrders.some((po) => po.id === id),
   ).length;
+  const selectedContainsLifecycleLocked = orders.some(
+    (po) => selectedPoIds.has(po.id) && !isPaymentOrderLifecycleEditable(po),
+  );
   //creates a memoized calculated list.
   //create a list of payment orders that can be selected
   //This creates a constant variable.
@@ -1238,8 +1277,16 @@ function PaymentOrders() {
                 type="button"
                 className={styles.dangerInlineBtn}
                 onClick={removeSelected}
-                disabled={selectedPoCount === 0 || exportingSelected}
-                title="Delete selected payment orders"
+                disabled={
+                  selectedPoCount === 0 ||
+                  exportingSelected ||
+                  selectedContainsLifecycleLocked
+                }
+                title={
+                  selectedContainsLifecycleLocked
+                    ? "Submitted and approved payment orders cannot be deleted"
+                    : "Delete selected payment orders"
+                }
               >
                 <FiTrash2 />
                 Delete selected{" "}
@@ -1373,11 +1420,15 @@ function PaymentOrders() {
                   isSelected={selectedPoIds.has(po.id)}
                   onSelectChange={toggleSelectedPo}
                   selectionDisabled={editingId === po.id}
-                  canEdit={canEditPaymentOrders}
-                  canDelete={canDeletePaymentOrders}
+                  canEdit={canEditPaymentOrders && isPaymentOrderLifecycleEditable(po)}
+                  canDelete={canDeletePaymentOrders && isPaymentOrderLifecycleEditable(po)}
                   canSubmitLifecycle={canEditPaymentOrders}
                   onSubmitLifecycle={() => submitForApproval(po)}
                   isSubmittingLifecycle={submittingPoId === po.id}
+                  canReviewLifecycle={canReviewPaymentOrders}
+                  onApproveLifecycle={() => reviewPaymentOrder(po, "approve")}
+                  onReturnLifecycle={() => reviewPaymentOrder(po, "return")}
+                  isReviewingLifecycle={reviewingPoId === po.id}
                 />
 
                 {expandedPoId === po.id && (
@@ -1387,7 +1438,7 @@ function PaymentOrders() {
                       txOptions={txOptions}
                       orgOptions={orgOptions}
                       costDetailOptions={costDetailOptions}
-                      canManage={canManagePaymentOrderLines}
+                      canManage={canManagePaymentOrderLines && isPaymentOrderLifecycleEditable(po)}
                     />
                   </div>
                 )}
