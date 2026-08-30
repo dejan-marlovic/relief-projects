@@ -2694,6 +2694,7 @@ Approximately:
             projectName={getSelectedProjectName(projects, selectedProjectId)}
             participants={projectParticipants}
             employees={employeeOptions}
+            positions={positionOptions}
           />
 
           <div className={styles.imageAndFormWrapper}>

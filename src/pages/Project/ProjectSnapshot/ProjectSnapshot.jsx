@@ -1,6 +1,17 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { FiBriefcase, FiCreditCard, FiFileText, FiPenTool, FiTrendingUp, FiUsers } from "react-icons/fi";
-import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { BASE_URL } from "../../../config/api";
 import styles from "./ProjectSnapshot.module.scss";
 import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
@@ -53,6 +64,53 @@ export const getParticipantNames = (participants = [], employees = []) => {
     const employeeId = participant.employeeId ?? participant.employee?.id;
     return employeeNames.get(String(employeeId)) ||
       (employeeId == null ? "Employee" : `Employee #${employeeId}`);
+  });
+};
+
+export const summarizeParticipantRoles = (participants = [], positions = []) => {
+  const positionNames = new Map(
+    asArray(positions).map((position) => {
+      const id = position.id ?? position.positionId;
+      const label = position.positionName || position.name || position.title || `Role #${id}`;
+      return [String(id), label];
+    })
+  );
+
+  const counts = new Map();
+  asArray(participants).forEach((participant) => {
+    const positionId = participant.positionId ?? participant.position?.id;
+    const role = participant.positionName || participant.position?.positionName ||
+      participant.position?.name || participant.position?.title ||
+      positionNames.get(String(positionId)) ||
+      (positionId == null ? "Unassigned" : `Role #${positionId}`);
+    counts.set(role, (counts.get(role) || 0) + 1);
+  });
+
+  return Array.from(counts, ([name, value]) => ({ name, value }))
+    .sort((left, right) => right.value - left.value || left.name.localeCompare(right.name));
+};
+
+export const getParticipantDetails = (participants = [], employees = [], positions = []) => {
+  const names = getParticipantNames(participants, employees);
+  const positionNames = new Map(
+    asArray(positions).map((position) => [
+      String(position.id ?? position.positionId),
+      position.positionName || position.name || position.title ||
+        `Role #${position.id ?? position.positionId}`,
+    ])
+  );
+
+  return asArray(participants).map((participant, index) => {
+    const positionId = participant.positionId ?? participant.position?.id;
+    const role = participant.positionName || participant.position?.positionName ||
+      participant.position?.name || participant.position?.title ||
+      positionNames.get(String(positionId)) ||
+      (positionId == null ? "Unassigned" : `Role #${positionId}`);
+    return {
+      id: participant.id ?? participant.employeeProjectId ?? `${names[index]}-${index}`,
+      name: names[index],
+      role,
+    };
   });
 };
 
@@ -124,7 +182,13 @@ const ActivityTooltip = ({ active, payload }) => {
   );
 };
 
-const ProjectSnapshot = ({ projectId, projectName, participants = [], employees = [] }) => {
+const ProjectSnapshot = ({
+  projectId,
+  projectName,
+  participants = [],
+  employees = [],
+  positions = [],
+}) => {
   const [snapshot, setSnapshot] = useState(emptySnapshot);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -220,15 +284,18 @@ const ProjectSnapshot = ({ projectId, projectName, participants = [], employees 
     { name: "Payments", value: snapshot.paymentOrders },
     { name: "Signatures", value: snapshot.signatures },
     { name: "Documents", value: snapshot.documents, details: snapshot.documentNames },
-    {
-      name: "Participants",
-      value: participants.length,
-      details: getParticipantNames(participants, employees),
-    },
   ].map((item, index) => ({
     ...item,
     color: CHART_COLORS[index % CHART_COLORS.length],
   }));
+
+  const participantRoles = summarizeParticipantRoles(participants, positions).map(
+    (role, index) => ({
+      ...role,
+      color: CHART_COLORS[index % CHART_COLORS.length],
+    })
+  );
+  const participantDetails = getParticipantDetails(participants, employees, positions);
 
   return (
     <section className={styles.snapshot} aria-labelledby="project-snapshot-title">
@@ -261,23 +328,83 @@ const ProjectSnapshot = ({ projectId, projectName, participants = [], employees 
           ))}
         </div>
 
-        <div className={styles.chartCard}>
-          <div className={styles.chartTitle}>Operational activity</div>
-          <div className={styles.chartSubtitle}>Record counts across the selected project</div>
-          <div className={styles.chartWrap}>
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={chartData} margin={{ top: 16, right: 20, left: 0, bottom: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="name" interval={0} tick={{ fontSize: 12 }} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
-                <Tooltip content={<ActivityTooltip />} cursor={{ fill: "rgba(61, 133, 198, 0.08)" }} />
-                <Bar dataKey="value" name="Records" radius={[8, 8, 0, 0]}>
-                  {chartData.map((entry) => (
-                    <Cell key={entry.name} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+        <div className={styles.chartGrid}>
+          <div className={styles.chartCard}>
+            <div className={styles.chartTitle}>Operational activity</div>
+            <div className={styles.chartSubtitle}>Record counts across the selected project</div>
+            <div className={styles.chartWrap}>
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={chartData} margin={{ top: 16, right: 20, left: 0, bottom: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="name" interval={0} tick={{ fontSize: 12 }} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+                  <Tooltip content={<ActivityTooltip />} cursor={{ fill: "rgba(61, 133, 198, 0.08)" }} />
+                  <Bar dataKey="value" name="Records" radius={[8, 8, 0, 0]}>
+                    {chartData.map((entry) => (
+                      <Cell key={entry.name} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className={styles.chartCard}>
+            <div className={styles.chartTitle}>Project participants</div>
+            <div className={styles.chartSubtitle}>Participants grouped by role</div>
+            {participantRoles.length > 0 ? (
+              <>
+                <div className={styles.participantChartContent}>
+                  <div>
+                    <div className={styles.donutWrap}>
+                      <ResponsiveContainer width="100%" height={210}>
+                        <PieChart>
+                          <Pie
+                            data={participantRoles}
+                            dataKey="value"
+                            nameKey="name"
+                            innerRadius={58}
+                            outerRadius={86}
+                            paddingAngle={2}
+                          >
+                            {participantRoles.map((entry) => (
+                              <Cell key={entry.name} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip formatter={(value, name) => [`${value} participant${value === 1 ? "" : "s"}`, name]} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                      <div className={styles.donutTotal} aria-label={`${participants.length} participants`}>
+                        <strong>{participants.length}</strong>
+                        <span>Participants</span>
+                      </div>
+                    </div>
+                    <ul className={styles.roleLegend}>
+                      {participantRoles.map((role) => (
+                        <li key={role.name}>
+                          <span className={styles.legendDot} style={{ backgroundColor: role.color }} />
+                          <span className={styles.legendName}>{role.name}</span>
+                          <strong>{role.value}</strong>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className={styles.participantList}>
+                    <div className={styles.participantListTitle}>Team members</div>
+                    <ul>
+                      {participantDetails.map((participant) => (
+                        <li key={participant.id}>
+                          <strong>{participant.name}</strong>
+                          <span>{participant.role}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className={styles.emptyChart}>No participants added</div>
+            )}
           </div>
         </div>
       </>}

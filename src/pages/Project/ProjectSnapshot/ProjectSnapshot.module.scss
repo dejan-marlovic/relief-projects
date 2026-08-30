@@ -61,9 +61,58 @@
 .kpiValue { margin-top: 0.15rem; color: colors.$text-strong; font-size: 1.25rem; line-height: 1.2; overflow-wrap: anywhere; }
 .kpiHint { margin-top: 0.2rem; color: colors.$text-muted; font-size: 0.72rem; }
 
-.chartCard { margin-top: 0.9rem; padding: 1rem; border: 1px solid colors.$border-subtle; border-radius: 12px; }
+.chartGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(430px, 2fr);
+  gap: 0.9rem;
+  margin-top: 0.9rem;
+}
+
+.chartCard { min-width: 0; padding: 1rem; border: 1px solid colors.$border-subtle; border-radius: 12px; }
 .chartTitle { color: colors.$text-strong; font-weight: 700; }
 .chartWrap { margin-top: 0.5rem; width: 100%; }
+
+.donutWrap { position: relative; width: 100%; margin-top: 0.35rem; }
+
+.participantChartContent {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.9fr) minmax(180px, 1.1fr);
+  gap: 0.9rem;
+  align-items: start;
+}
+
+.donutTotal {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.donutTotal strong { color: colors.$text-strong; font-size: 1.45rem; line-height: 1; }
+.donutTotal span { margin-top: 0.25rem; color: colors.$text-muted; font-size: 0.7rem; }
+
+.roleLegend { margin: 0.25rem 0 0; padding: 0; list-style: none; }
+.roleLegend li { display: flex; align-items: center; gap: 0.5rem; padding: 0.28rem 0; color: colors.$text-secondary; font-size: 0.78rem; }
+.legendDot { width: 9px; height: 9px; flex: 0 0 auto; border-radius: 50%; }
+.legendName { min-width: 0; flex: 1; overflow-wrap: anywhere; }
+.roleLegend strong { color: colors.$text-strong; }
+.participantList {
+  width: 100%;
+  max-width: 220px;
+  min-width: 0;
+  align-self: center;
+  justify-self: end;
+}
+.participantListTitle { color: colors.$text-secondary; font-size: 0.76rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; }
+.participantList ul { max-height: 250px; margin: 0.5rem 0 0; padding: 0; overflow-y: auto; list-style: none; }
+.participantList li { display: flex; flex-direction: column; gap: 0.12rem; padding: 0.5rem 0; border-bottom: 1px solid colors.$border-subtle; }
+.participantList li:last-child { border-bottom: 0; }
+.participantList strong { color: colors.$text-strong; font-size: 0.8rem; overflow-wrap: anywhere; }
+.participantList span { color: colors.$text-muted; font-size: 0.74rem; overflow-wrap: anywhere; }
+.emptyChart { display: grid; min-height: 210px; place-items: center; color: colors.$text-muted; font-size: 0.85rem; }
 
 .tooltipBox {
   width: min(280px, calc(100vw - 2rem));
@@ -101,8 +150,13 @@
 
 @keyframes shimmer { to { background-position: -200% 0; } }
 
-@media (max-width: 900px) { .kpiGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 900px) {
+  .kpiGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .chartGrid { grid-template-columns: 1fr; }
+}
 @media (max-width: 600px) {
   .sectionHeader { flex-direction: column; }
   .kpiGrid { grid-template-columns: 1fr; }
+  .participantChartContent { grid-template-columns: 1fr; }
+  .participantList { max-width: none; justify-self: stretch; }
 }
