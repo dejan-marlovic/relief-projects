@@ -1,0 +1,79 @@
+@use "../../../styles/colors" as colors;
+@use "../../../styles/forms" as forms;
+
+.card {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border: 1px solid colors.$primary-focus;
+  border-radius: 14px;
+  background: colors.$surface;
+  box-shadow: 0 10px 24px colors.$border-subtle;
+}
+
+.header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.header h3 { margin: 0; color: colors.$primary; font-size: 1.05rem; }
+.header p { margin: 0.25rem 0 0; color: colors.$text-muted; font-size: 0.85rem; }
+
+.refreshButton, .primaryButton, .secondaryButton, .pagination button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 38px;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid colors.$primary-border;
+  border-radius: 9px;
+  background: colors.$surface;
+  color: colors.$primary;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primaryButton { border-color: colors.$primary; background: colors.$primary; color: colors.$text-on-primary; }
+.secondaryButton { color: colors.$text-secondary; }
+.refreshButton:disabled, .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding: 0.85rem;
+  border: 1px solid colors.$border-subtle;
+  border-radius: 11px;
+  background: colors.$surface-secondary;
+}
+
+.filters label { display: flex; min-width: 0; flex-direction: column; gap: 0.3rem; }
+.filters label > span { color: colors.$text-secondary; font-size: 0.76rem; font-weight: 700; }
+.filters input, .filters select { @include forms.text-input; width: 100%; min-width: 0; margin: 0; }
+.filterActions { display: flex; align-items: flex-end; gap: 0.5rem; }
+
+.summary { min-height: 1.2rem; margin: 0.85rem 0 0.45rem; color: colors.$text-muted; font-size: 0.8rem; }
+.tableWrap { width: 100%; overflow-x: auto; border: 1px solid colors.$border-subtle; border-radius: 11px; }
+.tableWrap table { width: 100%; min-width: 980px; border-collapse: collapse; }
+.tableWrap th { position: sticky; top: 0; padding: 0.7rem; background: colors.$surface-tint; color: colors.$text-secondary; text-align: left; font-size: 0.76rem; white-space: nowrap; }
+.tableWrap td { padding: 0.7rem; border-top: 1px solid colors.$border-subtle; color: colors.$text; font-size: 0.8rem; vertical-align: middle; }
+.tableWrap tbody tr:nth-child(even) { background: colors.$surface-secondary; }
+.subtle { display: block; margin-top: 0.1rem; color: colors.$text-muted; font-size: 0.72rem; }
+.nowrap { white-space: nowrap; }
+.empty { padding: 1.5rem !important; color: colors.$text-muted !important; text-align: center; }
+.badge, .state { display: inline-flex; padding: 0.22rem 0.48rem; border-radius: 999px; font-size: 0.7rem; font-weight: 800; }
+.badge { color: colors.$primary-dark; background: colors.$primary-soft; }
+.actionAPPROVE { color: colors.$success-dark; background: colors.$success-soft; }
+.actionRETURN { color: colors.$warning-dark; background: colors.$warning-soft; }
+.state { color: colors.$text-secondary; background: colors.$surface-secondary; border: 1px solid colors.$border-muted; }
+.arrow { margin: 0 0.35rem; color: colors.$text-muted; }
+
+.pagination { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 0.75rem; color: colors.$text-muted; font-size: 0.8rem; }
+.pagination > div { display: flex; gap: 0.5rem; }
+
+@media (max-width: 1100px) { .filters { grid-template-columns: repeat(2, minmax(150px, 1fr)); } }
+@media (max-width: 600px) {
+  .header, .pagination { align-items: stretch; flex-direction: column; }
+  .filters { grid-template-columns: 1fr; }
+  .filterActions, .filterActions button { width: 100%; }
+  .pagination > div, .pagination button { width: 100%; }
+}

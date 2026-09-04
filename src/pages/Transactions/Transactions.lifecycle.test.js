@@ -7,21 +7,30 @@ import {
 } from "./Transactions";
 
 const budgets = [
-  { id: 1, lifecycleStatus: "DRAFT" },
-  { id: 2, lifecycleStatus: "SUBMITTED" },
-  { id: 3, lifecycleStatus: "APPROVED" },
-  { id: 4, lifecycleStatus: "RETURNED" },
+  { id: 1, projectId: 10, lifecycleStatus: "DRAFT" },
+  { id: 2, projectId: 10, lifecycleStatus: "SUBMITTED" },
+  { id: 3, projectId: 10, lifecycleStatus: "APPROVED" },
+  { id: 4, projectId: 10, lifecycleStatus: "RETURNED" },
+  { id: 5, projectId: 20, lifecycleStatus: "APPROVED" },
 ];
 
 test("new transactions can select only approved budgets", () => {
-  expect(approvedBudgetOptions(budgets).map((budget) => budget.id)).toEqual([3]);
+  expect(approvedBudgetOptions(budgets).map((budget) => budget.id)).toEqual([3, 5]);
 });
 
 test("editing preserves the currently assigned historical budget", () => {
   expect(approvedBudgetOptions(budgets, 2).map((budget) => budget.id)).toEqual([
-    2,
-    3,
+    2, 3, 5,
   ]);
+});
+
+test("budget choices are restricted to the selected project", () => {
+  expect(
+    approvedBudgetOptions(budgets, null, 10).map((budget) => budget.id),
+  ).toEqual([3]);
+  expect(
+    approvedBudgetOptions(budgets, null, 20).map((budget) => budget.id),
+  ).toEqual([5]);
 });
 
 test("transaction lifecycle status defaults safely to draft", () => {

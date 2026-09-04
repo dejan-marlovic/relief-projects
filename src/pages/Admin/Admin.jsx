@@ -104,6 +104,7 @@ import UserRoleManagement from "./UserRoleManagement/UserRoleManagement";
 import RegisterProject from "../RegisterProject/RegisterProject";
 import LogoSettings from "./LogoSettings/LogoSettings";
 import ThemeSettings from "./ThemeSettings/ThemeSettings";
+import AuditHistory from "./AuditHistory/AuditHistory";
 import {
   useUnsavedChange,
   useUnsavedChanges,
@@ -643,6 +644,14 @@ const Admin = () => {
       >
         <h2 id="user-access-heading">User access</h2>
         <UserRoleManagement />
+      </section>
+
+      <section
+        className={styles.content}
+        aria-labelledby="audit-history-heading"
+      >
+        <h2 id="audit-history-heading">Audit history</h2>
+        <AuditHistory />
       </section>
 
       <section

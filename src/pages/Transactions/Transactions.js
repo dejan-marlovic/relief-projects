@@ -29,12 +29,21 @@ import { formatApiError, readApiError } from "../../utils/apiErrors";
 import ErrorBanner from "../../components/ErrorBanner/ErrorBanner";
 import { useUnsavedChange } from "../../context/UnsavedChangesContext";
 
-export const approvedBudgetOptions = (budgets = [], currentBudgetId = null) =>
+const budgetProjectId = (budget) =>
+  budget?.projectId ?? budget?.project?.id ?? null;
+
+export const approvedBudgetOptions = (
+  budgets = [],
+  currentBudgetId = null,
+  projectId = null,
+) =>
   budgets.filter(
     (budget) =>
-      budget.lifecycleStatus === "APPROVED" ||
-      (currentBudgetId != null &&
-        String(budget.id) === String(currentBudgetId)),
+      (projectId == null ||
+        String(budgetProjectId(budget)) === String(projectId)) &&
+      (budget.lifecycleStatus === "APPROVED" ||
+        (currentBudgetId != null &&
+          String(budget.id) === String(currentBudgetId))),
   );
 
 export const transactionLifecycleStatus = (transaction) =>
@@ -291,6 +300,8 @@ const Transactions = ({ refreshTrigger }) => {
         setBudgetOptions([]);
         return;
       }
+      setCostDetailOptions([]);
+      setBudgetOptions([]);
       try {
         const token = localStorage.getItem("authToken");
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
@@ -375,7 +386,11 @@ const Transactions = ({ refreshTrigger }) => {
     setEditingId("new");
     setExpandedTxId(null);
 
-    const eligibleBudgets = approvedBudgetOptions(budgetOptions);
+    const eligibleBudgets = approvedBudgetOptions(
+      budgetOptions,
+      null,
+      selectedProjectId,
+    );
     const autoBudgetId =
       eligibleBudgets.length === 1 ? eligibleBudgets[0].id : "";
 
@@ -414,7 +429,7 @@ const Transactions = ({ refreshTrigger }) => {
 
     const isCreate = id === "new";
     const effectiveProjectId = isCreate
-      ? values.projectId || selectedProjectId
+      ? selectedProjectId
       : (values.projectId ?? null);
 
     setFormError("");
@@ -1824,7 +1839,11 @@ const Transactions = ({ refreshTrigger }) => {
               organizations={orgOptions}
               projects={projectOptions}
               statuses={statusOptions}
-              budgets={approvedBudgetOptions(budgetOptions)}
+              budgets={approvedBudgetOptions(
+                budgetOptions,
+                null,
+                selectedProjectId,
+              )}
               visibleCols={visibleCols}
               isEven={false}
               fieldErrors={fieldErrors.new || {}}
@@ -1860,7 +1879,11 @@ const Transactions = ({ refreshTrigger }) => {
                 organizations={orgOptions}
                 projects={projectOptions}
                 statuses={statusOptions}
-                budgets={approvedBudgetOptions(budgetOptions, tx.budgetId)}
+                budgets={approvedBudgetOptions(
+                  budgetOptions,
+                  tx.budgetId,
+                  selectedProjectId,
+                )}
                 visibleCols={visibleCols}
                 fieldErrors={fieldErrors[tx.id] || {}}
                 expanded={expandedTxId === tx.id}

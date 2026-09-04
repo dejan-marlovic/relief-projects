@@ -138,25 +138,6 @@ const Transaction = ({
     </>
   );
 
-  const selectProject = () => (
-    <>
-      <select
-        value={ev.projectId ?? tx.projectId ?? ""}
-        onChange={(e) => onChange("projectId", toNum(e.target.value))}
-        onBlur={autoSave ? submit : undefined}
-        className={inputClass("projectId")}
-      >
-        <option value="">Select project</option>
-        {projects.map((p) => (
-          <option key={p.id} value={p.id}>
-            {p.projectName}
-          </option>
-        ))}
-      </select>
-      <FieldError name="projectId" />
-    </>
-  );
-
   const selectStatus = () => (
     <>
       <select
@@ -204,7 +185,7 @@ const Transaction = ({
   const orgName = (id) =>
     organizations.find((o) => o.id === id)?.name || (id ?? "-");
   const projectName = (id) =>
-    projects.find((p) => p.id === id)?.projectName || (id ?? "-");
+    projects.find((p) => String(p.id) === String(id))?.projectName || (id ?? "-");
   const statusName = (id) =>
     statuses.find((s) => s.id === id)?.transactionStatusName || (id ?? "-");
   const budgetName = (id) =>
@@ -410,7 +391,7 @@ const Transaction = ({
         </Cell>
 
         <Cell className={hc(3)}>
-          {isEditing ? selectProject() : projectName(tx.projectId)}
+          {projectName(ev.projectId ?? tx.projectId)}
         </Cell>
 
         <Cell className={hc(4)}>
