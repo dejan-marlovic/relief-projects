@@ -1,0 +1,15 @@
+@use "../../styles/colors" as colors;
+
+.history { margin: 0.75rem 0; border: 1px solid colors.$border-subtle; border-radius: 10px; background: colors.$surface; color: colors.$text; min-width: 0; }
+.history summary { padding: 0.75rem 1rem; cursor: pointer; font-weight: 700; color: colors.$primary; }
+.history summary:focus-visible, .history button:focus-visible { outline: 2px solid colors.$primary; outline-offset: 2px; }
+.panel { padding: 0 1rem 1rem; }
+.toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.75rem; font-size: 0.85rem; }
+.buttons { display: flex; gap: 0.5rem; }
+.history button { padding: 0.5rem 0.75rem; border: 1px solid colors.$primary-border; border-radius: 8px; background: colors.$surface; color: colors.$primary; cursor: pointer; font: inherit; }
+.history button:disabled { opacity: 0.5; cursor: not-allowed; }
+.tableWrap { overflow-x: auto; margin-top: 0.75rem; }
+.tableWrap table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
+.tableWrap th, .tableWrap td { padding: 0.7rem; border-bottom: 1px solid colors.$border-subtle; }
+.tableWrap th { background: colors.$surface-secondary; }
+.caption { text-align: left; padding: 0.5rem; color: colors.$text-muted; }

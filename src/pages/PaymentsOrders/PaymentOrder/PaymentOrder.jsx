@@ -1,5 +1,6 @@
 import React from "react";
 import styles from "./PaymentOrder.module.scss";
+import RecordHistory from "../../../components/RecordHistory/RecordHistory";
 import {
   FiEdit,
   FiTrash2,
@@ -167,6 +168,7 @@ const PaymentOrder = ({
     "Booked (final signature) — this payment order is read-only. Undo/remove the Booked signature to edit.";
 
   return (
+    <>
     <div
       ref={rowRef || undefined}
       className={`${styles.row} ${styles.gridRow} ${
@@ -377,6 +379,8 @@ const PaymentOrder = ({
         {isEditing ? inputText("pinCode") : (po.pinCode ?? "-")}
       </Cell>
     </div>
+    <RecordHistory entityType="PAYMENT_ORDER" entityId={po.id} lifecycleStatus={lifecycleStatus} />
+    </>
   );
 };
 

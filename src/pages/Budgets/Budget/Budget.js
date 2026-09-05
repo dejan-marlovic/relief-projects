@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import ExcelJS from "exceljs";
 import styles from "./Budget.module.scss";
 import CostDetails from "./CostDetails/CostDetails";
+import RecordHistory from "../../../components/RecordHistory/RecordHistory";
 
 // ✅ Icons (same style as Project)
 import {
@@ -1733,6 +1734,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
         </div>
       )}
 
+      <RecordHistory entityType="BUDGET" entityId={budget.id} lifecycleStatus={lifecycleStatus} />
       {budget?.id && (
         <div className={styles.card}>
           <div className={styles.cardHeader}>

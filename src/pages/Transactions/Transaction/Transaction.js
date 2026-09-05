@@ -12,6 +12,7 @@ import {
   FiCornerUpLeft,
 } from "react-icons/fi";
 import TransactionAllocations from "./TransactionAllocations/TransactionAllocations";
+import RecordHistory from "../../../components/RecordHistory/RecordHistory";
 
 const yesNo = ["Yes", "No"];
 
@@ -451,6 +452,7 @@ const Transaction = ({
         </Cell>
       </div>
 
+      <RecordHistory entityType="TRANSACTION" entityId={tx.id} lifecycleStatus={lifecycleStatus} />
       {expanded && !isCreate && (
         <div className={styles.expandedPanel}>
           <TransactionAllocations
