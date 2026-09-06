@@ -3,6 +3,7 @@ import ExcelJS from "exceljs";
 import styles from "./Budget.module.scss";
 import CostDetails from "./CostDetails/CostDetails";
 import RecordHistory from "../../../components/RecordHistory/RecordHistory";
+import ReturnReasonDialog from "../../../components/ReturnReasonDialog/ReturnReasonDialog";
 
 // ✅ Icons (same style as Project)
 import {
@@ -36,6 +37,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [reviewAction, setReviewAction] = useState("");
+  const [returnOpen, setReturnOpen] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [exportingBudget, setExportingBudget] = useState(false);
 
@@ -1712,7 +1714,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                 </button>}
                 {canReviewBudget && <button
                   type="button"
-                  onClick={() => handleReviewTransition("return")}
+                  onClick={() => setReturnOpen(true)}
                   className={styles.returnButton}
                   disabled={loading || exportingBudget || Boolean(reviewAction)}
                 >
@@ -1735,6 +1737,12 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
       )}
 
       <RecordHistory entityType="BUDGET" entityId={budget.id} lifecycleStatus={lifecycleStatus} />
+      {returnOpen && canReviewBudget && <ReturnReasonDialog key={budget.id}
+        endpoint={`/api/budgets/${budget.id}/return`} recordLabel={`budget #${budget.id}`}
+        onCancel={() => setReturnOpen(false)} onSuccess={(updated) => {
+          setBudget(updated); setHasUnsavedChanges(false); setFieldErrors({}); setFormError("");
+          setReturnOpen(false); onUpdate?.(updated);
+        }} />}
       {budget?.id && (
         <div className={styles.card}>
           <div className={styles.cardHeader}>

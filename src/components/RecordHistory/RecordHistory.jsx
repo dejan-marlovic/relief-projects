@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { BASE_URL } from "../../config/api";
 import { createAuthFetch, safeReadJson } from "../../utils/http";
 import styles from "./RecordHistory.module.scss";
+import ReturnReason from "../ReturnReason/ReturnReason";
 
 const labels = { BUDGET: "Budget", TRANSACTION: "Transaction", PAYMENT_ORDER: "Payment order" };
 const readable = (value) => value ? value.charAt(0) + value.slice(1).toLowerCase().replaceAll("_", " ") : "—";
@@ -57,7 +58,7 @@ function HistoryPage({ entityType, entityId }) {
           <thead><tr><th scope="col">Date and time</th><th scope="col">Transition</th><th scope="col">Performed by</th></tr></thead>
           <tbody>{result.content.map((event) => <tr key={event.id}>
             <td><time dateTime={event.occurredAt}>{timestamp(event.occurredAt)}</time></td>
-            <td>{readable(event.previousState)} → {readable(event.newState)}</td>
+            <td>{readable(event.previousState)} → {readable(event.newState)}<ReturnReason event={event} /></td>
             <td>{event.performedByDisplay || (event.performedBy ? `User #${event.performedBy}` : "Unknown user")}</td>
           </tr>)}</tbody>
         </table></div>}

@@ -1,0 +1,12 @@
+@use "../../styles/colors" as colors;
+.dialog { width: min(540px, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); overflow: auto; box-sizing: border-box; padding: 1.5rem; border: 1px solid colors.$primary-border; border-radius: 14px; background: colors.$surface; color: colors.$text; }
+.dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
+.dialog h2 { margin-top: 0; }
+.dialog label { display: block; font-weight: 700; margin-bottom: 0.5rem; }
+.dialog textarea { width: 100%; box-sizing: border-box; resize: vertical; padding: 0.75rem; font: inherit; color: colors.$text; background: colors.$surface; border: 1px solid colors.$primary-border; border-radius: 8px; }
+.dialog textarea:focus-visible, .dialog button:focus-visible { outline: 2px solid colors.$primary; outline-offset: 2px; }
+.error { color: colors.$danger; white-space: pre-wrap; }
+.actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1rem; }
+.actions button { padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid colors.$primary-border; font: inherit; background: colors.$surface; color: colors.$primary; cursor: pointer; }
+.actions button:last-child { background: colors.$primary; color: colors.$text-on-primary; }
+.actions button:disabled { opacity: 0.5; cursor: not-allowed; }

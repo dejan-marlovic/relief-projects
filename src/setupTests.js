@@ -8,6 +8,10 @@ const { TextDecoder, TextEncoder } = require("util");
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
+// jsdom does not yet implement native modal dialog methods.
+HTMLDialogElement.prototype.showModal = function () { this.setAttribute("open", ""); };
+HTMLDialogElement.prototype.close = function () { this.removeAttribute("open"); };
+
 // Jest 27 (bundled with react-scripts 5) cannot resolve React Router 7's
 // package-export subpath. Runtime bundling is unaffected; this maps that
 // test-only subpath to the same CommonJS DOM export shipped by react-router.

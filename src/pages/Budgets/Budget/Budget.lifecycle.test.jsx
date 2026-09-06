@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import Budget from "./Budget";
+import { MemoryRouter } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 
 jest.mock("../../../context/AuthContext", () => ({ useAuth: jest.fn() }));
@@ -27,7 +28,7 @@ const renderBudget = async (roles, overrides = {}, onUpdate = jest.fn()) => {
     hasAnyRole: (...allowed) => allowed.some((role) => roles.includes(role)),
   });
   render(
-    <Budget budget={{ ...budget, ...overrides }} onUpdate={onUpdate} />,
+    <MemoryRouter><Budget budget={{ ...budget, ...overrides }} onUpdate={onUpdate} /></MemoryRouter>,
   );
   await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
   return onUpdate;
@@ -150,6 +151,11 @@ test.each([
     fetch.mockResolvedValueOnce(jsonResponse(updated));
 
     fireEvent.click(screen.getByRole("button", { name: buttonName }));
+    if (action === "return") {
+      expect(fetch).toHaveBeenCalledTimes(2);
+      fireEvent.change(screen.getByLabelText("Return reason (required)"), { target: { value: "Correct the amounts." } });
+      fireEvent.click(screen.getByRole("button", { name: "Confirm return" }));
+    }
 
     await waitFor(() =>
       expect(

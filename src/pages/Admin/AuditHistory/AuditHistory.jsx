@@ -6,6 +6,7 @@ import { BASE_URL } from "../../../config/api";
 import { ProjectContext } from "../../../context/ProjectContext";
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
 import styles from "./AuditHistory.module.scss";
+import ReturnReason from "../../../components/ReturnReason/ReturnReason";
 
 const EMPTY_FILTERS = {
   entityType: "",
@@ -217,7 +218,7 @@ const AuditHistory = () => {
                 <td><strong>{ENTITY_LABELS[event.entityType] || event.entityType}</strong><span className={styles.subtle}>#{event.entityId}</span></td>
                 <td>{projectLabel(event.projectId)}</td>
                 <td><span className={`${styles.badge} ${styles[`action${event.action}`] || ""}`}>{ACTION_LABELS[event.action] || event.action}</span></td>
-                <td className={styles.nowrap}><span className={styles.state}>{event.previousState}</span><span className={styles.arrow}>→</span><span className={styles.state}>{event.newState}</span></td>
+                <td><span className={styles.state}>{event.previousState}</span><span className={styles.arrow}>→</span><span className={styles.state}>{event.newState}</span><ReturnReason event={event} /></td>
                 <td><strong>{event.performedByDisplay || "Unknown user"}</strong><span className={styles.subtle}>User #{event.performedBy}</span></td>
               </tr>
             ))}

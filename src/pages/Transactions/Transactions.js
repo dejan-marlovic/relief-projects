@@ -26,6 +26,7 @@ import ClearFiltersButton from "../../components/ClearFiltersButton/ClearFilters
 import { getSelectedProjectName } from "../../utils/projectDisplay";
 import { matchesDateRange, matchesNumberRange, matchesSelect, matchesText } from "../../utils/tableSorting";
 import { formatApiError, readApiError } from "../../utils/apiErrors";
+import ReturnReasonDialog from "../../components/ReturnReasonDialog/ReturnReasonDialog";
 import ErrorBanner from "../../components/ErrorBanner/ErrorBanner";
 import { useUnsavedChange } from "../../context/UnsavedChangesContext";
 
@@ -158,6 +159,7 @@ const Transactions = ({ refreshTrigger }) => {
   const [expandedTxId, setExpandedTxId] = useState(null);
   const [submittingTxId, setSubmittingTxId] = useState(null);
   const [reviewingTxId, setReviewingTxId] = useState(null);
+  const [returnTarget, setReturnTarget] = useState(null);
   const [exportingSelected, setExportingSelected] = useState(false);
   const [sortConfig, setSortConfig] = useState(null);
   const emptyFilters = () => ({ id:{min:"",max:""}, organization:"", project:"", budget:"", financier:"", status:"", appliedForAmount:{min:"",max:""}, firstShareAmount:{min:"",max:""}, approvedAmount:{min:"",max:""}, secondShareAmount:{min:"",max:""}, ownContribution:"", datePlanned:{from:"",to:""}, okStatus:"" });
@@ -1902,7 +1904,7 @@ const Transactions = ({ refreshTrigger }) => {
                 isSubmittingLifecycle={submittingTxId === tx.id}
                 canReviewLifecycle={canReviewTransactions}
                 onApproveLifecycle={() => reviewTransaction(tx, "approve")}
-                onReturnLifecycle={() => reviewTransaction(tx, "return")}
+                onReturnLifecycle={() => setReturnTarget(tx.id)}
                 isReviewingLifecycle={reviewingTxId === tx.id}
               />
             ))
@@ -1910,6 +1912,13 @@ const Transactions = ({ refreshTrigger }) => {
 
         </div>
       </div>
+      {returnTarget && canReviewTransactions && transactions.some((tx) => tx.id === returnTarget && tx.lifecycleStatus === "SUBMITTED") &&
+        <ReturnReasonDialog key={returnTarget} endpoint={`/api/transactions/${returnTarget}/return`}
+          recordLabel={`transaction #${returnTarget}`} onCancel={() => setReturnTarget(null)}
+          onSuccess={(updated) => {
+            setTransactions((current) => current.map((item) => item.id === updated.id ? updated : item));
+            setFormError(""); setReturnTarget(null);
+          }} />}
     </div>
   );
 };

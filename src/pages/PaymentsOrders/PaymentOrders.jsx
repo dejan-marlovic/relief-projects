@@ -7,6 +7,7 @@ import React, {
   useState,
 } from "react";
 import ExcelJS from "exceljs";
+import ReturnReasonDialog from "../../components/ReturnReasonDialog/ReturnReasonDialog";
 import { ProjectContext } from "../../context/ProjectContext";
 import { useAuth } from "../../context/AuthContext";
 import { useUnsavedChange } from "../../context/UnsavedChangesContext";
@@ -184,6 +185,7 @@ function PaymentOrders() {
   const [lockedPoIds, setLockedPoIds] = useState(() => new Set());
   const [submittingPoId, setSubmittingPoId] = useState(null);
   const [reviewingPoId, setReviewingPoId] = useState(null);
+  const [returnTarget, setReturnTarget] = useState(null);
 
   const newRowRef = useRef(null);
 
@@ -1427,7 +1429,7 @@ function PaymentOrders() {
                   isSubmittingLifecycle={submittingPoId === po.id}
                   canReviewLifecycle={canReviewPaymentOrders}
                   onApproveLifecycle={() => reviewPaymentOrder(po, "approve")}
-                  onReturnLifecycle={() => reviewPaymentOrder(po, "return")}
+                  onReturnLifecycle={() => setReturnTarget(po.id)}
                   isReviewingLifecycle={reviewingPoId === po.id}
                 />
 
@@ -1464,6 +1466,15 @@ function PaymentOrders() {
           )}
         </div>
       </div>
+      {returnTarget && canReviewPaymentOrders && orders.some((po) => po.id === returnTarget && paymentOrderLifecycleStatus(po) === "SUBMITTED") &&
+        <ReturnReasonDialog key={returnTarget} endpoint={`/api/payment-orders/${returnTarget}/return`}
+          recordLabel={`payment order #${returnTarget}`} onCancel={() => setReturnTarget(null)}
+          onSuccess={(data) => {
+            const updated = normalizePO(data);
+            setOrders((current) => current.map((item) => item.id === updated.id ? updated : item));
+            if (updated.locked) markLocked(updated.id);
+            setFormError(""); setLockedBanner(""); setReturnTarget(null);
+          }} />}
     </div>
   );
 }
