@@ -7,6 +7,7 @@ import { ProjectContext } from "../../../context/ProjectContext";
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
 import styles from "./AuditHistory.module.scss";
 import ReturnReason from "../../../components/ReturnReason/ReturnReason";
+import { AUDIT_ACTION_LABELS, hasAuditTransition } from "../../../utils/auditEvents";
 
 const EMPTY_FILTERS = {
   entityType: "",
@@ -22,12 +23,6 @@ const ENTITY_LABELS = {
   BUDGET: "Budget",
   TRANSACTION: "Transaction",
   PAYMENT_ORDER: "Payment order",
-};
-
-const ACTION_LABELS = {
-  SUBMIT: "Submitted",
-  APPROVE: "Approved",
-  RETURN: "Returned",
 };
 
 const toInstant = (value) => (value ? new Date(value).toISOString() : "");
@@ -132,8 +127,8 @@ const AuditHistory = () => {
     <div className={styles.card}>
       <div className={styles.header}>
         <div>
-          <h3>Lifecycle audit history</h3>
-          <p>Successful budget, transaction, and payment-order lifecycle transitions.</p>
+          <h3>Record audit history</h3>
+          <p>Lifecycle transitions, deletions, and restorations for budgets, transactions, and payment orders.</p>
         </div>
         <button type="button" className={styles.refreshButton} onClick={() => setRefreshKey((value) => value + 1)} disabled={loading}>
           <FiRefreshCw aria-hidden="true" /> Refresh
@@ -157,6 +152,8 @@ const AuditHistory = () => {
             <option value="SUBMIT">Submit</option>
             <option value="APPROVE">Approve</option>
             <option value="RETURN">Return</option>
+            <option value="DELETE">Deleted</option>
+            <option value="RESTORE">Restored</option>
           </select>
         </label>
         <label>
@@ -211,14 +208,14 @@ const AuditHistory = () => {
           </thead>
           <tbody>
             {!loading && result.content.length === 0 ? (
-              <tr><td colSpan="6" className={styles.empty}>No lifecycle audit events match these filters.</td></tr>
+              <tr><td colSpan="6" className={styles.empty}>No audit events match these filters.</td></tr>
             ) : result.content.map((event) => (
               <tr key={event.id}>
                 <td className={styles.nowrap}>{formatAuditTimestamp(event.occurredAt)}</td>
                 <td><strong>{ENTITY_LABELS[event.entityType] || event.entityType}</strong><span className={styles.subtle}>#{event.entityId}</span></td>
                 <td>{projectLabel(event.projectId)}</td>
-                <td><span className={`${styles.badge} ${styles[`action${event.action}`] || ""}`}>{ACTION_LABELS[event.action] || event.action}</span></td>
-                <td><span className={styles.state}>{event.previousState}</span><span className={styles.arrow}>→</span><span className={styles.state}>{event.newState}</span><ReturnReason event={event} /></td>
+                <td><span className={`${styles.badge} ${styles[`action${event.action}`] || ""}`}>{AUDIT_ACTION_LABELS[event.action] || event.action}</span></td>
+                <td>{hasAuditTransition(event) ? <><span className={styles.state}>{event.previousState}</span><span className={styles.arrow}>→</span><span className={styles.state}>{event.newState}</span></> : "—"}<ReturnReason event={event} /></td>
                 <td><strong>{event.performedByDisplay || "Unknown user"}</strong><span className={styles.subtle}>User #{event.performedBy}</span></td>
               </tr>
             ))}

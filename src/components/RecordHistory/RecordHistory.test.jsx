@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import RecordHistory from "./RecordHistory";
 
 const mockNavigate = jest.fn();
@@ -11,6 +11,26 @@ const open = () => { const details = screen.getByText(/^History ·/).closest("de
 
 beforeEach(() => { global.fetch = jest.fn().mockResolvedValue(response(page())); localStorage.setItem("authToken", "token"); mockNavigate.mockClear(); });
 afterEach(() => { localStorage.clear(); });
+
+test("restored record history includes delete/restore activity and existing return reasons", async () => {
+  fetch.mockResolvedValue(response(page([
+    { ...event, id: 4, action: "RESTORE", previousState: null, newState: null },
+    { ...event, id: 3, action: "DELETE", previousState: null, newState: null },
+    { ...event, id: 2, action: "RETURN", previousState: "SUBMITTED", newState: "RETURNED", returnReason: "Correct the amounts." },
+    { ...event, action: "SUBMIT" },
+  ])));
+  render(<RecordHistory {...props} />); open();
+  for (const label of ["Restored", "Deleted"]) {
+    const row = (await screen.findByText(label)).closest("tr");
+    expect(row).not.toHaveTextContent("→");
+    expect(row).not.toHaveTextContent("Return reason");
+    expect(within(row).getByText("Alex")).toBeInTheDocument();
+    expect(row.querySelector("time")).toHaveAttribute("dateTime", event.occurredAt);
+  }
+  expect(screen.getByText("Correct the amounts.")).toBeInTheDocument();
+  expect(screen.getByText("Draft → Submitted")).toBeInTheDocument();
+  expect(screen.getAllByRole("row")).toHaveLength(5);
+});
 
 test.each(["BUDGET", "TRANSACTION", "PAYMENT_ORDER"])("lazily loads scoped %s history with authentication", async (entityType) => {
   render(<RecordHistory {...props} entityType={entityType} />);
@@ -28,14 +48,14 @@ test.each([[403, "You do not have permission"], [404, "This record is unavailabl
   fetch.mockResolvedValue(response({ message: "Invalid filter" }, status));
   render(<RecordHistory {...props} />); open();
   expect(await screen.findByRole("alert")).toHaveTextContent(message);
-  expect(screen.queryByText("No lifecycle history yet.")).not.toBeInTheDocument();
+  expect(screen.queryByText("No record history yet.")).not.toBeInTheDocument();
   expect(fetch).toHaveBeenCalledTimes(1);
 });
 
 test("empty history and expired authentication", async () => {
   fetch.mockResolvedValueOnce(response(page([], 0, 0))).mockResolvedValueOnce(response(null, 401));
   render(<RecordHistory {...props} />); open();
-  expect(await screen.findByText("No lifecycle history yet.")).toBeInTheDocument();
+  expect(await screen.findByText("No record history yet.")).toBeInTheDocument();
   fireEvent.click(screen.getByText("Refresh history"));
   await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith("/login", { replace: true }));
   expect(localStorage.getItem("authToken")).toBeNull();

@@ -64,6 +64,8 @@
 .badge { color: colors.$primary-dark; background: colors.$primary-soft; }
 .actionAPPROVE { color: colors.$success-dark; background: colors.$success-soft; }
 .actionRETURN { color: colors.$warning-dark; background: colors.$warning-soft; }
+.actionDELETE { color: colors.$danger-dark; background: colors.$danger-soft; }
+.actionRESTORE { color: colors.$success-dark; background: colors.$success-soft; }
 .state { color: colors.$text-secondary; background: colors.$surface-secondary; border: 1px solid colors.$border-muted; }
 .arrow { margin: 0 0.35rem; color: colors.$text-muted; }
 
