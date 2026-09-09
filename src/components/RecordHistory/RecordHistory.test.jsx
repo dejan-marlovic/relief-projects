@@ -12,15 +12,16 @@ const open = () => { const details = screen.getByText(/^History ·/).closest("de
 beforeEach(() => { global.fetch = jest.fn().mockResolvedValue(response(page())); localStorage.setItem("authToken", "token"); mockNavigate.mockClear(); });
 afterEach(() => { localStorage.clear(); });
 
-test("restored record history includes delete/restore activity and existing return reasons", async () => {
+test("restored record history includes creation, delete/restore activity and existing return reasons", async () => {
   fetch.mockResolvedValue(response(page([
     { ...event, id: 4, action: "RESTORE", previousState: null, newState: null },
     { ...event, id: 3, action: "DELETE", previousState: null, newState: null },
     { ...event, id: 2, action: "RETURN", previousState: "SUBMITTED", newState: "RETURNED", returnReason: "Correct the amounts." },
     { ...event, action: "SUBMIT" },
+    { ...event, id: 0, action: "CREATE", previousState: null, newState: null },
   ])));
   render(<RecordHistory {...props} />); open();
-  for (const label of ["Restored", "Deleted"]) {
+  for (const label of ["Restored", "Deleted", "Created"]) {
     const row = (await screen.findByText(label)).closest("tr");
     expect(row).not.toHaveTextContent("→");
     expect(row).not.toHaveTextContent("Return reason");
@@ -29,7 +30,7 @@ test("restored record history includes delete/restore activity and existing retu
   }
   expect(screen.getByText("Correct the amounts.")).toBeInTheDocument();
   expect(screen.getByText("Draft → Submitted")).toBeInTheDocument();
-  expect(screen.getAllByRole("row")).toHaveLength(5);
+  expect(screen.getAllByRole("row")).toHaveLength(6);
 });
 
 test.each(["BUDGET", "TRANSACTION", "PAYMENT_ORDER"])("lazily loads scoped %s history with authentication", async (entityType) => {

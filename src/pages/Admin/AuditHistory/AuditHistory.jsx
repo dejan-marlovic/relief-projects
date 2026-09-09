@@ -128,7 +128,7 @@ const AuditHistory = () => {
       <div className={styles.header}>
         <div>
           <h3>Record audit history</h3>
-          <p>Lifecycle transitions, deletions, and restorations for budgets, transactions, and payment orders.</p>
+          <p>Creation, lifecycle transitions, deletions, and restorations for budgets, transactions, and payment orders.</p>
         </div>
         <button type="button" className={styles.refreshButton} onClick={() => setRefreshKey((value) => value + 1)} disabled={loading}>
           <FiRefreshCw aria-hidden="true" /> Refresh
@@ -149,6 +149,7 @@ const AuditHistory = () => {
           <span>Action</span>
           <select name="action" value={draftFilters.action} onChange={updateDraft}>
             <option value="">All actions</option>
+            <option value="CREATE">Created</option>
             <option value="SUBMIT">Submit</option>
             <option value="APPROVE">Approve</option>
             <option value="RETURN">Return</option>
