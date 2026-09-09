@@ -601,10 +601,7 @@ const Admin = () => {
   };
 
   const handleEntityOptionSelect = (option) => {
-    if (
-      option.value !== selectedEntity &&
-      !confirmDiscardUnsavedChanges()
-    ) {
+    if (option.value !== selectedEntity && !confirmDiscardUnsavedChanges()) {
       return;
     }
     setAdminEditorDirty(false);
@@ -638,10 +635,7 @@ const Admin = () => {
         <LogoSettings />
       </section>
 
-      <section
-        className={styles.content}
-        aria-labelledby="user-access-heading"
-      >
+      <section className={styles.content} aria-labelledby="user-access-heading">
         <h2 id="user-access-heading">User access</h2>
         <UserRoleManagement />
       </section>
