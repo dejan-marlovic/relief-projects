@@ -106,3 +106,19 @@ test("unsaved records do not offer history", () => {
   expect(screen.queryByText(/^History/)).not.toBeInTheDocument();
   expect(fetch).not.toHaveBeenCalled();
 });
+
+test("successful edit refresh key reloads history with unchanged lifecycle status", async () => {
+  const updatedEvent = { ...event, action: "UPDATE", previousState: null, newState: null, fieldChangesVersion: 1,
+    fieldChanges: [{ field: "totalAmount", type: "DECIMAL", oldValue: "100.00", newValue: "125.00" }] };
+  fetch.mockResolvedValueOnce(response(page([event], 0, 2))).mockResolvedValueOnce(response(page([event], 1, 2)))
+    .mockResolvedValueOnce(response(page([updatedEvent])));
+  const view = render(<RecordHistory {...props} refreshKey={0} />); open();
+  await screen.findByText("Alex"); fireEvent.click(screen.getByText("Next"));
+  await screen.findByText(/Page 2 of 2/);
+  view.rerender(<RecordHistory {...props} refreshKey={1} />);
+  await screen.findByText("Updated");
+  expect(screen.getByText("125.00")).toBeInTheDocument();
+  expect(screen.getByText("Budget total")).toBeInTheDocument();
+  expect(screen.getByText("Updated").closest("tr")).not.toHaveTextContent("→");
+  expect(fetch.mock.calls[2][0]).toContain("page=0");
+});

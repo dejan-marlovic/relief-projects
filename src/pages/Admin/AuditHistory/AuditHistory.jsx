@@ -7,6 +7,7 @@ import { ProjectContext } from "../../../context/ProjectContext";
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
 import styles from "./AuditHistory.module.scss";
 import ReturnReason from "../../../components/ReturnReason/ReturnReason";
+import AuditFieldChanges from "../../../components/AuditFieldChanges/AuditFieldChanges";
 import { AUDIT_ACTION_LABELS, hasAuditTransition } from "../../../utils/auditEvents";
 
 const EMPTY_FILTERS = {
@@ -128,7 +129,7 @@ const AuditHistory = () => {
       <div className={styles.header}>
         <div>
           <h3>Record audit history</h3>
-          <p>Creation, lifecycle transitions, deletions, and restorations for budgets, transactions, and payment orders.</p>
+          <p>Creation, lifecycle transitions, deletions, and restorations for budgets, transactions, and payment orders. Includes selected budget header edits.</p>
         </div>
         <button type="button" className={styles.refreshButton} onClick={() => setRefreshKey((value) => value + 1)} disabled={loading}>
           <FiRefreshCw aria-hidden="true" /> Refresh
@@ -150,6 +151,7 @@ const AuditHistory = () => {
           <select name="action" value={draftFilters.action} onChange={updateDraft}>
             <option value="">All actions</option>
             <option value="CREATE">Created</option>
+            <option value="UPDATE">Updated</option>
             <option value="SUBMIT">Submit</option>
             <option value="APPROVE">Approve</option>
             <option value="RETURN">Return</option>
@@ -203,7 +205,7 @@ const AuditHistory = () => {
               <th>Record</th>
               <th>Project</th>
               <th>Action</th>
-              <th>State change</th>
+              <th>Changes</th>
               <th>Performed by</th>
             </tr>
           </thead>
@@ -216,7 +218,7 @@ const AuditHistory = () => {
                 <td><strong>{ENTITY_LABELS[event.entityType] || event.entityType}</strong><span className={styles.subtle}>#{event.entityId}</span></td>
                 <td>{projectLabel(event.projectId)}</td>
                 <td><span className={`${styles.badge} ${styles[`action${event.action}`] || ""}`}>{AUDIT_ACTION_LABELS[event.action] || event.action}</span></td>
-                <td>{hasAuditTransition(event) ? <><span className={styles.state}>{event.previousState}</span><span className={styles.arrow}>→</span><span className={styles.state}>{event.newState}</span></> : "—"}<ReturnReason event={event} /></td>
+                <td>{event.action === "UPDATE" ? <AuditFieldChanges event={event} /> : hasAuditTransition(event) ? <><span className={styles.state}>{event.previousState}</span><span className={styles.arrow}>→</span><span className={styles.state}>{event.newState}</span></> : "—"}<ReturnReason event={event} /></td>
                 <td><strong>{event.performedByDisplay || "Unknown user"}</strong><span className={styles.subtle}>User #{event.performedBy}</span></td>
               </tr>
             ))}

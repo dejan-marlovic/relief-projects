@@ -5,7 +5,7 @@ import { ProjectContext } from "../../../context/ProjectContext";
 const mockNavigate = jest.fn();
 jest.mock("react-router-dom", () => ({ useNavigate: () => mockNavigate }));
 
-test.each([["CREATE", "Created"], ["DELETE", "Deleted"], ["RESTORE", "Restored"]])("Admin can filter %s events and render their null states", async (action, label) => {
+test.each([["UPDATE", "Updated"], ["CREATE", "Created"], ["DELETE", "Deleted"], ["RESTORE", "Restored"]])("Admin can filter %s events and render their null states", async (action, label) => {
   const auditEvent = { id: 9, entityType: "BUDGET", entityId: 7, action, previousState: null, newState: null, returnReason: null, performedBy: "42", performedByDisplay: "admin.user", occurredAt: "2026-09-08T12:00:00Z" };
   global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200, text: async () => JSON.stringify({ content: [auditEvent], number: 0, totalPages: 1, totalElements: 1 }) });
   render(<ProjectContext.Provider value={{ projects: [] }}><AuditHistory /></ProjectContext.Provider>);

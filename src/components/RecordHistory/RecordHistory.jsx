@@ -4,6 +4,7 @@ import { BASE_URL } from "../../config/api";
 import { createAuthFetch, safeReadJson } from "../../utils/http";
 import styles from "./RecordHistory.module.scss";
 import ReturnReason from "../ReturnReason/ReturnReason";
+import AuditFieldChanges from "../AuditFieldChanges/AuditFieldChanges";
 import { AUDIT_ACTION_LABELS, hasAuditTransition } from "../../utils/auditEvents";
 
 const labels = { BUDGET: "Budget", TRANSACTION: "Transaction", PAYMENT_ORDER: "Payment order" };
@@ -56,11 +57,11 @@ function HistoryPage({ entityType, entityId }) {
       {result.content.length === 0 ? <p role="status">No record history yet.</p> :
         <div className={styles.tableWrap}><table>
           <caption className={styles.caption}>{labels[entityType]} #{entityId} history</caption>
-          <thead><tr><th scope="col">Date and time</th><th scope="col">Action</th><th scope="col">State change</th><th scope="col">Performed by</th></tr></thead>
+          <thead><tr><th scope="col">Date and time</th><th scope="col">Action</th><th scope="col">Changes</th><th scope="col">Performed by</th></tr></thead>
           <tbody>{result.content.map((event) => <tr key={event.id}>
             <td><time dateTime={event.occurredAt}>{timestamp(event.occurredAt)}</time></td>
             <td>{AUDIT_ACTION_LABELS[event.action] || event.action || "—"}</td>
-            <td>{hasAuditTransition(event) ? <>{readable(event.previousState)} → {readable(event.newState)}</> : "—"}<ReturnReason event={event} /></td>
+            <td>{event.action === "UPDATE" ? <AuditFieldChanges event={event} /> : hasAuditTransition(event) ? <>{readable(event.previousState)} → {readable(event.newState)}</> : "—"}<ReturnReason event={event} /></td>
             <td>{event.performedByDisplay || (event.performedBy ? `User #${event.performedBy}` : "Unknown user")}</td>
           </tr>)}</tbody>
         </table></div>}
@@ -75,11 +76,11 @@ function HistoryPage({ entityType, entityId }) {
   </div>;
 }
 
-function HistoryDisclosure({ entityType, entityId, lifecycleStatus }) {
+function HistoryDisclosure({ entityType, entityId, lifecycleStatus, refreshKey = 0 }) {
   const [open, setOpen] = useState(false);
   return <details className={styles.history} onToggle={(event) => setOpen(event.currentTarget.open)}>
     <summary>History · {labels[entityType]} #{entityId}</summary>
-    {open && <HistoryPage key={lifecycleStatus} entityType={entityType} entityId={entityId} />}
+    {open && <HistoryPage key={`${lifecycleStatus}:${refreshKey}`} entityType={entityType} entityId={entityId} />}
   </details>;
 }
 

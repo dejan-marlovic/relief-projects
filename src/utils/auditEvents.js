@@ -1,5 +1,6 @@
 export const AUDIT_ACTION_LABELS = {
   CREATE: "Created",
+  UPDATE: "Updated",
   SUBMIT: "Submitted",
   APPROVE: "Approved",
   RETURN: "Returned",
@@ -8,5 +9,5 @@ export const AUDIT_ACTION_LABELS = {
 };
 
 export const hasAuditTransition = (event) =>
-  !["CREATE", "DELETE", "RESTORE"].includes(event.action) &&
+  !["CREATE", "UPDATE", "DELETE", "RESTORE"].includes(event.action) &&
   Boolean(event.previousState && event.newState);

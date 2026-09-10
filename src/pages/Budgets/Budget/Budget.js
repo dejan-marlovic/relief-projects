@@ -30,6 +30,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
     dateString ? dateString.slice(0, 16) : "";
 
   const [budget, setBudget] = useState(initialBudget || {});
+  const [historyRefreshKey, setHistoryRefreshKey] = useState(0);
   const [currencies, setCurrencies] = useState([]);
   const [exchangeRates, setExchangeRates] = useState([]);
   const [refreshCostDetailsTrigger, setRefreshCostDetailsTrigger] = useState(0);
@@ -1242,7 +1243,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
         if (data) {
           if (data.fieldErrors) setFieldErrors(data.fieldErrors);
           setFormError(
-            data.message || "There was a problem updating the budget.",
+            data.fieldErrors?.id || data.message || "There was a problem updating the budget.",
           );
         } else {
           setFormError("There was a problem updating the budget.");
@@ -1252,6 +1253,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
 
       const updated = await response.json();
       setBudget(updated);
+      setHistoryRefreshKey((value) => value + 1);
       setHasUnsavedChanges(false);
       onUpdate?.(updated);
 
@@ -1736,7 +1738,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
         </div>
       )}
 
-      <RecordHistory entityType="BUDGET" entityId={budget.id} lifecycleStatus={lifecycleStatus} />
+      <RecordHistory entityType="BUDGET" entityId={budget.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} />
       {returnOpen && canReviewBudget && <ReturnReasonDialog key={budget.id}
         endpoint={`/api/budgets/${budget.id}/return`} recordLabel={`budget #${budget.id}`}
         onCancel={() => setReturnOpen(false)} onSuccess={(updated) => {
