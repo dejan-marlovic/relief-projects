@@ -129,7 +129,7 @@ const AuditHistory = () => {
       <div className={styles.header}>
         <div>
           <h3>Record audit history</h3>
-          <p>Creation, lifecycle transitions, deletions, and restorations for budgets, transactions, and payment orders. Includes selected budget header edits.</p>
+          <p>Creation, lifecycle transitions, deletions, and restorations for budgets, transactions, and payment orders. Includes budget and transaction header edits.</p>
         </div>
         <button type="button" className={styles.refreshButton} onClick={() => setRefreshKey((value) => value + 1)} disabled={loading}>
           <FiRefreshCw aria-hidden="true" /> Refresh

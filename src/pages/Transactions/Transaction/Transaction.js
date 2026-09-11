@@ -64,6 +64,7 @@ const Transaction = ({
   onApproveLifecycle,
   onReturnLifecycle,
   isReviewingLifecycle = false,
+  historyRefreshKey = 0,
 }) => {
   const ev = editedValues || {};
   const isCreate = (tx?.id ?? "") === "new";
@@ -452,7 +453,7 @@ const Transaction = ({
         </Cell>
       </div>
 
-      <RecordHistory entityType="TRANSACTION" entityId={tx.id} lifecycleStatus={lifecycleStatus} />
+      <RecordHistory entityType="TRANSACTION" entityId={tx.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} />
       {expanded && !isCreate && (
         <div className={styles.expandedPanel}>
           <TransactionAllocations

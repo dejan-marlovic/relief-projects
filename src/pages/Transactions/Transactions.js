@@ -159,6 +159,7 @@ const Transactions = ({ refreshTrigger }) => {
   const [expandedTxId, setExpandedTxId] = useState(null);
   const [submittingTxId, setSubmittingTxId] = useState(null);
   const [reviewingTxId, setReviewingTxId] = useState(null);
+  const [historyRefreshKeys, setHistoryRefreshKeys] = useState({});
   const [returnTarget, setReturnTarget] = useState(null);
   const [exportingSelected, setExportingSelected] = useState(false);
   const [sortConfig, setSortConfig] = useState(null);
@@ -492,7 +493,7 @@ const Transactions = ({ refreshTrigger }) => {
         }
 
         setFormError(
-          formatApiError(
+          data?.fieldErrors?.id || formatApiError(
             data,
             `Failed to ${isCreate ? "create" : "update"} transaction.`,
           ),
@@ -500,6 +501,7 @@ const Transactions = ({ refreshTrigger }) => {
         return;
       }
 
+      if (!isCreate) setHistoryRefreshKeys((current) => ({ ...current, [id]: (current[id] || 0) + 1 }));
       await fetchTransactions(selectedProjectId);
       cancel();
     } catch (err) {
@@ -1906,6 +1908,7 @@ const Transactions = ({ refreshTrigger }) => {
                 onApproveLifecycle={() => reviewTransaction(tx, "approve")}
                 onReturnLifecycle={() => setReturnTarget(tx.id)}
                 isReviewingLifecycle={reviewingTxId === tx.id}
+                historyRefreshKey={historyRefreshKeys[tx.id] || 0}
               />
             ))
           )}

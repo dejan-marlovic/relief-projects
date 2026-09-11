@@ -1,6 +1,11 @@
 import React from "react";
 import styles from "./AuditFieldChanges.module.scss";
 const labels = {
+  organizationId: "Organization", budgetId: "Budget",
+  financierOrganizationId: "Financier organization", transactionStatusId: "Business status",
+  appliedForAmount: "Applied-for amount", firstShareAmount: "First-share amount",
+  approvedAmount: "Approved amount", ownContribution: "Own contribution",
+  secondShareAmount: "Second-share amount", datePlanned: "Planned date/time", okStatus: "OK status",
   budgetDescription: "Description", budgetPreparationDate: "Preparation date/time",
   totalAmount: "Budget total", projectId: "Project", localCurrencyId: "Local currency",
   localExchangeRateToGbpId: "Local-to-GBP exchange rate",
