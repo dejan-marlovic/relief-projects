@@ -150,6 +150,7 @@ function PaymentOrders() {
   const canReviewPaymentOrders = hasAnyRole("ADMIN", "APPROVER");
 
   const [orders, setOrders] = useState([]);
+  const [historyRefreshKeys, setHistoryRefreshKeys] = useState({});
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
   useUnsavedChange("payment-orders-editor", editingId !== null);
@@ -487,7 +488,7 @@ function PaymentOrders() {
         }
 
         const msg =
-          data?.message ||
+          data?.fieldErrors?.id || data?.message ||
           `Failed to ${isCreate ? "create" : "update"} payment order.`;
 
         setFormError(msg);
@@ -495,6 +496,7 @@ function PaymentOrders() {
       }
 
       // success -> clear banners
+      if (!isCreate) setHistoryRefreshKeys((current) => ({ ...current, [id]: (current[id] || 0) + 1 }));
       setLockedBanner("");
       setFormError("");
 
@@ -1431,6 +1433,7 @@ function PaymentOrders() {
                   onApproveLifecycle={() => reviewPaymentOrder(po, "approve")}
                   onReturnLifecycle={() => setReturnTarget(po.id)}
                   isReviewingLifecycle={reviewingPoId === po.id}
+                  historyRefreshKey={historyRefreshKeys[po.id] || 0}
                 />
 
                 {expandedPoId === po.id && (

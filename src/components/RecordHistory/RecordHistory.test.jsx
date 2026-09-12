@@ -107,7 +107,7 @@ test("unsaved records do not offer history", () => {
   expect(fetch).not.toHaveBeenCalled();
 });
 
-test.each(["BUDGET", "TRANSACTION"])("successful %s edit refresh key reloads history with unchanged lifecycle status", async (entityType) => {
+test.each(["BUDGET", "TRANSACTION", "PAYMENT_ORDER"])("successful %s edit refresh key reloads history with unchanged lifecycle status", async (entityType) => {
   const updatedEvent = { ...event, action: "UPDATE", previousState: null, newState: null, fieldChangesVersion: 1,
     fieldChanges: [{ field: "totalAmount", type: "DECIMAL", oldValue: "100.00", newValue: "125.00" }] };
   fetch.mockResolvedValueOnce(response(page([event], 0, 2))).mockResolvedValueOnce(response(page([event], 1, 2)))

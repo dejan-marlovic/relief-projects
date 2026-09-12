@@ -62,6 +62,7 @@ const PaymentOrder = ({
   onApproveLifecycle,
   onReturnLifecycle,
   isReviewingLifecycle = false,
+  historyRefreshKey = 0,
 }) => {
   const ev = editedValues || {};
   const isCreate = (po?.id ?? "") === "new";
@@ -379,7 +380,7 @@ const PaymentOrder = ({
         {isEditing ? inputText("pinCode") : (po.pinCode ?? "-")}
       </Cell>
     </div>
-    <RecordHistory entityType="PAYMENT_ORDER" entityId={po.id} lifecycleStatus={lifecycleStatus} />
+    <RecordHistory entityType="PAYMENT_ORDER" entityId={po.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} />
     </>
   );
 };

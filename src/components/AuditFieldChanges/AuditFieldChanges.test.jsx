@@ -1,6 +1,23 @@
 import { render, screen } from "@testing-library/react";
 import AuditFieldChanges, { formatFieldValue } from "./AuditFieldChanges";
 
+test("renders payment-order changes including cleared header, exact count and multiline text", () => {
+  const { container } = render(<AuditFieldChanges event={{ action: "UPDATE", entityType: "PAYMENT_ORDER", fieldChangesVersion: 1, fieldChanges: [
+    { field: "transactionId", type: "REFERENCE", oldValue: { id: "42", label: "Transaction 42 — Project A" }, newValue: null },
+    { field: "paymentOrderDate", type: "LOCAL_DATETIME", oldValue: null, newValue: "2026-09-12T09:30:00" },
+    { field: "numberOfTransactions", type: "DECIMAL", oldValue: "2", newValue: "9007199254740993" },
+    { field: "paymentOrderDescription", type: "TEXT", oldValue: "Before", newValue: "Updated description" },
+    { field: "message", type: "TEXT", oldValue: "", newValue: "First line\nSecond line" },
+  ] }} />);
+  expect(Array.from(container.querySelectorAll("dt"), (node) => node.textContent)).toEqual([
+    "Header transaction", "Payment-order date/time", "Number of transactions", "Description", "Message",
+  ]);
+  for (const value of ["Transaction 42 — Project A (ID 42)", "2026-09-12 09:30:00", "9007199254740993", "Empty text"]) expect(screen.getByText(value)).toBeInTheDocument();
+  expect(container.textContent).toContain("First line\nSecond line");
+  expect(screen.getAllByText("Not set")).toHaveLength(2);
+  expect(container.textContent).not.toContain("PIN");
+});
+
 test("renders all transaction fields with exact amounts and historical reference labels", () => {
   const fields = [
     ["organizationId", "Organization", "REFERENCE", { id: "5", label: "Old organization" }],
