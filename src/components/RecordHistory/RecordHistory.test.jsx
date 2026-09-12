@@ -12,6 +12,20 @@ const open = () => { const details = screen.getByText(/^History ·/).closest("de
 beforeEach(() => { global.fetch = jest.fn().mockResolvedValue(response(page())); localStorage.setItem("authToken", "token"); mockNavigate.mockClear(); });
 afterEach(() => { localStorage.clear(); });
 
+test("payment-order history aggregates lines once and can return to exact header history", async () => {
+  const line = { ...event, id: 99, entityType: "PAYMENT_ORDER_LINE", entityId: 81, action: "DELETE", parentPaymentOrderId: 7, previousState: null, newState: null };
+  fetch.mockResolvedValueOnce(response(page([line, line], 0, 2))).mockResolvedValueOnce(response(page([event])));
+  render(<RecordHistory {...props} entityType="PAYMENT_ORDER" />); open();
+  expect(await screen.findByText("Line #81 deleted")).toBeInTheDocument();
+  expect(screen.getAllByRole("row")).toHaveLength(2);
+  expect(fetch.mock.calls[0][0]).toContain("includeChildren=true");
+  fireEvent.click(screen.getByRole("checkbox", { name: "Include line activity" }));
+  await screen.findByText("Draft → Submitted");
+  expect(fetch.mock.calls[1][0]).not.toContain("includeChildren");
+  expect(fetch.mock.calls[1][0]).toContain("entityType=PAYMENT_ORDER&entityId=7&page=0");
+  expect(screen.queryByText("Line #81 deleted")).not.toBeInTheDocument();
+});
+
 test("restored record history includes creation, delete/restore activity and existing return reasons", async () => {
   fetch.mockResolvedValue(response(page([
     { ...event, id: 4, action: "RESTORE", previousState: null, newState: null },
@@ -40,7 +54,7 @@ test.each(["BUDGET", "TRANSACTION", "PAYMENT_ORDER"])("lazily loads scoped %s hi
   expect(await screen.findByText("Alex")).toBeInTheDocument();
   const [url, options] = fetch.mock.calls[0];
   const query = new URL(url, "http://localhost").searchParams;
-  expect(Object.fromEntries(query)).toEqual({ entityType, entityId: "7", page: "0", size: "20" });
+  expect(Object.fromEntries(query)).toEqual({ entityType, entityId: "7", page: "0", size: "20", ...(entityType === "PAYMENT_ORDER" ? { includeChildren: "true" } : {}) });
   expect(options.headers.Authorization).toBe("Bearer token");
   expect(screen.getByText("Draft → Submitted")).toBeInTheDocument();
 });

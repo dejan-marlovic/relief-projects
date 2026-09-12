@@ -8,7 +8,8 @@ import { createAuthFetch, safeReadJson } from "../../../utils/http";
 import styles from "./AuditHistory.module.scss";
 import ReturnReason from "../../../components/ReturnReason/ReturnReason";
 import AuditFieldChanges from "../../../components/AuditFieldChanges/AuditFieldChanges";
-import { AUDIT_ACTION_LABELS, hasAuditTransition } from "../../../utils/auditEvents";
+import { auditActionLabel, hasAuditTransition, uniqueAuditEvents } from "../../../utils/auditEvents";
+import LineAuditDetails from "../../../components/LineAuditDetails/LineAuditDetails";
 
 const EMPTY_FILTERS = {
   entityType: "",
@@ -24,6 +25,7 @@ const ENTITY_LABELS = {
   BUDGET: "Budget",
   TRANSACTION: "Transaction",
   PAYMENT_ORDER: "Payment order",
+  PAYMENT_ORDER_LINE: "Payment-order line",
 };
 
 const toInstant = (value) => (value ? new Date(value).toISOString() : "");
@@ -81,7 +83,7 @@ const AuditHistory = () => {
         throw new Error(body?.message || "Lifecycle audit history could not be loaded.");
       }
       setResult({
-        content: Array.isArray(body?.content) ? body.content : [],
+        content: Array.isArray(body?.content) ? uniqueAuditEvents(body.content) : [],
         number: Number(body?.number) || 0,
         totalElements: Number(body?.totalElements) || 0,
         totalPages: Number(body?.totalPages) || 0,
@@ -129,7 +131,7 @@ const AuditHistory = () => {
       <div className={styles.header}>
         <div>
           <h3>Record audit history</h3>
-          <p>Creation, header edits, lifecycle transitions, deletions, and restorations for budgets, transactions, and payment orders.</p>
+          <p>Record activity for budgets, transactions, payment orders, and payment-order lines.</p>
         </div>
         <button type="button" className={styles.refreshButton} onClick={() => setRefreshKey((value) => value + 1)} disabled={loading}>
           <FiRefreshCw aria-hidden="true" /> Refresh
@@ -144,6 +146,7 @@ const AuditHistory = () => {
             <option value="BUDGET">Budget</option>
             <option value="TRANSACTION">Transaction</option>
             <option value="PAYMENT_ORDER">Payment order</option>
+            <option value="PAYMENT_ORDER_LINE">Payment-order line</option>
           </select>
         </label>
         <label>
@@ -217,8 +220,8 @@ const AuditHistory = () => {
                 <td className={styles.nowrap}>{formatAuditTimestamp(event.occurredAt)}</td>
                 <td><strong>{ENTITY_LABELS[event.entityType] || event.entityType}</strong><span className={styles.subtle}>#{event.entityId}</span></td>
                 <td>{projectLabel(event.projectId)}</td>
-                <td><span className={`${styles.badge} ${styles[`action${event.action}`] || ""}`}>{AUDIT_ACTION_LABELS[event.action] || event.action}</span></td>
-                <td>{event.action === "UPDATE" ? <AuditFieldChanges event={event} /> : hasAuditTransition(event) ? <><span className={styles.state}>{event.previousState}</span><span className={styles.arrow}>→</span><span className={styles.state}>{event.newState}</span></> : "—"}<ReturnReason event={event} /></td>
+                <td><span className={`${styles.badge} ${styles[`action${event.action}`] || ""}`}>{auditActionLabel(event)}</span></td>
+                <td>{event.entityType === "PAYMENT_ORDER_LINE" ? <LineAuditDetails event={event} /> : event.action === "UPDATE" ? <AuditFieldChanges event={event} /> : hasAuditTransition(event) ? <><span className={styles.state}>{event.previousState}</span><span className={styles.arrow}>→</span><span className={styles.state}>{event.newState}</span></> : "—"}<ReturnReason event={event} /></td>
                 <td><strong>{event.performedByDisplay || "Unknown user"}</strong><span className={styles.subtle}>User #{event.performedBy}</span></td>
               </tr>
             ))}

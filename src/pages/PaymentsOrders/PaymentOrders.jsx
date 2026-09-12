@@ -1444,6 +1444,10 @@ function PaymentOrders() {
                       orgOptions={orgOptions}
                       costDetailOptions={costDetailOptions}
                       canManage={canManagePaymentOrderLines && isPaymentOrderLifecycleEditable(po)}
+                      onMutationSuccess={async () => {
+                        setHistoryRefreshKeys((current) => ({ ...current, [po.id]: (current[po.id] || 0) + 1 }));
+                        await fetchOrders(selectedProjectId);
+                      }}
                     />
                   </div>
                 )}

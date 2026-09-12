@@ -91,8 +91,7 @@ async function safeParseJsonResponse(res) {
   }
 }
 
-function isLockedResponse(res, data) {
-  if (res?.status === 409) return true;
+export function isLockedResponse(res, data) {
   const msg = (data?.message || "").toLowerCase();
   return (
     msg.includes("locked") || msg.includes("booked") || msg.includes("final")
@@ -143,6 +142,7 @@ const PaymentOrderLines = ({
   orgOptions = [],
   costDetailOptions = [],
   canManage = false,
+  onMutationSuccess,
 }) => {
   const token = useMemo(() => localStorage.getItem("authToken"), []);
   const authHeaders = useMemo(
@@ -351,8 +351,8 @@ const PaymentOrderLines = ({
       if (data?.fieldErrors) setFieldErrors(data.fieldErrors);
 
       const msg =
-        data?.message ||
-        (res.status === 409 ? "Conflict: payment order is locked." : null) ||
+        data?.fieldErrors?.id || data?.fieldErrors?.paymentOrderId || data?.message ||
+        (res.status === 409 ? "The line could not be changed. Refresh lines and try again." : null) ||
         "Failed to create line.";
 
       throw makeApiError(msg, data?.fieldErrors || null, res.status);
@@ -380,8 +380,8 @@ const PaymentOrderLines = ({
       }
 
       const msg =
-        data?.message ||
-        (res.status === 409 ? "Conflict: payment order is locked." : null) ||
+        data?.fieldErrors?.id || data?.fieldErrors?.paymentOrderId || data?.message ||
+        (res.status === 409 ? "The line could not be changed. Refresh lines and try again." : null) ||
         "Failed to update line.";
 
       // IMPORTANT: don't set global fieldErrors here
@@ -411,7 +411,7 @@ const PaymentOrderLines = ({
       const msg = formatApiError(
         data,
         res.status === 409
-          ? "Conflict: payment order is locked."
+          ? "The line could not be deleted. Refresh lines and try again."
           : "Failed to delete line.",
       );
 
@@ -443,6 +443,7 @@ const PaymentOrderLines = ({
 
     try {
       await apiCreate(payload);
+      await onMutationSuccess?.();
       setDraft({
         transactionId: "",
         organizationId: "",
@@ -503,6 +504,7 @@ const PaymentOrderLines = ({
 
     try {
       await apiUpdate(rowId, payload);
+      await onMutationSuccess?.();
       await fetchRows();
     } catch (e) {
       console.error(e);
@@ -534,6 +536,7 @@ const PaymentOrderLines = ({
 
     try {
       await apiDelete(id);
+      await onMutationSuccess?.();
       await fetchRows();
     } catch (e) {
       console.error(e);

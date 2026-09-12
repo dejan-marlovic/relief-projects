@@ -2,7 +2,14 @@ import {
   approvedTransactionOptions,
   allocationCostDetailOptions,
   validatePaymentOrderLine,
+  isLockedResponse,
 } from "./PaymentOrderLines";
+
+test("ownership and transaction conflicts do not mark the payment order Booked", () => {
+  expect(isLockedResponse({ status: 409 }, { message: "Line ownership changed. Refresh and retry.", fieldErrors: { paymentOrderId: "Owner changed" } })).toBe(false);
+  expect(isLockedResponse({ status: 409 }, { message: "Line mutations in an enclosing transaction require writable READ_COMMITTED isolation." })).toBe(false);
+  expect(isLockedResponse({ status: 409 }, { message: "Payment order is Booked and locked." })).toBe(true);
+});
 
 const validLine = {
   paymentOrderId: 1,

@@ -5,7 +5,8 @@ import { createAuthFetch, safeReadJson } from "../../utils/http";
 import styles from "./RecordHistory.module.scss";
 import ReturnReason from "../ReturnReason/ReturnReason";
 import AuditFieldChanges from "../AuditFieldChanges/AuditFieldChanges";
-import { AUDIT_ACTION_LABELS, hasAuditTransition } from "../../utils/auditEvents";
+import { auditActionLabel, hasAuditTransition, uniqueAuditEvents } from "../../utils/auditEvents";
+import LineAuditDetails from "../LineAuditDetails/LineAuditDetails";
 
 const labels = { BUDGET: "Budget", TRANSACTION: "Transaction", PAYMENT_ORDER: "Payment order" };
 const readable = (value) => value ? value.charAt(0) + value.slice(1).toLowerCase().replaceAll("_", " ") : "—";
@@ -14,7 +15,7 @@ const timestamp = (value) => {
   return value && !Number.isNaN(date.getTime()) ? date.toLocaleString() : "—";
 };
 
-function HistoryPage({ entityType, entityId }) {
+function HistoryPage({ entityType, entityId, includeChildren }) {
   const navigate = useNavigate();
   const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
   const [page, setPage] = useState(0);
@@ -27,6 +28,7 @@ function HistoryPage({ entityType, entityId }) {
     const load = async () => {
       try {
         const query = new URLSearchParams({ entityType, entityId: String(entityId), page: String(page), size: "20" });
+        if (entityType === "PAYMENT_ORDER" && includeChildren) query.set("includeChildren", "true");
         const response = await authFetch(`${BASE_URL}/api/audit-events?${query}`, { signal: controller.signal });
         const body = await safeReadJson(response);
         if (!response.ok) {
@@ -36,14 +38,14 @@ function HistoryPage({ entityType, entityId }) {
           throw new Error(message);
         }
         if (!Array.isArray(body?.content)) throw new Error("Lifecycle history could not be loaded. Please try again.");
-        if (!controller.signal.aborted) setState({ loading: false, result: body });
+        if (!controller.signal.aborted) setState({ loading: false, result: { ...body, content: uniqueAuditEvents(body.content) } });
       } catch (error) {
         if (!controller.signal.aborted) setState({ loading: false, error: error.message });
       }
     };
     load();
     return () => controller.abort();
-  }, [authFetch, entityType, entityId, page, refresh]);
+  }, [authFetch, entityType, entityId, includeChildren, page, refresh]);
 
   const { loading, error, result } = state;
   return <div className={styles.panel}>
@@ -60,8 +62,8 @@ function HistoryPage({ entityType, entityId }) {
           <thead><tr><th scope="col">Date and time</th><th scope="col">Action</th><th scope="col">Changes</th><th scope="col">Performed by</th></tr></thead>
           <tbody>{result.content.map((event) => <tr key={event.id}>
             <td><time dateTime={event.occurredAt}>{timestamp(event.occurredAt)}</time></td>
-            <td>{AUDIT_ACTION_LABELS[event.action] || event.action || "—"}</td>
-            <td>{event.action === "UPDATE" ? <AuditFieldChanges event={event} /> : hasAuditTransition(event) ? <>{readable(event.previousState)} → {readable(event.newState)}</> : "—"}<ReturnReason event={event} /></td>
+            <td>{auditActionLabel(event)}</td>
+            <td>{event.entityType === "PAYMENT_ORDER_LINE" ? <LineAuditDetails event={event} /> : event.action === "UPDATE" ? <AuditFieldChanges event={event} /> : hasAuditTransition(event) ? <>{readable(event.previousState)} → {readable(event.newState)}</> : "—"}<ReturnReason event={event} /></td>
             <td>{event.performedByDisplay || (event.performedBy ? `User #${event.performedBy}` : "Unknown user")}</td>
           </tr>)}</tbody>
         </table></div>}
@@ -78,9 +80,13 @@ function HistoryPage({ entityType, entityId }) {
 
 function HistoryDisclosure({ entityType, entityId, lifecycleStatus, refreshKey = 0 }) {
   const [open, setOpen] = useState(false);
+  const [includeChildren, setIncludeChildren] = useState(true);
   return <details className={styles.history} onToggle={(event) => setOpen(event.currentTarget.open)}>
     <summary>History · {labels[entityType]} #{entityId}</summary>
-    {open && <HistoryPage key={`${lifecycleStatus}:${refreshKey}`} entityType={entityType} entityId={entityId} />}
+    {open && entityType === "PAYMENT_ORDER" && <label style={{ display: "block", padding: "0 1rem 0.5rem" }}>
+      <input type="checkbox" checked={includeChildren} onChange={(event) => setIncludeChildren(event.target.checked)} /> Include line activity
+    </label>}
+    {open && <HistoryPage key={`${lifecycleStatus}:${refreshKey}:${includeChildren}`} entityType={entityType} entityId={entityId} includeChildren={includeChildren} />}
   </details>;
 }
 

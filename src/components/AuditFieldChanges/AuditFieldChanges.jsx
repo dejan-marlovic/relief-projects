@@ -1,6 +1,7 @@
 import React from "react";
 import styles from "./AuditFieldChanges.module.scss";
 const labels = {
+  paymentOrderId: "Payment order", costDetailId: "Cost detail", amount: "Amount", memo: "Memo",
   transactionId: "Header transaction", paymentOrderDate: "Payment-order date/time",
   numberOfTransactions: "Number of transactions", paymentOrderDescription: "Description", message: "Message",
   organizationId: "Organization", budgetId: "Budget",
@@ -30,7 +31,7 @@ export default function AuditFieldChanges({ event }) {
   if (!changes.length) return <p>No field changes recorded.</p>;
   return <dl className={styles.changes} aria-label="Updated fields">
     {changes.map((change, index) => <div className={styles.change} key={`${change.field}-${index}`}>
-      <dt>{labels[change.field] || change.field || "Unknown field"}</dt>
+      <dt>{event.entityType === "PAYMENT_ORDER_LINE" && change.field === "transactionId" ? "Transaction" : labels[change.field] || change.field || "Unknown field"}</dt>
       <dd><span className={styles.label}>Before</span><span className={styles.value}>{formatFieldValue(change.oldValue, change.type)}</span></dd>
       <dd><span className={styles.label}>After</span><span className={styles.value}>{formatFieldValue(change.newValue, change.type)}</span></dd>
     </div>)}
