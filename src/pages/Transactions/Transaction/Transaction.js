@@ -65,6 +65,7 @@ const Transaction = ({
   onReturnLifecycle,
   isReviewingLifecycle = false,
   historyRefreshKey = 0,
+  onAllocationMutationSuccess,
 }) => {
   const ev = editedValues || {};
   const isCreate = (tx?.id ?? "") === "new";
@@ -457,6 +458,7 @@ const Transaction = ({
       {expanded && !isCreate && (
         <div className={styles.expandedPanel}>
           <TransactionAllocations
+            onMutationSuccess={onAllocationMutationSuccess}
             txId={tx.id}
             costDetailOptions={costDetailOptions}
             budgetOptions={budgets}

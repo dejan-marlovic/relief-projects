@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./TransactionAllocations.module.scss";
-import {  FiPlus,
+import {
+  FiPlus,
   FiRefreshCw,
   FiSave,
   FiTrash2,
@@ -51,6 +52,7 @@ const TransactionAllocations = ({
   costDetailOptions = [],
   budgetOptions = [],
   fallbackCurrencyLabel = "",
+  onMutationSuccess,
   canManage = false,
 }) => {
   const token = useMemo(() => localStorage.getItem("authToken"), []);
@@ -238,8 +240,9 @@ const TransactionAllocations = ({
       ? null
       : Number(txMeta.approvedAmount);
 
-  const upsert = async ({ costDetailId, plannedAmount, note }) => {
+  const upsert = async ({ id, costDetailId, plannedAmount, note }) => {
     const payload = {
+      ...(id != null ? { id } : {}),
       transactionId: Number(txId),
       costDetailId: Number(costDetailId),
       plannedAmount,
@@ -291,6 +294,7 @@ const TransactionAllocations = ({
       setPlannedAmountEdited(false);
       await fetchRows();
       await fetchTxMeta();
+      await onMutationSuccess?.();
     } catch (e) {
       console.error(e);
       if (e.fieldErrors) setFieldErrors(e.fieldErrors);
@@ -328,12 +332,14 @@ const TransactionAllocations = ({
 
     try {
       await upsert({
+        id: row.id,
         costDetailId: row.costDetailId,
         plannedAmount: planned,
         note: patch.note ?? row.note ?? "",
       });
       await fetchRows();
       await fetchTxMeta();
+      await onMutationSuccess?.();
     } catch (e) {
       console.error(e);
       setRowErrorsById((prev) => ({
@@ -369,6 +375,7 @@ const TransactionAllocations = ({
       }
       await fetchRows();
       await fetchTxMeta();
+      await onMutationSuccess?.();
     } catch (e) {
       console.error(e);
       setFormError(e.message || "Failed to delete allocation.");

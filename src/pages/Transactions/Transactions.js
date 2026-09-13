@@ -11,7 +11,8 @@ import { ProjectContext } from "../../context/ProjectContext";
 import { useAuth } from "../../context/AuthContext";
 import Transaction from "./Transaction/Transaction";
 import styles from "./Transactions.module.scss";
-import {  FiPlus,
+import {
+  FiPlus,
   FiColumns,
   FiTrash2,
   FiDownload,
@@ -1908,6 +1909,9 @@ const Transactions = ({ refreshTrigger }) => {
                 onApproveLifecycle={() => reviewTransaction(tx, "approve")}
                 onReturnLifecycle={() => setReturnTarget(tx.id)}
                 isReviewingLifecycle={reviewingTxId === tx.id}
+                onAllocationMutationSuccess={() => {
+                  setHistoryRefreshKeys((current) => ({ ...current, [tx.id]: (current[tx.id] || 0) + 1 }));
+                }}
                 historyRefreshKey={historyRefreshKeys[tx.id] || 0}
               />
             ))
