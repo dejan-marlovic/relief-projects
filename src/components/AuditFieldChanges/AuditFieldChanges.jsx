@@ -1,6 +1,10 @@
 import React from "react";
 import styles from "./AuditFieldChanges.module.scss";
 const labels = {
+  costTypeId: "Type", costId: "Category", costDescription: "Description",
+  noOfUnits: "Units", frequencyMonths: "Frequency (months)", unitPrice: "Unit price",
+  percentageCharging: "Percentage charged", amountLocalCurrency: "Local amount",
+  amountReportingCurrency: "Reporting amount (SEK field)", amountGBP: "GBP amount", amountEuro: "EUR amount",
   plannedAmount: "Planned amount", note: "Note",
   paymentOrderId: "Payment order", costDetailId: "Cost detail", amount: "Amount", memo: "Memo",
   transactionId: "Header transaction", paymentOrderDate: "Payment-order date/time",

@@ -85,7 +85,7 @@ async function safeParseJsonResponse(response) {
   }
 }
 
-const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
+const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates, onMutationSuccess }) => {
   const { hasAnyRole } = useAuth();
   const isBudgetEditable = ["DRAFT", "RETURNED"].includes(
     budget?.lifecycleStatus || "DRAFT",
@@ -220,7 +220,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
 
       const token = localStorage.getItem("authToken");
 
-      const updatedList = await Promise.all(
+      const results = await Promise.all(
         list.map(async (item) => {
           const computed = computeAmounts(item);
           const merged = { ...item, ...computed };
@@ -255,7 +255,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
           };
 
           try {
-            await fetch(`${BASE_URL}/api/cost-details/${item.costDetailId}`, {
+            const response = await fetch(`${BASE_URL}/api/cost-details/${item.costDetailId}`, {
               method: "PUT",
               headers: {
                 "Content-Type": "application/json",
@@ -263,6 +263,8 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
               },
               body: JSON.stringify(payload),
             });
+            if (!response.ok) throw new Error(await readApiError(response, "Recalculation failed."));
+            return true;
           } catch (err) {
             console.error(
               "Failed to recalculate cost detail",
@@ -271,13 +273,17 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
             );
           }
 
-          return merged;
+          return false;
         })
       );
 
-      setCostDetails(updatedList);
+      await fetchCostDetails();
+      onMutationSuccess?.();
+      if (results.some((success) => !success)) {
+        setFormError("Some cost details could not be recalculated. Review the saved values and history before retrying.");
+      }
     },
-    [budget, exchangeRates, computeAmounts]
+    [budget, computeAmounts, fetchCostDetails, onMutationSuccess]
   );
 
   // 👉 fetch on mount + whenever refreshTrigger changes
@@ -414,6 +420,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
         }
 
         await fetchCostDetails();
+        onMutationSuccess?.();
         setEditingId(null);
         setEditedValues((prev) => {
           const next = { ...prev };
@@ -482,6 +489,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
       }
 
       await fetchCostDetails();
+      onMutationSuccess?.();
       setEditingId(null);
       setEditedValues((prev) => {
         const newValues = { ...prev };
@@ -529,6 +537,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
       }
 
       await fetchCostDetails();
+      onMutationSuccess?.();
     } catch (err) {
       console.error("Error deleting cost detail:", err);
       setFormError(err.message || "Failed to delete cost detail.");

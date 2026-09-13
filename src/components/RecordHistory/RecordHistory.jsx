@@ -6,6 +6,7 @@ import styles from "./RecordHistory.module.scss";
 import ReturnReason from "../ReturnReason/ReturnReason";
 import AuditFieldChanges from "../AuditFieldChanges/AuditFieldChanges";
 import { auditActionLabel, hasAuditTransition, uniqueAuditEvents } from "../../utils/auditEvents";
+import CostDetailAuditDetails from "../CostDetailAuditDetails/CostDetailAuditDetails";
 import AllocationAuditDetails from "../AllocationAuditDetails/AllocationAuditDetails";
 import LineAuditDetails from "../LineAuditDetails/LineAuditDetails";
 
@@ -29,7 +30,7 @@ function HistoryPage({ entityType, entityId, includeChildren }) {
     const load = async () => {
       try {
         const query = new URLSearchParams({ entityType, entityId: String(entityId), page: String(page), size: "20" });
-        if (["PAYMENT_ORDER", "TRANSACTION"].includes(entityType) && includeChildren) query.set("includeChildren", "true");
+        if (["BUDGET", "PAYMENT_ORDER", "TRANSACTION"].includes(entityType) && includeChildren) query.set("includeChildren", "true");
         const response = await authFetch(`${BASE_URL}/api/audit-events?${query}`, { signal: controller.signal });
         const body = await safeReadJson(response);
         if (!response.ok) {
@@ -64,7 +65,7 @@ function HistoryPage({ entityType, entityId, includeChildren }) {
           <tbody>{result.content.map((event) => <tr key={event.id}>
             <td><time dateTime={event.occurredAt}>{timestamp(event.occurredAt)}</time></td>
             <td>{auditActionLabel(event)}</td>
-            <td>{event.entityType === "COST_DETAIL_ALLOCATION" ? <AllocationAuditDetails event={event} /> : event.entityType === "PAYMENT_ORDER_LINE" ? <LineAuditDetails event={event} /> : event.action === "UPDATE" ? <AuditFieldChanges event={event} /> : hasAuditTransition(event) ? <>{readable(event.previousState)} → {readable(event.newState)}</> : "—"}<ReturnReason event={event} /></td>
+            <td>{event.entityType === "COST_DETAIL" ? <CostDetailAuditDetails event={event} /> : event.entityType === "COST_DETAIL_ALLOCATION" ? <AllocationAuditDetails event={event} /> : event.entityType === "PAYMENT_ORDER_LINE" ? <LineAuditDetails event={event} /> : event.action === "UPDATE" ? <AuditFieldChanges event={event} /> : hasAuditTransition(event) ? <>{readable(event.previousState)} → {readable(event.newState)}</> : "—"}<ReturnReason event={event} /></td>
             <td>{event.performedByDisplay || (event.performedBy ? `User #${event.performedBy}` : "Unknown user")}</td>
           </tr>)}</tbody>
         </table></div>}
@@ -82,10 +83,10 @@ function HistoryPage({ entityType, entityId, includeChildren }) {
 function HistoryDisclosure({ entityType, entityId, lifecycleStatus, refreshKey = 0 }) {
   const [open, setOpen] = useState(false);
   const [includeChildren, setIncludeChildren] = useState(true);
-  return <details className={styles.history} onToggle={(event) => setOpen(event.currentTarget.open)}>
+  return <details className={styles.history} onToggle={(event) => { if (event.target === event.currentTarget) setOpen(event.currentTarget.open); }}>
     <summary>History · {labels[entityType]} #{entityId}</summary>
-    {open && ["PAYMENT_ORDER", "TRANSACTION"].includes(entityType) && <label style={{ display: "block", padding: "0 1rem 0.5rem" }}>
-      <input type="checkbox" checked={includeChildren} onChange={(event) => setIncludeChildren(event.target.checked)} /> {entityType === "TRANSACTION" ? "Include allocation activity" : "Include line activity"}
+    {open && ["BUDGET", "PAYMENT_ORDER", "TRANSACTION"].includes(entityType) && <label style={{ display: "block", padding: "0 1rem 0.5rem" }}>
+      <input type="checkbox" checked={includeChildren} onChange={(event) => setIncludeChildren(event.target.checked)} /> {entityType === "BUDGET" ? "Include cost-detail activity" : entityType === "TRANSACTION" ? "Include allocation activity" : "Include line activity"}
     </label>}
     {open && <HistoryPage key={`${lifecycleStatus}:${refreshKey}:${includeChildren}`} entityType={entityType} entityId={entityId} includeChildren={includeChildren} />}
   </details>;

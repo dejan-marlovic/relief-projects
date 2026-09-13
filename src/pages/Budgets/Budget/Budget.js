@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import ExcelJS from "exceljs";
 import styles from "./Budget.module.scss";
 import CostDetails from "./CostDetails/CostDetails";
@@ -31,6 +31,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
 
   const [budget, setBudget] = useState(initialBudget || {});
   const [historyRefreshKey, setHistoryRefreshKey] = useState(0);
+  const refreshChildHistory = useCallback(() => setHistoryRefreshKey((value) => value + 1), []);
   const [currencies, setCurrencies] = useState([]);
   const [exchangeRates, setExchangeRates] = useState([]);
   const [refreshCostDetailsTrigger, setRefreshCostDetailsTrigger] = useState(0);
@@ -1753,6 +1754,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
           </div>
 
           <CostDetails
+            onMutationSuccess={refreshChildHistory}
             budgetId={budget.id}
             refreshTrigger={refreshCostDetailsTrigger}
             budget={budget}

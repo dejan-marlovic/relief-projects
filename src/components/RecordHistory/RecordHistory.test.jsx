@@ -54,7 +54,7 @@ test.each(["BUDGET", "TRANSACTION", "PAYMENT_ORDER"])("lazily loads scoped %s hi
   expect(await screen.findByText("Alex")).toBeInTheDocument();
   const [url, options] = fetch.mock.calls[0];
   const query = new URL(url, "http://localhost").searchParams;
-  expect(Object.fromEntries(query)).toEqual({ entityType, entityId: "7", page: "0", size: "20", ...(["PAYMENT_ORDER", "TRANSACTION"].includes(entityType) ? { includeChildren: "true" } : {}) });
+  expect(Object.fromEntries(query)).toEqual({ entityType, entityId: "7", page: "0", size: "20", ...(["BUDGET", "PAYMENT_ORDER", "TRANSACTION"].includes(entityType) ? { includeChildren: "true" } : {}) });
   expect(options.headers.Authorization).toBe("Bearer token");
   expect(screen.getByText("Draft → Submitted")).toBeInTheDocument();
 });
@@ -149,4 +149,18 @@ test("transaction history aggregates allocations once and can return to exact he
   expect(fetch.mock.calls[1][0]).not.toContain("includeChildren");
   expect(fetch.mock.calls[1][0]).toContain("entityType=TRANSACTION&entityId=7&page=0");
   expect(screen.queryByText("Allocation #81 deleted")).not.toBeInTheDocument();
+});
+
+test("budget history aggregates cost details once and can return to exact header history", async () => {
+  const line = { ...event, id: 99, entityType: "COST_DETAIL", entityId: 81, action: "DELETE", parentBudgetId: 7, previousState: null, newState: null };
+  fetch.mockResolvedValueOnce(response(page([line, line], 0, 2))).mockResolvedValueOnce(response(page([event])));
+  render(<RecordHistory {...props} entityType="BUDGET" />); open();
+  expect(await screen.findByText("Cost detail #81 deleted")).toBeInTheDocument();
+  expect(screen.getAllByRole("row")).toHaveLength(2);
+  expect(fetch.mock.calls[0][0]).toContain("includeChildren=true");
+  fireEvent.click(screen.getByRole("checkbox", { name: "Include cost-detail activity" }));
+  await screen.findByText("Draft → Submitted");
+  expect(fetch.mock.calls[1][0]).not.toContain("includeChildren");
+  expect(fetch.mock.calls[1][0]).toContain("entityType=BUDGET&entityId=7&page=0");
+  expect(screen.queryByText("Cost detail #81 deleted")).not.toBeInTheDocument();
 });
