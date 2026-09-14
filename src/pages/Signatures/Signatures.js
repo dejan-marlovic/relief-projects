@@ -475,14 +475,14 @@ function Signatures() {
         const msg =
           data?.message ||
           (res.status === 409
-            ? "Conflict: this item is locked."
+            ? "Conflict: reload and retry the signature change."
             : `Failed to ${isCreate ? "create" : "update"} signature.`);
 
         setFormError(msg);
         return;
       }
 
-      await fetchSignatures(selectedProjectId);
+      await Promise.all([fetchSignatures(selectedProjectId), fetchPaymentOrders(selectedProjectId)]);
       cancel();
     } catch (e) {
       console.error(e);
@@ -545,7 +545,7 @@ function Signatures() {
         const msg = formatApiError(
           data,
           res.status === 409
-            ? "Conflict: this item is locked."
+            ? "Conflict: reload and retry the signature change."
             : "Delete failed.",
         );
         setFormError(msg);
@@ -558,7 +558,7 @@ function Signatures() {
         return next;
       });
 
-      await fetchSignatures(selectedProjectId);
+      await Promise.all([fetchSignatures(selectedProjectId), fetchPaymentOrders(selectedProjectId)]);
     } catch (e) {
       console.error(e);
       setFormError("Delete failed.");
@@ -596,7 +596,7 @@ function Signatures() {
         );
       }
       setSelectedSignatureIds(new Set());
-      await fetchSignatures(selectedProjectId);
+      await Promise.all([fetchSignatures(selectedProjectId), fetchPaymentOrders(selectedProjectId)]);
     } catch (err) {
       console.error(err);
       setFormError(err.message || "Failed to delete selected signatures.");

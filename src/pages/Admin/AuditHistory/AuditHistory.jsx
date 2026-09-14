@@ -9,6 +9,7 @@ import styles from "./AuditHistory.module.scss";
 import ReturnReason from "../../../components/ReturnReason/ReturnReason";
 import AuditFieldChanges from "../../../components/AuditFieldChanges/AuditFieldChanges";
 import { auditActionLabel, hasAuditTransition, uniqueAuditEvents } from "../../../utils/auditEvents";
+import SignatureAuditDetails from "../../../components/SignatureAuditDetails/SignatureAuditDetails";
 import CostDetailAuditDetails from "../../../components/CostDetailAuditDetails/CostDetailAuditDetails";
 import AllocationAuditDetails from "../../../components/AllocationAuditDetails/AllocationAuditDetails";
 import LineAuditDetails from "../../../components/LineAuditDetails/LineAuditDetails";
@@ -27,6 +28,7 @@ const ENTITY_LABELS = {
   BUDGET: "Budget",
   TRANSACTION: "Transaction",
   PAYMENT_ORDER: "Payment order",
+  SIGNATURE: "Signature",
   COST_DETAIL: "Budget cost detail",
   COST_DETAIL_ALLOCATION: "Transaction allocation",
   PAYMENT_ORDER_LINE: "Payment-order line",
@@ -135,7 +137,7 @@ const AuditHistory = () => {
       <div className={styles.header}>
         <div>
           <h3>Record audit history</h3>
-          <p>Record activity for budgets, transactions, payment orders, payment-order lines, transaction allocations, and budget cost details.</p>
+          <p>Record activity for budgets, transactions, payment orders, payment-order lines, transaction allocations, budget cost details, and signatures.</p>
         </div>
         <button type="button" className={styles.refreshButton} onClick={() => setRefreshKey((value) => value + 1)} disabled={loading}>
           <FiRefreshCw aria-hidden="true" /> Refresh
@@ -150,6 +152,7 @@ const AuditHistory = () => {
             <option value="BUDGET">Budget</option>
             <option value="TRANSACTION">Transaction</option>
             <option value="PAYMENT_ORDER">Payment order</option>
+            <option value="SIGNATURE">Signature</option>
             <option value="COST_DETAIL">Budget cost detail</option>
             <option value="COST_DETAIL_ALLOCATION">Transaction allocation</option>
             <option value="PAYMENT_ORDER_LINE">Payment-order line</option>
@@ -227,7 +230,7 @@ const AuditHistory = () => {
                 <td><strong>{ENTITY_LABELS[event.entityType] || event.entityType}</strong><span className={styles.subtle}>#{event.entityId}</span></td>
                 <td>{projectLabel(event.projectId)}</td>
                 <td><span className={`${styles.badge} ${styles[`action${event.action}`] || ""}`}>{auditActionLabel(event)}</span></td>
-                <td>{event.entityType === "COST_DETAIL" ? <CostDetailAuditDetails event={event} /> : event.entityType === "COST_DETAIL_ALLOCATION" ? <AllocationAuditDetails event={event} /> : event.entityType === "PAYMENT_ORDER_LINE" ? <LineAuditDetails event={event} /> : event.action === "UPDATE" ? <AuditFieldChanges event={event} /> : hasAuditTransition(event) ? <><span className={styles.state}>{event.previousState}</span><span className={styles.arrow}>→</span><span className={styles.state}>{event.newState}</span></> : "—"}<ReturnReason event={event} /></td>
+                <td>{event.entityType === "SIGNATURE" ? <SignatureAuditDetails event={event} /> : event.entityType === "COST_DETAIL" ? <CostDetailAuditDetails event={event} /> : event.entityType === "COST_DETAIL_ALLOCATION" ? <AllocationAuditDetails event={event} /> : event.entityType === "PAYMENT_ORDER_LINE" ? <LineAuditDetails event={event} /> : event.action === "UPDATE" ? <AuditFieldChanges event={event} /> : hasAuditTransition(event) ? <><span className={styles.state}>{event.previousState}</span><span className={styles.arrow}>→</span><span className={styles.state}>{event.newState}</span></> : "—"}<ReturnReason event={event} /></td>
                 <td><strong>{event.performedByDisplay || "Unknown user"}</strong><span className={styles.subtle}>User #{event.performedBy}</span></td>
               </tr>
             ))}

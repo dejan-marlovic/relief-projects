@@ -1,6 +1,7 @@
 import React from "react";
 import styles from "./AuditFieldChanges.module.scss";
 const labels = {
+  signatureStatusId: "Signature status", employeeId: "Named signer", signatureDate: "Signature date", signature: "Signature content",
   costTypeId: "Type", costId: "Category", costDescription: "Description",
   noOfUnits: "Units", frequencyMonths: "Frequency (months)", unitPrice: "Unit price",
   percentageCharging: "Percentage charged", amountLocalCurrency: "Local amount",
@@ -20,6 +21,7 @@ const labels = {
   reportingExchangeRateSekId: "SEK reporting exchange rate", reportingExchangeRateEurId: "EUR reporting exchange rate",
 };
 export const formatFieldValue = (value, type) => {
+  if (type === "REDACTED") return "Values not retained";
   if (value == null) return "Not set";
   if (value === "") return "Empty text";
   if (type === "REFERENCE" && typeof value === "object") {
@@ -37,8 +39,11 @@ export default function AuditFieldChanges({ event }) {
   return <dl className={styles.changes} aria-label="Updated fields">
     {changes.map((change, index) => <div className={styles.change} key={`${change.field}-${index}`}>
       <dt>{["PAYMENT_ORDER_LINE", "COST_DETAIL_ALLOCATION"].includes(event.entityType) && change.field === "transactionId" ? "Transaction" : labels[change.field] || change.field || "Unknown field"}</dt>
+      {change.type === "REDACTED" || (event.entityType === "SIGNATURE" && change.field === "signature") ?
+        <dd>Signature content changed; values not retained.</dd> : <>
       <dd><span className={styles.label}>Before</span><span className={styles.value}>{formatFieldValue(change.oldValue, change.type)}</span></dd>
       <dd><span className={styles.label}>After</span><span className={styles.value}>{formatFieldValue(change.newValue, change.type)}</span></dd>
+      </>}
     </div>)}
   </dl>;
 }

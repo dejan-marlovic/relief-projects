@@ -9,7 +9,7 @@ export const AUDIT_ACTION_LABELS = {
 };
 
 export const hasAuditTransition = (event) =>
-  !["PAYMENT_ORDER_LINE", "COST_DETAIL_ALLOCATION", "COST_DETAIL"].includes(event.entityType) &&
+  !["PAYMENT_ORDER_LINE", "COST_DETAIL_ALLOCATION", "COST_DETAIL", "SIGNATURE"].includes(event.entityType) &&
   !["CREATE", "UPDATE", "DELETE", "RESTORE"].includes(event.action) &&
   Boolean(event.previousState && event.newState);
 
@@ -27,10 +27,10 @@ export const auditActionLabel = (event) => {
       : event.action === "CREATE" ? "added" : label.toLowerCase();
     return `Allocation #${event.entityId} ${action}`;
   }
-  if (event.entityType !== "PAYMENT_ORDER_LINE") return label;
+  if (!["PAYMENT_ORDER_LINE", "SIGNATURE"].includes(event.entityType)) return label;
   const moved = event.previousParentPaymentOrderId != null && event.parentPaymentOrderId != null &&
     String(event.previousParentPaymentOrderId) !== String(event.parentPaymentOrderId);
-  return `Line #${event.entityId} ${moved ? "moved" : label.toLowerCase()}`;
+  return `${event.entityType === "SIGNATURE" ? "Signature" : "Line"} #${event.entityId} ${moved ? "moved" : label.toLowerCase()}`;
 };
 
 export const uniqueAuditEvents = (events) => {
