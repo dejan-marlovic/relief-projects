@@ -116,3 +116,19 @@ test("Admin can request exact signature history and see the line and parent iden
   expect(fetch.mock.calls[1][0]).not.toContain("includeChildren");
   await waitFor(() => expect(screen.getByRole("button", { name: "Refresh" })).toBeEnabled());
 });
+
+test("Admin can request exact recipient history and see the line and parent identifiers", async () => {
+  const event = { id: 50, entityType: "RECIPIENT", entityId: 81, parentPaymentOrderId: 73, action: "CREATE", performedByDisplay: "admin.user" };
+  global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200, text: async () => JSON.stringify({ content: [event, event], number: 0, totalPages: 1, totalElements: 1 }) });
+  render(<ProjectContext.Provider value={{ projects: [] }}><AuditHistory /></ProjectContext.Provider>);
+  await screen.findByText("Recipient #81 created");
+  expect(screen.getByText("Payment order #73")).toBeInTheDocument();
+  expect(screen.getAllByRole("row")).toHaveLength(2);
+  fireEvent.change(screen.getByRole("combobox", { name: "Record type" }), { target: { value: "RECIPIENT" } });
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Record ID" }), { target: { value: "81" } });
+  fireEvent.click(screen.getByRole("button", { name: "Apply filters" }));
+  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+  expect(fetch.mock.calls[1][0]).toContain("entityType=RECIPIENT&entityId=81");
+  expect(fetch.mock.calls[1][0]).not.toContain("includeChildren");
+  await waitFor(() => expect(screen.getByRole("button", { name: "Refresh" })).toBeEnabled());
+});

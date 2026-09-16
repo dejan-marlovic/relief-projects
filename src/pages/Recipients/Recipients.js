@@ -484,7 +484,7 @@ function Recipients() {
 
           setLockedBanner(msg);
           setFormError("");
-          await fetchRecipients(selectedProjectId);
+          await Promise.all([fetchRecipients(selectedProjectId), fetchPaymentOrders(selectedProjectId)]);
           return;
         }
 
@@ -495,7 +495,7 @@ function Recipients() {
         return;
       }
 
-      await fetchRecipients(selectedProjectId);
+      await Promise.all([fetchRecipients(selectedProjectId), fetchPaymentOrders(selectedProjectId)]);
       cancel();
     } catch (e) {
       console.error(e);
@@ -528,7 +528,7 @@ function Recipients() {
 
           setLockedBanner(msg);
           setFormError("");
-          await fetchRecipients(selectedProjectId);
+          await Promise.all([fetchRecipients(selectedProjectId), fetchPaymentOrders(selectedProjectId)]);
           return;
         }
 
@@ -542,7 +542,7 @@ function Recipients() {
         return next;
       });
 
-      await fetchRecipients(selectedProjectId);
+      await Promise.all([fetchRecipients(selectedProjectId), fetchPaymentOrders(selectedProjectId)]);
     } catch (e) {
       console.error(e);
       setFormError("Delete failed.");
@@ -628,7 +628,7 @@ function Recipients() {
         ? data.lockedRecipientIds
         : [];
 
-      if (lockedIds.length > 0) {
+      if (data?.message || lockedIds.length > 0) {
         setLockedBanner(
           data?.message ||
             `Locked recipients were not deleted: ${lockedIds
@@ -640,7 +640,7 @@ function Recipients() {
       }
 
       setSelectedRecipientIds(new Set());
-      await fetchRecipients(selectedProjectId);
+      await Promise.all([fetchRecipients(selectedProjectId), fetchPaymentOrders(selectedProjectId)]);
     } catch (err) {
       console.error(err);
       setFormError(err.message || "Failed to delete recipients.");
