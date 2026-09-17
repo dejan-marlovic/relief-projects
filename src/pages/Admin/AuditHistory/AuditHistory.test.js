@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import AuditHistory, { buildAuditQuery, formatAuditTimestamp } from "./AuditHistory";
 import { ProjectContext } from "../../../context/ProjectContext";
 
@@ -131,4 +131,26 @@ test("Admin can request exact recipient history and see the line and parent iden
   expect(fetch.mock.calls[1][0]).toContain("entityType=RECIPIENT&entityId=81");
   expect(fetch.mock.calls[1][0]).not.toContain("includeChildren");
   await waitFor(() => expect(screen.getByRole("button", { name: "Refresh" })).toBeEnabled());
+});
+
+
+test("late responses cannot overwrite newer Admin filter results", async () => {
+  let finishOld;
+  const response = (name) => ({ ok: true, text: async () => JSON.stringify({ content: [{ id: 1, entityType: "BUDGET", entityId: 7, action: "CREATE", performedByDisplay: name }], number: 0, totalPages: 1, totalElements: 1 }) });
+  global.fetch = jest.fn().mockImplementationOnce(() => new Promise((resolve) => { finishOld = resolve; })).mockResolvedValue(response("Current actor"));
+  render(<ProjectContext.Provider value={{ projects: [] }}><AuditHistory /></ProjectContext.Provider>);
+  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Record ID" }), { target: { value: "7" } });
+  // Submit the filter form while the initial response is still pending.
+  fireEvent.submit(screen.getByRole("button", { name: "Apply filters" }).closest("form"));
+  await screen.findByText("Current actor");
+  await act(async () => { finishOld(response("Stale actor")); });
+  expect(screen.getByText("Current actor")).toBeInTheDocument();
+  expect(screen.queryByText("Stale actor")).not.toBeInTheDocument();
+});
+
+test("malformed Admin history response is an error, not empty history", async () => {
+  global.fetch = jest.fn().mockResolvedValue({ ok: true, text: async () => JSON.stringify({ unexpected: [] }) });
+  render(<ProjectContext.Provider value={{ projects: [] }}><AuditHistory /></ProjectContext.Provider>);
+  expect(await screen.findByRole("alert")).toHaveTextContent("invalid response");
 });

@@ -90,6 +90,8 @@ const AuditHistory = () => {
       if (!response.ok) {
         throw new Error(body?.message || "Lifecycle audit history could not be loaded.");
       }
+      if (signal.aborted) return;
+      if (!Array.isArray(body?.content)) throw new Error("Audit history returned an invalid response. Please try again.");
       setResult({
         content: Array.isArray(body?.content) ? uniqueAuditEvents(body.content) : [],
         number: Number(body?.number) || 0,
@@ -97,7 +99,7 @@ const AuditHistory = () => {
         totalPages: Number(body?.totalPages) || 0,
       });
     } catch (loadError) {
-      if (loadError.name !== "AbortError") {
+      if (!signal.aborted && loadError.name !== "AbortError") {
         setError(loadError.message || "Lifecycle audit history could not be loaded.");
         setResult({ content: [], number: 0, totalElements: 0, totalPages: 0 });
       }
