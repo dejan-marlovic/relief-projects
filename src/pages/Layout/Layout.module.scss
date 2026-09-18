@@ -128,18 +128,18 @@ $secondary-color: colors.$danger;
   flex-shrink: 0;
   min-width: 0;
   margin-bottom: 1rem;
-  padding: 6px;
+  padding: 8px;
   border: 1px solid colors.$primary-border;
   border-radius: 14px;
-  background: colors.$surface-secondary;
-  box-shadow: 0 3px 10px colors.$border-subtle;
+  background: colors.$surface;
+  box-shadow: colors.$shadow-card;
 }
 
 .tabList {
   list-style: none;
   display: flex;
   align-items: stretch;
-  gap: 6px;
+  gap: 8px;
   margin: 0;
   padding: 2px;
   max-width: 100%;
@@ -159,26 +159,26 @@ $secondary-color: colors.$danger;
   align-items: flex-start;
   justify-content: center;
   box-sizing: border-box;
-  min-height: 54px;
+  min-height: 62px;
   white-space: nowrap;
-  padding: 10px 18px;
-  border: 1px solid colors.$border-subtle;
-  border-radius: 10px;
+  padding: 12px 22px;
+  border: 1px solid colors.$primary-border;
+  border-radius: 12px;
   background: colors.$surface;
   color: colors.$text-secondary;
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 600;
   line-height: 1.25;
   text-decoration: none;
-  box-shadow: 0 1px 2px colors.$border-subtle;
+  box-shadow: none;
   transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .tabLink:hover {
   background: colors.$primary-soft;
-  border-color: colors.$primary-a60;
+  border-color: colors.$primary-border-strong;
   color: colors.$primary-dark;
-  box-shadow: 0 2px 6px colors.$border-subtle;
+  box-shadow: none;
 }
 
 .projectTab {
@@ -201,17 +201,17 @@ $secondary-color: colors.$danger;
   display: block;
   margin-top: 3px;
   color: colors.$text-muted;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 400;
   line-height: 1.25;
 }
 
 .tabLink.active {
-  border-color: colors.$primary-a60;
+  border-color: colors.$primary-border-strong;
   background: colors.$primary-soft;
   color: colors.$primary-dark;
   font-weight: 700;
-  box-shadow: inset 0 -3px 0 colors.$primary, 0 2px 5px colors.$border-subtle;
+  box-shadow: inset 0 -2px 0 colors.$primary;
 }
 
 /* Responsive */
@@ -241,7 +241,7 @@ $secondary-color: colors.$danger;
 }
 
 .tabLink.active.adminTab {
-  box-shadow: inset 0 -3px 0 colors.$danger, 0 2px 5px colors.$border-subtle;
+  box-shadow: inset 0 -2px 0 colors.$danger;
 }
 
 // Pages use document scrolling on phones so forms remain
