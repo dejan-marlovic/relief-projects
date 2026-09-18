@@ -1,3 +1,4 @@
+import useMediaQuery from "../../hooks/useMediaQuery";
 import React, {
   useCallback,
   useContext,
@@ -110,6 +111,9 @@ function Signatures() {
   const canManageSignatures = hasAnyRole("ADMIN", "APPROVER");
 
   const [items, setItems] = useState([]);
+  const compact = useMediaQuery("(max-width: 1100px)");
+  const [saving, setSaving] = useState(false);
+  const saveInProgress = useRef(false);
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
   useUnsavedChange("signatures-editor", editingId !== null);
@@ -349,7 +353,7 @@ function Signatures() {
   };
 
   const startEdit = (row) => {
-    if (!canManageSignatures) return;
+    if (!canManageSignatures || saving || (compact && editingId !== null)) return;
     setEditingId(row?.id ?? null);
     setEditedValues((prev) => ({
       ...prev,
@@ -373,7 +377,7 @@ function Signatures() {
   };
 
   const startCreate = () => {
-    if (!canManageSignatures) return;
+    if (!canManageSignatures || saving || (compact && editingId !== null)) return;
     setEditingId("new");
     setEditedValues((prev) => ({ ...prev, new: { ...blankSignature } }));
 
@@ -433,7 +437,7 @@ function Signatures() {
   };
 
   const save = async () => {
-    if (!canManageSignatures) return;
+    if (!canManageSignatures || saveInProgress.current) return;
     const id = editingId;
     const v = editedValues[id];
     if (!v) return;
@@ -444,6 +448,8 @@ function Signatures() {
     setFieldErrors((prev) => ({ ...prev, [id]: {} }));
 
     if (!validateClientSide(id, v)) return;
+    saveInProgress.current = true;
+    setSaving(true);
 
     const payload = {
       signatureStatusId: Number(v.signatureStatusId),
@@ -489,7 +495,7 @@ function Signatures() {
       setFormError(
         e.message || `Failed to ${isCreate ? "create" : "update"} signature.`,
       );
-    }
+    } finally { saveInProgress.current = false; setSaving(false); }
   };
 
   /*
@@ -1075,7 +1081,7 @@ function Signatures() {
               type="button"
               className={styles.exportInlineBtn}
               onClick={handleExportSelected}
-              disabled={selectedSignatureCount === 0 || exportingSelected}
+              disabled={selectedSignatureCount === 0 || exportingSelected || saving || (compact && editingId !== null)}
               title="Export selected signatures to Excel"
             >
               <FiDownload />
@@ -1093,7 +1099,7 @@ function Signatures() {
                 type="button"
                 className={styles.dangerInlineBtn}
                 onClick={removeSelected}
-                disabled={selectedSignatureCount === 0 || exportingSelected}
+                disabled={selectedSignatureCount === 0 || exportingSelected || saving || (compact && editingId !== null)}
                 title="Delete selected signatures"
               >
                 <FiTrash2 />
@@ -1103,7 +1109,7 @@ function Signatures() {
                   : ""}
               </button>
             )}
-            <div className={styles.columnsBox}>
+            {!compact && <div className={styles.columnsBox}>
               <button
                 className={styles.columnsBtn}
                 onClick={() => setColumnsOpen((v) => !v)}
@@ -1132,7 +1138,7 @@ function Signatures() {
                   ))}
                 </div>
               )}
-            </div>
+            </div>}
 
             {canManageSignatures && (
               <button
@@ -1140,7 +1146,7 @@ function Signatures() {
                 onClick={startCreate}
                 disabled={
                   !selectedProjectId ||
-                  editingId === "new" ||
+                  saving || (compact ? editingId !== null : editingId === "new") ||
                   exportingSelected
                 }
                 title={
@@ -1161,8 +1167,23 @@ function Signatures() {
 
         {formError && <ErrorBanner message={formError} onDismiss={() => setFormError("")} />}
 
-        <div className={styles.table} style={{ ["--sig-grid-cols"]: gridCols }}>
-          <div className={`${styles.gridRow} ${styles.headerRow}`}>
+        {compact && <fieldset className={styles.compactTools} disabled={editingId !== null || saving}>
+          <legend>Signature controls</legend>
+          <details><summary>Sort &amp; filter{hasActiveFilters ? " · filters active" : ""}</summary>
+            <div className={styles.compactFilters}>
+              {headerLabels.slice(1).map((label, index) => {
+                const key = HEADER_SORT_KEYS[index + 1];
+                return <div key={key} className={styles.sortAndFilterHeader}>
+                  <SortableHeader label={label} sortKey={key} sortConfig={sortConfig} onSort={toggleSort} />
+                  <ColumnFilter label={label} type={key === "status" ? "select" : key === "paymentOrderId" ? "number" : key === "date" ? "date" : "text"} value={filters[key]} options={key === "status" ? statusOptions.map((status) => ({ value: status.id, label: status.label })) : []} onApply={(value) => setFilters((current) => ({ ...current, [key]: value }))} onClear={() => setFilters((current) => ({ ...current, [key]: emptyFilters()[key] }))} />
+                </div>;
+              })}
+            </div>
+          </details>
+          <label className={styles.selectAll}><input type="checkbox" checked={allVisibleSelected} disabled={!selectableSignatures.length} onChange={(event) => toggleSelectAllVisible(event.target.checked)} />Select all visible ({displayedItems.length})</label>
+        </fieldset>}
+        <div className={`${styles.table} ${compact ? styles.compactList : ""}`} style={{ "--sig-grid-cols": gridCols }}>
+          {!compact && <div className={`${styles.gridRow} ${styles.headerRow}`}>
             {headerLabels.map((h, i) => (
               <div
                 key={h}
@@ -1187,7 +1208,7 @@ function Signatures() {
                 )}
               </div>
             ))}
-          </div>
+          </div>}
 
           {!selectedProjectId ? (
             <p className={styles.noData}>
@@ -1195,9 +1216,13 @@ function Signatures() {
             </p>
           ) : items.length === 0 ? (
             <p className={styles.noData}>No signatures for this project.</p>
+          ) : displayedItems.length === 0 ? (
+            <p className={styles.noData}>No signatures match your filters.</p>
           ) : (
             displayedItems.map((s, idx) => (
               <SignatureRow
+                compact={compact}
+                saving={saving}
                 key={s.id}
                 row={s}
                 isEven={idx % 2 === 0}
@@ -1217,18 +1242,20 @@ function Signatures() {
                 visibleCols={visibleCols}
                 fieldErrors={fieldErrors[s.id] || {}}
                 canEdit={
-                  canManageSignatures &&
+                  canManageSignatures && (!compact || editingId === null || editingId === s.id) &&
                   isSignaturePaymentOrderApproved(
                     poOptions.find((po) => String(po.id) === String(s.paymentOrderId)),
                   )
                 }
-                canDelete={canManageSignatures}
+                canDelete={canManageSignatures && (!compact || editingId === null)}
               />
             ))
           )}
 
           {editingId === "new" && (
             <SignatureRow
+              compact={compact}
+              saving={saving}
               row={{
                 id: "new",
                 signatureStatusId: "",

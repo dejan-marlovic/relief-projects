@@ -238,10 +238,10 @@ $secondary-color: colors.$danger;
   color: colors.$danger-text !important;
 }
 
-// The Recipients pilot uses document scrolling on phones so forms remain
+// Responsive list pages use document scrolling on phones so forms remain
 // reachable when the software keyboard reduces the available height.
 @media (max-width: 700px) {
-  .recipientViewport {
+  .responsiveListViewport {
     height: auto;
     min-height: 100dvh;
     overflow: visible;
