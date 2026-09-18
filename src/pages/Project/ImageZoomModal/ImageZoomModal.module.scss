@@ -173,3 +173,13 @@
   .iconBtn, .closeBtn { min-width: 44px; min-height: 44px; }
   .caption { overflow-wrap: anywhere; max-height: 25dvh; overflow-y: auto; }
 }
+
+@media (max-height: 500px) {
+  .backdrop { padding: 8px; }
+  .modal { height: calc(100dvh - 16px); }
+  .toolbar { gap: 6px; padding: 6px 8px; }
+  .thumbStrip { padding: 4px 8px; }
+  .thumbImg { width: 60px; height: 40px; }
+  .caption { max-height: 20dvh; overflow-y: auto; overflow-wrap: anywhere; }
+  .hint { padding: 4px 8px; }
+}

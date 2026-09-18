@@ -10,3 +10,11 @@
 .actions button { padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid colors.$primary-border; font: inherit; background: colors.$surface; color: colors.$primary; cursor: pointer; }
 .actions button:last-child { background: colors.$primary; color: colors.$text-on-primary; }
 .actions button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.dialog { max-height: calc(100dvh - 2rem); overflow-wrap: anywhere; }
+@media (max-width: 700px) {
+  .dialog { padding: 16px; }
+  .dialog textarea { font-size: 16px; }
+  .actions { flex-wrap: wrap; }
+  .actions button { flex: 1 1 120px; min-height: 44px; }
+}
