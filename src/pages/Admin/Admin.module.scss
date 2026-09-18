@@ -215,3 +215,14 @@
   .selectorRow, .selectorControl, .selectorText { min-width: 0; max-width: 100%; }
   .selectorTitle, .selectorSubtitle { overflow-wrap: anywhere; }
 }
+
+@media (max-width: 700px) {
+  .actionCard { box-sizing: border-box; min-width: 0; }
+  .actionOptions { flex: 1 1 auto; min-width: 0; gap: 4px 16px; }
+  .radioOption { min-height: 44px; align-items: center; margin: 0; }
+  .radioOption input[type="radio"] { width: 20px; height: 20px; align-self: center; }
+  .selectInput { min-height: 44px; font-size: 16px; }
+  .entityLookupOption { min-height: 44px; overflow-wrap: anywhere; }
+  .selectorLabel { white-space: normal; }
+  .content { min-width: 0; }
+}

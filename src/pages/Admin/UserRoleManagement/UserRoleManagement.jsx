@@ -243,7 +243,7 @@ const UserRoleManagement = () => {
       </div>
 
       <div className={styles.tableScroll}>
-        <table className={styles.userTable}>
+        <table role="table" aria-label="User roles" className={styles.userTable}>
           <thead>
             <tr>
               <th>User</th>
@@ -259,13 +259,13 @@ const UserRoleManagement = () => {
             ) : users.map((user) => {
               const dirty = !sameRoles(draftRoles[user.id], user.roles);
               return (
-                <tr key={user.id} className={dirty ? styles.dirtyRow : ""}>
-                  <td>
+                <tr role="row" key={user.id} className={dirty ? styles.dirtyRow : ""}>
+                  <td role="cell" data-label="User">
                     <strong>{user.username}</strong>
                     <span>{user.email || `User #${user.id}`}</span>
                   </td>
                   {roles.map((role) => (
-                    <td key={role.name}>
+                    <td role="cell" data-label={role.name.replaceAll("_", " ")} key={role.name}>
                       <input
                         type="checkbox"
                         checked={(draftRoles[user.id] || []).includes(role.name)}
@@ -275,7 +275,7 @@ const UserRoleManagement = () => {
                       />
                     </td>
                   ))}
-                  <td>
+                  <td role="cell" data-label="Actions">
                     <div className={styles.rowActions}>
                       <button type="button" onClick={() => saveUser(user)} disabled={!dirty || savingUserId !== null}>
                         <FiSave /> {savingUserId === user.id ? "Saving..." : "Save"}
@@ -305,7 +305,7 @@ const UserRoleManagement = () => {
         <h3>Current access matrix</h3>
         <p>This reflects the authorization rules currently implemented in the backend and frontend.</p>
       </div>
-      <div className={styles.tableScroll}>
+      <div className={styles.tableScroll} role="region" aria-label="Current access matrix, scroll horizontally to compare roles" tabIndex={0}>
         <table className={styles.matrixTable}>
           <thead><tr><th>Area</th>{ROLE_ORDER.map((role) => <th key={role}>{role.replaceAll("_", " ")}</th>)}</tr></thead>
           <tbody>
