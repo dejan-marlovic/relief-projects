@@ -65,10 +65,10 @@ function HistoryPage({ entityType, entityId, includeChildren }) {
           <caption className={styles.caption}>{labels[entityType]} #{entityId} history</caption>
           <thead><tr><th scope="col">Date and time</th><th scope="col">Action</th><th scope="col">Changes</th><th scope="col">Performed by</th></tr></thead>
           <tbody>{result.content.map((event) => <tr key={event.id}>
-            <td><time dateTime={event.occurredAt}>{timestamp(event.occurredAt)}</time></td>
-            <td>{auditActionLabel(event)}</td>
-            <td>{event.entityType === "RECIPIENT" ? <RecipientAuditDetails event={event} /> : event.entityType === "SIGNATURE" ? <SignatureAuditDetails event={event} /> : event.entityType === "COST_DETAIL" ? <CostDetailAuditDetails event={event} /> : event.entityType === "COST_DETAIL_ALLOCATION" ? <AllocationAuditDetails event={event} /> : event.entityType === "PAYMENT_ORDER_LINE" ? <LineAuditDetails event={event} /> : event.action === "UPDATE" ? <AuditFieldChanges event={event} /> : hasAuditTransition(event) ? <>{readable(event.previousState)} → {readable(event.newState)}</> : "—"}<ReturnReason event={event} /></td>
-            <td>{event.performedByDisplay || (event.performedBy ? `User #${event.performedBy}` : "Unknown user")}</td>
+            <td data-label="Date and time"><time dateTime={event.occurredAt}>{timestamp(event.occurredAt)}</time></td>
+            <td data-label="Action">{auditActionLabel(event)}</td>
+            <td data-label="Changes">{event.entityType === "RECIPIENT" ? <RecipientAuditDetails event={event} /> : event.entityType === "SIGNATURE" ? <SignatureAuditDetails event={event} /> : event.entityType === "COST_DETAIL" ? <CostDetailAuditDetails event={event} /> : event.entityType === "COST_DETAIL_ALLOCATION" ? <AllocationAuditDetails event={event} /> : event.entityType === "PAYMENT_ORDER_LINE" ? <LineAuditDetails event={event} /> : event.action === "UPDATE" ? <AuditFieldChanges event={event} /> : hasAuditTransition(event) ? <>{readable(event.previousState)} → {readable(event.newState)}</> : "—"}<ReturnReason event={event} /></td>
+            <td data-label="Performed by">{event.performedByDisplay || (event.performedBy ? `User #${event.performedBy}` : "Unknown user")}</td>
           </tr>)}</tbody>
         </table></div>}
       <div className={styles.toolbar}>
@@ -85,7 +85,7 @@ function HistoryPage({ entityType, entityId, includeChildren }) {
 function HistoryDisclosure({ entityType, entityId, lifecycleStatus, refreshKey = 0 }) {
   const [open, setOpen] = useState(false);
   const [includeChildren, setIncludeChildren] = useState(true);
-  return <details className={styles.history} onToggle={(event) => { if (event.target === event.currentTarget) setOpen(event.currentTarget.open); }}>
+  return <details data-entity-type={entityType} className={styles.history} onToggle={(event) => { if (event.target === event.currentTarget) setOpen(event.currentTarget.open); }}>
     <summary>History · {labels[entityType]} #{entityId}</summary>
     {open && ["BUDGET", "PAYMENT_ORDER", "TRANSACTION"].includes(entityType) && <label style={{ display: "block", padding: "0 1rem 0.5rem" }}>
       <input type="checkbox" checked={includeChildren} onChange={(event) => setIncludeChildren(event.target.checked)} /> {entityType === "BUDGET" ? "Include cost-detail activity" : entityType === "TRANSACTION" ? "Include allocation activity" : "Include line, signature, and recipient activity"}

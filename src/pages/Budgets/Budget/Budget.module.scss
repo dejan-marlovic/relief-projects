@@ -357,3 +357,25 @@ label {
     color: colors.$primary;
   }
 }
+
+@media (max-width: 1100px) {
+  .budgetContainer { padding: 0; min-width: 0; }
+  .formContainer { padding: 16px; min-width: 0; }
+  .card, .formGroup, .pageHeaderText { min-width: 0; }
+  .pageHeader, .headerActions, .cardHeader { flex-wrap: wrap; }
+  .grid { grid-template-columns: minmax(0, 1fr); }
+  .row2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .budgetContainer input:not([type="checkbox"]), .budgetContainer select, .budgetContainer textarea {
+    min-width: 0; max-width: 100%; box-sizing: border-box; min-height: 44px; font-size: 16px;
+  }
+  .budgetContainer button { min-height: 44px; }
+  .pageSubtitle, .cardMeta, .bottomActions { overflow-wrap: anywhere; }
+}
+@media (max-width: 700px) {
+  .formContainer, .card { padding: 12px; }
+  .row2 { grid-template-columns: minmax(0, 1fr); }
+  .bottomActions { align-items: stretch; flex-direction: column; }
+  .bottomActions > button { width: 100%; justify-content: center; }
+  .headerActions { width: 100%; }
+  .headerActions > button { flex: 1 1 auto; justify-content: center; }
+}

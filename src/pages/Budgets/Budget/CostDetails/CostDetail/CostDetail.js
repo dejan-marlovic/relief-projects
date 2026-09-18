@@ -35,8 +35,10 @@ const CostDetail = ({
   };
 
   const toNum = (v) => (v === "" ? "" : Number(v));
+  const fieldLabels = { costDescription: "Description", costTypeId: "Type", costId: "Category", noOfUnits: "Units", frequencyMonths: "Periods", unitPrice: "Unit price", percentageCharging: "Allocated %", amountLocalCurrency: "Local", amountReportingCurrency: "Reporting", amountGBP: "GBP", amountEuro: "EUR" };
   const renderField = (name, control) => (
     <div className={styles.cell}>
+      <span className={styles.fieldLabel}>{fieldLabels[name]}</span>
       {React.cloneElement(control, {
         className: `${control.props.className || ""} ${
           fieldErrors[name] ? styles.inputError : ""
@@ -178,7 +180,7 @@ const CostDetail = ({
             className={styles.actionBtn}
             title="Save"
           >
-            <FiSave />
+            <FiSave /><span className={styles.actionLabel}>Save</span>
           </button>
           <button
             type="button"
@@ -187,7 +189,7 @@ const CostDetail = ({
             className={`${styles.actionBtn} ${styles.danger}`}
             title="Cancel"
           >
-            <FiX />
+            <FiX /><span className={styles.actionLabel}>Cancel</span>
           </button>
         </div>
       </div>
@@ -199,34 +201,34 @@ const CostDetail = ({
 
   return (
     <div className={styles.viewRow}>
-      <div className={styles.vcell}>
+      <div className={styles.vcell}><span className={styles.fieldLabel}>Description</span>
         <strong>{displayCost.costDescription}</strong>
       </div>
 
-      <div className={styles.vcell}>
+      <div className={styles.vcell}><span className={styles.fieldLabel}>Type</span>
         {costTypes.find((t) => t.id === displayCost.costTypeId)?.costTypeName ||
           "-"}
       </div>
 
-      <div className={styles.vcell}>
+      <div className={styles.vcell}><span className={styles.fieldLabel}>Category</span>
         {costs.find((c) => c.id === displayCost.costId)?.costName || "-"}
       </div>
 
-      <div className={styles.vcell}>{displayCost.noOfUnits ?? "-"}</div>
-      <div className={styles.vcell}>{displayCost.frequencyMonths ?? "-"}</div>
-      <div className={styles.vcell}>{displayCost.unitPrice ?? "-"}</div>
-      <div className={styles.vcell}>
+      <div className={styles.vcell}><span className={styles.fieldLabel}>Units</span>{displayCost.noOfUnits ?? "-"}</div>
+      <div className={styles.vcell}><span className={styles.fieldLabel}>Periods</span>{displayCost.frequencyMonths ?? "-"}</div>
+      <div className={styles.vcell}><span className={styles.fieldLabel}>Unit price</span>{displayCost.unitPrice ?? "-"}</div>
+      <div className={styles.vcell}><span className={styles.fieldLabel}>Allocated %</span>
         {displayCost.percentageCharging ?? "-"}%
       </div>
 
-      <div className={styles.vcell}>
+      <div className={styles.vcell}><span className={styles.fieldLabel}>Local</span>
         {displayCost.amountLocalCurrency ?? "-"}
       </div>
-      <div className={styles.vcell}>
+      <div className={styles.vcell}><span className={styles.fieldLabel}>Reporting</span>
         {displayCost.amountReportingCurrency ?? "-"}
       </div>
-      <div className={styles.vcell}>{displayCost.amountGBP ?? "-"}</div>
-      <div className={styles.vcell}>{displayCost.amountEuro ?? "-"}</div>
+      <div className={styles.vcell}><span className={styles.fieldLabel}>GBP</span>{displayCost.amountGBP ?? "-"}</div>
+      <div className={styles.vcell}><span className={styles.fieldLabel}>EUR</span>{displayCost.amountEuro ?? "-"}</div>
 
       <div className={styles.vcell}>
         {canEdit && <button
@@ -238,7 +240,7 @@ const CostDetail = ({
           className={styles.actionBtn}
           title="Edit"
         >
-          <FiEdit />
+          <FiEdit /><span className={styles.actionLabel}>Edit</span>
         </button>}
         {canDelete && <button
           onClick={(e) => {
@@ -249,7 +251,7 @@ const CostDetail = ({
           className={`${styles.actionBtn} ${styles.danger}`}
           title="Delete"
         >
-          <FiTrash2 />
+          <FiTrash2 /><span className={styles.actionLabel}>Delete</span>
         </button>}
       </div>
     </div>
