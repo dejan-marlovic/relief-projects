@@ -1,3 +1,4 @@
+import useMediaQuery from "../../hooks/useMediaQuery";
 import React, {
   useCallback,
   useContext,
@@ -154,6 +155,9 @@ const Transactions = ({ refreshTrigger }) => {
 
   const [transactions, setTransactions] = useState([]);
   const [selectedTxIds, setSelectedTxIds] = useState(() => new Set());
+  const compact = useMediaQuery("(max-width: 1100px)");
+  const [saving, setSaving] = useState(false);
+  const saveInProgress = useRef(false);
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
   useUnsavedChange("transactions-editor", editingId !== null);
@@ -355,7 +359,7 @@ const Transactions = ({ refreshTrigger }) => {
   }, [selectedProjectId]);
 
   const startEdit = (tx) => {
-    if (!canEditTransactions) return;
+    if (!canEditTransactions || saving || (compact && editingId !== null)) return;
     setEditingId(tx?.id ?? null);
     setExpandedTxId((cur) => (cur === tx.id ? null : cur));
 
@@ -386,7 +390,7 @@ const Transactions = ({ refreshTrigger }) => {
   };
 
   const startCreate = () => {
-    if (!canEditTransactions) return;
+    if (!canEditTransactions || saving || (compact && editingId !== null)) return;
     setEditingId("new");
     setExpandedTxId(null);
 
@@ -426,11 +430,13 @@ const Transactions = ({ refreshTrigger }) => {
   };
 
   const save = async () => {
-    if (!canEditTransactions) return;
+    if (!canEditTransactions || saveInProgress.current) return;
     const id = editingId;
     const values = editedValues[id];
     if (!values) return;
 
+    saveInProgress.current = true;
+    setSaving(true);
     const isCreate = id === "new";
     const effectiveProjectId = isCreate
       ? selectedProjectId
@@ -511,6 +517,9 @@ const Transactions = ({ refreshTrigger }) => {
         err.message ||
           `Failed to ${isCreate ? "create" : "update"} transaction.`,
       );
+    } finally {
+      saveInProgress.current = false;
+      setSaving(false);
     }
   };
 
@@ -1714,7 +1723,7 @@ const Transactions = ({ refreshTrigger }) => {
               type="button"
               className={styles.exportInlineBtn}
               onClick={handleExportSelected}
-              disabled={selectedCount === 0 || exportingSelected}
+              disabled={selectedCount === 0 || exportingSelected || saving || (compact && editingId !== null)}
               title="Export selected transactions to Excel"
             >
               <FiDownload />
@@ -1730,7 +1739,7 @@ const Transactions = ({ refreshTrigger }) => {
               disabled={
                 selectedCount === 0 ||
                 exportingSelected ||
-                selectedContainsLifecycleLocked
+                selectedContainsLifecycleLocked || saving || (compact && editingId !== null)
               }
               title={
                 selectedContainsLifecycleLocked
@@ -1741,7 +1750,7 @@ const Transactions = ({ refreshTrigger }) => {
               <FiTrash2></FiTrash2>
               Delete selected {selectedCount > 0 ? `(${selectedCount})` : ""}
             </button>}
-            <div className={styles.columnsBox}>
+            <div className={styles.columnsBox} hidden={compact}>
               <button
                 type="button"
                 className={styles.iconPillBtn}
@@ -1776,7 +1785,7 @@ const Transactions = ({ refreshTrigger }) => {
               type="button"
               className={styles.primaryInlineBtn}
               onClick={startCreate}
-              disabled={!selectedProjectId || editingId === "new"}
+              disabled={!selectedProjectId || saving || (compact ? editingId !== null : editingId === "new")}
               title="New Transaction"
             >
               <FiPlus />
@@ -1791,16 +1800,18 @@ const Transactions = ({ refreshTrigger }) => {
 
         <div
           className={styles.table}
-          style={{ ["--tx-grid-cols"]: gridCols }}
+          style={{ "--tx-grid-cols": gridCols }}
           ref={tableRef}
         >
-          <div className={`${styles.gridRow} ${styles.headerRow}`}>
+          <details className={styles.filterDisclosure} open={compact ? undefined : true}>
+          <summary>Sort, filter &amp; select</summary>
+          <fieldset aria-label="Transaction controls" disabled={compact && (editingId !== null || saving)} className={`${styles.gridRow} ${styles.headerRow}`}>
             {headerLabels.map((h, i) => (
               <div
                 key={h}
                 className={`${styles.headerCell} ${
                   i === 0 ? styles.stickyColHeader : ""
-                } ${!visibleCols[i] ? styles.hiddenCol : ""} ${
+                } ${!compact && !visibleCols[i] ? styles.hiddenCol : ""} ${
                   i === 0 ? styles.actionsCol : ""
                 }`}
               >
@@ -1823,10 +1834,14 @@ const Transactions = ({ refreshTrigger }) => {
                 )}
               </div>
             ))}
-          </div>
+          </fieldset>
+          </details>
 
           {canEditTransactions && editingId === "new" && (
             <Transaction
+              compact={compact}
+              saving={saving}
+              editingLocked={compact && editingId !== null}
               tx={{
                 id: "new",
                 ...blankTx,
@@ -1865,9 +1880,14 @@ const Transactions = ({ refreshTrigger }) => {
             </p>
           ) : transactions.length === 0 ? (
             <p className={styles.noData}>No transactions for this project.</p>
+          ) : displayedTransactions.length === 0 ? (
+            <p className={styles.noData}>No transactions match your filters.</p>
           ) : (
             displayedTransactions.map((tx, idx) => (
               <Transaction
+              compact={compact}
+              saving={saving}
+              editingLocked={compact && editingId !== null}
                 key={tx.id}
                 tx={tx}
                 isEven={idx % 2 === 0}

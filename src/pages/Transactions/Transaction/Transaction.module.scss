@@ -291,3 +291,20 @@
   color: #9b2c2c;
   border-color: #e7a0a0;
 }
+
+.fieldLabel { display: block; font-size: 0.8rem; font-weight: 600; color: colors.$text-muted; margin-bottom: 4px; }
+@media (max-width: 1100px) {
+  .gridRow { width: auto; min-width: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; padding: 16px; border: 1px solid colors.$border-subtle; border-radius: 10px; margin-top: 12px; }
+  .cell { white-space: normal; overflow-wrap: anywhere; overflow: visible; }
+  .actionsCol { grid-column: 1 / -1; grid-row: 6; position: static; box-shadow: none; padding: 0; }
+  .actions { flex-wrap: wrap; }
+  .actions button { min-height: 44px; min-width: 44px; width: auto; height: auto; border-radius: 8px; padding: 8px 12px; gap: 6px; }
+  .rowCheckbox { width: 24px; height: 24px; margin: 10px; }
+  .input { width: 100%; min-width: 0; max-width: 100%; box-sizing: border-box; min-height: 44px; font-size: 16px; }
+  .expandedPanel { padding: 12px; min-width: 0; }
+}
+@media (max-width: 700px) {
+  .gridRow { grid-template-columns: minmax(0, 1fr); padding: 12px; }
+  .actionsCol { grid-row: 14; }
+  .expandedPanel { padding: 6px; }
+}

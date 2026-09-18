@@ -654,9 +654,10 @@ const AllocationRow = ({
 
   return (
     <div className={styles.trow}>
-      <div className={styles.cdLabel}>{label}</div>
+      <div className={styles.cdLabel}><span className={styles.fieldLabel}>Cost detail</span>{label}</div>
 
       <div>
+        <span className={styles.fieldLabel}>Planned amount</span>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <input
             className={`${styles.textInput} ${
@@ -688,6 +689,7 @@ const AllocationRow = ({
       </div>
 
       <div>
+        <span className={styles.fieldLabel}>Note</span>
         <input
           className={styles.textInput}
           type="text"

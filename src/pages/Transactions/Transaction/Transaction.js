@@ -30,6 +30,9 @@ const Cell = ({ children, className }) => (
 );
 
 const Transaction = ({
+  compact = false,
+  saving = false,
+  editingLocked = false,
   tx,
   isEditing,
   editedValues,
@@ -69,7 +72,7 @@ const Transaction = ({
 }) => {
   const ev = editedValues || {};
   const isCreate = (tx?.id ?? "") === "new";
-  const autoSave = isEditing && !isCreate;
+  const autoSave = isEditing && !isCreate && !compact;
 
   const submit = (e) => {
     e.preventDefault();
@@ -77,6 +80,7 @@ const Transaction = ({
     onSave();
   };
 
+  const fieldLabels = { organizationId: "Organization", financierOrganizationId: "Financier", transactionStatusId: "Status", budgetId: "Budget", appliedForAmount: "Applied amount", firstShareAmount: "First share", approvedAmount: "Approved amount", secondShareAmount: "Second share", ownContribution: "Own contribution", okStatus: "OK status", datePlanned: "Date planned" };
   const toNum = (v) => (v === "" ? "" : Number(v));
 
   const getFieldError = (name) => fieldErrors?.[name];
@@ -92,8 +96,10 @@ const Transaction = ({
   const inputNum = (field, step = "1") => (
     <>
       <input
+        disabled={saving}
         type="number"
         step={step}
+        aria-label={fieldLabels[field]}
         value={ev[field] ?? tx[field] ?? ""}
         onChange={(e) => onChange(field, toNum(e.target.value))}
         onBlur={autoSave ? submit : undefined}
@@ -106,6 +112,8 @@ const Transaction = ({
   const selectYesNo = (field) => (
     <>
       <select
+        disabled={saving}
+        aria-label={fieldLabels[field]}
         value={ev[field] ?? tx[field] ?? ""}
         onChange={(e) => onChange(field, e.target.value)}
         onBlur={autoSave ? submit : undefined}
@@ -125,6 +133,8 @@ const Transaction = ({
   const selectOrg = (field) => (
     <>
       <select
+        disabled={saving}
+        aria-label={fieldLabels[field]}
         value={ev[field] ?? tx[field] ?? ""}
         onChange={(e) => onChange(field, toNum(e.target.value))}
         onBlur={autoSave ? submit : undefined}
@@ -144,6 +154,8 @@ const Transaction = ({
   const selectStatus = () => (
     <>
       <select
+        disabled={saving}
+        aria-label={fieldLabels.transactionStatusId}
         value={ev.transactionStatusId ?? tx.transactionStatusId ?? ""}
         onChange={(e) => onChange("transactionStatusId", toNum(e.target.value))}
         onBlur={autoSave ? submit : undefined}
@@ -169,6 +181,8 @@ const Transaction = ({
   const selectBudget = () => (
     <>
       <select
+        disabled={saving}
+        aria-label={fieldLabels.budgetId}
         value={ev.budgetId ?? tx.budgetId ?? ""}
         onChange={(e) => onChange("budgetId", toNum(e.target.value))}
         onBlur={autoSave ? submit : undefined}
@@ -199,6 +213,8 @@ const Transaction = ({
   const inputDate = (
     <>
       <input
+        disabled={saving}
+        aria-label="Date planned"
         type="datetime-local"
         value={toDateTimeLocal(ev.datePlanned ?? tx.datePlanned)}
         onChange={(e) =>
@@ -211,7 +227,7 @@ const Transaction = ({
     </>
   );
 
-  const hc = (i) => (!visibleCols[i] ? styles.hiddenCol : "");
+  const hc = (i) => (!compact && !visibleCols[i] ? styles.hiddenCol : "");
 
   const txIdLabel = isCreate ? "(new)" : tx?.id != null ? `TX#${tx.id}` : "-";
   const lifecycleStatus = tx?.lifecycleStatus || "DRAFT";
@@ -237,21 +253,23 @@ const Transaction = ({
               {canEdit && <button
                 type="button"
                 className={styles.iconCircleBtn}
+                disabled={saving}
                 onClick={submit}
                 title="Save"
                 aria-label="Save"
               >
-                <FiSave />
+                <FiSave />{compact && <span>Save</span>}
               </button>}
 
               <button
                 type="button"
                 className={styles.iconCircleBtn}
+                disabled={saving}
                 onClick={onCancel}
                 title="Cancel"
                 aria-label="Cancel"
               >
-                <FiX />
+                <FiX />{compact && <span>Cancel</span>}
               </button>
             </div>
           ) : (
@@ -260,7 +278,7 @@ const Transaction = ({
                 <input
                   type="checkbox"
                   checked={isSelected}
-                  disabled={selectionDisabled}
+                  disabled={selectionDisabled || saving || editingLocked}
                   onChange={(e) => {
                     e.stopPropagation();
                     onSelectChange?.(tx.id, e.target.checked);
@@ -280,10 +298,11 @@ const Transaction = ({
                   e.stopPropagation();
                   onEdit();
                 }}
+                disabled={saving || editingLocked}
                 title="Edit"
                 aria-label="Edit"
               >
-                <FiEdit />
+                <FiEdit />{compact && <span>Edit</span>}
               </button>}
 
               {showSubmitLifecycle && (
@@ -295,11 +314,11 @@ const Transaction = ({
                     e.stopPropagation();
                     onSubmitLifecycle?.();
                   }}
-                  disabled={isSubmittingLifecycle}
+                  disabled={isSubmittingLifecycle || saving || editingLocked}
                   title="Submit for approval"
                   aria-label={`Submit transaction ${tx.id} for approval`}
                 >
-                  <FiSend />
+                  <FiSend />{compact && <span>Submit</span>}
                 </button>
               )}
 
@@ -313,11 +332,11 @@ const Transaction = ({
                       e.stopPropagation();
                       onApproveLifecycle?.();
                     }}
-                    disabled={isReviewingLifecycle}
+                    disabled={isReviewingLifecycle || saving || editingLocked}
                     title="Approve transaction"
                     aria-label={`Approve transaction ${tx.id}`}
                   >
-                    <FiCheck />
+                    <FiCheck />{compact && <span>Approve</span>}
                   </button>
                   <button
                     type="button"
@@ -327,11 +346,11 @@ const Transaction = ({
                       e.stopPropagation();
                       onReturnLifecycle?.();
                     }}
-                    disabled={isReviewingLifecycle}
+                    disabled={isReviewingLifecycle || saving || editingLocked}
                     title="Return transaction"
                     aria-label={`Return transaction ${tx.id}`}
                   >
-                    <FiCornerUpLeft />
+                    <FiCornerUpLeft />{compact && <span>Return</span>}
                   </button>
                 </>
               )}
@@ -345,12 +364,13 @@ const Transaction = ({
                     e.stopPropagation();
                     onToggleAllocations?.();
                   }}
+                  disabled={saving || editingLocked}
                   title={expanded ? "Hide allocations" : "Show allocations"}
                   aria-label={
                     expanded ? "Hide allocations" : "Show allocations"
                   }
                 >
-                  {expanded ? <FiChevronUp /> : <FiChevronDown />}
+                  {expanded ? <FiChevronUp /> : <FiChevronDown />}{compact && <span>Allocations</span>}
                 </button>
               )}
 
@@ -363,10 +383,11 @@ const Transaction = ({
                     e.stopPropagation();
                     onDelete(tx.id);
                   }}
+                  disabled={saving || editingLocked}
                   title="Delete"
                   aria-label="Delete"
                 >
-                  <FiTrash2 />
+                  <FiTrash2 />{compact && <span>Delete</span>}
                 </button>
               )}
             </div>
@@ -375,6 +396,7 @@ const Transaction = ({
 
         {/* 1: Tx ID (read-only, never editable) */}
         <Cell className={hc(1)}>
+          {compact && <span className={styles.fieldLabel}>Transaction</span>}
           <div className={styles.txIdentity}>
             <span>{txIdLabel}</span>
             {!isCreate && (
@@ -390,58 +412,69 @@ const Transaction = ({
 
         {/* 2..: rest */}
         <Cell className={hc(2)}>
+          {compact && <span className={styles.fieldLabel}>Organization</span>}
           {isEditing ? selectOrg("organizationId") : orgName(tx.organizationId)}
         </Cell>
 
         <Cell className={hc(3)}>
+          {compact && <span className={styles.fieldLabel}>Project</span>}
           {projectName(ev.projectId ?? tx.projectId)}
         </Cell>
 
         <Cell className={hc(4)}>
+          {compact && <span className={styles.fieldLabel}>Budget</span>}
           {isEditing ? selectBudget() : budgetName(tx.budgetId)}
         </Cell>
 
         <Cell className={hc(5)}>
+          {compact && <span className={styles.fieldLabel}>Financier</span>}
           {isEditing
             ? selectOrg("financierOrganizationId")
             : orgName(tx.financierOrganizationId)}
         </Cell>
 
         <Cell className={hc(6)}>
+          {compact && <span className={styles.fieldLabel}>Status</span>}
           {isEditing ? selectStatus() : statusName(tx.transactionStatusId)}
         </Cell>
 
         <Cell className={hc(7)}>
+          {compact && <span className={styles.fieldLabel}>Applied amount</span>}
           {isEditing
             ? inputNum("appliedForAmount", "1")
             : (tx.appliedForAmount ?? "-")}
         </Cell>
 
         <Cell className={hc(8)}>
+          {compact && <span className={styles.fieldLabel}>First share</span>}
           {isEditing
             ? inputNum("firstShareAmount", "0.01")
             : (tx.firstShareAmount ?? "-")}
         </Cell>
 
         <Cell className={hc(9)}>
+          {compact && <span className={styles.fieldLabel}>Approved amount</span>}
           {isEditing
             ? inputNum("approvedAmount", "1")
             : (tx.approvedAmount ?? "-")}
         </Cell>
 
         <Cell className={hc(10)}>
+          {compact && <span className={styles.fieldLabel}>Second share</span>}
           {isEditing
             ? inputNum("secondShareAmount", "0.01")
             : (tx.secondShareAmount ?? "-")}
         </Cell>
 
         <Cell className={hc(11)}>
+          {compact && <span className={styles.fieldLabel}>Own contribution</span>}
           {isEditing
             ? selectYesNo("ownContribution")
             : (tx.ownContribution ?? "-")}
         </Cell>
 
         <Cell className={hc(12)}>
+          {compact && <span className={styles.fieldLabel}>Date planned</span>}
           {isEditing
             ? inputDate
             : tx.datePlanned
@@ -450,6 +483,7 @@ const Transaction = ({
         </Cell>
 
         <Cell className={hc(13)}>
+          {compact && <span className={styles.fieldLabel}>OK status</span>}
           {isEditing ? selectYesNo("okStatus") : (tx.okStatus ?? "-")}
         </Cell>
       </div>
