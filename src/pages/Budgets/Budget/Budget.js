@@ -1,3 +1,4 @@
+import { addDecimals, excelDecimal } from "../../../utils/budgetCalculations";
 import React, { useCallback, useEffect, useState } from "react";
 import ExcelJS from "exceljs";
 import styles from "./Budget.module.scss";
@@ -29,6 +30,10 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
   const formatDate = (dateString) =>
     dateString ? dateString.slice(0, 16) : "";
 
+  const [savedBudget, setSavedBudget] = useState(initialBudget || {});
+  const [childEditing, setChildEditing] = useState(false);
+  const [recalculationMessage, setRecalculationMessage] = useState("");
+  const [normalizeMissingInputs, setNormalizeMissingInputs] = useState(false);
   const [budget, setBudget] = useState(initialBudget || {});
   const [historyRefreshKey, setHistoryRefreshKey] = useState(0);
   const refreshChildHistory = useCallback(() => setHistoryRefreshKey((value) => value + 1), []);
@@ -92,7 +97,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
 
   // Filter rates for a specific currency pair
   const filterRatesForPair = (baseCurrencyId, quoteCurrencyId) => {
-    if (!baseCurrencyId || !quoteCurrencyId || !exchangeRates.length) return [];
+    if (!baseCurrencyId || !exchangeRates.length) return [];
     const baseNum =
       typeof baseCurrencyId === "string"
         ? Number(baseCurrencyId)
@@ -103,7 +108,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
         : quoteCurrencyId;
 
     return exchangeRates.filter(
-      (r) => r.baseCurrencyId === baseNum && r.quoteCurrencyId === quoteNum,
+      (r) => r.baseCurrencyId === baseNum && (!quoteCurrencyId || r.quoteCurrencyId === quoteNum) && Number(r.rate) > 0 && (r.baseCurrencyId !== r.quoteCurrencyId || Number(r.rate) === 1),
     );
   };
 
@@ -155,7 +160,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
     `${styles.textInput} ${hasError(fieldName) ? styles.inputError : ""}`;
 
   // Names for fixed reporting currencies (for display only)
-  const sekName = getCurrencyNameById(budget.reportingCurrencySekId) || "SEK";
+  const sekName = getCurrencyNameById(budget.reportingCurrencySekId || exchangeRates.find((rate) => String(rate.id) === String(budget.reportingExchangeRateSekId))?.quoteCurrencyId) || "Reporting";
   const eurName = getCurrencyNameById(budget.reportingCurrencyEurId) || "EUR";
 
   // IDs of special currencies
@@ -168,7 +173,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
       : [];
 
   const localToSekRates =
-    budget.localCurrencyId && budget.reportingCurrencySekId
+    budget.localCurrencyId
       ? filterRatesForPair(
           budget.localCurrencyId,
           budget.reportingCurrencySekId,
@@ -176,10 +181,10 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
       : [];
 
   const localToEurRates =
-    budget.localCurrencyId && budget.reportingCurrencyEurId
+    budget.localCurrencyId && (budget.reportingCurrencyEurId || findCurrencyIdByName("EUR"))
       ? filterRatesForPair(
           budget.localCurrencyId,
-          budget.reportingCurrencyEurId,
+          budget.reportingCurrencyEurId || findCurrencyIdByName("EUR"),
         )
       : [];
 
@@ -262,57 +267,12 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
     );
   };
 
-  const getExchangeRateValueById = (id) => {
-    const rateObject = getExchangeRateById(id);
-
-    if (!rateObject || rateObject.rate == null) return null;
-
-    const numericRate = Number(rateObject.rate);
-    return Number.isFinite(numericRate) ? numericRate : null;
-  };
-
   const getExportRateLabel = (id) => {
     const rateObject = getExchangeRateById(id);
 
     if (!rateObject) return "Not specified";
 
     return formatRateLabel(rateObject);
-  };
-
-  /*
-   * This uses the same calculation as CostDetails:
-   *
-   * base  = number of units × unit price
-   * gross = base × (1 + percentage charged / 100)
-   *
-   * The local amount is gross.
-   * SEK, GBP and EUR are gross multiplied by the exchange rates
-   * selected in the budget header.
-   */
-  const computeExportAmounts = (row) => {
-    const noOfUnits = toExcelNumber(row.noOfUnits);
-    const unitPrice = toExcelNumber(row.unitPrice);
-    const percentageCharging = toExcelNumber(row.percentageCharging);
-
-    const base = noOfUnits * unitPrice;
-    const gross = base * (1 + percentageCharging / 100);
-
-    const rateSek = getExchangeRateValueById(budget.reportingExchangeRateSekId);
-
-    const rateEur = getExchangeRateValueById(budget.reportingExchangeRateEurId);
-
-    const rateGbp = getExchangeRateValueById(budget.localExchangeRateToGbpId);
-
-    return {
-      ...row,
-      amountLocalCurrency: gross === 0 ? 0 : Number(gross.toFixed(3)),
-      amountReportingCurrency:
-        gross !== 0 && rateSek ? Number((gross * rateSek).toFixed(3)) : 0,
-      amountGBP:
-        gross !== 0 && rateGbp ? Number((gross * rateGbp).toFixed(3)) : 0,
-      amountEuro:
-        gross !== 0 && rateEur ? Number((gross * rateEur).toFixed(3)) : 0,
-    };
   };
 
   const applyExcelBorder = (cell) => {
@@ -541,8 +501,6 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
         matchingProject?.name ||
         (budget.projectId ? `Project ${budget.projectId}` : "Not specified");
 
-      const computedCostDetails = savedCostDetails.map(computeExportAmounts);
-
       const getCostTypeName = (id) =>
         exportCostTypes.find((type) => Number(type.id) === Number(id))
           ?.costTypeName || `Unknown Type ${id ?? ""}`.trim();
@@ -560,7 +518,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
        */
       const groupedCostDetails = {};
 
-      computedCostDetails.forEach((costDetail) => {
+      savedCostDetails.forEach((costDetail) => {
         const typeId = String(costDetail.costTypeId ?? "unknown");
         const categoryId = String(costDetail.costId ?? "unknown");
 
@@ -603,6 +561,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
         { key: "type", width: 22 },
         { key: "category", width: 25 },
         { key: "units", width: 13 },
+        { key: "periods", width: 13 },
         { key: "unitPrice", width: 15 },
         { key: "percentage", width: 14 },
         { key: "local", width: 17 },
@@ -611,12 +570,12 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
         { key: "eur", width: 17 },
       ];
 
-      worksheet.mergeCells("A1:J1");
+      worksheet.mergeCells("A1:K1");
       worksheet.getCell("A1").value = `Budget ${budget.id} Report`;
       styleExcelTitle(worksheet.getCell("A1"));
       worksheet.getRow(1).height = 30;
 
-      worksheet.mergeCells("A2:J2");
+      worksheet.mergeCells("A2:K2");
       worksheet.getCell("A2").value =
         `Exported: ${new Date().toLocaleString("sv-SE")} | ` +
         `Project: ${projectName}`;
@@ -688,7 +647,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
         applyExcelBorder(valueCell);
       };
 
-      worksheet.mergeCells(`A${currentRow}:J${currentRow}`);
+      worksheet.mergeCells(`A${currentRow}:K${currentRow}`);
       worksheet.getCell(`A${currentRow}`).value = "Budget Header";
       styleExcelSection(worksheet.getCell(`A${currentRow}`));
       currentRow += 1;
@@ -787,7 +746,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
       );
 
       addLandscapeHeaderField(
-        "Local → SEK",
+        `Local → ${sekName}`,
         getExportRateLabel(budget.reportingExchangeRateSekId),
         secondLabelRow,
         secondValueRow,
@@ -809,7 +768,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
 
       currentRow += 3;
 
-      worksheet.mergeCells(`A${currentRow}:J${currentRow}`);
+      worksheet.mergeCells(`A${currentRow}:K${currentRow}`);
       worksheet.getCell(`A${currentRow}`).value = "Cost Details";
       styleExcelSection(worksheet.getCell(`A${currentRow}`));
       currentRow += 1;
@@ -819,10 +778,11 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
         "Type",
         "Category",
         "Units",
+        "Periods",
         "Unit Price",
-        "% Charged",
+        "Allocated %",
         "Local",
-        "SEK",
+        sekName,
         "GBP",
         "EUR",
       ];
@@ -847,7 +807,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
       );
 
       if (sortedTypeEntries.length === 0) {
-        worksheet.mergeCells(`A${currentRow}:J${currentRow}`);
+        worksheet.mergeCells(`A${currentRow}:K${currentRow}`);
         worksheet.getCell(`A${currentRow}`).value =
           "There are no cost details for this budget.";
 
@@ -864,7 +824,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
         sortedTypeEntries.forEach(([typeId, categoryGroups]) => {
           const typeName = getCostTypeName(typeId);
 
-          worksheet.mergeCells(`A${currentRow}:J${currentRow}`);
+          worksheet.mergeCells(`A${currentRow}:K${currentRow}`);
           const typeCell = worksheet.getCell(`A${currentRow}`);
           typeCell.value = typeName;
           typeCell.font = {
@@ -900,7 +860,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
           sortedCategoryEntries.forEach(([categoryId, categoryItems]) => {
             const categoryName = getCostCategoryName(categoryId);
 
-            worksheet.mergeCells(`A${currentRow}:J${currentRow}`);
+            worksheet.mergeCells(`A${currentRow}:K${currentRow}`);
 
             const categoryCell = worksheet.getCell(`A${currentRow}`);
 
@@ -947,32 +907,33 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                 safeExcelValue(item.costDescription),
                 typeName,
                 categoryName,
-                toExcelNumber(item.noOfUnits),
-                toExcelNumber(item.unitPrice),
-                toExcelNumber(item.percentageCharging),
-                toExcelNumber(item.amountLocalCurrency),
-                toExcelNumber(item.amountReportingCurrency),
-                toExcelNumber(item.amountGBP),
-                toExcelNumber(item.amountEuro),
+                excelDecimal(item.noOfUnits),
+                excelDecimal(item.frequencyMonths),
+                excelDecimal(item.unitPrice),
+                excelDecimal(item.percentageCharging),
+                excelDecimal(item.amountLocalCurrency),
+                excelDecimal(item.amountReportingCurrency),
+                excelDecimal(item.amountGBP),
+                excelDecimal(item.amountEuro),
               ];
 
               styleExcelDataRow(row, index);
 
               /*
                * Numeric columns:
-               * D = units, E = unit price, F = percentage,
-               * G:J = calculated amounts.
+               * D = units, E = periods, F = unit price, G = allocation percentage,
+               * H:K = saved calculated amounts.
                */
-              for (let column = 4; column <= 10; column += 1) {
+              for (let column = 4; column <= 11; column += 1) {
                 row.getCell(column).numFmt = "#,##0.000";
               }
 
-              row.getCell(6).numFmt = '0.000"%"';
+              row.getCell(7).numFmt = '0.000"%"';
 
-              categoryTotals.local += toExcelNumber(item[amountKeys[0]]);
-              categoryTotals.sek += toExcelNumber(item[amountKeys[1]]);
-              categoryTotals.gbp += toExcelNumber(item[amountKeys[2]]);
-              categoryTotals.eur += toExcelNumber(item[amountKeys[3]]);
+              categoryTotals.local = addDecimals(categoryTotals.local, item[amountKeys[0]] ?? "0");
+              categoryTotals.sek = addDecimals(categoryTotals.sek, item[amountKeys[1]] ?? "0");
+              categoryTotals.gbp = addDecimals(categoryTotals.gbp, item[amountKeys[2]] ?? "0");
+              categoryTotals.eur = addDecimals(categoryTotals.eur, item[amountKeys[3]] ?? "0");
 
               currentRow += 1;
             });
@@ -986,27 +947,28 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
               "",
               "",
               "",
-              Number(categoryTotals.local.toFixed(3)),
-              Number(categoryTotals.sek.toFixed(3)),
-              Number(categoryTotals.gbp.toFixed(3)),
-              Number(categoryTotals.eur.toFixed(3)),
+              "",
+              excelDecimal(categoryTotals.local),
+              excelDecimal(categoryTotals.sek),
+              excelDecimal(categoryTotals.gbp),
+              excelDecimal(categoryTotals.eur),
             ];
 
             styleExcelTotalRow(categoryTotalRow, excelColors.paleYellow);
 
-            for (let column = 7; column <= 10; column += 1) {
+            for (let column = 8; column <= 11; column += 1) {
               categoryTotalRow.getCell(column).numFmt = "#,##0.000";
             }
 
-            typeTotals.local += categoryTotals.local;
-            typeTotals.sek += categoryTotals.sek;
-            typeTotals.gbp += categoryTotals.gbp;
-            typeTotals.eur += categoryTotals.eur;
+            typeTotals.local = addDecimals(typeTotals.local, categoryTotals.local);
+            typeTotals.sek = addDecimals(typeTotals.sek, categoryTotals.sek);
+            typeTotals.gbp = addDecimals(typeTotals.gbp, categoryTotals.gbp);
+            typeTotals.eur = addDecimals(typeTotals.eur, categoryTotals.eur);
 
-            grandTotals.local += categoryTotals.local;
-            grandTotals.sek += categoryTotals.sek;
-            grandTotals.gbp += categoryTotals.gbp;
-            grandTotals.eur += categoryTotals.eur;
+            grandTotals.local = addDecimals(grandTotals.local, categoryTotals.local);
+            grandTotals.sek = addDecimals(grandTotals.sek, categoryTotals.sek);
+            grandTotals.gbp = addDecimals(grandTotals.gbp, categoryTotals.gbp);
+            grandTotals.eur = addDecimals(grandTotals.eur, categoryTotals.eur);
 
             currentRow += 2;
           });
@@ -1020,15 +982,16 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
             "",
             "",
             "",
-            Number(typeTotals.local.toFixed(3)),
-            Number(typeTotals.sek.toFixed(3)),
-            Number(typeTotals.gbp.toFixed(3)),
-            Number(typeTotals.eur.toFixed(3)),
+            "",
+            excelDecimal(typeTotals.local),
+            excelDecimal(typeTotals.sek),
+            excelDecimal(typeTotals.gbp),
+            excelDecimal(typeTotals.eur),
           ];
 
           styleExcelTotalRow(typeTotalRow, excelColors.paleGreen);
 
-          for (let column = 7; column <= 10; column += 1) {
+          for (let column = 8; column <= 11; column += 1) {
             typeTotalRow.getCell(column).numFmt = "#,##0.000";
           }
 
@@ -1044,10 +1007,11 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
           "",
           "",
           "",
-          Number(grandTotals.local.toFixed(3)),
-          Number(grandTotals.sek.toFixed(3)),
-          Number(grandTotals.gbp.toFixed(3)),
-          Number(grandTotals.eur.toFixed(3)),
+          "",
+          excelDecimal(grandTotals.local),
+          excelDecimal(grandTotals.sek),
+          excelDecimal(grandTotals.gbp),
+          excelDecimal(grandTotals.eur),
         ];
 
         styleExcelTotalRow(grandTotalRow, excelColors.mediumBlue);
@@ -1059,7 +1023,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
           };
         });
 
-        for (let column = 7; column <= 10; column += 1) {
+        for (let column = 8; column <= 11; column += 1) {
           grandTotalRow.getCell(column).numFmt = "#,##0.000";
         }
       }
@@ -1114,6 +1078,31 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
     } finally {
       setExportingBudget(false);
     }
+  };
+
+  const handleRecalculate = async () => {
+    if (!canEditBudget || loading || childEditing || hasUnsavedChanges) return;
+    setLoading(true); setFormError(""); setFieldErrors({}); setRecalculationMessage("");
+    try {
+      const headers = { Authorization: `Bearer ${localStorage.getItem("authToken")}`, "Content-Type": "application/json" };
+      const response = await fetch(`${BASE_URL}/api/budgets/${budget.id}/recalculate`, {
+        method: "POST", headers, body: JSON.stringify({ normalizeMissingInputs: hasRole("ADMIN") && normalizeMissingInputs }),
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        setFieldErrors(data?.fieldErrors || {});
+        throw new Error([formatApiError(data, "Recalculation failed. No changes were saved."), ...Object.entries(data?.fieldErrors || {}).map(([field, message]) => `${field}: ${message}`)].join("\n"));
+      }
+      const result = await response.json();
+      triggerRefreshCostDetails(); setHistoryRefreshKey((value) => value + 1);
+      const fresh = await fetch(`${BASE_URL}/api/budgets/${budget.id}`, { headers });
+      if (!fresh.ok) throw new Error("Recalculation succeeded, but the budget could not be refreshed. Reload before editing.");
+      const updated = await fresh.json();
+      setBudget(updated); setSavedBudget(updated); onUpdate?.(updated);
+      setExchangeRates(await fetchExchangeRates(localStorage.getItem("authToken")));
+      setRecalculationMessage(`Recalculated ${result.examinedCostDetails} cost details; ${result.updatedCostDetails} updated, ${result.normalizedCostDetails} normalized.`);
+    } catch (error) { setFormError(error.message); }
+    finally { setLoading(false); }
   };
 
   // 💾 Save/Update Budget
@@ -1173,7 +1162,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
 
       if (!sekRateIdNum || !validLocalToSekIds.has(sekRateIdNum)) {
         newFieldErrors.reportingExchangeRateSekId =
-          "SEK exchange rate is required for the selected local currency.";
+          "Reporting exchange rate is required for the selected local currency.";
       }
 
       if (!eurRateIdNum || !validLocalToEurIds.has(eurRateIdNum)) {
@@ -1217,6 +1206,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
             ? null
             : Number(budget.reportingCurrencyEurId),
 
+        localCurrencyToGbpId: budget.localCurrencyToGbpId || gbpCurrencyId,
         localExchangeRateToGbpId: localToGbpIdNum,
         reportingExchangeRateSekId: sekRateIdNum,
         reportingExchangeRateEurId: eurRateIdNum,
@@ -1244,7 +1234,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
         if (data) {
           if (data.fieldErrors) setFieldErrors(data.fieldErrors);
           setFormError(
-            data.fieldErrors?.id || data.message || "There was a problem updating the budget.",
+            [formatApiError(data, "There was a problem updating the budget."), ...Object.entries(data.fieldErrors || {}).map(([field, message]) => `${field}: ${message}`)].join("\n"),
           );
         } else {
           setFormError("There was a problem updating the budget.");
@@ -1254,13 +1244,14 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
 
       const updated = await response.json();
       setBudget(updated);
+      setSavedBudget(updated);
       setHistoryRefreshKey((value) => value + 1);
       setHasUnsavedChanges(false);
       onUpdate?.(updated);
 
+      triggerRefreshCostDetails();
       const freshRates = await fetchExchangeRates(token);
       setExchangeRates(Array.isArray(freshRates) ? freshRates : []);
-      triggerRefreshCostDetails();
 
       setFormError("");
       setFieldErrors({});
@@ -1309,6 +1300,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
       }
 
       setBudget(data);
+      setSavedBudget(data);
       onUpdate?.(data);
       setFieldErrors({});
       setHasUnsavedChanges(false);
@@ -1362,6 +1354,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
       }
 
       setBudget(data);
+      setSavedBudget(data);
       setHasUnsavedChanges(false);
       setFieldErrors({});
       onUpdate?.(data);
@@ -1598,7 +1591,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
 
                   <div className={styles.row2}>
                     <div className={styles.formGroup}>
-                      <label>Reporting currency (SEK):</label>
+                      <label>Reporting currency:</label>
                       <input
                         type="text"
                         className={styles.textInput}
@@ -1608,7 +1601,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                     </div>
 
                     <div className={styles.formGroup}>
-                      <label>SEK Exchange Rate (Local → SEK):</label>
+                      <label>Reporting exchange rate (Local → {sekName}):</label>
                       <select
                         name="reportingExchangeRateSekId"
                         className={inputClass("reportingExchangeRateSekId")}
@@ -1672,7 +1665,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                   type="button"
                   onClick={handleExportBudget}
                   className={styles.exportButton}
-                  disabled={loading || exportingBudget}
+                  disabled={loading || exportingBudget || childEditing || hasUnsavedChanges}
                 >
                   <FiDownload />
                   {exportingBudget ? "Exporting..." : "Export to Excel"}
@@ -1682,7 +1675,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                   type="button"
                   onClick={handleSave}
                   className={styles.saveButton}
-                  disabled={loading || exportingBudget}
+                  disabled={loading || exportingBudget || childEditing}
                 >
                   <FiSave />
                   Save changes
@@ -1695,7 +1688,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                     loading ||
                     exportingBudget ||
                     submitting ||
-                    hasUnsavedChanges
+                    hasUnsavedChanges || childEditing
                   }
                   title={
                     hasUnsavedChanges
@@ -1728,7 +1721,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                   type="button"
                   onClick={handleDelete}
                   className={styles.deleteButton}
-                  disabled={loading || exportingBudget}
+                  disabled={loading || exportingBudget || childEditing}
                 >
                   <FiTrash2 />
                   Delete budget
@@ -1739,11 +1732,16 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
         </div>
       )}
 
+      {canEditBudget && <div className={styles.bottomActions}>
+        {hasRole("ADMIN") && <label><input type="checkbox" checked={normalizeMissingInputs} disabled={loading} onChange={(event) => setNormalizeMissingInputs(event.target.checked)} /> Fill missing calculation inputs (units 1, periods 1, price 0, allocation 100%)</label>}
+        <button type="button" className={styles.saveButton} onClick={handleRecalculate} disabled={loading || childEditing || hasUnsavedChanges} title="Save or cancel edits first. Uses persisted inputs and current selected rates.">Recalculate saved costs</button>
+        {recalculationMessage && <p role="status">{recalculationMessage}</p>}
+      </div>}
       <RecordHistory entityType="BUDGET" entityId={budget.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} />
       {returnOpen && canReviewBudget && <ReturnReasonDialog key={budget.id}
         endpoint={`/api/budgets/${budget.id}/return`} recordLabel={`budget #${budget.id}`}
         onCancel={() => setReturnOpen(false)} onSuccess={(updated) => {
-          setBudget(updated); setHasUnsavedChanges(false); setFieldErrors({}); setFormError("");
+          setBudget(updated); setSavedBudget(updated); setHasUnsavedChanges(false); setFieldErrors({}); setFormError("");
           setReturnOpen(false); onUpdate?.(updated);
         }} />}
       {budget?.id && (
@@ -1757,7 +1755,10 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
             onMutationSuccess={refreshChildHistory}
             budgetId={budget.id}
             refreshTrigger={refreshCostDetailsTrigger}
-            budget={budget}
+            budget={savedBudget}
+            onEditingChange={setChildEditing}
+            disabled={loading}
+            externalFieldErrors={fieldErrors}
             exchangeRates={exchangeRates}
           />
         </div>

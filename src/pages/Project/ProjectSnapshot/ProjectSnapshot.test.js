@@ -21,7 +21,8 @@ describe("project snapshot summary", () => {
       documents: [{}, {}, {}, {}],
       organizationOptions: [],
     })).toEqual({
-      reportingBudgetSek: 2000,
+      reportingBudgetSek: "2000.000",
+      reportingTotals: [{ currency: "Reporting", amount: "2000.000" }],
       recipients: 2,
       partners: 1,
       transactions: 3,

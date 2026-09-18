@@ -28,7 +28,7 @@ export default function CostDetailAuditDetails({ event }) {
           <div key={label}><dt>{label}</dt><dd>{formatFieldValue(value, type)}</dd></div>)}
       </dl>
       <CurrencyConfiguration value={context.configuredCurrencies} label="Recorded currency configuration" />
-      {moved && <CurrencyConfiguration value={context.previousConfiguredCurrencies} label="Previous budget currency configuration" />}
+      {(moved || context.previousConfiguredCurrencies) && <CurrencyConfiguration value={context.previousConfiguredCurrencies} label="Previous budget currency configuration" />}
     </>}
     {event.action === "UPDATE" && <div className={styles.changes}><AuditFieldChanges event={event} /></div>}
   </div>;

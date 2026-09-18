@@ -17,6 +17,7 @@ const labels = {
   secondShareAmount: "Second-share amount", datePlanned: "Planned date/time", okStatus: "OK status",
   budgetDescription: "Description", budgetPreparationDate: "Preparation date/time",
   totalAmount: "Budget total", projectId: "Project", localCurrencyId: "Local currency",
+  localCurrencyToGbpId: "GBP target currency", reportingCurrencySekId: "Reporting currency", reportingCurrencyEurId: "EUR target currency",
   localExchangeRateToGbpId: "Local-to-GBP exchange rate",
   reportingExchangeRateSekId: "SEK reporting exchange rate", reportingExchangeRateEurId: "EUR reporting exchange rate",
 };

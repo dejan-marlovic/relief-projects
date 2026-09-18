@@ -10,7 +10,7 @@
   border-bottom: 1px solid colors.$border-muted;
 
   /* remove row-level horizontal scrolling */
-  overflow-x: hidden;
+  min-width: 1120px;
 }
 
 .cell,

@@ -33,7 +33,7 @@ const validate = (values) => {
   }
   if (!values.reportingExchangeRateSekId) {
     errors.reportingExchangeRateSekId =
-      "Reporting SEK exchange rate is required.";
+      "Reporting exchange rate is required.";
   }
   if (!values.reportingExchangeRateEurId) {
     errors.reportingExchangeRateEurId =
@@ -107,7 +107,13 @@ const CreateBudget = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [name]: value };
+      if (name === "localCurrencyId") for (const field of ["localExchangeRateToGbpId", "reportingExchangeRateSekId", "reportingExchangeRateEurId"]) next[field] = "";
+      const rateField = { localCurrencyToGbpId: "localExchangeRateToGbpId", reportingCurrencySekId: "reportingExchangeRateSekId", reportingCurrencyEurId: "reportingExchangeRateEurId" }[name];
+      if (rateField) next[rateField] = "";
+      return next;
+    });
     setFieldErrors((prev) => ({ ...prev, [name]: "" }));
     setFormError("");
   };
@@ -158,6 +164,7 @@ const CreateBudget = () => {
       const data = await safeReadJson(res);
 
       if (!res.ok) {
+        setFieldErrors(data?.fieldErrors || {});
         setFormError(
           data?.message ||
             data?.detail ||
@@ -299,7 +306,7 @@ const CreateBudget = () => {
                 onChange={handleChange}
               >
                 <option value="">Optional</option>
-                {currencies.map((c) => (
+                {currencies.filter((c) => (c.name || "").toUpperCase() === "GBP").map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name} - {c.description}
                   </option>
@@ -308,7 +315,7 @@ const CreateBudget = () => {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Reporting currency SEK</label>
+              <label>Reporting currency</label>
               <select
                 className={inputClass("reportingCurrencySekId")}
                 name="reportingCurrencySekId"
@@ -333,7 +340,7 @@ const CreateBudget = () => {
                 onChange={handleChange}
               >
                 <option value="">Optional</option>
-                {currencies.map((c) => (
+                {currencies.filter((c) => (c.name || "").toUpperCase() === "EUR").map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name} - {c.description}
                   </option>
@@ -374,7 +381,7 @@ const CreateBudget = () => {
                 onChange={handleChange}
               >
                 <option value="">Select exchange rate</option>
-                {exchangeRates.map((r) => (
+                {exchangeRates.filter((r) => String(r.baseCurrencyId) === String(form.localCurrencyId) && (!form.localCurrencyToGbpId || String(r.quoteCurrencyId) === String(form.localCurrencyToGbpId)) && Number(r.rate) > 0 && (r.baseCurrencyId !== r.quoteCurrencyId || Number(r.rate) === 1) && (currencyNameById[r.quoteCurrencyId] || "").toUpperCase() === "GBP").map((r) => (
                   <option key={r.id} value={r.id}>
                     {exchangeRateLabel(r)}
                   </option>
@@ -383,7 +390,7 @@ const CreateBudget = () => {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Reporting exchange rate SEK</label>
+              <label>Reporting exchange rate</label>
               <select
                 className={inputClass("reportingExchangeRateSekId")}
                 name="reportingExchangeRateSekId"
@@ -391,7 +398,7 @@ const CreateBudget = () => {
                 onChange={handleChange}
               >
                 <option value="">Select exchange rate</option>
-                {exchangeRates.map((r) => (
+                {exchangeRates.filter((r) => String(r.baseCurrencyId) === String(form.localCurrencyId) && (!form.reportingCurrencySekId || String(r.quoteCurrencyId) === String(form.reportingCurrencySekId)) && Number(r.rate) > 0 && (r.baseCurrencyId !== r.quoteCurrencyId || Number(r.rate) === 1)).map((r) => (
                   <option key={r.id} value={r.id}>
                     {exchangeRateLabel(r)}
                   </option>
@@ -408,7 +415,7 @@ const CreateBudget = () => {
                 onChange={handleChange}
               >
                 <option value="">Select exchange rate</option>
-                {exchangeRates.map((r) => (
+                {exchangeRates.filter((r) => String(r.baseCurrencyId) === String(form.localCurrencyId) && (!form.reportingCurrencyEurId || String(r.quoteCurrencyId) === String(form.reportingCurrencyEurId)) && Number(r.rate) > 0 && (r.baseCurrencyId !== r.quoteCurrencyId || Number(r.rate) === 1) && (currencyNameById[r.quoteCurrencyId] || "").toUpperCase() === "EUR").map((r) => (
                   <option key={r.id} value={r.id}>
                     {exchangeRateLabel(r)}
                   </option>

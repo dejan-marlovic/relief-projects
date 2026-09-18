@@ -9,6 +9,7 @@ const completeCostDetail = {
   costTypeId: 1,
   costId: 2,
   noOfUnits: 10,
+  frequencyMonths: 1,
   unitPrice: 100,
   percentageCharging: 50,
   amountLocalCurrency: 500,
@@ -32,12 +33,9 @@ describe("cost-detail required-field validation", () => {
     "costTypeId",
     "costId",
     "noOfUnits",
+    "frequencyMonths",
     "unitPrice",
     "percentageCharging",
-    "amountLocalCurrency",
-    "amountReportingCurrency",
-    "amountGBP",
-    "amountEuro",
   ])("rejects a cost detail with missing %s", (field) => {
     expect(
       isValidCostDetail({ ...completeCostDetail, [field]: "" })

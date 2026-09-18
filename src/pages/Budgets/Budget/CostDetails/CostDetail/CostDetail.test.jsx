@@ -54,7 +54,7 @@ describe("CostDetail explicit editing", () => {
       "costDescription",
       "Updated shelter"
     );
-    expect(props.onChange).toHaveBeenCalledWith("noOfUnits", 12);
+    expect(props.onChange).toHaveBeenCalledWith("noOfUnits", "12");
     expect(props.onSave).not.toHaveBeenCalled();
     expect(screen.getByTitle("Save")).toBeInTheDocument();
   });
@@ -109,4 +109,12 @@ describe("CostDetail explicit editing", () => {
     expect(props.onChange).toHaveBeenCalledWith("costTypeId", 2);
     expect(props.onChange).toHaveBeenCalledWith("costId", "");
   });
+});
+
+test("calculated amounts are read-only and decimal input stays exact", () => {
+  const props = renderEditableRow();
+  for (const label of ["Local", "Reporting", "GBP", "EUR"]) expect(screen.getByPlaceholderText(label)).toHaveAttribute("readonly");
+  fireEvent.change(screen.getByPlaceholderText("Price"), { target: { value: "999999999999999.99" } });
+  expect(props.onChange).toHaveBeenCalledWith("unitPrice", "999999999999999.99");
+  expect(screen.getByPlaceholderText("Periods")).toHaveAttribute("min", "1");
 });

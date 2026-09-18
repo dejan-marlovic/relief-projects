@@ -5,7 +5,7 @@ describe("transaction allocation defaults", () => {
   test("uses the cost detail local amount as the planned amount", () => {
     expect(
       getCostDetailPlannedAmount({ amountLocalCurrency: "1250.75" })
-    ).toBe(1250.75);
+    ).toBe("1250.75");
   });
 
   test("keeps the field empty when the cost detail has no valid amount", () => {
@@ -33,7 +33,7 @@ test("editing preserves allocation identity and refreshes only after success", a
   fireEvent.click(screen.getByRole("button", { name: "Save allocation" }));
   await waitFor(() => expect(onMutationSuccess).toHaveBeenCalledTimes(1));
   const save = fetch.mock.calls.find(([, options]) => options?.method === "PUT");
-  expect(JSON.parse(save[1].body)).toEqual({ id: 81, transactionId: 42, costDetailId: 15, plannedAmount: 100, note: "Changed note" });
+  expect(JSON.parse(save[1].body)).toEqual({ id: 81, transactionId: 42, costDetailId: 15, plannedAmount: "100", note: "Changed note" });
   rejectSave = true;
   fireEvent.click(screen.getByRole("button", { name: "Save allocation" }));
   await screen.findByText("Ownership changed");

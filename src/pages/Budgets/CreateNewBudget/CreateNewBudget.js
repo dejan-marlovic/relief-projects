@@ -72,7 +72,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
         : quoteCurrencyId;
 
     return exchangeRates.filter(
-      (r) => r.baseCurrencyId === baseNum && r.quoteCurrencyId === quoteNum
+      (r) => r.baseCurrencyId === baseNum && r.quoteCurrencyId === quoteNum && Number(r.rate) > 0 && (r.baseCurrencyId !== r.quoteCurrencyId || Number(r.rate) === 1)
     );
   };
 

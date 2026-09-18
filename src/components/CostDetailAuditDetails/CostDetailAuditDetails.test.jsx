@@ -30,3 +30,9 @@ test("missing and future contexts have safe fallbacks", () => {
   view.rerender(<CostDetailAuditDetails event={{ ...base, costDetailContext: { version: 2 } }} />);
   expect(screen.getByText(/unsupported format/)).toBeInTheDocument();
 });
+
+test("shows prior currency configuration for a same-parent currency change", () => {
+  render(<CostDetailAuditDetails event={{ ...base, costDetailContext: { ...base.costDetailContext, previousConfiguredCurrencies: { local: { id: "8", label: "UGX" } } } }} />);
+  expect(screen.getByText("Previous budget currency configuration")).toBeInTheDocument();
+  expect(screen.getByText("UGX (ID 8)")).toBeInTheDocument();
+});

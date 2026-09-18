@@ -1,4 +1,27 @@
 @use "../../../../styles/colors" as colors;
+
+.calculationNote {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border: 1px solid colors.$border-subtle;
+  border-left: 3px solid colors.$primary-border;
+  border-radius: 8px;
+  background: colors.$surface-muted;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.calculationFormula {
+  margin: 0;
+  color: colors.$text-secondary;
+  font-weight: 600;
+}
+
+.calculationHint {
+  margin: 3px 0 0;
+  color: colors.$text-muted;
+}
+
 .noDataMessage {
   padding: 16px;
   font-style: italic;
@@ -12,14 +35,15 @@
   /* Responsive columns (shrink to fit, avoids horizontal scroll) */
   --cd-cols: minmax(140px, 2.2fr) /* Description */ minmax(80px, 1.1fr)
     /* Type */ minmax(110px, 1.4fr) /* Category */ minmax(55px, 0.8fr)
-    /* Units */ minmax(65px, 0.9fr) /* Unit price */ minmax(55px, 0.8fr)
+    /* Units */ minmax(55px, 0.8fr) /* Periods */ minmax(65px, 0.9fr) /* Unit price */ minmax(55px, 0.8fr)
     /* % Charged */ minmax(65px, 0.9fr) /* Local */ minmax(65px, 0.9fr)
     /* SEK */ minmax(65px, 0.9fr) /* GBP */ minmax(65px, 0.9fr) /* EUR */ 80px; /* Actions */
 
-  overflow-x: hidden; /* prevent page-level horizontal scrollbar */
+  overflow-x: auto; /* prevent page-level horizontal scrollbar */
 }
 
 .headerRow {
+  min-width: 1120px;
   font-weight: bold;
   display: grid;
   grid-template-columns: var(--cd-cols);

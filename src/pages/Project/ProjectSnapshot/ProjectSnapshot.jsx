@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { sumDecimals, reportingTotals } from "../../../utils/budgetCalculations";
+import React, { useEffect, useState } from "react";
 import { FiBriefcase, FiCreditCard, FiFileText, FiPenTool, FiTrendingUp, FiUsers } from "react-icons/fi";
 import {
   Bar,
@@ -17,7 +18,8 @@ import styles from "./ProjectSnapshot.module.scss";
 import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const emptySnapshot = {
-  reportingBudgetSek: 0,
+  reportingBudgetSek: "0.000",
+  reportingTotals: [],
   recipients: 0,
   partners: 0,
   transactions: 0,
@@ -30,11 +32,6 @@ const emptySnapshot = {
 };
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
-const numeric = (value) => {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
-};
-
 const CHART_COLORS = [
   "var(--color-primary)",
   "var(--color-primary-hover)",
@@ -129,9 +126,8 @@ export const summarizeProjectSnapshot = ({
     (organizationId == null ? "Organization" : `Organization #${organizationId}`);
 
   return ({
-  reportingBudgetSek: asArray(costDetails).reduce(
-    (total, row) => total + numeric(row.amountReportingCurrency), 0
-  ),
+  reportingTotals: reportingTotals(asArray(costDetails)),
+  reportingBudgetSek: sumDecimals(asArray(costDetails).map((row) => row.amountReportingCurrency)),
   recipients: asArray(recipients).length,
   partners: asArray(relations).length,
   transactions: asArray(transactions).length,
@@ -221,7 +217,7 @@ const ProjectSnapshot = ({
       setLoading(true);
       setError("");
       try {
-        const [budgets, transactions, paymentOrders, recipients, signatures, documents, allRelations, organizationOptions] =
+        const [budgets, transactions, paymentOrders, recipients, signatures, documents, allRelations, organizationOptions, currencyOptions] =
           await Promise.all([
             fetchList(`/api/budgets/project/${projectId}`),
             fetchList(`/api/transactions/project/${projectId}`),
@@ -231,11 +227,12 @@ const ProjectSnapshot = ({
             fetchList(`/api/documents/project/${projectId}`),
             fetchList("/api/project-organizations/active"),
             fetchList("/api/organizations/active/options"),
+            fetchList("/api/currencies/active"),
           ]);
 
         const costDetailGroups = await Promise.all(
           budgets.map((budget) =>
-            fetchList(`/api/cost-details/by-budget/${budget.id ?? budget.budgetId}`)
+            fetchList(`/api/cost-details/by-budget/${budget.id ?? budget.budgetId}`).then((rows) => rows.map((row) => ({ ...row, reportingCurrencyLabel: currencyOptions.find((currency) => String(currency.id) === String(budget.reportingCurrencySekId))?.name || (budget.reportingCurrencySekId ? `Currency #${budget.reportingCurrencySekId}` : "Unconfigured reporting currency") })))
           )
         );
         const relations = allRelations.filter(
@@ -262,14 +259,8 @@ const ProjectSnapshot = ({
     return () => controller.abort();
   }, [projectId]);
 
-  const currencyFormatter = useMemo(
-    () => new Intl.NumberFormat("sv-SE", {
-      style: "currency", currency: "SEK", maximumFractionDigits: 0,
-    }), []
-  );
-
   const cards = [
-    { label: "Reporting budget", value: currencyFormatter.format(snapshot.reportingBudgetSek), hint: "Cost details in reporting currency", icon: FiTrendingUp },
+    { label: "Reporting budget", value: (snapshot.reportingTotals || []).map(({ currency, amount }) => `${amount} ${currency}`).join(" / ") || "0.000", hint: "Cost details in reporting currency", icon: FiTrendingUp },
     { label: "Recipients", value: snapshot.recipients, hint: "Project beneficiaries", icon: FiUsers },
     { label: "Partners", value: snapshot.partners, hint: "Linked organizations", icon: FiBriefcase },
     { label: "Transactions", value: snapshot.transactions, hint: "Funding transactions", icon: FiCreditCard },

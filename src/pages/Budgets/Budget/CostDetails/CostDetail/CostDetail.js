@@ -18,6 +18,7 @@ const CostDetail = ({
   canEdit = false,
   canDelete = false,
   fieldErrors = {},
+  busy = false,
 }) => {
   const ev = editedValues || {};
   const selectedCostTypeId = ev.costTypeId ?? cost.costTypeId ?? "";
@@ -40,6 +41,8 @@ const CostDetail = ({
         className: `${control.props.className || ""} ${
           fieldErrors[name] ? styles.inputError : ""
         }`,
+        "aria-label": control.props.placeholder || name,
+        disabled: busy,
         "aria-invalid": Boolean(fieldErrors[name]),
         "aria-describedby": fieldErrors[name]
           ? `cost-detail-${cost.costDetailId}-${name}-error`
@@ -99,18 +102,19 @@ const CostDetail = ({
 
         {renderField("noOfUnits", <input
           type="number"
-          step="0.001"
+          min="1" step="1"
           value={ev.noOfUnits ?? cost.noOfUnits ?? ""}
-          onChange={(e) => onChange("noOfUnits", toNum(e.target.value))}
+          onChange={(e) => onChange("noOfUnits", e.target.value)}
           className={styles.input}
           placeholder="Units"
         />)}
 
+        {renderField("frequencyMonths", <input type="number" min="1" step="1" value={ev.frequencyMonths ?? cost.frequencyMonths ?? ""} onChange={(e) => onChange("frequencyMonths", e.target.value)} className={styles.input} placeholder="Periods" title="Number of periods; 1 for a one-off cost" />)}
         {renderField("unitPrice", <input
           type="number"
-          step="0.001"
+          min="0" step="0.01"
           value={ev.unitPrice ?? cost.unitPrice ?? ""}
-          onChange={(e) => onChange("unitPrice", toNum(e.target.value))}
+          onChange={(e) => onChange("unitPrice", e.target.value)}
           className={styles.input}
           placeholder="Price"
         />)}
@@ -120,10 +124,10 @@ const CostDetail = ({
           step="0.001"
           value={ev.percentageCharging ?? cost.percentageCharging ?? ""}
           onChange={(e) =>
-            onChange("percentageCharging", toNum(e.target.value))
+            onChange("percentageCharging", e.target.value)
           }
           className={styles.input}
-          placeholder="%"
+          placeholder="Allocated %" min="0" max="100"
         />)}
 
         {/* Local amount calculated; read-only */}
@@ -143,18 +147,16 @@ const CostDetail = ({
           value={
             ev.amountReportingCurrency ?? cost.amountReportingCurrency ?? ""
           }
-          onChange={(e) =>
-            onChange("amountReportingCurrency", toNum(e.target.value))
-          }
+          readOnly
           className={styles.input}
-          placeholder="SEK"
+          placeholder="Reporting"
         />)}
 
         {renderField("amountGBP", <input
           type="number"
           step="0.001"
           value={ev.amountGBP ?? cost.amountGBP ?? ""}
-          onChange={(e) => onChange("amountGBP", toNum(e.target.value))}
+          readOnly
           className={styles.input}
           placeholder="GBP"
         />)}
@@ -163,7 +165,7 @@ const CostDetail = ({
           type="number"
           step="0.001"
           value={ev.amountEuro ?? cost.amountEuro ?? ""}
-          onChange={(e) => onChange("amountEuro", toNum(e.target.value))}
+          readOnly
           className={styles.input}
           placeholder="EUR"
         />)}
@@ -171,6 +173,7 @@ const CostDetail = ({
         <div className={`${styles.actions} ${styles.cellActions}`}>
           <button
             type="button"
+            disabled={busy}
             onClick={handleSaveClick}
             className={styles.actionBtn}
             title="Save"
@@ -179,6 +182,7 @@ const CostDetail = ({
           </button>
           <button
             type="button"
+            disabled={busy}
             onClick={onCancel}
             className={`${styles.actionBtn} ${styles.danger}`}
             title="Cancel"
@@ -209,6 +213,7 @@ const CostDetail = ({
       </div>
 
       <div className={styles.vcell}>{displayCost.noOfUnits ?? "-"}</div>
+      <div className={styles.vcell}>{displayCost.frequencyMonths ?? "-"}</div>
       <div className={styles.vcell}>{displayCost.unitPrice ?? "-"}</div>
       <div className={styles.vcell}>
         {displayCost.percentageCharging ?? "-"}%

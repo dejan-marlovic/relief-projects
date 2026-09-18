@@ -22,7 +22,7 @@ export const getCostDetailPlannedAmount = (costDetail) => {
   const value = costDetail?.amountLocalCurrency;
   if (value === "" || value == null) return "";
   const amount = Number(value);
-  return Number.isFinite(amount) ? amount : "";
+  return Number.isFinite(amount) ? String(value) : "";
 };
 
 async function safeParseJsonResponse(res) {
@@ -286,7 +286,7 @@ const TransactionAllocations = ({
     try {
       await upsert({
         costDetailId: cdId,
-        plannedAmount: planned,
+        plannedAmount: String(draft.plannedAmount),
         note: draft.note,
       });
 
@@ -334,7 +334,7 @@ const TransactionAllocations = ({
       await upsert({
         id: row.id,
         costDetailId: row.costDetailId,
-        plannedAmount: planned,
+        plannedAmount: String(patch.plannedAmount),
         note: patch.note ?? row.note ?? "",
       });
       await fetchRows();

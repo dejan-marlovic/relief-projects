@@ -187,3 +187,32 @@ test.each(["SUBMITTED", "APPROVED"])(
     expect(screen.queryByRole("button", { name: "Delete budget" })).not.toBeInTheDocument();
   },
 );
+
+test.each(["ADMIN", "FINANCE"])("%s recalculates with one atomic request and refreshes the header", async (role) => {
+  const onUpdate = await renderBudget([role]);
+  fetch.mockResolvedValueOnce(jsonResponse({ examinedCostDetails: 3, updatedCostDetails: 2, normalizedCostDetails: 0 }))
+    .mockResolvedValueOnce(jsonResponse({ ...budget, reportingCurrencySekId: 9 }))
+    .mockResolvedValueOnce(jsonResponse([]));
+  fireEvent.click(screen.getByRole("button", { name: "Recalculate saved costs" }));
+  await screen.findByText("Recalculated 3 cost details; 2 updated, 0 normalized.");
+  expect(fetch.mock.calls.filter(([, options]) => options?.method === "POST")).toEqual([
+    [expect.stringContaining("/api/budgets/7/recalculate"), expect.objectContaining({ body: JSON.stringify({ normalizeMissingInputs: false }) })]
+  ]);
+  expect(fetch.mock.calls.some(([url]) => url.includes("/api/cost-details/"))).toBe(false);
+  expect(onUpdate).toHaveBeenCalledWith(expect.objectContaining({ reportingCurrencySekId: 9 }));
+  if (role === "FINANCE") expect(screen.queryByLabelText(/Fill missing/)).not.toBeInTheDocument();
+});
+test("admin normalization is explicit and recalculation errors retain row identity", async () => {
+  await renderBudget(["ADMIN"]);
+  fireEvent.click(screen.getByLabelText(/Fill missing calculation inputs/));
+  fetch.mockResolvedValueOnce(jsonResponse({ message: "No changes were saved.", fieldErrors: { "costDetails[42].amountLocalCurrency": "Below committed amount" } }, 400));
+  fireEvent.click(screen.getByRole("button", { name: "Recalculate saved costs" }));
+  expect(await screen.findByText(/costDetails\[42\].amountLocalCurrency: Below committed amount/)).toBeInTheDocument();
+  expect(fetch.mock.calls[2][1].body).toBe(JSON.stringify({ normalizeMissingInputs: true }));
+  expect(fetch).toHaveBeenCalledTimes(3);
+});
+test("recalculation requires saved header inputs", async () => {
+  await renderBudget(["FINANCE"]);
+  fireEvent.change(screen.getByPlaceholderText("Write a short note about this budget..."), { target: { name: "budgetDescription", value: "Draft edit" } });
+  expect(screen.getByRole("button", { name: "Recalculate saved costs" })).toBeDisabled();
+});
