@@ -208,3 +208,10 @@
     min-width: unset;
   }
 }
+
+@media (max-width: 700px) {
+  .adminContainer { padding: 0; min-width: 0; }
+  .selectorCard { padding: 12px; }
+  .selectorRow, .selectorControl, .selectorText { min-width: 0; max-width: 100%; }
+  .selectorTitle, .selectorSubtitle { overflow-wrap: anywhere; }
+}

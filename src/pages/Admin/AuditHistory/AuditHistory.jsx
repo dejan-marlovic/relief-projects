@@ -215,28 +215,28 @@ const AuditHistory = () => {
       </div>
 
       <div className={styles.tableWrap}>
-        <table>
+        <table role="table" aria-label="Audit events">
           <thead>
-            <tr>
-              <th>Date and time</th>
-              <th>Record</th>
-              <th>Project</th>
-              <th>Action</th>
-              <th>Changes</th>
-              <th>Performed by</th>
+            <tr role="row">
+              <th scope="col" role="columnheader">Date and time</th>
+              <th scope="col" role="columnheader">Record</th>
+              <th scope="col" role="columnheader">Project</th>
+              <th scope="col" role="columnheader">Action</th>
+              <th scope="col" role="columnheader">Changes</th>
+              <th scope="col" role="columnheader">Performed by</th>
             </tr>
           </thead>
           <tbody>
             {!loading && result.content.length === 0 ? (
-              <tr><td colSpan="6" className={styles.empty}>No audit events match these filters.</td></tr>
+              <tr role="row"><td role="cell" colSpan="6" className={styles.empty}>No audit events match these filters.</td></tr>
             ) : result.content.map((event) => (
-              <tr key={event.id}>
-                <td className={styles.nowrap}>{formatAuditTimestamp(event.occurredAt)}</td>
-                <td><strong>{ENTITY_LABELS[event.entityType] || event.entityType}</strong><span className={styles.subtle}>#{event.entityId}</span></td>
-                <td>{projectLabel(event.projectId)}</td>
-                <td><span className={`${styles.badge} ${styles[`action${event.action}`] || ""}`}>{auditActionLabel(event)}</span></td>
-                <td>{event.entityType === "RECIPIENT" ? <RecipientAuditDetails event={event} /> : event.entityType === "SIGNATURE" ? <SignatureAuditDetails event={event} /> : event.entityType === "COST_DETAIL" ? <CostDetailAuditDetails event={event} /> : event.entityType === "COST_DETAIL_ALLOCATION" ? <AllocationAuditDetails event={event} /> : event.entityType === "PAYMENT_ORDER_LINE" ? <LineAuditDetails event={event} /> : event.action === "UPDATE" ? <AuditFieldChanges event={event} /> : hasAuditTransition(event) ? <><span className={styles.state}>{event.previousState}</span><span className={styles.arrow}>→</span><span className={styles.state}>{event.newState}</span></> : "—"}<ReturnReason event={event} /></td>
-                <td><strong>{event.performedByDisplay || "Unknown user"}</strong><span className={styles.subtle}>User #{event.performedBy}</span></td>
+              <tr key={event.id} role="row">
+                <td role="cell" data-label="Date and time" className={styles.nowrap}>{formatAuditTimestamp(event.occurredAt)}</td>
+                <td role="cell" data-label="Record"><strong>{ENTITY_LABELS[event.entityType] || event.entityType}</strong><span className={styles.subtle}>#{event.entityId}</span></td>
+                <td role="cell" data-label="Project">{projectLabel(event.projectId)}</td>
+                <td role="cell" data-label="Action"><span className={`${styles.badge} ${styles[`action${event.action}`] || ""}`}>{auditActionLabel(event)}</span></td>
+                <td role="cell" data-label="Changes">{event.entityType === "RECIPIENT" ? <RecipientAuditDetails event={event} /> : event.entityType === "SIGNATURE" ? <SignatureAuditDetails event={event} /> : event.entityType === "COST_DETAIL" ? <CostDetailAuditDetails event={event} /> : event.entityType === "COST_DETAIL_ALLOCATION" ? <AllocationAuditDetails event={event} /> : event.entityType === "PAYMENT_ORDER_LINE" ? <LineAuditDetails event={event} /> : event.action === "UPDATE" ? <AuditFieldChanges event={event} /> : hasAuditTransition(event) ? <><span className={styles.state}>{event.previousState}</span><span className={styles.arrow}>→</span><span className={styles.state}>{event.newState}</span></> : "—"}<ReturnReason event={event} /></td>
+                <td role="cell" data-label="Performed by"><strong>{event.performedByDisplay || "Unknown user"}</strong><span className={styles.subtle}>User #{event.performedBy}</span></td>
               </tr>
             ))}
           </tbody>

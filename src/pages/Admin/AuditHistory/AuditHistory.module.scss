@@ -79,3 +79,38 @@
   .filterActions, .filterActions button { width: 100%; }
   .pagination > div, .pagination button { width: 100%; }
 }
+
+.card { min-width: 0; }
+@media (max-width: 700px) {
+  .card { padding: 12px; }
+  .header, .pagination { align-items: stretch; flex-direction: column; }
+  .header > div { min-width: 0; }
+  .filters { grid-template-columns: minmax(0, 1fr); padding: 12px; }
+  .filters input, .filters select { min-height: 44px; font-size: 16px; max-width: 100%; }
+  .filterActions { flex-wrap: wrap; }
+  .filterActions button, .pagination button { flex: 1; min-height: 44px; }
+  .refreshButton { min-height: 44px; }
+  .tableWrap { border: 0; overflow: visible; }
+  .tableWrap table, .tableWrap tbody { display: block; min-width: 0; width: 100%; }
+  .tableWrap thead {
+    position: absolute; width: 1px; height: 1px; padding: 0;
+    overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  }
+  .tableWrap tbody tr {
+    display: block; margin-bottom: 12px; padding: 12px;
+    border: 1px solid colors.$border-subtle; border-radius: 11px;
+  }
+  .tableWrap td {
+    display: block; border: 0; padding: 0; white-space: normal;
+    min-width: 0; overflow-wrap: anywhere;
+  }
+  .tableWrap td + td { margin-top: 12px; }
+  .tableWrap td[data-label]::before {
+    content: attr(data-label); display: block; margin-bottom: 4px;
+    font-weight: 700; font-size: 0.75rem; color: colors.$text-muted;
+  }
+  // Shared audit details have desktop minimum widths; cards must shrink freely.
+  .tableWrap td div, .tableWrap td dl { min-width: 0; max-width: 100%; }
+  .badge, .state { max-width: 100%; box-sizing: border-box; white-space: normal; }
+  .pagination > div { width: 100%; }
+}
