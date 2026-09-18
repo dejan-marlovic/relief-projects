@@ -86,6 +86,32 @@ h3 {
   font-size: 0.9rem;
 }
 
+.projectContextNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0.5rem 0 0;
+  padding: 10px 12px;
+  max-width: 70ch;
+  box-sizing: border-box;
+  border: 1px solid colors.$primary-border;
+  border-radius: 10px;
+  background: colors.$primary-a04;
+  color: colors.$text-muted;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+
+  svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: colors.$primary;
+    font-size: 1rem;
+  }
+
+  span { min-width: 0; }
+}
+
 .headerActions {
   display: flex;
   align-items: center;

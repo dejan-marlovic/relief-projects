@@ -22,7 +22,9 @@ import {
   FiSave,
   FiPlus,
   FiUploadCloud,
-  FiImage,  FiDownload,
+  FiImage,
+  FiDownload,
+  FiInfo,
 } from "react-icons/fi";
 
 import { BASE_URL, ASSETS_URL } from "../../config/api";
@@ -2635,6 +2637,14 @@ Approximately:
               <p className={styles.pageSubtitle}>
                 {getSelectedProjectName(projects, selectedProjectId)} • Update
                 project info, sectors, images, organizations, and participants.
+              </p>
+              <p className={styles.projectContextNote}>
+                <FiInfo aria-hidden="true" />
+                <span>
+                This is your currently selected project. Most tabs show data for
+                this project, including budgets, transactions, and payment orders.
+                Use the Project selector above to switch projects.
+                </span>
               </p>
             </div>
 

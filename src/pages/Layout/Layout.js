@@ -241,7 +241,8 @@ const Layout = () => {
                 <Link
                   to={path}
                   aria-current={isActive(path) ? "page" : undefined}
-                  title={isProjectTab ? label : undefined}
+                  title={isProjectTab ? `${label} — Currently selected project. Most tabs show data for this project.` : undefined}
+                  aria-label={isProjectTab ? label : undefined}
                   onClick={(event) => {
                     if (
                       !isActive(path) &&
@@ -256,7 +257,12 @@ const Layout = () => {
                     isProjectTab ? styles.projectTab : ""
                   }`}
                 >
-                  {label}
+                  {isProjectTab ? (
+                    <>
+                      <span className={styles.projectTabName}>{label}</span>
+                      <span className={styles.projectTabSubtitle}>Selected project</span>
+                    </>
+                  ) : label}
                 </Link>
               </li>
             );

@@ -127,88 +127,91 @@ $secondary-color: colors.$danger;
 .nav {
   flex-shrink: 0;
   min-width: 0;
-  margin-bottom: 0.75rem;
-  border-bottom: 1px solid colors.$primary-a35;
+  margin-bottom: 1rem;
+  padding: 6px;
+  border: 1px solid colors.$primary-border;
+  border-radius: 14px;
+  background: colors.$surface-secondary;
+  box-shadow: 0 3px 10px colors.$border-subtle;
 }
 
 .tabList {
   list-style: none;
   display: flex;
-  gap: 0.35rem;
+  align-items: stretch;
+  gap: 6px;
   margin: 0;
-  padding: 6px 0 2px;
+  padding: 2px;
   max-width: 100%;
   overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 .tabItem {
+  display: flex;
   margin: 0;
   flex: 0 0 auto;
 }
 
-/* TAB look: top-rounded, flat bottom */
 .tabLink {
-  display: inline-block;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 54px;
   white-space: nowrap;
-  padding: 0.9rem 1.35rem;
-  font-size: 1rem;
-  font-weight: 700;
-  text-decoration: none;
+  padding: 10px 18px;
+  border: 1px solid colors.$border-subtle;
+  border-radius: 10px;
+  background: colors.$surface;
   color: colors.$text-secondary;
-
-  background: colors.$surface-secondary;
-  border: 1px solid colors.$primary-a35;
-  border-bottom: none;
-
-  border-top-left-radius: 12px;
-  border-top-right-radius: 12px;
-
-  transition:
-    background 0.2s ease,
-    transform 0.1s ease;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-decoration: none;
+  box-shadow: 0 1px 2px colors.$border-subtle;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .tabLink:hover {
   background: colors.$primary-soft;
+  border-color: colors.$primary-a60;
+  color: colors.$primary-dark;
+  box-shadow: 0 2px 6px colors.$border-subtle;
 }
 
-/* Keep the selected-project tab slightly raised like a folder label. */
 .projectTab {
-  position: relative;
-  z-index: 3;
   max-width: 18rem;
   overflow: hidden;
-  text-overflow: ellipsis;
-  transform: translateY(-4px);
   background: colors.$primary-soft;
-  color: colors.$primary;
+  border-color: colors.$primary-border;
+  color: colors.$primary-dark;
+}
+
+.projectTabName {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 700;
+}
+
+.projectTabSubtitle {
+  display: block;
+  margin-top: 3px;
+  color: colors.$text-muted;
+  font-size: 0.7rem;
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+.tabLink.active {
   border-color: colors.$primary-a60;
-  box-shadow: 0 -4px 10px colors.$border-subtle;
-}
-
-.projectTab:hover {
-  transform: translateY(-5px);
-  background: colors.$primary-soft-hover;
-}
-
-/* ACTIVE TAB = visually connected to page */
-.active {
-  background: colors.$text-on-primary !important;
-  color: colors.$primary !important;
-  font-weight: 800;
-
-  position: relative;
-  top: 1px;
-
-  border-color: colors.$primary-a60;
-  box-shadow: 0 -2px 6px colors.$border-subtle;
-  z-index: 2;
-}
-
-.active.projectTab {
-  background: colors.$primary-soft !important;
-  transform: translateY(-4px);
-  box-shadow: 0 -5px 12px colors.$border-subtle;
+  background: colors.$primary-soft;
+  color: colors.$primary-dark;
+  font-weight: 700;
+  box-shadow: inset 0 -3px 0 colors.$primary, 0 2px 5px colors.$border-subtle;
 }
 
 /* Responsive */
@@ -227,18 +230,18 @@ $secondary-color: colors.$danger;
 }
 
 .adminTab {
-  border-color: colors.$danger-border !important;
-  background: colors.$danger-soft !important;
-  color: colors.$danger-text !important;
+  border-color: colors.$danger-border;
+  color: colors.$danger-text;
 }
 
-.adminTab:hover {
-  background: colors.$danger-soft !important;
+.adminTab:hover, .tabLink.active.adminTab {
+  background: colors.$danger-soft;
+  border-color: colors.$danger-border;
+  color: colors.$danger-text;
 }
 
-.active.adminTab {
-  border-color: colors.$danger-border !important;
-  color: colors.$danger-text !important;
+.tabLink.active.adminTab {
+  box-shadow: inset 0 -3px 0 colors.$danger, 0 2px 5px colors.$border-subtle;
 }
 
 // Pages use document scrolling on phones so forms remain
@@ -290,6 +293,10 @@ $secondary-color: colors.$danger;
 
 @media (max-width: 700px) {
   .logo { height: 36px; max-width: 140px; }
-  .nav { border-bottom: 0; }
+  .nav { padding: 0; border: 0; box-shadow: none; background: transparent; }
   .selectInput { min-height: 44px; font-size: 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tabLink { transition: none; }
 }
