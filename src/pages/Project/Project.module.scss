@@ -126,7 +126,7 @@ h3 {
   align-items: baseline;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-bottom: 0.85rem;
+  margin-bottom: 12px;
 }
 
 .cardTitle {
@@ -144,14 +144,20 @@ h3 {
 .fullWidthField {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 6px;
 }
 
 .formGroup {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 6px;
   margin-bottom: 0.9rem;
+}
+
+// Let the field container own spacing, without adding the label margin again.
+.formGroup > label,
+.fullWidthField > label {
+  margin: 0;
 }
 
 .row2 {
@@ -424,7 +430,7 @@ h3 {
 }
 
 .imageListTitle {
-  margin-bottom: 0.35rem;
+  margin-bottom: 12px;
   color: colors.$text;
 }
 
@@ -527,6 +533,10 @@ h3 {
   font-weight: 700;
 }
 
+.sectionTitle + .scrollBox {
+  margin-top: 12px;
+}
+
 .sectionHint {
   display: block;
   color: colors.$text-muted;
@@ -537,7 +547,7 @@ h3 {
 .sectionRowStack {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 12px;
   align-items: stretch;
   margin-bottom: 1rem;
 }
