@@ -4,7 +4,8 @@ import {
   FiRefreshCw,
   FiSave,
   FiTrash2,
-  FiPlus,} from "react-icons/fi";
+  FiPlus,
+} from "react-icons/fi";
 
 import { BASE_URL } from "../../../../config/api";
 import ErrorBanner from "../../../../components/ErrorBanner/ErrorBanner"; // adjust path if needed
@@ -803,6 +804,7 @@ const LineRow = ({
   return (
     <div className={styles.trow}>
       <div>
+        <span className={styles.fieldLabel}>Transaction</span>
         <select
           value={transactionId}
           disabled={locked}
@@ -831,6 +833,7 @@ const LineRow = ({
       </div>
 
       <div>
+        <span className={styles.fieldLabel}>Organization</span>
         <select
           value={organizationId}
           disabled={locked}
@@ -851,6 +854,7 @@ const LineRow = ({
       </div>
 
       <div>
+        <span className={styles.fieldLabel}>Cost detail</span>
         <select
           value={costDetailId}
           disabled={locked}
@@ -875,6 +879,7 @@ const LineRow = ({
       </div>
 
       <div>
+        <span className={styles.fieldLabel}>Amount</span>
         <input
           type="number"
           step="0.01"
@@ -896,6 +901,7 @@ const LineRow = ({
       </div>
 
       <div>
+        <span className={styles.fieldLabel}>Memo</span>
         <input
           type="text"
           value={memo}

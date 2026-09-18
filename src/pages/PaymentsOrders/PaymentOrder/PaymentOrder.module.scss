@@ -260,3 +260,18 @@
   color: colors.$primary;
   border-color: colors.$primary-a25;
 }
+
+.fieldLabel { display: block; color: colors.$text-muted; font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; }
+@media (max-width: 1100px) {
+  .gridRow { grid-template-columns: repeat(3, minmax(0, 1fr)); min-width: 0; width: auto; gap: 14px; padding: 16px; margin-top: 12px; border: 1px solid colors.$border-subtle; border-radius: 10px; }
+  .cell { white-space: normal; overflow-wrap: anywhere; overflow: visible; }
+  .actionsCol { grid-column: 1 / -1; grid-row: 4; position: static; box-shadow: none; padding: 0; }
+  .actions { flex-wrap: wrap; }
+  .actions button { min-height: 44px; min-width: 44px; width: auto; height: auto; padding: 8px 12px; border-radius: 8px; gap: 6px; }
+  .rowCheckbox { width: 24px; height: 24px; margin: 10px; }
+  .input { width: 100%; max-width: 100%; min-width: 0; min-height: 44px; font-size: 16px; box-sizing: border-box; }
+}
+@media (max-width: 700px) {
+  .gridRow { grid-template-columns: minmax(0, 1fr); padding: 12px; }
+  .actionsCol { grid-row: 8; }
+}

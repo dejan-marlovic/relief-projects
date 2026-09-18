@@ -1,3 +1,4 @@
+import useMediaQuery from "../../hooks/useMediaQuery";
 import React, {
   useCallback,
   useContext,
@@ -16,7 +17,8 @@ import styles from "./PaymentOrders.module.scss";
 import PaymentOrderLines from "./PaymentOrder/PaymentOrderLines/PaymentOrderLines";
 import {
   FiPlus,
-  FiColumns,  FiTrash2,
+  FiColumns,
+  FiTrash2,
   FiDownload,
 } from "react-icons/fi";
 
@@ -151,6 +153,9 @@ function PaymentOrders() {
 
   const [orders, setOrders] = useState([]);
   const [historyRefreshKeys, setHistoryRefreshKeys] = useState({});
+  const compact = useMediaQuery("(max-width: 1100px)");
+  const [saving, setSaving] = useState(false);
+  const saveInProgress = useRef(false);
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
   useUnsavedChange("payment-orders-editor", editingId !== null);
@@ -357,7 +362,7 @@ function PaymentOrders() {
   }, [editingId]);
 
   const startEdit = (po) => {
-    if (!canEditPaymentOrders) return;
+    if (!canEditPaymentOrders || saving || (compact && editingId !== null)) return;
     setEditingId(po?.id ?? null);
     setEditedValues((prev) => ({
       ...prev,
@@ -381,7 +386,7 @@ function PaymentOrders() {
   };
 
   const startCreate = () => {
-    if (!canEditPaymentOrders) return;
+    if (!canEditPaymentOrders || saving || (compact && editingId !== null)) return;
     setEditingId("new");
     setEditedValues((prev) => ({ ...prev, new: { ...blankPO } }));
 
@@ -436,11 +441,13 @@ function PaymentOrders() {
   };
 
   const save = async () => {
-    if (!canEditPaymentOrders) return;
+    if (!canEditPaymentOrders || saveInProgress.current) return;
     const id = editingId;
     const v = editedValues[id];
     if (!v) return;
 
+    saveInProgress.current = true;
+    setSaving(true);
     const isCreate = id === "new";
 
     const payload = {
@@ -510,6 +517,9 @@ function PaymentOrders() {
             editingId === "new" ? "create" : "update"
           } payment order.`,
       );
+    } finally {
+      saveInProgress.current = false;
+      setSaving(false);
     }
   };
 
@@ -1267,7 +1277,7 @@ function PaymentOrders() {
               type="button"
               className={styles.exportInlineBtn}
               onClick={handleExportSelected}
-              disabled={selectedPoCount === 0 || exportingSelected}
+              disabled={selectedPoCount === 0 || exportingSelected || saving || (compact && editingId !== null)}
               title="Export selected payment orders to Excel"
             >
               <FiDownload />
@@ -1284,7 +1294,7 @@ function PaymentOrders() {
                 disabled={
                   selectedPoCount === 0 ||
                   exportingSelected ||
-                  selectedContainsLifecycleLocked
+                  selectedContainsLifecycleLocked || saving || (compact && editingId !== null)
                 }
                 title={
                   selectedContainsLifecycleLocked
@@ -1297,7 +1307,7 @@ function PaymentOrders() {
                 {selectedPoCount > 0 ? `(${selectedPoCount})` : ""}
               </button>
             )}
-            <div className={styles.columnsBox}>
+            <div className={styles.columnsBox} hidden={compact}>
               <button
                 type="button"
                 className={styles.iconPillBtn}
@@ -1333,7 +1343,7 @@ function PaymentOrders() {
               <button
                 className={styles.primaryBtn}
                 onClick={startCreate}
-                disabled={!selectedProjectId || editingId === "new"}
+                disabled={!selectedProjectId || saving || (compact ? editingId !== null : editingId === "new")}
                 title={
                   !selectedProjectId
                     ? "Select a project first"
@@ -1362,14 +1372,16 @@ function PaymentOrders() {
           <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
-        <div className={styles.table} style={{ ["--po-grid-cols"]: gridCols }}>
-          <div className={`${styles.gridRow} ${styles.headerRow}`}>
+        <div className={styles.table} style={{ "--po-grid-cols": gridCols }}>
+          <details className={styles.filterDisclosure} open={compact ? undefined : true}>
+          <summary>Sort, filter &amp; select</summary>
+          <fieldset aria-label="Payment order controls" disabled={compact && (editingId !== null || saving)} className={`${styles.gridRow} ${styles.headerRow}`}>
             {headerLabels.map((h, i) => (
               <div
                 key={h}
                 className={`${styles.headerCell}
                   ${i === 0 ? styles.stickyColHeader : ""}
-                  ${!visibleCols[i] ? styles.hiddenCol : ""}
+                  ${!compact && !visibleCols[i] ? styles.hiddenCol : ""}
                   ${i === 0 ? styles.actionsCol : ""}`}
               >
                 {i === 0 ? (
@@ -1389,7 +1401,8 @@ function PaymentOrders() {
                 )}
               </div>
             ))}
-          </div>
+          </fieldset>
+          </details>
 
           {!selectedProjectId ? (
             <p className={styles.noData}>
@@ -1397,10 +1410,15 @@ function PaymentOrders() {
             </p>
           ) : orders.length === 0 ? (
             <p className={styles.noData}>No payment orders for this project.</p>
+          ) : displayedOrders.length === 0 ? (
+            <p className={styles.noData}>No payment orders match your filters.</p>
           ) : (
             displayedOrders.map((po, idx) => (
               <React.Fragment key={po.id}>
                 <PaymentOrder
+                  compact={compact}
+                  saving={saving}
+                  editingLocked={compact && editingId !== null}
                   po={po}
                   locked={lockedPoIds.has(po.id)}
                   isEven={idx % 2 === 0}
@@ -1457,6 +1475,9 @@ function PaymentOrders() {
 
           {editingId === "new" && (
             <PaymentOrder
+                  compact={compact}
+                  saving={saving}
+                  editingLocked={compact && editingId !== null}
               po={{ id: "new", ...blankPO, amount: 0 }}
               isEditing
               editedValues={editedValues.new}
