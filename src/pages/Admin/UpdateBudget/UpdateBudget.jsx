@@ -1,3 +1,5 @@
+import { budgetOptionLabel } from "../../../utils/budgetDisplay";
+import { normalizeBudgetName, budgetNameError } from "../../../utils/budgetDisplay";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiSave, FiRefreshCw, FiEdit3 } from "react-icons/fi";
@@ -14,6 +16,7 @@ import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 const initialForm = {
   selectedId: "",
   projectId: "",
+  budgetName: "",
   budgetDescription: "",
   budgetPreparationDate: "",
   totalAmount: "",
@@ -38,6 +41,8 @@ const toInputDateTime = (value) => {
 
 const validate = (values) => {
   const errors = {};
+  const nameError = budgetNameError(values.budgetName);
+  if (nameError) errors.budgetName = nameError;
 
   if (!values.selectedId) errors.selectedId = "Please select a budget.";
   if (!values.projectId) errors.projectId = "Project is required.";
@@ -175,6 +180,7 @@ const UpdateBudget = () => {
     setForm({
       selectedId,
       projectId: selected?.projectId ? String(selected.projectId) : "",
+      budgetName: selected?.budgetName || "",
       budgetDescription: selected?.budgetDescription || "",
       budgetPreparationDate: toInputDateTime(selected?.budgetPreparationDate),
       totalAmount:
@@ -236,6 +242,7 @@ const UpdateBudget = () => {
       projectId: selectedBudget.projectId
         ? String(selectedBudget.projectId)
         : "",
+      budgetName: selectedBudget.budgetName || "",
       budgetDescription: selectedBudget.budgetDescription || "",
       budgetPreparationDate: toInputDateTime(
         selectedBudget.budgetPreparationDate,
@@ -293,6 +300,7 @@ const UpdateBudget = () => {
 
       const payload = {
         projectId: Number(form.projectId),
+        budgetName: normalizeBudgetName(form.budgetName),
         budgetDescription: form.budgetDescription.trim(),
         budgetPreparationDate: form.budgetPreparationDate || null,
         totalAmount: Number(form.totalAmount),
@@ -407,9 +415,7 @@ const UpdateBudget = () => {
                     <option value="">Select budget</option>
                     {budgets.map((item) => (
                       <option key={item.id} value={item.id}>
-                        {projectNameById[item.projectId] ||
-                          `Project #${item.projectId}`}{" "}
-                        - total: {item.totalAmount} (id: {item.id})
+                        {budgetOptionLabel(item)}
                       </option>
                     ))}
                   </select>
@@ -452,6 +458,12 @@ const UpdateBudget = () => {
                 </div>
 
                 <div className={styles.formGroup}>
+                <label htmlFor={`budget-name-${form.id || form.selectedId || "new"}`}>Budget name</label>
+                <input id={`budget-name-${form.id || form.selectedId || "new"}`} name="budgetName" value={form.budgetName || ""} onChange={handleInputChange} className={inputClass("budgetName")} required aria-invalid={Boolean(fieldErrors.budgetName)} aria-describedby={`budget-name-error-${form.id || form.selectedId || "new"}`} disabled={!form.selectedId || saving} placeholder="e.g. Water supply 2026" />
+                <span id={`budget-name-error-${form.id || form.selectedId || "new"}`} className={styles.fieldError}>{fieldErrors.budgetName}</span>
+              </div>
+
+              <div className={styles.formGroup}>
                   <label>Budget description</label>
                   <input
                     className={inputClass("budgetDescription")}

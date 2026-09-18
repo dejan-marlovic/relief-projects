@@ -1,3 +1,4 @@
+import { budgetOptionLabel } from "../../utils/budgetDisplay";
 import useMediaQuery from "../../hooks/useMediaQuery";
 import React, {
   useCallback,
@@ -714,12 +715,7 @@ const Transactions = ({ refreshTrigger }) => {
     () =>
       new Map(
         budgetOptions.map((budget) => {
-          const description =
-            budget.budgetDescription || budget.description || "";
-          return [
-            String(budget.id),
-            description ? `${budget.id} — ${description}` : String(budget.id),
-          ];
+          return [String(budget.id), budgetOptionLabel(budget)];
         }),
       ),
     [budgetOptions],
@@ -1032,13 +1028,7 @@ const Transactions = ({ refreshTrigger }) => {
 
     if (!matchingBudget) return `Budget ${id}`;
 
-    const description = sanitizeExcelText(
-      matchingBudget.budgetDescription || matchingBudget.description || "",
-    );
-
-    return description
-      ? `${matchingBudget.id} — ${description}`
-      : `Budget ${matchingBudget.id}`;
+    return sanitizeExcelText(budgetOptionLabel(matchingBudget));
   };
 
   const applyExcelBorder = (cell) => {

@@ -1,3 +1,4 @@
+import { budgetOptionLabel } from "../../../utils/budgetDisplay";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiTrash2, FiRefreshCw, FiRepeat } from "react-icons/fi";
@@ -43,9 +44,7 @@ const DeleteTransaction = () => {
 
   const budgetLabelById = useMemo(() => {
     return budgets.reduce((acc, budget) => {
-      const label = budget.budgetDescription
-        ? `${budget.budgetDescription} (id: ${budget.id})`
-        : `Budget #${budget.id}`;
+      const label = budgetOptionLabel(budget);
       acc[budget.id] = label;
       return acc;
     }, {});

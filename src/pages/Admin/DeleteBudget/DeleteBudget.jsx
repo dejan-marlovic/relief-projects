@@ -1,8 +1,10 @@
+import { budgetOptionLabel } from "../../../utils/budgetDisplay";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiTrash2,
-  FiRefreshCw,  FiDollarSign,
+  FiRefreshCw,
+  FiDollarSign,
 } from "react-icons/fi";
 
 import styles from "./DeleteBudget.module.scss";
@@ -161,7 +163,7 @@ const DeleteBudget = () => {
       }
 
       const confirmed = window.confirm(
-        `Are you sure you want to delete budget "${selectedBudget.budgetDescription || "Untitled budget"}" (id: ${selectedBudget.id})?`,
+        `Are you sure you want to delete budget "${budgetOptionLabel(selectedBudget)}"?`,
       );
 
       if (!confirmed) return;
@@ -188,7 +190,7 @@ const DeleteBudget = () => {
       }
 
       const deletedBudgetLabel =
-        selectedBudget.budgetDescription || `Budget #${selectedBudget.id}`;
+        budgetOptionLabel(selectedBudget);
 
       setBudgets((prev) =>
         prev.filter((budget) => budget.id !== selectedBudget.id),
@@ -259,8 +261,7 @@ const DeleteBudget = () => {
                     <option value="">Select budget</option>
                     {budgets.map((budget) => (
                       <option key={budget.id} value={budget.id}>
-                        {getProjectLabel(budget.projectId)} | Total:{" "}
-                        {budget.totalAmount} | Id: {budget.id}
+                        {budgetOptionLabel(budget)}
                       </option>
                     ))}
                   </select>

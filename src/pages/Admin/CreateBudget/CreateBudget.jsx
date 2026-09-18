@@ -1,3 +1,4 @@
+import { normalizeBudgetName, budgetNameError } from "../../../utils/budgetDisplay";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiSave, FiX } from "react-icons/fi";
@@ -9,6 +10,7 @@ import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const initialForm = {
   projectId: "",
+  budgetName: "",
   budgetDescription: "",
   budgetPreparationDate: "",
   totalAmount: "",
@@ -24,6 +26,8 @@ const initialForm = {
 
 const validate = (values) => {
   const errors = {};
+  const nameError = budgetNameError(values.budgetName);
+  if (nameError) errors.budgetName = nameError;
   if (!values.projectId) errors.projectId = "Project is required.";
   if (!values.totalAmount) errors.totalAmount = "Total amount is required.";
   if (!values.localCurrencyId)
@@ -142,6 +146,7 @@ const CreateBudget = () => {
 
       const payload = {
         projectId: Number(form.projectId),
+        budgetName: normalizeBudgetName(form.budgetName),
         budgetDescription: form.budgetDescription.trim(),
         budgetPreparationDate: form.budgetPreparationDate || null,
         totalAmount: form.totalAmount,
@@ -240,6 +245,12 @@ const CreateBudget = () => {
             </div>
 
             <div className={styles.formGroup}>
+                <label htmlFor={`budget-name-${form.id || form.selectedId || "new"}`}>Budget name</label>
+                <input id={`budget-name-${form.id || form.selectedId || "new"}`} name="budgetName" value={form.budgetName || ""} onChange={handleChange} className={inputClass("budgetName")} required aria-invalid={Boolean(fieldErrors.budgetName)} aria-describedby={`budget-name-error-${form.id || form.selectedId || "new"}`} placeholder="e.g. Water supply 2026" />
+                <span id={`budget-name-error-${form.id || form.selectedId || "new"}`} className={styles.fieldError}>{fieldErrors.budgetName}</span>
+              </div>
+
+              <div className={styles.formGroup}>
               <label>Description</label>
               <textarea
                 className={inputClass("budgetDescription")}

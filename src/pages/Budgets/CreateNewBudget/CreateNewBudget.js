@@ -1,3 +1,4 @@
+import { normalizeBudgetName, budgetNameError } from "../../../utils/budgetDisplay";
 import React, { useState, useEffect, useContext, useMemo } from "react";
 import styles from "../Budget/Budget.module.scss"; // ✅ reuse Budget styling
 import { ProjectContext } from "../../../context/ProjectContext";
@@ -16,6 +17,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
   const [loading, setLoading] = useState(false);
 
   const [budget, setBudget] = useState({
+    budgetName: "",
     budgetDescription: "",
     totalAmount: "",
     budgetPreparationDate: "",
@@ -213,6 +215,8 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
 
       // ✅ lightweight frontend validation (matches Budget behavior)
       const newFieldErrors = {};
+      const nameError = budgetNameError(budget.budgetName);
+      if (nameError) newFieldErrors.budgetName = nameError;
 
       if (
         budget.totalAmount === "" ||
@@ -250,6 +254,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
       const payload = {
         projectId: selectedProjectId ? Number(selectedProjectId) : null,
 
+        budgetName: normalizeBudgetName(budget.budgetName),
         budgetDescription: budget.budgetDescription ?? "",
         budgetPreparationDate: budget.budgetPreparationDate || null,
         totalAmount:
@@ -389,6 +394,12 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
               <div className={styles.cardHeader}>
                 <div className={styles.cardTitle}>Summary</div>
                 <div className={styles.cardMeta}>Description & totals</div>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label htmlFor={`budget-name-${budget.id || budget.selectedId || "new"}`}>Budget name</label>
+                <input id={`budget-name-${budget.id || budget.selectedId || "new"}`} name="budgetName" value={budget.budgetName || ""} onChange={handleChange} className={inputClass("budgetName")} required aria-invalid={Boolean(getFieldError("budgetName"))} aria-describedby={`budget-name-error-${budget.id || budget.selectedId || "new"}`} placeholder="e.g. Water supply 2026" />
+                <span id={`budget-name-error-${budget.id || budget.selectedId || "new"}`} className={styles.fieldError}>{getFieldError("budgetName")}</span>
               </div>
 
               <div className={styles.formGroup}>

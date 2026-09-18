@@ -1,3 +1,4 @@
+import { budgetOptionLabel } from "../../../utils/budgetDisplay";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiSave, FiRefreshCw, FiEdit3 } from "react-icons/fi";
@@ -499,9 +500,7 @@ const UpdateTransaction = () => {
                     <option value="">Select budget</option>
                     {budgetsForSelectedProject.map((item) => (
                       <option key={item.id} value={item.id}>
-                        {projectLabelById[item.projectId] ||
-                          `Project #${item.projectId}`}{" "}
-                        - total: {item.totalAmount} (id: {item.id})
+                        {budgetOptionLabel(item)}
                       </option>
                     ))}
                   </select>

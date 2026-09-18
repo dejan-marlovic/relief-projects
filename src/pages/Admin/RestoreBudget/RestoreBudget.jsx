@@ -1,8 +1,10 @@
+import { budgetOptionLabel } from "../../../utils/budgetDisplay";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiRotateCcw,
-  FiRefreshCw,  FiDollarSign,
+  FiRefreshCw,
+  FiDollarSign,
 } from "react-icons/fi";
 
 import styles from "./RestoreBudget.module.scss";
@@ -103,12 +105,7 @@ const RestoreBudget = () => {
   const getBudgetLabel = (budget) => {
     if (!budget) return "N/A";
 
-    const project = getProjectLabel(budget.projectId);
-    const amount = getAmountLabel(budget.totalAmount);
-    const currency = getCurrencyLabel(budget.localCurrencyId);
-    const date = formatDate(budget.budgetPreparationDate);
-
-    return `${project} | amount: ${amount} ${currency} | date: ${date}`;
+    return budgetOptionLabel(budget);
   };
 
   const loadDeletedBudgets = async () => {

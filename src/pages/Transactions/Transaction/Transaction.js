@@ -1,3 +1,4 @@
+import { budgetOptionLabel } from "../../../utils/budgetDisplay";
 import React from "react";
 import styles from "./Transaction.module.scss";
 import {
@@ -174,8 +175,7 @@ const Transaction = ({
 
   const budgetLabel = (b) => {
     if (!b) return "-";
-    const desc = b.budgetDescription || b.description || "";
-    return desc ? `${b.id} — ${desc}` : String(b.id);
+    return budgetOptionLabel(b);
   };
 
   const selectBudget = () => (

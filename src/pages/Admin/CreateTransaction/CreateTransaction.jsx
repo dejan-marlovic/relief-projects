@@ -1,3 +1,4 @@
+import { budgetOptionLabel } from "../../../utils/budgetDisplay";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiSave, FiX } from "react-icons/fi";
@@ -271,7 +272,7 @@ const CreateTransaction = () => {
                 <option value="">Select budget</option>
                 {filteredBudgets.map((b) => (
                   <option key={b.id} value={b.id}>
-                    Budget #{b.id}
+                    {budgetOptionLabel(b)}
                   </option>
                 ))}
               </select>

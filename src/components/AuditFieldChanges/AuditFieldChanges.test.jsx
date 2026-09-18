@@ -70,3 +70,12 @@ test("handles historical and future versions without crashing", () => {
   view.rerender(<AuditFieldChanges event={{ action: "UPDATE", fieldChangesVersion: 2 }} />);
   expect(screen.getByText(/unsupported format/)).toBeInTheDocument();
 });
+
+test("budget name history shows literal old and new names", () => {
+  render(<AuditFieldChanges event={{ action: "UPDATE", entityType: "BUDGET", fieldChangesVersion: 1, fieldChanges: [
+    { field: "budgetName", type: "TEXT", oldValue: "Original water budget", newValue: "Water phase two" },
+  ] }} />);
+  expect(screen.getByText("Budget name")).toBeInTheDocument();
+  expect(screen.getByText("Original water budget")).toBeInTheDocument();
+  expect(screen.getByText("Water phase two")).toBeInTheDocument();
+});

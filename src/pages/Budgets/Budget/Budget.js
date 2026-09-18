@@ -1,3 +1,4 @@
+import { normalizeBudgetName, budgetNameError } from "../../../utils/budgetDisplay";
 import { addDecimals, excelDecimal } from "../../../utils/budgetCalculations";
 import React, { useCallback, useEffect, useState } from "react";
 import ExcelJS from "exceljs";
@@ -1114,6 +1115,8 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
 
       // ❗ Frontend validation
       const newFieldErrors = {};
+      const nameError = budgetNameError(budget.budgetName);
+      if (nameError) newFieldErrors.budgetName = nameError;
 
       if (
         budget.totalAmount === "" ||
@@ -1182,6 +1185,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
       const payload = {
         id: budget.id,
         projectId: budget.projectId,
+        budgetName: normalizeBudgetName(budget.budgetName),
         budgetDescription: budget.budgetDescription ?? "",
         budgetPreparationDate: budget.budgetPreparationDate ?? null,
         totalAmount:
@@ -1496,6 +1500,12 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                   </div>
 
                   <div className={styles.formGroup}>
+                <label htmlFor={`budget-name-${budget.id || budget.selectedId || "new"}`}>Budget name</label>
+                <input id={`budget-name-${budget.id || budget.selectedId || "new"}`} name="budgetName" value={budget.budgetName || ""} onChange={handleChange} className={inputClass("budgetName")} required aria-invalid={Boolean(getFieldError("budgetName"))} aria-describedby={`budget-name-error-${budget.id || budget.selectedId || "new"}`} placeholder="e.g. Water supply 2026" />
+                <span id={`budget-name-error-${budget.id || budget.selectedId || "new"}`} className={styles.fieldError}>{getFieldError("budgetName")}</span>
+              </div>
+
+              <div className={styles.formGroup}>
                     <label>Description:</label>
                     <textarea
                       name="budgetDescription"

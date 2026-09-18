@@ -1,8 +1,10 @@
+import { budgetOptionLabel } from "../../../utils/budgetDisplay";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiRotateCcw,
-  FiRefreshCw,  FiRepeat,
+  FiRefreshCw,
+  FiRepeat,
 } from "react-icons/fi";
 
 import styles from "./RestoreTransaction.module.scss";
@@ -89,13 +91,7 @@ const RestoreTransaction = () => {
       return `Budget id: ${budgetId}`;
     }
 
-    const project = getProjectLabel(budget.projectId);
-    const amount =
-      budget.totalAmount !== null && budget.totalAmount !== undefined
-        ? budget.totalAmount
-        : "N/A";
-
-    return `${project} | amount: ${amount} | budget id: ${budgetId}`;
+    return budgetOptionLabel(budget);
   };
 
   const getTransactionStatusLabel = (transactionStatusId) => {
