@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import styles from "./Layout.module.scss";
 import { ProjectContext } from "../../context/ProjectContext";
@@ -7,7 +7,11 @@ import { useBranding } from "../../context/BrandingContext";
 import { useAuth } from "../../context/AuthContext";
 import { UnsavedChangesContext } from "../../context/UnsavedChangesContext";
 
+import useMediaQuery from "../../hooks/useMediaQuery";
+
 const Layout = () => {
+  const isPhone = useMediaQuery("(max-width: 700px)");
+  const tabListRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { logoUrl } = useBranding();
@@ -108,13 +112,51 @@ const Layout = () => {
     isAboutPage ||
     isAdminPage;
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => location.pathname === path ||
+    (path === "/admin" && location.pathname.startsWith("/admin/"));
+
+  const navigationItems = [
+    ["/project", projectTabLabel],
+    ["/budgets", "Budgets"],
+    ["/transactions", "Transactions"],
+    ["/payments", "Payments"],
+    ["/signatures", "Signatures"],
+    ["/recipients", "Recipients"],
+    ["/organizations", "Organizations"],
+    ["/documents", "Documents"],
+    ["/statistics", "Statistics"],
+    ["/register-project", "New Project"],
+    ["/operational-guide", "Guide"],
+    ["/about", "About"],
+    ["/admin", "Admin"],
+  ].filter(([path]) => {
+    if (path === "/admin") return hasRole("ADMIN");
+    if (path === "/register-project") return hasAnyRole("ADMIN", "PROJECT_MANAGER");
+    return true;
+  });
+
+  const currentPage = navigationItems.find(([path]) => isActive(path))?.[0] || "";
+
+  useEffect(() => {
+    const revealActiveTab = () => {
+      const list = tabListRef.current;
+      const active = list?.querySelector('[aria-current="page"]');
+      if (!active || list.scrollWidth <= list.clientWidth) return;
+      const bounds = list.getBoundingClientRect();
+      const tab = active.getBoundingClientRect();
+      if (tab.left < bounds.left) list.scrollLeft += tab.left - bounds.left;
+      else if (tab.right > bounds.right) list.scrollLeft += tab.right - bounds.right;
+    };
+    revealActiveTab();
+    window.addEventListener("resize", revealActiveTab);
+    return () => window.removeEventListener("resize", revealActiveTab);
+  }, [location.pathname, isPhone, projectTabLabel]);
 
   return (
     <div
       className={`${styles.layoutShell} ${
         usesInternalTableScroll ? styles.fixedTableViewport : ""
-      } ${["/recipients", "/signatures", "/documents", "/organizations", "/budgets", "/transactions", "/payments", "/project"].includes(location.pathname) ? styles.responsiveListViewport : ""}`}
+      }`}
     >
       <header className={styles.headerBar}>
         <div className={styles.headerTitleBlock}>
@@ -132,8 +174,9 @@ const Layout = () => {
         <div className={styles.headerRight}>
           {!hideSelector && (
             <div className={styles.selectorInline}>
-              <span className={styles.selectorLabel}>Project</span>
+              <label htmlFor="layout-project" className={styles.selectorLabel}>Project</label>
               <select
+                id="layout-project"
                 value={selectedProjectId}
                 onChange={handleSelectChange}
                 className={styles.selectInput}
@@ -170,37 +213,26 @@ const Layout = () => {
         </div>
       </header>
 
-      <nav className={styles.nav}>
-        <ul className={styles.tabList}>
-          {[
-            ["/project", projectTabLabel],
-            ["/budgets", "Budgets"],
-            ["/transactions", "Transactions"],
-            ["/payments", "Payments"],
-            ["/signatures", "Signatures"],
-            ["/recipients", "Recipients"],
-            ["/organizations", "Organizations"],
-            ["/documents", "Documents"],
-            ["/statistics", "Statistics"],
-            ["/register-project", "New Project"],
-
-            // ✅ Existing
-            ["/operational-guide", "Guide"],
-
-            // ✅ Existing
-            ["/about", "About"],
-
-            // ✅ NEW: Admin (placeholder)
-            ["/admin", "Admin"],
-          ]
-            .filter(([path]) => {
-              if (path === "/admin") return hasRole("ADMIN");
-              if (path === "/register-project") {
-                return hasAnyRole("ADMIN", "PROJECT_MANAGER");
-              }
-              return true;
-            })
-            .map(([path, label]) => {
+      <nav className={styles.nav} aria-label="Main navigation">
+        {isPhone ? (
+          <div className={styles.pagePicker}>
+            <label htmlFor="layout-page" className={styles.selectorLabel}>Current page</label>
+            <select
+              id="layout-page"
+              className={styles.selectInput}
+              value={currentPage}
+              onChange={(event) => {
+                const nextPage = event.target.value;
+                if (nextPage !== currentPage && confirmDiscardUnsavedChanges()) navigate(nextPage);
+              }}
+            >
+              {!currentPage && <option value="" disabled>Select page</option>}
+              {navigationItems.map(([path, label]) => <option key={path} value={path}>{label}</option>)}
+            </select>
+          </div>
+        ) : (
+        <ul className={styles.tabList} ref={tabListRef}>
+          {navigationItems.map(([path, label]) => {
             const isAdminTab = path === "/admin";
             const isProjectTab = path === "/project";
 
@@ -208,6 +240,7 @@ const Layout = () => {
               <li key={path} className={styles.tabItem}>
                 <Link
                   to={path}
+                  aria-current={isActive(path) ? "page" : undefined}
                   title={isProjectTab ? label : undefined}
                   onClick={(event) => {
                     if (
@@ -229,6 +262,7 @@ const Layout = () => {
             );
             })}
         </ul>
+        )}
       </nav>
 
       <main className={styles.content}>

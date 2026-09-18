@@ -3,6 +3,7 @@ $secondary-color: colors.$danger;
 
 .layoutShell {
   padding: 1rem;
+  min-width: 0;
 }
 
 /* List-heavy pages keep scrolling inside their tables, not on the document. */
@@ -124,6 +125,8 @@ $secondary-color: colors.$danger;
 /* ================= TABS ================= */
 
 .nav {
+  flex-shrink: 0;
+  min-width: 0;
   margin-bottom: 0.75rem;
   border-bottom: 1px solid colors.$primary-a35;
 }
@@ -133,7 +136,9 @@ $secondary-color: colors.$danger;
   display: flex;
   gap: 0.35rem;
   margin: 0;
-  padding: 0;
+  padding: 6px 0 2px;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .tabItem {
@@ -221,7 +226,6 @@ $secondary-color: colors.$danger;
   }
 }
 
-/* ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ Admin tab: subtle standout */
 .adminTab {
   border-color: colors.$danger-border !important;
   background: colors.$danger-soft !important;
@@ -232,16 +236,15 @@ $secondary-color: colors.$danger;
   background: colors.$danger-soft !important;
 }
 
-/* If Admin is active, keep it ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“admin-coloredÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â while active */
 .active.adminTab {
   border-color: colors.$danger-border !important;
   color: colors.$danger-text !important;
 }
 
-// Responsive list pages use document scrolling on phones so forms remain
+// Pages use document scrolling on phones so forms remain
 // reachable when the software keyboard reduces the available height.
 @media (max-width: 700px) {
-  .responsiveListViewport {
+  .layoutShell {
     height: auto;
     min-height: 100dvh;
     overflow: visible;
@@ -256,4 +259,37 @@ $secondary-color: colors.$danger;
     .tabList { max-width: 100%; }
     .tabLink { padding: 12px; font-size: 0.9rem; }
   }
+}
+
+.pagePicker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  background: colors.$surface-secondary;
+  border: 1px solid colors.$primary-border;
+  border-radius: 12px;
+}
+
+.selectInput {
+  min-width: 0;
+  max-width: 100%;
+  color: colors.$text-secondary;
+  background: colors.$surface;
+}
+
+.tabLink:focus-visible, .selectInput:focus-visible, .logoutIcon:focus-visible {
+  outline: 2px solid colors.$primary;
+  outline-offset: -2px;
+}
+
+.headerBar { flex-shrink: 0; min-width: 0; }
+.headerRight { min-width: 0; }
+.selectorInline { max-width: 100%; }
+.logoutIcon { flex-shrink: 0; }
+
+@media (max-width: 700px) {
+  .logo { height: 36px; max-width: 140px; }
+  .nav { border-bottom: 0; }
+  .selectInput { min-height: 44px; font-size: 1rem; }
 }
