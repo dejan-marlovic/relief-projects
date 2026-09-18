@@ -1,0 +1,44 @@
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import Recipients from "./Recipients";
+import { ProjectContext } from "../../context/ProjectContext";
+import { authValue, jsonResponse } from "../../testUtils/authTestUtils";
+import { useAuth } from "../../context/AuthContext";
+jest.mock("../../context/AuthContext", () => ({ useAuth: jest.fn() }));
+
+test("mobile controls share filtering, selection, and save logic while retaining rejected drafts", async () => {
+  window.matchMedia = jest.fn(() => ({ matches: true, addEventListener: jest.fn(), removeEventListener: jest.fn() }));
+  useAuth.mockReturnValue(authValue(["ADMIN"]));
+  let fail = true;
+  global.fetch = jest.fn((url, options = {}) => {
+    if (options.method === "PUT") return jsonResponse(fail ? { message: "Please correct the organization.", fieldErrors: { organizationId: "Choose another organization" } } : {}, fail ? 400 : 200);
+    if (url.includes("/recipients/by-project/")) return jsonResponse([{ id: 7, organizationId: 1, paymentOrderId: 20, amount: 15 }]);
+    if (url.includes("/payment-orders/project/")) return jsonResponse([{ id: 20, lifecycleStatus: "DRAFT" }]);
+    if (url.includes("/organizations/")) return jsonResponse([{ id: 1, label: "Relief network" }, { id: 2, label: "Second organization" }]);
+    return jsonResponse([]);
+  });
+  render(<ProjectContext.Provider value={{ selectedProjectId: 1, projects: [] }}><Recipients /></ProjectContext.Provider>);
+  await screen.findByText("Relief network");
+  expect(screen.queryByRole("button", { name: "Columns" })).not.toBeInTheDocument();
+  const selectAll = screen.getByLabelText(/Select all visible/);
+  fireEvent.click(selectAll);
+  expect(screen.getByRole("button", { name: "Export selected (1)" })).toBeEnabled();
+  fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+  expect(selectAll).toBeDisabled();
+  const organization = screen.getByLabelText("Organization", { selector: "select" });
+  fireEvent.change(organization, { target: { value: "2" } }); fireEvent.blur(organization);
+  expect(fetch.mock.calls.some(([, options]) => options?.method === "PUT")).toBe(false);
+  fireEvent.click(screen.getByRole("button", { name: "Save" }));
+  await screen.findByText("Choose another organization");
+  expect(organization).toHaveValue("2");
+  expect(screen.getByRole("button", { name: "New" })).toBeDisabled();
+  fail = false; fireEvent.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(() => expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument());
+  expect(JSON.parse(fetch.mock.calls.find(([, options]) => options?.method === "PUT")[1].body)).toEqual({ organizationId: 2, paymentOrderId: 20 });
+  fireEvent.click(screen.getByText(/Sort & filter/));
+  fireEvent.click(screen.getByRole("button", { name: "Filter Organization" }));
+  const dialog = screen.getByRole("dialog");
+  fireEvent.change(within(dialog).getByRole("textbox"), { target: { value: "unmatched" } });
+  fireEvent.click(within(dialog).getByRole("button", { name: "Apply" }));
+  expect(await screen.findByText("No recipients match your filters.")).toBeInTheDocument();
+  delete window.matchMedia;
+});

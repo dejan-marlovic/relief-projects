@@ -237,3 +237,23 @@ $secondary-color: colors.$danger;
   border-color: colors.$danger-border !important;
   color: colors.$danger-text !important;
 }
+
+// The Recipients pilot uses document scrolling on phones so forms remain
+// reachable when the software keyboard reduces the available height.
+@media (max-width: 700px) {
+  .recipientViewport {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+    padding: 8px;
+    .content { overflow: visible; min-width: 0; padding: 0; }
+    .headerBar { padding: 12px; margin-bottom: 12px; }
+    .headerTitle { font-size: 1.4rem; }
+    .headerSubtitle { font-size: 0.8rem; }
+    .headerRight { flex-wrap: wrap; min-width: 0; }
+    .selectorInline { min-width: 0; flex: 1 1 100%; }
+    .selectInput { width: 100%; min-width: 0; box-sizing: border-box; }
+    .tabList { max-width: 100%; }
+    .tabLink { padding: 12px; font-size: 0.9rem; }
+  }
+}

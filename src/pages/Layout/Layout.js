@@ -114,7 +114,7 @@ const Layout = () => {
     <div
       className={`${styles.layoutShell} ${
         usesInternalTableScroll ? styles.fixedTableViewport : ""
-      }`}
+      } ${location.pathname === "/recipients" ? styles.recipientViewport : ""}`}
     >
       <header className={styles.headerBar}>
         <div className={styles.headerTitleBlock}>

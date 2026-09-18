@@ -1,3 +1,4 @@
+import useMediaQuery from "../../hooks/useMediaQuery";
 import React, {
   useCallback,
   useContext,
@@ -111,6 +112,9 @@ function Recipients() {
   const canBulkDeleteRecipients = hasRole("ADMIN");
 
   const [items, setItems] = useState([]);
+  const compact = useMediaQuery("(max-width: 700px)");
+  const [saving, setSaving] = useState(false);
+  const saveInProgress = useRef(false);
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
   useUnsavedChange("recipients-editor", editingId !== null);
@@ -340,7 +344,7 @@ function Recipients() {
   };
 
   const startEdit = (row) => {
-    if (!canManageRecipients) return;
+    if (!canManageRecipients || (compact && editingId !== null)) return;
     setEditingId(row?.id ?? null);
     setEditedValues((prev) => ({
       ...prev,
@@ -361,7 +365,7 @@ function Recipients() {
   };
 
   const startCreate = () => {
-    if (!canManageRecipients) return;
+    if (!canManageRecipients || (compact && editingId !== null)) return;
     setEditingId("new");
     setEditedValues((prev) => ({ ...prev, new: { ...blankRecipient } }));
 
@@ -421,12 +425,14 @@ function Recipients() {
   };
 
   const save = async () => {
-    if (!canManageRecipients) return;
+    if (!canManageRecipients || saveInProgress.current) return;
     const id = editingId;
     const v = editedValues[id];
     if (!v) return;
 
     const isCreate = id === "new";
+    saveInProgress.current = true;
+    setSaving(true);
 
     const payload = {
       organizationId: v.organizationId !== "" ? Number(v.organizationId) : null,
@@ -502,7 +508,7 @@ function Recipients() {
       setFormError(
         e.message || `Failed to ${isCreate ? "create" : "update"} recipient.`,
       );
-    }
+    } finally { saveInProgress.current = false; setSaving(false); }
   };
 
   const remove = async (id) => {
@@ -1084,7 +1090,7 @@ function Recipients() {
               type="button"
               className={styles.exportInlineBtn}
               onClick={handleExportSelected}
-              disabled={selectedRecipientCount === 0 || exportingSelected}
+              disabled={selectedRecipientCount === 0 || exportingSelected || saving}
               title="Export selected recipients to Excel"
             >
               <FiDownload />
@@ -1104,6 +1110,8 @@ function Recipients() {
                 onClick={removeSelected}
                 disabled={
                   selectedRecipientCount === 0 ||
+                  saving ||
+                  (compact && editingId !== null) ||
                   exportingSelected ||
                   selectedContainsLifecycleLocked
                 }
@@ -1121,7 +1129,7 @@ function Recipients() {
               </button>
             )}
 
-            <div className={styles.columnsBox}>
+            {!compact && <div className={styles.columnsBox}>
               <button
                 className={styles.columnsBtn}
                 onClick={() => setColumnsOpen((v) => !v)}
@@ -1150,7 +1158,7 @@ function Recipients() {
                   ))}
                 </div>
               )}
-            </div>
+            </div>}
 
             {canManageRecipients && (
               <button
@@ -1158,7 +1166,8 @@ function Recipients() {
                 onClick={startCreate}
                 disabled={
                   !selectedProjectId ||
-                  editingId === "new" ||
+                  saving ||
+                  (compact ? editingId !== null : editingId === "new") ||
                   exportingSelected
                 }
                 title={
@@ -1182,8 +1191,24 @@ function Recipients() {
         )}
         {formError && <ErrorBanner message={formError} onDismiss={() => setFormError("")} />}
 
-        <div className={styles.table} style={{ ["--rec-grid-cols"]: gridCols }}>
-          <div className={`${styles.gridRow} ${styles.headerRow}`}>
+        {compact && <fieldset disabled={editingId !== null || saving} className={styles.mobileTools}>
+          <legend className={styles.mobileToolsLegend}>Recipient controls</legend>
+          <details>
+            <summary>Sort &amp; filter{hasActiveFilters ? " · filters active" : ""}</summary>
+            <div className={styles.mobileFilters}>
+              {headerLabels.slice(1).map((label, index) => {
+                const key = HEADER_SORT_KEYS[index + 1];
+                return <div key={key} className={styles.sortAndFilterHeader}>
+                  <SortableHeader label={label} sortKey={key} sortConfig={sortConfig} onSort={toggleSort} />
+                  <ColumnFilter label={label} type={key === "organization" ? "text" : "number"} value={filters[key]} onApply={(value) => setFilters((current) => ({ ...current, [key]: value }))} onClear={() => setFilters((current) => ({ ...current, [key]: emptyFilters()[key] }))} />
+                </div>;
+              })}
+            </div>
+          </details>
+          <label className={styles.mobileSelectAll}><input type="checkbox" checked={allVisibleSelected} disabled={!selectableRecipients.length} onChange={(event) => toggleSelectAllVisible(event.target.checked)} /> Select all visible ({displayedItems.length})</label>
+        </fieldset>}
+        <div className={styles.table} style={{ "--rec-grid-cols": gridCols, "--rec-tablet-cols": ["130px", "minmax(140px, 1fr)", "140px", "110px"].map((width, index) => visibleCols[index] ? width : "0px").join(" ") }}>
+          {!compact && <div className={`${styles.gridRow} ${styles.headerRow}`}>
             {headerLabels.map((h, i) => (
               <div
                 key={h}
@@ -1208,7 +1233,7 @@ function Recipients() {
                 )}
               </div>
             ))}
-          </div>
+          </div>}
 
           {!selectedProjectId ? (
             <p className={styles.noData}>
@@ -1216,9 +1241,13 @@ function Recipients() {
             </p>
           ) : items.length === 0 ? (
             <p className={styles.noData}>No recipients for this project.</p>
+          ) : displayedItems.length === 0 ? (
+            <p className={styles.noData}>No recipients match your filters.</p>
           ) : (
             displayedItems.map((r, idx) => (
               <RecipientRow
+                compact={compact}
+                saving={saving}
                 key={r.id}
                 row={r}
                 isEven={idx % 2 === 0}
@@ -1241,7 +1270,7 @@ function Recipients() {
                 visibleCols={visibleCols}
                 fieldErrors={fieldErrors[r.id] || {}}
                 canManage={
-                  canManageRecipients &&
+                  canManageRecipients && (!compact || editingId === null || editingId === r.id) &&
                   isRecipientPaymentOrderEditable(
                     poOptions.find(
                       (po) => String(po.id) === String(r.paymentOrderId),
@@ -1254,6 +1283,8 @@ function Recipients() {
 
           {editingId === "new" && (
             <RecipientRow
+              compact={compact}
+              saving={saving}
               row={{
                 id: "new",
                 organizationId: "",
