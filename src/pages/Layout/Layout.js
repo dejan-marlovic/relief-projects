@@ -114,7 +114,7 @@ const Layout = () => {
     <div
       className={`${styles.layoutShell} ${
         usesInternalTableScroll ? styles.fixedTableViewport : ""
-      } ${["/recipients", "/signatures"].includes(location.pathname) ? styles.responsiveListViewport : ""}`}
+      } ${["/recipients", "/signatures", "/documents"].includes(location.pathname) ? styles.responsiveListViewport : ""}`}
     >
       <header className={styles.headerBar}>
         <div className={styles.headerTitleBlock}>

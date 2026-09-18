@@ -1,6 +1,8 @@
 @use "../../styles/colors" as colors;
 @use "../../styles/forms" as forms;
 
+.mobileActionLabel { display: none; }
+
 
 // ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ NEW (for nicer upload messages)
 
@@ -264,4 +266,35 @@
   svg {
     font-size: 16px;
   }
+}
+
+@media (max-width: 1100px) {
+  .page { padding: 0.5rem; }
+  .shell { padding: 1rem; min-width: 0; }
+  .pageSubtitle, .uploadedBy, .docName { overflow-wrap: anywhere; }
+  .docActions { flex-shrink: 0; }
+  .downloadLink, .dangerIconBtn {
+    min-height: 44px;
+    min-width: 44px;
+    box-sizing: border-box;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 700px) {
+  .page { padding: 0; margin-top: 0; min-width: 0; }
+  .shell { padding: 12px; }
+  .uploadArea { padding: 16px 12px; overflow-wrap: anywhere; }
+  .uploadArea > span { max-width: 100%; }
+  .documentsList {
+    max-height: none;
+    overflow: visible;
+    scrollbar-gutter: auto;
+    overscroll-behavior: auto;
+  }
+  .documentItem { flex-direction: column; align-items: stretch; padding: 14px 12px; }
+  .docActions { flex-wrap: wrap; }
+  .downloadLink { flex: 1 1 auto; }
+  .dangerIconBtn { gap: 6px; padding: 10px 12px; }
+  .mobileActionLabel { display: inline; }
 }

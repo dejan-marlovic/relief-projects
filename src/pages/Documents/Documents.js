@@ -359,7 +359,7 @@ const Documents = () => {
                   <span>
                     {uploading
                       ? "Uploading..."
-                      : "Drag & drop a file here, or click to select"}
+                      : "Choose a file, or drag and drop it here"}
                   </span>
                   <span className={styles.uploadFormats}>
                     {ALLOWED_FORMATS_LABEL} • max {MAX_UPLOAD_MB}MB
@@ -419,6 +419,7 @@ const Documents = () => {
                         aria-label="Delete"
                       >
                         <FiTrash2 />
+                        <span className={styles.mobileActionLabel}>Delete</span>
                       </button>}
                     </div>
                   </li>
