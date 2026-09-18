@@ -160,3 +160,16 @@
   .participantChartContent { grid-template-columns: 1fr; }
   .participantList { max-width: none; justify-self: stretch; }
 }
+
+@media (max-width: 1100px) {
+  .chartGrid { grid-template-columns: minmax(0, 1fr); }
+  .participantChartContent { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .sectionHeader { flex-wrap: wrap; }
+  .sectionSubtitle, .chartSubtitle, .kpiHint { overflow-wrap: anywhere; }
+}
+@media (max-width: 700px) {
+  .snapshot, .chartCard { padding: 12px; }
+  .kpiGrid, .participantChartContent { grid-template-columns: minmax(0, 1fr); }
+  .participantList { max-width: none; justify-self: stretch; }
+  .sectionHeader { gap: 10px; }
+}

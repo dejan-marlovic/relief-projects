@@ -99,3 +99,11 @@
 .error {
   color: colors.$danger-dark;
 }
+
+@media (max-width: 1100px) {
+  .container, .memoCard { min-width: 0; }
+  .headerRow, .actions { flex-wrap: wrap; }
+  .textarea { box-sizing: border-box; min-width: 0; max-width: 100%; font-size: 16px; }
+  .memoText, .note, .error { overflow-wrap: anywhere; }
+  .container button { min-height: 44px; }
+}
