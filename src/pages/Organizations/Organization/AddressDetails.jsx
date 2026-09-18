@@ -287,12 +287,12 @@ const AddressDetails = ({ organizationId, canManage = false }) => {
             </div>
           )}
         </div>
-        <div className={styles.cell}>{primary ? <span className={styles.primaryBadge}><FiStar /> Primary</span> : isNew ? "New" : "Additional"}</div>
-        <div className={styles.cell}>{renderField(rowKey, address, "street", "Street")}</div>
-        <div className={styles.cell}>{renderField(rowKey, address, "city", "City")}</div>
-        <div className={styles.cell}>{renderField(rowKey, address, "state", "State")}</div>
-        <div className={styles.cell}>{renderField(rowKey, address, "postalCode", "Postal code")}</div>
-        <div className={styles.cell}>{renderField(rowKey, address, "country", "Country")}</div>
+        <div className={styles.cell}><span className={styles.fieldLabel}>Type</span>{primary ? <span className={styles.primaryBadge}><FiStar /> Primary</span> : isNew ? "New" : "Additional"}</div>
+        <div className={styles.cell}><span className={styles.fieldLabel}>Street</span>{renderField(rowKey, address, "street", "Street")}</div>
+        <div className={styles.cell}><span className={styles.fieldLabel}>City</span>{renderField(rowKey, address, "city", "City")}</div>
+        <div className={styles.cell}><span className={styles.fieldLabel}>State</span>{renderField(rowKey, address, "state", "State")}</div>
+        <div className={styles.cell}><span className={styles.fieldLabel}>Postal code</span>{renderField(rowKey, address, "postalCode", "Postal code")}</div>
+        <div className={styles.cell}><span className={styles.fieldLabel}>Country</span>{renderField(rowKey, address, "country", "Country")}</div>
       </div>
     );
   };

@@ -181,10 +181,10 @@ const BankDetails = ({ organizationId, canManage = false }) => {
           {canManage && <button type="button" className={styles.unlinkBtn} onClick={() => unlink(id)} disabled={Boolean(editingId) || disabled} title="Remove from organization" aria-label={`Remove bank detail ${id} from organization`}><FiLink /></button>}
         </div>}
       </div>
-      <div className={styles.cell}>{renderField(id, row, "bankName", "Bank name")}</div>
-      <div className={styles.cell}>{renderField(id, row, "accountNumber", "Account number")}</div>
-      <div className={styles.cell}>{renderField(id, row, "branchName", "Branch")}</div>
-      <div className={styles.cell}>{renderField(id, row, "swiftCode", "SWIFT")}</div>
+      <div className={styles.cell}><span className={styles.fieldLabel}>Bank name</span>{renderField(id, row, "bankName", "Bank name")}</div>
+      <div className={styles.cell}><span className={styles.fieldLabel}>Account number</span>{renderField(id, row, "accountNumber", "Account number")}</div>
+      <div className={styles.cell}><span className={styles.fieldLabel}>Branch</span>{renderField(id, row, "branchName", "Branch")}</div>
+      <div className={styles.cell}><span className={styles.fieldLabel}>SWIFT</span>{renderField(id, row, "swiftCode", "SWIFT")}</div>
     </div>;
   };
 
