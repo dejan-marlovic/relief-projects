@@ -27,8 +27,6 @@ const validate = (values) => {
   if (!values.projectId) errors.projectId = "Project is required.";
   if (!values.documentName?.trim())
     errors.documentName = "Document name is required.";
-  if (!values.documentPath?.trim())
-    errors.documentPath = "Document path is required.";
 
   return errors;
 };
@@ -199,7 +197,6 @@ const UpdateDocument = () => {
         employeeId: Number(form.employeeId),
         projectId: Number(form.projectId),
         documentName: form.documentName.trim(),
-        documentPath: form.documentPath.trim(),
       };
 
       const res = await authFetch(
@@ -357,12 +354,13 @@ const UpdateDocument = () => {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>Document path</label>
+                  <label htmlFor="document-storage-key">Stored file (read-only)</label>
                   <input
+                    id="document-storage-key"
                     className={inputClass("documentPath")}
                     name="documentPath"
                     value={form.documentPath}
-                    onChange={handleInputChange}
+                    readOnly
                     disabled={!form.selectedId || saving}
                   />
                 </div>

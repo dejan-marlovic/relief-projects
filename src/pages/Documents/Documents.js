@@ -1,14 +1,16 @@
-import React, { useEffect, useState, useContext, useMemo } from "react";
+import React, { useEffect, useState, useContext, useMemo, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { ProjectContext } from "../../context/ProjectContext";
 import { useAuth } from "../../context/AuthContext";
 import { FiTrash2, FiDownload, FiUploadCloud } from "react-icons/fi";
 import styles from "./Documents.module.scss";
 
-import { BASE_URL, ASSETS_URL } from "../../config/api";
+import { BASE_URL } from "../../config/api";
+import { createAuthFetch } from "../../utils/http";
+import { downloadDocument } from "../../utils/documentDownload";
 import { getSelectedProjectName } from "../../utils/projectDisplay";
 import ErrorBanner from "../../components/ErrorBanner/ErrorBanner";
 import { readApiError } from "../../utils/apiErrors";
-const DOCUMENTS_BASE_PATH = `${ASSETS_URL}/documents/`;
 
 // 🔹 TODO: replace with real current employee ID from your auth/user context
 // ✅ Keep this in sync with backend:
@@ -70,10 +72,43 @@ export const validateDocumentFile = (file) => {
 };
 
 const Documents = () => {
+  const navigate = useNavigate();
+  const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
+  const downloadRequests = useRef(new Map());
+  const [downloading, setDownloading] = useState([]);
+  const [downloadError, setDownloadError] = useState("");
   const { selectedProjectId, projects } = useContext(ProjectContext);
   const { user, hasRole, hasAnyRole } = useAuth();
   const canUploadDocuments = hasAnyRole("ADMIN", "PROJECT_MANAGER");
   const canDeleteDocuments = hasRole("ADMIN");
+
+  useEffect(() => {
+    setDownloadError("");
+    setDownloading([]);
+    const requests = downloadRequests.current;
+    return () => {
+      requests.forEach((controller) => controller.abort());
+      requests.clear();
+    };
+  }, [selectedProjectId]);
+
+  const handleDownload = async (id) => {
+    if (downloadRequests.current.has(id)) return;
+    const controller = new AbortController();
+    downloadRequests.current.set(id, controller);
+    setDownloading((current) => [...current, id]);
+    setDownloadError("");
+    try {
+      await downloadDocument(id, authFetch, controller.signal);
+    } catch (error) {
+      if (!controller.signal.aborted) setDownloadError(error.message || "Download failed. Please try again.");
+    } finally {
+      if (downloadRequests.current.get(id) === controller) {
+        downloadRequests.current.delete(id);
+        setDownloading((current) => current.filter((value) => value !== id));
+      }
+    }
+  };
 
   const [documents, setDocuments] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -298,7 +333,7 @@ const Documents = () => {
     }
   };
 
-  const anyError = uploadError || deleteError || listError;
+  const anyError = downloadError || uploadError || deleteError || listError;
 
   return (
     <div className={styles.page}>
@@ -328,6 +363,7 @@ const Documents = () => {
               <ErrorBanner
                 message={anyError}
                 onDismiss={() => {
+                  setDownloadError("");
                   setUploadError("");
                   setDeleteError("");
                   setListError("");
@@ -399,16 +435,17 @@ const Documents = () => {
                     </div>
 
                     <div className={styles.docActions}>
-                      <a
-                        href={`${DOCUMENTS_BASE_PATH}${doc.documentPath}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        type="button"
+                        onClick={() => handleDownload(doc.id)}
+                        disabled={downloading.includes(doc.id)}
+                        aria-busy={downloading.includes(doc.id)}
                         title="Download"
                         className={styles.downloadLink}
                       >
                         <FiDownload />
-                        <span>Download</span>
-                      </a>
+                        <span>{downloading.includes(doc.id) ? "Downloading…" : "Download"}</span>
+                      </button>
 
                       {canDeleteDocuments && <button
                         type="button"

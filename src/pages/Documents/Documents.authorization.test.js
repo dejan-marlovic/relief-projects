@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import Documents from "./Documents";
 import { ProjectContext } from "../../context/ProjectContext";
@@ -43,7 +43,7 @@ describe("Documents permissions", () => {
       await screen.findByText("Uploaded by Dario Marlovic")
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Upload document" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Download/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Download/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Delete" })).toBeInTheDocument();
   });
 
@@ -51,14 +51,14 @@ describe("Documents permissions", () => {
     renderDocuments(["PROJECT_MANAGER"]);
     expect(await screen.findByText("report.pdf")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Upload document" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Download/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Download/ })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Delete" })).not.toBeInTheDocument();
   });
 
   test.each(["FINANCE", "APPROVER", "VIEWER"])("%s has read/download-only access", async (role) => {
     renderDocuments([role]);
     expect(await screen.findByText("report.pdf")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Download/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Download/ })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Upload document" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Delete" })).not.toBeInTheDocument();
     await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
@@ -67,5 +67,31 @@ describe("Documents permissions", () => {
   test("falls back to the employee ID when the employee is unavailable", async () => {
     renderDocuments(["VIEWER"], []);
     expect(await screen.findByText("Uploaded by Employee #2")).toBeInTheDocument();
+  });
+
+  test("prevents duplicate requests and announces a failed download", async () => {
+    renderDocuments(["VIEWER"]);
+    const button = await screen.findByRole("button", { name: "Download" });
+    let finish;
+    fetch.mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
+    const before = fetch.mock.calls.length;
+    fireEvent.click(button);
+    fireEvent.click(button);
+    expect(button).toBeDisabled();
+    expect(fetch.mock.calls.length).toBe(before + 1);
+    await act(async () => finish({ ok: false, status: 404 }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("no longer available");
+    expect(button).toBeEnabled();
+    expect(screen.queryByRole("link", { name: /Download/ })).not.toBeInTheDocument();
+  });
+
+  test("cancels an in-flight download when leaving Documents", async () => {
+    const view = renderDocuments(["VIEWER"]);
+    const button = await screen.findByRole("button", { name: "Download" });
+    fetch.mockImplementation(() => new Promise(() => {}));
+    fireEvent.click(button);
+    const options = fetch.mock.calls[fetch.mock.calls.length - 1][1];
+    view.unmount();
+    expect(options.signal.aborted).toBe(true);
   });
 });
