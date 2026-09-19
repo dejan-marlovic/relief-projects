@@ -7,7 +7,7 @@ import { jsonResponse, makeUser } from "../../testUtils/authTestUtils";
 jest.mock("../../context/AuthContext", () => ({ useAuth: jest.fn() }));
 const { useAuth } = require("../../context/AuthContext");
 
-const documentFixture = { id: 7, documentName: "report.pdf", documentPath: "report.pdf", employeeId: 2, projectId: 1 };
+const documentFixture = { id: 7, isCurrent: true, isDeleted: false, versionNumber: 1, documentName: "report.pdf", documentPath: "report.pdf", employeeId: 2, projectId: 1 };
 const employees = [{ id: 2, firstName: "Dario", lastName: "Marlovic" }];
 
 const renderDocuments = (roles, employeeRows = employees) => {

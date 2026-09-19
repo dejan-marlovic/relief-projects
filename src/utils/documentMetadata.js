@@ -15,6 +15,7 @@ export const readDocumentError = async (response, fallback) => {
 
 // Compare with the loaded record so unrelated edits don't clear or replace metadata.
 export const documentMetadataChanges = (form, original) => ({
+  ...(form.status && form.status !== original?.status ? { status: form.status } : {}),
   ...(form.category !== (original?.category || "UNCATEGORIZED") ? { category: form.category } : {}),
   ...(form.documentDate !== (original?.documentDate || "") ? { documentDate: form.documentDate || null } : {}),
 });

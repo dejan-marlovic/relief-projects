@@ -2,6 +2,9 @@
 @use "../../styles/forms" as forms;
 
 .mobileActionLabel { display: none; }
+.versionList { list-style: none; padding: 0; margin: 1rem 0; border: 1px solid colors.$border; border-radius: 10px; overflow: hidden; }
+.metadataEditor h3 { overflow-wrap: anywhere; min-width: 0; }
+.metadataControls input[type="file"] { overflow: hidden; }
 
 .metadataControls {
   display: flex;

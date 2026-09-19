@@ -7,12 +7,14 @@ import { BASE_URL } from "../../../config/api";
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
 import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 import useDocumentCategories from "../../../hooks/useDocumentCategories";
+import DocumentStatus from "../../../components/DocumentStatus/DocumentStatus";
 
 const initialForm = {
   projectId: "",
   file: null,
   category: "UNCATEGORIZED",
   documentDate: "",
+  status: "DRAFT",
 };
 
 const validate = (values) => {
@@ -95,6 +97,7 @@ const CreateDocument = () => {
       formData.append("file", form.file);
       formData.append("projectId", String(Number(form.projectId)));
       formData.append("category", form.category);
+      formData.append("status", form.status);
       if (form.documentDate) formData.append("documentDate", form.documentDate);
 
       const res = await authFetch(`${BASE_URL}/api/documents/upload`, {
@@ -196,6 +199,11 @@ const CreateDocument = () => {
                 {categories.map((category) => <option key={category.id} value={category.id}>{category.label}</option>)}
               </select>
               {fieldErrors.category && <span role="alert">{fieldErrors.category}</span>}
+            </div>
+            <div className={styles.formGroup}>
+              <DocumentStatus className={inputClass("status")} value={form.status} disabled={loading} onChange={(e) => setForm((previous) => ({ ...previous, status: e.target.value }))} />
+              <small>Final is a descriptive label, not approval or proof of signing.</small>
+              {fieldErrors.status && <span role="alert">{fieldErrors.status}</span>}
             </div>
             <div className={styles.formGroup}>
               <label htmlFor="new-document-date">Document date (optional)</label>

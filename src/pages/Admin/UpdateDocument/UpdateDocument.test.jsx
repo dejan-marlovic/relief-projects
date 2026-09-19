@@ -47,3 +47,21 @@ test("admin edits clear dates explicitly without sending captured upload identit
   expect(screen.getByText("Uploaded by captured.user")).toBeInTheDocument();
   localStorage.clear();
 });
+
+test.each([true, false])("linked record current=%s cannot move; historical metadata cannot save", async (isCurrent) => {
+  const row = { id: 7, employeeId: 2, projectId: 1, documentName: 'Linked.pdf', category: 'UNCATEGORIZED', isCurrent, predecessorDocumentId: 3, status: 'DRAFT' };
+  localStorage.setItem('authToken', 'token');
+  global.fetch = jest.fn((url) => {
+    if (url.endsWith('/categories')) return jsonResponse([{ id: 'UNCATEGORIZED', label: 'Uncategorized' }]);
+    if (url.endsWith('/documents/active')) return jsonResponse([row]);
+    if (url.endsWith('/employees/active')) return jsonResponse([{ id: 2, firstName: 'Test' }]);
+    return jsonResponse([{ id: 1, projectName: 'Project' }]);
+  });
+  const view = render(<MemoryRouter><UpdateDocument /></MemoryRouter>);
+  await screen.findByRole('option', { name: /Linked.pdf/ });
+  fireEvent.change(screen.getAllByRole('combobox')[0], { target: { value: '7' } });
+  expect(view.container.querySelector('[name="projectId"]')).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Update document' }).disabled).toBe(!isCurrent);
+  expect(screen.getByLabelText('Status').disabled).toBe(!isCurrent);
+  localStorage.clear();
+});
