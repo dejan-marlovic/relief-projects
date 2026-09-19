@@ -54,8 +54,7 @@ function Login() {
   };
 
   return (
-    <div className={styles.container}>
-      {/* Centered logo above input fields */}
+    <div className={styles.page}>
       <div className={styles.logoWrapper}>
         <img
           src={logoUrl}
@@ -68,6 +67,7 @@ function Login() {
         />
       </div>
 
+      <div className={styles.container}>
       <h2>Login</h2>
 
       <form onSubmit={handleSubmit}>
@@ -99,6 +99,7 @@ function Login() {
       </form>
 
       {message && <p className={styles.message}>{message}</p>}
+      </div>
     </div>
   );
 }

@@ -190,18 +190,6 @@ const Layout = () => {
             </div>
           )}
 
-          <div className={styles.logoWrap}>
-            <img
-              src={logoUrl}
-              alt="Relief Projects logo"
-              className={styles.logo}
-              onError={(event) => {
-                event.currentTarget.onerror = null;
-                event.currentTarget.src = "/logo.png";
-              }}
-            />
-          </div>
-
           <button
             type="button"
             className={styles.logoutIcon}
@@ -210,6 +198,17 @@ const Layout = () => {
           >
             <FiLogOut />
           </button>
+        </div>
+        <div className={styles.logoWrap}>
+          <img
+            src={logoUrl}
+            alt="Relief Projects logo"
+            className={styles.logo}
+            onError={(event) => {
+              event.currentTarget.onerror = null;
+              event.currentTarget.src = "/logo.png";
+            }}
+          />
         </div>
       </header>
 

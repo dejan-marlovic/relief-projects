@@ -27,8 +27,10 @@ $secondary-color: colors.$danger;
 /* ================= HEADER ================= */
 
 .headerBar {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas: "title controls logo";
+  align-items: start;
   gap: 1rem;
   padding: 1.2rem 1.3rem;
   margin-bottom: 1rem;
@@ -40,6 +42,9 @@ $secondary-color: colors.$danger;
 }
 
 .headerTitleBlock {
+  grid-area: title;
+  min-width: 0;
+  overflow-wrap: anywhere;
   display: flex;
   flex-direction: column;
 }
@@ -72,6 +77,9 @@ $secondary-color: colors.$danger;
 }
 
 .headerRight {
+  grid-area: controls;
+  align-self: center;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -97,6 +105,9 @@ $secondary-color: colors.$danger;
 }
 
 .logoWrap {
+  grid-area: logo;
+  justify-self: end;
+  align-self: start;
   padding: 0.5rem 0.75rem;
   background: colors.$surface;
   border-radius: 12px;
@@ -159,9 +170,9 @@ $secondary-color: colors.$danger;
   align-items: flex-start;
   justify-content: center;
   box-sizing: border-box;
-  min-height: 70px;
+  min-height: 84px;
   white-space: nowrap;
-  padding: 14px 16px;
+  padding: 20px 16px;
   border: 1px solid colors.$primary-border;
   border-radius: 12px;
   background: colors.$surface;
@@ -215,14 +226,34 @@ $secondary-color: colors.$danger;
 }
 
 /* Responsive */
+@media (min-width: 1101px) {
+  .headerBar {
+    grid-template-areas: "title controls logo" ". . logout";
+  }
+
+  .headerRight { display: contents; }
+  .selectorInline { grid-area: controls; align-self: start; }
+  .logoutIcon { grid-area: logout; justify-self: end; }
+}
+
 @media (max-width: 1100px) {
   .headerBar {
-    flex-direction: column;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "title logo" "controls controls";
   }
 
   .headerRight {
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    row-gap: 0.25rem;
   }
+
+  .selectorInline { display: contents; }
+  .selectorInline .selectorLabel { grid-column: 1; grid-row: 1; }
+  .selectorInline .selectInput { grid-column: 1; grid-row: 2; width: 100%; }
+  .logoutIcon { grid-column: 2; grid-row: 2; justify-self: end; }
+  .logoutIcon:only-child { grid-row: 1; }
 
   .tabList {
     overflow-x: auto;
@@ -257,7 +288,7 @@ $secondary-color: colors.$danger;
     .headerTitle { font-size: 1.4rem; }
     .headerSubtitle { font-size: 0.8rem; }
     .headerRight { flex-wrap: wrap; min-width: 0; }
-    .selectorInline { min-width: 0; flex: 1 1 100%; }
+    .selectorInline { min-width: 0; flex: 1 1 180px; }
     .selectInput { width: 100%; min-width: 0; box-sizing: border-box; }
     .tabList { max-width: 100%; }
     .tabLink { padding: 12px; font-size: 0.9rem; }
