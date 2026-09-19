@@ -85,6 +85,26 @@ $secondary-color: colors.$danger;
   gap: 0.75rem;
 }
 
+.projectContextNote {
+  grid-area: context;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  min-width: 0;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid colors.$primary-border;
+  border-radius: 12px;
+  background: colors.$primary-soft;
+  color: colors.$text-muted;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+
+  > svg { flex-shrink: 0; margin-top: 0.15rem; color: colors.$primary; }
+  strong { display: block; margin-bottom: 0.2rem; color: colors.$text-secondary; font-weight: 600; }
+  p { margin: 0; }
+}
+
 .selectorInline {
   display: flex;
   flex-direction: column;
@@ -139,7 +159,7 @@ $secondary-color: colors.$danger;
   flex-shrink: 0;
   min-width: 0;
   margin-bottom: 1rem;
-  padding: 8px;
+  padding: 22px 8px;
   border: 1px solid colors.$primary-border;
   border-radius: 14px;
   background: colors.$surface;
@@ -170,9 +190,9 @@ $secondary-color: colors.$danger;
   align-items: flex-start;
   justify-content: center;
   box-sizing: border-box;
-  min-height: 84px;
+  min-height: 66px;
   white-space: nowrap;
-  padding: 20px 16px;
+  padding: 11px 16px;
   border: 1px solid colors.$primary-border;
   border-radius: 12px;
   background: colors.$surface;
@@ -228,18 +248,25 @@ $secondary-color: colors.$danger;
 /* Responsive */
 @media (min-width: 1101px) {
   .headerBar {
-    grid-template-areas: "title controls logo" ". . logout";
+    grid-template-columns: fit-content(26vw) minmax(0, 1fr) minmax(200px, 24vw) auto;
+    grid-template-areas: "title context controls logo" ". . . logout";
   }
 
   .headerRight { display: contents; }
-  .selectorInline { grid-area: controls; align-self: start; }
+  .projectContextNote {
+    justify-self: center;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 28rem;
+  }
+  .selectorInline { grid-area: controls; align-self: start; min-width: 0; }
   .logoutIcon { grid-area: logout; justify-self: end; }
 }
 
 @media (max-width: 1100px) {
   .headerBar {
     grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas: "title logo" "controls controls";
+    grid-template-areas: "title logo" "context context" "controls controls";
   }
 
   .headerRight {
