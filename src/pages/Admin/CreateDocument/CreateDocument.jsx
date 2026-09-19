@@ -6,16 +6,17 @@ import styles from "../CreateUser/CreateUser.module.scss";
 import { BASE_URL } from "../../../config/api";
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
 import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
+import useDocumentCategories from "../../../hooks/useDocumentCategories";
 
 const initialForm = {
-  employeeId: "",
   projectId: "",
   file: null,
+  category: "UNCATEGORIZED",
+  documentDate: "",
 };
 
 const validate = (values) => {
   const errors = {};
-  if (!values.employeeId) errors.employeeId = "Employee is required.";
   if (!values.projectId) errors.projectId = "Project is required.";
   if (!values.file) errors.file = "Document file is required.";
   return errors;
@@ -24,6 +25,7 @@ const validate = (values) => {
 const CreateDocument = () => {
   const navigate = useNavigate();
   const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
+  const { categories, categoryError, retryCategories } = useDocumentCategories(authFetch);
 
   const [loading, setLoading] = useState(false);
   const [loadingLists, setLoadingLists] = useState(false);
@@ -31,7 +33,6 @@ const CreateDocument = () => {
   const [fieldErrors, setFieldErrors] = useState({});
   const [form, setForm] = useState(initialForm);
 
-  const [employees, setEmployees] = useState([]);
   const [projects, setProjects] = useState([]);
 
   const inputClass = (name) =>
@@ -42,17 +43,9 @@ const CreateDocument = () => {
       try {
         setLoadingLists(true);
 
-        const [employeeRes, projectRes] = await Promise.all([
-          authFetch(`${BASE_URL}/api/employees/active`),
-          authFetch(`${BASE_URL}/api/projects/active`),
-        ]);
-
-        const [employeeData, projectData] = await Promise.all([
-          safeReadJson(employeeRes),
-          safeReadJson(projectRes),
-        ]);
-
-        setEmployees(Array.isArray(employeeData) ? employeeData : []);
+        const projectRes = await authFetch(`${BASE_URL}/api/projects/active`);
+        const projectData = await safeReadJson(projectRes);
+        if (!projectRes.ok) throw new Error("Could not load projects.");
         setProjects(Array.isArray(projectData) ? projectData : []);
       } catch (err) {
         console.error("Error loading document form data:", err);
@@ -101,7 +94,8 @@ const CreateDocument = () => {
       const formData = new FormData();
       formData.append("file", form.file);
       formData.append("projectId", String(Number(form.projectId)));
-      formData.append("employeeId", String(Number(form.employeeId)));
+      formData.append("category", form.category);
+      if (form.documentDate) formData.append("documentDate", form.documentDate);
 
       const res = await authFetch(`${BASE_URL}/api/documents/upload`, {
         method: "POST",
@@ -111,6 +105,7 @@ const CreateDocument = () => {
       const data = await safeReadJson(res);
 
       if (!res.ok) {
+        setFieldErrors(data?.fieldErrors || {});
         setFormError(
           data?.message ||
             data?.detail ||
@@ -154,7 +149,7 @@ const CreateDocument = () => {
           <div className={styles.pageHeaderText}>
             <h3 className={styles.pageTitle}>Create Document</h3>
             <p className={styles.pageSubtitle}>
-              Upload a document and link it to an employee and a project.
+              Upload a document for a project. Upload attribution is recorded from your signed-in account.
             </p>
           </div>
         </div>
@@ -162,29 +157,13 @@ const CreateDocument = () => {
         {formError && (
           <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
+        {categoryError && <div role="alert">{categoryError} <button type="button" onClick={retryCategories}>Retry categories</button></div>}
 
         <div className={styles.grid}>
           <div className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={styles.cardTitle}>Relations</div>
               <div className={styles.cardMeta}>Required links</div>
-            </div>
-
-            <div className={styles.formGroup}>
-              <label>Employee</label>
-              <select
-                className={inputClass("employeeId")}
-                name="employeeId"
-                value={form.employeeId}
-                onChange={handleChange}
-              >
-                <option value="">Select employee</option>
-                {employees.map((e) => (
-                  <option key={e.id} value={e.id}>
-                    {e.firstName} {e.lastName} (id: {e.id})
-                  </option>
-                ))}
-              </select>
             </div>
 
             <div className={styles.formGroup}>
@@ -212,6 +191,18 @@ const CreateDocument = () => {
             </div>
 
             <div className={styles.formGroup}>
+              <label htmlFor="new-document-category">Category</label>
+              <select id="new-document-category" name="category" className={inputClass("category")} value={form.category} onChange={handleChange} disabled={loading || !categories.length}>
+                {categories.map((category) => <option key={category.id} value={category.id}>{category.label}</option>)}
+              </select>
+              {fieldErrors.category && <span role="alert">{fieldErrors.category}</span>}
+            </div>
+            <div className={styles.formGroup}>
+              <label htmlFor="new-document-date">Document date (optional)</label>
+              <input id="new-document-date" name="documentDate" type="date" min="1000-01-01" max="9999-12-31" className={inputClass("documentDate")} value={form.documentDate} onChange={handleChange} disabled={loading} />
+              {fieldErrors.documentDate && <span role="alert">{fieldErrors.documentDate}</span>}
+            </div>
+            <div className={styles.formGroup}>
               <label>File</label>
               <input
                 className={inputClass("file")}
@@ -233,7 +224,7 @@ const CreateDocument = () => {
             type="button"
             onClick={handleCreate}
             className={styles.saveButton}
-            disabled={loading}
+            disabled={loading || !categories.length}
           >
             <FiSave /> Upload document
           </button>

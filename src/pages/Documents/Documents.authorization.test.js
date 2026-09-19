@@ -17,6 +17,7 @@ const renderDocuments = (roles, employeeRows = employees) => {
     hasAnyRole: (...required) => required.some((role) => roles.includes(role)),
   });
   fetch.mockImplementation((url) => {
+    if (url.endsWith("/categories")) return Promise.resolve(jsonResponse([{ id: "UNCATEGORIZED", label: "Uncategorized" }]));
     if (url.includes("/api/employees/active")) {
       return Promise.resolve(jsonResponse(employeeRows));
     }
@@ -40,7 +41,7 @@ describe("Documents permissions", () => {
     renderDocuments(["ADMIN"]);
     expect(await screen.findByText("report.pdf")).toBeInTheDocument();
     expect(
-      await screen.findByText("Uploaded by Dario Marlovic")
+      await screen.findByText("Employee attribution: Dario Marlovic")
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Upload document" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Download/ })).toBeInTheDocument();
@@ -61,12 +62,14 @@ describe("Documents permissions", () => {
     expect(screen.getByRole("button", { name: /Download/ })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Upload document" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Delete" })).not.toBeInTheDocument();
-    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+    expect(screen.queryByRole("button", { name: "Edit details" })).not.toBeInTheDocument();
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(3));
   });
 
   test("falls back to the employee ID when the employee is unavailable", async () => {
     renderDocuments(["VIEWER"], []);
-    expect(await screen.findByText("Uploaded by Employee #2")).toBeInTheDocument();
+    expect(await screen.findByText("Employee attribution: Employee #2")).toBeInTheDocument();
+    expect(screen.getByText("Uploaded by Unknown · Uploaded: Unknown")).toBeInTheDocument();
   });
 
   test("prevents duplicate requests and announces a failed download", async () => {

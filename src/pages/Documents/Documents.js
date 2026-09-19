@@ -11,8 +11,9 @@ import { downloadDocument } from "../../utils/documentDownload";
 import { getSelectedProjectName } from "../../utils/projectDisplay";
 import ErrorBanner from "../../components/ErrorBanner/ErrorBanner";
 import { readApiError } from "../../utils/apiErrors";
+import useDocumentCategories from "../../hooks/useDocumentCategories";
+import { documentMetadataChanges, uploaderLabel, uploadTimeLabel, readDocumentError } from "../../utils/documentMetadata";
 
-// 🔹 TODO: replace with real current employee ID from your auth/user context
 // ✅ Keep this in sync with backend:
 // spring.servlet.multipart.max-file-size / spring.servlet.multipart.max-request-size
 const MAX_UPLOAD_MB = 50;
@@ -74,15 +75,31 @@ export const validateDocumentFile = (file) => {
 const Documents = () => {
   const navigate = useNavigate();
   const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
+  const { categories, categoryError, retryCategories } = useDocumentCategories(authFetch);
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [uploadCategory, setUploadCategory] = useState("UNCATEGORIZED");
+  const [uploadDate, setUploadDate] = useState("");
+  const [listRevision, setListRevision] = useState(0);
+  const [editing, setEditing] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState("");
+  const currentProject = useRef(null);
   const downloadRequests = useRef(new Map());
   const [downloading, setDownloading] = useState([]);
   const [downloadError, setDownloadError] = useState("");
   const { selectedProjectId, projects } = useContext(ProjectContext);
+  currentProject.current = selectedProjectId;
   const { user, hasRole, hasAnyRole } = useAuth();
   const canUploadDocuments = hasAnyRole("ADMIN", "PROJECT_MANAGER");
   const canDeleteDocuments = hasRole("ADMIN");
 
   useEffect(() => {
+    setEditing(null);
+    setEditError("");
+    setUploadInfo("");
+    setUploadError("");
+    setUploadCategory("UNCATEGORIZED");
+    setUploadDate("");
     setDownloadError("");
     setDownloading([]);
     const requests = downloadRequests.current;
@@ -147,7 +164,7 @@ const Documents = () => {
     [employees]
   );
 
-  const getUploaderLabel = (document) => {
+  const getEmployeeLabel = (document) => {
     const employeeId =
       document.employeeId ?? document.employee?.id ?? document.employee?.employeeId;
     if (!employeeId) return "Unknown employee";
@@ -177,8 +194,10 @@ const Documents = () => {
 
   // Fetch documents for selected project
   useEffect(() => {
+    const controller = new AbortController();
+    setDocuments([]);
     if (!selectedProjectId) {
-      setDocuments([]);
+      setLoading(false);
       return;
     }
 
@@ -186,9 +205,10 @@ const Documents = () => {
       setLoading(true);
       setListError("");
       try {
-        const res = await fetch(
-          `${BASE_URL}/api/documents/project/${selectedProjectId}`,
+        const res = await authFetch(
+          `${BASE_URL}/api/documents/project/${selectedProjectId}${categoryFilter ? `?category=${encodeURIComponent(categoryFilter)}` : ""}`,
           {
+            signal: controller.signal,
             headers: {
               "Content-Type": "application/json",
               ...authHeaders,
@@ -197,29 +217,31 @@ const Documents = () => {
         );
 
         if (!res.ok) {
-          const text = await res.text().catch(() => "");
-          throw new Error(text || "Failed to load documents");
+          throw new Error(await readApiError(res, "Failed to load documents"));
         }
 
         const data = await res.json();
-        setDocuments(Array.isArray(data) ? data : []);
+        if (!controller.signal.aborted) setDocuments(Array.isArray(data) ? data : []);
       } catch (err) {
+        if (controller.signal.aborted) return;
         console.error(err);
         setListError(err.message || "Failed to load documents");
         setDocuments([]);
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
 
     fetchDocs();
-  }, [selectedProjectId, authHeaders]);
+    return () => controller.abort();
+  }, [selectedProjectId, authHeaders, authFetch, categoryFilter, listRevision]);
 
   // ✅ Parse API errors nicely (supports your ApiError { message, fieldErrors... })
-  const readApiErrorMessage = (res) => readApiError(res, "Request failed.");
+  const readApiErrorMessage = (res) => readDocumentError(res, "Request failed.");
 
   const uploadDocument = async (file) => {
-    if (!canUploadDocuments || !file || !selectedProjectId) return;
+    if (!canUploadDocuments || !file || !selectedProjectId || uploading || !categories.length) return;
+    const uploadProject = selectedProjectId;
 
     setUploadError("");
     setUploadInfo("");
@@ -243,8 +265,10 @@ const Documents = () => {
       formData.append("file", file);
       formData.append("projectId", selectedProjectId);
       formData.append("employeeId", user.employeeId);
+      formData.append("category", uploadCategory);
+      if (uploadDate) formData.append("documentDate", uploadDate);
 
-      const res = await fetch(`${BASE_URL}/api/documents/upload`, {
+      const res = await authFetch(`${BASE_URL}/api/documents/upload`, {
         method: "POST",
         headers: {
           ...authHeaders,
@@ -265,10 +289,13 @@ const Documents = () => {
         throw new Error(msg || "Upload failed");
       }
 
-      const created = await res.json();
-      setDocuments((prev) => [created, ...prev]);
-      setUploadInfo("Upload complete ✅");
+      await res.json();
+      if (currentProject.current === uploadProject) {
+        setListRevision((value) => value + 1);
+        setUploadInfo("Upload complete. The list shows documents matching the selected category filter.");
+      }
     } catch (err) {
+      if (currentProject.current !== uploadProject) return;
       console.error(err);
       setUploadError(err.message || "Upload failed");
       setUploadInfo("");
@@ -297,7 +324,7 @@ const Documents = () => {
   };
 
   const handleClickPicker = () => {
-    if (!canUploadDocuments) return;
+    if (!canUploadDocuments || uploading || !categories.length) return;
     const input = document.getElementById("documentFileInput");
     if (input) input.click();
   };
@@ -325,6 +352,7 @@ const Documents = () => {
       }
 
       setDocuments((prev) => prev.filter((d) => d.id !== docId));
+      setListRevision((value) => value + 1);
     } catch (err) {
       console.error(err);
       setDeleteError(err.message || "Failed to delete document");
@@ -334,6 +362,33 @@ const Documents = () => {
   };
 
   const anyError = downloadError || uploadError || deleteError || listError;
+
+  const saveMetadata = async (event) => {
+    event.preventDefault();
+    if (!canUploadDocuments || saving || !editing) return;
+    const editProject = selectedProjectId;
+    setSaving(true);
+    setEditError("");
+    try {
+      const original = editing.original;
+      const response = await authFetch(`${BASE_URL}/api/documents/${original.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: original.id, documentName: original.documentName,
+          projectId: original.projectId, employeeId: original.employeeId,
+          ...documentMetadataChanges(editing, original) }),
+      });
+      if (!response.ok) throw new Error(await readDocumentError(response, "Could not update document details."));
+      if (currentProject.current === editProject) {
+        setEditing(null);
+        setListRevision((value) => value + 1);
+      }
+    } catch (err) {
+      if (currentProject.current === editProject) setEditError(err.message || "Could not update document details.");
+    } finally { setSaving(false); }
+  };
+
+  const categoryOptions = categories.map((category) => <option key={category.id} value={category.id}>{category.label}</option>);
 
   return (
     <div className={styles.page}>
@@ -358,6 +413,7 @@ const Documents = () => {
 
         {selectedProjectId && (
           <>
+            {categoryError && <div role="alert" className={styles.errorBanner}>{categoryError} <button type="button" onClick={retryCategories}>Retry categories</button></div>}
             {/* Error banner */}
             {anyError && (
               <ErrorBanner
@@ -378,6 +434,11 @@ const Documents = () => {
 
             {canUploadDocuments && (
               <>
+                <div className={styles.metadataControls}>
+                  <label>Upload category<select value={uploadCategory} disabled={uploading || !categories.length} onChange={(e) => setUploadCategory(e.target.value)}>{categoryOptions}</select></label>
+                  <label>Document date (optional)<input type="date" min="1000-01-01" max="9999-12-31" value={uploadDate} disabled={uploading} onChange={(e) => setUploadDate(e.target.value)} /></label>
+                </div>
+                <p className={styles.infoText}>Choose details before selecting a file. The document date is the date on the document, not its upload date.</p>
                 {/* Upload area */}
                 <div
                   onDrop={handleDrop}
@@ -390,6 +451,7 @@ const Documents = () => {
                     if (e.key === "Enter" || e.key === " ") handleClickPicker();
                   }}
                   aria-label="Upload document"
+                  aria-disabled={uploading || !categories.length}
                 >
                   <FiUploadCloud size={24} className={styles.uploadIcon} />
                   <span>
@@ -414,13 +476,27 @@ const Documents = () => {
 
             {/* Section heading */}
             <h3 className={styles.sectionTitle}>Files for this project</h3>
+            <div className={styles.metadataControls}>
+              <label>Filter by category<select value={categoryFilter} disabled={!categories.length} onChange={(e) => { setCategoryFilter(e.target.value); setEditing(null); }}><option value="">All categories</option>{categoryOptions}</select></label>
+              <button type="button" className={styles.downloadLink} onClick={() => setListRevision((value) => value + 1)} disabled={loading}>Refresh list</button>
+            </div>
+            {editing && <form className={styles.metadataEditor} onSubmit={saveMetadata}>
+              <h4>Edit details · {editing.original.documentName}</h4>
+              {editError && <ErrorBanner message={editError} onDismiss={() => setEditError("")} />}
+              <div className={styles.metadataControls}>
+                <label>Category<select value={editing.category} disabled={saving || !categories.length} onChange={(e) => setEditing({ ...editing, category: e.target.value })}>{categoryOptions}</select></label>
+                <label>Document date<input type="date" min="1000-01-01" max="9999-12-31" value={editing.documentDate} disabled={saving} onChange={(e) => setEditing({ ...editing, documentDate: e.target.value })} /></label>
+              </div>
+              <p className={styles.infoText}>Leave the date empty to clear it. Choose Uncategorized to remove a classification.</p>
+              <div className={styles.docActions}><button className={styles.downloadLink} type="submit" disabled={saving || !categories.length}>{saving ? "Saving…" : "Save details"}</button><button className={styles.downloadLink} type="button" disabled={saving} onClick={() => setEditing(null)}>Cancel</button></div>
+            </form>}
 
             {loading && (
               <p className={styles.loadingText}>Loading documents...</p>
             )}
 
             {!loading && documents.length === 0 && !listError && (
-              <p className={styles.emptyText}>No documents uploaded yet.</p>
+              <p className={styles.emptyText}>{categoryFilter ? "No documents match this category." : "No documents uploaded yet."}</p>
             )}
 
             {documents.length > 0 && (
@@ -430,11 +506,14 @@ const Documents = () => {
                     <div className={styles.docInfo}>
                       <span className={styles.docName}>{doc.documentName}</span>
                       <span className={styles.uploadedBy}>
-                        Uploaded by {getUploaderLabel(doc)}
+                        {categories.find((item) => item.id === doc.category)?.label || doc.category || "Uncategorized"} · Document date: {doc.documentDate || "Unknown"}
                       </span>
+                      <span className={styles.uploadedBy}>Uploaded by {uploaderLabel(doc)} · Uploaded: {uploadTimeLabel(doc.uploadedAt)}</span>
+                      <span className={styles.uploadedBy}>Employee attribution: {getEmployeeLabel(doc)}</span>
                     </div>
 
                     <div className={styles.docActions}>
+                      {canUploadDocuments && <button type="button" className={styles.downloadLink} disabled={saving || !categories.length} onClick={() => { setEditError(""); setEditing({ original: doc, category: doc.category || "UNCATEGORIZED", documentDate: doc.documentDate || "" }); }}>Edit details</button>}
                       <button
                         type="button"
                         onClick={() => handleDownload(doc.id)}

@@ -3,6 +3,19 @@
 
 .mobileActionLabel { display: none; }
 
+.metadataControls {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 0.75rem 0;
+  label { display: flex; flex-direction: column; gap: 0.4rem; color: colors.$text-secondary; font-size: 0.85rem; font-weight: 600; flex: 1 1 220px; max-width: 360px; min-width: 0; }
+  select, input { box-sizing: border-box; width: 100%; min-width: 0; min-height: 42px; padding: 0.55rem 0.7rem; border: 1px solid colors.$border; border-radius: 8px; background: colors.$surface; color: colors.$text; font: inherit; }
+  select:focus-visible, input:focus-visible { outline: 2px solid colors.$primary; outline-offset: 2px; }
+}
+.metadataEditor { margin: 1rem 0; padding: 1rem; background: colors.$primary-a04; border: 1px solid colors.$primary-border; border-radius: 12px; h4 { margin: 0 0 0.75rem; overflow-wrap: anywhere; } }
+.uploadArea[aria-disabled="true"] { opacity: 0.6; cursor: not-allowed; }
+
 
 // ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ NEW (for nicer upload messages)
 
@@ -214,6 +227,7 @@
 /* Right side actions */
 .docActions {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   align-items: center;
 }
@@ -286,6 +300,7 @@
 }
 
 @media (max-width: 700px) {
+  .metadataControls label { max-width: none; flex-basis: 100%; }
   .page { padding: 0; margin-top: 0; min-width: 0; }
   .shell { padding: 12px; }
   .uploadArea { padding: 16px 12px; overflow-wrap: anywhere; }

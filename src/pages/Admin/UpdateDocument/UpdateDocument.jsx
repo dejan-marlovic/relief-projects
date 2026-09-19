@@ -10,6 +10,8 @@ import {
   extractFieldErrors,
 } from "../../../utils/http";
 import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
+import useDocumentCategories from "../../../hooks/useDocumentCategories";
+import { documentMetadataChanges, uploaderLabel, uploadTimeLabel } from "../../../utils/documentMetadata";
 
 const initialForm = {
   selectedId: "",
@@ -17,6 +19,8 @@ const initialForm = {
   projectId: "",
   documentName: "",
   documentPath: "",
+  category: "UNCATEGORIZED",
+  documentDate: "",
 };
 
 const validate = (values) => {
@@ -34,6 +38,7 @@ const validate = (values) => {
 const UpdateDocument = () => {
   const navigate = useNavigate();
   const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
+  const { categories, categoryError, retryCategories } = useDocumentCategories(authFetch);
 
   const [documents, setDocuments] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -93,10 +98,12 @@ const UpdateDocument = () => {
       const documentData = await safeReadJson(documentRes);
       const employeeData = await safeReadJson(employeeRes);
       const projectData = await safeReadJson(projectRes);
+      if (!documentRes.ok || !employeeRes.ok || !projectRes.ok) throw new Error("Could not refresh document metadata.");
 
       setDocuments(Array.isArray(documentData) ? documentData : []);
       setEmployees(Array.isArray(employeeData) ? employeeData : []);
       setProjects(Array.isArray(projectData) ? projectData : []);
+      setForm(initialForm);
     } catch (err) {
       console.error("Load documents error:", err);
       setDocuments([]);
@@ -135,6 +142,8 @@ const UpdateDocument = () => {
       projectId: selected?.projectId ? String(selected.projectId) : "",
       documentName: selected?.documentName || "",
       documentPath: selected?.documentPath || "",
+      category: selected?.category || "UNCATEGORIZED",
+      documentDate: selected?.documentDate || "",
     });
   };
 
@@ -171,6 +180,8 @@ const UpdateDocument = () => {
         : "",
       documentName: selectedDocument.documentName || "",
       documentPath: selectedDocument.documentPath || "",
+      category: selectedDocument.category || "UNCATEGORIZED",
+      documentDate: selectedDocument.documentDate || "",
     });
 
     setFieldErrors({});
@@ -197,6 +208,7 @@ const UpdateDocument = () => {
         employeeId: Number(form.employeeId),
         projectId: Number(form.projectId),
         documentName: form.documentName.trim(),
+        ...documentMetadataChanges(form, selectedDocument),
       };
 
       const res = await authFetch(
@@ -225,7 +237,7 @@ const UpdateDocument = () => {
       setDocuments((prev) =>
         prev.map((item) =>
           item.id === Number(form.selectedId)
-            ? { ...item, ...payload, id: item.id }
+            ? { ...item, ...payload, ...data, id: item.id }
             : item,
         ),
       );
@@ -256,6 +268,7 @@ const UpdateDocument = () => {
         {formError && (
           <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
+        {categoryError && <div role="alert">{categoryError} <button type="button" onClick={retryCategories}>Retry categories</button></div>}
 
         {successMessage && (
           <div className={styles.successBanner}>
@@ -307,7 +320,7 @@ const UpdateDocument = () => {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>Employee</label>
+                  <label>Employee attribution</label>
                   <select
                     className={inputClass("employeeId")}
                     name="employeeId"
@@ -353,6 +366,24 @@ const UpdateDocument = () => {
                   />
                 </div>
 
+                <div className={styles.formGroup}>
+                  <label htmlFor="document-category">Category</label>
+                  <select id="document-category" name="category" className={inputClass("category")} value={form.category} onChange={handleInputChange} disabled={!form.selectedId || saving || !categories.length}>
+                    {categories.map((category) => <option key={category.id} value={category.id}>{category.label}</option>)}
+                  </select>
+                  {fieldErrors.category && <span role="alert">{fieldErrors.category}</span>}
+                </div>
+                <div className={styles.formGroup}>
+                  <label htmlFor="document-date">Document date (optional)</label>
+                  <input id="document-date" name="documentDate" className={inputClass("documentDate")} type="date" min="1000-01-01" max="9999-12-31" value={form.documentDate} onChange={handleInputChange} disabled={!form.selectedId || saving} />
+                  <small>Leave empty to clear the document date.</small>
+                  {fieldErrors.documentDate && <span role="alert">{fieldErrors.documentDate}</span>}
+                </div>
+                {selectedDocument && <div className={styles.formGroup}>
+                  <span>Uploaded by {uploaderLabel(selectedDocument)}</span>
+                  <span>Uploaded: {uploadTimeLabel(selectedDocument.uploadedAt)}</span>
+                  <small>Recorded at upload; independent of employee attribution.</small>
+                </div>}
                 <div className={styles.formGroup}>
                   <label htmlFor="document-storage-key">Stored file (read-only)</label>
                   <input
