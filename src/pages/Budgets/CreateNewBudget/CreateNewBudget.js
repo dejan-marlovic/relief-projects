@@ -1,3 +1,4 @@
+import { budgetLimitError } from "../../../utils/budgetLimit";
 import { normalizeBudgetName, budgetNameError } from "../../../utils/budgetDisplay";
 import React, { useState, useEffect, useContext, useMemo } from "react";
 import styles from "../Budget/Budget.module.scss"; // ✅ reuse Budget styling
@@ -134,7 +135,6 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
     const { name, value } = e.target;
 
     const numericFields = [
-      "totalAmount",
       "localCurrencyId",
       "localExchangeRateToGbpId",
       "reportingCurrencySekId",
@@ -221,9 +221,9 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
       if (
         budget.totalAmount === "" ||
         budget.totalAmount == null ||
-        Number(budget.totalAmount) <= 0
+        budgetLimitError(budget.totalAmount)
       ) {
-        newFieldErrors.totalAmount = "Total amount must be greater than zero.";
+        newFieldErrors.totalAmount = "Budget limit must be positive, within storage capacity and have at most three meaningful decimal places.";
       }
 
       if (!budget.localCurrencyId) {
@@ -260,7 +260,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
         totalAmount:
           budget.totalAmount === "" || budget.totalAmount == null
             ? null
-            : Number(budget.totalAmount),
+            : String(budget.totalAmount),
 
         localCurrencyId:
           budget.localCurrencyId === "" || budget.localCurrencyId == null
@@ -436,12 +436,12 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>Total Amount:</label>
+                  <label>Budget limit (local currency):</label>
                   <input
                     type="number"
-                    name="totalAmount"
+                    name="totalAmount" min="0.001" step="any"
                     className={inputClass("totalAmount")}
-                    placeholder="Enter total budget amount"
+                    placeholder="Enter budget limit in local currency"
                     value={budget.totalAmount}
                     onChange={handleChange}
                   />

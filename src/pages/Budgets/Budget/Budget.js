@@ -1,3 +1,5 @@
+import BudgetPlanning from "../../../components/BudgetPlanning/BudgetPlanning";
+import { budgetLimitError } from "../../../utils/budgetLimit";
 import { normalizeBudgetName, budgetNameError } from "../../../utils/budgetDisplay";
 import { addDecimals, excelDecimal } from "../../../utils/budgetCalculations";
 import React, { useCallback, useEffect, useState } from "react";
@@ -211,12 +213,6 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
     return value;
   };
 
-  const toExcelNumber = (value) => {
-    if (value == null || value === "") return 0;
-
-    const numericValue = Number(value);
-    return Number.isFinite(numericValue) ? numericValue : 0;
-  };
 
   const formatExcelDate = (value) => {
     if (!value) return "Not specified";
@@ -693,8 +689,8 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
       );
 
       addLandscapeHeaderField(
-        "Budget Total",
-        toExcelNumber(budget.totalAmount),
+        `Budget limit (${getCurrencyNameById(savedBudget.localCurrencyId) || "unknown currency"})${String(savedBudget.budgetLimitCurrencyId) === String(savedBudget.localCurrencyId) && savedBudget.budgetLimitCurrencyId ? "" : " — unconfirmed meaning"}`,
+        excelDecimal(savedBudget.totalAmount),
         firstLabelRow,
         firstValueRow,
         7,
@@ -1113,6 +1109,8 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
   // 💾 Save/Update Budget
   const handleSave = async () => {
     if (!canEditBudget) return;
+    const currencyChanged = String(savedBudget.localCurrencyId) !== String(budget.localCurrencyId);
+    if (currencyChanged && !window.confirm("Confirm that the entered budget limit is in the newly selected local currency. No automatic currency conversion is performed.")) return;
     try {
       setLoading(true);
       const token = localStorage.getItem("authToken");
@@ -1125,9 +1123,9 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
       if (
         budget.totalAmount === "" ||
         budget.totalAmount == null ||
-        Number(budget.totalAmount) <= 0
+        budgetLimitError(budget.totalAmount)
       ) {
-        newFieldErrors.totalAmount = "Total amount must be greater than zero.";
+        newFieldErrors.totalAmount = "Budget limit must be positive, within storage capacity and have at most three meaningful decimal places.";
       }
 
       if (!budget.localCurrencyId) {
@@ -1192,10 +1190,11 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
         budgetName: normalizeBudgetName(budget.budgetName),
         budgetDescription: budget.budgetDescription ?? "",
         budgetPreparationDate: budget.budgetPreparationDate ?? null,
+        ...(currencyChanged ? { confirmedLocalCurrencyId: Number(budget.localCurrencyId) } : {}),
         totalAmount:
           budget.totalAmount === "" || budget.totalAmount == null
             ? null
-            : Number(budget.totalAmount),
+            : String(budget.totalAmount),
 
         localCurrencyId:
           budget.localCurrencyId === "" || budget.localCurrencyId == null
@@ -1409,7 +1408,6 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
     const { name, value } = e.target;
 
     const numericFields = [
-      "totalAmount",
       "localCurrencyId",
       "localExchangeRateToGbpId",
       "reportingCurrencySekId",
@@ -1533,10 +1531,10 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                     </div>
 
                     <div className={styles.formGroup}>
-                      <label>Total Amount:</label>
+                      <label>Budget limit (local currency):</label>
                       <input
                         type="number"
-                        name="totalAmount"
+                        name="totalAmount" min="0.001" step="any"
                         className={inputClass("totalAmount")}
                         value={budget.totalAmount || ""}
                         onChange={handleChange}
@@ -1751,6 +1749,8 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
         <button type="button" className={styles.saveButton} onClick={handleRecalculate} disabled={loading || childEditing || hasUnsavedChanges} title="Save or cancel edits first. Uses persisted inputs and current selected rates.">Recalculate saved costs</button>
         {recalculationMessage && <p role="status">{recalculationMessage}</p>}
       </div>}
+      {hasUnsavedChanges && <button type="button" className={styles.saveButton} disabled={loading || submitting || Boolean(reviewAction)} onClick={() => { setBudget(savedBudget); setHasUnsavedChanges(false); setFieldErrors({}); setFormError(""); }}>Discard header edits</button>}
+      <BudgetPlanning key={`planning-${savedBudget.id}`} budget={savedBudget} refreshKey={historyRefreshKey} disabled={hasUnsavedChanges || childEditing || loading || submitting || Boolean(reviewAction)} onUpdated={(updated) => { setBudget(updated); setSavedBudget(updated); setHasUnsavedChanges(false); setHistoryRefreshKey((value) => value + 1); onUpdate?.(updated); }} />
       <RecordHistory entityType="BUDGET" entityId={budget.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} />
       <FinancialDocuments entityType="BUDGET" entityId={savedBudget.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} editingLocked={hasUnsavedChanges || loading || submitting || Boolean(reviewAction)} />
       {returnOpen && canReviewBudget && <ReturnReasonDialog key={budget.id}

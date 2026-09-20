@@ -16,7 +16,7 @@ const labels = {
   approvedAmount: "Approved amount", ownContribution: "Own contribution",
   secondShareAmount: "Second-share amount", datePlanned: "Planned date/time", okStatus: "OK status",
   budgetName: "Budget name", budgetDescription: "Description", budgetPreparationDate: "Preparation date/time",
-  totalAmount: "Budget total", projectId: "Project", localCurrencyId: "Local currency",
+  totalAmount: "Budget total", budgetLimitCurrencyId: "Budget limit currency confirmation", projectId: "Project", localCurrencyId: "Local currency",
   localCurrencyToGbpId: "GBP target currency", reportingCurrencySekId: "Reporting currency", reportingCurrencyEurId: "EUR target currency",
   localExchangeRateToGbpId: "Local-to-GBP exchange rate",
   reportingExchangeRateSekId: "SEK reporting exchange rate", reportingExchangeRateEurId: "EUR reporting exchange rate",

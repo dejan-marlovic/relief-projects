@@ -368,7 +368,7 @@ const RestoreBudget = () => {
                     </div>
 
                     <div className={styles.detailRow}>
-                      <span className={styles.detailLabel}>Total amount</span>
+                      <span className={styles.detailLabel}>Budget limit (currency meaning may be unconfirmed)</span>
                       <span className={styles.detailValue}>
                         {getAmountLabel(selectedBudget.totalAmount)}
                       </span>

@@ -1,3 +1,5 @@
+import BudgetPlanning from "../../../components/BudgetPlanning/BudgetPlanning";
+import { budgetLimitError } from "../../../utils/budgetLimit";
 import { budgetOptionLabel } from "../../../utils/budgetDisplay";
 import { normalizeBudgetName, budgetNameError } from "../../../utils/budgetDisplay";
 import React, { useEffect, useMemo, useState } from "react";
@@ -46,8 +48,8 @@ const validate = (values) => {
 
   if (!values.selectedId) errors.selectedId = "Please select a budget.";
   if (!values.projectId) errors.projectId = "Project is required.";
-  if (!values.totalAmount || Number(values.totalAmount) <= 0) {
-    errors.totalAmount = "Total amount must be greater than zero.";
+  if (!values.totalAmount || budgetLimitError(values.totalAmount)) {
+    errors.totalAmount = "Budget limit must be positive, within storage capacity and have at most three meaningful decimal places.";
   }
   if (!values.localCurrencyId)
     errors.localCurrencyId = "Local currency is required.";
@@ -296,6 +298,8 @@ const UpdateBudget = () => {
         return;
       }
 
+      const currencyChanged = String(selectedBudget.localCurrencyId) !== String(form.localCurrencyId);
+      if (currencyChanged && !window.confirm("Confirm that the entered budget limit is in the newly selected local currency. No automatic conversion is performed.")) return;
       setSaving(true);
 
       const payload = {
@@ -303,7 +307,8 @@ const UpdateBudget = () => {
         budgetName: normalizeBudgetName(form.budgetName),
         budgetDescription: form.budgetDescription.trim(),
         budgetPreparationDate: form.budgetPreparationDate || null,
-        totalAmount: Number(form.totalAmount),
+        totalAmount: String(form.totalAmount),
+        ...(currencyChanged ? { confirmedLocalCurrencyId: Number(form.localCurrencyId) } : {}),
         localCurrencyId: Number(form.localCurrencyId),
         localCurrencyToGbpId: form.localCurrencyToGbpId
           ? Number(form.localCurrencyToGbpId)
@@ -378,6 +383,7 @@ const UpdateBudget = () => {
           </div>
         </div>
 
+        {selectedBudget && <BudgetPlanning key={selectedBudget.id} budget={selectedBudget} disabled={saving} onUpdated={(updated) => { setBudgets((rows) => rows.map((row) => row.id === updated.id ? updated : row)); setForm((old) => ({ ...old, totalAmount: updated.totalAmount })); }} />}
         {formError && (
           <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
@@ -487,12 +493,11 @@ const UpdateBudget = () => {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>Total amount</label>
+                  <label>Budget limit (local currency)</label>
                   <input
                     className={inputClass("totalAmount")}
                     type="number"
-                    step="0.01"
-                    name="totalAmount"
+                    name="totalAmount" min="0.001" step="any"
                     value={form.totalAmount}
                     onChange={handleInputChange}
                     disabled={!form.selectedId || saving}

@@ -313,7 +313,7 @@ const DeleteBudget = () => {
                     </div>
 
                     <div className={styles.detailRow}>
-                      <span className={styles.detailLabel}>Total amount</span>
+                      <span className={styles.detailLabel}>Budget limit (currency meaning may be unconfirmed)</span>
                       <span className={styles.detailValue}>
                         {selectedBudget.totalAmount}
                       </span>

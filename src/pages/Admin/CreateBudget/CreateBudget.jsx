@@ -1,3 +1,4 @@
+import { budgetLimitError } from "../../../utils/budgetLimit";
 import { normalizeBudgetName, budgetNameError } from "../../../utils/budgetDisplay";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -29,7 +30,7 @@ const validate = (values) => {
   const nameError = budgetNameError(values.budgetName);
   if (nameError) errors.budgetName = nameError;
   if (!values.projectId) errors.projectId = "Project is required.";
-  if (!values.totalAmount) errors.totalAmount = "Total amount is required.";
+  if (budgetLimitError(values.totalAmount)) errors.totalAmount = budgetLimitError(values.totalAmount);
   if (!values.localCurrencyId)
     errors.localCurrencyId = "Local currency is required.";
   if (!values.localExchangeRateToGbpId) {
@@ -273,12 +274,11 @@ const CreateBudget = () => {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Total amount</label>
+              <label>Budget limit (local currency)</label>
               <input
                 className={inputClass("totalAmount")}
                 type="number"
-                step="0.01"
-                name="totalAmount"
+                name="totalAmount" min="0.001" step="any"
                 value={form.totalAmount}
                 onChange={handleChange}
               />
