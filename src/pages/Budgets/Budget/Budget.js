@@ -5,6 +5,7 @@ import ExcelJS from "exceljs";
 import styles from "./Budget.module.scss";
 import CostDetails from "./CostDetails/CostDetails";
 import RecordHistory from "../../../components/RecordHistory/RecordHistory";
+import FinancialDocuments from "../../../components/FinancialDocuments/FinancialDocuments";
 import ReturnReasonDialog from "../../../components/ReturnReasonDialog/ReturnReasonDialog";
 
 // ✅ Icons (same style as Project)
@@ -1748,6 +1749,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
         {recalculationMessage && <p role="status">{recalculationMessage}</p>}
       </div>}
       <RecordHistory entityType="BUDGET" entityId={budget.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} />
+      <FinancialDocuments entityType="BUDGET" entityId={savedBudget.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} editingLocked={hasUnsavedChanges || loading || submitting || Boolean(reviewAction)} />
       {returnOpen && canReviewBudget && <ReturnReasonDialog key={budget.id}
         endpoint={`/api/budgets/${budget.id}/return`} recordLabel={`budget #${budget.id}`}
         onCancel={() => setReturnOpen(false)} onSuccess={(updated) => {

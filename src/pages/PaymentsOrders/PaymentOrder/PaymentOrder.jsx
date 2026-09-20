@@ -1,6 +1,7 @@
 import React from "react";
 import styles from "./PaymentOrder.module.scss";
 import RecordHistory from "../../../components/RecordHistory/RecordHistory";
+import FinancialDocuments from "../../../components/FinancialDocuments/FinancialDocuments";
 import {
   FiEdit,
   FiTrash2,
@@ -396,6 +397,7 @@ const PaymentOrder = ({
       </Cell>
     </div>
     <RecordHistory entityType="PAYMENT_ORDER" entityId={po.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} />
+    <FinancialDocuments entityType="PAYMENT_ORDER" entityId={po.id} lifecycleStatus={lifecycleStatus} locked={locked} refreshKey={historyRefreshKey} editingLocked={isEditing || saving || editingLocked} />
     </>
   );
 };

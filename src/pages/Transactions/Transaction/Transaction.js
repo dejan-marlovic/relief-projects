@@ -14,6 +14,7 @@ import {
 } from "react-icons/fi";
 import TransactionAllocations from "./TransactionAllocations/TransactionAllocations";
 import RecordHistory from "../../../components/RecordHistory/RecordHistory";
+import FinancialDocuments from "../../../components/FinancialDocuments/FinancialDocuments";
 
 const yesNo = ["Yes", "No"];
 
@@ -489,6 +490,7 @@ const Transaction = ({
       </div>
 
       <RecordHistory entityType="TRANSACTION" entityId={tx.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} />
+      <FinancialDocuments entityType="TRANSACTION" entityId={tx.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} editingLocked={isEditing} />
       {expanded && !isCreate && (
         <div className={styles.expandedPanel}>
           <TransactionAllocations
