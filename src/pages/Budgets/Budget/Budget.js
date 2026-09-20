@@ -930,7 +930,10 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
                 row.getCell(column).numFmt = "#,##0.000";
               }
 
-              row.getCell(7).numFmt = '0.000"%"';
+              row.getCell(4).numFmt = "#,##0.############";
+              row.getCell(5).numFmt = "0";
+              row.getCell(6).numFmt = "#,##0.############";
+              row.getCell(7).numFmt = '0.############"%"';
 
               categoryTotals.local = addDecimals(categoryTotals.local, item[amountKeys[0]] ?? "0");
               categoryTotals.sek = addDecimals(categoryTotals.sek, item[amountKeys[1]] ?? "0");

@@ -169,7 +169,7 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
           <input
             id="noOfUnits"
             type="number"
-            name="noOfUnits" min="1" step="1"
+            name="noOfUnits" min="0.000000000001" step="any"
             value={form.noOfUnits}
             onChange={handleNumberChange}
             className={styles.input}
@@ -181,7 +181,7 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
           <input
             id="unitPrice"
             type="number"
-            name="unitPrice" min="0" step="0.01"
+            name="unitPrice" min="0" step="any"
             value={form.unitPrice}
             onChange={handleNumberChange}
             className={styles.input}
@@ -205,7 +205,7 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
           <input
             id="percentageCharging"
             type="number"
-            name="percentageCharging" min="0" max="100" step="0.001"
+            name="percentageCharging" min="0" max="100" step="any"
             value={form.percentageCharging}
             onChange={handleNumberChange}
             className={styles.input}

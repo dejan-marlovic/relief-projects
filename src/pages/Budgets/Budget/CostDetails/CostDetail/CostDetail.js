@@ -2,6 +2,9 @@ import React from "react";
 import styles from "./CostDetail.module.scss";
 import { FiEdit, FiTrash2, FiSave, FiX } from "react-icons/fi";
 
+// Display only: remove insignificant zeros without converting exact decimals to Number.
+const displayInput = (value) => value == null ? "-" : String(value).replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
+
 const CostDetail = ({
   cost,
   costType,
@@ -104,7 +107,7 @@ const CostDetail = ({
 
         {renderField("noOfUnits", <input
           type="number"
-          min="1" step="1"
+          min="0.000000000001" step="any"
           value={ev.noOfUnits ?? cost.noOfUnits ?? ""}
           onChange={(e) => onChange("noOfUnits", e.target.value)}
           className={styles.input}
@@ -114,7 +117,7 @@ const CostDetail = ({
         {renderField("frequencyMonths", <input type="number" min="1" step="1" value={ev.frequencyMonths ?? cost.frequencyMonths ?? ""} onChange={(e) => onChange("frequencyMonths", e.target.value)} className={styles.input} placeholder="Periods" title="Number of periods; 1 for a one-off cost" />)}
         {renderField("unitPrice", <input
           type="number"
-          min="0" step="0.01"
+          min="0" step="any"
           value={ev.unitPrice ?? cost.unitPrice ?? ""}
           onChange={(e) => onChange("unitPrice", e.target.value)}
           className={styles.input}
@@ -123,7 +126,7 @@ const CostDetail = ({
 
         {renderField("percentageCharging", <input
           type="number"
-          step="0.001"
+          step="any"
           value={ev.percentageCharging ?? cost.percentageCharging ?? ""}
           onChange={(e) =>
             onChange("percentageCharging", e.target.value)
@@ -214,11 +217,11 @@ const CostDetail = ({
         {costs.find((c) => c.id === displayCost.costId)?.costName || "-"}
       </div>
 
-      <div className={styles.vcell}><span className={styles.fieldLabel}>Units</span>{displayCost.noOfUnits ?? "-"}</div>
+      <div className={styles.vcell}><span className={styles.fieldLabel}>Units</span>{displayInput(displayCost.noOfUnits)}</div>
       <div className={styles.vcell}><span className={styles.fieldLabel}>Periods</span>{displayCost.frequencyMonths ?? "-"}</div>
-      <div className={styles.vcell}><span className={styles.fieldLabel}>Unit price</span>{displayCost.unitPrice ?? "-"}</div>
+      <div className={styles.vcell}><span className={styles.fieldLabel}>Unit price</span>{displayInput(displayCost.unitPrice)}</div>
       <div className={styles.vcell}><span className={styles.fieldLabel}>Allocated %</span>
-        {displayCost.percentageCharging ?? "-"}%
+        {displayInput(displayCost.percentageCharging)}%
       </div>
 
       <div className={styles.vcell}><span className={styles.fieldLabel}>Local</span>

@@ -24,23 +24,23 @@ export const addDecimals = (a, b, scale = 3) => {
 export const sumDecimals = (values, scale = 3) => values.reduce((sum, value) => addDecimals(sum, value ?? "0", scale), format(parse("0"), scale));
 export const calculationErrors = (row) => {
   const errors = {};
-  for (const [field, label] of [["noOfUnits", "Units"], ["frequencyMonths", "Periods"]]) {
+  for (const [field, label] of [["frequencyMonths", "Periods"]]) {
     const text = String(row[field] ?? "");
     if (!/^\d+$/.test(text) || BigInt(text || "0") < BigInt(1) || BigInt(text || "0") > BigInt(Number.MAX_SAFE_INTEGER)) errors[field] = `${label} must be a positive whole number within the browser's exact integer range.`;
   }
-  for (const [field, label, scale, max] of [["unitPrice", "Unit price", 2, "999999999999999999.99"], ["percentageCharging", "Allocated share", 3, "100"]]) {
+  for (const [field, label, scale, max] of [["noOfUnits", "Units", 12, "9999999999999999999.999999999999"], ["unitPrice", "Unit price", 12, "999999999999999999.999999999999"], ["percentageCharging", "Allocated share", 12, "100"]]) {
     try {
       const x = parse(row[field]);
       const limit = parse(max);
       const common = Math.max(x.s, limit.s);
-      if (x.n < BigInt(0) || x.n * ten(common - x.s) > limit.n * ten(common - limit.s) || (x.s > scale && x.n % ten(x.s - scale) !== BigInt(0))) throw new Error();
-    } catch { errors[field] = `${label} must be between 0 and ${max}, with at most ${scale} decimal places.`; }
+      if ((field === "noOfUnits" && x.n === BigInt(0)) || x.n < BigInt(0) || x.n * ten(common - x.s) > limit.n * ten(common - limit.s) || (x.s > scale && x.n % ten(x.s - scale) !== BigInt(0))) throw new Error();
+    } catch { errors[field] = `${label} must be ${field === "noOfUnits" ? "greater than zero and at most" : "between 0 and"} ${max}, with at most ${scale} decimal places.`; }
   }
   return errors;
 };
 export const costDetailInputs = (row, budgetId) => ({
   budgetId, costTypeId: Number(row.costTypeId), costId: Number(row.costId),
-  costDescription: row.costDescription, noOfUnits: Number(row.noOfUnits),
+  costDescription: row.costDescription, noOfUnits: String(row.noOfUnits),
   frequencyMonths: Number(row.frequencyMonths), unitPrice: String(row.unitPrice),
   percentageCharging: String(row.percentageCharging),
 });

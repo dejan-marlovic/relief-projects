@@ -11,7 +11,7 @@ test("zero is visible, invalid inputs/rates never reuse old converted amounts", 
   expect(previewAmounts({ ...row, percentageCharging: "0" }, budget, rates).amountGBP).toBe("0.000");
   expect(previewAmounts({ ...row, amountGBP: "99" }, budget, [{ ...rates[1], baseCurrencyId: 3 }]).amountGBP).toBe("");
   expect(calculationErrors({ ...row, frequencyMonths: 0, percentageCharging: 101 })).toHaveProperty("frequencyMonths");
-  expect(calculationErrors({ ...row, unitPrice: "1.001" })).toHaveProperty("unitPrice");
+  expect(calculationErrors({ ...row, unitPrice: "1.0000000000001" })).toHaveProperty("unitPrice");
   expect(calculationErrors({ ...row, unitPrice: "1.000", percentageCharging: "100.0000" })).toEqual({});
 });
 test("saved amounts sum exactly beyond Number precision, Excel preserves large decimals", () => {
@@ -29,4 +29,26 @@ test("request sends editable inputs only and preserves decimal strings", () => {
 
 test("reporting totals keep different configured currencies separate", () => {
   expect(reportingTotals([{ reportingCurrencyLabel: "SEK", amountReportingCurrency: "0.001" }, { reportingCurrencyLabel: "USD", amountReportingCurrency: "2.000" }, { reportingCurrencyLabel: "SEK", amountReportingCurrency: "0.002" }])).toEqual([{ currency: "SEK", amount: "0.003" }, { currency: "USD", amount: "2.000" }]);
+});
+test("fractional inputs retain twelve meaningful places and exact request strings", () => {
+  const precise = { ...row, noOfUnits: "18886.971409400761", unitPrice: "13.652165077302", frequencyMonths: "50", percentageCharging: "100" };
+  expect(calculationErrors(precise)).toEqual({});
+  expect(costDetailInputs(precise, 1).noOfUnits).toBe("18886.971409400761");
+  expect(previewAmounts(precise, budget, [{ ...rates[0], rate: "0.315636" }])).toMatchObject({ amountLocalCurrency: "12892402.575", amountReportingCurrency: "4069306.379" });
+  expect(excelDecimal(precise.noOfUnits)).toBe(precise.noOfUnits);
+});
+test("sub-unit quantity and independent conversion rounding match the backend", () => {
+  expect(previewAmounts({ ...row, noOfUnits: "0.125", unitPrice: "19.99", frequencyMonths: "3", percentageCharging: "25" }, budget, rates)).toEqual({ amountLocalCurrency: "1.874", amountReportingCurrency: "19.678", amountGBP: "1.499", amountEuro: "1.687" });
+  expect(calculationErrors({ ...row, noOfUnits: "0.000000000001" })).toEqual({});
+});
+test("input scale and storage bounds reject meaningful excess without rounding", () => {
+  for (const field of ["noOfUnits", "unitPrice", "percentageCharging"]) {
+    expect(calculationErrors({ ...row, [field]: "1.2500000000000" })).toEqual({});
+    expect(calculationErrors({ ...row, [field]: "1.2500000000001" })).toHaveProperty(field);
+  }
+  expect(calculationErrors({ ...row, noOfUnits: "0" })).toHaveProperty("noOfUnits");
+  expect(calculationErrors({ ...row, noOfUnits: "10000000000000000000" })).toHaveProperty("noOfUnits");
+  expect(calculationErrors({ ...row, unitPrice: "1000000000000000000" })).toHaveProperty("unitPrice");
+  expect(calculationErrors({ ...row, noOfUnits: "9999999999999999999.999999999999", unitPrice: "999999999999999999.999999999999" })).toEqual({});
+  expect(calculationErrors({ ...row, frequencyMonths: "0.5" })).toHaveProperty("frequencyMonths");
 });

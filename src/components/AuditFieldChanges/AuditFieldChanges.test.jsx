@@ -79,3 +79,7 @@ test("budget name history shows literal old and new names", () => {
   expect(screen.getByText("Original water budget")).toBeInTheDocument();
   expect(screen.getByText("Water phase two")).toBeInTheDocument();
 });
+test("quantity history preserves new decimal strings and historical integer events", () => {
+  expect(formatFieldValue("18886.971409400761", "DECIMAL")).toBe("18886.971409400761");
+  expect(formatFieldValue("9223372036854775807", "INTEGER")).toBe("9223372036854775807");
+});

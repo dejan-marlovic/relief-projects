@@ -4,7 +4,7 @@ jest.mock("../../../../context/AuthContext", () => ({ useAuth: () => ({ hasAnyRo
 test("create uses defaults, sends inputs only, preserves failed drafts and displays authoritative success", async () => {
   let reject = true, saved = false;
   const onMutationSuccess = jest.fn();
-  const row = { costDetailId: 42, costTypeId: 1, costId: 2, costDescription: "Materials", noOfUnits: 1, frequencyMonths: 1, unitPrice: "0.00", percentageCharging: "100.000", amountLocalCurrency: "0.000", amountReportingCurrency: "0.000", amountGBP: "0.000", amountEuro: "0.000" };
+  const row = { costDetailId: 42, costTypeId: 1, costId: 2, costDescription: "Materials", noOfUnits: "0.125000000001", frequencyMonths: 1, unitPrice: "0.00", percentageCharging: "100.000", amountLocalCurrency: "0.000", amountReportingCurrency: "0.000", amountGBP: "0.000", amountEuro: "0.000" };
   global.fetch = jest.fn(async (url, options) => {
     const create = options?.method === "POST";
     if (create && !reject) saved = true;
@@ -21,13 +21,15 @@ test("create uses defaults, sends inputs only, preserves failed drafts and displ
   fireEvent.change(screen.getByPlaceholderText("Description"), { target: { value: "Materials" } });
   fireEvent.change(screen.getAllByRole("combobox")[0], { target: { value: "1" } });
   fireEvent.change(screen.getAllByRole("combobox")[1], { target: { value: "2" } });
+  fireEvent.change(screen.getByPlaceholderText("Units"), { target: { value: "0.125000000001" } });
   fireEvent.click(screen.getByTitle("Save"));
   await screen.findByText(/Choose a valid reporting rate/);
   expect(screen.getByPlaceholderText("Description")).toHaveValue("Materials");
   expect(onMutationSuccess).not.toHaveBeenCalled();
   const request = JSON.parse(fetch.mock.calls.find(([, options]) => options?.method === "POST")[1].body);
-  expect(request).toEqual({ budgetId: 7, costTypeId: 1, costId: 2, costDescription: "Materials", noOfUnits: 1, frequencyMonths: 1, unitPrice: "0.00", percentageCharging: "100" });
+  expect(request).toEqual({ budgetId: 7, costTypeId: 1, costId: 2, costDescription: "Materials", noOfUnits: "0.125000000001", frequencyMonths: 1, unitPrice: "0.00", percentageCharging: "100" });
   reject = false;
+  fireEvent.change(screen.getByPlaceholderText("Units"), { target: { value: "0.125000000001" } });
   fireEvent.click(screen.getByTitle("Save"));
   await waitFor(() => expect(onMutationSuccess).toHaveBeenCalledTimes(1));
   expect(screen.queryByTitle("Save")).not.toBeInTheDocument();
