@@ -1,0 +1,26 @@
+@use "../../styles/colors" as colors;
+.section { margin: 0.75rem 0; border: 1px solid colors.$border; border-radius: 12px; background: colors.$surface; min-width: 0; color: colors.$text; }
+.section summary { cursor: pointer; padding: 0.9rem 1rem; color: colors.$primary; font-weight: 600; overflow-wrap: anywhere; }
+.panel { padding: 0 1rem 1rem; min-width: 0; }
+.panel button { padding: 0.6rem 0.8rem; border: 1px solid colors.$primary-border; border-radius: 8px; color: colors.$primary; background: colors.$primary-a04; font: inherit; cursor: pointer; }
+.panel button:disabled { opacity: 0.55; cursor: not-allowed; }
+.panel button:focus-visible, .panel select:focus-visible { outline: 2px solid colors.$primary; outline-offset: 2px; }
+.actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+@media(max-width: 700px) { .actions button { flex: 1 1 auto; min-height: 44px; } .panel { padding: 0 0.75rem 0.75rem; } .picker { padding: 0.75rem; } }
+.item { margin-top: 0.8rem; border: 1px solid colors.$border; border-radius: 10px; }
+.item summary { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem; }
+.body { padding: 0 1rem 1rem; }
+.body h4 { margin-bottom: 0.5rem; }
+.badge { font-size: 0.8rem; color: colors.$text-secondary; }
+.muted { color: colors.$text-muted; font-size: 0.85rem; line-height: 1.5; }
+.counts { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-top: 1rem; }
+.counts span { padding: 0.6rem; border-radius: 8px; background: colors.$primary-a04; }
+.form { margin: 1rem 0; padding: 0.8rem; background: colors.$primary-a04; border-radius: 8px; }
+.form label { display: block; margin-bottom: 0.7rem; }
+.form select, .form textarea { display: block; box-sizing: border-box; width: 100%; min-width: 0; padding: 0.65rem; margin: 0.4rem 0; border: 1px solid colors.$border; border-radius: 8px; background: colors.$surface; color: colors.$text; font: inherit; }
+.evidence { list-style: none; padding: 0; }
+.evidence li { display: flex; flex-direction: column; gap: 0.4rem; padding: 1rem 0; border-bottom: 1px solid colors.$border; overflow-wrap: anywhere; }
+@media (max-width: 700px) { .body { padding: 0 0.65rem 0.65rem; } .form { padding: 0.6rem; } }
+.item summary::after { content: "+"; color: colors.$primary; }
+.item[open] > summary::after { content: "−"; }
+.form textarea:focus-visible { outline: 2px solid colors.$primary; outline-offset: 2px; }

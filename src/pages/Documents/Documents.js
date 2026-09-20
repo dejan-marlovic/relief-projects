@@ -14,6 +14,7 @@ import { readApiError } from "../../utils/apiErrors";
 import useDocumentCategories from "../../hooks/useDocumentCategories";
 import { documentMetadataChanges, uploaderLabel, uploadTimeLabel, readDocumentError } from "../../utils/documentMetadata";
 import DocumentStatus, { statusLabel } from "../../components/DocumentStatus/DocumentStatus";
+import ProjectDocumentChecklist from "../../components/ProjectDocumentChecklist/ProjectDocumentChecklist";
 import DocumentVersions from "../../components/DocumentVersions/DocumentVersions";
 
 // ✅ Keep this in sync with backend:
@@ -430,6 +431,7 @@ const Documents = () => {
         {selectedProjectId && (
           <>
             {categoryError && <div role="alert" className={styles.errorBanner}>{categoryError} <button type="button" onClick={retryCategories}>Retry categories</button></div>}
+            <ProjectDocumentChecklist key={selectedProjectId} projectId={selectedProjectId} authFetch={authFetch} categories={categories} refreshKey={listRevision} />
             {/* Error banner */}
             {anyError && (
               <ErrorBanner
