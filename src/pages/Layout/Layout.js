@@ -124,6 +124,7 @@ const Layout = () => {
     ["/recipients", "Recipients"],
     ["/organizations", "Organizations"],
     ["/documents", "Documents"],
+    ["/follow-ups", "Follow-ups"],
     ["/statistics", "Statistics"],
     ["/register-project", "New Project"],
     ["/operational-guide", "Guide"],
