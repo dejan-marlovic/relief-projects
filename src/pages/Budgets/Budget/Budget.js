@@ -1747,8 +1747,8 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
       )}
 
       {canEditBudget && <div className={styles.bottomActions}>
-        <button type="button" className={styles.saveButton} disabled={loading || childEditing || submitting || Boolean(reviewAction)} onClick={() => setCurrencyOpen(true)}>Change budget currency</button>
         {hasRole("ADMIN") && <label><input type="checkbox" checked={normalizeMissingInputs} disabled={loading} onChange={(event) => setNormalizeMissingInputs(event.target.checked)} /> Fill missing calculation inputs (units 1, periods 1, price 0, allocation 100%)</label>}
+        <button type="button" className={styles.saveButton} disabled={loading || childEditing || submitting || Boolean(reviewAction)} onClick={() => setCurrencyOpen(true)}>Change budget currency</button>
         <button type="button" className={styles.saveButton} onClick={handleRecalculate} disabled={loading || childEditing || hasUnsavedChanges} title="Save or cancel edits first. Uses persisted inputs and current selected rates.">Recalculate saved costs</button>
         {recalculationMessage && <p role="status">{recalculationMessage}</p>}
       </div>}
