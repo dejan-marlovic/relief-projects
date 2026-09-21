@@ -1,4 +1,5 @@
 import BudgetPlanning from "../../../components/BudgetPlanning/BudgetPlanning";
+import BudgetCurrencyDialog from "../../../components/BudgetCurrencyDialog/BudgetCurrencyDialog";
 import { budgetLimitError } from "../../../utils/budgetLimit";
 import { normalizeBudgetName, budgetNameError } from "../../../utils/budgetDisplay";
 import { addDecimals, excelDecimal } from "../../../utils/budgetCalculations";
@@ -49,6 +50,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
   const [submitting, setSubmitting] = useState(false);
   const [reviewAction, setReviewAction] = useState("");
   const [returnOpen, setReturnOpen] = useState(false);
+  const [currencyOpen, setCurrencyOpen] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [exportingBudget, setExportingBudget] = useState(false);
 
@@ -1107,10 +1109,10 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
   };
 
   // 💾 Save/Update Budget
-  const handleSave = async () => {
+  const handleSave = async (currencyMode) => {
     if (!canEditBudget) return;
     const currencyChanged = String(savedBudget.localCurrencyId) !== String(budget.localCurrencyId);
-    if (currencyChanged && !window.confirm("Confirm that the entered budget limit is in the newly selected local currency. No automatic currency conversion is performed.")) return;
+    if (currencyChanged && currencyMode !== "KEEP_VALUES") { setCurrencyOpen(true); return; }
     try {
       setLoading(true);
       const token = localStorage.getItem("authToken");
@@ -1745,11 +1747,22 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
       )}
 
       {canEditBudget && <div className={styles.bottomActions}>
+        <button type="button" className={styles.saveButton} disabled={loading || childEditing || submitting || Boolean(reviewAction)} onClick={() => setCurrencyOpen(true)}>Change budget currency</button>
         {hasRole("ADMIN") && <label><input type="checkbox" checked={normalizeMissingInputs} disabled={loading} onChange={(event) => setNormalizeMissingInputs(event.target.checked)} /> Fill missing calculation inputs (units 1, periods 1, price 0, allocation 100%)</label>}
         <button type="button" className={styles.saveButton} onClick={handleRecalculate} disabled={loading || childEditing || hasUnsavedChanges} title="Save or cancel edits first. Uses persisted inputs and current selected rates.">Recalculate saved costs</button>
         {recalculationMessage && <p role="status">{recalculationMessage}</p>}
       </div>}
       {hasUnsavedChanges && <button type="button" className={styles.saveButton} disabled={loading || submitting || Boolean(reviewAction)} onClick={() => { setBudget(savedBudget); setHasUnsavedChanges(false); setFieldErrors({}); setFormError(""); }}>Discard header edits</button>}
+      {currencyOpen && canEditBudget && <BudgetCurrencyDialog key={`currency-${savedBudget.id}`} budget={savedBudget} currencies={currencies} rates={exchangeRates}
+        initialTargetId={budget.localCurrencyId} dirty={hasUnsavedChanges}
+        keepReady={String(savedBudget.localCurrencyId) !== String(budget.localCurrencyId)}
+        onDiscard={() => { setBudget(savedBudget); setHasUnsavedChanges(false); setFieldErrors({}); setFormError(""); }}
+        onKeep={() => { setCurrencyOpen(false); handleSave("KEEP_VALUES"); }} onClose={() => setCurrencyOpen(false)}
+        onUpdated={(updated) => {
+          setBudget(updated); setSavedBudget(updated); setHasUnsavedChanges(false); setFieldErrors({}); setFormError("");
+          setHistoryRefreshKey((value) => value + 1); triggerRefreshCostDetails(); onUpdate?.(updated);
+          fetchExchangeRates(localStorage.getItem("authToken")).then((fresh) => setExchangeRates(Array.isArray(fresh) ? fresh : [])).catch(() => setExchangeRates([]));
+        }} />}
       <BudgetPlanning key={`planning-${savedBudget.id}`} budget={savedBudget} refreshKey={historyRefreshKey} disabled={hasUnsavedChanges || childEditing || loading || submitting || Boolean(reviewAction)} onUpdated={(updated) => { setBudget(updated); setSavedBudget(updated); setHasUnsavedChanges(false); setHistoryRefreshKey((value) => value + 1); onUpdate?.(updated); }} />
       <RecordHistory entityType="BUDGET" entityId={budget.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} />
       <FinancialDocuments entityType="BUDGET" entityId={savedBudget.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} editingLocked={hasUnsavedChanges || loading || submitting || Boolean(reviewAction)} />

@@ -1,4 +1,5 @@
 import React from "react";
+import CurrencyChangeContext from "./CurrencyChangeContext";
 import styles from "./AuditFieldChanges.module.scss";
 const labels = {
   signatureStatusId: "Signature status", employeeId: "Named signer", signatureDate: "Signature date", signature: "Signature content",
@@ -36,8 +37,8 @@ export default function AuditFieldChanges({ event }) {
   if (event.action !== "UPDATE" && !(event.entityType === "COST_DETAIL_ALLOCATION" && event.action === "RESTORE")) return null;
   if (event.fieldChangesVersion != null && event.fieldChangesVersion !== 1) return <p>Field changes use an unsupported format (version {String(event.fieldChangesVersion)}).</p>;
   const changes = Array.isArray(event.fieldChanges) ? event.fieldChanges.filter((change) => change && typeof change === "object") : [];
-  if (!changes.length) return <p>No field changes recorded.</p>;
-  return <dl className={styles.changes} aria-label="Updated fields">
+  if (!changes.length) return <><CurrencyChangeContext context={event.budgetCurrencyChangeContext} /><p>No field changes recorded.</p></>;
+  return <><CurrencyChangeContext context={event.budgetCurrencyChangeContext} /><dl className={styles.changes} aria-label="Updated fields">
     {changes.map((change, index) => <div className={styles.change} key={`${change.field}-${index}`}>
       <dt>{["PAYMENT_ORDER_LINE", "COST_DETAIL_ALLOCATION"].includes(event.entityType) && change.field === "transactionId" ? "Transaction" : labels[change.field] || change.field || "Unknown field"}</dt>
       {change.type === "REDACTED" || (event.entityType === "SIGNATURE" && change.field === "signature") ?
@@ -46,5 +47,5 @@ export default function AuditFieldChanges({ event }) {
       <dd><span className={styles.label}>After</span><span className={styles.value}>{formatFieldValue(change.newValue, change.type)}</span></dd>
       </>}
     </div>)}
-  </dl>;
+  </dl></>;
 }

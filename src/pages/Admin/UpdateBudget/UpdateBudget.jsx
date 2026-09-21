@@ -1,4 +1,5 @@
 import BudgetPlanning from "../../../components/BudgetPlanning/BudgetPlanning";
+import BudgetCurrencyDialog from "../../../components/BudgetCurrencyDialog/BudgetCurrencyDialog";
 import { budgetLimitError } from "../../../utils/budgetLimit";
 import { budgetOptionLabel } from "../../../utils/budgetDisplay";
 import { normalizeBudgetName, budgetNameError } from "../../../utils/budgetDisplay";
@@ -78,6 +79,8 @@ const UpdateBudget = () => {
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [currencyOpen, setCurrencyOpen] = useState(false);
+  const [planningRefresh, setPlanningRefresh] = useState(0);
 
   const [formError, setFormError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -285,12 +288,14 @@ const UpdateBudget = () => {
     setSuccessMessage("");
   };
 
-  const handleUpdate = async () => {
+  const handleUpdate = async (currencyMode) => {
     try {
       setFormError("");
       setSuccessMessage("");
       setFieldErrors({});
 
+      const currencyChanged = selectedBudget && String(selectedBudget.localCurrencyId) !== String(form.localCurrencyId);
+      if (currencyChanged && currencyMode !== "KEEP_VALUES") { setCurrencyOpen(true); return; }
       const errors = validate(form);
       if (Object.keys(errors).length) {
         setFieldErrors(errors);
@@ -298,8 +303,6 @@ const UpdateBudget = () => {
         return;
       }
 
-      const currencyChanged = String(selectedBudget.localCurrencyId) !== String(form.localCurrencyId);
-      if (currencyChanged && !window.confirm("Confirm that the entered budget limit is in the newly selected local currency. No automatic conversion is performed.")) return;
       setSaving(true);
 
       const payload = {
@@ -355,7 +358,7 @@ const UpdateBudget = () => {
           item.id === Number(form.selectedId)
             ? {
                 ...item,
-                ...payload,
+                ...data,
                 id: item.id,
               }
             : item,
@@ -363,6 +366,7 @@ const UpdateBudget = () => {
       );
 
       setSuccessMessage("Budget updated successfully.");
+      setPlanningRefresh((value) => value + 1);
     } catch (err) {
       console.error("Update budget error:", err);
       setFormError(err?.message || "Unexpected error while updating budget.");
@@ -383,7 +387,19 @@ const UpdateBudget = () => {
           </div>
         </div>
 
-        {selectedBudget && <BudgetPlanning key={selectedBudget.id} budget={selectedBudget} disabled={saving} onUpdated={(updated) => { setBudgets((rows) => rows.map((row) => row.id === updated.id ? updated : row)); setForm((old) => ({ ...old, totalAmount: updated.totalAmount })); }} />}
+        {selectedBudget && <BudgetPlanning key={selectedBudget.id} budget={selectedBudget} refreshKey={planningRefresh} disabled={saving} onUpdated={(updated) => { setBudgets((rows) => rows.map((row) => row.id === updated.id ? updated : row)); setForm((old) => ({ ...old, totalAmount: updated.totalAmount })); }} />}
+        {selectedBudget && ["DRAFT", "RETURNED"].includes(selectedBudget.lifecycleStatus || "DRAFT") && <button type="button" className={styles.secondaryButton} disabled={saving || loading} onClick={() => setCurrencyOpen(true)}>Change budget currency</button>}
+        {currencyOpen && selectedBudget && <BudgetCurrencyDialog key={`currency-${selectedBudget.id}`} budget={selectedBudget} currencies={currencies} rates={exchangeRates}
+          initialTargetId={form.localCurrencyId}
+          dirty={Object.keys(initialForm).some((key) => key !== "selectedId" && String(form[key] ?? "") !== String(key === "budgetPreparationDate" ? toInputDateTime(selectedBudget[key]) : selectedBudget[key] ?? ""))}
+          keepReady={String(selectedBudget.localCurrencyId) !== String(form.localCurrencyId)}
+          onDiscard={resetForm} onKeep={() => { setCurrencyOpen(false); handleUpdate("KEEP_VALUES"); }} onClose={() => setCurrencyOpen(false)}
+          onUpdated={(updated) => {
+            setBudgets((rows) => rows.map((row) => row.id === updated.id ? updated : row));
+            setForm(Object.fromEntries(Object.keys(initialForm).map((key) => [key, key === "selectedId" ? String(updated.id) : key === "budgetPreparationDate" ? toInputDateTime(updated[key]) : String(updated[key] ?? "")])));
+            setPlanningRefresh((value) => value + 1); setFieldErrors({}); setFormError("");
+            authFetch(`${BASE_URL}/api/exchange-rates/active`).then(safeReadJson).then((fresh) => setExchangeRates(Array.isArray(fresh) ? fresh : [])).catch(() => setExchangeRates([]));
+          }} />}
         {formError && (
           <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
