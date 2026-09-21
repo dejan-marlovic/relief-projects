@@ -40,3 +40,11 @@ test("an active compact edit blocks other lifecycle and mutation actions", () =>
   expect(screen.getByRole("button", { name: /Submit transaction/ })).toBeDisabled();
   expect(screen.getByRole("button", { name: "Show allocations" })).toBeDisabled();
 });
+test("funding edits preserve exact input strings and show observed currency", () => {
+  const onChange = jest.fn();
+  render(<Transaction {...props} onChange={onChange} compact isEditing tx={{ ...props.tx, fundingCurrency: { source: "CURRENT_BUDGET_CONFIGURATION", availability: "AVAILABLE", currency: { id: 3, name: "SEK" } } }} />);
+  fireEvent.change(screen.getByLabelText("Requested funding"), { target: { value: "9999999999999999999.999" } });
+  expect(onChange).toHaveBeenCalledWith("appliedForAmount", "9999999999999999999.999");
+  expect(screen.getByLabelText("Requested funding")).toHaveAttribute("step", "any");
+  expect(screen.getByText("SEK")).toBeInTheDocument();
+});

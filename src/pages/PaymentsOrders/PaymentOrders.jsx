@@ -154,6 +154,7 @@ function PaymentOrders() {
   const [orders, setOrders] = useState([]);
   const [historyRefreshKeys, setHistoryRefreshKeys] = useState({});
   const compact = useMediaQuery("(max-width: 1100px)");
+  const FilterContainer = compact ? "details" : React.Fragment;
   const [saving, setSaving] = useState(false);
   const saveInProgress = useRef(false);
   const [editingId, setEditingId] = useState(null);
@@ -1373,8 +1374,8 @@ function PaymentOrders() {
         )}
 
         <div className={styles.table} style={{ "--po-grid-cols": gridCols }}>
-          <details className={styles.filterDisclosure} open={compact ? undefined : true}>
-          <summary>Sort, filter &amp; select</summary>
+          <FilterContainer {...(compact ? { className: styles.filterDisclosure } : {})}>
+          {compact && <summary>Sort, filter &amp; select</summary>}
           <fieldset aria-label="Payment order controls" disabled={compact && (editingId !== null || saving)} className={`${styles.gridRow} ${styles.headerRow}`}>
             {headerLabels.map((h, i) => (
               <div
@@ -1402,7 +1403,7 @@ function PaymentOrders() {
               </div>
             ))}
           </fieldset>
-          </details>
+          </FilterContainer>
 
           {!selectedProjectId ? (
             <p className={styles.noData}>

@@ -1,8 +1,10 @@
+import { fundingCurrencyLabel } from "../../../utils/transactionFunding";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiRotateCcw,
-  FiRefreshCw,  FiFileText,
+  FiRefreshCw,
+  FiFileText,
 } from "react-icons/fi";
 
 import styles from "./RestorePaymentOrder.module.scss";
@@ -119,7 +121,7 @@ const RestorePaymentOrder = () => {
     const status = getTransactionStatusLabel(transaction.transactionStatusId);
     const approvedAmount = getAmountLabel(transaction.approvedAmount);
 
-    return `${project} | ${organization} | ${status} | approved: ${approvedAmount}`;
+    return `${project} | ${organization} | ${status} | approved funding: ${approvedAmount} | ${fundingCurrencyLabel(transaction.fundingCurrency)} (current budget configuration)`;
   };
 
   const getPaymentOrderLabel = (paymentOrder) => {

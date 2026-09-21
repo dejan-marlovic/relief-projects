@@ -1,3 +1,4 @@
+import { fundingCurrencyLabel } from "../../../utils/transactionFunding";
 import { budgetOptionLabel } from "../../../utils/budgetDisplay";
 import React from "react";
 import styles from "./Transaction.module.scss";
@@ -82,7 +83,7 @@ const Transaction = ({
     onSave();
   };
 
-  const fieldLabels = { organizationId: "Organization", financierOrganizationId: "Financier", transactionStatusId: "Status", budgetId: "Budget", appliedForAmount: "Applied amount", firstShareAmount: "First share", approvedAmount: "Approved amount", secondShareAmount: "Second share", ownContribution: "Own contribution", okStatus: "OK status", datePlanned: "Date planned" };
+  const fieldLabels = { organizationId: "Organization", financierOrganizationId: "Financier", transactionStatusId: "Status", budgetId: "Budget", appliedForAmount: "Requested funding", firstShareAmount: "First share (legacy)", approvedAmount: "Approved funding", secondShareAmount: "Second share (legacy)", ownContribution: "Own contribution", okStatus: "OK status", datePlanned: "Date planned" };
   const toNum = (v) => (v === "" ? "" : Number(v));
 
   const getFieldError = (name) => fieldErrors?.[name];
@@ -103,7 +104,7 @@ const Transaction = ({
         step={step}
         aria-label={fieldLabels[field]}
         value={ev[field] ?? tx[field] ?? ""}
-        onChange={(e) => onChange(field, toNum(e.target.value))}
+        onChange={(e) => onChange(field, e.target.value)}
         onBlur={autoSave ? submit : undefined}
         className={inputClass(field)}
       />
@@ -440,28 +441,28 @@ const Transaction = ({
         </Cell>
 
         <Cell className={hc(7)}>
-          {compact && <span className={styles.fieldLabel}>Applied amount</span>}
+          {compact && <span className={styles.fieldLabel}>Requested funding</span>}
           {isEditing
-            ? inputNum("appliedForAmount", "1")
+            ? inputNum("appliedForAmount", "any")
             : (tx.appliedForAmount ?? "-")}
         </Cell>
 
         <Cell className={hc(8)}>
-          {compact && <span className={styles.fieldLabel}>First share</span>}
+          {compact && <span className={styles.fieldLabel}>First share (legacy)</span>}
           {isEditing
             ? inputNum("firstShareAmount", "0.01")
             : (tx.firstShareAmount ?? "-")}
         </Cell>
 
         <Cell className={hc(9)}>
-          {compact && <span className={styles.fieldLabel}>Approved amount</span>}
+          {compact && <span className={styles.fieldLabel}>Approved funding</span>}
           {isEditing
-            ? inputNum("approvedAmount", "1")
+            ? inputNum("approvedAmount", "any")
             : (tx.approvedAmount ?? "-")}
         </Cell>
 
         <Cell className={hc(10)}>
-          {compact && <span className={styles.fieldLabel}>Second share</span>}
+          {compact && <span className={styles.fieldLabel}>Second share (legacy)</span>}
           {isEditing
             ? inputNum("secondShareAmount", "0.01")
             : (tx.secondShareAmount ?? "-")}
@@ -489,6 +490,7 @@ const Transaction = ({
         </Cell>
       </div>
 
+      <p className={styles.currencyNote}>Current budget currency: <strong>{isCreate ? "Follows selected budget" : fundingCurrencyLabel(tx.fundingCurrency)}</strong> · Current configuration, not verified historical denomination.</p>
       <RecordHistory entityType="TRANSACTION" entityId={tx.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} />
       <FinancialDocuments entityType="TRANSACTION" entityId={tx.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} editingLocked={isEditing} />
       {expanded && !isCreate && (
@@ -496,6 +498,7 @@ const Transaction = ({
           <TransactionAllocations
             onMutationSuccess={onAllocationMutationSuccess}
             txId={tx.id}
+            refreshKey={historyRefreshKey}
             costDetailOptions={costDetailOptions}
             budgetOptions={budgets}
             canManage={canManageAllocations}

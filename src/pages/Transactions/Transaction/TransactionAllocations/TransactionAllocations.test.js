@@ -40,3 +40,12 @@ test("editing preserves allocation identity and refreshes only after success", a
   expect(onMutationSuccess).toHaveBeenCalledTimes(1);
   log.mockRestore();
 });
+test("capacity retains a six-decimal shortfall and refreshes when header funding changes", async () => {
+  let approvedAmount = "90.000";
+  global.fetch = jest.fn(async (url) => ({ ok: true, json: async () => url.includes("cost-allocations") ? [{ id: 1, plannedAmount: "90.000001" }] : { approvedAmount, fundingCurrency: { source: "CURRENT_BUDGET_CONFIGURATION", availability: "AVAILABLE", currency: { id: 3, name: "SEK" } } } }));
+  const { rerender } = render(<TransactionAllocations txId={42} refreshKey={0} />);
+  expect(await screen.findByText(/Remaining for allocation: -0.000001 SEK/)).toBeInTheDocument();
+  approvedAmount = "90.001";
+  rerender(<TransactionAllocations txId={42} refreshKey={1} />);
+  expect(await screen.findByText(/Remaining for allocation: 0.000999 SEK/)).toBeInTheDocument();
+});

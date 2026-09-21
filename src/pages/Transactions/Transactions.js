@@ -1,3 +1,4 @@
+import { decimalUnits, fundingErrors, fundingCurrencyLabel, matchesDecimalRange, sumAmounts, remainingFunding, fundingExcel } from "../../utils/transactionFunding";
 import { budgetOptionLabel } from "../../utils/budgetDisplay";
 import useMediaQuery from "../../hooks/useMediaQuery";
 import React, {
@@ -90,10 +91,10 @@ const headerLabels = [
   "Budget",
   "Financier",
   "Status",
-  "Applied Amt",
-  "1st Share",
-  "Approved Amt",
-  "2nd Share",
+  "Requested funding",
+  "1st share (legacy)",
+  "Approved funding",
+  "2nd share (legacy)",
   "Own Contrib",
   "Date Planned",
   "OK Status",
@@ -125,20 +126,14 @@ const BASE_COL_WIDTHS = [
   260, // Budget
   180, // Financier
   160, // Status
-  120, // Applied Amt
-  120, // 1st Share
-  140, // Approved Amt
-  120, // 2nd Share
+  120, // Requested funding
+  120, // 1st share (legacy)
+  140, // Approved funding
+  120, // 2nd share (legacy)
   110, // Own Contrib
   170, // Date Planned
   100, // OK Status
 ];
-
-const toSortableNumber = (value) => {
-  if (value == null || value === "") return null;
-  const number = Number(value);
-  return Number.isFinite(number) ? number : null;
-};
 
 const toSortableDate = (value) => {
   if (!value) return null;
@@ -157,6 +152,7 @@ const Transactions = ({ refreshTrigger }) => {
   const [transactions, setTransactions] = useState([]);
   const [selectedTxIds, setSelectedTxIds] = useState(() => new Set());
   const compact = useMediaQuery("(max-width: 1100px)");
+  const FilterContainer = compact ? "details" : React.Fragment;
   const [saving, setSaving] = useState(false);
   const saveInProgress = useRef(false);
   const [editingId, setEditingId] = useState(null);
@@ -436,6 +432,8 @@ const Transactions = ({ refreshTrigger }) => {
     const values = editedValues[id];
     if (!values) return;
 
+    const errors = fundingErrors(values);
+    if (Object.keys(errors).length) { setFieldErrors((prev) => ({ ...prev, [id]: errors })); setFormError("Please correct the funding amounts."); return; }
     saveInProgress.current = true;
     setSaving(true);
     const isCreate = id === "new";
@@ -458,19 +456,11 @@ const Transactions = ({ refreshTrigger }) => {
       transactionStatusId: values.transactionStatusId
         ? Number(values.transactionStatusId)
         : null,
-      appliedForAmount: values.appliedForAmount
-        ? Number(values.appliedForAmount)
-        : null,
-      firstShareAmount: values.firstShareAmount
-        ? Number(values.firstShareAmount)
-        : null,
-      approvedAmount: values.approvedAmount
-        ? Number(values.approvedAmount)
-        : null,
+      appliedForAmount: values.appliedForAmount == null || values.appliedForAmount === "" ? null : String(values.appliedForAmount),
+      firstShareAmount: values.firstShareAmount == null || values.firstShareAmount === "" ? null : String(values.firstShareAmount),
+      approvedAmount: values.approvedAmount == null || values.approvedAmount === "" ? null : String(values.approvedAmount),
       ownContribution: values.ownContribution || null,
-      secondShareAmount: values.secondShareAmount
-        ? Number(values.secondShareAmount)
-        : null,
+      secondShareAmount: values.secondShareAmount == null || values.secondShareAmount === "" ? null : String(values.secondShareAmount),
       datePlanned: values.datePlanned || null,
       okStatus: values.okStatus || null,
     };
@@ -729,10 +719,10 @@ const Transactions = ({ refreshTrigger }) => {
       matchesText(budgetLabelsById.get(String(tx.budgetId)), filters.budget) &&
       matchesText(organizationNamesById.get(String(tx.financierOrganizationId)), filters.financier) &&
       matchesSelect(tx.transactionStatusId, filters.status) &&
-      matchesNumberRange(tx.appliedForAmount, filters.appliedForAmount) &&
-      matchesNumberRange(tx.firstShareAmount, filters.firstShareAmount) &&
-      matchesNumberRange(tx.approvedAmount, filters.approvedAmount) &&
-      matchesNumberRange(tx.secondShareAmount, filters.secondShareAmount) &&
+      matchesDecimalRange(tx.appliedForAmount, filters.appliedForAmount) &&
+      matchesDecimalRange(tx.firstShareAmount, filters.firstShareAmount) &&
+      matchesDecimalRange(tx.approvedAmount, filters.approvedAmount) &&
+      matchesDecimalRange(tx.secondShareAmount, filters.secondShareAmount) &&
       matchesSelect(tx.ownContribution, filters.ownContribution) &&
       matchesDateRange(tx.datePlanned, filters.datePlanned) &&
       matchesSelect(tx.okStatus, filters.okStatus)
@@ -775,10 +765,10 @@ const Transactions = ({ refreshTrigger }) => {
         if (statusId == null || statusId === "") return null;
         return statusNamesById.get(String(statusId)) || `Status ${statusId}`;
       },
-      appliedForAmount: (tx) => toSortableNumber(tx?.appliedForAmount),
-      firstShareAmount: (tx) => toSortableNumber(tx?.firstShareAmount),
-      approvedAmount: (tx) => toSortableNumber(tx?.approvedAmount),
-      secondShareAmount: (tx) => toSortableNumber(tx?.secondShareAmount),
+      appliedForAmount: (tx) => decimalUnits(tx?.appliedForAmount),
+      firstShareAmount: (tx) => decimalUnits(tx?.firstShareAmount),
+      approvedAmount: (tx) => decimalUnits(tx?.approvedAmount),
+      secondShareAmount: (tx) => decimalUnits(tx?.secondShareAmount),
       ownContribution: (tx) => tx?.ownContribution || null,
       datePlanned: (tx) => toSortableDate(tx?.datePlanned),
       okStatus: (tx) => tx?.okStatus || null,
@@ -960,13 +950,6 @@ const Transactions = ({ refreshTrigger }) => {
       .trim();
   };
 
-  const toExcelNumber = (value) => {
-    if (value == null || value === "") return 0;
-
-    const numericValue = Number(value);
-    return Number.isFinite(numericValue) ? numericValue : 0;
-  };
-
   const formatExcelDate = (value) => {
     if (!value) return "Not specified";
 
@@ -1113,29 +1096,6 @@ const Transactions = ({ refreshTrigger }) => {
           fgColor: { argb: excelColors.lightGray },
         };
       }
-    });
-  };
-
-  const styleExcelTotalRow = (row) => {
-    row.eachCell((cell) => {
-      cell.font = {
-        bold: true,
-        color: { argb: excelColors.text },
-      };
-
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: excelColors.paleGreen },
-      };
-
-      cell.alignment = {
-        vertical: "middle",
-        horizontal: "left",
-        wrapText: true,
-      };
-
-      applyExcelBorder(cell);
     });
   };
 
@@ -1346,10 +1306,10 @@ const Transactions = ({ refreshTrigger }) => {
         "Budget",
         "Financier",
         "Status",
-        "Applied Amount",
-        "First Share",
-        "Approved Amount",
-        "Second Share",
+        "Requested funding",
+        "First share (legacy)",
+        "Approved funding",
+        "Second share (legacy)",
         "Own Contribution",
         "Date Planned",
         "OK Status",
@@ -1357,26 +1317,18 @@ const Transactions = ({ refreshTrigger }) => {
 
       styleExcelTableHeader(headerRow);
 
-      const totals = {
-        applied: 0,
-        firstShare: 0,
-        approved: 0,
-        secondShare: 0,
-        allocated: 0,
-      };
-
       sortedTransactions.forEach((transaction, index) => {
         const transactionRow = worksheet.addRow({
           transactionId: transaction.id,
           organization: getOrganizationName(transaction.organizationId),
           project: getProjectName(transaction.projectId),
-          budget: getBudgetLabel(transaction.budgetId),
+          budget: `${getBudgetLabel(transaction.budgetId)} | Current currency: ${fundingCurrencyLabel(transaction.fundingCurrency)}`,
           financier: getOrganizationName(transaction.financierOrganizationId),
           status: getTransactionStatusName(transaction.transactionStatusId),
-          applied: toExcelNumber(transaction.appliedForAmount),
-          firstShare: toExcelNumber(transaction.firstShareAmount),
-          approved: toExcelNumber(transaction.approvedAmount),
-          secondShare: toExcelNumber(transaction.secondShareAmount),
+          applied: fundingExcel(transaction.appliedForAmount),
+          firstShare: fundingExcel(transaction.firstShareAmount),
+          approved: fundingExcel(transaction.approvedAmount),
+          secondShare: fundingExcel(transaction.secondShareAmount),
           ownContribution: transaction.ownContribution || "Not specified",
           datePlanned: formatExcelDate(transaction.datePlanned),
           okStatus: transaction.okStatus || "Not specified",
@@ -1396,13 +1348,9 @@ const Transactions = ({ refreshTrigger }) => {
         });
 
         for (let column = 7; column <= 10; column += 1) {
-          transactionRow.getCell(column).numFmt = "#,##0.00";
+          transactionRow.getCell(column).numFmt = column === 7 || column === 9 ? "#,##0.000" : "#,##0.00";
         }
 
-        totals.applied += toExcelNumber(transaction.appliedForAmount);
-        totals.firstShare += toExcelNumber(transaction.firstShareAmount);
-        totals.approved += toExcelNumber(transaction.approvedAmount);
-        totals.secondShare += toExcelNumber(transaction.secondShareAmount);
 
         const allocations =
           allocationsByTransactionId.get(transaction.id) || [];
@@ -1497,7 +1445,7 @@ const Transactions = ({ refreshTrigger }) => {
             applyExcelBorder(cell);
           }
         } else {
-          let transactionAllocatedTotal = 0;
+          const transactionAllocatedTotal = sumAmounts(allocations.map((row) => row.plannedAmount));
 
           allocations.forEach((allocation, allocationIndex) => {
             const allocationRow = worksheet.addRow([]);
@@ -1505,10 +1453,9 @@ const Transactions = ({ refreshTrigger }) => {
             allocationRow.outlineLevel = 1;
             allocationRow.hidden = true;
 
-            const plannedAmount = toExcelNumber(allocation.plannedAmount);
+            const plannedAmount = fundingExcel(allocation.plannedAmount);
 
-            transactionAllocatedTotal += plannedAmount;
-            totals.allocated += plannedAmount;
+
 
             allocationRow.getCell(1).value =
               allocation.id != null ? `A#${allocation.id}` : "↳";
@@ -1521,7 +1468,7 @@ const Transactions = ({ refreshTrigger }) => {
             allocationRow.getCell(9).value =
               sanitizeExcelText(allocation.note) || "Not specified";
 
-            allocationRow.getCell(7).numFmt = "#,##0.00";
+            allocationRow.getCell(7).numFmt = "#,##0.000000";
 
             for (let column = 1; column <= 13; column += 1) {
               const cell = allocationRow.getCell(column);
@@ -1553,18 +1500,11 @@ const Transactions = ({ refreshTrigger }) => {
           allocationTotalRow.getCell(2).value =
             `Allocated total for transaction ${transaction.id}`;
 
-          allocationTotalRow.getCell(7).value = Number(
-            transactionAllocatedTotal.toFixed(2),
-          );
+          allocationTotalRow.getCell(7).value = fundingExcel(transactionAllocatedTotal);
 
-          allocationTotalRow.getCell(7).numFmt = "#,##0.00";
+          allocationTotalRow.getCell(7).numFmt = "#,##0.000000";
 
-          allocationTotalRow.getCell(9).value = `Approved: ${toExcelNumber(
-            transaction.approvedAmount,
-          ).toFixed(2)} | Remaining: ${(
-            toExcelNumber(transaction.approvedAmount) -
-            transactionAllocatedTotal
-          ).toFixed(2)}`;
+          allocationTotalRow.getCell(9).value = `Approved funding: ${transaction.approvedAmount ?? "Unavailable"} | Remaining for allocation: ${remainingFunding(transaction.approvedAmount, transactionAllocatedTotal) ?? "Unavailable"} | ${fundingCurrencyLabel(transaction.fundingCurrency)}`;
 
           for (let column = 1; column <= 13; column += 1) {
             const cell = allocationTotalRow.getCell(column);
@@ -1588,68 +1528,10 @@ const Transactions = ({ refreshTrigger }) => {
         }
       });
 
-      const totalRow = worksheet.addRow({
-        transactionId: "TOTAL",
-        organization: "",
-        project: "",
-        budget: "",
-        financier: "",
-        status: "",
-        applied: Number(totals.applied.toFixed(2)),
-        firstShare: Number(totals.firstShare.toFixed(2)),
-        approved: Number(totals.approved.toFixed(2)),
-        secondShare: Number(totals.secondShare.toFixed(2)),
-        ownContribution: "",
-        datePlanned: "",
-        okStatus: "",
-      });
-
-      styleExcelTotalRow(totalRow);
-
-      for (let column = 7; column <= 10; column += 1) {
-        totalRow.getCell(column).numFmt = "#,##0.00";
-      }
-
-      /*
-       * Add the allocation grand total as a separate summary line so it does
-       * not overwrite any of the transaction amount columns.
-       */
-      const allocationGrandTotalRow = worksheet.addRow([]);
-
-      allocationGrandTotalRow.getCell(1).value =
-        "GRAND TOTAL — TRANSACTION ALLOCATIONS";
-
-      allocationGrandTotalRow.getCell(7).value = Number(
-        totals.allocated.toFixed(2),
-      );
-
-      allocationGrandTotalRow.getCell(7).numFmt = "#,##0.00";
-
-      allocationGrandTotalRow.getCell(9).value =
-        "Total planned amount across all exported allocation rows.";
-
-      for (let column = 1; column <= 13; column += 1) {
-        const cell = allocationGrandTotalRow.getCell(column);
-
-        cell.font = {
-          bold: true,
-          color: { argb: excelColors.text },
-        };
-
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: excelColors.paleGreen },
-        };
-
-        cell.alignment = {
-          vertical: "middle",
-          horizontal: "left",
-          wrapText: true,
-        };
-
-        applyExcelBorder(cell);
-      }
+      const totalsNote = worksheet.addRow(["Cross-transaction totals omitted: currencies may differ or be unavailable. Legacy shares have no agreed total meaning. Currency labels reflect current budget configuration, not verified historical denomination. Approval is not receipt or settlement."]);
+      worksheet.mergeCells(totalsNote.number, 1, totalsNote.number, 13);
+      totalsNote.height = 48;
+      totalsNote.getCell(1).alignment = { wrapText: true, vertical: "middle" };
 
       worksheet.autoFilter = {
         from: "A4",
@@ -1784,6 +1666,7 @@ const Transactions = ({ refreshTrigger }) => {
           </div>
         </div>
 
+        <details className={styles.fundingHelp}><summary>About funding amounts</summary><p>Requested and approved funding are separate; approval does not mean funds received. First and second shares are legacy values with unconfirmed meaning. Own contribution is a recorded flag, not an amount or percentage.</p></details>
         {formError && (
           <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
@@ -1793,8 +1676,8 @@ const Transactions = ({ refreshTrigger }) => {
           style={{ "--tx-grid-cols": gridCols }}
           ref={tableRef}
         >
-          <details className={styles.filterDisclosure} open={compact ? undefined : true}>
-          <summary>Sort, filter &amp; select</summary>
+          <FilterContainer {...(compact ? { className: styles.filterDisclosure } : {})}>
+          {compact && <summary>Sort, filter &amp; select</summary>}
           <fieldset aria-label="Transaction controls" disabled={compact && (editingId !== null || saving)} className={`${styles.gridRow} ${styles.headerRow}`}>
             {headerLabels.map((h, i) => (
               <div
@@ -1825,7 +1708,7 @@ const Transactions = ({ refreshTrigger }) => {
               </div>
             ))}
           </fieldset>
-          </details>
+          </FilterContainer>
 
           {canEditTransactions && editingId === "new" && (
             <Transaction

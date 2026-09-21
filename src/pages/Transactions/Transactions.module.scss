@@ -364,3 +364,5 @@ fieldset.headerRow { margin: 0; border: 0; min-inline-size: 0; }
   .headerRow { grid-template-columns: minmax(0, 1fr); }
   .headerActions > button { flex: 1 1 auto; }
 }
+
+.fundingHelp { margin: 0 0 0.8rem; color: colors.$text-muted; font-size: 0.85rem; line-height: 1.5; }

@@ -14,6 +14,9 @@ export const sortRows = (rows, getValue, direction = "asc") => {
       if (leftMissing && rightMissing) return left.index - right.index;
 
       const comparison =
+        typeof leftValue === "bigint" && typeof rightValue === "bigint"
+          ? leftValue < rightValue ? -1 : leftValue > rightValue ? 1 : 0
+          :
         typeof leftValue === "number" && typeof rightValue === "number"
           ? leftValue - rightValue
           : String(leftValue).localeCompare(String(rightValue), undefined, {

@@ -1,3 +1,4 @@
+import { fundingCurrencyLabel } from "../../../utils/transactionFunding";
 import { budgetOptionLabel } from "../../../utils/budgetDisplay";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -307,6 +308,7 @@ const RestoreTransaction = () => {
           </div>
         </div>
 
+        {selectedTransaction && <p className={styles.pageSubtitle}>Current budget currency: {fundingCurrencyLabel(selectedTransaction.fundingCurrency)}. This is not verified historical denomination.</p>}
         {formError && (
           <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
@@ -437,7 +439,7 @@ const RestoreTransaction = () => {
 
                     <div className={styles.detailRow}>
                       <span className={styles.detailLabel}>
-                        Applied for amount
+                        Requested funding
                       </span>
                       <span className={styles.detailValue}>
                         {getAmountLabel(selectedTransaction.appliedForAmount)}
@@ -446,7 +448,7 @@ const RestoreTransaction = () => {
 
                     <div className={styles.detailRow}>
                       <span className={styles.detailLabel}>
-                        First share amount
+                        First share (legacy)
                       </span>
                       <span className={styles.detailValue}>
                         {getAmountLabel(selectedTransaction.firstShareAmount)}
@@ -455,7 +457,7 @@ const RestoreTransaction = () => {
 
                     <div className={styles.detailRow}>
                       <span className={styles.detailLabel}>
-                        Approved amount
+                        Approved funding
                       </span>
                       <span className={styles.detailValue}>
                         {getAmountLabel(selectedTransaction.approvedAmount)}
@@ -473,7 +475,7 @@ const RestoreTransaction = () => {
 
                     <div className={styles.detailRow}>
                       <span className={styles.detailLabel}>
-                        Second share amount
+                        Second share (legacy)
                       </span>
                       <span className={styles.detailValue}>
                         {getAmountLabel(selectedTransaction.secondShareAmount)}
