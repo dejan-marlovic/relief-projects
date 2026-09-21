@@ -75,10 +75,8 @@ const blankTx = {
   financierOrganizationId: "",
   transactionStatusId: "",
   appliedForAmount: "",
-  firstShareAmount: "",
   approvedAmount: "",
   ownContribution: "",
-  secondShareAmount: "",
   datePlanned: "",
   okStatus: "",
 };
@@ -92,9 +90,7 @@ const headerLabels = [
   "Financier",
   "Status",
   "Requested funding",
-  "1st share (legacy)",
   "Approved funding",
-  "2nd share (legacy)",
   "Own Contrib",
   "Date Planned",
   "OK Status",
@@ -109,9 +105,7 @@ const HEADER_SORT_KEYS = [
   "financier",
   "status",
   "appliedForAmount",
-  "firstShareAmount",
   "approvedAmount",
-  "secondShareAmount",
   "ownContribution",
   "datePlanned",
   "okStatus",
@@ -126,10 +120,8 @@ const BASE_COL_WIDTHS = [
   260, // Budget
   180, // Financier
   160, // Status
-  120, // Requested funding
-  120, // 1st share (legacy)
-  140, // Approved funding
-  120, // 2nd share (legacy)
+  180, // Requested funding (including sort/filter controls)
+  180, // Approved funding (including sort/filter controls)
   110, // Own Contrib
   170, // Date Planned
   100, // OK Status
@@ -165,7 +157,7 @@ const Transactions = ({ refreshTrigger }) => {
   const [returnTarget, setReturnTarget] = useState(null);
   const [exportingSelected, setExportingSelected] = useState(false);
   const [sortConfig, setSortConfig] = useState(null);
-  const emptyFilters = () => ({ id:{min:"",max:""}, organization:"", project:"", budget:"", financier:"", status:"", appliedForAmount:{min:"",max:""}, firstShareAmount:{min:"",max:""}, approvedAmount:{min:"",max:""}, secondShareAmount:{min:"",max:""}, ownContribution:"", datePlanned:{from:"",to:""}, okStatus:"" });
+  const emptyFilters = () => ({ id:{min:"",max:""}, organization:"", project:"", budget:"", financier:"", status:"", appliedForAmount:{min:"",max:""}, approvedAmount:{min:"",max:""}, ownContribution:"", datePlanned:{from:"",to:""}, okStatus:"" });
   const [filters, setFilters] = useState(emptyFilters);
   const hasActiveFilters = JSON.stringify(filters) !== JSON.stringify(emptyFilters());
 
@@ -369,10 +361,8 @@ const Transactions = ({ refreshTrigger }) => {
         financierOrganizationId: tx.financierOrganizationId,
         transactionStatusId: tx.transactionStatusId,
         appliedForAmount: tx.appliedForAmount,
-        firstShareAmount: tx.firstShareAmount,
         approvedAmount: tx.approvedAmount,
         ownContribution: tx.ownContribution,
-        secondShareAmount: tx.secondShareAmount,
         datePlanned: tx.datePlanned,
         okStatus: tx.okStatus,
       },
@@ -457,10 +447,8 @@ const Transactions = ({ refreshTrigger }) => {
         ? Number(values.transactionStatusId)
         : null,
       appliedForAmount: values.appliedForAmount == null || values.appliedForAmount === "" ? null : String(values.appliedForAmount),
-      firstShareAmount: values.firstShareAmount == null || values.firstShareAmount === "" ? null : String(values.firstShareAmount),
       approvedAmount: values.approvedAmount == null || values.approvedAmount === "" ? null : String(values.approvedAmount),
       ownContribution: values.ownContribution || null,
-      secondShareAmount: values.secondShareAmount == null || values.secondShareAmount === "" ? null : String(values.secondShareAmount),
       datePlanned: values.datePlanned || null,
       okStatus: values.okStatus || null,
     };
@@ -720,9 +708,7 @@ const Transactions = ({ refreshTrigger }) => {
       matchesText(organizationNamesById.get(String(tx.financierOrganizationId)), filters.financier) &&
       matchesSelect(tx.transactionStatusId, filters.status) &&
       matchesDecimalRange(tx.appliedForAmount, filters.appliedForAmount) &&
-      matchesDecimalRange(tx.firstShareAmount, filters.firstShareAmount) &&
       matchesDecimalRange(tx.approvedAmount, filters.approvedAmount) &&
-      matchesDecimalRange(tx.secondShareAmount, filters.secondShareAmount) &&
       matchesSelect(tx.ownContribution, filters.ownContribution) &&
       matchesDateRange(tx.datePlanned, filters.datePlanned) &&
       matchesSelect(tx.okStatus, filters.okStatus)
@@ -766,9 +752,7 @@ const Transactions = ({ refreshTrigger }) => {
         return statusNamesById.get(String(statusId)) || `Status ${statusId}`;
       },
       appliedForAmount: (tx) => decimalUnits(tx?.appliedForAmount),
-      firstShareAmount: (tx) => decimalUnits(tx?.firstShareAmount),
       approvedAmount: (tx) => decimalUnits(tx?.approvedAmount),
-      secondShareAmount: (tx) => decimalUnits(tx?.secondShareAmount),
       ownContribution: (tx) => tx?.ownContribution || null,
       datePlanned: (tx) => toSortableDate(tx?.datePlanned),
       okStatus: (tx) => tx?.okStatus || null,
@@ -813,7 +797,7 @@ const Transactions = ({ refreshTrigger }) => {
       </button>
       <ColumnFilter
         label={label}
-        type={(["id","appliedForAmount","firstShareAmount","approvedAmount","secondShareAmount"].includes(key) ? "number" : key === "datePlanned" ? "date" : ["status","ownContribution","okStatus"].includes(key) ? "select" : "text")}
+        type={(["id","appliedForAmount","approvedAmount"].includes(key) ? "number" : key === "datePlanned" ? "date" : ["status","ownContribution","okStatus"].includes(key) ? "select" : "text")}
         value={filters[key]}
         options={key === "status" ? statusOptions.map((s) => ({value:s.id,label:s.transactionStatusName})) : ["ownContribution","okStatus"].includes(key) ? [{value:"Yes",label:"Yes"},{value:"No",label:"No"}] : []}
         onApply={(value) => setFilters((current) => ({...current,[key]:value}))}
@@ -1242,22 +1226,20 @@ const Transactions = ({ refreshTrigger }) => {
         { key: "financier", width: 28 },
         { key: "status", width: 22 },
         { key: "applied", width: 17 },
-        { key: "firstShare", width: 17 },
         { key: "approved", width: 17 },
-        { key: "secondShare", width: 17 },
         { key: "ownContribution", width: 17 },
         { key: "datePlanned", width: 22 },
         { key: "okStatus", width: 14 },
       ];
 
-      worksheet.mergeCells("A1:M1");
+      worksheet.mergeCells("A1:K1");
       worksheet.getCell("A1").value = "Selected Transactions Report";
       styleExcelTitle(worksheet.getCell("A1"));
       worksheet.getRow(1).height = 30;
 
       const selectedProjectName = getProjectName(selectedProjectId);
 
-      worksheet.mergeCells("A2:M2");
+      worksheet.mergeCells("A2:K2");
       worksheet.getCell("A2").value =
         `Project: ${selectedProjectName} | ` +
         `Selected transactions: ${sortedTransactions.length} | ` +
@@ -1273,7 +1255,7 @@ const Transactions = ({ refreshTrigger }) => {
         horizontal: "left",
       };
 
-      worksheet.mergeCells("A3:M3");
+      worksheet.mergeCells("A3:K3");
       worksheet.getCell("A3").value =
         "Only selected transactions are exported. Allocation groups open collapsed. " +
         "Use Excel's outline controls to expand or collapse them.";
@@ -1307,9 +1289,7 @@ const Transactions = ({ refreshTrigger }) => {
         "Financier",
         "Status",
         "Requested funding",
-        "First share (legacy)",
         "Approved funding",
-        "Second share (legacy)",
         "Own Contribution",
         "Date Planned",
         "OK Status",
@@ -1326,9 +1306,7 @@ const Transactions = ({ refreshTrigger }) => {
           financier: getOrganizationName(transaction.financierOrganizationId),
           status: getTransactionStatusName(transaction.transactionStatusId),
           applied: fundingExcel(transaction.appliedForAmount),
-          firstShare: fundingExcel(transaction.firstShareAmount),
           approved: fundingExcel(transaction.approvedAmount),
-          secondShare: fundingExcel(transaction.secondShareAmount),
           ownContribution: transaction.ownContribution || "Not specified",
           datePlanned: formatExcelDate(transaction.datePlanned),
           okStatus: transaction.okStatus || "Not specified",
@@ -1347,10 +1325,9 @@ const Transactions = ({ refreshTrigger }) => {
           };
         });
 
-        for (let column = 7; column <= 10; column += 1) {
-          transactionRow.getCell(column).numFmt = column === 7 || column === 9 ? "#,##0.000" : "#,##0.00";
+        for (let column = 7; column <= 8; column += 1) {
+          transactionRow.getCell(column).numFmt = "#,##0.000";
         }
-
 
         const allocations =
           allocationsByTransactionId.get(transaction.id) || [];
@@ -1389,7 +1366,7 @@ const Transactions = ({ refreshTrigger }) => {
         allocationHeaderRow.getCell(7).value = "Planned Amount";
         allocationHeaderRow.getCell(9).value = "Note";
 
-        for (let column = 1; column <= 13; column += 1) {
+        for (let column = 1; column <= 11; column += 1) {
           const cell = allocationHeaderRow.getCell(column);
 
           cell.font = {
@@ -1422,7 +1399,7 @@ const Transactions = ({ refreshTrigger }) => {
           emptyAllocationRow.getCell(2).value =
             "No allocations for this transaction.";
 
-          for (let column = 1; column <= 13; column += 1) {
+          for (let column = 1; column <= 11; column += 1) {
             const cell = emptyAllocationRow.getCell(column);
 
             cell.fill = {
@@ -1456,7 +1433,6 @@ const Transactions = ({ refreshTrigger }) => {
             const plannedAmount = fundingExcel(allocation.plannedAmount);
 
 
-
             allocationRow.getCell(1).value =
               allocation.id != null ? `A#${allocation.id}` : "↳";
 
@@ -1470,7 +1446,7 @@ const Transactions = ({ refreshTrigger }) => {
 
             allocationRow.getCell(7).numFmt = "#,##0.000000";
 
-            for (let column = 1; column <= 13; column += 1) {
+            for (let column = 1; column <= 11; column += 1) {
               const cell = allocationRow.getCell(column);
 
               cell.alignment = {
@@ -1506,7 +1482,7 @@ const Transactions = ({ refreshTrigger }) => {
 
           allocationTotalRow.getCell(9).value = `Approved funding: ${transaction.approvedAmount ?? "Unavailable"} | Remaining for allocation: ${remainingFunding(transaction.approvedAmount, transactionAllocatedTotal) ?? "Unavailable"} | ${fundingCurrencyLabel(transaction.fundingCurrency)}`;
 
-          for (let column = 1; column <= 13; column += 1) {
+          for (let column = 1; column <= 11; column += 1) {
             const cell = allocationTotalRow.getCell(column);
 
             cell.font = { bold: true };
@@ -1528,14 +1504,14 @@ const Transactions = ({ refreshTrigger }) => {
         }
       });
 
-      const totalsNote = worksheet.addRow(["Cross-transaction totals omitted: currencies may differ or be unavailable. Legacy shares have no agreed total meaning. Currency labels reflect current budget configuration, not verified historical denomination. Approval is not receipt or settlement."]);
-      worksheet.mergeCells(totalsNote.number, 1, totalsNote.number, 13);
+      const totalsNote = worksheet.addRow(["Cross-transaction totals omitted: currencies may differ or be unavailable. Currency labels reflect current budget configuration, not verified historical denomination. Approval is not receipt or settlement."]);
+      worksheet.mergeCells(totalsNote.number, 1, totalsNote.number, 11);
       totalsNote.height = 48;
       totalsNote.getCell(1).alignment = { wrapText: true, vertical: "middle" };
 
       worksheet.autoFilter = {
         from: "A4",
-        to: "M4",
+        to: "K4",
       };
 
       const buffer = await workbook.xlsx.writeBuffer();
@@ -1666,7 +1642,7 @@ const Transactions = ({ refreshTrigger }) => {
           </div>
         </div>
 
-        <details className={styles.fundingHelp}><summary>About funding amounts</summary><p>Requested and approved funding are separate; approval does not mean funds received. First and second shares are legacy values with unconfirmed meaning. Own contribution is a recorded flag, not an amount or percentage.</p></details>
+        <details className={styles.fundingHelp}><summary>About funding amounts</summary><p>Requested and approved funding are separate; approval does not mean funds received. Own contribution is a recorded flag, not an amount or percentage.</p></details>
         {formError && (
           <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}

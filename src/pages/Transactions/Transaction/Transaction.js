@@ -83,7 +83,7 @@ const Transaction = ({
     onSave();
   };
 
-  const fieldLabels = { organizationId: "Organization", financierOrganizationId: "Financier", transactionStatusId: "Status", budgetId: "Budget", appliedForAmount: "Requested funding", firstShareAmount: "First share (legacy)", approvedAmount: "Approved funding", secondShareAmount: "Second share (legacy)", ownContribution: "Own contribution", okStatus: "OK status", datePlanned: "Date planned" };
+  const fieldLabels = { organizationId: "Organization", financierOrganizationId: "Financier", transactionStatusId: "Status", budgetId: "Budget", appliedForAmount: "Requested funding", approvedAmount: "Approved funding", ownContribution: "Own contribution", okStatus: "OK status", datePlanned: "Date planned" };
   const toNum = (v) => (v === "" ? "" : Number(v));
 
   const getFieldError = (name) => fieldErrors?.[name];
@@ -447,35 +447,23 @@ const Transaction = ({
             : (tx.appliedForAmount ?? "-")}
         </Cell>
 
-        <Cell className={hc(8)}>
-          {compact && <span className={styles.fieldLabel}>First share (legacy)</span>}
-          {isEditing
-            ? inputNum("firstShareAmount", "0.01")
-            : (tx.firstShareAmount ?? "-")}
-        </Cell>
 
-        <Cell className={hc(9)}>
+        <Cell className={hc(8)}>
           {compact && <span className={styles.fieldLabel}>Approved funding</span>}
           {isEditing
             ? inputNum("approvedAmount", "any")
             : (tx.approvedAmount ?? "-")}
         </Cell>
 
-        <Cell className={hc(10)}>
-          {compact && <span className={styles.fieldLabel}>Second share (legacy)</span>}
-          {isEditing
-            ? inputNum("secondShareAmount", "0.01")
-            : (tx.secondShareAmount ?? "-")}
-        </Cell>
 
-        <Cell className={hc(11)}>
+        <Cell className={hc(9)}>
           {compact && <span className={styles.fieldLabel}>Own contribution</span>}
           {isEditing
             ? selectYesNo("ownContribution")
             : (tx.ownContribution ?? "-")}
         </Cell>
 
-        <Cell className={hc(12)}>
+        <Cell className={hc(10)}>
           {compact && <span className={styles.fieldLabel}>Date planned</span>}
           {isEditing
             ? inputDate
@@ -484,7 +472,7 @@ const Transaction = ({
               : "-"}
         </Cell>
 
-        <Cell className={hc(13)}>
+        <Cell className={hc(11)}>
           {compact && <span className={styles.fieldLabel}>OK status</span>}
           {isEditing ? selectYesNo("okStatus") : (tx.okStatus ?? "-")}
         </Cell>

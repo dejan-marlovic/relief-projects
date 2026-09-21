@@ -1,6 +1,6 @@
 /* global BigInt */
 import { addDecimals, excelDecimal } from "./budgetCalculations";
-export const fundingFields = ["appliedForAmount", "approvedAmount", "firstShareAmount", "secondShareAmount"];
+export const fundingFields = ["appliedForAmount", "approvedAmount"];
 export const decimalUnits = (value, scale = 6) => {
   const text = String(value ?? "").trim();
   if (!/^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(text)) return null;

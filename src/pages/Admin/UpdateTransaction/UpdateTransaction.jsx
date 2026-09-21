@@ -21,10 +21,8 @@ const initialForm = {
   financierOrganizationId: "",
   transactionStatusId: "",
   appliedForAmount: "",
-  firstShareAmount: "",
   approvedAmount: "",
   ownContribution: "",
-  secondShareAmount: "",
   datePlanned: "",
   okStatus: "",
 };
@@ -55,18 +53,14 @@ const validate = (values) => {
   if (values.appliedForAmount === "") {
     errors.appliedForAmount = "Requested funding is required.";
   }
-  if (values.firstShareAmount === "") {
-    errors.firstShareAmount = "First share (legacy) is required.";
-  }
+
   if (values.approvedAmount === "") {
     errors.approvedAmount = "Approved funding is required.";
   }
   if (!values.ownContribution) {
     errors.ownContribution = "Own contribution is required.";
   }
-  if (values.secondShareAmount === "") {
-    errors.secondShareAmount = "Second share (legacy) is required.";
-  }
+
   if (!values.datePlanned) {
     errors.datePlanned = "Date planned is required.";
   }
@@ -220,22 +214,14 @@ const UpdateTransaction = () => {
         selected?.appliedForAmount !== null
           ? String(selected.appliedForAmount)
           : "",
-      firstShareAmount:
-        selected?.firstShareAmount !== undefined &&
-        selected?.firstShareAmount !== null
-          ? String(selected.firstShareAmount)
-          : "",
+
       approvedAmount:
         selected?.approvedAmount !== undefined &&
         selected?.approvedAmount !== null
           ? String(selected.approvedAmount)
           : "",
       ownContribution: selected?.ownContribution || "",
-      secondShareAmount:
-        selected?.secondShareAmount !== undefined &&
-        selected?.secondShareAmount !== null
-          ? String(selected.secondShareAmount)
-          : "",
+
       datePlanned: toInputDateTime(selected?.datePlanned),
       okStatus: selected?.okStatus || "",
     });
@@ -287,22 +273,14 @@ const UpdateTransaction = () => {
         selectedTransaction.appliedForAmount !== null
           ? String(selectedTransaction.appliedForAmount)
           : "",
-      firstShareAmount:
-        selectedTransaction.firstShareAmount !== undefined &&
-        selectedTransaction.firstShareAmount !== null
-          ? String(selectedTransaction.firstShareAmount)
-          : "",
+
       approvedAmount:
         selectedTransaction.approvedAmount !== undefined &&
         selectedTransaction.approvedAmount !== null
           ? String(selectedTransaction.approvedAmount)
           : "",
       ownContribution: selectedTransaction.ownContribution || "",
-      secondShareAmount:
-        selectedTransaction.secondShareAmount !== undefined &&
-        selectedTransaction.secondShareAmount !== null
-          ? String(selectedTransaction.secondShareAmount)
-          : "",
+
       datePlanned: toInputDateTime(selectedTransaction.datePlanned),
       okStatus: selectedTransaction.okStatus || "",
     });
@@ -334,10 +312,8 @@ const UpdateTransaction = () => {
         financierOrganizationId: Number(form.financierOrganizationId),
         transactionStatusId: Number(form.transactionStatusId),
         appliedForAmount: String(form.appliedForAmount),
-        firstShareAmount: String(form.firstShareAmount),
         approvedAmount: String(form.approvedAmount),
         ownContribution: form.ownContribution,
-        secondShareAmount: String(form.secondShareAmount),
         datePlanned: form.datePlanned,
         okStatus: form.okStatus,
       };
@@ -373,7 +349,7 @@ const UpdateTransaction = () => {
         ),
       );
       setForm((previous) => ({ ...previous, ...Object.fromEntries(
-        ["appliedForAmount", "approvedAmount", "firstShareAmount", "secondShareAmount"].map((field) => [field, String(data?.[field] ?? "")]),
+        ["appliedForAmount", "approvedAmount"].map((field) => [field, String(data?.[field] ?? "")]),
       ) }));
 
       setSuccessMessage("Transaction updated successfully.");
@@ -400,7 +376,7 @@ const UpdateTransaction = () => {
         </div>
 
         {selectedTransaction && <p className={styles.pageSubtitle}>Saved funding — current budget currency: {fundingCurrencyLabel(selectedTransaction.fundingCurrency)}. This is current configuration, not verified historical denomination.</p>}
-        <p className={styles.pageSubtitle}>First and second shares are retained legacy values with unconfirmed meaning. Own contribution is a recorded Yes/No flag, not an amount or calculated share. Funding currency follows the selected budget.</p>
+        <p className={styles.pageSubtitle}>Own contribution is a recorded Yes/No flag, not an amount or calculated share. Funding currency follows the selected budget.</p>
         {formError && (
           <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
@@ -561,19 +537,6 @@ const UpdateTransaction = () => {
               <span id="funding-error-appliedForAmount" className={styles.fieldError}>{fieldErrors.appliedForAmount}</span>
                 </div>
 
-                <div className={styles.formGroup}>
-                  <label htmlFor="funding-firstShareAmount">First share (legacy)</label>
-                  <input
-                    className={inputClass("firstShareAmount")}
-                    type="number"
-                    step="0.01"
-                    id="funding-firstShareAmount" name="firstShareAmount" aria-invalid={Boolean(fieldErrors.firstShareAmount)} aria-describedby="funding-error-firstShareAmount"
-                    value={form.firstShareAmount}
-                    onChange={handleInputChange}
-                    disabled={!form.selectedId || saving}
-                  />
-              <span id="funding-error-firstShareAmount" className={styles.fieldError}>{fieldErrors.firstShareAmount}</span>
-                </div>
 
                 <div className={styles.formGroup}>
                   <label htmlFor="funding-approvedAmount">Approved funding</label>
@@ -603,19 +566,6 @@ const UpdateTransaction = () => {
                   </select>
                 </div>
 
-                <div className={styles.formGroup}>
-                  <label htmlFor="funding-secondShareAmount">Second share (legacy)</label>
-                  <input
-                    className={inputClass("secondShareAmount")}
-                    type="number"
-                    step="0.01"
-                    id="funding-secondShareAmount" name="secondShareAmount" aria-invalid={Boolean(fieldErrors.secondShareAmount)} aria-describedby="funding-error-secondShareAmount"
-                    value={form.secondShareAmount}
-                    onChange={handleInputChange}
-                    disabled={!form.selectedId || saving}
-                  />
-              <span id="funding-error-secondShareAmount" className={styles.fieldError}>{fieldErrors.secondShareAmount}</span>
-                </div>
 
                 <div className={styles.formGroup}>
                   <label>Date planned</label>

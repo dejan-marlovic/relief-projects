@@ -446,14 +446,6 @@ const RestoreTransaction = () => {
                       </span>
                     </div>
 
-                    <div className={styles.detailRow}>
-                      <span className={styles.detailLabel}>
-                        First share (legacy)
-                      </span>
-                      <span className={styles.detailValue}>
-                        {getAmountLabel(selectedTransaction.firstShareAmount)}
-                      </span>
-                    </div>
 
                     <div className={styles.detailRow}>
                       <span className={styles.detailLabel}>
@@ -473,14 +465,6 @@ const RestoreTransaction = () => {
                       </span>
                     </div>
 
-                    <div className={styles.detailRow}>
-                      <span className={styles.detailLabel}>
-                        Second share (legacy)
-                      </span>
-                      <span className={styles.detailValue}>
-                        {getAmountLabel(selectedTransaction.secondShareAmount)}
-                      </span>
-                    </div>
 
                     <div className={styles.detailRow}>
                       <span className={styles.detailLabel}>Date planned</span>

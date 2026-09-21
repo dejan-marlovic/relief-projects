@@ -845,9 +845,6 @@ const OperationalGuide = () => {
                 <li>“This financier is providing money for this project”</li>
                 <li>“This amount was applied for”</li>
                 <li>“This amount was approved”</li>
-                <li>
-                  “First and second shares are retained legacy values whose meaning is unconfirmed”
-                </li>
                 <li>“This is the planned date”</li>
                 <li>“This is the current transaction status”</li>
               </ul>
@@ -870,8 +867,6 @@ const OperationalGuide = () => {
               <ul>
                 <li>Requested funding (up to three decimal places)</li>
                 <li>Approved funding (up to three decimal places; not funds received)</li>
-                <li>First share — legacy value with unconfirmed meaning</li>
-                <li>Second share — legacy value with unconfirmed meaning</li>
                 <li>Own contribution (recorded Yes/No flag, not an amount or percentage)</li>
                 <li>Date planned</li>
                 <li>OK status (Yes/No)</li>

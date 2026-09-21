@@ -16,10 +16,8 @@ const initialForm = {
   financierOrganizationId: "",
   transactionStatusId: "",
   appliedForAmount: "",
-  firstShareAmount: "",
   approvedAmount: "",
   ownContribution: "No",
-  secondShareAmount: "",
   datePlanned: "",
   okStatus: "No",
 };
@@ -38,12 +36,10 @@ const validate = (values) => {
   }
   if (values.appliedForAmount === "")
     errors.appliedForAmount = "Requested funding is required.";
-  if (values.firstShareAmount === "")
-    errors.firstShareAmount = "First share (legacy) is required.";
+
   if (values.approvedAmount === "")
     errors.approvedAmount = "Approved funding is required.";
-  if (values.secondShareAmount === "")
-    errors.secondShareAmount = "Second share (legacy) is required.";
+
   if (!values.datePlanned) errors.datePlanned = "Date planned is required.";
   return errors;
 };
@@ -152,10 +148,8 @@ const CreateTransaction = () => {
         financierOrganizationId: Number(form.financierOrganizationId),
         transactionStatusId: Number(form.transactionStatusId),
         appliedForAmount: String(form.appliedForAmount),
-        firstShareAmount: String(form.firstShareAmount),
         approvedAmount: String(form.approvedAmount),
         ownContribution: form.ownContribution,
-        secondShareAmount: String(form.secondShareAmount),
         datePlanned: form.datePlanned,
         okStatus: form.okStatus,
       };
@@ -218,7 +212,7 @@ const CreateTransaction = () => {
           </div>
         </div>
 
-        <p className={styles.pageSubtitle}>First and second shares are retained legacy values with unconfirmed meaning. Own contribution is a recorded Yes/No flag, not an amount or calculated share. Funding currency follows the selected budget.</p>
+        <p className={styles.pageSubtitle}>Own contribution is a recorded Yes/No flag, not an amount or calculated share. Funding currency follows the selected budget.</p>
         {formError && (
           <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
@@ -334,18 +328,6 @@ const CreateTransaction = () => {
               <span id="funding-error-appliedForAmount" className={styles.fieldError}>{fieldErrors.appliedForAmount}</span>
             </div>
 
-            <div className={styles.formGroup}>
-              <label htmlFor="funding-firstShareAmount">First share (legacy)</label>
-              <input
-                className={inputClass("firstShareAmount")}
-                type="number"
-                step="0.01"
-                id="funding-firstShareAmount" name="firstShareAmount" aria-invalid={Boolean(fieldErrors.firstShareAmount)} aria-describedby="funding-error-firstShareAmount"
-                value={form.firstShareAmount}
-                onChange={handleChange}
-              />
-              <span id="funding-error-firstShareAmount" className={styles.fieldError}>{fieldErrors.firstShareAmount}</span>
-            </div>
 
             <div className={styles.formGroup}>
               <label htmlFor="funding-approvedAmount">Approved funding</label>
@@ -372,18 +354,6 @@ const CreateTransaction = () => {
               </select>
             </div>
 
-            <div className={styles.formGroup}>
-              <label htmlFor="funding-secondShareAmount">Second share (legacy)</label>
-              <input
-                className={inputClass("secondShareAmount")}
-                type="number"
-                step="0.01"
-                id="funding-secondShareAmount" name="secondShareAmount" aria-invalid={Boolean(fieldErrors.secondShareAmount)} aria-describedby="funding-error-secondShareAmount"
-                value={form.secondShareAmount}
-                onChange={handleChange}
-              />
-              <span id="funding-error-secondShareAmount" className={styles.fieldError}>{fieldErrors.secondShareAmount}</span>
-            </div>
 
             <div className={styles.formGroup}>
               <label>Date planned</label>

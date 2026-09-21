@@ -433,14 +433,6 @@ const DeleteTransaction = () => {
                       </span>
                     </div>
 
-                    <div className={styles.detailRow}>
-                      <span className={styles.detailLabel}>
-                        First share (legacy)
-                      </span>
-                      <span className={styles.detailValue}>
-                        {selectedTransaction.firstShareAmount ?? "N/A"}
-                      </span>
-                    </div>
 
                     <div className={styles.detailRow}>
                       <span className={styles.detailLabel}>
@@ -460,14 +452,6 @@ const DeleteTransaction = () => {
                       </span>
                     </div>
 
-                    <div className={styles.detailRow}>
-                      <span className={styles.detailLabel}>
-                        Second share (legacy)
-                      </span>
-                      <span className={styles.detailValue}>
-                        {selectedTransaction.secondShareAmount ?? "N/A"}
-                      </span>
-                    </div>
 
                     <div className={styles.detailRow}>
                       <span className={styles.detailLabel}>Date planned</span>

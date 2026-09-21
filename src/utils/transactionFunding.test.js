@@ -1,6 +1,6 @@
 import { decimalUnits, fundingErrors, fundingCurrencyLabel, matchesDecimalRange, sumAmounts, remainingFunding, fundingExcel } from "./transactionFunding";
 import { sortRows } from "./tableSorting";
-const values = { appliedForAmount: "0", approvedAmount: "9999999999999999999.999", firstShareAmount: "0.00", secondShareAmount: "1.25" };
+const values = { appliedForAmount: "0", approvedAmount: "9999999999999999999.999", };
 test("funding accepts the full 19-digit range and zero, independently of requested funding", () => {
   expect(fundingErrors(values)).toEqual({});
   expect(fundingErrors({ ...values, approvedAmount: "1.23000" })).toEqual({});
