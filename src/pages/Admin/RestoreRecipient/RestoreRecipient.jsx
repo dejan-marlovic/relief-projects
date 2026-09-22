@@ -1,8 +1,10 @@
+import PaymentAmount from "../../../components/PaymentAmount/PaymentAmount";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiRotateCcw,
-  FiRefreshCw,  FiUserCheck,
+  FiRefreshCw,
+  FiUserCheck,
 } from "react-icons/fi";
 
 import styles from "./RestoreRecipient.module.scss";
@@ -351,9 +353,7 @@ const RestoreRecipient = () => {
 
                     <div className={styles.detailRow}>
                       <span className={styles.detailLabel}>Amount</span>
-                      <span className={styles.detailValue}>
-                        {getAmountLabel(selectedRecipient.amount)}
-                      </span>
+                      <div className={styles.detailValue}><PaymentAmount record={selectedRecipient} /></div>
                     </div>
                   </div>
                 ) : (

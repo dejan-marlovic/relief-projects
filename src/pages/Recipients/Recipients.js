@@ -1,3 +1,4 @@
+import { decimalUnits, matchesDecimalRange, fundingExcel, summaryExcel, summaryText, issueText, groupedPaymentTotals } from "../../utils/paymentFunding";
 import useMediaQuery from "../../hooks/useMediaQuery";
 import React, {
   useCallback,
@@ -85,7 +86,8 @@ function normalizeRecipient(r) {
     //works only when you already have a variable called organizationId.
     organizationId,
     paymentOrderId,
-    amount: r.amount ?? 0,
+    amount: r.amount ?? null,
+    amountSummary: r.amountSummary ?? null,
     locked: Boolean(r.locked ?? r.isLocked ?? false),
   };
 }
@@ -682,12 +684,7 @@ function Recipients() {
       .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, "")
       .trim();
 
-  const toExcelNumber = (value) => {
-    if (value == null || value === "") return 0;
 
-    const number = Number(value);
-    return Number.isFinite(number) ? number : 0;
-  };
 
   const getOrganizationLabel = (id) => {
     const organization = orgOptions.find(
@@ -906,22 +903,21 @@ function Recipients() {
         applyExcelBorder(cell);
       }
 
-      let totalAmount = 0;
+
 
       sortedRecipients.forEach((recipient, index) => {
-        const amount = toExcelNumber(recipient.amount);
-        totalAmount += amount;
+        const amount = summaryExcel(recipient);
 
         const row = worksheet.addRow({
           recipientId: recipient.id,
           organization: getOrganizationLabel(recipient.organizationId),
           paymentOrder: getPaymentOrderLabel(recipient.paymentOrderId),
           amount,
-          state: getPaymentOrderState(recipient),
+          state: `${getPaymentOrderState(recipient)} | ${summaryText(recipient.amountSummary)} | ${issueText(recipient.amountSummary?.issues)}`,
           project: projectName,
         });
 
-        row.getCell(4).numFmt = "#,##0.00";
+        row.getCell(4).numFmt = "#,##0.######";
 
         for (let column = 1; column <= 6; column += 1) {
           const cell = row.getCell(column);
@@ -943,36 +939,12 @@ function Recipients() {
         }
       });
 
-      const totalRow = worksheet.addRow({
-        recipientId: "TOTAL",
-        organization: "",
-        paymentOrder: "",
-        amount: Number(totalAmount.toFixed(2)),
-        state: "",
-        project: "",
-      });
-
-      totalRow.getCell(4).numFmt = "#,##0.00";
-
-      for (let column = 1; column <= 6; column += 1) {
-        const cell = totalRow.getCell(column);
-
-        cell.font = {
-          bold: true,
-          color: { argb: excelColors.text },
-        };
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFE2F0D9" },
-        };
-        cell.alignment = {
-          vertical: "middle",
-          horizontal: "left",
-          wrapText: true,
-        };
-        applyExcelBorder(cell);
+      for (const group of groupedPaymentTotals(sortedRecipients)) {
+        const row = worksheet.addRow({recipientId: "TOTAL", organization: `${group.currency.name || "Currency"} (#${group.currency.id})`, amount: fundingExcel(group.amount)});
+        row.getCell(4).numFmt = "#,##0.######";
+        row.font = { bold: true };
       }
+      worksheet.addRow(["Subtotals grouped by current currency ID; inconsistent, unavailable and unknown-currency totals excluded. A valid recipient subtotal does not certify the full order."]);
 
       worksheet.autoFilter = {
         from: "A4",
@@ -1032,14 +1004,14 @@ function Recipients() {
   useEffect(() => setFilters(emptyFilters()), [selectedProjectId]);
   const filteredItems = useMemo(() => items.filter((r) =>
     matchesText(organizationNames.get(String(r.organizationId)), filters.organization) &&
-    matchesNumberRange(r.paymentOrderId, filters.paymentOrderId) && matchesNumberRange(r.amount, filters.amount)
+    matchesNumberRange(r.paymentOrderId, filters.paymentOrderId) && matchesDecimalRange(r.amount, filters.amount)
   ), [filters, items, organizationNames]);
   const displayedItems = useMemo(() => {
     if (!sortConfig) return filteredItems;
     const getters = {
       organization: (r) => r?.organizationId == null ? null : organizationNames.get(String(r.organizationId)) || `Organization ${r.organizationId}`,
       paymentOrderId: (r) => toSortableNumber(r?.paymentOrderId),
-      amount: (r) => toSortableNumber(r?.amount),
+      amount: (r) => decimalUnits(r?.amount),
     };
     return sortRows(filteredItems, getters[sortConfig.key], sortConfig.direction);
   }, [filteredItems, organizationNames, sortConfig]);

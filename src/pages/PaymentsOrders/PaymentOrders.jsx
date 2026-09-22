@@ -1,3 +1,4 @@
+import { decimalUnits, matchesDecimalRange, fundingExcel, summaryExcel, summaryText, issueText, groupedPaymentTotals } from "../../utils/paymentFunding";
 import useMediaQuery from "../../hooks/useMediaQuery";
 import React, {
   useCallback,
@@ -135,7 +136,8 @@ function normalizePO(po) {
     paymentOrderDescription:
       po.paymentOrderDescription ?? po.payment_order_description ?? "",
     // ✅ backend computed
-    amount: po.amount ?? 0,
+    amount: po.amount ?? null,
+    amountSummary: po.amountSummary ?? null,
     message: po.message ?? "",
     pinCode: po.pinCode ?? po.pin_code ?? "",
     locked: Boolean(po.locked ?? po.isLocked ?? false),
@@ -658,7 +660,7 @@ function PaymentOrders() {
   const filteredOrders = useMemo(() => orders.filter((po) =>
     matchesNumberRange(po.id, filters.id) && matchesNumberRange(po.transactionId, filters.transactionId) &&
     matchesDateRange(po.paymentOrderDate, filters.date) && matchesText(po.paymentOrderDescription, filters.description) &&
-    matchesNumberRange(po.amount, filters.amount) && matchesText(po.message, filters.message) && matchesText(po.pinCode, filters.pinCode)
+    matchesDecimalRange(po.amount, filters.amount) && matchesText(po.message, filters.message) && matchesText(po.pinCode, filters.pinCode)
   ), [filters, orders]);
   const displayedOrders = useMemo(() => {
     if (!sortConfig) return filteredOrders;
@@ -667,7 +669,7 @@ function PaymentOrders() {
       transactionId: (po) => toSortableNumber(po?.transactionId),
       date: (po) => toSortableDate(po?.paymentOrderDate),
       description: (po) => po?.paymentOrderDescription || null,
-      amount: (po) => toSortableNumber(po?.amount),
+      amount: (po) => decimalUnits(po?.amount),
       message: (po) => po?.message || null,
       pinCode: (po) => po?.pinCode || null,
     };
@@ -854,11 +856,7 @@ function PaymentOrders() {
       .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, "")
       .trim();
 
-  const toExcelNumber = (value) => {
-    if (value == null || value === "") return 0;
-    const number = Number(value);
-    return Number.isFinite(number) ? number : 0;
-  };
+
 
   const formatExcelDate = (value) => {
     if (!value) return "Not specified";
@@ -1080,11 +1078,10 @@ function PaymentOrders() {
       ];
       styleExcelHeader(headerRow);
 
-      let grandTotal = 0;
+
 
       sortedOrders.forEach((po, index) => {
-        const poAmount = toExcelNumber(po.amount);
-        grandTotal += poAmount;
+        const poAmount = summaryExcel(po);
 
         const orderRow = worksheet.addRow({
           paymentOrderId: `PO#${po.id}`,
@@ -1098,14 +1095,14 @@ function PaymentOrders() {
           amount: poAmount,
           message: sanitizeExcelText(po.message) || "Not specified",
           pinCode: sanitizeExcelText(po.pinCode) || "Not specified",
-          status: po.locked ? "Booked / Locked" : "Editable",
+          status: `${po.locked ? "Booked / Locked" : "Editable"} | ${summaryText(po.amountSummary)} | ${issueText(po.amountSummary?.issues)}`,
         });
 
         styleExcelRow(orderRow, index);
         orderRow.eachCell((cell) => {
           cell.font = { ...(cell.font || {}), bold: true };
         });
-        orderRow.getCell(5).numFmt = "#,##0.00";
+        orderRow.getCell(5).numFmt = "#,##0.######";
 
         const lines = linesByPaymentOrderId.get(po.id) || [];
         const lineHeader = worksheet.addRow([]);
@@ -1117,6 +1114,7 @@ function PaymentOrders() {
         lineHeader.getCell(4).value = "Cost Detail";
         lineHeader.getCell(5).value = "Amount";
         lineHeader.getCell(6).value = "Memo";
+        lineHeader.getCell(7).value = "Current currency";
 
         for (let column = 1; column <= 8; column += 1) {
           const cell = lineHeader.getCell(column);
@@ -1130,7 +1128,7 @@ function PaymentOrders() {
           applyExcelBorder(cell);
         }
 
-        let lineTotal = 0;
+
 
         if (lines.length === 0) {
           const emptyRow = worksheet.addRow([]);
@@ -1150,8 +1148,7 @@ function PaymentOrders() {
           }
         } else {
           lines.forEach((line, lineIndex) => {
-            const amount = toExcelNumber(line.amount);
-            lineTotal += amount;
+            const amount = fundingExcel(line.amount);
 
             const lineRow = worksheet.addRow([]);
             lineRow.outlineLevel = 1;
@@ -1166,9 +1163,10 @@ function PaymentOrders() {
             lineRow.getCell(3).value = getOrganizationName(line.organizationId);
             lineRow.getCell(4).value = getCostDetailLabel(line.costDetailId);
             lineRow.getCell(5).value = amount;
+            lineRow.getCell(7).value = line.amountCurrency?.availability === "AVAILABLE" ? `${line.amountCurrency.currency?.name || "Currency"} (#${line.amountCurrency.currency?.id})` : `Unavailable: ${line.amountCurrency?.availability || "Not recorded"}`;
             lineRow.getCell(6).value =
               sanitizeExcelText(line.memo) || "Not specified";
-            lineRow.getCell(5).numFmt = "#,##0.00";
+            lineRow.getCell(5).numFmt = "#,##0.######";
 
             for (let column = 1; column <= 8; column += 1) {
               const cell = lineRow.getCell(column);
@@ -1193,10 +1191,10 @@ function PaymentOrders() {
           lineTotalRow.hidden = true;
           lineTotalRow.getCell(1).value = "TOTAL";
           lineTotalRow.getCell(2).value = `Lines total for PO#${po.id}`;
-          lineTotalRow.getCell(5).value = Number(lineTotal.toFixed(2));
-          lineTotalRow.getCell(5).numFmt = "#,##0.00";
+          lineTotalRow.getCell(5).value = poAmount;
+          lineTotalRow.getCell(5).numFmt = "#,##0.######";
           lineTotalRow.getCell(6).value =
-            `Header amount: ${poAmount.toFixed(2)} | Difference: ${(poAmount - lineTotal).toFixed(2)}`;
+            `Calculated order total | ${summaryText(po.amountSummary)} | ${issueText(po.amountSummary?.issues)}`;
 
           for (let column = 1; column <= 8; column += 1) {
             const cell = lineTotalRow.getCell(column);
@@ -1212,20 +1210,14 @@ function PaymentOrders() {
         }
       });
 
-      const totalRow = worksheet.addRow([]);
-      totalRow.getCell(1).value = "GRAND TOTAL";
-      totalRow.getCell(5).value = Number(grandTotal.toFixed(2));
-      totalRow.getCell(5).numFmt = "#,##0.00";
-      for (let column = 1; column <= 8; column += 1) {
-        const cell = totalRow.getCell(column);
-        cell.font = { bold: true, color: { argb: excelColors.text } };
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: excelColors.paleGreen },
-        };
-        applyExcelBorder(cell);
+      for (const group of groupedPaymentTotals(sortedOrders)) {
+        const row = worksheet.addRow([]);
+        row.getCell(1).value = `TOTAL ${group.currency.name || "Currency"} (#${group.currency.id})`;
+        row.getCell(5).value = fundingExcel(group.amount);
+        row.getCell(5).numFmt = "#,##0.######";
+        row.font = { bold: true };
       }
+      worksheet.addRow(["Totals grouped by current currency ID; inconsistent, unavailable and unknown-currency totals excluded. Commitments are not settlement."]);
 
       worksheet.autoFilter = { from: "A4", to: "H4" };
 
@@ -1459,13 +1451,15 @@ function PaymentOrders() {
                   <div className={styles.linesPanel}>
                     <PaymentOrderLines
                       paymentOrderId={po.id}
+                      order={po}
+                      refreshKey={historyRefreshKeys[po.id] || 0}
                       txOptions={txOptions}
                       orgOptions={orgOptions}
                       costDetailOptions={costDetailOptions}
                       canManage={canManagePaymentOrderLines && isPaymentOrderLifecycleEditable(po)}
                       onMutationSuccess={async () => {
                         setHistoryRefreshKeys((current) => ({ ...current, [po.id]: (current[po.id] || 0) + 1 }));
-                        await fetchOrders(selectedProjectId);
+                        await Promise.all([fetchOrders(selectedProjectId), fetchTxOptions(selectedProjectId)]);
                       }}
                     />
                   </div>

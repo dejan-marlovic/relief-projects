@@ -1,3 +1,4 @@
+import PaymentAmount from "../../../components/PaymentAmount/PaymentAmount";
 import React from "react";
 import styles from "./PaymentOrder.module.scss";
 import RecordHistory from "../../../components/RecordHistory/RecordHistory";
@@ -151,10 +152,6 @@ const PaymentOrder = ({
   const hc = (i) => (!compact && !visibleCols[i] ? styles.hiddenCol : "");
 
   // amount is computed by backend, display only
-  const computedAmount =
-    po?.amount == null || Number.isNaN(Number(po.amount))
-      ? 0
-      : Number(po.amount);
 
   // PO ID label (read-only)
   const poIdLabel = isCreate ? "(new)" : po?.id != null ? `PO#${po.id}` : "-";
@@ -382,7 +379,7 @@ const PaymentOrder = ({
 
       {/* 5: Amount (computed, not editable) */}
       <Cell className={hc(5)}>
-        {compact && <span className={styles.fieldLabel}>Amount</span>}{computedAmount.toFixed(2)}</Cell>
+        {compact && <span className={styles.fieldLabel}>Amount</span>}<PaymentAmount record={po} /></Cell>
 
       {/* 6: Message */}
       <Cell className={hc(6)}>

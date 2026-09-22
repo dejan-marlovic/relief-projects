@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import Recipient from "./Recipient";
-const row = { id: 7, organizationId: 1, paymentOrderId: 20, amount: "12.50" };
+const row = { id: 7, organizationId: 1, paymentOrderId: 20, amount: "12.50", amountSummary: {status:"CONSISTENT",source:"CURRENT_BUDGET_CONFIGURATION",currency:{id:1,name:"SEK"}} };
 const props = () => ({ row, compact: true, canManage: true, visibleCols: [true, false, false, false], orgOptions: [{ id: 1, label: "Relief organization with a long name" }, { id: 2, label: "Second organization" }], poOptions: [{ id: 20 }], onSave: jest.fn(), onChange: jest.fn(), onCancel: jest.fn(), onDelete: jest.fn(), onEdit: jest.fn(), onSelectChange: jest.fn() });
 test("mobile editing requires Save and retains accessible field errors", () => {
   const p = props();
@@ -30,7 +30,7 @@ test("viewer has selection and information but no mutation actions", () => {
   render(<Recipient {...props()} canManage={false} />);
   expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Delete recipient" })).not.toBeInTheDocument();
-  expect(screen.getByText("12.50")).toBeInTheDocument();
+  expect(screen.getByText("12.5")).toBeInTheDocument();
 });
 test("resize keeps the current controlled draft; saving disables repeated actions", () => {
   const p = props(); const editedValues = { organizationId: 2, paymentOrderId: 20 };

@@ -1,3 +1,4 @@
+import PaymentAmount from "../../../components/PaymentAmount/PaymentAmount";
 import { fundingCurrencyLabel } from "../../../utils/transactionFunding";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -439,9 +440,7 @@ const RestorePaymentOrder = () => {
                       <span className={styles.detailLabel}>
                         Computed amount
                       </span>
-                      <span className={styles.detailValue}>
-                        {getAmountLabel(selectedPaymentOrder.amount)}
-                      </span>
+                      <div className={styles.detailValue}><PaymentAmount record={selectedPaymentOrder} /></div>
                     </div>
 
                     <div className={styles.detailRow}>

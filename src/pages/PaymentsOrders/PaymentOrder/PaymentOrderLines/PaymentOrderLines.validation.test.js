@@ -87,7 +87,7 @@ describe("payment order line validation", () => {
       transactionId: "Transaction is required.",
       organizationId: "Organization is required.",
       costDetailId: "Cost detail is required.",
-      amount: "Amount must be a number > 0.",
+      amount: "Amount must be positive with at most 6 meaningful decimal places.",
     });
   });
 });

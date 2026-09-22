@@ -1,3 +1,5 @@
+import PaymentAmount from "../../../../components/PaymentAmount/PaymentAmount";
+import { paymentAmountError, decimalUnits } from "../../../../utils/paymentFunding";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./PaymentOrderLines.module.scss";
 import {
@@ -30,13 +32,8 @@ export const validatePaymentOrderLine = (payload) => {
   if (!payload.costDetailId) {
     fieldErrors.costDetailId = "Cost detail is required.";
   }
-  if (
-    payload.amount == null ||
-    !Number.isFinite(payload.amount) ||
-    payload.amount <= 0
-  ) {
-    fieldErrors.amount = "Amount must be a number > 0.";
-  }
+  const amountError = paymentAmountError(payload.amount);
+  if (amountError) fieldErrors.amount = amountError;
 
   return fieldErrors;
 };
@@ -57,7 +54,7 @@ export const allocationCostDetailOptions = (
   costDetails = [],
 ) =>
   allocations
-    .filter((allocation) => Number(allocation?.plannedAmount) > 0)
+    .filter((allocation) => decimalUnits(allocation?.plannedAmount) > 0)
     .map((allocation) => {
       const costDetailId =
         allocation.costDetailId ??
@@ -123,6 +120,7 @@ function normalizeLine(r) {
     organizationId,
     costDetailId,
     amount: r.amount ?? null,
+    amountCurrency: r.amountCurrency ?? null,
     memo: r.memo ?? "",
   };
 }
@@ -138,6 +136,8 @@ function makeApiError(message, fieldErrors = null, status = null) {
 }
 
 const PaymentOrderLines = ({
+  order,
+  refreshKey,
   paymentOrderId,
   txOptions = [],
   orgOptions = [],
@@ -320,7 +320,7 @@ const PaymentOrderLines = ({
 
   useEffect(() => {
     fetchRows();
-  }, [fetchRows]);
+  }, [fetchRows, refreshKey]);
 
   useEffect(() => {
     if (!draft.transactionId) return;
@@ -431,7 +431,7 @@ const PaymentOrderLines = ({
       transactionId: draft.transactionId ? Number(draft.transactionId) : null,
       organizationId: toNumOrNull(draft.organizationId),
       costDetailId: draft.costDetailId ? Number(draft.costDetailId) : null,
-      amount: draft.amount === "" ? null : Number(draft.amount),
+      amount: draft.amount === "" ? null : String(draft.amount),
       memo: draft.memo || null,
     };
 
@@ -486,7 +486,7 @@ const PaymentOrderLines = ({
           : patch.costDetailId
           ? Number(patch.costDetailId)
           : null,
-      amount: patch.amount === "" ? null : Number(patch.amount),
+      amount: patch.amount === "" ? null : String(patch.amount),
       memo: patch.memo ?? null,
     };
 
@@ -545,7 +545,6 @@ const PaymentOrderLines = ({
     }
   };
 
-  const total = rows.reduce((acc, r) => acc + (Number(r.amount) || 0), 0);
   const lockedBanner =
     isLocked && (lockMessage || "This payment order is Booked (locked).");
 
@@ -559,13 +558,15 @@ const PaymentOrderLines = ({
         <div>
           <div className={styles.title}>Payment lines</div>
           <div className={styles.sub}>
-            PaymentOrder #{paymentOrderId} • Lines total: {total.toFixed(2)}
+            Payment order #{paymentOrderId} · Calculated total
+            <PaymentAmount record={order} />
+            <small>Line amounts are commitments, not settled payments. Currency reflects current budget configuration.</small>
           </div>
         </div>
 
         <button
           className={styles.iconPillBtn}
-          onClick={fetchRows}
+          onClick={async () => { await onMutationSuccess?.(); await fetchRows(); }}
           disabled={loading}
           title="Refresh lines"
         >
@@ -590,8 +591,8 @@ const PaymentOrderLines = ({
       {canManage && (
         <div className={styles.addRow}>
           <div className={styles.field}>
-          <label>Transaction *</label>
-          <select
+          <label htmlFor={`line-transaction-${paymentOrderId}`}>Transaction *</label>
+          <select id={`line-transaction-${paymentOrderId}`}
             value={draft.transactionId}
             disabled={loading || isLocked}
             onChange={(e) => {
@@ -617,8 +618,8 @@ const PaymentOrderLines = ({
         </div>
 
         <div className={styles.field}>
-          <label>Organization *</label>
-          <select
+          <label htmlFor={`line-organization-${paymentOrderId}`}>Organization *</label>
+          <select id={`line-organization-${paymentOrderId}`}
             value={draft.organizationId}
             disabled={loading || isLocked}
             onChange={(e) => updateDraftField("organizationId", e.target.value)}
@@ -641,8 +642,8 @@ const PaymentOrderLines = ({
         </div>
 
         <div className={styles.field}>
-          <label>Cost detail *</label>
-          <select
+          <label htmlFor={`line-cost-detail-${paymentOrderId}`}>Cost detail *</label>
+          <select id={`line-cost-detail-${paymentOrderId}`}
             value={draft.costDetailId}
             disabled={loading || isLocked}
             onChange={(e) => updateDraftField("costDetailId", e.target.value)}
@@ -663,10 +664,10 @@ const PaymentOrderLines = ({
         </div>
 
         <div className={styles.field}>
-          <label>Amount *</label>
-          <input
+          <label htmlFor={`line-amount-${paymentOrderId}`}>Amount *</label>
+          <input id={`line-amount-${paymentOrderId}`}
             type="number"
-            step="0.01"
+            step="any" min="0.000001"
             value={draft.amount}
             disabled={loading || isLocked}
             onChange={(e) => updateDraftField("amount", e.target.value)}
@@ -680,8 +681,8 @@ const PaymentOrderLines = ({
         </div>
 
         <div className={styles.field}>
-          <label>Memo</label>
-          <input
+          <label htmlFor={`line-memo-${paymentOrderId}`}>Memo</label>
+          <input id={`line-memo-${paymentOrderId}`}
             type="text"
             value={draft.memo}
             disabled={loading || isLocked}
@@ -882,7 +883,7 @@ const LineRow = ({
         <span className={styles.fieldLabel}>Amount</span>
         <input
           type="number"
-          step="0.01"
+          step="any" min="0.000001"
           value={amount}
           disabled={locked}
           onChange={(e) => {
@@ -891,6 +892,7 @@ const LineRow = ({
           }}
           className={`${styles.input} ${amountError ? styles.inputError : ""}`}
         />
+        <PaymentAmount record={row} line showAmount={false} />
         {amountError ? (
           <div className={styles.fieldError}>{amountError}</div>
         ) : null}

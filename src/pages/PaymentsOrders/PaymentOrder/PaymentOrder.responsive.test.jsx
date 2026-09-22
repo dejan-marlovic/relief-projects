@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import PaymentOrder from "./PaymentOrder";
 jest.mock("../../../components/RecordHistory/RecordHistory", () => () => null);
 const props = {
-  po: { id: 106, transactionId: 47, paymentOrderDescription: "Demo payment", amount: 123.45, lifecycleStatus: "DRAFT" },
+  po: { id: 106, transactionId: 47, paymentOrderDescription: "Demo payment", amount: "123.45", amountSummary: {status:"CONSISTENT",source:"CURRENT_BUDGET_CONFIGURATION",currency:{id:1,name:"SEK"}}, lifecycleStatus: "DRAFT" },
   transactions: [{ id: 47 }], visibleCols: Array(8).fill(true),
   onSave: jest.fn(), onChange: jest.fn(), onCancel: jest.fn(), canEdit: true, canDelete: true,
 };

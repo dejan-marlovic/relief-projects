@@ -1,8 +1,10 @@
+import PaymentAmount from "../../../components/PaymentAmount/PaymentAmount";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiTrash2,
-  FiRefreshCw,  FiFileText,
+  FiRefreshCw,
+  FiFileText,
 } from "react-icons/fi";
 
 import styles from "./DeletePaymentOrder.module.scss";
@@ -345,9 +347,7 @@ const DeletePaymentOrder = () => {
 
                     <div className={styles.detailRow}>
                       <span className={styles.detailLabel}>Amount</span>
-                      <span className={styles.detailValue}>
-                        {selectedPaymentOrder.amount ?? "N/A"}
-                      </span>
+                      <div className={styles.detailValue}><PaymentAmount record={selectedPaymentOrder} /></div>
                     </div>
 
                     <div className={styles.detailRow}>

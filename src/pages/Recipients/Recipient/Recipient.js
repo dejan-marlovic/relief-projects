@@ -1,3 +1,4 @@
+import PaymentAmount from "../../../components/PaymentAmount/PaymentAmount";
 // src/components/Recipients/Recipient/Recipient.jsx
 import React from "react";
 import styles from "./Recipient.module.scss";
@@ -132,10 +133,6 @@ const RecipientRow = ({
   const hc = (i) => (!compact && !visibleCols[i] ? styles.hiddenCol : "");
 
   // Amount is computed by the backend and is display-only.
-  const amountNum =
-    row?.amount == null || Number.isNaN(Number(row.amount))
-      ? 0
-      : Number(row.amount);
 
   const lockedTitle =
     "Booked (final signature) — this recipient is read-only. Undo/remove the Booked signature to edit.";
@@ -255,7 +252,7 @@ const RecipientRow = ({
       </Cell>
 
       {/* 3: Amount (computed, read-only) */}
-      <Cell label="Amount" className={hc(3)}>{amountNum.toFixed(2)}</Cell>
+      <Cell label="Amount" className={hc(3)}><PaymentAmount record={row} /></Cell>
     </div>
   );
 };

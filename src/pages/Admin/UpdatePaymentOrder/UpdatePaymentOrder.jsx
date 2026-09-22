@@ -1,3 +1,4 @@
+import PaymentAmount from "../../../components/PaymentAmount/PaymentAmount";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiSave, FiRefreshCw, FiEdit3 } from "react-icons/fi";
@@ -413,7 +414,7 @@ const UpdatePaymentOrder = () => {
 
                 {selectedPaymentOrder?.amount !== undefined && (
                   <div className={styles.mutedHint}>
-                    Current computed amount: {selectedPaymentOrder.amount}
+                    Current computed amount: <PaymentAmount record={selectedPaymentOrder} />
                   </div>
                 )}
               </div>

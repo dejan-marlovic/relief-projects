@@ -1,3 +1,4 @@
+import PaymentAmount from "../../../components/PaymentAmount/PaymentAmount";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiTrash2, FiRefreshCw, FiUsers } from "react-icons/fi";
@@ -319,9 +320,7 @@ const DeleteRecipient = () => {
 
                     <div className={styles.detailRow}>
                       <span className={styles.detailLabel}>Amount</span>
-                      <span className={styles.detailValue}>
-                        {selectedRecipient.amount ?? "N/A"}
-                      </span>
+                      <div className={styles.detailValue}><PaymentAmount record={selectedRecipient} /></div>
                     </div>
 
                     <div className={styles.warningBox}>

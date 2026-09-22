@@ -1,3 +1,4 @@
+import PaymentCurrencyContext from "../PaymentCurrencyContext/PaymentCurrencyContext";
 import TransactionCurrencyContext from "../TransactionCurrencyContext/TransactionCurrencyContext";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -68,7 +69,7 @@ function HistoryPage({ entityType, entityId, includeChildren }) {
           <tbody>{result.content.map((event) => <tr key={event.id}>
             <td data-label="Date and time"><time dateTime={event.occurredAt}>{timestamp(event.occurredAt)}</time></td>
             <td data-label="Action">{auditActionLabel(event)}</td>
-            <td data-label="Changes">{event.entityType === "RECIPIENT" ? <RecipientAuditDetails event={event} /> : event.entityType === "SIGNATURE" ? <SignatureAuditDetails event={event} /> : event.entityType === "COST_DETAIL" ? <CostDetailAuditDetails event={event} /> : event.entityType === "COST_DETAIL_ALLOCATION" ? <AllocationAuditDetails event={event} /> : event.entityType === "PAYMENT_ORDER_LINE" ? <LineAuditDetails event={event} /> : event.action === "UPDATE" ? <AuditFieldChanges event={event} /> : hasAuditTransition(event) ? <>{readable(event.previousState)} → {readable(event.newState)}</> : "—"}<TransactionCurrencyContext event={event} /><ReturnReason event={event} /></td>
+            <td data-label="Changes">{event.entityType === "RECIPIENT" ? <RecipientAuditDetails event={event} /> : event.entityType === "SIGNATURE" ? <SignatureAuditDetails event={event} /> : event.entityType === "COST_DETAIL" ? <CostDetailAuditDetails event={event} /> : event.entityType === "COST_DETAIL_ALLOCATION" ? <AllocationAuditDetails event={event} /> : event.entityType === "PAYMENT_ORDER_LINE" ? <LineAuditDetails event={event} /> : event.action === "UPDATE" ? <AuditFieldChanges event={event} /> : hasAuditTransition(event) ? <>{readable(event.previousState)} → {readable(event.newState)}</> : "—"}<TransactionCurrencyContext event={event} /><PaymentCurrencyContext event={event} /><ReturnReason event={event} /></td>
             <td data-label="Performed by">{event.performedByDisplay || (event.performedBy ? `User #${event.performedBy}` : "Unknown user")}</td>
           </tr>)}</tbody>
         </table></div>}

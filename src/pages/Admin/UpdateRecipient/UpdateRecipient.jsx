@@ -1,3 +1,4 @@
+import { exactAmount, summaryAmount, summaryText } from "../../../utils/paymentFunding";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiSave, FiRefreshCw, FiEdit3 } from "react-icons/fi";
@@ -214,7 +215,8 @@ const UpdateRecipient = () => {
                   data?.organizationId ?? Number(form.organizationId),
                 paymentOrderId:
                   data?.paymentOrderId ?? Number(form.paymentOrderId),
-                amount: data?.amount ?? item.amount,
+                amount: data?.amount ?? null,
+                amountSummary: data?.amountSummary ?? null,
               }
             : item,
         ),
@@ -288,7 +290,7 @@ const UpdateRecipient = () => {
                         -{" "}
                         {paymentOrderLabelById[item.paymentOrderId] ||
                           `PO #${item.paymentOrderId}`}{" "}
-                        - amount: {item.amount ?? 0} (id: {item.id})
+                        - amount: {exactAmount(summaryAmount(item))} · {summaryText(item.amountSummary)} (id: {item.id})
                       </option>
                     ))}
                   </select>
