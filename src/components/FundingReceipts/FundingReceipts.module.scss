@@ -1,0 +1,24 @@
+@use "../../styles/colors" as colors;
+.section { margin: .75rem 0; border: 1px solid colors.$border; border-radius: 12px; background: colors.$surface; color: colors.$text; min-width: 0; }
+.section summary { padding: .9rem 1rem; cursor: pointer; font-weight: 600; color: colors.$primary; }
+.panel { padding: 0 1rem 1rem; min-width: 0; }
+.hint { color: colors.$text-muted; font-size: .85rem; line-height: 1.5; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: .75rem 0; }
+.panel button { padding: .6rem .8rem; border: 1px solid colors.$primary-border; border-radius: 8px; background: colors.$primary-a04; color: colors.$primary; font: inherit; cursor: pointer; }
+.panel button:disabled { opacity: .55; cursor: not-allowed; }
+.panel :focus-visible { outline: 2px solid colors.$primary; outline-offset: 2px; }
+.totals, .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: .8rem; }
+.totals > div { padding: .8rem; border: 1px solid colors.$border; border-radius: 8px; }
+.totals dt { color: colors.$text-muted; font-size: .85rem; }
+.totals dd { margin: .4rem 0 0; font-weight: 600; overflow-wrap: anywhere; }
+.entry, .form { margin: 1rem 0; padding: 1rem; border: 1px solid colors.$border; border-radius: 10px; overflow-wrap: anywhere; }
+.entry h4, .form h4 { margin: 0 0 .75rem; }
+.voided { border-style: dashed; background: colors.$primary-a04; }
+.form { background: colors.$primary-a04; }
+.form fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.form label { display: block; margin-bottom: .75rem; font-size: .9rem; }
+.form input:not([type=checkbox]), .form textarea, .form select { display: block; box-sizing: border-box; margin-top: .35rem; padding: .65rem; width: 100%; min-width: 0; border: 1px solid colors.$border; border-radius: 8px; background: colors.$surface; color: colors.$text; font: inherit; }
+.form select[multiple] { min-height: 7rem; }
+.evidence { padding-left: 1.2rem; }
+.evidence li { margin: .6rem 0; }
+@media(max-width: 700px) { .panel { padding: 0 .75rem .75rem; } .entry, .form { padding: .75rem; } .actions button { flex: 1 1 auto; min-height: 44px; } }

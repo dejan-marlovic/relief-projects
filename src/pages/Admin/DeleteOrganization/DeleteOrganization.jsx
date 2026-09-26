@@ -1,3 +1,4 @@
+import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiTrash2, FiRefreshCw, FiHome } from "react-icons/fi";
@@ -21,7 +22,7 @@ const DeleteOrganization = () => {
   const [selectedOrganizationId, setSelectedOrganizationId] = useState("");
 
   const [formError, setFormError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useTransientMessage("");
 
   const addressLabelById = useMemo(() => {
     return addresses.reduce((acc, address) => {

@@ -1,3 +1,4 @@
+import { appFetch as fetch } from "../../utils/appFetch";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   PieChart,

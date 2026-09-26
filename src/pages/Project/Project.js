@@ -1,3 +1,4 @@
+import { appFetch as fetch } from "../../utils/appFetch";
 // Project.jsx
 import React, { useEffect, useState, useContext, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
@@ -2336,7 +2337,7 @@ Approximately:
         );
       }
 
-      alert("Project deleted successfully!");
+      // Successful mutations are announced by the shared notification banner.
 
       const updatedProjects = projects.filter(
         (p) => p.id !== projectDetails.id,
@@ -2481,7 +2482,7 @@ Approximately:
 
       setFormError("");
       setFieldErrors({});
-      alert("Project updated successfully!");
+      // Successful mutations are announced by the shared notification banner.
     } catch (error) {
       console.error("Update error:", error);
       setFormError("Unexpected error while updating project.");

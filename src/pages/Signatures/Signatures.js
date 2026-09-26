@@ -1,3 +1,4 @@
+import { appFetch as fetch } from "../../utils/appFetch";
 import useMediaQuery from "../../hooks/useMediaQuery";
 import React, {
   useCallback,

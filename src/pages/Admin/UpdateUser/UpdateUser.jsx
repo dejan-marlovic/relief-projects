@@ -1,3 +1,4 @@
+import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiSave, FiRefreshCw, FiEdit3 } from "react-icons/fi";
@@ -59,7 +60,7 @@ const UpdateUser = () => {
   const [userDetails, setUserDetails] = useState(initialUserDetails);
 
   const [formError, setFormError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useTransientMessage("");
   const [fieldErrors, setFieldErrors] = useState({});
 
   const hasError = (name) => Boolean(fieldErrors?.[name]);

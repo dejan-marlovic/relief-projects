@@ -1,3 +1,4 @@
+import { appFetch as fetch } from "../../../utils/appFetch";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { FiEdit, FiLink, FiPlus, FiSave, FiX } from "react-icons/fi";
 import { BASE_URL } from "../../../config/api";

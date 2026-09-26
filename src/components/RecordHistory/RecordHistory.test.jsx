@@ -144,7 +144,7 @@ test("transaction history aggregates allocations once and can return to exact he
   expect(await screen.findByText("Allocation #81 deleted")).toBeInTheDocument();
   expect(screen.getAllByRole("row")).toHaveLength(2);
   expect(fetch.mock.calls[0][0]).toContain("includeChildren=true");
-  fireEvent.click(screen.getByRole("checkbox", { name: "Include allocation activity" }));
+  fireEvent.click(screen.getByRole("checkbox", { name: "Include allocation and funding-receipt activity" }));
   await screen.findByText("Draft → Submitted");
   expect(fetch.mock.calls[1][0]).not.toContain("includeChildren");
   expect(fetch.mock.calls[1][0]).toContain("entityType=TRANSACTION&entityId=7&page=0");

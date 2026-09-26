@@ -1,3 +1,4 @@
+import { appFetch as fetch } from "../../../utils/appFetch";
 import React, { useState, useMemo } from "react";
 import { FiSave, FiX, FiBriefcase } from "react-icons/fi";
 import styles from "./CreatePosition.module.scss";
@@ -206,7 +207,7 @@ const CreatePosition = () => {
         return;
       }
 
-      alert("Position was created successfully!");
+      // Successful mutations are announced by the shared notification banner.
       onResetClick();
       //Optional: navigate somewhere (list/details) after creation
       //navigate("/positions");

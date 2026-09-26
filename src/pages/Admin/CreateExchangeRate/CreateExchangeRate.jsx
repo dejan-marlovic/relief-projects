@@ -258,11 +258,7 @@ const CreateExchangeRate = () => {
       const createdId =
         created?.id ?? created?.exchangeRateId ?? created?.exchange_rate_id;
 
-      alert(
-        `Exchange rate created successfully${
-          createdId ? ` (id: ${createdId})` : "!"
-        }`,
-      );
+      // Successful mutations are announced by the shared notification banner.
       resetForm();
     } catch (err) {
       console.error("Create exchange rate error", err);

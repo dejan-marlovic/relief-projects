@@ -1,3 +1,4 @@
+import useTransientMessage from "../../hooks/useTransientMessage";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ProjectContext } from "../../context/ProjectContext";
@@ -38,7 +39,7 @@ function Queue({ mode, projectId, authFetch }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
+  const [notice, setNotice] = useTransientMessage("", value => value.startsWith("Follow-up updated."));
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState(null);
   const [employees, setEmployees] = useState([]);

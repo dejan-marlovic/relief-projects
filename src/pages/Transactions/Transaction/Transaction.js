@@ -1,3 +1,4 @@
+import FundingReceipts from "../../../components/FundingReceipts/FundingReceipts";
 import { fundingCurrencyLabel } from "../../../utils/transactionFunding";
 import { budgetOptionLabel } from "../../../utils/budgetDisplay";
 import React from "react";
@@ -72,6 +73,7 @@ const Transaction = ({
   isReviewingLifecycle = false,
   historyRefreshKey = 0,
   onAllocationMutationSuccess,
+  onReceiptMutationSuccess,
 }) => {
   const ev = editedValues || {};
   const isCreate = (tx?.id ?? "") === "new";
@@ -480,6 +482,7 @@ const Transaction = ({
 
       <p className={styles.currencyNote}>Current budget currency: <strong>{isCreate ? "Follows selected budget" : fundingCurrencyLabel(tx.fundingCurrency)}</strong> · Current configuration, not verified historical denomination.</p>
       <RecordHistory entityType="TRANSACTION" entityId={tx.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} />
+      <FundingReceipts transactionId={tx.id} projectId={tx.projectId} refreshKey={`${historyRefreshKey}:${lifecycleStatus}`} editingLocked={isEditing || editingLocked} onChanged={onReceiptMutationSuccess} />
       <FinancialDocuments entityType="TRANSACTION" entityId={tx.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} editingLocked={isEditing} />
       {expanded && !isCreate && (
         <div className={styles.expandedPanel}>

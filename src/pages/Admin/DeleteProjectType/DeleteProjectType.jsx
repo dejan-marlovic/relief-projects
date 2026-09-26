@@ -1,3 +1,4 @@
+import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiTrash2, FiRefreshCw, FiFolder } from "react-icons/fi";
@@ -20,7 +21,7 @@ const DeleteProjectType = () => {
   const [selectedProjectTypeId, setSelectedProjectTypeId] = useState("");
 
   const [formError, setFormError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useTransientMessage("");
 
   const selectedProjectType = useMemo(() => {
     const id = Number(selectedProjectTypeId);

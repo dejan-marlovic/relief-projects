@@ -1,3 +1,4 @@
+import { appFetch as fetch } from "../../../../utils/appFetch";
 /* global BigInt */
 import { decimalUnits, fundingCurrencyLabel, sumAmounts, remainingFunding } from "../../../../utils/transactionFunding";
 import React, { useCallback, useEffect, useMemo, useState } from "react";

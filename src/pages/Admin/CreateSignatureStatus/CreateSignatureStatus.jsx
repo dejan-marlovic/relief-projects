@@ -77,9 +77,7 @@ const CreateSignatureStatus = () => {
         return;
       }
 
-      alert(
-        `Signature status created successfully${data?.id ? ` (id: ${data.id})` : ""}!`,
-      );
+      // Successful mutations are announced by the shared notification banner.
       resetForm();
     } catch (err) {
       console.error("Create signature status error:", err);

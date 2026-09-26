@@ -1,3 +1,4 @@
+import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiRefreshCw, FiSave, FiShield, FiUsers } from "react-icons/fi";
@@ -68,7 +69,7 @@ const UserRoleManagement = () => {
   const [savingUserId, setSavingUserId] = useState(null);
   const [roleErrorUserId, setRoleErrorUserId] = useState(null);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [success, setSuccess] = useTransientMessage("");
 
   const loadData = useCallback(async () => {
     setLoading(true);

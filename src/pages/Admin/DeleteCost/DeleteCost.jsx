@@ -1,3 +1,4 @@
+import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiTrash2, FiRefreshCw, FiTag } from "react-icons/fi";
@@ -21,7 +22,7 @@ const DeleteCost = () => {
   const [selectedCostId, setSelectedCostId] = useState("");
 
   const [formError, setFormError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useTransientMessage("");
 
   const costTypeNameById = useMemo(() => {
     return costTypes.reduce((acc, costType) => {

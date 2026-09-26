@@ -191,9 +191,7 @@ const CreateCost = () => {
       const created = await safeReadJson(res);
       const createdId = created?.id ?? created?.costId ?? created?.cost_id;
 
-      alert(
-        `Cost created successfully${createdId ? ` (id: ${createdId})` : "!"}`,
-      );
+      // Successful mutations are announced by the shared notification banner.
 
       resetForm();
     } catch (err) {

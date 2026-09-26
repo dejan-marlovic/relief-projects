@@ -169,11 +169,7 @@ const CreateTransactionStatus = () => {
         created?.transactionStatusId ??
         created?.transaction_status_id;
 
-      alert(
-        `New transaction status created successfully${
-          createdId ? ` (id: ${createdId})` : "!"
-        }`,
-      );
+      // Successful mutations are announced by the shared notification banner.
 
       resetForm();
     } catch (err) {

@@ -114,9 +114,7 @@ const CreateRecipient = () => {
         return;
       }
 
-      alert(
-        `Recipient created successfully${data?.id ? ` (id: ${data.id})` : ""}!`,
-      );
+      // Successful mutations are announced by the shared notification banner.
       resetForm();
     } catch (err) {
       console.error("Create recipient error:", err);

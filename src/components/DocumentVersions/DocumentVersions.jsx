@@ -1,3 +1,4 @@
+import useTransientMessage from "../../hooks/useTransientMessage";
 import React, { useEffect, useRef, useState } from "react";
 import { BASE_URL } from "../../config/api";
 import { readDocumentError, uploaderLabel, uploadTimeLabel } from "../../utils/documentMetadata";
@@ -12,7 +13,7 @@ export default function DocumentVersions({ document, authFetch, categories, canE
   const [refresh, setRefresh] = useState(0);
   const [busy, setBusy] = useState(false);
   const [replacement, setReplacement] = useState(null);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useTransientMessage("");
   const alive = useRef(true);
   const mutation = useRef(false);
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);

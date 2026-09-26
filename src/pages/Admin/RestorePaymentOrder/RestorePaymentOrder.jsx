@@ -1,3 +1,4 @@
+import useTransientMessage from "../../../hooks/useTransientMessage";
 import PaymentAmount from "../../../components/PaymentAmount/PaymentAmount";
 import { fundingCurrencyLabel } from "../../../utils/transactionFunding";
 import React, { useEffect, useMemo, useState } from "react";
@@ -30,7 +31,7 @@ const RestorePaymentOrder = () => {
   const [selectedPaymentOrderId, setSelectedPaymentOrderId] = useState("");
 
   const [formError, setFormError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useTransientMessage("");
 
   const selectedPaymentOrder = useMemo(() => {
     const id = Number(selectedPaymentOrderId);

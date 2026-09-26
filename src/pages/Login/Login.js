@@ -1,3 +1,5 @@
+import { notifySuccess } from "../../utils/successNotifications";
+import { appFetch as fetch } from "../../utils/appFetch";
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Login.module.scss";
@@ -45,6 +47,7 @@ function Login() {
       }
 
       // 3️⃣ Navigate to project page
+      notifySuccess("You are now signed in.");
       navigate("/project");
     } catch (error) {
       clearAuth();

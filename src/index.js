@@ -1,3 +1,4 @@
+import SuccessNotifications from "./components/SuccessNotifications/SuccessNotifications";
 import FollowUps from "./pages/FollowUps/FollowUps";
 // Import ReactDOM to render the React app into the DOM
 import ReactDOM from "react-dom/client";
@@ -41,6 +42,7 @@ export default function App() {
       <ProjectProvider>
         <BrowserRouter>
           <AuthProvider>
+            <SuccessNotifications />
             <Routes>
               {/* Public route: login is outside the main layout */}
               <Route path="/login" element={<Login />} />

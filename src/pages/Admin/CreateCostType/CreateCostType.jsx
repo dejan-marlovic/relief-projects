@@ -120,11 +120,7 @@ const CreateCostType = () => {
       const createdId =
         created?.id ?? created?.costTypeId ?? created?.cost_type_id;
 
-      alert(
-        `Cost type created successfully${
-          createdId ? ` (id: ${createdId})` : "!"
-        }`,
-      );
+      // Successful mutations are announced by the shared notification banner.
 
       resetForm();
     } catch (err) {

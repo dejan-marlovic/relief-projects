@@ -1,3 +1,4 @@
+import useTransientMessage from "../../../hooks/useTransientMessage";
 import BudgetPlanning from "../../../components/BudgetPlanning/BudgetPlanning";
 import BudgetCurrencyDialog from "../../../components/BudgetCurrencyDialog/BudgetCurrencyDialog";
 import { budgetLimitError } from "../../../utils/budgetLimit";
@@ -83,7 +84,7 @@ const UpdateBudget = () => {
   const [planningRefresh, setPlanningRefresh] = useState(0);
 
   const [formError, setFormError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useTransientMessage("");
   const [fieldErrors, setFieldErrors] = useState({});
 
   const selectedBudget = useMemo(() => {

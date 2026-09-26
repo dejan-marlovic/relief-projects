@@ -117,11 +117,7 @@ const CreateProjectType = () => {
       const createdId =
         created?.id ?? created?.projectTypeId ?? created?.project_type_id;
 
-      alert(
-        `Project type created successfully${
-          createdId ? ` (id: ${createdId})` : "!"
-        }`,
-      );
+      // Successful mutations are announced by the shared notification banner.
 
       resetForm();
     } catch (err) {

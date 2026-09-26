@@ -1,3 +1,4 @@
+import FundingReceiptAuditDetails from "../../../components/FundingReceipts/FundingReceiptAuditDetails";
 import PaymentCurrencyContext from "../../../components/PaymentCurrencyContext/PaymentCurrencyContext";
 import TransactionCurrencyContext from "../../../components/TransactionCurrencyContext/TransactionCurrencyContext";
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
@@ -31,6 +32,7 @@ const ENTITY_LABELS = {
   BUDGET: "Budget",
   TRANSACTION: "Transaction",
   PAYMENT_ORDER: "Payment order",
+  FUNDING_RECEIPT: "Funding receipt",
   RECIPIENT: "Recipient",
   SIGNATURE: "Signature",
   COST_DETAIL: "Budget cost detail",
@@ -158,6 +160,7 @@ const AuditHistory = () => {
             <option value="BUDGET">Budget</option>
             <option value="TRANSACTION">Transaction</option>
             <option value="PAYMENT_ORDER">Payment order</option>
+            <option value="FUNDING_RECEIPT">Funding receipt</option>
             <option value="RECIPIENT">Recipient</option>
             <option value="SIGNATURE">Signature</option>
             <option value="COST_DETAIL">Budget cost detail</option>
@@ -176,6 +179,7 @@ const AuditHistory = () => {
             <option value="RETURN">Return</option>
             <option value="DELETE">Deleted</option>
             <option value="RESTORE">Restored</option>
+            <option value="VOID">Voided</option>
           </select>
         </label>
         <label>
@@ -237,7 +241,7 @@ const AuditHistory = () => {
                 <td role="cell" data-label="Record"><strong>{ENTITY_LABELS[event.entityType] || event.entityType}</strong><span className={styles.subtle}>#{event.entityId}</span></td>
                 <td role="cell" data-label="Project">{projectLabel(event.projectId)}</td>
                 <td role="cell" data-label="Action"><span className={`${styles.badge} ${styles[`action${event.action}`] || ""}`}>{auditActionLabel(event)}</span></td>
-                <td role="cell" data-label="Changes">{event.entityType === "RECIPIENT" ? <RecipientAuditDetails event={event} /> : event.entityType === "SIGNATURE" ? <SignatureAuditDetails event={event} /> : event.entityType === "COST_DETAIL" ? <CostDetailAuditDetails event={event} /> : event.entityType === "COST_DETAIL_ALLOCATION" ? <AllocationAuditDetails event={event} /> : event.entityType === "PAYMENT_ORDER_LINE" ? <LineAuditDetails event={event} /> : event.action === "UPDATE" ? <AuditFieldChanges event={event} /> : hasAuditTransition(event) ? <><span className={styles.state}>{event.previousState}</span><span className={styles.arrow}>→</span><span className={styles.state}>{event.newState}</span></> : "—"}<TransactionCurrencyContext event={event} /><PaymentCurrencyContext event={event} /><ReturnReason event={event} /></td>
+                <td role="cell" data-label="Changes">{event.entityType === "FUNDING_RECEIPT" ? <FundingReceiptAuditDetails event={event} /> : event.entityType === "RECIPIENT" ? <RecipientAuditDetails event={event} /> : event.entityType === "SIGNATURE" ? <SignatureAuditDetails event={event} /> : event.entityType === "COST_DETAIL" ? <CostDetailAuditDetails event={event} /> : event.entityType === "COST_DETAIL_ALLOCATION" ? <AllocationAuditDetails event={event} /> : event.entityType === "PAYMENT_ORDER_LINE" ? <LineAuditDetails event={event} /> : event.action === "UPDATE" ? <AuditFieldChanges event={event} /> : hasAuditTransition(event) ? <><span className={styles.state}>{event.previousState}</span><span className={styles.arrow}>→</span><span className={styles.state}>{event.newState}</span></> : "—"}<TransactionCurrencyContext event={event} /><PaymentCurrencyContext event={event} /><ReturnReason event={event} /></td>
                 <td role="cell" data-label="Performed by"><strong>{event.performedByDisplay || "Unknown user"}</strong><span className={styles.subtle}>User #{event.performedBy}</span></td>
               </tr>
             ))}

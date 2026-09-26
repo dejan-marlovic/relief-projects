@@ -1,3 +1,4 @@
+import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -22,7 +23,7 @@ const RestoreExchangeRate = () => {
   const [selectedExchangeRateId, setSelectedExchangeRateId] = useState("");
 
   const [formError, setFormError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useTransientMessage("");
 
   const selectedExchangeRate = useMemo(() => {
     const id = Number(selectedExchangeRateId);

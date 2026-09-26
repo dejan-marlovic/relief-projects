@@ -125,9 +125,7 @@ const CreateCurrency = () => {
       const createdId =
         created?.id ?? created?.currencyId ?? created?.currency_id;
 
-      alert(
-        `Currency created successfully${createdId ? ` (id: ${createdId})` : "!"}`,
-      );
+      // Successful mutations are announced by the shared notification banner.
 
       resetForm();
     } catch (err) {

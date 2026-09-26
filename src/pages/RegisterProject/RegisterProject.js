@@ -1,3 +1,4 @@
+import { appFetch as fetch } from "../../utils/appFetch";
 // RegisterProject.jsx
 import React, { useEffect, useState, useContext, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
@@ -9,7 +10,8 @@ import {
   FiSave,
   FiX,
   FiUploadCloud,
-  FiImage,} from "react-icons/fi";
+  FiImage,
+} from "react-icons/fi";
 
 // ✅ IMPORTANT: use shared config (works in IDE dev + Docker + AWS)
 import { BASE_URL } from "../../config/api";
@@ -379,7 +381,7 @@ const RegisterProject = () => {
       // ✅ Select the newly created project so Project.jsx can fetch /api/projects/:id
       setSelectedProjectId(String(finalProject.id));
 
-      alert("Project created successfully!");
+      // Successful mutations are announced by the shared notification banner.
       resetForm();
 
       // Optional: if you have a dedicated route for project details, you can navigate there

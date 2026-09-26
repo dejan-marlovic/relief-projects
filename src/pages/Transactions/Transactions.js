@@ -1,3 +1,4 @@
+import { appFetch as fetch } from "../../utils/appFetch";
 import { decimalUnits, fundingErrors, fundingCurrencyLabel, matchesDecimalRange, sumAmounts, remainingFunding, fundingExcel } from "../../utils/transactionFunding";
 import { budgetOptionLabel } from "../../utils/budgetDisplay";
 import useMediaQuery from "../../hooks/useMediaQuery";
@@ -1780,6 +1781,16 @@ const Transactions = ({ refreshTrigger }) => {
                 isReviewingLifecycle={reviewingTxId === tx.id}
                 onAllocationMutationSuccess={() => {
                   setHistoryRefreshKeys((current) => ({ ...current, [tx.id]: (current[tx.id] || 0) + 1 }));
+                }}
+                onReceiptMutationSuccess={async () => {
+                  setHistoryRefreshKeys((current) => ({ ...current, [tx.id]: (current[tx.id] || 0) + 1 }));
+                  try {
+                    const response = await fetch(`${BASE_URL}/api/transactions/${tx.id}`, { headers: authHeaders, cache: "no-store" });
+                    if (response.ok) {
+                      const current = await response.json();
+                      setTransactions((previous) => previous.map(item => item.id === tx.id ? current : item));
+                    }
+                  } catch { /* Receipt eligibility stays authoritative; preserve any open draft. */ }
                 }}
                 historyRefreshKey={historyRefreshKeys[tx.id] || 0}
               />

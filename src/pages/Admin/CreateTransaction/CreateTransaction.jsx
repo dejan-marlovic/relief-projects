@@ -172,9 +172,7 @@ const CreateTransaction = () => {
         return;
       }
 
-      alert(
-        `Transaction created successfully${data?.id ? ` (id: ${data.id})` : ""}!`,
-      );
+      // Successful mutations are announced by the shared notification banner.
       resetForm();
     } catch (err) {
       console.error("Create transaction error:", err);

@@ -1,5 +1,6 @@
 export const AUDIT_ACTION_LABELS = {
   CREATE: "Created",
+  VOID: "Voided",
   UPDATE: "Updated",
   SUBMIT: "Submitted",
   APPROVE: "Approved",
@@ -9,12 +10,13 @@ export const AUDIT_ACTION_LABELS = {
 };
 
 export const hasAuditTransition = (event) =>
-  !["PAYMENT_ORDER_LINE", "COST_DETAIL_ALLOCATION", "COST_DETAIL", "SIGNATURE", "RECIPIENT"].includes(event.entityType) &&
+  !["FUNDING_RECEIPT", "PAYMENT_ORDER_LINE", "COST_DETAIL_ALLOCATION", "COST_DETAIL", "SIGNATURE", "RECIPIENT"].includes(event.entityType) &&
   !["CREATE", "UPDATE", "DELETE", "RESTORE"].includes(event.action) &&
   Boolean(event.previousState && event.newState);
 
 export const auditActionLabel = (event) => {
   const label = AUDIT_ACTION_LABELS[event.action] || event.action || "—";
+  if (event.entityType === "FUNDING_RECEIPT") return `Funding receipt #${event.entityId} ${label.toLowerCase()}`;
   if (event.entityType === "COST_DETAIL") {
     const moved = event.previousParentBudgetId != null && event.parentBudgetId != null &&
       String(event.previousParentBudgetId) !== String(event.parentBudgetId);

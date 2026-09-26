@@ -1,3 +1,4 @@
+import { appFetch as fetch } from "../../../utils/appFetch";
 // src/components/Admin/CreateUser/CreateUser.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -213,9 +214,7 @@ const CreateUser = () => {
       }
 
       const created = await safeReadJson(res);
-      alert(
-        `User created successfully${created?.id ? ` (id: ${created.id})` : ""}!`,
-      );
+      // Successful mutations are announced by the shared notification banner.
       resetForm();
     } catch (err) {
       console.error("Create user error:", err);

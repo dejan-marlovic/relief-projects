@@ -1,3 +1,5 @@
+import useTransientMessage from "../../hooks/useTransientMessage";
+import { appFetch as fetch } from "../../utils/appFetch";
 import React, { useEffect, useState, useContext, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ProjectContext } from "../../context/ProjectContext";
@@ -142,7 +144,7 @@ const Documents = () => {
 
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
-  const [uploadInfo, setUploadInfo] = useState(""); // small helper message (optional)
+  const [uploadInfo, setUploadInfo] = useTransientMessage("", value => value.startsWith("Upload complete.")); // small helper message (optional)
 
   const [deletingId, setDeletingId] = useState(null);
   const [deleteError, setDeleteError] = useState("");

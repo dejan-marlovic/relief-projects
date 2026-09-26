@@ -1,3 +1,4 @@
+import useTransientMessage from "../../hooks/useTransientMessage";
 import React, { useEffect, useRef, useState } from "react";
 import { BASE_URL } from "../../config/api";
 import { readDocumentError, uploadTimeLabel } from "../../utils/documentMetadata";
@@ -81,7 +82,7 @@ function Panel({ projectId, authFetch, categories, refreshKey }) {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
+  const [notice, setNotice] = useTransientMessage("", value => value === "Checklist updated.");
   const [documents, setDocuments] = useState([]);
   const [documentError, setDocumentError] = useState("");
   const [historical, setHistorical] = useState(false);

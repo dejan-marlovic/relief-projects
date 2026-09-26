@@ -1,3 +1,5 @@
+import useTransientMessage from "../../hooks/useTransientMessage";
+import { appFetch as fetch } from "../../utils/appFetch";
 import React, { useEffect, useRef, useState } from "react";
 import { BASE_URL } from "../../config/api";
 import { useAuth } from "../../context/AuthContext";
@@ -12,7 +14,7 @@ export default function BudgetPlanning({ budget, refreshKey = 0, disabled = fals
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useTransientMessage("");
   const [amount, setAmount] = useState("");
   const [confirmed, setConfirmed] = useState(false);
   const alive = useRef(true), pending = useRef(false);

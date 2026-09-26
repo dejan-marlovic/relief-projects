@@ -145,9 +145,7 @@ const CreateAddress = () => {
       const createdId =
         created?.id ?? created?.addressId ?? created?.address_id;
 
-      alert(
-        `Address created successfully${createdId ? ` (id: ${createdId})` : "!"}`,
-      );
+      // Successful mutations are announced by the shared notification banner.
 
       resetForm();
     } catch (err) {

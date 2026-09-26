@@ -189,11 +189,7 @@ const CreateOrganization = () => {
       const createdId =
         created?.id ?? created?.organizationId ?? created?.organization_id;
 
-      alert(
-        `Organization created successfully${
-          createdId ? ` (id: ${createdId})` : "!"
-        }`,
-      );
+      // Successful mutations are announced by the shared notification banner.
 
       resetForm();
     } catch (err) {

@@ -1,3 +1,4 @@
+import { appFetch as fetch } from "../../../utils/appFetch";
 import BudgetPlanning from "../../../components/BudgetPlanning/BudgetPlanning";
 import BudgetCurrencyDialog from "../../../components/BudgetCurrencyDialog/BudgetCurrencyDialog";
 import { budgetLimitError } from "../../../utils/budgetLimit";
@@ -1264,7 +1265,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
 
       setFormError("");
       setFieldErrors({});
-      alert("Budget updated successfully!");
+      // Successful mutations are announced by the shared notification banner.
     } catch (error) {
       console.error("Error updating budget:", error);
       setFormError("Unexpected error while saving budget.");
@@ -1395,7 +1396,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete }) => {
         throw new Error(await readApiError(response, "Failed to delete budget."));
       }
 
-      alert("Budget deleted successfully!");
+      // Successful mutations are announced by the shared notification banner.
       onDelete?.(budget.id);
       setBudget({});
     } catch (error) {

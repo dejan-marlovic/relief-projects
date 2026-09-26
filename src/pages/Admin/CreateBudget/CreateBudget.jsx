@@ -179,9 +179,7 @@ const CreateBudget = () => {
         return;
       }
 
-      alert(
-        `Budget created successfully${data?.id ? ` (id: ${data.id})` : ""}!`,
-      );
+      // Successful mutations are announced by the shared notification banner.
       resetForm();
     } catch (err) {
       console.error("Create budget error:", err);

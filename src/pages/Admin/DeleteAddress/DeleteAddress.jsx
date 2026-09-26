@@ -1,3 +1,4 @@
+import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiTrash2, FiRefreshCw, FiMapPin } from "react-icons/fi";
@@ -20,7 +21,7 @@ const DeleteAddress = () => {
   const [selectedAddressId, setSelectedAddressId] = useState("");
 
   const [formError, setFormError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useTransientMessage("");
 
   const selectedAddress = useMemo(() => {
     const id = Number(selectedAddressId);

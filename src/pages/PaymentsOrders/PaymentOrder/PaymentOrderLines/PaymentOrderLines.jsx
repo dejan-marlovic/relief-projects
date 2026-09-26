@@ -1,3 +1,4 @@
+import { appFetch as fetch } from "../../../../utils/appFetch";
 import RecipientConflicts from "./RecipientConflicts";
 import PaymentAmount from "../../../../components/PaymentAmount/PaymentAmount";
 import { paymentAmountError, decimalUnits } from "../../../../utils/paymentFunding";

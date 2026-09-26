@@ -109,9 +109,7 @@ const CreateBankDetail = () => {
         return;
       }
 
-      alert(
-        `Bank detail created successfully${data?.bankId ? ` (id: ${data.bankId})` : ""}!`,
-      );
+      // Successful mutations are announced by the shared notification banner.
       resetForm();
     } catch (err) {
       console.error("Create bank detail error:", err);

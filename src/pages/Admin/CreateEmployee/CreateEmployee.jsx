@@ -1,3 +1,4 @@
+import { appFetch as fetch } from "../../../utils/appFetch";
 import React, { useEffect, useState } from "react";
 import { FiSave, FiX, FiUser } from "react-icons/fi";
 import styles from "./CreateEmployee.module.scss";
@@ -249,7 +250,7 @@ const CreateEmployee = () => {
         return;
       }
 
-      alert("Employee was created successfully!");
+      // Successful mutations are announced by the shared notification banner.
       onResetClick();
     } catch (err) {
       console.error(err);

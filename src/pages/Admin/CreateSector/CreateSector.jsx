@@ -174,9 +174,7 @@ const CreateSector = () => {
       const created = await safeReadJson(res);
       const createdId = created?.id ?? created?.sectorId ?? created?.sector_id;
 
-      alert(
-        `Sector created successfully${createdId ? ` (id: ${createdId})` : "!"}`,
-      );
+      // Successful mutations are announced by the shared notification banner.
 
       resetForm();
     } catch (err) {

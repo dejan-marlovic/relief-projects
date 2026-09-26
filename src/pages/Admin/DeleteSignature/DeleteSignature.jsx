@@ -1,3 +1,4 @@
+import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiTrash2, FiRefreshCw, FiEdit3 } from "react-icons/fi";
@@ -23,7 +24,7 @@ const DeleteSignature = () => {
   const [selectedSignatureId, setSelectedSignatureId] = useState("");
 
   const [formError, setFormError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useTransientMessage("");
 
   const signatureStatusNameById = useMemo(() => {
     return signatureStatuses.reduce((acc, status) => {

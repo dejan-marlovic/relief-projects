@@ -1,3 +1,4 @@
+import useTransientMessage from "../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -27,7 +28,7 @@ function DocumentsPanel({ entityType, entityId, locked, lifecycleStatus, refresh
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState("");
   const [actionError, setActionError] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useTransientMessage("");
   const [candidates, setCandidates] = useState([]);
   const [candidateError, setCandidateError] = useState("");
   const [candidateLoading, setCandidateLoading] = useState(false);
