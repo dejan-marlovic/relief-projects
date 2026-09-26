@@ -247,6 +247,9 @@ $secondary-color: colors.$danger;
 
 /* Responsive */
 @media (min-width: 1101px) {
+  .tabList { gap: 6px; }
+  .tabLink { padding-inline: 12px; }
+
   .headerBar {
     grid-template-columns: fit-content(26vw) minmax(0, 1fr) minmax(200px, 24vw) auto;
     grid-template-areas: "title context controls logo" ". . . logout";
