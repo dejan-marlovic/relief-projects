@@ -270,3 +270,18 @@
   color: colors.$text-secondary;
   line-height: 1.55;
 }
+
+.page, .shell, .heroCard, .heroSide, .card, .statCard, .principle { min-width: 0; }
+@media (max-width: 1100px) {
+  .page { padding: 8px; }
+  .hero, .grid, .principles { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 700px) {
+  .page { padding: 0; }
+  .shell, .heroCard, .statCard, .card, .principle, .flowStep { padding: 12px; }
+  .pageHeader { flex-wrap: wrap; }
+  .pageHeaderText, .flowStep > div { min-width: 0; }
+  .shell { overflow-wrap: anywhere; }
+  .flowStep { grid-template-columns: 34px minmax(0, 1fr); gap: 10px; }
+  .pageTitle svg, .heroKicker svg { flex-shrink: 0; }
+}

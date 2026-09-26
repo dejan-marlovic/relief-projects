@@ -1,5 +1,8 @@
+import PaymentAmount from "../../../components/PaymentAmount/PaymentAmount";
 import React from "react";
 import styles from "./PaymentOrder.module.scss";
+import RecordHistory from "../../../components/RecordHistory/RecordHistory";
+import FinancialDocuments from "../../../components/FinancialDocuments/FinancialDocuments";
 import {
   FiEdit,
   FiTrash2,
@@ -7,6 +10,9 @@ import {
   FiX,
   FiChevronDown,
   FiChevronUp,
+  FiSend,
+  FiCheck,
+  FiCornerUpLeft,
 } from "react-icons/fi";
 
 const Cell = ({ children, className }) => (
@@ -26,6 +32,9 @@ function toDateTimeLocal(iso) {
 }
 
 const PaymentOrder = ({
+  compact = false,
+  saving = false,
+  editingLocked = false,
   po,
   isEditing = false,
   editedValues,
@@ -51,10 +60,18 @@ const PaymentOrder = ({
   selectionDisabled = false,
   canEdit = false,
   canDelete = false,
+  canSubmitLifecycle = false,
+  onSubmitLifecycle,
+  isSubmittingLifecycle = false,
+  canReviewLifecycle = false,
+  onApproveLifecycle,
+  onReturnLifecycle,
+  isReviewingLifecycle = false,
+  historyRefreshKey = 0,
 }) => {
   const ev = editedValues || {};
   const isCreate = (po?.id ?? "") === "new";
-  const autoSave = isEditing && !isCreate;
+  const autoSave = isEditing && !isCreate && !compact;
 
   const submit = (e) => {
     e.preventDefault();
@@ -76,12 +93,13 @@ const PaymentOrder = ({
   const inputText = (field) => (
     <>
       <input
+        aria-label={field === "paymentOrderDescription" ? "Description" : field === "pinCode" ? "PIN code" : "Message"}
         type="text"
         value={ev[field] ?? po[field] ?? ""}
         onChange={(e) => onChange(field, e.target.value)}
         onBlur={autoSave ? submit : undefined}
         className={inputClass(field)}
-        disabled={locked}
+        disabled={locked || saving}
       />
       <FieldError name={field} />
     </>
@@ -90,6 +108,7 @@ const PaymentOrder = ({
   const selectTransaction = (
     <>
       <select
+        aria-label="Transaction"
         value={ev.transactionId ?? po.transactionId ?? ""}
         onChange={(e) =>
           onChange(
@@ -99,7 +118,7 @@ const PaymentOrder = ({
         }
         onBlur={autoSave ? submit : undefined}
         className={inputClass("transactionId")}
-        disabled={locked}
+        disabled={locked || saving}
       >
         <option value="">(none)</option>
         {transactions.map((t) => (
@@ -113,6 +132,7 @@ const PaymentOrder = ({
   const inputDate = (
     <>
       <input
+        aria-label="Payment order date"
         type="datetime-local"
         value={toDateTimeLocal(ev.paymentOrderDate ?? po.paymentOrderDate)}
         onChange={(e) =>
@@ -123,29 +143,37 @@ const PaymentOrder = ({
         }
         onBlur={autoSave ? submit : undefined}
         className={inputClass("paymentOrderDate")}
-        disabled={locked}
+        disabled={locked || saving}
       />
       <FieldError name="paymentOrderDate" />
     </>
   );
 
-  const hc = (i) => (!visibleCols[i] ? styles.hiddenCol : "");
+  const hc = (i) => (!compact && !visibleCols[i] ? styles.hiddenCol : "");
 
   // amount is computed by backend, display only
-  const computedAmount =
-    po?.amount == null || Number.isNaN(Number(po.amount))
-      ? 0
-      : Number(po.amount);
 
   // PO ID label (read-only)
   const poIdLabel = isCreate ? "(new)" : po?.id != null ? `PO#${po.id}` : "-";
   const poIdWithLock =
     !isCreate && locked ? `${poIdLabel} (Booked)` : poIdLabel;
+  const lifecycleStatus = po?.lifecycleStatus || "DRAFT";
+  const showSubmitLifecycle =
+    !isCreate &&
+    !locked &&
+    canSubmitLifecycle &&
+    ["DRAFT", "RETURNED"].includes(lifecycleStatus);
+  const showReviewLifecycle =
+    !isCreate &&
+    !locked &&
+    canReviewLifecycle &&
+    lifecycleStatus === "SUBMITTED";
 
   const lockedTitle =
     "Booked (final signature) — this payment order is read-only. Undo/remove the Booked signature to edit.";
 
   return (
+    <>
     <div
       ref={rowRef || undefined}
       className={`${styles.row} ${styles.gridRow} ${
@@ -164,9 +192,9 @@ const PaymentOrder = ({
               onClick={submit}
               title={locked ? lockedTitle : "Save"}
               aria-label="Save"
-              disabled={locked}
+              disabled={locked || saving}
             >
-              <FiSave />
+              <FiSave />{compact && <span>Save</span>}
             </button>
 
             <button
@@ -174,9 +202,10 @@ const PaymentOrder = ({
               className={styles.dangerIconBtn}
               onClick={onCancel}
               title="Cancel"
+              disabled={saving}
               aria-label="Cancel"
             >
-              <FiX />
+              <FiX />{compact && <span>Cancel</span>}
             </button>
           </div>
         ) : (
@@ -189,7 +218,7 @@ const PaymentOrder = ({
                  * Locked payment orders remain selectable because selection is
                  * used for Excel export. Editing and deleting are still blocked.
                  */
-                disabled={selectionDisabled}
+                disabled={selectionDisabled || saving || editingLocked}
                 onChange={(e) => {
                   e.stopPropagation();
                   onSelectChange?.(po.id, e.target.checked);
@@ -215,10 +244,60 @@ const PaymentOrder = ({
                 }}
                 title={locked ? lockedTitle : "Edit"}
                 aria-label="Edit"
-                disabled={locked}
+                disabled={locked || saving || editingLocked}
               >
-                <FiEdit />
+                <FiEdit />{compact && <span>Edit</span>}
               </button>
+            )}
+
+            {showSubmitLifecycle && (
+              <button
+                type="button"
+                className={`${styles.iconCircleBtn} ${styles.submitBtn}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onSubmitLifecycle?.();
+                }}
+                disabled={isSubmittingLifecycle || saving || editingLocked}
+                title="Submit for approval"
+                aria-label={`Submit payment order ${po.id} for approval`}
+              >
+                <FiSend />{compact && <span>Submit</span>}
+              </button>
+            )}
+
+            {showReviewLifecycle && (
+              <>
+                <button
+                  type="button"
+                  className={`${styles.iconCircleBtn} ${styles.submitBtn}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onApproveLifecycle?.();
+                  }}
+                  disabled={isReviewingLifecycle || saving || editingLocked}
+                  title="Approve payment order"
+                  aria-label={`Approve payment order ${po.id}`}
+                >
+                  <FiCheck />{compact && <span>Approve</span>}
+                </button>
+                <button
+                  type="button"
+                  className={styles.iconCircleBtn}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onReturnLifecycle?.();
+                  }}
+                  disabled={isReviewingLifecycle || saving || editingLocked}
+                  title="Return payment order"
+                  aria-label={`Return payment order ${po.id}`}
+                >
+                  <FiCornerUpLeft />{compact && <span>Return</span>}
+                </button>
+              </>
             )}
 
             {!isCreate && (
@@ -230,10 +309,11 @@ const PaymentOrder = ({
                   e.stopPropagation();
                   onToggleLines?.();
                 }}
+                disabled={saving || editingLocked}
                 title={expanded ? "Hide lines" : "Show lines"}
                 aria-label={expanded ? "Hide lines" : "Show lines"}
               >
-                {expanded ? <FiChevronUp /> : <FiChevronDown />}
+                {expanded ? <FiChevronUp /> : <FiChevronDown />}{compact && <span>Lines</span>}
               </button>
             )}
 
@@ -248,9 +328,9 @@ const PaymentOrder = ({
                 }}
                 title={locked ? lockedTitle : "Delete"}
                 aria-label="Delete payment order"
-                disabled={locked}
+                disabled={locked || saving || editingLocked}
               >
-                <FiTrash2 />
+                <FiTrash2 />{compact && <span>Delete</span>}
               </button>
             )}
           </div>
@@ -258,15 +338,30 @@ const PaymentOrder = ({
       </Cell>
 
       {/* 1: PO ID (read-only) */}
-      <Cell className={hc(1)}>{poIdWithLock}</Cell>
+      <Cell className={hc(1)}>
+        {compact && <span className={styles.fieldLabel}>Payment order</span>}
+        <div className={styles.poIdentity}>
+          <span>{poIdWithLock}</span>
+          {!isCreate && (
+            <span
+              className={`${styles.statusBadge} ${styles[`status${lifecycleStatus}`] || ""}`}
+              aria-label={`Payment order lifecycle status: ${lifecycleStatus}`}
+            >
+              {lifecycleStatus}
+            </span>
+          )}
+        </div>
+      </Cell>
 
       {/* 2: Transaction */}
       <Cell className={hc(2)}>
+        {compact && <span className={styles.fieldLabel}>Transaction</span>}
         {isEditing ? selectTransaction : (po.transactionId ?? "-")}
       </Cell>
 
       {/* 3: Date */}
       <Cell className={hc(3)}>
+        {compact && <span className={styles.fieldLabel}>Date</span>}
         {isEditing
           ? inputDate
           : po.paymentOrderDate
@@ -276,24 +371,31 @@ const PaymentOrder = ({
 
       {/* 4: Description */}
       <Cell className={hc(4)}>
+        {compact && <span className={styles.fieldLabel}>Description</span>}
         {isEditing
           ? inputText("paymentOrderDescription")
           : (po.paymentOrderDescription ?? "-")}
       </Cell>
 
       {/* 5: Amount (computed, not editable) */}
-      <Cell className={hc(5)}>{computedAmount.toFixed(2)}</Cell>
+      <Cell className={hc(5)}>
+        {compact && <span className={styles.fieldLabel}>Amount</span>}<PaymentAmount record={po} /></Cell>
 
       {/* 6: Message */}
       <Cell className={hc(6)}>
+        {compact && <span className={styles.fieldLabel}>Message</span>}
         {isEditing ? inputText("message") : (po.message ?? "-")}
       </Cell>
 
       {/* 7: Pin Code */}
       <Cell className={hc(7)}>
+        {compact && <span className={styles.fieldLabel}>PIN code</span>}
         {isEditing ? inputText("pinCode") : (po.pinCode ?? "-")}
       </Cell>
     </div>
+    <RecordHistory entityType="PAYMENT_ORDER" entityId={po.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} />
+    <FinancialDocuments entityType="PAYMENT_ORDER" entityId={po.id} lifecycleStatus={lifecycleStatus} locked={locked} refreshKey={historyRefreshKey} editingLocked={isEditing || saving || editingLocked} />
+    </>
   );
 };
 

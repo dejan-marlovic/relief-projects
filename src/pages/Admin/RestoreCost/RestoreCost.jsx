@@ -1,15 +1,15 @@
+import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiRotateCcw,
-  FiRefreshCw,
-  FiAlertCircle,
-  FiDollarSign,
+  FiRefreshCw,  FiDollarSign,
 } from "react-icons/fi";
 
 import styles from "./RestoreCost.module.scss";
 import { BASE_URL } from "../../../config/api";
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const RestoreCost = () => {
   const navigate = useNavigate();
@@ -23,7 +23,7 @@ const RestoreCost = () => {
   const [selectedCostId, setSelectedCostId] = useState("");
 
   const [formError, setFormError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useTransientMessage("");
 
   const selectedCost = useMemo(() => {
     const id = Number(selectedCostId);
@@ -184,10 +184,7 @@ const RestoreCost = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {successMessage && (

@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiSave, FiX, FiAlertCircle } from "react-icons/fi";
+import { FiSave, FiX } from "react-icons/fi";
 
 import styles from "./CreateProjectStatus.module.scss";
 import { BASE_URL } from "../../../config/api";
@@ -12,6 +12,7 @@ import {
   safeReadJson,
   extractFieldErrors,
 } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 // Intial form state
 const initialProjectStatusDetails = {
@@ -115,11 +116,7 @@ const CreateProjectStatus = () => {
       const createdId =
         created?.id ?? created?.projectStatusId ?? created?.project_status_id;
 
-      alert(
-        `Project status created successfully${
-          createdId ? ` (id: ${createdId})` : "!"
-        }`,
-      );
+      // Successful mutations are announced by the shared notification banner.
 
       resetForm();
     } catch (err) {
@@ -151,10 +148,7 @@ const CreateProjectStatus = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {hasAnyFieldErrors && (

@@ -1,9 +1,10 @@
+import useTransientMessage from "../../../hooks/useTransientMessage";
+import { budgetOptionLabel } from "../../../utils/budgetDisplay";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiTrash2,
   FiRefreshCw,
-  FiAlertCircle,
   FiDollarSign,
 } from "react-icons/fi";
 
@@ -11,6 +12,8 @@ import styles from "./DeleteBudget.module.scss";
 import { BASE_URL } from "../../../config/api";
 
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
+import { formatApiError } from "../../../utils/apiErrors";
 
 const DeleteBudget = () => {
   const navigate = useNavigate();
@@ -26,7 +29,7 @@ const DeleteBudget = () => {
   const [selectedBudgetId, setSelectedBudgetId] = useState("");
 
   const [formError, setFormError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useTransientMessage("");
 
   const projectNameById = useMemo(() => {
     return projects.reduce((acc, project) => {
@@ -161,7 +164,7 @@ const DeleteBudget = () => {
       }
 
       const confirmed = window.confirm(
-        `Are you sure you want to delete budget "${selectedBudget.budgetDescription || "Untitled budget"}" (id: ${selectedBudget.id})?`,
+        `Are you sure you want to delete budget "${budgetOptionLabel(selectedBudget)}"?`,
       );
 
       if (!confirmed) return;
@@ -183,14 +186,12 @@ const DeleteBudget = () => {
 
       if (!res.ok) {
         const data = await safeReadJson(res);
-        setFormError(
-          data?.message || data?.detail || "Failed to delete the budget.",
-        );
+        setFormError(formatApiError(data, "Failed to delete the budget."));
         return;
       }
 
       const deletedBudgetLabel =
-        selectedBudget.budgetDescription || `Budget #${selectedBudget.id}`;
+        budgetOptionLabel(selectedBudget);
 
       setBudgets((prev) =>
         prev.filter((budget) => budget.id !== selectedBudget.id),
@@ -222,10 +223,7 @@ const DeleteBudget = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {successMessage && (
@@ -264,8 +262,7 @@ const DeleteBudget = () => {
                     <option value="">Select budget</option>
                     {budgets.map((budget) => (
                       <option key={budget.id} value={budget.id}>
-                        {getProjectLabel(budget.projectId)} | Total:{" "}
-                        {budget.totalAmount} | Id: {budget.id}
+                        {budgetOptionLabel(budget)}
                       </option>
                     ))}
                   </select>
@@ -317,7 +314,7 @@ const DeleteBudget = () => {
                     </div>
 
                     <div className={styles.detailRow}>
-                      <span className={styles.detailLabel}>Total amount</span>
+                      <span className={styles.detailLabel}>Budget limit (currency meaning may be unconfirmed)</span>
                       <span className={styles.detailValue}>
                         {selectedBudget.totalAmount}
                       </span>

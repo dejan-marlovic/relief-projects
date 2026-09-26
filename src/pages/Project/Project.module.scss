@@ -126,7 +126,7 @@ h3 {
   align-items: baseline;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-bottom: 0.85rem;
+  margin-bottom: 12px;
 }
 
 .cardTitle {
@@ -144,14 +144,20 @@ h3 {
 .fullWidthField {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 6px;
 }
 
 .formGroup {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 6px;
   margin-bottom: 0.9rem;
+}
+
+// Let the field container own spacing, without adding the label margin again.
+.formGroup > label,
+.fullWidthField > label {
+  margin: 0;
 }
 
 .row2 {
@@ -424,7 +430,7 @@ h3 {
 }
 
 .imageListTitle {
-  margin-bottom: 0.35rem;
+  margin-bottom: 12px;
   color: colors.$text;
 }
 
@@ -527,6 +533,10 @@ h3 {
   font-weight: 700;
 }
 
+.sectionTitle + .scrollBox {
+  margin-top: 12px;
+}
+
 .sectionHint {
   display: block;
   color: colors.$text-muted;
@@ -537,7 +547,7 @@ h3 {
 .sectionRowStack {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 12px;
   align-items: stretch;
   margin-bottom: 1rem;
 }
@@ -810,4 +820,35 @@ h3 {
   .row2 {
     grid-template-columns: 1fr;
   }
+}
+
+@media (max-width: 1100px) {
+  .projectContainer { padding: 8px; }
+  .formContainer { padding: 16px; min-width: 0; }
+  .pageHeader { margin: -16px -16px 16px; padding: 16px; flex-wrap: wrap; }
+  .pageHeaderText, .mediaColumn, .card, .formGroup, .fullWidthField, .split > div, .orgText { min-width: 0; }
+  .imageAndFormWrapper, .grid, .split { grid-template-columns: minmax(0, 1fr); }
+  .mediaColumn { position: static; }
+  .row2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .addRow { grid-template-columns: minmax(0, 1fr); }
+  .headerActions, .cardHeader, .sectionTitle { flex-wrap: wrap; }
+  .pageSubtitle, .cardMeta, .sectionHint, .orgName, .orgStatus, .mutedNote, .dropzoneText { overflow-wrap: anywhere; }
+  .orgRow, .imageRow { grid-template-columns: minmax(0, 1fr) auto; }
+  .projectContainer input:not([type="checkbox"]), .projectContainer select, .projectContainer textarea {
+    width: 100%; min-width: 0; max-width: 100%; box-sizing: border-box; min-height: 44px; font-size: 16px;
+  }
+  .projectContainer button { min-width: 44px; min-height: 44px; }
+  .checkboxRow { min-height: 44px; }
+  .checkboxRow input { width: 24px; height: 24px; flex-shrink: 0; }
+  .pill { max-width: 100%; box-sizing: border-box; overflow-wrap: anywhere; }
+  .pillRemoveBtn { flex-shrink: 0; }
+}
+@media (max-width: 700px) {
+  .projectContainer { padding: 0; margin-top: 0; }
+  .formContainer, .card { padding: 12px; }
+  .pageHeader { position: static; margin: -12px -12px 12px; padding: 12px; }
+  .headerActions { width: 100%; }
+  .headerActions > button { justify-content: center; }
+  .row2, .sectionRow { grid-template-columns: minmax(0, 1fr); }
+  .scrollBox { max-height: 280px; }
 }

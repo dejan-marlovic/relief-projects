@@ -1,0 +1,12 @@
+@use "../../styles/colors" as colors;
+.panel { padding: 1rem; margin: 1rem 0; border: 1px solid colors.$primary-border; border-radius: 12px; color: colors.$text; background: colors.$surface; }
+.panel h3 { margin-top: 0; color: colors.$primary; }
+.muted { color: colors.$text-muted; font-size: 0.85rem; line-height: 1.5; }
+.totals { display: flex; gap: 1rem; flex-wrap: wrap; }
+.totals div { flex: 1 1 180px; padding: 0.8rem; background: colors.$primary-a04; border-radius: 8px; overflow-wrap: anywhere; }
+.totals dd { margin: 0.4rem 0 0; font-weight: bold; }
+.panel label { display: block; margin: 0.8rem 0; }
+.panel input[type=number] { display: block; width: 100%; box-sizing: border-box; padding: 0.65rem; margin-top: 0.4rem; color: colors.$text; background: colors.$surface; border: 1px solid colors.$border; border-radius: 8px; font: inherit; }
+.panel button { padding: 0.65rem; border: 1px solid colors.$primary-border; border-radius: 8px; background: colors.$primary-a04; color: colors.$primary; cursor: pointer; }
+.panel button:disabled { opacity: 0.5; cursor: not-allowed; }
+.panel :focus-visible { outline: 2px solid colors.$primary; outline-offset: 2px; }

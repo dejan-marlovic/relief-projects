@@ -1,3 +1,4 @@
+import { appFetch as fetch } from "./appFetch";
 // src/utils/http.js
 
 /**

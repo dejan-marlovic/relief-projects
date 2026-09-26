@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiSave, FiX, FiAlertCircle } from "react-icons/fi";
+import { FiSave, FiX } from "react-icons/fi";
 
 import styles from "./CreateCost.module.scss";
 import { BASE_URL } from "../../../config/api";
@@ -12,6 +12,7 @@ import {
   safeReadJson,
   extractFieldErrors,
 } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 // Initial form state
 const initialCostDetails = {
@@ -190,9 +191,7 @@ const CreateCost = () => {
       const created = await safeReadJson(res);
       const createdId = created?.id ?? created?.costId ?? created?.cost_id;
 
-      alert(
-        `Cost created successfully${createdId ? ` (id: ${createdId})` : "!"}`,
-      );
+      // Successful mutations are announced by the shared notification banner.
 
       resetForm();
     } catch (err) {
@@ -223,10 +222,7 @@ const CreateCost = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {hasAnyFieldErrors && (

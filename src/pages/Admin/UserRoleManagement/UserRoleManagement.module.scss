@@ -66,10 +66,7 @@
 }
 
 .tableScroll {
-  max-height: clamp(320px, 55vh, 680px);
-  overflow: auto;
-  scrollbar-gutter: stable;
-  overscroll-behavior: contain;
+  overflow-x: auto;
   border: 1px solid colors.$border-subtle;
   border-radius: 10px;
 }
@@ -80,9 +77,6 @@
   background: colors.$surface;
   th, td { padding: 0.7rem; border-bottom: 1px solid colors.$border-subtle; text-align: center; }
   th {
-    position: sticky;
-    top: 0;
-    z-index: 1;
     background: colors.$primary-a08;
     color: colors.$text-strong;
     font-size: 0.8rem;
@@ -122,4 +116,29 @@
 @media (max-width: 700px) {
   .panelHeader { flex-direction: column; }
   .summaryGrid, .roleGuide { grid-template-columns: 1fr; }
+}
+
+.panel, .tableScroll { min-width: 0; max-width: 100%; }
+@media (max-width: 700px) {
+  .panel { padding: 12px; }
+  .panelHeader, .matrixHeader { flex-direction: column; }
+  .panelHeader > div, .roleGuide article { min-width: 0; overflow-wrap: anywhere; }
+  .summaryGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .roleGuide { grid-template-columns: minmax(0, 1fr); }
+  .roleGuide article > div { flex-wrap: wrap; }
+  .userTable, .userTable tbody { display: block; }
+  .userTable thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .userTable tbody tr { display: block; padding: 12px; border-bottom: 1px solid colors.$border-subtle; }
+  .userTable td { display: flex; align-items: center; justify-content: space-between; gap: 8px; border: 0; padding: 6px 0; text-align: left; min-width: 0; overflow-wrap: anywhere; }
+  .userTable td:first-child { display: block; min-width: 0; }
+  .userTable td[data-label]::before { content: attr(data-label); font-size: 0.8rem; font-weight: 700; }
+  .userTable td:first-child::before { display: block; margin-bottom: 6px; }
+  .userTable td:last-child { display: block; }
+  .userTable input[type="checkbox"] { width: 28px; height: 28px; margin: 8px; flex-shrink: 0; }
+  .rowActions { flex-wrap: wrap; justify-content: flex-start; margin-top: 8px; }
+  .rowActions button, .panelHeader button { min-height: 44px; justify-content: center; }
+  .rowActions button { flex: 1; }
+  .rowError { white-space: normal; text-align: left; }
+  .matrixTable th:first-child, .matrixTable td:first-child { position: sticky; left: 0; background: colors.$surface; min-width: 120px; max-width: 150px; overflow-wrap: anywhere; }
+  .safetyNote, .matrixHeader, .errorBanner, .successBanner { overflow-wrap: anywhere; }
 }

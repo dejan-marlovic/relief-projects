@@ -1,16 +1,16 @@
+import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiTrash2,
-  FiRefreshCw,
-  FiAlertCircle,
-  FiTrendingUp,
+  FiRefreshCw,  FiTrendingUp,
 } from "react-icons/fi";
 
 import styles from "./DeleteExchangeRate.module.scss";
 import { BASE_URL } from "../../../config/api";
 
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const DeleteExchangeRate = () => {
   const navigate = useNavigate();
@@ -25,7 +25,7 @@ const DeleteExchangeRate = () => {
   const [selectedExchangeRateId, setSelectedExchangeRateId] = useState("");
 
   const [formError, setFormError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useTransientMessage("");
 
   const currencyNameById = useMemo(() => {
     return currencies.reduce((acc, currency) => {
@@ -213,10 +213,7 @@ const DeleteExchangeRate = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {successMessage && (

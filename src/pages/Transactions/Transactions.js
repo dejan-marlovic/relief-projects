@@ -1,3 +1,7 @@
+import { appFetch as fetch } from "../../utils/appFetch";
+import { decimalUnits, fundingErrors, fundingCurrencyLabel, matchesDecimalRange, sumAmounts, remainingFunding, fundingExcel } from "../../utils/transactionFunding";
+import { budgetOptionLabel } from "../../utils/budgetDisplay";
+import useMediaQuery from "../../hooks/useMediaQuery";
 import React, {
   useCallback,
   useContext,
@@ -12,7 +16,6 @@ import { useAuth } from "../../context/AuthContext";
 import Transaction from "./Transaction/Transaction";
 import styles from "./Transactions.module.scss";
 import {
-  FiAlertCircle,
   FiPlus,
   FiColumns,
   FiTrash2,
@@ -27,6 +30,44 @@ import ColumnFilter from "../../components/ColumnFilter/ColumnFilter";
 import ClearFiltersButton from "../../components/ClearFiltersButton/ClearFiltersButton";
 import { getSelectedProjectName } from "../../utils/projectDisplay";
 import { matchesDateRange, matchesNumberRange, matchesSelect, matchesText } from "../../utils/tableSorting";
+import { formatApiError, readApiError } from "../../utils/apiErrors";
+import ReturnReasonDialog from "../../components/ReturnReasonDialog/ReturnReasonDialog";
+import ErrorBanner from "../../components/ErrorBanner/ErrorBanner";
+import { useUnsavedChange } from "../../context/UnsavedChangesContext";
+
+const budgetProjectId = (budget) =>
+  budget?.projectId ?? budget?.project?.id ?? null;
+
+export const approvedBudgetOptions = (
+  budgets = [],
+  currentBudgetId = null,
+  projectId = null,
+) =>
+  budgets.filter(
+    (budget) =>
+      (projectId == null ||
+        String(budgetProjectId(budget)) === String(projectId)) &&
+      (budget.lifecycleStatus === "APPROVED" ||
+        (currentBudgetId != null &&
+          String(budget.id) === String(currentBudgetId))),
+  );
+
+export const transactionLifecycleStatus = (transaction) =>
+  transaction?.lifecycleStatus || "DRAFT";
+
+export const canSubmitTransactionLifecycle = (transaction, canSubmit) =>
+  Boolean(canSubmit) &&
+  ["DRAFT", "RETURNED"].includes(transactionLifecycleStatus(transaction));
+
+export const costDetailsForBudget = (costDetails = [], budgetId = null) => {
+  if (budgetId == null || budgetId === "") return [];
+  return costDetails.filter(
+    (costDetail) => String(costDetail.budgetId) === String(budgetId),
+  );
+};
+
+export const isTransactionLifecycleEditable = (transaction) =>
+  ["DRAFT", "RETURNED"].includes(transactionLifecycleStatus(transaction));
 
 const blankTx = {
   organizationId: "",
@@ -35,10 +76,8 @@ const blankTx = {
   financierOrganizationId: "",
   transactionStatusId: "",
   appliedForAmount: "",
-  firstShareAmount: "",
   approvedAmount: "",
   ownContribution: "",
-  secondShareAmount: "",
   datePlanned: "",
   okStatus: "",
 };
@@ -51,10 +90,8 @@ const headerLabels = [
   "Budget",
   "Financier",
   "Status",
-  "Applied Amt",
-  "1st Share",
-  "Approved Amt",
-  "2nd Share",
+  "Requested funding",
+  "Approved funding",
   "Own Contrib",
   "Date Planned",
   "OK Status",
@@ -69,9 +106,7 @@ const HEADER_SORT_KEYS = [
   "financier",
   "status",
   "appliedForAmount",
-  "firstShareAmount",
   "approvedAmount",
-  "secondShareAmount",
   "ownContribution",
   "datePlanned",
   "okStatus",
@@ -86,20 +121,12 @@ const BASE_COL_WIDTHS = [
   260, // Budget
   180, // Financier
   160, // Status
-  120, // Applied Amt
-  120, // 1st Share
-  140, // Approved Amt
-  120, // 2nd Share
+  180, // Requested funding (including sort/filter controls)
+  180, // Approved funding (including sort/filter controls)
   110, // Own Contrib
   170, // Date Planned
   100, // OK Status
 ];
-
-const toSortableNumber = (value) => {
-  if (value == null || value === "") return null;
-  const number = Number(value);
-  return Number.isFinite(number) ? number : null;
-};
 
 const toSortableDate = (value) => {
   if (!value) return null;
@@ -113,15 +140,25 @@ const Transactions = ({ refreshTrigger }) => {
   const canEditTransactions = hasAnyRole("ADMIN", "FINANCE");
   const canDeleteTransactions = hasRole("ADMIN");
   const canManageAllocations = hasAnyRole("ADMIN", "FINANCE");
+  const canReviewTransactions = hasAnyRole("ADMIN", "APPROVER");
 
   const [transactions, setTransactions] = useState([]);
   const [selectedTxIds, setSelectedTxIds] = useState(() => new Set());
+  const compact = useMediaQuery("(max-width: 1100px)");
+  const FilterContainer = compact ? "details" : React.Fragment;
+  const [saving, setSaving] = useState(false);
+  const saveInProgress = useRef(false);
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
+  useUnsavedChange("transactions-editor", editingId !== null);
   const [expandedTxId, setExpandedTxId] = useState(null);
+  const [submittingTxId, setSubmittingTxId] = useState(null);
+  const [reviewingTxId, setReviewingTxId] = useState(null);
+  const [historyRefreshKeys, setHistoryRefreshKeys] = useState({});
+  const [returnTarget, setReturnTarget] = useState(null);
   const [exportingSelected, setExportingSelected] = useState(false);
   const [sortConfig, setSortConfig] = useState(null);
-  const emptyFilters = () => ({ id:{min:"",max:""}, organization:"", project:"", budget:"", financier:"", status:"", appliedForAmount:{min:"",max:""}, firstShareAmount:{min:"",max:""}, approvedAmount:{min:"",max:""}, secondShareAmount:{min:"",max:""}, ownContribution:"", datePlanned:{from:"",to:""}, okStatus:"" });
+  const emptyFilters = () => ({ id:{min:"",max:""}, organization:"", project:"", budget:"", financier:"", status:"", appliedForAmount:{min:"",max:""}, approvedAmount:{min:"",max:""}, ownContribution:"", datePlanned:{from:"",to:""}, okStatus:"" });
   const [filters, setFilters] = useState(emptyFilters);
   const hasActiveFilters = JSON.stringify(filters) !== JSON.stringify(emptyFilters());
 
@@ -261,6 +298,8 @@ const Transactions = ({ refreshTrigger }) => {
         setBudgetOptions([]);
         return;
       }
+      setCostDetailOptions([]);
+      setBudgetOptions([]);
       try {
         const token = localStorage.getItem("authToken");
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
@@ -269,20 +308,28 @@ const Transactions = ({ refreshTrigger }) => {
           `${BASE_URL}/api/budgets/project/${selectedProjectId}`,
           { headers },
         );
-        const budgets = bRes.ok ? await bRes.json() : [];
+        const budgets =
+          bRes.ok && bRes.status !== 204 ? await bRes.json() : [];
         const budgetList = Array.isArray(budgets) ? budgets : [];
 
         if (!cancelled) setBudgetOptions(budgetList);
 
         const all = [];
         for (const b of budgetList) {
-          const cdRes = await fetch(
-            `${BASE_URL}/api/cost-details/by-budget/${b.id}`,
-            { headers },
-          );
-          if (!cdRes.ok) continue;
-          const cds = await cdRes.json();
-          if (Array.isArray(cds)) all.push(...cds);
+          try {
+            const cdRes = await fetch(
+              `${BASE_URL}/api/cost-details/by-budget/${b.id}`,
+              { headers },
+            );
+            if (!cdRes.ok || cdRes.status === 204) continue;
+            const cds = await cdRes.json();
+            if (Array.isArray(cds)) all.push(...cds);
+          } catch (error) {
+            console.error(
+              `Failed to load cost details for budget ${b.id}:`,
+              error,
+            );
+          }
         }
 
         if (!cancelled) setCostDetailOptions(all);
@@ -302,7 +349,7 @@ const Transactions = ({ refreshTrigger }) => {
   }, [selectedProjectId]);
 
   const startEdit = (tx) => {
-    if (!canEditTransactions) return;
+    if (!canEditTransactions || saving || (compact && editingId !== null)) return;
     setEditingId(tx?.id ?? null);
     setExpandedTxId((cur) => (cur === tx.id ? null : cur));
 
@@ -315,10 +362,8 @@ const Transactions = ({ refreshTrigger }) => {
         financierOrganizationId: tx.financierOrganizationId,
         transactionStatusId: tx.transactionStatusId,
         appliedForAmount: tx.appliedForAmount,
-        firstShareAmount: tx.firstShareAmount,
         approvedAmount: tx.approvedAmount,
         ownContribution: tx.ownContribution,
-        secondShareAmount: tx.secondShareAmount,
         datePlanned: tx.datePlanned,
         okStatus: tx.okStatus,
       },
@@ -333,11 +378,17 @@ const Transactions = ({ refreshTrigger }) => {
   };
 
   const startCreate = () => {
-    if (!canEditTransactions) return;
+    if (!canEditTransactions || saving || (compact && editingId !== null)) return;
     setEditingId("new");
     setExpandedTxId(null);
 
-    const autoBudgetId = budgetOptions.length === 1 ? budgetOptions[0].id : "";
+    const eligibleBudgets = approvedBudgetOptions(
+      budgetOptions,
+      null,
+      selectedProjectId,
+    );
+    const autoBudgetId =
+      eligibleBudgets.length === 1 ? eligibleBudgets[0].id : "";
 
     setEditedValues((prev) => ({
       ...prev,
@@ -367,14 +418,18 @@ const Transactions = ({ refreshTrigger }) => {
   };
 
   const save = async () => {
-    if (!canEditTransactions) return;
+    if (!canEditTransactions || saveInProgress.current) return;
     const id = editingId;
     const values = editedValues[id];
     if (!values) return;
 
+    const errors = fundingErrors(values);
+    if (Object.keys(errors).length) { setFieldErrors((prev) => ({ ...prev, [id]: errors })); setFormError("Please correct the funding amounts."); return; }
+    saveInProgress.current = true;
+    setSaving(true);
     const isCreate = id === "new";
     const effectiveProjectId = isCreate
-      ? values.projectId || selectedProjectId
+      ? selectedProjectId
       : (values.projectId ?? null);
 
     setFormError("");
@@ -392,19 +447,9 @@ const Transactions = ({ refreshTrigger }) => {
       transactionStatusId: values.transactionStatusId
         ? Number(values.transactionStatusId)
         : null,
-      appliedForAmount: values.appliedForAmount
-        ? Number(values.appliedForAmount)
-        : null,
-      firstShareAmount: values.firstShareAmount
-        ? Number(values.firstShareAmount)
-        : null,
-      approvedAmount: values.approvedAmount
-        ? Number(values.approvedAmount)
-        : null,
+      appliedForAmount: values.appliedForAmount == null || values.appliedForAmount === "" ? null : String(values.appliedForAmount),
+      approvedAmount: values.approvedAmount == null || values.approvedAmount === "" ? null : String(values.approvedAmount),
       ownContribution: values.ownContribution || null,
-      secondShareAmount: values.secondShareAmount
-        ? Number(values.secondShareAmount)
-        : null,
       datePlanned: values.datePlanned || null,
       okStatus: values.okStatus || null,
     };
@@ -435,12 +480,15 @@ const Transactions = ({ refreshTrigger }) => {
         }
 
         setFormError(
-          data?.message ||
+          data?.fieldErrors?.id || formatApiError(
+            data,
             `Failed to ${isCreate ? "create" : "update"} transaction.`,
+          ),
         );
         return;
       }
 
+      if (!isCreate) setHistoryRefreshKeys((current) => ({ ...current, [id]: (current[id] || 0) + 1 }));
       await fetchTransactions(selectedProjectId);
       cancel();
     } catch (err) {
@@ -449,6 +497,9 @@ const Transactions = ({ refreshTrigger }) => {
         err.message ||
           `Failed to ${isCreate ? "create" : "update"} transaction.`,
       );
+    } finally {
+      saveInProgress.current = false;
+      setSaving(false);
     }
   };
 
@@ -483,7 +534,11 @@ const Transactions = ({ refreshTrigger }) => {
         method: "DELETE",
         headers: authHeaders,
       });
-      if (!res.ok) throw new Error("Failed to delete transaction");
+      if (!res.ok) {
+        throw new Error(
+          await readApiError(res, "Failed to delete transaction."),
+        );
+      }
 
       setSelectedTxIds((prev) => {
         const next = new Set(prev);
@@ -495,7 +550,96 @@ const Transactions = ({ refreshTrigger }) => {
       setExpandedTxId((cur) => (cur === id ? null : cur));
     } catch (err) {
       console.error(err);
-      alert("Failed to delete transaction.");
+      setFormError(err.message || "Failed to delete transaction.");
+    }
+  };
+
+  const submitForApproval = async (tx) => {
+    if (!canSubmitTransactionLifecycle(tx, canEditTransactions)) return;
+
+    setFormError("");
+    setSubmittingTxId(tx.id);
+
+    try {
+      const response = await fetch(
+        `${BASE_URL}/api/transactions/${tx.id}/submit`,
+        {
+          method: "POST",
+          headers: authHeaders,
+        },
+      );
+      const raw = await response.text().catch(() => "");
+      let data = null;
+
+      try {
+        data = raw ? JSON.parse(raw) : null;
+      } catch {
+        // Keep the fallback error message when the response is not JSON.
+      }
+
+      if (!response.ok) {
+        setFormError(
+          formatApiError(data, "Failed to submit transaction for approval."),
+        );
+        return;
+      }
+
+      if (!data) {
+        setFormError(
+          "The transaction was submitted, but no updated transaction was returned.",
+        );
+        return;
+      }
+
+      setTransactions((current) =>
+        current.map((item) => (item.id === data.id ? data : item)),
+      );
+    } catch (error) {
+      console.error("Error submitting transaction:", error);
+      setFormError(
+        error?.message || "Unexpected error while submitting transaction.",
+      );
+    } finally {
+      setSubmittingTxId(null);
+    }
+  };
+
+  const reviewTransaction = async (tx, action) => {
+    if (!canReviewTransactions || tx.lifecycleStatus !== "SUBMITTED") return;
+    setFormError("");
+    setReviewingTxId(tx.id);
+    try {
+      const response = await fetch(
+        `${BASE_URL}/api/transactions/${tx.id}/${action}`,
+        { method: "POST", headers: authHeaders },
+      );
+      const raw = await response.text().catch(() => "");
+      let data = null;
+      try {
+        data = raw ? JSON.parse(raw) : null;
+      } catch {
+        // Use the fallback message for non-JSON responses.
+      }
+      if (!response.ok) {
+        setFormError(
+          formatApiError(data, `Failed to ${action} transaction.`),
+        );
+        return;
+      }
+      if (!data) {
+        setFormError(
+          `The transaction was ${action === "approve" ? "approved" : "returned"}, but no updated transaction was returned.`,
+        );
+        return;
+      }
+      setTransactions((current) =>
+        current.map((item) => (item.id === data.id ? data : item)),
+      );
+    } catch (error) {
+      console.error(`Error reviewing transaction (${action}):`, error);
+      setFormError(error?.message || `Unexpected error while trying to ${action} transaction.`);
+    } finally {
+      setReviewingTxId(null);
     }
   };
 
@@ -507,6 +651,11 @@ const Transactions = ({ refreshTrigger }) => {
   }, [visibleCols]);
 
   const selectedCount = selectedTxIds.size;
+  const selectedContainsLifecycleLocked = transactions.some(
+    (transaction) =>
+      selectedTxIds.has(transaction.id) &&
+      !isTransactionLifecycleEditable(transaction),
+  );
 
   const organizationNamesById = useMemo(
     () =>
@@ -545,12 +694,7 @@ const Transactions = ({ refreshTrigger }) => {
     () =>
       new Map(
         budgetOptions.map((budget) => {
-          const description =
-            budget.budgetDescription || budget.description || "";
-          return [
-            String(budget.id),
-            description ? `${budget.id} — ${description}` : String(budget.id),
-          ];
+          return [String(budget.id), budgetOptionLabel(budget)];
         }),
       ),
     [budgetOptions],
@@ -564,10 +708,8 @@ const Transactions = ({ refreshTrigger }) => {
       matchesText(budgetLabelsById.get(String(tx.budgetId)), filters.budget) &&
       matchesText(organizationNamesById.get(String(tx.financierOrganizationId)), filters.financier) &&
       matchesSelect(tx.transactionStatusId, filters.status) &&
-      matchesNumberRange(tx.appliedForAmount, filters.appliedForAmount) &&
-      matchesNumberRange(tx.firstShareAmount, filters.firstShareAmount) &&
-      matchesNumberRange(tx.approvedAmount, filters.approvedAmount) &&
-      matchesNumberRange(tx.secondShareAmount, filters.secondShareAmount) &&
+      matchesDecimalRange(tx.appliedForAmount, filters.appliedForAmount) &&
+      matchesDecimalRange(tx.approvedAmount, filters.approvedAmount) &&
       matchesSelect(tx.ownContribution, filters.ownContribution) &&
       matchesDateRange(tx.datePlanned, filters.datePlanned) &&
       matchesSelect(tx.okStatus, filters.okStatus)
@@ -610,10 +752,8 @@ const Transactions = ({ refreshTrigger }) => {
         if (statusId == null || statusId === "") return null;
         return statusNamesById.get(String(statusId)) || `Status ${statusId}`;
       },
-      appliedForAmount: (tx) => toSortableNumber(tx?.appliedForAmount),
-      firstShareAmount: (tx) => toSortableNumber(tx?.firstShareAmount),
-      approvedAmount: (tx) => toSortableNumber(tx?.approvedAmount),
-      secondShareAmount: (tx) => toSortableNumber(tx?.secondShareAmount),
+      appliedForAmount: (tx) => decimalUnits(tx?.appliedForAmount),
+      approvedAmount: (tx) => decimalUnits(tx?.approvedAmount),
       ownContribution: (tx) => tx?.ownContribution || null,
       datePlanned: (tx) => toSortableDate(tx?.datePlanned),
       okStatus: (tx) => tx?.okStatus || null,
@@ -658,7 +798,7 @@ const Transactions = ({ refreshTrigger }) => {
       </button>
       <ColumnFilter
         label={label}
-        type={(["id","appliedForAmount","firstShareAmount","approvedAmount","secondShareAmount"].includes(key) ? "number" : key === "datePlanned" ? "date" : ["status","ownContribution","okStatus"].includes(key) ? "select" : "text")}
+        type={(["id","appliedForAmount","approvedAmount"].includes(key) ? "number" : key === "datePlanned" ? "date" : ["status","ownContribution","okStatus"].includes(key) ? "select" : "text")}
         value={filters[key]}
         options={key === "status" ? statusOptions.map((s) => ({value:s.id,label:s.transactionStatusName})) : ["ownContribution","okStatus"].includes(key) ? [{value:"Yes",label:"Yes"},{value:"No",label:"No"}] : []}
         onApply={(value) => setFilters((current) => ({...current,[key]:value}))}
@@ -731,8 +871,9 @@ const Transactions = ({ refreshTrigger }) => {
       });
 
       if (!res.ok) {
-        const raw = await res.text().catch(() => "");
-        throw new Error(raw || "Failed to delete selected transactions.");
+        throw new Error(
+          await readApiError(res, "Failed to delete selected transactions."),
+        );
       }
 
       setSelectedTxIds(new Set());
@@ -740,7 +881,7 @@ const Transactions = ({ refreshTrigger }) => {
       await fetchTransactions(selectedProjectId);
     } catch (err) {
       console.error(err);
-      alert(err.message || "Failed to delete selected transactions.");
+      setFormError(err.message || "Failed to delete selected transactions.");
     }
   };
 
@@ -792,13 +933,6 @@ const Transactions = ({ refreshTrigger }) => {
     return String(value ?? "")
       .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, "")
       .trim();
-  };
-
-  const toExcelNumber = (value) => {
-    if (value == null || value === "") return 0;
-
-    const numericValue = Number(value);
-    return Number.isFinite(numericValue) ? numericValue : 0;
   };
 
   const formatExcelDate = (value) => {
@@ -862,13 +996,7 @@ const Transactions = ({ refreshTrigger }) => {
 
     if (!matchingBudget) return `Budget ${id}`;
 
-    const description = sanitizeExcelText(
-      matchingBudget.budgetDescription || matchingBudget.description || "",
-    );
-
-    return description
-      ? `${matchingBudget.id} — ${description}`
-      : `Budget ${matchingBudget.id}`;
+    return sanitizeExcelText(budgetOptionLabel(matchingBudget));
   };
 
   const applyExcelBorder = (cell) => {
@@ -953,29 +1081,6 @@ const Transactions = ({ refreshTrigger }) => {
           fgColor: { argb: excelColors.lightGray },
         };
       }
-    });
-  };
-
-  const styleExcelTotalRow = (row) => {
-    row.eachCell((cell) => {
-      cell.font = {
-        bold: true,
-        color: { argb: excelColors.text },
-      };
-
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: excelColors.paleGreen },
-      };
-
-      cell.alignment = {
-        vertical: "middle",
-        horizontal: "left",
-        wrapText: true,
-      };
-
-      applyExcelBorder(cell);
     });
   };
 
@@ -1122,22 +1227,20 @@ const Transactions = ({ refreshTrigger }) => {
         { key: "financier", width: 28 },
         { key: "status", width: 22 },
         { key: "applied", width: 17 },
-        { key: "firstShare", width: 17 },
         { key: "approved", width: 17 },
-        { key: "secondShare", width: 17 },
         { key: "ownContribution", width: 17 },
         { key: "datePlanned", width: 22 },
         { key: "okStatus", width: 14 },
       ];
 
-      worksheet.mergeCells("A1:M1");
+      worksheet.mergeCells("A1:K1");
       worksheet.getCell("A1").value = "Selected Transactions Report";
       styleExcelTitle(worksheet.getCell("A1"));
       worksheet.getRow(1).height = 30;
 
       const selectedProjectName = getProjectName(selectedProjectId);
 
-      worksheet.mergeCells("A2:M2");
+      worksheet.mergeCells("A2:K2");
       worksheet.getCell("A2").value =
         `Project: ${selectedProjectName} | ` +
         `Selected transactions: ${sortedTransactions.length} | ` +
@@ -1153,7 +1256,7 @@ const Transactions = ({ refreshTrigger }) => {
         horizontal: "left",
       };
 
-      worksheet.mergeCells("A3:M3");
+      worksheet.mergeCells("A3:K3");
       worksheet.getCell("A3").value =
         "Only selected transactions are exported. Allocation groups open collapsed. " +
         "Use Excel's outline controls to expand or collapse them.";
@@ -1186,10 +1289,8 @@ const Transactions = ({ refreshTrigger }) => {
         "Budget",
         "Financier",
         "Status",
-        "Applied Amount",
-        "First Share",
-        "Approved Amount",
-        "Second Share",
+        "Requested funding",
+        "Approved funding",
         "Own Contribution",
         "Date Planned",
         "OK Status",
@@ -1197,26 +1298,16 @@ const Transactions = ({ refreshTrigger }) => {
 
       styleExcelTableHeader(headerRow);
 
-      const totals = {
-        applied: 0,
-        firstShare: 0,
-        approved: 0,
-        secondShare: 0,
-        allocated: 0,
-      };
-
       sortedTransactions.forEach((transaction, index) => {
         const transactionRow = worksheet.addRow({
           transactionId: transaction.id,
           organization: getOrganizationName(transaction.organizationId),
           project: getProjectName(transaction.projectId),
-          budget: getBudgetLabel(transaction.budgetId),
+          budget: `${getBudgetLabel(transaction.budgetId)} | Current currency: ${fundingCurrencyLabel(transaction.fundingCurrency)}`,
           financier: getOrganizationName(transaction.financierOrganizationId),
           status: getTransactionStatusName(transaction.transactionStatusId),
-          applied: toExcelNumber(transaction.appliedForAmount),
-          firstShare: toExcelNumber(transaction.firstShareAmount),
-          approved: toExcelNumber(transaction.approvedAmount),
-          secondShare: toExcelNumber(transaction.secondShareAmount),
+          applied: fundingExcel(transaction.appliedForAmount),
+          approved: fundingExcel(transaction.approvedAmount),
           ownContribution: transaction.ownContribution || "Not specified",
           datePlanned: formatExcelDate(transaction.datePlanned),
           okStatus: transaction.okStatus || "Not specified",
@@ -1235,14 +1326,9 @@ const Transactions = ({ refreshTrigger }) => {
           };
         });
 
-        for (let column = 7; column <= 10; column += 1) {
-          transactionRow.getCell(column).numFmt = "#,##0.00";
+        for (let column = 7; column <= 8; column += 1) {
+          transactionRow.getCell(column).numFmt = "#,##0.000";
         }
-
-        totals.applied += toExcelNumber(transaction.appliedForAmount);
-        totals.firstShare += toExcelNumber(transaction.firstShareAmount);
-        totals.approved += toExcelNumber(transaction.approvedAmount);
-        totals.secondShare += toExcelNumber(transaction.secondShareAmount);
 
         const allocations =
           allocationsByTransactionId.get(transaction.id) || [];
@@ -1281,7 +1367,7 @@ const Transactions = ({ refreshTrigger }) => {
         allocationHeaderRow.getCell(7).value = "Planned Amount";
         allocationHeaderRow.getCell(9).value = "Note";
 
-        for (let column = 1; column <= 13; column += 1) {
+        for (let column = 1; column <= 11; column += 1) {
           const cell = allocationHeaderRow.getCell(column);
 
           cell.font = {
@@ -1314,7 +1400,7 @@ const Transactions = ({ refreshTrigger }) => {
           emptyAllocationRow.getCell(2).value =
             "No allocations for this transaction.";
 
-          for (let column = 1; column <= 13; column += 1) {
+          for (let column = 1; column <= 11; column += 1) {
             const cell = emptyAllocationRow.getCell(column);
 
             cell.fill = {
@@ -1337,7 +1423,7 @@ const Transactions = ({ refreshTrigger }) => {
             applyExcelBorder(cell);
           }
         } else {
-          let transactionAllocatedTotal = 0;
+          const transactionAllocatedTotal = sumAmounts(allocations.map((row) => row.plannedAmount));
 
           allocations.forEach((allocation, allocationIndex) => {
             const allocationRow = worksheet.addRow([]);
@@ -1345,10 +1431,8 @@ const Transactions = ({ refreshTrigger }) => {
             allocationRow.outlineLevel = 1;
             allocationRow.hidden = true;
 
-            const plannedAmount = toExcelNumber(allocation.plannedAmount);
+            const plannedAmount = fundingExcel(allocation.plannedAmount);
 
-            transactionAllocatedTotal += plannedAmount;
-            totals.allocated += plannedAmount;
 
             allocationRow.getCell(1).value =
               allocation.id != null ? `A#${allocation.id}` : "↳";
@@ -1361,9 +1445,9 @@ const Transactions = ({ refreshTrigger }) => {
             allocationRow.getCell(9).value =
               sanitizeExcelText(allocation.note) || "Not specified";
 
-            allocationRow.getCell(7).numFmt = "#,##0.00";
+            allocationRow.getCell(7).numFmt = "#,##0.000000";
 
-            for (let column = 1; column <= 13; column += 1) {
+            for (let column = 1; column <= 11; column += 1) {
               const cell = allocationRow.getCell(column);
 
               cell.alignment = {
@@ -1393,20 +1477,13 @@ const Transactions = ({ refreshTrigger }) => {
           allocationTotalRow.getCell(2).value =
             `Allocated total for transaction ${transaction.id}`;
 
-          allocationTotalRow.getCell(7).value = Number(
-            transactionAllocatedTotal.toFixed(2),
-          );
+          allocationTotalRow.getCell(7).value = fundingExcel(transactionAllocatedTotal);
 
-          allocationTotalRow.getCell(7).numFmt = "#,##0.00";
+          allocationTotalRow.getCell(7).numFmt = "#,##0.000000";
 
-          allocationTotalRow.getCell(9).value = `Approved: ${toExcelNumber(
-            transaction.approvedAmount,
-          ).toFixed(2)} | Remaining: ${(
-            toExcelNumber(transaction.approvedAmount) -
-            transactionAllocatedTotal
-          ).toFixed(2)}`;
+          allocationTotalRow.getCell(9).value = `Approved funding: ${transaction.approvedAmount ?? "Unavailable"} | Remaining for allocation: ${remainingFunding(transaction.approvedAmount, transactionAllocatedTotal) ?? "Unavailable"} | ${fundingCurrencyLabel(transaction.fundingCurrency)}`;
 
-          for (let column = 1; column <= 13; column += 1) {
+          for (let column = 1; column <= 11; column += 1) {
             const cell = allocationTotalRow.getCell(column);
 
             cell.font = { bold: true };
@@ -1428,72 +1505,14 @@ const Transactions = ({ refreshTrigger }) => {
         }
       });
 
-      const totalRow = worksheet.addRow({
-        transactionId: "TOTAL",
-        organization: "",
-        project: "",
-        budget: "",
-        financier: "",
-        status: "",
-        applied: Number(totals.applied.toFixed(2)),
-        firstShare: Number(totals.firstShare.toFixed(2)),
-        approved: Number(totals.approved.toFixed(2)),
-        secondShare: Number(totals.secondShare.toFixed(2)),
-        ownContribution: "",
-        datePlanned: "",
-        okStatus: "",
-      });
-
-      styleExcelTotalRow(totalRow);
-
-      for (let column = 7; column <= 10; column += 1) {
-        totalRow.getCell(column).numFmt = "#,##0.00";
-      }
-
-      /*
-       * Add the allocation grand total as a separate summary line so it does
-       * not overwrite any of the transaction amount columns.
-       */
-      const allocationGrandTotalRow = worksheet.addRow([]);
-
-      allocationGrandTotalRow.getCell(1).value =
-        "GRAND TOTAL — TRANSACTION ALLOCATIONS";
-
-      allocationGrandTotalRow.getCell(7).value = Number(
-        totals.allocated.toFixed(2),
-      );
-
-      allocationGrandTotalRow.getCell(7).numFmt = "#,##0.00";
-
-      allocationGrandTotalRow.getCell(9).value =
-        "Total planned amount across all exported allocation rows.";
-
-      for (let column = 1; column <= 13; column += 1) {
-        const cell = allocationGrandTotalRow.getCell(column);
-
-        cell.font = {
-          bold: true,
-          color: { argb: excelColors.text },
-        };
-
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: excelColors.paleGreen },
-        };
-
-        cell.alignment = {
-          vertical: "middle",
-          horizontal: "left",
-          wrapText: true,
-        };
-
-        applyExcelBorder(cell);
-      }
+      const totalsNote = worksheet.addRow(["Cross-transaction totals omitted: currencies may differ or be unavailable. Currency labels reflect current budget configuration, not verified historical denomination. Approval is not receipt or settlement."]);
+      worksheet.mergeCells(totalsNote.number, 1, totalsNote.number, 11);
+      totalsNote.height = 48;
+      totalsNote.getCell(1).alignment = { wrapText: true, vertical: "middle" };
 
       worksheet.autoFilter = {
         from: "A4",
-        to: "M4",
+        to: "K4",
       };
 
       const buffer = await workbook.xlsx.writeBuffer();
@@ -1553,7 +1572,7 @@ const Transactions = ({ refreshTrigger }) => {
               type="button"
               className={styles.exportInlineBtn}
               onClick={handleExportSelected}
-              disabled={selectedCount === 0 || exportingSelected}
+              disabled={selectedCount === 0 || exportingSelected || saving || (compact && editingId !== null)}
               title="Export selected transactions to Excel"
             >
               <FiDownload />
@@ -1566,13 +1585,21 @@ const Transactions = ({ refreshTrigger }) => {
               type="button"
               className={styles.dangerInlineBtn}
               onClick={removeSelected}
-              disabled={selectedCount === 0 || exportingSelected}
-              title="Delete selected transactions"
+              disabled={
+                selectedCount === 0 ||
+                exportingSelected ||
+                selectedContainsLifecycleLocked || saving || (compact && editingId !== null)
+              }
+              title={
+                selectedContainsLifecycleLocked
+                  ? "Submitted and approved transactions cannot be deleted"
+                  : "Delete selected transactions"
+              }
             >
               <FiTrash2></FiTrash2>
               Delete selected {selectedCount > 0 ? `(${selectedCount})` : ""}
             </button>}
-            <div className={styles.columnsBox}>
+            <div className={styles.columnsBox} hidden={compact}>
               <button
                 type="button"
                 className={styles.iconPillBtn}
@@ -1607,7 +1634,7 @@ const Transactions = ({ refreshTrigger }) => {
               type="button"
               className={styles.primaryInlineBtn}
               onClick={startCreate}
-              disabled={!selectedProjectId || editingId === "new"}
+              disabled={!selectedProjectId || saving || (compact ? editingId !== null : editingId === "new")}
               title="New Transaction"
             >
               <FiPlus />
@@ -1616,25 +1643,25 @@ const Transactions = ({ refreshTrigger }) => {
           </div>
         </div>
 
+        <details className={styles.fundingHelp}><summary>About funding amounts</summary><p>Requested and approved funding are separate; approval does not mean funds received. Own contribution is a recorded flag, not an amount or percentage.</p></details>
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         <div
           className={styles.table}
-          style={{ ["--tx-grid-cols"]: gridCols }}
+          style={{ "--tx-grid-cols": gridCols }}
           ref={tableRef}
         >
-          <div className={`${styles.gridRow} ${styles.headerRow}`}>
+          <FilterContainer {...(compact ? { className: styles.filterDisclosure } : {})}>
+          {compact && <summary>Sort, filter &amp; select</summary>}
+          <fieldset aria-label="Transaction controls" disabled={compact && (editingId !== null || saving)} className={`${styles.gridRow} ${styles.headerRow}`}>
             {headerLabels.map((h, i) => (
               <div
                 key={h}
                 className={`${styles.headerCell} ${
                   i === 0 ? styles.stickyColHeader : ""
-                } ${!visibleCols[i] ? styles.hiddenCol : ""} ${
+                } ${!compact && !visibleCols[i] ? styles.hiddenCol : ""} ${
                   i === 0 ? styles.actionsCol : ""
                 }`}
               >
@@ -1657,50 +1684,14 @@ const Transactions = ({ refreshTrigger }) => {
                 )}
               </div>
             ))}
-          </div>
-
-          {!selectedProjectId ? (
-            <p className={styles.noData}>
-              Select a project to see transactions.
-            </p>
-          ) : transactions.length === 0 ? (
-            <p className={styles.noData}>No transactions for this project.</p>
-          ) : (
-            displayedTransactions.map((tx, idx) => (
-              <Transaction
-                key={tx.id}
-                tx={tx}
-                isEven={idx % 2 === 0}
-                isEditing={editingId === tx.id}
-                editedValues={editedValues[tx.id]}
-                onEdit={() => startEdit(tx)}
-                onChange={onChange}
-                onSave={save}
-                onCancel={cancel}
-                onDelete={remove}
-                isSelected={selectedTxIds.has(tx.id)}
-                onSelectChange={toggleSelected}
-                selectionDisabled={editingId === tx.id}
-                organizations={orgOptions}
-                projects={projectOptions}
-                statuses={statusOptions}
-                budgets={budgetOptions}
-                visibleCols={visibleCols}
-                fieldErrors={fieldErrors[tx.id] || {}}
-                expanded={expandedTxId === tx.id}
-                onToggleAllocations={() =>
-                  setExpandedTxId((cur) => (cur === tx.id ? null : tx.id))
-                }
-                costDetailOptions={costDetailOptions}
-                canEdit={canEditTransactions}
-                canDelete={canDeleteTransactions}
-                canManageAllocations={canManageAllocations}
-              />
-            ))
-          )}
+          </fieldset>
+          </FilterContainer>
 
           {canEditTransactions && editingId === "new" && (
             <Transaction
+              compact={compact}
+              saving={saving}
+              editingLocked={compact && editingId !== null}
               tx={{
                 id: "new",
                 ...blankTx,
@@ -1718,7 +1709,11 @@ const Transactions = ({ refreshTrigger }) => {
               organizations={orgOptions}
               projects={projectOptions}
               statuses={statusOptions}
-              budgets={budgetOptions}
+              budgets={approvedBudgetOptions(
+                budgetOptions,
+                null,
+                selectedProjectId,
+              )}
               visibleCols={visibleCols}
               isEven={false}
               fieldErrors={fieldErrors.new || {}}
@@ -1728,8 +1723,89 @@ const Transactions = ({ refreshTrigger }) => {
               canManageAllocations={canManageAllocations}
             />
           )}
+
+          {!selectedProjectId ? (
+            <p className={styles.noData}>
+              Select a project to see transactions.
+            </p>
+          ) : transactions.length === 0 ? (
+            <p className={styles.noData}>No transactions for this project.</p>
+          ) : displayedTransactions.length === 0 ? (
+            <p className={styles.noData}>No transactions match your filters.</p>
+          ) : (
+            displayedTransactions.map((tx, idx) => (
+              <Transaction
+              compact={compact}
+              saving={saving}
+              editingLocked={compact && editingId !== null}
+                key={tx.id}
+                tx={tx}
+                isEven={idx % 2 === 0}
+                isEditing={editingId === tx.id}
+                editedValues={editedValues[tx.id]}
+                onEdit={() => startEdit(tx)}
+                onChange={onChange}
+                onSave={save}
+                onCancel={cancel}
+                onDelete={remove}
+                isSelected={selectedTxIds.has(tx.id)}
+                onSelectChange={toggleSelected}
+                selectionDisabled={editingId === tx.id}
+                organizations={orgOptions}
+                projects={projectOptions}
+                statuses={statusOptions}
+                budgets={approvedBudgetOptions(
+                  budgetOptions,
+                  tx.budgetId,
+                  selectedProjectId,
+                )}
+                visibleCols={visibleCols}
+                fieldErrors={fieldErrors[tx.id] || {}}
+                expanded={expandedTxId === tx.id}
+                onToggleAllocations={() =>
+                  setExpandedTxId((cur) => (cur === tx.id ? null : tx.id))
+                }
+                costDetailOptions={costDetailsForBudget(
+                  costDetailOptions,
+                  tx.budgetId,
+                )}
+                canEdit={canEditTransactions && isTransactionLifecycleEditable(tx)}
+                canDelete={canDeleteTransactions && isTransactionLifecycleEditable(tx)}
+                canManageAllocations={canManageAllocations && isTransactionLifecycleEditable(tx)}
+                canSubmitLifecycle={canEditTransactions}
+                onSubmitLifecycle={() => submitForApproval(tx)}
+                isSubmittingLifecycle={submittingTxId === tx.id}
+                canReviewLifecycle={canReviewTransactions}
+                onApproveLifecycle={() => reviewTransaction(tx, "approve")}
+                onReturnLifecycle={() => setReturnTarget(tx.id)}
+                isReviewingLifecycle={reviewingTxId === tx.id}
+                onAllocationMutationSuccess={() => {
+                  setHistoryRefreshKeys((current) => ({ ...current, [tx.id]: (current[tx.id] || 0) + 1 }));
+                }}
+                onReceiptMutationSuccess={async () => {
+                  setHistoryRefreshKeys((current) => ({ ...current, [tx.id]: (current[tx.id] || 0) + 1 }));
+                  try {
+                    const response = await fetch(`${BASE_URL}/api/transactions/${tx.id}`, { headers: authHeaders, cache: "no-store" });
+                    if (response.ok) {
+                      const current = await response.json();
+                      setTransactions((previous) => previous.map(item => item.id === tx.id ? current : item));
+                    }
+                  } catch { /* Receipt eligibility stays authoritative; preserve any open draft. */ }
+                }}
+                historyRefreshKey={historyRefreshKeys[tx.id] || 0}
+              />
+            ))
+          )}
+
         </div>
       </div>
+      {returnTarget && canReviewTransactions && transactions.some((tx) => tx.id === returnTarget && tx.lifecycleStatus === "SUBMITTED") &&
+        <ReturnReasonDialog key={returnTarget} endpoint={`/api/transactions/${returnTarget}/return`}
+          recordLabel={`transaction #${returnTarget}`} onCancel={() => setReturnTarget(null)}
+          onSuccess={(updated) => {
+            setTransactions((current) => current.map((item) => item.id === updated.id ? updated : item));
+            setFormError(""); setReturnTarget(null);
+          }} />}
     </div>
   );
 };

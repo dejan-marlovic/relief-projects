@@ -1,3 +1,4 @@
+import { appFetch as fetch } from "../utils/appFetch";
 import React, { createContext, useState, useEffect, useCallback } from "react";
 
 import { BASE_URL } from "../config/api";

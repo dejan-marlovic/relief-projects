@@ -17,6 +17,9 @@ const Cell = ({ children, className }) => (
 );
 
 const Organization = ({
+  compact = false,
+  saving = false,
+  editingLocked = false,
   link, // { id, projectId, organizationId, organizationStatusId }
   isEditing,
   editedValues,
@@ -38,7 +41,7 @@ const Organization = ({
 }) => {
   const ev = editedValues || {};
   const isCreate = (link?.id ?? "") === "new";
-  const autoSave = isEditing && !isCreate;
+  const autoSave = isEditing && !isCreate && !compact;
 
   const [showBankDetails, setShowBankDetails] = useState(false);
   const [showAddressDetails, setShowAddressDetails] = useState(false);
@@ -64,6 +67,8 @@ const Organization = ({
   const selectOrg = () => (
     <>
       <select
+        aria-label="Organization"
+        disabled={saving}
         value={ev.organizationId ?? link.organizationId ?? ""}
         onChange={(e) => onChange("organizationId", toNum(e.target.value))}
         onBlur={autoSave ? submit : undefined}
@@ -83,6 +88,8 @@ const Organization = ({
   const selectStatus = () => (
     <>
       <select
+        aria-label="Status"
+        disabled={saving}
         value={ev.organizationStatusId ?? link.organizationStatusId ?? ""}
         onChange={(e) =>
           onChange("organizationStatusId", toNum(e.target.value))
@@ -107,7 +114,7 @@ const Organization = ({
   const statusName = (id) =>
     statuses.find((s) => s.id === id)?.organizationStatusName || (id ?? "-");
 
-  const hc = (i) => (!visibleCols[i] ? styles.hiddenCol : "");
+  const hc = (i) => (!compact && !visibleCols[i] ? styles.hiddenCol : "");
 
   return (
     <>
@@ -123,21 +130,23 @@ const Organization = ({
               {canManage && <button
                 type="button"
                 className={styles.iconCircleBtn}
+                disabled={saving}
                 onClick={submit}
                 title="Save"
                 aria-label="Save"
               >
-                <FiSave />
+                <FiSave />{compact && <span>Save</span>}
               </button>}
 
               <button
                 type="button"
                 className={styles.dangerIconBtn}
+                disabled={saving}
                 onClick={onCancel}
                 title="Cancel"
                 aria-label="Cancel"
               >
-                <FiX />
+                <FiX />{compact && <span>Cancel</span>}
               </button>
             </div>
           ) : (
@@ -150,10 +159,11 @@ const Organization = ({
                   e.stopPropagation();
                   onEdit();
                 }}
+                disabled={saving || editingLocked}
                 title="Edit"
                 aria-label="Edit"
               >
-                <FiEdit />
+                <FiEdit />{compact && <span>Edit</span>}
               </button>}
 
               {!isCreate && canManage && (
@@ -165,10 +175,11 @@ const Organization = ({
                     e.stopPropagation();
                     onDelete(link.id);
                   }}
+                  disabled={saving || editingLocked}
                   title="Delete"
                   aria-label="Delete organization relation"
                 >
-                  <FiTrash2 />
+                  <FiTrash2 />{compact && <span>Delete</span>}
                 </button>
               )}
 
@@ -195,7 +206,7 @@ const Organization = ({
                       : "Show address details"
                   }
                 >
-                  {showAddressDetails ? <FiChevronUp /> : <FiChevronDown />}
+                  {showAddressDetails ? <FiChevronUp /> : <FiChevronDown />}{compact && <span>Addresses</span>}
                 </button>
               )}
 
@@ -218,7 +229,7 @@ const Organization = ({
                     showBankDetails ? "Hide bank details" : "Show bank details"
                   }
                 >
-                  {showBankDetails ? <FiChevronUp /> : <FiChevronDown />}
+                  {showBankDetails ? <FiChevronUp /> : <FiChevronDown />}{compact && <span>Bank details</span>}
                 </button>
               )}
             </div>
@@ -227,11 +238,13 @@ const Organization = ({
 
         {/* 1: Organization */}
         <Cell className={hc(1)}>
+          {compact && <span className={styles.fieldLabel}>Organization</span>}
           {isEditing ? selectOrg() : orgName(link.organizationId)}
         </Cell>
 
         {/* 2: Status */}
         <Cell className={hc(2)}>
+          {compact && <span className={styles.fieldLabel}>Status</span>}
           {isEditing ? selectStatus() : statusName(link.organizationStatusId)}
         </Cell>
       </div>

@@ -1,15 +1,18 @@
+import useTransientMessage from "../../../hooks/useTransientMessage";
+import { budgetOptionLabel } from "../../../utils/budgetDisplay";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiRotateCcw,
   FiRefreshCw,
-  FiAlertCircle,
   FiDollarSign,
 } from "react-icons/fi";
 
 import styles from "./RestoreBudget.module.scss";
 import { BASE_URL } from "../../../config/api";
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
+import { formatApiError } from "../../../utils/apiErrors";
 
 const RestoreBudget = () => {
   const navigate = useNavigate();
@@ -26,7 +29,7 @@ const RestoreBudget = () => {
   const [selectedBudgetId, setSelectedBudgetId] = useState("");
 
   const [formError, setFormError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useTransientMessage("");
 
   const selectedBudget = useMemo(() => {
     const id = Number(selectedBudgetId);
@@ -103,12 +106,7 @@ const RestoreBudget = () => {
   const getBudgetLabel = (budget) => {
     if (!budget) return "N/A";
 
-    const project = getProjectLabel(budget.projectId);
-    const amount = getAmountLabel(budget.totalAmount);
-    const currency = getCurrencyLabel(budget.localCurrencyId);
-    const date = formatDate(budget.budgetPreparationDate);
-
-    return `${project} | amount: ${amount} ${currency} | date: ${date}`;
+    return budgetOptionLabel(budget);
   };
 
   const loadDeletedBudgets = async () => {
@@ -226,9 +224,10 @@ const RestoreBudget = () => {
       if (!res.ok) {
         const data = await safeReadJson(res);
         setFormError(
-          data?.message ||
-            data?.detail ||
+          formatApiError(
+            data,
             "Failed to restore the budget. Backend support may be missing.",
+          ),
         );
         return;
       }
@@ -267,10 +266,7 @@ const RestoreBudget = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {successMessage && (
@@ -373,7 +369,7 @@ const RestoreBudget = () => {
                     </div>
 
                     <div className={styles.detailRow}>
-                      <span className={styles.detailLabel}>Total amount</span>
+                      <span className={styles.detailLabel}>Budget limit (currency meaning may be unconfirmed)</span>
                       <span className={styles.detailValue}>
                         {getAmountLabel(selectedBudget.totalAmount)}
                       </span>

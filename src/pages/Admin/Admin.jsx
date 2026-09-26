@@ -104,6 +104,11 @@ import UserRoleManagement from "./UserRoleManagement/UserRoleManagement";
 import RegisterProject from "../RegisterProject/RegisterProject";
 import LogoSettings from "./LogoSettings/LogoSettings";
 import ThemeSettings from "./ThemeSettings/ThemeSettings";
+import AuditHistory from "./AuditHistory/AuditHistory";
+import {
+  useUnsavedChange,
+  useUnsavedChanges,
+} from "../../context/UnsavedChangesContext";
 
 const ENTITY_OPTIONS = [
   { value: "position", label: "Position (master data)" },
@@ -236,6 +241,9 @@ const RESTORE_ENTITY_VALUES = new Set([
 ]);
 
 const Admin = () => {
+  const { confirmDiscardUnsavedChanges } = useUnsavedChanges();
+  const [adminEditorDirty, setAdminEditorDirty] = useState(false);
+  useUnsavedChange("admin-data-editor", adminEditorDirty);
   const [action, setAction] = useState("create");
 
   // One shared entity state for all actions.
@@ -532,6 +540,8 @@ const Admin = () => {
   }, [action, selectedEntity]);
 
   const handleActionChange = (e) => {
+    if (!confirmDiscardUnsavedChanges()) return;
+    setAdminEditorDirty(false);
     setAction(e.target.value);
     setEntityMenuOpen(false);
   };
@@ -566,8 +576,7 @@ const Admin = () => {
       );
 
       if (exactMatch) {
-        setSelectedEntity(exactMatch.value);
-        setEntitySearch(exactMatch.label);
+        handleEntityOptionSelect(exactMatch);
         return;
       }
 
@@ -581,8 +590,7 @@ const Admin = () => {
       });
 
       if (partialMatch) {
-        setSelectedEntity(partialMatch.value);
-        setEntitySearch(partialMatch.label);
+        handleEntityOptionSelect(partialMatch);
         return;
       }
 
@@ -593,6 +601,10 @@ const Admin = () => {
   };
 
   const handleEntityOptionSelect = (option) => {
+    if (option.value !== selectedEntity && !confirmDiscardUnsavedChanges()) {
+      return;
+    }
+    setAdminEditorDirty(false);
     setSelectedEntity(option.value);
     setEntitySearch(option.label);
     setEntityMenuOpen(false);
@@ -623,12 +635,17 @@ const Admin = () => {
         <LogoSettings />
       </section>
 
-      <section
-        className={styles.content}
-        aria-labelledby="user-access-heading"
-      >
+      <section className={styles.content} aria-labelledby="user-access-heading">
         <h2 id="user-access-heading">User access</h2>
         <UserRoleManagement />
+      </section>
+
+      <section
+        className={styles.content}
+        aria-labelledby="audit-history-heading"
+      >
+        <h2 id="audit-history-heading">Audit history</h2>
+        <AuditHistory />
       </section>
 
       <section
@@ -758,10 +775,26 @@ const Admin = () => {
           </div>
         </div>
 
-        <SelectedComponent key={`${action}-${selectedEntity}`} />
+        <div
+          onChangeCapture={(event) => {
+            const isRecordLookup =
+              event.target.tagName === "SELECT" && !event.target.name;
+            if (!isRecordLookup) setAdminEditorDirty(true);
+          }}
+          onClickCapture={(event) => {
+            const button = event.target.closest("button");
+            const label = button?.textContent?.trim().toLowerCase() || "";
+            if (/^(save|create|update|register)/.test(label)) {
+              setAdminEditorDirty(false);
+            }
+          }}
+          onSubmitCapture={() => setAdminEditorDirty(false)}
+        >
+          <SelectedComponent key={`${action}-${selectedEntity}`} />
+        </div>
       </section>
     </div>
   );
 };
 
-export default Admin;
+export default Admin;  

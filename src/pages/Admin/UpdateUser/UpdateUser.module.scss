@@ -1,3 +1,4 @@
+@use "../responsiveForms" as responsive;
 @use "../../../styles/colors" as colors;
 @use "../../../styles/forms" as forms;
 
@@ -214,3 +215,5 @@ label {
   border-radius: 999px;
   background: colors.$neutral-a08;
 }
+
+@include responsive.layout;

@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiSave, FiX, FiAlertCircle } from "react-icons/fi";
+import { FiSave, FiX } from "react-icons/fi";
 
 import styles from "../CreateUser/CreateUser.module.scss";
 import { BASE_URL } from "../../../config/api";
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const initialForm = {
   organizationId: "",
@@ -108,9 +109,7 @@ const CreateBankDetail = () => {
         return;
       }
 
-      alert(
-        `Bank detail created successfully${data?.bankId ? ` (id: ${data.bankId})` : ""}!`,
-      );
+      // Successful mutations are announced by the shared notification banner.
       resetForm();
     } catch (err) {
       console.error("Create bank detail error:", err);
@@ -149,10 +148,7 @@ const CreateBankDetail = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         <div className={styles.grid}>

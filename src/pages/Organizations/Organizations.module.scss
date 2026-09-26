@@ -136,8 +136,8 @@
   border-radius: 14px;
   background: colors.$surface;
 
-  --org-header-bg: colors.$surface-tint;
-  --org-header-border: colors.$border-muted;
+  --org-header-bg: #{colors.$surface-tint};
+  --org-header-border: #{colors.$border-muted};
   --org-grid-cols: 230px; /* ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ fallback (Actions col) */
 }
 
@@ -190,4 +190,22 @@
 .noData {
   padding: 12px;
   color: colors.$text-neutral;
+}
+
+fieldset.headerRow { margin: 0; border: 0; border-bottom: 1px solid colors.$border-muted; min-inline-size: 0; }
+@media (max-width: 1100px) {
+  .page { padding: 8px; }
+  .shell { padding: 16px; min-width: 0; box-sizing: border-box; }
+  .pageHeader { flex-wrap: wrap; }
+  .pageSubtitle { overflow-wrap: anywhere; }
+  .headerRow { min-width: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; position: static; }
+  .headerCell:first-child { display: none; }
+  .sortAndFilterHeader { display: flex; justify-content: space-between; }
+  .sortAndFilterHeader button, .headerActions button { min-height: 44px; min-width: 44px; }
+}
+@media (max-width: 700px) {
+  .page { padding: 0; margin: 0; height: auto; }
+  .shell { padding: 12px; height: auto; }
+  .table { overflow: visible; flex: none; }
+  .headerRow { grid-template-columns: minmax(0, 1fr); }
 }

@@ -100,6 +100,10 @@
   gap: 1rem;
 }
 
+.budgetSection {
+  scroll-margin-top: 100px;
+}
+
 .noData {
   padding: 12px;
   color: colors.$text-neutral;
@@ -134,4 +138,22 @@
   .createFormSection {
     scroll-margin-top: 155px;
   }
+
+  .budgetSection {
+    scroll-margin-top: 155px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .page { padding: 8px; }
+  .shell { padding: 16px; min-width: 0; }
+  .pageHeader { margin: -16px -16px 16px; padding: 16px; }
+  .pageSubtitle { overflow-wrap: anywhere; }
+}
+@media (max-width: 700px) {
+  .page { padding: 0; margin-top: 0; }
+  .shell { padding: 8px; }
+  .pageHeader { position: static; margin: -8px -8px 12px; padding: 12px; }
+  .primaryBtn { min-height: 44px; }
+  .budgetSection, .createFormSection { scroll-margin-top: 12px; min-width: 0; }
 }

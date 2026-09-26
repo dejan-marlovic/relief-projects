@@ -19,7 +19,10 @@ const renderEditableRow = (overrides = {}) => {
   const props = {
     cost,
     costTypes: [{ id: 1, costTypeName: "Direct" }],
-    costs: [{ id: 2, costName: "Shelter" }],
+    costs: [
+      { id: 2, costName: "Shelter", costTypeId: 1 },
+      { id: 3, costName: "Monitoring", costTypeId: 2 },
+    ],
     isEditing: true,
     editedValues: { ...cost },
     onEdit: jest.fn(),
@@ -51,7 +54,7 @@ describe("CostDetail explicit editing", () => {
       "costDescription",
       "Updated shelter"
     );
-    expect(props.onChange).toHaveBeenCalledWith("noOfUnits", 12);
+    expect(props.onChange).toHaveBeenCalledWith("noOfUnits", "12");
     expect(props.onSave).not.toHaveBeenCalled();
     expect(screen.getByTitle("Save")).toBeInTheDocument();
   });
@@ -83,4 +86,35 @@ describe("CostDetail explicit editing", () => {
       "true"
     );
   });
+
+  test("only offers categories belonging to the selected type", () => {
+    renderEditableRow();
+
+    expect(screen.getByRole("option", { name: "Shelter" })).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: "Monitoring" })).not.toBeInTheDocument();
+  });
+
+  test("changing type clears the selected category", () => {
+    const props = renderEditableRow({
+      costTypes: [
+        { id: 1, costTypeName: "Direct" },
+        { id: 2, costTypeName: "Indirect" },
+      ],
+    });
+
+    fireEvent.change(screen.getAllByRole("combobox")[0], {
+      target: { value: "2" },
+    });
+
+    expect(props.onChange).toHaveBeenCalledWith("costTypeId", 2);
+    expect(props.onChange).toHaveBeenCalledWith("costId", "");
+  });
+});
+
+test("calculated amounts are read-only and decimal input stays exact", () => {
+  const props = renderEditableRow();
+  for (const label of ["Local", "Reporting", "GBP", "EUR"]) expect(screen.getByPlaceholderText(label)).toHaveAttribute("readonly");
+  fireEvent.change(screen.getByPlaceholderText("Price"), { target: { value: "999999999999999.99" } });
+  expect(props.onChange).toHaveBeenCalledWith("unitPrice", "999999999999999.99");
+  expect(screen.getByPlaceholderText("Periods")).toHaveAttribute("min", "1");
 });

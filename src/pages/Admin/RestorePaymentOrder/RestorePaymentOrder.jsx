@@ -1,15 +1,19 @@
+import useTransientMessage from "../../../hooks/useTransientMessage";
+import PaymentAmount from "../../../components/PaymentAmount/PaymentAmount";
+import { fundingCurrencyLabel } from "../../../utils/transactionFunding";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiRotateCcw,
   FiRefreshCw,
-  FiAlertCircle,
   FiFileText,
 } from "react-icons/fi";
 
 import styles from "./RestorePaymentOrder.module.scss";
 import { BASE_URL } from "../../../config/api";
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
+import { formatApiError } from "../../../utils/apiErrors";
 
 const RestorePaymentOrder = () => {
   const navigate = useNavigate();
@@ -27,7 +31,7 @@ const RestorePaymentOrder = () => {
   const [selectedPaymentOrderId, setSelectedPaymentOrderId] = useState("");
 
   const [formError, setFormError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useTransientMessage("");
 
   const selectedPaymentOrder = useMemo(() => {
     const id = Number(selectedPaymentOrderId);
@@ -119,7 +123,7 @@ const RestorePaymentOrder = () => {
     const status = getTransactionStatusLabel(transaction.transactionStatusId);
     const approvedAmount = getAmountLabel(transaction.approvedAmount);
 
-    return `${project} | ${organization} | ${status} | approved: ${approvedAmount}`;
+    return `${project} | ${organization} | ${status} | approved funding: ${approvedAmount} | ${fundingCurrencyLabel(transaction.fundingCurrency)} (current budget configuration)`;
   };
 
   const getPaymentOrderLabel = (paymentOrder) => {
@@ -274,9 +278,7 @@ const RestorePaymentOrder = () => {
       if (!res.ok) {
         const data = await safeReadJson(res);
         setFormError(
-          data?.message ||
-            data?.detail ||
-            "Failed to restore the payment order. Backend support may be missing.",
+          formatApiError(data, "Failed to restore the payment order."),
         );
         return;
       }
@@ -315,10 +317,7 @@ const RestorePaymentOrder = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {successMessage && (
@@ -442,9 +441,7 @@ const RestorePaymentOrder = () => {
                       <span className={styles.detailLabel}>
                         Computed amount
                       </span>
-                      <span className={styles.detailValue}>
-                        {getAmountLabel(selectedPaymentOrder.amount)}
-                      </span>
+                      <div className={styles.detailValue}><PaymentAmount record={selectedPaymentOrder} /></div>
                     </div>
 
                     <div className={styles.detailRow}>

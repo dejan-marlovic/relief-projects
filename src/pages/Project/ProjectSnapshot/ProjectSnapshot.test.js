@@ -1,4 +1,9 @@
-import { getParticipantNames, summarizeProjectSnapshot } from "./ProjectSnapshot";
+import {
+  getParticipantNames,
+  getParticipantDetails,
+  summarizeParticipantRoles,
+  summarizeProjectSnapshot,
+} from "./ProjectSnapshot";
 
 describe("project snapshot summary", () => {
   test("calculates project record counts and the SEK reporting budget", () => {
@@ -16,7 +21,8 @@ describe("project snapshot summary", () => {
       documents: [{}, {}, {}, {}],
       organizationOptions: [],
     })).toEqual({
-      reportingBudgetSek: 2000,
+      reportingBudgetSek: "2000.000",
+      reportingTotals: [{ currency: "Reporting", amount: "2000.000" }],
       recipients: 2,
       partners: 1,
       transactions: 3,
@@ -58,5 +64,34 @@ describe("project snapshot summary", () => {
         { id: 8, name: "Alex Johnson" },
       ]
     )).toEqual(["Dejan Marlovic", "Alex Johnson"]);
+  });
+
+  test("groups project participants by role", () => {
+    expect(summarizeParticipantRoles(
+      [
+        { positionId: 2 },
+        { positionId: 1 },
+        { positionId: 2 },
+        { positionId: null },
+      ],
+      [
+        { id: 1, positionName: "Coordinator" },
+        { id: 2, name: "Field Officer" },
+      ]
+    )).toEqual([
+      { name: "Field Officer", value: 2 },
+      { name: "Coordinator", value: 1 },
+      { name: "Unassigned", value: 1 },
+    ]);
+  });
+
+  test("resolves participant names and roles for the team list", () => {
+    expect(getParticipantDetails(
+      [{ id: 9, employeeId: 4, positionId: 2 }],
+      [{ id: 4, firstName: "Dejan", lastName: "Marlovic" }],
+      [{ id: 2, positionName: "Field Officer" }]
+    )).toEqual([
+      { id: 9, name: "Dejan Marlovic", role: "Field Officer" },
+    ]);
   });
 });

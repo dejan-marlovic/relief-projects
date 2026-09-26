@@ -1,3 +1,4 @@
+import { appFetch as fetch } from "../../../utils/appFetch";
 import React, {
   useCallback,
   useContext,
@@ -8,10 +9,12 @@ import React, {
 } from "react";
 import { ProjectContext } from "../../../context/ProjectContext";
 import styles from "./Memos.module.scss";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 import projectStyles from "../Project.module.scss"; // ← reuse Project form styles
 import { FiEdit, FiTrash2, FiSave, FiX } from "react-icons/fi";
 
 import { BASE_URL } from "../../../config/api"; // adjust path if needed
+import { useUnsavedChange } from "../../../context/UnsavedChangesContext";
 
 // Text getter
 const getText = (m = {}) =>
@@ -53,6 +56,7 @@ export default function Memos({ canEdit = false }) {
   const [error, setError] = useState("");
   const [drafts, setDrafts] = useState({}); // { [id|'new']: { text, positionId, employeeId, memoDate } }
   const [editingId, setEditingId] = useState(null);
+  useUnsavedChange("memos-editor", editingId !== null);
 
   // ✅ NEW: ref for new memo textarea
   const newMemoTextareaRef = useRef(null);
@@ -235,7 +239,7 @@ export default function Memos({ canEdit = false }) {
     };
 
     if (!projectIdNum) {
-      alert("Please select a project before saving a memo.");
+      setError("Please select a project before saving a memo.");
       return;
     }
 
@@ -253,7 +257,7 @@ export default function Memos({ canEdit = false }) {
       cancel();
     } catch (e) {
       console.error(e);
-      alert(`${isCreate ? "Create" : "Save"} failed.`);
+      setError(`${isCreate ? "Create" : "Save"} failed.`);
     }
   };
 
@@ -269,7 +273,7 @@ export default function Memos({ canEdit = false }) {
       await fetchMemos();
     } catch (e) {
       console.error(e);
-      alert("Delete failed.");
+      setError("Delete failed.");
     }
   };
 
@@ -327,7 +331,9 @@ export default function Memos({ canEdit = false }) {
       </div>
 
       {loading && <p className={styles.note}>Loading…</p>}
-      {error && <p className={styles.error}>{error}</p>}
+      {error && (
+        <ErrorBanner message={error} onDismiss={() => setError("")} />
+      )}
 
       {(items || []).map((m) => (
         <div key={m.id} className={styles.memoCard}>

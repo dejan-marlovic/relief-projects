@@ -1,0 +1,85 @@
+import { render, screen } from "@testing-library/react";
+import AuditFieldChanges, { formatFieldValue } from "./AuditFieldChanges";
+
+test("renders payment-order changes including cleared header, exact count and multiline text", () => {
+  const { container } = render(<AuditFieldChanges event={{ action: "UPDATE", entityType: "PAYMENT_ORDER", fieldChangesVersion: 1, fieldChanges: [
+    { field: "transactionId", type: "REFERENCE", oldValue: { id: "42", label: "Transaction 42 — Project A" }, newValue: null },
+    { field: "paymentOrderDate", type: "LOCAL_DATETIME", oldValue: null, newValue: "2026-09-12T09:30:00" },
+    { field: "numberOfTransactions", type: "DECIMAL", oldValue: "2", newValue: "9007199254740993" },
+    { field: "paymentOrderDescription", type: "TEXT", oldValue: "Before", newValue: "Updated description" },
+    { field: "message", type: "TEXT", oldValue: "", newValue: "First line\nSecond line" },
+  ] }} />);
+  expect(Array.from(container.querySelectorAll("dt"), (node) => node.textContent)).toEqual([
+    "Header transaction", "Payment-order date/time", "Number of transactions", "Description", "Message",
+  ]);
+  for (const value of ["Transaction 42 — Project A (ID 42)", "2026-09-12 09:30:00", "9007199254740993", "Empty text"]) expect(screen.getByText(value)).toBeInTheDocument();
+  expect(container.textContent).toContain("First line\nSecond line");
+  expect(screen.getAllByText("Not set")).toHaveLength(2);
+  expect(container.textContent).not.toContain("PIN");
+});
+
+test("renders all transaction fields with exact amounts and historical reference labels", () => {
+  const fields = [
+    ["organizationId", "Organization", "REFERENCE", { id: "5", label: "Old organization" }],
+    ["projectId", "Project", "REFERENCE", { id: "8", label: "Project A" }],
+    ["budgetId", "Budget", "REFERENCE", { id: "10", label: "Budget 10" }],
+    ["financierOrganizationId", "Financier organization", "REFERENCE", { id: "6", label: "Financier" }],
+    ["transactionStatusId", "Business status", "REFERENCE", { id: "2", label: "Funded" }],
+    ["appliedForAmount", "Applied-for amount", "DECIMAL", "9007199254740993"],
+    ["firstShareAmount", "First-share amount", "DECIMAL", "123.45"],
+    ["approvedAmount", "Approved amount", "DECIMAL", "9007199254740995"],
+    ["ownContribution", "Own contribution", "TEXT", "Yes"],
+    ["secondShareAmount", "Second-share amount", "DECIMAL", "678.90"],
+    ["datePlanned", "Planned date/time", "LOCAL_DATETIME", "2026-09-11T14:30:00"],
+    ["okStatus", "OK status", "TEXT", "No"],
+  ];
+  const { container } = render(<AuditFieldChanges event={{ action: "UPDATE", entityType: "TRANSACTION", fieldChangesVersion: 1,
+    fieldChanges: fields.map(([field, , type, newValue]) => ({ field, type, oldValue: null, newValue })),
+  }} />);
+  expect(Array.from(container.querySelectorAll("dt"), (node) => node.textContent)).toEqual(fields.map((field) => field[1]));
+  for (const value of ["9007199254740993", "9007199254740995", "678.90", "2026-09-11 14:30:00", "Yes", "No", "Old organization (ID 5)", "Budget 10 (ID 10)", "Funded (ID 2)"]) {
+    expect(screen.getByText(value)).toBeInTheDocument();
+  }
+});
+
+test("preserves precision, local dates, nulls, empty text and historical references", () => {
+  expect(formatFieldValue("999999999999999999.99", "DECIMAL")).toBe("999999999999999999.99");
+  expect(formatFieldValue("2026-09-10T13:14:15", "LOCAL_DATETIME")).toBe("2026-09-10 13:14:15");
+  expect(formatFieldValue(null, "TEXT")).toBe("Not set");
+  expect(formatFieldValue("", "TEXT")).toBe("Empty text");
+  expect(formatFieldValue({ id: "7", label: "Old project" }, "REFERENCE")).toBe("Old project (ID 7)");
+  expect(formatFieldValue({ id: "8" }, "REFERENCE")).toBe("ID 8");
+});
+test("renders grouped field changes as escaped text with stable-name fallbacks", () => {
+  const text = "<script>bad()</script>\nSecond line";
+  const { container } = render(<AuditFieldChanges event={{ action: "UPDATE", fieldChangesVersion: 1, fieldChanges: [
+    { field: "budgetDescription", type: "TEXT", oldValue: null, newValue: text },
+    { field: "futureField", type: "TEXT", oldValue: "", newValue: "new" },
+  ] }} />);
+  expect(screen.getByText("Description")).toBeInTheDocument();
+  expect(screen.getByText("futureField")).toBeInTheDocument();
+  expect(container.textContent).toContain(text);
+  expect(container.querySelector("script")).toBeNull();
+  expect(screen.getAllByText("Before")).toHaveLength(2);
+});
+test("handles historical and future versions without crashing", () => {
+  const view = render(<AuditFieldChanges event={{ action: "CREATE" }} />);
+  expect(view.container).toBeEmptyDOMElement();
+  view.rerender(<AuditFieldChanges event={{ action: "UPDATE", fieldChanges: [] }} />);
+  expect(screen.getByText("No field changes recorded.")).toBeInTheDocument();
+  view.rerender(<AuditFieldChanges event={{ action: "UPDATE", fieldChangesVersion: 2 }} />);
+  expect(screen.getByText(/unsupported format/)).toBeInTheDocument();
+});
+
+test("budget name history shows literal old and new names", () => {
+  render(<AuditFieldChanges event={{ action: "UPDATE", entityType: "BUDGET", fieldChangesVersion: 1, fieldChanges: [
+    { field: "budgetName", type: "TEXT", oldValue: "Original water budget", newValue: "Water phase two" },
+  ] }} />);
+  expect(screen.getByText("Budget name")).toBeInTheDocument();
+  expect(screen.getByText("Original water budget")).toBeInTheDocument();
+  expect(screen.getByText("Water phase two")).toBeInTheDocument();
+});
+test("quantity history preserves new decimal strings and historical integer events", () => {
+  expect(formatFieldValue("18886.971409400761", "DECIMAL")).toBe("18886.971409400761");
+  expect(formatFieldValue("9223372036854775807", "INTEGER")).toBe("9223372036854775807");
+});

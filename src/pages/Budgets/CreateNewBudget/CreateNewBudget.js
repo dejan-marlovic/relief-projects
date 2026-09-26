@@ -1,11 +1,15 @@
+import { appFetch as fetch } from "../../../utils/appFetch";
+import { budgetLimitError } from "../../../utils/budgetLimit";
+import { normalizeBudgetName, budgetNameError } from "../../../utils/budgetDisplay";
 import React, { useState, useEffect, useContext, useMemo } from "react";
 import styles from "../Budget/Budget.module.scss"; // ✅ reuse Budget styling
 import { ProjectContext } from "../../../context/ProjectContext";
 
 // ✅ Icons to match Budget/Project vibe
-import { FiSave, FiX, FiAlertCircle } from "react-icons/fi";
+import { FiSave, FiX } from "react-icons/fi";
 
-import { BASE_URL } from "../../../config/api"; // adjust path if needed
+import { BASE_URL } from "../../../config/api";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner"; // adjust path if needed
 
 const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
   const { selectedProjectId } = useContext(ProjectContext);
@@ -15,6 +19,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
   const [loading, setLoading] = useState(false);
 
   const [budget, setBudget] = useState({
+    budgetName: "",
     budgetDescription: "",
     totalAmount: "",
     budgetPreparationDate: "",
@@ -71,7 +76,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
         : quoteCurrencyId;
 
     return exchangeRates.filter(
-      (r) => r.baseCurrencyId === baseNum && r.quoteCurrencyId === quoteNum
+      (r) => r.baseCurrencyId === baseNum && r.quoteCurrencyId === quoteNum && Number(r.rate) > 0 && (r.baseCurrencyId !== r.quoteCurrencyId || Number(r.rate) === 1)
     );
   };
 
@@ -131,7 +136,6 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
     const { name, value } = e.target;
 
     const numericFields = [
-      "totalAmount",
       "localCurrencyId",
       "localExchangeRateToGbpId",
       "reportingCurrencySekId",
@@ -212,13 +216,15 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
 
       // ✅ lightweight frontend validation (matches Budget behavior)
       const newFieldErrors = {};
+      const nameError = budgetNameError(budget.budgetName);
+      if (nameError) newFieldErrors.budgetName = nameError;
 
       if (
         budget.totalAmount === "" ||
         budget.totalAmount == null ||
-        Number(budget.totalAmount) <= 0
+        budgetLimitError(budget.totalAmount)
       ) {
-        newFieldErrors.totalAmount = "Total amount must be greater than zero.";
+        newFieldErrors.totalAmount = "Budget limit must be positive, within storage capacity and have at most three meaningful decimal places.";
       }
 
       if (!budget.localCurrencyId) {
@@ -249,12 +255,13 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
       const payload = {
         projectId: selectedProjectId ? Number(selectedProjectId) : null,
 
+        budgetName: normalizeBudgetName(budget.budgetName),
         budgetDescription: budget.budgetDescription ?? "",
         budgetPreparationDate: budget.budgetPreparationDate || null,
         totalAmount:
           budget.totalAmount === "" || budget.totalAmount == null
             ? null
-            : Number(budget.totalAmount),
+            : String(budget.totalAmount),
 
         localCurrencyId:
           budget.localCurrencyId === "" || budget.localCurrencyId == null
@@ -372,10 +379,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {loading ? (
@@ -391,6 +395,12 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
               <div className={styles.cardHeader}>
                 <div className={styles.cardTitle}>Summary</div>
                 <div className={styles.cardMeta}>Description & totals</div>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label htmlFor={`budget-name-${budget.id || budget.selectedId || "new"}`}>Budget name</label>
+                <input id={`budget-name-${budget.id || budget.selectedId || "new"}`} name="budgetName" value={budget.budgetName || ""} onChange={handleChange} className={inputClass("budgetName")} required aria-invalid={Boolean(getFieldError("budgetName"))} aria-describedby={`budget-name-error-${budget.id || budget.selectedId || "new"}`} placeholder="e.g. Water supply 2026" />
+                <span id={`budget-name-error-${budget.id || budget.selectedId || "new"}`} className={styles.fieldError}>{getFieldError("budgetName")}</span>
               </div>
 
               <div className={styles.formGroup}>
@@ -427,12 +437,12 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>Total Amount:</label>
+                  <label>Budget limit (local currency):</label>
                   <input
                     type="number"
-                    name="totalAmount"
+                    name="totalAmount" min="0.001" step="any"
                     className={inputClass("totalAmount")}
-                    placeholder="Enter total budget amount"
+                    placeholder="Enter budget limit in local currency"
                     value={budget.totalAmount}
                     onChange={handleChange}
                   />

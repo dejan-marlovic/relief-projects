@@ -43,10 +43,14 @@ const SignatureRow = ({
   fieldErrors = {},
   rowRef = null,
   canManage = false,
+  canEdit = canManage,
+  canDelete = canManage,
+  compact = false,
+  saving = false,
 }) => {
   const ev = editedValues || {};
   const isCreate = (row?.id ?? "") === "new";
-  const autoSave = isEditing && !isCreate;
+  const autoSave = isEditing && !isCreate && !compact;
 
   const submit = (e) => {
     e.preventDefault();
@@ -62,12 +66,20 @@ const SignatureRow = ({
 
   const FieldError = ({ name }) =>
     hasError(name) ? (
-      <div className={styles.fieldError}>{getFieldError(name)}</div>
+      <div id={`signature-${row.id}-${name}-error`} className={styles.fieldError}>{getFieldError(name)}</div>
     ) : null;
+
+  const fieldAccessibility = (name, label) => ({
+    "aria-label": label,
+    "aria-invalid": hasError(name),
+    "aria-describedby": hasError(name) ? `signature-${row.id}-${name}-error` : undefined,
+    disabled: saving,
+  });
 
   const inputText = (field) => (
     <>
       <input
+        {...fieldAccessibility(field, "Signature")}
         type="text"
         value={ev[field] ?? row[field] ?? ""}
         onChange={(e) => onChange(field, e.target.value)}
@@ -81,6 +93,7 @@ const SignatureRow = ({
   const selectPO = (
     <>
       <select
+        {...fieldAccessibility("paymentOrderId", "Payment order")}
         value={
           ev.paymentOrderId ??
           (row.paymentOrderId != null ? String(row.paymentOrderId) : "")
@@ -103,6 +116,7 @@ const SignatureRow = ({
   const selectStatus = (
     <>
       <select
+        {...fieldAccessibility("signatureStatusId", "Status")}
         value={
           ev.signatureStatusId ??
           (row.signatureStatusId != null ? String(row.signatureStatusId) : "")
@@ -125,6 +139,7 @@ const SignatureRow = ({
   const selectEmployee = (
     <>
       <select
+        {...fieldAccessibility("employeeId", "Employee")}
         value={
           ev.employeeId ??
           (row.employeeId != null ? String(row.employeeId) : "")
@@ -147,6 +162,7 @@ const SignatureRow = ({
   const inputDate = (
     <>
       <input
+        {...fieldAccessibility("signatureDate", "Signature date")}
         type="datetime-local"
         value={toDateTimeLocal(ev.signatureDate ?? row.signatureDate)}
         onChange={(e) =>
@@ -174,35 +190,30 @@ const SignatureRow = ({
 
   const hc = (i) => (!visibleCols[i] ? styles.hiddenCol : "");
 
-  return (
-    <div
-      ref={rowRef || undefined}
-      className={`${styles.row} ${styles.gridRow} ${
-        isEven ? styles.zebraEven : ""
-      } ${styles.hoverable}`}
-    >
-      {/* 0: Actions (sticky left) */}
-      <Cell className={`${styles.stickyCol} ${hc(0)}`}>
+  const actionCell = (
+      <Cell className={compact ? styles.cardActions : `${styles.stickyCol} ${hc(0)}`}>
         {isEditing ? (
           <div className={styles.actions}>
             <button
               type="button"
               className={styles.iconCircleBtn}
+              disabled={saving}
               onClick={submit}
               title="Save"
               aria-label="Save"
             >
-              <FiSave />
+              <FiSave />{compact && <span>{saving ? "Saving…" : "Save"}</span>}
             </button>
 
             <button
               type="button"
               className={styles.dangerIconBtn}
+              disabled={saving}
               onClick={onCancel}
               title="Cancel"
               aria-label="Cancel"
             >
-              <FiX />
+              <FiX />{compact && <span>Cancel</span>}
             </button>
           </div>
         ) : (
@@ -243,10 +254,11 @@ const SignatureRow = ({
                 className={styles.rowCheckbox}
               ></input>
             )}
-            {canManage && (
+            {canEdit && (
               <button
                 type="button"
                 className={styles.iconCircleBtn}
+                disabled={saving}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -255,11 +267,11 @@ const SignatureRow = ({
                 title="Edit"
                 aria-label="Edit"
               >
-                <FiEdit />
+                <FiEdit />{compact && <span>Edit</span>}
               </button>
             )}
 
-            {!isCreate && canManage && (
+            {!isCreate && canDelete && (
               <button
                 type="button"
                 className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.iconOnlyBtn}`}
@@ -268,15 +280,46 @@ const SignatureRow = ({
                   e.stopPropagation();
                   onDelete(row.id);
                 }}
+                disabled={saving}
                 title="Delete"
                 aria-label="Delete signature"
               >
-                <FiTrash2 />
+                <FiTrash2 />{compact && <span>Delete</span>}
               </button>
             )}
           </div>
         )}
       </Cell>
+
+  );
+
+  if (compact) return (
+    <section ref={rowRef || undefined} className={styles.compactCard} aria-label={isCreate ? "New signature" : `Signature ${row.id}`}>
+      <div className={styles.cardTitle}>{isCreate ? "New signature" : `Signature #${row.id}`}</div>
+      <div className={styles.cardSummary}>
+        <div><span className={styles.fieldLabel}>Status</span>{isEditing ? selectStatus : statusLabelById(row.signatureStatusId)}</div>
+        <div><span className={styles.fieldLabel}>Employee</span>{isEditing ? selectEmployee : employeeLabelById(row.employeeId)}</div>
+        <div><span className={styles.fieldLabel}>Payment order</span>{isEditing ? selectPO : (row.paymentOrderId != null ? `PO#${row.paymentOrderId}` : "-")}</div>
+      </div>
+      <details className={styles.cardDetails} open={isEditing ? true : undefined}>
+        <summary>Signature details</summary>
+        <div className={styles.detailFields}>
+          <div><span className={styles.fieldLabel}>Signature</span>{isEditing ? inputText("signature") : (row.signature || "-")}</div>
+          <div><span className={styles.fieldLabel}>Date</span>{isEditing ? inputDate : row.signatureDate ? new Date(row.signatureDate).toLocaleString() : "-"}</div>
+        </div>
+      </details>
+      {actionCell}
+    </section>
+  );
+
+  return (
+    <div
+      ref={rowRef || undefined}
+      className={`${styles.row} ${styles.gridRow} ${
+        isEven ? styles.zebraEven : ""
+      } ${styles.hoverable}`}
+    >
+      {actionCell}
 
       {/* 1: Status */}
       <Cell className={hc(1)}>

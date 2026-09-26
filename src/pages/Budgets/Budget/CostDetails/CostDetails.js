@@ -1,37 +1,31 @@
+import { appFetch as fetch } from "../../../../utils/appFetch";
+import { calculationErrors, costDetailInputs, previewAmounts, sumDecimals } from "../../../../utils/budgetCalculations";
 import React, { useEffect, useState, useCallback } from "react";
 import CostDetail from "./CostDetail/CostDetail";
 import styles from "./CostDetails.module.scss";
 
 import { BASE_URL } from "../../../../config/api"; // adjust path if needed
 import { useAuth } from "../../../../context/AuthContext";
+import { readApiError } from "../../../../utils/apiErrors";
+import ErrorBanner from "../../../../components/ErrorBanner/ErrorBanner";
+import { useUnsavedChange } from "../../../../context/UnsavedChangesContext";
 
 const blankCostDetail = {
   costDescription: "",
   costTypeId: "",
   costId: "",
-  noOfUnits: "",
-  unitPrice: "",
-  percentageCharging: "",
+  noOfUnits: "1",
+  frequencyMonths: "1",
+  unitPrice: "0.00",
+  percentageCharging: "100",
   amountLocalCurrency: "",
   amountReportingCurrency: "",
   amountGBP: "",
   amountEuro: "",
 };
 
-export const validateCostDetail = (values) => {
+export const validateCostDetail = (values, costs = []) => {
   const errors = {};
-  const requiredNumber = (field, label, { minimum = 0 } = {}) => {
-    const value = values?.[field];
-    if (value === "" || value == null) {
-      errors[field] = `${label} is required.`;
-      return;
-    }
-    const number = Number(value);
-    if (!Number.isFinite(number) || number < minimum) {
-      errors[field] = `${label} must be a number of at least ${minimum}.`;
-    }
-  };
-
   if (!values?.costDescription?.trim()) {
     errors.costDescription = "Description is required.";
   }
@@ -40,20 +34,31 @@ export const validateCostDetail = (values) => {
   }
   if (values?.costId === "" || values?.costId == null) {
     errors.costId = "Category is required.";
+  } else if (costs.length > 0 && values?.costTypeId !== "" && values?.costTypeId != null) {
+    const selectedCost = costs.find(
+      (cost) => Number(cost.id) === Number(values.costId),
+    );
+    if (!selectedCost) {
+      errors.costId = "Selected category is unavailable.";
+    } else if (Number(selectedCost.costTypeId) !== Number(values.costTypeId)) {
+      errors.costId = "Category must belong to the selected type.";
+    }
   }
 
-  requiredNumber("noOfUnits", "Units");
-  requiredNumber("unitPrice", "Unit price");
-  requiredNumber("percentageCharging", "% charged");
-  requiredNumber("amountLocalCurrency", "Local amount");
-  requiredNumber("amountReportingCurrency", "SEK amount");
-  requiredNumber("amountGBP", "GBP amount");
-  requiredNumber("amountEuro", "EUR amount");
+  Object.assign(errors, calculationErrors(values));
   return errors;
 };
 
-export const isValidCostDetail = (values) =>
-  Object.keys(validateCostDetail(values)).length === 0;
+export const isValidCostDetail = (values, costs = []) =>
+  Object.keys(validateCostDetail(values, costs)).length === 0;
+
+export const readCostDetailsResponse = async (response) => {
+  if (response.status === 204) return [];
+  if (!response.ok) throw new Error("Failed to fetch cost details");
+
+  const data = await response.json();
+  return Array.isArray(data) ? data : [];
+};
 
 async function safeParseJsonResponse(response) {
   const raw = await response.text().catch(() => "");
@@ -65,16 +70,31 @@ async function safeParseJsonResponse(response) {
   }
 }
 
-const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
+const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates, onMutationSuccess, onEditingChange, disabled = false, externalFieldErrors = {} }) => {
   const { hasAnyRole } = useAuth();
-  const canEditCostDetails = hasAnyRole("ADMIN", "FINANCE");
+  const isBudgetEditable = ["DRAFT", "RETURNED"].includes(
+    budget?.lifecycleStatus || "DRAFT",
+  );
+  const canEditCostDetails =
+    hasAnyRole("ADMIN", "FINANCE") && isBudgetEditable;
   const canDeleteCostDetails = canEditCostDetails;
   const [costTypes, setCostTypes] = useState([]);
   const [costs, setCosts] = useState([]);
   const [costDetails, setCostDetails] = useState([]);
   const [editingId, setEditingId] = useState(null); // number | "new" | null
   const [editedValues, setEditedValues] = useState({});
+  useUnsavedChange(`cost-details-${budgetId}`, editingId !== null);
   const [fieldErrorsById, setFieldErrorsById] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState("");
+  useEffect(() => { onEditingChange?.(editingId !== null || saving); }, [editingId, saving, onEditingChange]);
+
+  useEffect(() => {
+    if (canEditCostDetails) return;
+    setEditingId(null);
+    setEditedValues({});
+    setFieldErrorsById({});
+  }, [canEditCostDetails]);
 
   const fetchCostDetails = useCallback(async () => {
     if (!budgetId) return [];
@@ -86,12 +106,12 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
         `${BASE_URL}/api/cost-details/by-budget/${budgetId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      if (!response.ok) throw new Error("Failed to fetch cost details");
-      const data = await response.json();
+      const data = await readCostDetailsResponse(response);
       setCostDetails(data);
       return data;
     } catch (error) {
       console.error("Error fetching cost details:", error);
+      setFormError("Could not refresh saved cost details. Reload before making further changes.");
       return [];
     }
   }, [budgetId]);
@@ -127,143 +147,11 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
     fetchCosts();
   }, []);
 
-  const getRateById = (id) => {
-    if (!id || !exchangeRates || exchangeRates.length === 0) return null;
-    const numericId = typeof id === "string" ? Number(id) : id;
-
-    const rateObj = exchangeRates.find((r) => r.id === numericId);
-    if (!rateObj || rateObj.rate == null) return null;
-
-    const rate = Number(rateObj.rate);
-    return Number.isNaN(rate) ? null : rate;
-  };
-
-  // ---- SHARED AMOUNT CALCULATION ----
-  const computeAmounts = useCallback(
-    (row) => {
-      if (!budget) return row;
-
-      const noOfUnits = Number(row.noOfUnits) || 0;
-      const unitPrice = Number(row.unitPrice) || 0;
-      const pct =
-        row.percentageCharging === "" || row.percentageCharging == null
-          ? 0
-          : Number(row.percentageCharging) || 0;
-
-      const base = noOfUnits * unitPrice;
-      const gross = base * (1 + pct / 100);
-
-      const updated = { ...row };
-
-      // Local in budget's local currency
-      updated.amountLocalCurrency = gross === 0 ? "" : Number(gross.toFixed(3));
-
-      // Rates from budget header
-      const rateSek = getRateById(budget.reportingExchangeRateSekId);
-      const rateEur = getRateById(budget.reportingExchangeRateEurId);
-      const rateGbp = getRateById(budget.localExchangeRateToGbpId);
-
-      // Reporting currency = SEK
-      if (gross !== 0 && rateSek) {
-        updated.amountReportingCurrency = Number((gross * rateSek).toFixed(3));
-      }
-
-      if (gross !== 0 && rateEur) {
-        updated.amountEuro = Number((gross * rateEur).toFixed(3));
-      }
-
-      if (gross !== 0 && rateGbp) {
-        updated.amountGBP = Number((gross * rateGbp).toFixed(3));
-      }
-
-      return updated;
-    },
-    [budget, exchangeRates]
-  );
-
-  // 🔁 Recalc + persist all cost details when budget is saved
-  const recalcAllForBudget = useCallback(
-    async (list) => {
-      if (!budget || !Array.isArray(list) || list.length === 0) return;
-
-      const token = localStorage.getItem("authToken");
-
-      const updatedList = await Promise.all(
-        list.map(async (item) => {
-          const computed = computeAmounts(item);
-          const merged = { ...item, ...computed };
-
-          const payload = {
-            ...merged,
-            noOfUnits: Number(merged.noOfUnits),
-            unitPrice: Number(merged.unitPrice),
-            percentageCharging:
-              merged.percentageCharging === "" ||
-              merged.percentageCharging == null
-                ? null
-                : Number(merged.percentageCharging),
-            amountLocalCurrency:
-              merged.amountLocalCurrency === "" ||
-              merged.amountLocalCurrency == null
-                ? null
-                : Number(merged.amountLocalCurrency),
-            amountReportingCurrency:
-              merged.amountReportingCurrency === "" ||
-              merged.amountReportingCurrency == null
-                ? null
-                : Number(merged.amountReportingCurrency),
-            amountGBP:
-              merged.amountGBP === "" || merged.amountGBP == null
-                ? null
-                : Number(merged.amountGBP),
-            amountEuro:
-              merged.amountEuro === "" || merged.amountEuro == null
-                ? null
-                : Number(merged.amountEuro),
-          };
-
-          try {
-            await fetch(`${BASE_URL}/api/cost-details/${item.costDetailId}`, {
-              method: "PUT",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify(payload),
-            });
-          } catch (err) {
-            console.error(
-              "Failed to recalculate cost detail",
-              item.costDetailId,
-              err
-            );
-          }
-
-          return merged;
-        })
-      );
-
-      setCostDetails(updatedList);
-    },
-    [budget, exchangeRates, computeAmounts]
-  );
-
-  // 👉 fetch on mount + whenever refreshTrigger changes
-  useEffect(() => {
-    const run = async () => {
-      const data = await fetchCostDetails();
-
-      // Only recalc after an explicit refresh (i.e. after saving budget).
-      if (!budget || refreshTrigger === 0) return;
-
-      await recalcAllForBudget(data);
-    };
-
-    run();
-  }, [fetchCostDetails, recalcAllForBudget, refreshTrigger, budget]);
+  const computeAmounts = (row) => ({ ...row, ...previewAmounts(row, budget, exchangeRates) });
+  useEffect(() => { fetchCostDetails(); }, [fetchCostDetails, refreshTrigger]);
 
   const handleEdit = (cost) => {
-    if (!canEditCostDetails) return;
+    if (!canEditCostDetails || disabled || saving) return;
     setEditingId(cost.costDetailId);
     setFieldErrorsById((current) => ({ ...current, [cost.costDetailId]: {} }));
     setEditedValues((prev) => ({
@@ -271,6 +159,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
       [cost.costDetailId]: {
         costDescription: cost.costDescription,
         noOfUnits: cost.noOfUnits,
+        frequencyMonths: cost.frequencyMonths,
         unitPrice: cost.unitPrice,
         percentageCharging: cost.percentageCharging,
         costTypeId: cost.costTypeId,
@@ -284,32 +173,28 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
   };
 
   const handleCreate = () => {
-    if (!canEditCostDetails) return;
+    if (!canEditCostDetails || disabled || saving) return;
     setEditingId("new");
     setFieldErrorsById((current) => ({ ...current, new: {} }));
     setEditedValues((prev) => ({
       ...prev,
-      new: { ...blankCostDetail },
+      new: computeAmounts(blankCostDetail),
     }));
   };
 
   const handleChange = (field, value) => {
     setFieldErrorsById((current) => ({ ...current, [editingId]: {} }));
-    const toNumOrBlank = (v) =>
-      v === "" ? "" : Number.isNaN(Number(v)) ? v : Number(v);
-
     setEditedValues((prev) => {
       const current = prev[editingId] || {};
 
       const baseUpdated = {
         ...current,
-        [field]: ["costDescription"].includes(field)
-          ? value
-          : toNumOrBlank(value),
+        [field]: value,
       };
 
       const shouldRecalc = [
         "noOfUnits",
+        "frequencyMonths",
         "unitPrice",
         "percentageCharging",
       ].includes(field);
@@ -331,7 +216,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
   };
 
   const handleSave = async (costId) => {
-    if (!canEditCostDetails) return;
+    if (!canEditCostDetails || disabled || saving) return;
     const isCreate = costId === "new";
     const values = editedValues[costId];
     if (!values) return;
@@ -339,29 +224,15 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
     const token = localStorage.getItem("authToken");
 
     if (isCreate) {
-      const localErrors = validateCostDetail(values);
+      const localErrors = validateCostDetail(values, costs);
       if (Object.keys(localErrors).length > 0) {
         setFieldErrorsById((current) => ({ ...current, new: localErrors }));
         return;
       }
 
-      const payload = {
-        budgetId,
-        costDescription: values.costDescription,
-        costTypeId: Number(values.costTypeId),
-        costId: Number(values.costId),
-        noOfUnits: Number(values.noOfUnits),
-        unitPrice: Number(values.unitPrice),
-        percentageCharging:
-          values.percentageCharging === ""
-            ? null
-            : Number(values.percentageCharging),
-        amountLocalCurrency: Number(values.amountLocalCurrency),
-        amountReportingCurrency: Number(values.amountReportingCurrency),
-        amountGBP: Number(values.amountGBP),
-        amountEuro: Number(values.amountEuro),
-      };
+      const payload = costDetailInputs(values, budgetId);
 
+      setSaving(true); setFormError("");
       try {
         const response = await fetch(`${BASE_URL}/api/cost-details`, {
           method: "POST",
@@ -375,13 +246,17 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
         if (!response.ok) {
           const data = await safeParseJsonResponse(response);
           if (data?.fieldErrors) {
+          setFormError(Object.entries(data.fieldErrors).map(([field, message]) => `${field}: ${message}`).join(" "));
             setFieldErrorsById((current) => ({ ...current, new: data.fieldErrors }));
             return;
           }
           throw new Error(data?.message || "Failed to create cost detail.");
         }
 
+        const saved = await response.json();
+        setCostDetails((rows) => [...rows, saved]);
         await fetchCostDetails();
+        onMutationSuccess?.();
         setEditingId(null);
         setEditedValues((prev) => {
           const next = { ...prev };
@@ -390,8 +265,8 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
         });
       } catch (err) {
         console.error("Error creating cost detail:", err);
-        alert("Failed to create cost detail.");
-      }
+        setFormError(err.message || "Failed to create cost detail.");
+      } finally { setSaving(false); }
       return;
     }
 
@@ -401,32 +276,15 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
 
     const merged = { ...original, ...values };
 
-    const localErrors = validateCostDetail(merged);
+    const localErrors = validateCostDetail(merged, costs);
     if (Object.keys(localErrors).length > 0) {
       setFieldErrorsById((current) => ({ ...current, [costId]: localErrors }));
       return;
     }
 
-    const fullPayload = {
-      ...merged,
-      noOfUnits: Number(merged.noOfUnits),
-      unitPrice: Number(merged.unitPrice),
-      percentageCharging:
-        merged.percentageCharging === ""
-          ? null
-          : Number(merged.percentageCharging),
-      amountLocalCurrency:
-        merged.amountLocalCurrency === ""
-          ? null
-          : Number(merged.amountLocalCurrency),
-      amountReportingCurrency:
-        merged.amountReportingCurrency === ""
-          ? null
-          : Number(merged.amountReportingCurrency),
-      amountGBP: merged.amountGBP === "" ? null : Number(merged.amountGBP),
-      amountEuro: merged.amountEuro === "" ? null : Number(merged.amountEuro),
-    };
+    const fullPayload = costDetailInputs(merged, budgetId);
 
+    setSaving(true); setFormError("");
     try {
       const response = await fetch(`${BASE_URL}/api/cost-details/${costId}`, {
         method: "PUT",
@@ -440,6 +298,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
       if (!response.ok) {
         const data = await safeParseJsonResponse(response);
         if (data?.fieldErrors) {
+          setFormError(Object.entries(data.fieldErrors).map(([field, message]) => `${field}: ${message}`).join(" "));
           setFieldErrorsById((current) => ({
             ...current,
             [costId]: data.fieldErrors,
@@ -449,7 +308,10 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
         throw new Error(data?.message || "Failed to update cost detail");
       }
 
+      const saved = await response.json();
+      setCostDetails((rows) => rows.map((row) => row.costDetailId === costId ? saved : row));
       await fetchCostDetails();
+      onMutationSuccess?.();
       setEditingId(null);
       setEditedValues((prev) => {
         const newValues = { ...prev };
@@ -458,8 +320,8 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
       });
     } catch (err) {
       console.error("Error updating cost detail:", err);
-      alert("Failed to save cost detail.");
-    }
+      setFormError(err.message || "Failed to save cost detail.");
+    } finally { setSaving(false); }
   };
 
   const handleCancel = () => {
@@ -478,26 +340,31 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
   };
 
   const handleDelete = async (costId) => {
-    if (!canDeleteCostDetails) return;
+    if (!canDeleteCostDetails || disabled || saving) return;
     if (!window.confirm("Are you sure you want to delete this cost detail?"))
       return;
 
     const token = localStorage.getItem("authToken");
 
+    setSaving(true); setFormError("");
     try {
       const response = await fetch(`${BASE_URL}/api/cost-details/${costId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!response.ok)
-        throw new Error(`Failed to delete cost detail with ID ${costId}`);
+      if (!response.ok) {
+        throw new Error(
+          await readApiError(response, "Failed to delete cost detail."),
+        );
+      }
 
       await fetchCostDetails();
+      onMutationSuccess?.();
     } catch (err) {
       console.error("Error deleting cost detail:", err);
-      alert("Failed to delete cost detail.");
-    }
+      setFormError(err.message || "Failed to delete cost detail.");
+    } finally { setSaving(false); }
   };
 
   const groupCosts = () => {
@@ -516,16 +383,32 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
 
   return (
     <div className={styles.gridContainer}>
+      {formError && (
+        <ErrorBanner
+          message={formError}
+          onDismiss={() => setFormError("")}
+        />
+      )}
+
+      <aside className={styles.calculationNote} aria-label="Cost calculation">
+        <p className={styles.calculationFormula}>
+          Local amount = units × unit price × periods × allocated % ÷ 100
+        </p>
+        <p className={styles.calculationHint}>
+          Use 1 period for a one-off cost and 100% for the full cost. Currency amounts use the budget’s selected exchange rates. Previews are confirmed when you save.
+        </p>
+      </aside>
       {/* Header */}
       <div className={styles.headerRow}>
         <div>Description</div>
         <div>Type</div>
         <div>Category</div>
         <div>Units</div>
+        <div>Periods</div>
         <div>Unit price</div>
-        <div>% Charged</div>
+        <div title="Cost allocated to this budget (%)">Allocated %</div>
         <div>Local</div>
-        <div>SEK</div>
+        <div>Reporting</div>
         <div>GBP</div>
         <div>EUR</div>
         <div></div>
@@ -550,17 +433,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
                   const category = costs.find(
                     (c) => c.id === parseInt(costId, 10)
                   );
-                  const totals = items.reduce(
-                    (acc, item) => {
-                      const computed = computeAmounts(item);
-                      acc.local += computed.amountLocalCurrency || 0;
-                      acc.sek += computed.amountReportingCurrency || 0;
-                      acc.gbp += computed.amountGBP || 0;
-                      acc.eur += computed.amountEuro || 0;
-                      return acc;
-                    },
-                    { local: 0, sek: 0, gbp: 0, eur: 0 }
-                  );
+                  const totals = Object.fromEntries(Object.entries({ local: "amountLocalCurrency", sek: "amountReportingCurrency", gbp: "amountGBP", eur: "amountEuro" }).map(([key, field]) => [key, sumDecimals(items.map((row) => row[field]))]));
 
                   return (
                     <div key={costId} className={styles.categorySection}>
@@ -583,16 +456,17 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
                           onSave={() => handleSave(cost.costDetailId)}
                           onCancel={handleCancel}
                           onDelete={handleDelete}
-                          canEdit={canEditCostDetails}
-                          canDelete={canDeleteCostDetails}
-                          fieldErrors={fieldErrorsById[cost.costDetailId] || {}}
+                          busy={saving || disabled}
+                          canEdit={canEditCostDetails && !disabled && !saving && editingId === null}
+                          canDelete={canDeleteCostDetails && !disabled && !saving && editingId === null}
+                          fieldErrors={{ ...Object.fromEntries(Object.entries(externalFieldErrors).filter(([key]) => key.startsWith(`costDetails[${cost.costDetailId}].`)).map(([key, value]) => [key.split(".").pop(), value])), ...fieldErrorsById[cost.costDetailId] }}
                         />
                       ))}
 
                       <div className={styles.categoryTotal}>
-                        Total (Category): Local: {totals.local.toFixed(3)} |
-                        SEK: {totals.sek.toFixed(3)} | GBP:{" "}
-                        {totals.gbp.toFixed(3)} | EUR: {totals.eur.toFixed(3)}
+                        Total (Category): Local: {totals.local} |
+                        Reporting: {totals.sek} | GBP:{" "}
+                        {totals.gbp} | EUR: {totals.eur}
                       </div>
                     </div>
                   );
@@ -616,8 +490,9 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
           onCancel={handleCancel}
           onEdit={() => {}}
           onDelete={() => {}}
-          canEdit={canEditCostDetails}
-          canDelete={canDeleteCostDetails}
+          busy={saving || disabled}
+                          canEdit={canEditCostDetails && !disabled && !saving && editingId === null}
+          canDelete={canDeleteCostDetails && !disabled && !saving && editingId === null}
           fieldErrors={fieldErrorsById.new || {}}
         />
       )}
@@ -627,7 +502,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates }) => {
         <button
           className={styles.addBtn}
           onClick={handleCreate}
-          disabled={!budgetId || editingId === "new"}
+          disabled={saving || disabled || !budgetId || editingId !== null}
         >
           + New Cost Detail
         </button>

@@ -1,9 +1,14 @@
+import { appFetch as fetch } from "../../../../utils/appFetch";
+import { calculationErrors, costDetailInputs } from "../../../../utils/budgetCalculations";
+import { readApiError } from "../../../../utils/apiErrors";
 import React, { useState, useEffect } from "react";
 import styles from "./CreateCostDetail.module.scss";
 
 import { BASE_URL } from "../../../../config/api"; // adjust path if needed
+import ErrorBanner from "../../../../components/ErrorBanner/ErrorBanner";
 
 const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
+  const [formError, setFormError] = useState("");
   const [costTypes, setCostTypes] = useState([]);
   const [costs, setCosts] = useState([]);
   const [form, setForm] = useState({
@@ -11,9 +16,9 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
     costId: "",
     costDescription: "",
     noOfUnits: 1,
-    unitPrice: 0,
+    unitPrice: "0.00",
     frequencyMonths: 1,
-    percentageCharging: 0,
+    percentageCharging: "100",
   });
 
   const fetchCostTypes = async (token) => {
@@ -40,7 +45,7 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
       body: JSON.stringify(payload),
     });
 
-    if (!res.ok) throw new Error("Failed to create cost detail");
+    if (!res.ok) throw new Error(await readApiError(res, "Failed to create cost detail"));
     return await res.json();
   };
 
@@ -70,7 +75,7 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
 
   const handleNumberChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: Number(value) }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
@@ -78,51 +83,38 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
 
     const token = localStorage.getItem("authToken");
 
-    const {
-      noOfUnits,
-      unitPrice,
-      frequencyMonths,
-      percentageCharging,
-      ...rest
-    } = form;
-
-    const rawTotal = noOfUnits * unitPrice * frequencyMonths;
-    const chargedAmount = (rawTotal * percentageCharging) / 100;
-
-    const fullPayload = {
-      ...rest,
-      noOfUnits,
-      unitPrice,
-      frequencyMonths,
-      percentageCharging,
-      budgetId,
-      amountLocalCurrency: chargedAmount,
-      amountReportingCurrency: chargedAmount,
-      amountGBP: chargedAmount,
-      amountEuro: chargedAmount,
-    };
+    const errors = calculationErrors(form);
+    if (Object.keys(errors).length) { setFormError(Object.values(errors).join(" ")); return; }
+    const fullPayload = costDetailInputs(form, budgetId);
 
     try {
-      await createCostDetail(fullPayload, token);
-      onCreated?.();
+      const created = await createCostDetail(fullPayload, token);
+      onCreated?.(created);
       setForm({
         costTypeId: "",
         costId: "",
         costDescription: "",
         noOfUnits: 1,
-        unitPrice: 0,
+        unitPrice: "0.00",
         frequencyMonths: 1,
-        percentageCharging: 0,
+        percentageCharging: "100",
       });
     } catch (error) {
       console.error("Error creating cost detail:", error);
-      alert("Failed to create cost detail.");
+      setFormError(error.message || "Failed to create cost detail.");
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className={styles.formContainer}>
       <h4 className={styles.formTitle}>Add New Cost Detail Row</h4>
+
+      {formError && (
+        <ErrorBanner
+          message={formError}
+          onDismiss={() => setFormError("")}
+        />
+      )}
 
       <div className={styles.formRow}>
         <div className={styles.formGroup}>
@@ -153,7 +145,7 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
             className={styles.select}
           >
             <option value="">Select Category</option>
-            {costs.map((c) => (
+            {costs.filter((c) => Number(c.costTypeId) === Number(form.costTypeId)).map((c) => (
               <option key={c.id} value={c.id}>
                 {c.costName}
               </option>
@@ -178,7 +170,7 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
           <input
             id="noOfUnits"
             type="number"
-            name="noOfUnits"
+            name="noOfUnits" min="0.000000000001" step="any"
             value={form.noOfUnits}
             onChange={handleNumberChange}
             className={styles.input}
@@ -190,7 +182,7 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
           <input
             id="unitPrice"
             type="number"
-            name="unitPrice"
+            name="unitPrice" min="0" step="any"
             value={form.unitPrice}
             onChange={handleNumberChange}
             className={styles.input}
@@ -198,11 +190,11 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
         </div>
 
         <div className={styles.formGroup}>
-          <label htmlFor="frequencyMonths">Frequency (months)</label>
+          <label htmlFor="frequencyMonths">Periods (1 for one-off)</label>
           <input
             id="frequencyMonths"
             type="number"
-            name="frequencyMonths"
+            name="frequencyMonths" min="1" step="1"
             value={form.frequencyMonths}
             onChange={handleNumberChange}
             className={styles.input}
@@ -210,11 +202,11 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
         </div>
 
         <div className={styles.formGroup}>
-          <label htmlFor="percentageCharging">% Charging</label>
+          <label htmlFor="percentageCharging">Cost allocated to this budget (%)</label>
           <input
             id="percentageCharging"
             type="number"
-            name="percentageCharging"
+            name="percentageCharging" min="0" max="100" step="any"
             value={form.percentageCharging}
             onChange={handleNumberChange}
             className={styles.input}

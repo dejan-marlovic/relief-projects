@@ -1,6 +1,7 @@
+import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiSave, FiRefreshCw, FiAlertCircle, FiEdit3 } from "react-icons/fi";
+import { FiSave, FiRefreshCw, FiEdit3 } from "react-icons/fi";
 
 import styles from "../UpdateUser/UpdateUser.module.scss";
 import { BASE_URL } from "../../../config/api";
@@ -9,6 +10,10 @@ import {
   safeReadJson,
   extractFieldErrors,
 } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
+import useDocumentCategories from "../../../hooks/useDocumentCategories";
+import DocumentStatus from "../../../components/DocumentStatus/DocumentStatus";
+import { documentMetadataChanges, uploaderLabel, uploadTimeLabel } from "../../../utils/documentMetadata";
 
 const initialForm = {
   selectedId: "",
@@ -16,6 +21,9 @@ const initialForm = {
   projectId: "",
   documentName: "",
   documentPath: "",
+  category: "UNCATEGORIZED",
+  documentDate: "",
+  status: "",
 };
 
 const validate = (values) => {
@@ -26,8 +34,6 @@ const validate = (values) => {
   if (!values.projectId) errors.projectId = "Project is required.";
   if (!values.documentName?.trim())
     errors.documentName = "Document name is required.";
-  if (!values.documentPath?.trim())
-    errors.documentPath = "Document path is required.";
 
   return errors;
 };
@@ -35,6 +41,7 @@ const validate = (values) => {
 const UpdateDocument = () => {
   const navigate = useNavigate();
   const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
+  const { categories, categoryError, retryCategories } = useDocumentCategories(authFetch);
 
   const [documents, setDocuments] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -45,7 +52,7 @@ const UpdateDocument = () => {
   const [saving, setSaving] = useState(false);
 
   const [formError, setFormError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useTransientMessage("");
   const [fieldErrors, setFieldErrors] = useState({});
 
   const selectedDocument = useMemo(() => {
@@ -53,6 +60,8 @@ const UpdateDocument = () => {
     if (!id) return null;
     return documents.find((item) => item.id === id) || null;
   }, [form.selectedId, documents]);
+  const historical = selectedDocument?.isCurrent === false;
+  const linked = Boolean(selectedDocument?.predecessorDocumentId || selectedDocument?.successorDocumentId);
 
   const employeeLabelById = useMemo(() => {
     return employees.reduce((acc, item) => {
@@ -94,10 +103,12 @@ const UpdateDocument = () => {
       const documentData = await safeReadJson(documentRes);
       const employeeData = await safeReadJson(employeeRes);
       const projectData = await safeReadJson(projectRes);
+      if (!documentRes.ok || !employeeRes.ok || !projectRes.ok) throw new Error("Could not refresh document metadata.");
 
       setDocuments(Array.isArray(documentData) ? documentData : []);
       setEmployees(Array.isArray(employeeData) ? employeeData : []);
       setProjects(Array.isArray(projectData) ? projectData : []);
+      setForm(initialForm);
     } catch (err) {
       console.error("Load documents error:", err);
       setDocuments([]);
@@ -136,6 +147,9 @@ const UpdateDocument = () => {
       projectId: selected?.projectId ? String(selected.projectId) : "",
       documentName: selected?.documentName || "",
       documentPath: selected?.documentPath || "",
+      category: selected?.category || "UNCATEGORIZED",
+      documentDate: selected?.documentDate || "",
+      status: selected?.status || "",
     });
   };
 
@@ -172,6 +186,9 @@ const UpdateDocument = () => {
         : "",
       documentName: selectedDocument.documentName || "",
       documentPath: selectedDocument.documentPath || "",
+      category: selectedDocument.category || "UNCATEGORIZED",
+      documentDate: selectedDocument.documentDate || "",
+      status: selectedDocument.status || "",
     });
 
     setFieldErrors({});
@@ -180,6 +197,7 @@ const UpdateDocument = () => {
   };
 
   const handleUpdate = async () => {
+    if (historical) return;
     try {
       setFormError("");
       setSuccessMessage("");
@@ -198,7 +216,7 @@ const UpdateDocument = () => {
         employeeId: Number(form.employeeId),
         projectId: Number(form.projectId),
         documentName: form.documentName.trim(),
-        documentPath: form.documentPath.trim(),
+        ...documentMetadataChanges(form, selectedDocument),
       };
 
       const res = await authFetch(
@@ -213,6 +231,11 @@ const UpdateDocument = () => {
       const data = await safeReadJson(res);
 
       if (!res.ok) {
+        if (res.status === 409) {
+          await loadData();
+          setFormError(data?.message || "The document changed. Select it again after refreshing.");
+          return;
+        }
         const fe = extractFieldErrors(data);
         if (fe) setFieldErrors(fe);
 
@@ -227,7 +250,7 @@ const UpdateDocument = () => {
       setDocuments((prev) =>
         prev.map((item) =>
           item.id === Number(form.selectedId)
-            ? { ...item, ...payload, id: item.id }
+            ? { ...item, ...payload, ...data, id: item.id }
             : item,
         ),
       );
@@ -256,11 +279,9 @@ const UpdateDocument = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
+        {categoryError && <div role="alert">{categoryError} <button type="button" onClick={retryCategories}>Retry categories</button></div>}
 
         {successMessage && (
           <div className={styles.successBanner}>
@@ -310,15 +331,22 @@ const UpdateDocument = () => {
                   <div className={styles.cardTitle}>Edit details</div>
                   <div className={styles.cardMeta}>Document metadata only</div>
                 </div>
+                {historical && <p>Historical version · metadata is read-only.</p>}
+                {linked && <p>Linked versions stay in the same project.</p>}
+                <div className={styles.formGroup}>
+                  <DocumentStatus className={inputClass("status")} value={form.status} allowUnknown={!selectedDocument?.status} disabled={!form.selectedId || saving || historical} onChange={(e) => setForm((previous) => ({ ...previous, status: e.target.value }))} />
+                  <small>Final is a descriptive label, not approval or proof of signing.</small>
+                  {fieldErrors.status && <span role="alert">{fieldErrors.status}</span>}
+                </div>
 
                 <div className={styles.formGroup}>
-                  <label>Employee</label>
+                  <label>Employee attribution</label>
                   <select
                     className={inputClass("employeeId")}
                     name="employeeId"
                     value={form.employeeId}
                     onChange={handleInputChange}
-                    disabled={!form.selectedId || saving}
+                    disabled={!form.selectedId || saving || historical}
                   >
                     <option value="">Select employee</option>
                     {employees.map((item) => (
@@ -336,7 +364,7 @@ const UpdateDocument = () => {
                     name="projectId"
                     value={form.projectId}
                     onChange={handleInputChange}
-                    disabled={!form.selectedId || saving}
+                    disabled={!form.selectedId || saving || historical || linked}
                   >
                     <option value="">Select project</option>
                     {projects.map((item) => (
@@ -354,18 +382,37 @@ const UpdateDocument = () => {
                     name="documentName"
                     value={form.documentName}
                     onChange={handleInputChange}
-                    disabled={!form.selectedId || saving}
+                    disabled={!form.selectedId || saving || historical}
                   />
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>Document path</label>
+                  <label htmlFor="document-category">Category</label>
+                  <select id="document-category" name="category" className={inputClass("category")} value={form.category} onChange={handleInputChange} disabled={!form.selectedId || saving || historical || !categories.length}>
+                    {categories.map((category) => <option key={category.id} value={category.id}>{category.label}</option>)}
+                  </select>
+                  {fieldErrors.category && <span role="alert">{fieldErrors.category}</span>}
+                </div>
+                <div className={styles.formGroup}>
+                  <label htmlFor="document-date">Document date (optional)</label>
+                  <input id="document-date" name="documentDate" className={inputClass("documentDate")} type="date" min="1000-01-01" max="9999-12-31" value={form.documentDate} onChange={handleInputChange} disabled={!form.selectedId || saving || historical} />
+                  <small>Leave empty to clear the document date.</small>
+                  {fieldErrors.documentDate && <span role="alert">{fieldErrors.documentDate}</span>}
+                </div>
+                {selectedDocument && <div className={styles.formGroup}>
+                  <span>Uploaded by {uploaderLabel(selectedDocument)}</span>
+                  <span>Uploaded: {uploadTimeLabel(selectedDocument.uploadedAt)}</span>
+                  <small>Recorded at upload; independent of employee attribution.</small>
+                </div>}
+                <div className={styles.formGroup}>
+                  <label htmlFor="document-storage-key">Stored file (read-only)</label>
                   <input
+                    id="document-storage-key"
                     className={inputClass("documentPath")}
                     name="documentPath"
                     value={form.documentPath}
-                    onChange={handleInputChange}
-                    disabled={!form.selectedId || saving}
+                    readOnly
+                    disabled={!form.selectedId || saving || historical}
                   />
                 </div>
               </div>
@@ -394,7 +441,7 @@ const UpdateDocument = () => {
                 type="button"
                 onClick={handleUpdate}
                 className={styles.saveButton}
-                disabled={saving}
+                disabled={saving || historical || !form.selectedId}
               >
                 <FiSave /> {saving ? "Saving..." : "Update document"}
               </button>

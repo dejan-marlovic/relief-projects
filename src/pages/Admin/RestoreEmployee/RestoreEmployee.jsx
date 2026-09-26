@@ -1,15 +1,15 @@
+import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiRotateCcw,
-  FiRefreshCw,
-  FiAlertCircle,
-  FiUserCheck,
+  FiRefreshCw,  FiUserCheck,
 } from "react-icons/fi";
 
 import styles from "./RestoreEmployee.module.scss";
 import { BASE_URL } from "../../../config/api";
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const RestoreEmployee = () => {
   const navigate = useNavigate();
@@ -24,7 +24,7 @@ const RestoreEmployee = () => {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
 
   const [formError, setFormError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useTransientMessage("");
 
   const selectedEmployee = useMemo(() => {
     const id = Number(selectedEmployeeId);
@@ -197,10 +197,7 @@ const RestoreEmployee = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {successMessage && (

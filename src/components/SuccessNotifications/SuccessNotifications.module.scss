@@ -1,0 +1,10 @@
+@use "../../styles/colors" as colors;
+.stack { position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: 10000; display: grid; gap: .65rem; width: min(26rem, calc(100vw - 2.5rem)); pointer-events: none; }
+.notice { display: flex; align-items: flex-start; gap: .75rem; padding: .9rem 1rem; border: 1px solid colors.$success-border; border-left: 4px solid colors.$success; border-radius: 10px; background: colors.$surface; color: colors.$text; box-shadow: 0 6px 24px colors.$neutral-a10; font-size: .9rem; line-height: 1.45; pointer-events: auto; animation: appear .18s ease-out; }
+.notice > svg { flex-shrink: 0; color: colors.$success; margin-top: .15rem; }
+.notice span { flex: 1; overflow-wrap: anywhere; }
+.notice button { display: inline-flex; padding: .2rem; border: 0; background: transparent; color: colors.$text-secondary; cursor: pointer; border-radius: 4px; }
+.notice button:focus-visible { outline: 2px solid colors.$primary; outline-offset: 2px; }
+@keyframes appear { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@media(prefers-reduced-motion: reduce) { .notice { animation: none; } }
+@media(max-width: 700px) { .stack { right: .75rem; bottom: max(.75rem, env(safe-area-inset-bottom)); width: calc(100vw - 1.5rem); } .notice button { min-width: 32px; min-height: 32px; align-items: center; justify-content: center; } }

@@ -53,3 +53,30 @@ describe("Organization row permissions", () => {
     expect(onDelete).toHaveBeenCalledWith(11);
   });
 });
+
+
+test("compact editing uses explicit save and retains draft across viewport changes", () => {
+  const onSave = jest.fn();
+  const props = { ...baseProps, canManage: true, isEditing: true, onSave,
+    editedValues: { organizationId: 5, organizationStatusId: 2 } };
+  const { rerender } = render(<Organization {...props} compact />);
+  fireEvent.blur(screen.getByRole("combobox", { name: "Organization" }));
+  expect(onSave).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "Save" }));
+  expect(onSave).toHaveBeenCalledTimes(1);
+  rerender(<Organization {...props} compact={false} />);
+  expect(screen.getByRole("combobox", { name: "Organization" })).toHaveValue("5");
+  fireEvent.blur(screen.getByRole("combobox", { name: "Status" }));
+  expect(onSave).toHaveBeenCalledTimes(2);
+  rerender(<Organization {...props} compact saving />);
+  expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
+  expect(screen.getByRole("combobox", { name: "Status" })).toBeDisabled();
+});
+
+test("compact viewer has address access but no link mutation or bank access", () => {
+  render(<Organization {...baseProps} compact />);
+  expect(screen.getByRole("button", { name: "Show address details" })).toBeEnabled();
+  expect(screen.queryByRole("button", { name: "Show bank details" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
+});

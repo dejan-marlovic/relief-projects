@@ -1,3 +1,4 @@
+import { appFetch as fetch } from "../../utils/appFetch";
 // RegisterProject.jsx
 import React, { useEffect, useState, useContext, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
@@ -10,11 +11,12 @@ import {
   FiX,
   FiUploadCloud,
   FiImage,
-  FiAlertCircle,
 } from "react-icons/fi";
 
 // ✅ IMPORTANT: use shared config (works in IDE dev + Docker + AWS)
 import { BASE_URL } from "../../config/api";
+import ErrorBanner from "../../components/ErrorBanner/ErrorBanner";
+import { useUnsavedChange } from "../../context/UnsavedChangesContext";
 
 // Optional: initial state helper to avoid resetting to {}
 const initialProjectDetails = {
@@ -84,6 +86,18 @@ const RegisterProject = () => {
   const [coverPreview, setCoverPreview] = useState("");
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadError, setUploadError] = useState("");
+
+  const hasUnsavedProject = useMemo(
+    () =>
+      Boolean(coverFile) ||
+      Object.keys(initialProjectDetails).some(
+        (key) =>
+          String(projectDetails[key] ?? "") !==
+          String(initialProjectDetails[key] ?? ""),
+      ),
+    [coverFile, projectDetails],
+  );
+  useUnsavedChange("new-project", hasUnsavedProject);
 
   const getFieldError = (fieldName) => fieldErrors?.[fieldName];
   const hasError = (fieldName) => Boolean(fieldErrors?.[fieldName]);
@@ -367,7 +381,7 @@ const RegisterProject = () => {
       // ✅ Select the newly created project so Project.jsx can fetch /api/projects/:id
       setSelectedProjectId(String(finalProject.id));
 
-      alert("Project created successfully!");
+      // Successful mutations are announced by the shared notification banner.
       resetForm();
 
       // Optional: if you have a dedicated route for project details, you can navigate there
@@ -425,10 +439,7 @@ const RegisterProject = () => {
 
         {/* Errors */}
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {hasAnyFieldErrors && (
@@ -827,28 +838,6 @@ const RegisterProject = () => {
               </div>
             </div>
 
-            {/* Bottom actions */}
-            <div className={styles.bottomActions}>
-              <button
-                type="button"
-                onClick={handleRegister}
-                className={styles.saveButton}
-                disabled={loading || uploadingCover}
-              >
-                <FiSave />
-                Register project
-              </button>
-
-              <button
-                type="button"
-                onClick={resetForm}
-                className={styles.deleteButton}
-                disabled={loading || uploadingCover}
-              >
-                <FiX />
-                Reset form
-              </button>
-            </div>
           </>
         )}
       </div>

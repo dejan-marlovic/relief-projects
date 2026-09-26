@@ -1,0 +1,8 @@
+@use "../../styles/colors" as colors;
+.details { min-width: 240px; max-width: 42rem; white-space: normal; overflow-wrap: anywhere; }
+.details p { margin: 0 0 0.5rem; }
+.context { margin: 0; }
+.context > div { display: grid; grid-template-columns: 6rem minmax(0, 1fr); gap: 0.5rem; margin: 0.3rem 0; }
+.context dt { color: colors.$text-muted; }
+.context dd { margin: 0; white-space: pre-wrap; }
+.changes { margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid colors.$border-subtle; }

@@ -1,10 +1,13 @@
+import { fundingErrors } from "../../../utils/transactionFunding";
+import { budgetOptionLabel } from "../../../utils/budgetDisplay";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiSave, FiX, FiAlertCircle } from "react-icons/fi";
+import { FiSave, FiX } from "react-icons/fi";
 
 import styles from "../CreateUser/CreateUser.module.scss";
 import { BASE_URL } from "../../../config/api";
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const initialForm = {
   organizationId: "",
@@ -13,16 +16,14 @@ const initialForm = {
   financierOrganizationId: "",
   transactionStatusId: "",
   appliedForAmount: "",
-  firstShareAmount: "",
   approvedAmount: "",
   ownContribution: "No",
-  secondShareAmount: "",
   datePlanned: "",
   okStatus: "No",
 };
 
 const validate = (values) => {
-  const errors = {};
+  const errors = fundingErrors(values);
   if (!values.organizationId)
     errors.organizationId = "Organization is required.";
   if (!values.projectId) errors.projectId = "Project is required.";
@@ -34,13 +35,11 @@ const validate = (values) => {
     errors.transactionStatusId = "Transaction status is required.";
   }
   if (values.appliedForAmount === "")
-    errors.appliedForAmount = "Applied for amount is required.";
-  if (values.firstShareAmount === "")
-    errors.firstShareAmount = "First share amount is required.";
+    errors.appliedForAmount = "Requested funding is required.";
+
   if (values.approvedAmount === "")
-    errors.approvedAmount = "Approved amount is required.";
-  if (values.secondShareAmount === "")
-    errors.secondShareAmount = "Second share amount is required.";
+    errors.approvedAmount = "Approved funding is required.";
+
   if (!values.datePlanned) errors.datePlanned = "Date planned is required.";
   return errors;
 };
@@ -148,11 +147,9 @@ const CreateTransaction = () => {
         budgetId: Number(form.budgetId),
         financierOrganizationId: Number(form.financierOrganizationId),
         transactionStatusId: Number(form.transactionStatusId),
-        appliedForAmount: Number(form.appliedForAmount),
-        firstShareAmount: form.firstShareAmount,
-        approvedAmount: Number(form.approvedAmount),
+        appliedForAmount: String(form.appliedForAmount),
+        approvedAmount: String(form.approvedAmount),
         ownContribution: form.ownContribution,
-        secondShareAmount: form.secondShareAmount,
         datePlanned: form.datePlanned,
         okStatus: form.okStatus,
       };
@@ -166,6 +163,7 @@ const CreateTransaction = () => {
       const data = await safeReadJson(res);
 
       if (!res.ok) {
+        if (data?.fieldErrors) setFieldErrors(data.fieldErrors);
         setFormError(
           data?.message ||
             data?.detail ||
@@ -174,9 +172,7 @@ const CreateTransaction = () => {
         return;
       }
 
-      alert(
-        `Transaction created successfully${data?.id ? ` (id: ${data.id})` : ""}!`,
-      );
+      // Successful mutations are announced by the shared notification banner.
       resetForm();
     } catch (err) {
       console.error("Create transaction error:", err);
@@ -214,11 +210,9 @@ const CreateTransaction = () => {
           </div>
         </div>
 
+        <p className={styles.pageSubtitle}>Own contribution is a recorded Yes/No flag, not an amount or calculated share. Funding currency follows the selected budget.</p>
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         <div className={styles.grid}>
@@ -273,7 +267,7 @@ const CreateTransaction = () => {
                 <option value="">Select budget</option>
                 {filteredBudgets.map((b) => (
                   <option key={b.id} value={b.id}>
-                    Budget #{b.id}
+                    {budgetOptionLabel(b)}
                   </option>
                 ))}
               </select>
@@ -321,37 +315,28 @@ const CreateTransaction = () => {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Applied for amount</label>
+              <label htmlFor="funding-appliedForAmount">Requested funding</label>
               <input
                 className={inputClass("appliedForAmount")}
                 type="number"
-                name="appliedForAmount"
+                id="funding-appliedForAmount" name="appliedForAmount" aria-invalid={Boolean(fieldErrors.appliedForAmount)} aria-describedby="funding-error-appliedForAmount" step="any" min="0"
                 value={form.appliedForAmount}
                 onChange={handleChange}
               />
+              <span id="funding-error-appliedForAmount" className={styles.fieldError}>{fieldErrors.appliedForAmount}</span>
             </div>
 
-            <div className={styles.formGroup}>
-              <label>First share amount</label>
-              <input
-                className={inputClass("firstShareAmount")}
-                type="number"
-                step="0.01"
-                name="firstShareAmount"
-                value={form.firstShareAmount}
-                onChange={handleChange}
-              />
-            </div>
 
             <div className={styles.formGroup}>
-              <label>Approved amount</label>
+              <label htmlFor="funding-approvedAmount">Approved funding</label>
               <input
                 className={inputClass("approvedAmount")}
                 type="number"
-                name="approvedAmount"
+                id="funding-approvedAmount" name="approvedAmount" aria-invalid={Boolean(fieldErrors.approvedAmount)} aria-describedby="funding-error-approvedAmount" step="any" min="0"
                 value={form.approvedAmount}
                 onChange={handleChange}
               />
+              <span id="funding-error-approvedAmount" className={styles.fieldError}>{fieldErrors.approvedAmount}</span>
             </div>
 
             <div className={styles.formGroup}>
@@ -367,17 +352,6 @@ const CreateTransaction = () => {
               </select>
             </div>
 
-            <div className={styles.formGroup}>
-              <label>Second share amount</label>
-              <input
-                className={inputClass("secondShareAmount")}
-                type="number"
-                step="0.01"
-                name="secondShareAmount"
-                value={form.secondShareAmount}
-                onChange={handleChange}
-              />
-            </div>
 
             <div className={styles.formGroup}>
               <label>Date planned</label>

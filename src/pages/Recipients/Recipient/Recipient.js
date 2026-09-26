@@ -1,10 +1,11 @@
+import PaymentAmount from "../../../components/PaymentAmount/PaymentAmount";
 // src/components/Recipients/Recipient/Recipient.jsx
 import React from "react";
 import styles from "./Recipient.module.scss";
 import { FiEdit, FiTrash2, FiSave, FiX } from "react-icons/fi";
 
-const Cell = ({ children, className }) => (
-  <div className={`${styles.cell} ${className || ""}`}>{children}</div>
+const Cell = ({ children, className, label }) => (
+  <div className={`${styles.cell} ${className || ""}`}>{label && <span className={styles.mobileLabel}>{label}</span>}{children}</div>
 );
 
 const RecipientRow = ({
@@ -27,10 +28,12 @@ const RecipientRow = ({
   fieldErrors = {},
   rowRef = null,
   canManage = false,
+  compact = false,
+  saving = false,
 }) => {
   const ev = editedValues || {};
   const isCreate = (row?.id ?? "") === "new";
-  const autoSave = isEditing && !isCreate;
+  const autoSave = isEditing && !isCreate && !compact;
 
   const submit = (e) => {
     e.preventDefault();
@@ -47,19 +50,22 @@ const RecipientRow = ({
 
   const FieldError = ({ name }) =>
     hasError(name) ? (
-      <div className={styles.fieldError}>{getFieldError(name)}</div>
+      <div id={`recipient-${row.id}-${name}-error`} className={styles.fieldError}>{getFieldError(name)}</div>
     ) : null;
 
   const inputNum = (field, step = "1") => (
     <>
       <input
+        aria-label="Organization ID"
+        aria-invalid={hasError(field)}
+        aria-describedby={hasError(field) ? `recipient-${row.id}-${field}-error` : undefined}
         type="number"
         step={step}
         value={ev[field] ?? row[field] ?? ""}
         onChange={(e) => onChange(field, toNum(e.target.value))}
         onBlur={autoSave ? submit : undefined}
         className={inputClass(field)}
-        disabled={locked}
+        disabled={locked || saving}
       />
       <FieldError name={field} />
     </>
@@ -68,6 +74,9 @@ const RecipientRow = ({
   const selectPO = (
     <>
       <select
+        aria-label="Payment order"
+        aria-invalid={hasError("paymentOrderId")}
+        aria-describedby={hasError("paymentOrderId") ? `recipient-${row.id}-paymentOrderId-error` : undefined}
         value={ev.paymentOrderId ?? row.paymentOrderId ?? ""}
         onChange={(e) =>
           onChange(
@@ -77,7 +86,7 @@ const RecipientRow = ({
         }
         onBlur={autoSave ? submit : undefined}
         className={inputClass("paymentOrderId")}
-        disabled={locked}
+        disabled={locked || saving}
       >
         <option value="">(none)</option>
         {poOptions.map((po) => (
@@ -91,6 +100,9 @@ const RecipientRow = ({
   const selectOrg = (
     <>
       <select
+        aria-label="Organization"
+        aria-invalid={hasError("organizationId")}
+        aria-describedby={hasError("organizationId") ? `recipient-${row.id}-organizationId-error` : undefined}
         value={ev.organizationId ?? row.organizationId ?? ""}
         onChange={(e) =>
           onChange(
@@ -100,7 +112,7 @@ const RecipientRow = ({
         }
         onBlur={autoSave ? submit : undefined}
         className={inputClass("organizationId")}
-        disabled={locked}
+        disabled={locked || saving}
       >
         <option value="">(none)</option>
         {orgOptions.map((o) => (
@@ -118,19 +130,17 @@ const RecipientRow = ({
     return hit ? (hit.label ?? `Org #${hit.id}`) : (id ?? "-");
   };
 
-  const hc = (i) => (!visibleCols[i] ? styles.hiddenCol : "");
+  const hc = (i) => (!compact && !visibleCols[i] ? styles.hiddenCol : "");
 
   // Amount is computed by the backend and is display-only.
-  const amountNum =
-    row?.amount == null || Number.isNaN(Number(row.amount))
-      ? 0
-      : Number(row.amount);
 
   const lockedTitle =
     "Booked (final signature) — this recipient is read-only. Undo/remove the Booked signature to edit.";
 
   return (
     <div
+      role="group"
+      aria-label={isCreate ? "New recipient" : `Recipient ${row.id}`}
       ref={rowRef || undefined}
       className={`${styles.row} ${styles.gridRow} ${
         isEven ? styles.zebraEven : ""
@@ -138,6 +148,7 @@ const RecipientRow = ({
       title={locked ? lockedTitle : undefined}
       style={locked ? { opacity: 0.92 } : undefined}
     >
+      <div className={styles.mobileTitle}>{isCreate ? "New recipient" : `Recipient #${row.id}`}{locked && <span>Read-only · Booked</span>}</div>
       {/* 0: Actions */}
       <Cell className={`${styles.stickyCol} ${styles.actionsCol} ${hc(0)}`}>
         {isEditing ? (
@@ -148,19 +159,20 @@ const RecipientRow = ({
               onClick={submit}
               title={locked ? lockedTitle : "Save"}
               aria-label="Save"
-              disabled={locked}
+              disabled={locked || saving}
             >
-              <FiSave />
+              <FiSave /><span className={styles.mobileActionText}>{saving ? "Saving…" : "Save"}</span>
             </button>
 
             <button
               type="button"
               className={styles.dangerIconBtn}
+              disabled={saving}
               onClick={onCancel}
               title="Cancel"
               aria-label="Cancel"
             >
-              <FiX />
+              <FiX /><span className={styles.mobileActionText}>Cancel</span>
             </button>
           </div>
         ) : (
@@ -197,9 +209,9 @@ const RecipientRow = ({
                 }}
                 title={locked ? lockedTitle : "Edit"}
                 aria-label="Edit"
-                disabled={locked}
+                disabled={locked || saving}
               >
-                <FiEdit />
+                <FiEdit /><span className={styles.mobileActionText}>Edit</span>
               </button>
             )}
 
@@ -214,9 +226,9 @@ const RecipientRow = ({
                 }}
                 title={locked ? lockedTitle : "Delete recipient"}
                 aria-label="Delete recipient"
-                disabled={locked}
+                disabled={locked || saving}
               >
-                <FiTrash2 />
+                <FiTrash2 /><span className={styles.mobileActionText}>Delete</span>
               </button>
             )}
           </div>
@@ -224,7 +236,7 @@ const RecipientRow = ({
       </Cell>
 
       {/* 1: Organization */}
-      <Cell className={hc(1)}>
+      <Cell label="Organization" className={hc(1)}>
         {isEditing
           ? orgOptions.length > 0
             ? selectOrg
@@ -235,12 +247,12 @@ const RecipientRow = ({
       </Cell>
 
       {/* 2: Payment Order */}
-      <Cell className={hc(2)}>
+      <Cell label="Payment order" className={hc(2)}>
         {isEditing ? selectPO : (row.paymentOrderId ?? "-")}
       </Cell>
 
       {/* 3: Amount (computed, read-only) */}
-      <Cell className={hc(3)}>{amountNum.toFixed(2)}</Cell>
+      <Cell label="Amount" className={hc(3)}><PaymentAmount record={row} /></Cell>
     </div>
   );
 };

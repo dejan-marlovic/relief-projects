@@ -1,3 +1,4 @@
+@use "../responsiveForms" as responsive;
 @use "../../../styles/colors" as colors;
 /* src/components/Admin/CreateCost/CreateCost.module.scss */
 @use "../../../styles/forms" as forms;
@@ -212,3 +213,5 @@ label {
   border-radius: 999px;
   background: colors.$neutral-a08;
 }
+
+@include responsive.layout;

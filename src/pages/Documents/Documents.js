@@ -1,14 +1,24 @@
-import React, { useEffect, useState, useContext, useMemo } from "react";
+import useTransientMessage from "../../hooks/useTransientMessage";
+import { appFetch as fetch } from "../../utils/appFetch";
+import React, { useEffect, useState, useContext, useMemo, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { ProjectContext } from "../../context/ProjectContext";
 import { useAuth } from "../../context/AuthContext";
 import { FiTrash2, FiDownload, FiUploadCloud } from "react-icons/fi";
 import styles from "./Documents.module.scss";
 
-import { BASE_URL, ASSETS_URL } from "../../config/api";
+import { BASE_URL } from "../../config/api";
+import { createAuthFetch } from "../../utils/http";
+import { downloadDocument } from "../../utils/documentDownload";
 import { getSelectedProjectName } from "../../utils/projectDisplay";
-const DOCUMENTS_BASE_PATH = `${ASSETS_URL}/documents/`;
+import ErrorBanner from "../../components/ErrorBanner/ErrorBanner";
+import { readApiError } from "../../utils/apiErrors";
+import useDocumentCategories from "../../hooks/useDocumentCategories";
+import { documentMetadataChanges, uploaderLabel, uploadTimeLabel, readDocumentError } from "../../utils/documentMetadata";
+import DocumentStatus, { statusLabel } from "../../components/DocumentStatus/DocumentStatus";
+import ProjectDocumentChecklist from "../../components/ProjectDocumentChecklist/ProjectDocumentChecklist";
+import DocumentVersions from "../../components/DocumentVersions/DocumentVersions";
 
-// 🔹 TODO: replace with real current employee ID from your auth/user context
 // ✅ Keep this in sync with backend:
 // spring.servlet.multipart.max-file-size / spring.servlet.multipart.max-request-size
 const MAX_UPLOAD_MB = 50;
@@ -68,10 +78,64 @@ export const validateDocumentFile = (file) => {
 };
 
 const Documents = () => {
+  const navigate = useNavigate();
+  const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
+  const { categories, categoryError, retryCategories } = useDocumentCategories(authFetch);
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [currentOnly, setCurrentOnly] = useState(true);
+  const [historyDocument, setHistoryDocument] = useState(null);
+  const [uploadStatus, setUploadStatus] = useState("DRAFT");
+  const [uploadCategory, setUploadCategory] = useState("UNCATEGORIZED");
+  const [uploadDate, setUploadDate] = useState("");
+  const [listRevision, setListRevision] = useState(0);
+  const [editing, setEditing] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState("");
+  const currentProject = useRef(null);
+  const downloadRequests = useRef(new Map());
+  const [downloading, setDownloading] = useState([]);
+  const [downloadError, setDownloadError] = useState("");
   const { selectedProjectId, projects } = useContext(ProjectContext);
+  currentProject.current = selectedProjectId;
   const { user, hasRole, hasAnyRole } = useAuth();
   const canUploadDocuments = hasAnyRole("ADMIN", "PROJECT_MANAGER");
   const canDeleteDocuments = hasRole("ADMIN");
+
+  useEffect(() => {
+    setEditing(null);
+    setHistoryDocument(null);
+    setUploadStatus("DRAFT");
+    setEditError("");
+    setUploadInfo("");
+    setUploadError("");
+    setUploadCategory("UNCATEGORIZED");
+    setUploadDate("");
+    setDownloadError("");
+    setDownloading([]);
+    const requests = downloadRequests.current;
+    return () => {
+      requests.forEach((controller) => controller.abort());
+      requests.clear();
+    };
+  }, [selectedProjectId]);
+
+  const handleDownload = async (id) => {
+    if (downloadRequests.current.has(id)) return;
+    const controller = new AbortController();
+    downloadRequests.current.set(id, controller);
+    setDownloading((current) => [...current, id]);
+    setDownloadError("");
+    try {
+      await downloadDocument(id, authFetch, controller.signal);
+    } catch (error) {
+      if (!controller.signal.aborted) setDownloadError(error.message || "Download failed. Please try again.");
+    } finally {
+      if (downloadRequests.current.get(id) === controller) {
+        downloadRequests.current.delete(id);
+        setDownloading((current) => current.filter((value) => value !== id));
+      }
+    }
+  };
 
   const [documents, setDocuments] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -80,7 +144,7 @@ const Documents = () => {
 
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
-  const [uploadInfo, setUploadInfo] = useState(""); // small helper message (optional)
+  const [uploadInfo, setUploadInfo] = useTransientMessage("", value => value.startsWith("Upload complete.")); // small helper message (optional)
 
   const [deletingId, setDeletingId] = useState(null);
   const [deleteError, setDeleteError] = useState("");
@@ -110,7 +174,7 @@ const Documents = () => {
     [employees]
   );
 
-  const getUploaderLabel = (document) => {
+  const getEmployeeLabel = (document) => {
     const employeeId =
       document.employeeId ?? document.employee?.id ?? document.employee?.employeeId;
     if (!employeeId) return "Unknown employee";
@@ -140,8 +204,10 @@ const Documents = () => {
 
   // Fetch documents for selected project
   useEffect(() => {
+    const controller = new AbortController();
+    setDocuments([]);
     if (!selectedProjectId) {
-      setDocuments([]);
+      setLoading(false);
       return;
     }
 
@@ -149,9 +215,10 @@ const Documents = () => {
       setLoading(true);
       setListError("");
       try {
-        const res = await fetch(
-          `${BASE_URL}/api/documents/project/${selectedProjectId}`,
+        const res = await authFetch(
+          `${BASE_URL}/api/documents/project/${selectedProjectId}${categoryFilter ? `?category=${encodeURIComponent(categoryFilter)}` : ""}${currentOnly ? `${categoryFilter ? "&" : "?"}currentOnly=true` : ""}`,
           {
+            signal: controller.signal,
             headers: {
               "Content-Type": "application/json",
               ...authHeaders,
@@ -160,49 +227,31 @@ const Documents = () => {
         );
 
         if (!res.ok) {
-          const text = await res.text().catch(() => "");
-          throw new Error(text || "Failed to load documents");
+          throw new Error(await readApiError(res, "Failed to load documents"));
         }
 
         const data = await res.json();
-        setDocuments(Array.isArray(data) ? data : []);
+        if (!controller.signal.aborted) setDocuments(Array.isArray(data) ? data : []);
       } catch (err) {
+        if (controller.signal.aborted) return;
         console.error(err);
         setListError(err.message || "Failed to load documents");
         setDocuments([]);
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
 
     fetchDocs();
-  }, [selectedProjectId, authHeaders]);
+    return () => controller.abort();
+  }, [selectedProjectId, authHeaders, authFetch, categoryFilter, currentOnly, listRevision]);
 
   // ✅ Parse API errors nicely (supports your ApiError { message, fieldErrors... })
-  const readApiErrorMessage = async (res) => {
-    const contentType = res.headers.get("content-type") || "";
-
-    // If backend returns JSON (ApiError)
-    if (contentType.includes("application/json")) {
-      const json = await res.json().catch(() => null);
-
-      // Your ApiError has "message"
-      if (json?.message) return json.message;
-
-      // fallback keys if you ever return other shapes
-      if (json?.error) return json.error;
-      if (json?.details) return json.details;
-
-      return "Request failed.";
-    }
-
-    // Fallback to text
-    const text = await res.text().catch(() => "");
-    return text || "Request failed.";
-  };
+  const readApiErrorMessage = (res) => readDocumentError(res, "Request failed.");
 
   const uploadDocument = async (file) => {
-    if (!canUploadDocuments || !file || !selectedProjectId) return;
+    if (!canUploadDocuments || !file || !selectedProjectId || uploading || !categories.length) return;
+    const uploadProject = selectedProjectId;
 
     setUploadError("");
     setUploadInfo("");
@@ -226,8 +275,11 @@ const Documents = () => {
       formData.append("file", file);
       formData.append("projectId", selectedProjectId);
       formData.append("employeeId", user.employeeId);
+      formData.append("category", uploadCategory);
+      formData.append("status", uploadStatus);
+      if (uploadDate) formData.append("documentDate", uploadDate);
 
-      const res = await fetch(`${BASE_URL}/api/documents/upload`, {
+      const res = await authFetch(`${BASE_URL}/api/documents/upload`, {
         method: "POST",
         headers: {
           ...authHeaders,
@@ -248,10 +300,13 @@ const Documents = () => {
         throw new Error(msg || "Upload failed");
       }
 
-      const created = await res.json();
-      setDocuments((prev) => [created, ...prev]);
-      setUploadInfo("Upload complete ✅");
+      await res.json();
+      if (currentProject.current === uploadProject) {
+        setListRevision((value) => value + 1);
+        setUploadInfo("Upload complete. The list shows documents matching the selected category filter.");
+      }
     } catch (err) {
+      if (currentProject.current !== uploadProject) return;
       console.error(err);
       setUploadError(err.message || "Upload failed");
       setUploadInfo("");
@@ -280,7 +335,7 @@ const Documents = () => {
   };
 
   const handleClickPicker = () => {
-    if (!canUploadDocuments) return;
+    if (!canUploadDocuments || uploading || !categories.length) return;
     const input = document.getElementById("documentFileInput");
     if (input) input.click();
   };
@@ -288,14 +343,14 @@ const Documents = () => {
   // Delete a document (soft delete in backend)
   const handleDeleteDocument = async (docId) => {
     if (!canDeleteDocuments) return;
-    if (!window.confirm("Are you sure you want to delete this document?"))
+    if (!window.confirm("Delete this document? If it is the current version, older versions will not become current."))
       return;
 
     setDeleteError("");
     setDeletingId(docId);
 
     try {
-      const res = await fetch(`${BASE_URL}/api/documents/${docId}`, {
+      const res = await authFetch(`${BASE_URL}/api/documents/${docId}`, {
         method: "DELETE",
         headers: {
           ...authHeaders,
@@ -308,6 +363,7 @@ const Documents = () => {
       }
 
       setDocuments((prev) => prev.filter((d) => d.id !== docId));
+      setListRevision((value) => value + 1);
     } catch (err) {
       console.error(err);
       setDeleteError(err.message || "Failed to delete document");
@@ -316,7 +372,42 @@ const Documents = () => {
     }
   };
 
-  const anyError = uploadError || deleteError || listError;
+  const anyError = downloadError || uploadError || deleteError || listError;
+
+  const saveMetadata = async (event) => {
+    event.preventDefault();
+    if (!canUploadDocuments || saving || !editing || editing.original.isCurrent === false) return;
+    const editProject = selectedProjectId;
+    setSaving(true);
+    setEditError("");
+    try {
+      const original = editing.original;
+      const response = await authFetch(`${BASE_URL}/api/documents/${original.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: original.id, documentName: original.documentName,
+          projectId: original.projectId, employeeId: original.employeeId,
+          ...documentMetadataChanges(editing, original) }),
+      });
+      if (!response.ok) {
+        const reason = await readDocumentError(response, "Could not update document details.");
+        if (response.status === 409 && currentProject.current === editProject) {
+          setEditing(null);
+          setListRevision((value) => value + 1);
+          setDownloadError(reason);
+        }
+        throw new Error(reason);
+      }
+      if (currentProject.current === editProject) {
+        setEditing(null);
+        setListRevision((value) => value + 1);
+      }
+    } catch (err) {
+      if (currentProject.current === editProject) setEditError(err.message || "Could not update document details.");
+    } finally { setSaving(false); }
+  };
+
+  const categoryOptions = categories.map((category) => <option key={category.id} value={category.id}>{category.label}</option>);
 
   return (
     <div className={styles.page}>
@@ -341,8 +432,20 @@ const Documents = () => {
 
         {selectedProjectId && (
           <>
+            {categoryError && <div role="alert" className={styles.errorBanner}>{categoryError} <button type="button" onClick={retryCategories}>Retry categories</button></div>}
+            <ProjectDocumentChecklist key={selectedProjectId} projectId={selectedProjectId} authFetch={authFetch} categories={categories} refreshKey={listRevision} />
             {/* Error banner */}
-            {anyError && <div className={styles.errorBanner}>{anyError}</div>}
+            {anyError && (
+              <ErrorBanner
+                message={anyError}
+                onDismiss={() => {
+                  setDownloadError("");
+                  setUploadError("");
+                  setDeleteError("");
+                  setListError("");
+                }}
+              />
+            )}
 
             {/* Optional small info line */}
             {uploadInfo && !uploadError && (
@@ -351,6 +454,13 @@ const Documents = () => {
 
             {canUploadDocuments && (
               <>
+                <div className={styles.metadataControls}>
+                  <DocumentStatus label="Upload status" value={uploadStatus} disabled={uploading} onChange={(e) => setUploadStatus(e.target.value)} />
+                  <label>Upload category<select value={uploadCategory} disabled={uploading || !categories.length} onChange={(e) => setUploadCategory(e.target.value)}>{categoryOptions}</select></label>
+                  <label>Document date (optional)<input type="date" min="1000-01-01" max="9999-12-31" value={uploadDate} disabled={uploading} onChange={(e) => setUploadDate(e.target.value)} /></label>
+                </div>
+                <p className={styles.infoText}>Choose details before selecting a file. The document date is the date on the document, not its upload date.</p>
+                <p className={styles.infoText}>Final is a descriptive label, not approval or proof of signing.</p>
                 {/* Upload area */}
                 <div
                   onDrop={handleDrop}
@@ -363,12 +473,13 @@ const Documents = () => {
                     if (e.key === "Enter" || e.key === " ") handleClickPicker();
                   }}
                   aria-label="Upload document"
+                  aria-disabled={uploading || !categories.length}
                 >
                   <FiUploadCloud size={24} className={styles.uploadIcon} />
                   <span>
                     {uploading
                       ? "Uploading..."
-                      : "Drag & drop a file here, or click to select"}
+                      : "Choose a file, or drag and drop it here"}
                   </span>
                   <span className={styles.uploadFormats}>
                     {ALLOWED_FORMATS_LABEL} • max {MAX_UPLOAD_MB}MB
@@ -387,13 +498,30 @@ const Documents = () => {
 
             {/* Section heading */}
             <h3 className={styles.sectionTitle}>Files for this project</h3>
+            <div className={styles.metadataControls}>
+              <label>Versions shown<select value={currentOnly ? "current" : "all"} onChange={(e) => { setCurrentOnly(e.target.value === "current"); setEditing(null); }}><option value="current">Current versions</option><option value="all">All active versions</option></select></label>
+              <label>Filter by category<select value={categoryFilter} disabled={!categories.length} onChange={(e) => { setCategoryFilter(e.target.value); setEditing(null); }}><option value="">All categories</option>{categoryOptions}</select></label>
+              <button type="button" className={styles.downloadLink} onClick={() => setListRevision((value) => value + 1)} disabled={loading}>Refresh list</button>
+            </div>
+            {editing && <form className={styles.metadataEditor} onSubmit={saveMetadata}>
+              <h4>Edit details · {editing.original.documentName}</h4>
+              {editError && <ErrorBanner message={editError} onDismiss={() => setEditError("")} />}
+              <div className={styles.metadataControls}>
+                <DocumentStatus value={editing.status} allowUnknown={!editing.original.status} disabled={saving} onChange={(e) => setEditing({ ...editing, status: e.target.value })} />
+                <label>Category<select value={editing.category} disabled={saving || !categories.length} onChange={(e) => setEditing({ ...editing, category: e.target.value })}>{categoryOptions}</select></label>
+                <label>Document date<input type="date" min="1000-01-01" max="9999-12-31" value={editing.documentDate} disabled={saving} onChange={(e) => setEditing({ ...editing, documentDate: e.target.value })} /></label>
+              </div>
+              <p className={styles.infoText}>Leave the date empty to clear it. Choose Uncategorized to remove a classification.</p>
+              <div className={styles.docActions}><button className={styles.downloadLink} type="submit" disabled={saving || !categories.length}>{saving ? "Saving…" : "Save details"}</button><button className={styles.downloadLink} type="button" disabled={saving} onClick={() => setEditing(null)}>Cancel</button></div>
+            </form>}
+            {historyDocument && <DocumentVersions key={`${selectedProjectId}-${historyDocument.id}`} document={historyDocument} authFetch={authFetch} categories={categories} canEdit={canUploadDocuments} canDelete={canDeleteDocuments} onDownload={handleDownload} downloading={downloading} revision={listRevision} onChanged={() => { setEditing(null); setListRevision((value) => value + 1); }} onClose={() => setHistoryDocument(null)} validateFile={validateDocumentFile} />}
 
             {loading && (
               <p className={styles.loadingText}>Loading documents...</p>
             )}
 
             {!loading && documents.length === 0 && !listError && (
-              <p className={styles.emptyText}>No documents uploaded yet.</p>
+              <p className={styles.emptyText}>{categoryFilter ? "No documents match this category." : currentOnly ? "No active current documents. Use All active versions to find retained earlier versions." : "No active documents."}</p>
             )}
 
             {documents.length > 0 && (
@@ -402,22 +530,28 @@ const Documents = () => {
                   <li key={doc.id} className={styles.documentItem}>
                     <div className={styles.docInfo}>
                       <span className={styles.docName}>{doc.documentName}</span>
+                      <span className={styles.uploadedBy}>{statusLabel(doc.status)} · Version {doc.versionNumber || 1} · {doc.isCurrent === true ? "Current" : doc.isCurrent === false ? "Historical · read-only" : "Version state unknown"}</span>
                       <span className={styles.uploadedBy}>
-                        Uploaded by {getUploaderLabel(doc)}
+                        {categories.find((item) => item.id === doc.category)?.label || doc.category || "Uncategorized"} · Document date: {doc.documentDate || "Unknown"}
                       </span>
+                      <span className={styles.uploadedBy}>Uploaded by {uploaderLabel(doc)} · Uploaded: {uploadTimeLabel(doc.uploadedAt)}</span>
+                      <span className={styles.uploadedBy}>Employee attribution: {getEmployeeLabel(doc)}</span>
                     </div>
 
                     <div className={styles.docActions}>
-                      <a
-                        href={`${DOCUMENTS_BASE_PATH}${doc.documentPath}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button type="button" className={styles.downloadLink} onClick={() => { setEditing(null); setHistoryDocument(doc); }}>Version history</button>
+                      {canUploadDocuments && doc.isCurrent === true && <button type="button" className={styles.downloadLink} disabled={saving || !categories.length} onClick={() => { setEditError(""); setEditing({ original: doc, category: doc.category || "UNCATEGORIZED", documentDate: doc.documentDate || "", status: doc.status || "" }); }}>Edit details</button>}
+                      <button
+                        type="button"
+                        onClick={() => handleDownload(doc.id)}
+                        disabled={downloading.includes(doc.id)}
+                        aria-busy={downloading.includes(doc.id)}
                         title="Download"
                         className={styles.downloadLink}
                       >
                         <FiDownload />
-                        <span>Download</span>
-                      </a>
+                        <span>{downloading.includes(doc.id) ? "Downloading…" : "Download"}</span>
+                      </button>
 
                       {canDeleteDocuments && <button
                         type="button"
@@ -428,6 +562,7 @@ const Documents = () => {
                         aria-label="Delete"
                       >
                         <FiTrash2 />
+                        <span className={styles.mobileActionLabel}>Delete</span>
                       </button>}
                     </div>
                   </li>

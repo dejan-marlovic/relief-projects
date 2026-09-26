@@ -1,3 +1,4 @@
+import { appFetch as fetch } from "../../utils/appFetch";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   PieChart,
@@ -12,8 +13,25 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import styles from "./Statistics.module.scss";
+import useMediaQuery from "../../hooks/useMediaQuery";
+import ErrorBanner from "../../components/ErrorBanner/ErrorBanner";
 
 import { BASE_URL } from "../../config/api"; // adjust path if needed
+const COLORS = [
+    "#3D85C6",
+    "#CC4125",
+    "#E69138",
+    "#6AA84F",
+    "#674EA7",
+    "#45818E",
+    "#A64D79",
+    "#6D9EEB",
+    "#F1C232",
+    "#8E7CC3",
+    "#3C78D8",
+    "#C27BA0",
+  ];
+
 const tokenFromStorage = () => localStorage.getItem("authToken");
 
 // Legend (styled via CSS Module, only dynamic color stays inline)
@@ -94,6 +112,8 @@ const BarTooltip = ({ active, payload, label }) => {
 };
 
 const Statistics = () => {
+  const isPhone = useMediaQuery("(max-width: 700px)");
+  const compactCharts = useMediaQuery("(max-width: 1100px)");
   const [relations, setRelations] = useState([]);
   const [sectors, setSectors] = useState([]);
   const [projects, setProjects] = useState([]); // ids-names (labels/tooltips)
@@ -168,20 +188,7 @@ const Statistics = () => {
     return () => ac.abort();
   }, []);
 
-  const COLORS = [
-    "#3D85C6",
-    "#CC4125",
-    "#E69138",
-    "#6AA84F",
-    "#674EA7",
-    "#45818E",
-    "#A64D79",
-    "#6D9EEB",
-    "#F1C232",
-    "#8E7CC3",
-    "#3C78D8",
-    "#C27BA0",
-  ];
+
 
   // Sector id -> "CODE — Description"
   const sectorNameMap = useMemo(() => {
@@ -405,9 +412,9 @@ const Statistics = () => {
       statusData.map((d, i) => ({
         key: d.statusId ?? `status-${i}`,
         color: COLORS[i % COLORS.length],
-        label: d.name,
+        label: `${d.name} — ${d.value} (${(statusTotal ? d.value / statusTotal * 100 : 0).toFixed(1)}%)`,
       })),
-    [statusData]
+    [statusData, statusTotal]
   );
 
   // Sector legend items
@@ -416,15 +423,14 @@ const Statistics = () => {
       pieData.map((d, i) => ({
         key: d.sectorId,
         color: COLORS[i % COLORS.length],
-        label: d.name,
+        label: `${d.name} — ${d.value} (${(total ? d.value / total * 100 : 0).toFixed(1)}%)`,
       })),
-    [pieData]
+    [pieData, total]
   );
 
   // ================================
   // Pie geometry (existing)
   // ================================
-  const CHART_WIDTH = 1460;
   const OUTER_RADIUS = 185;
   const LABEL_OFFSET = 110;
   const POLE_EXTRA = 44;
@@ -521,7 +527,9 @@ const Statistics = () => {
 
         {loading && <div className={styles.loadingSkeleton} />}
 
-        {!loading && error && <div className={styles.errorBanner}>{error}</div>}
+        {!loading && error && (
+          <ErrorBanner message={error} onDismiss={() => setError("")} />
+        )}
 
         {!loading && !error && (
           <>
@@ -543,19 +551,18 @@ const Statistics = () => {
             ) : (
               <>
                 <div className={styles.chartRow}>
+                  <ResponsiveContainer width="100%" height={compactCharts ? 300 : CHART_HEIGHT}>
                   <PieChart
-                    width={CHART_WIDTH}
-                    height={CHART_HEIGHT}
-                    margin={{ top: 8, right: 32, bottom: 0, left: 32 }}
+                    margin={{ top: 8, right: compactCharts ? 8 : 32, bottom: 0, left: compactCharts ? 8 : 32 }}
                   >
                     <Pie
                       data={pieData}
                       dataKey="value"
                       nameKey="name"
-                      cx={CHART_WIDTH / 2}
-                      cy={CY}
-                      outerRadius={OUTER_RADIUS}
-                      label={renderLabel}
+                      cx="50%"
+                      cy={compactCharts ? "50%" : CY}
+                      outerRadius={compactCharts ? "78%" : OUTER_RADIUS}
+                      label={compactCharts ? false : renderLabel}
                       labelLine={false}
                       isAnimationActive
                     >
@@ -569,6 +576,7 @@ const Statistics = () => {
 
                     <RechartsTooltip content={<SliceTooltip />} />
                   </PieChart>
+                  </ResponsiveContainer>
                 </div>
 
                 <div className={styles.chartLegendSpacer} />
@@ -610,7 +618,7 @@ const Statistics = () => {
               <>
                 <div className={styles.donutCard}>
                   <div className={styles.donutChartWrap}>
-                    <ResponsiveContainer width="100%" height={420}>
+                    <ResponsiveContainer width="100%" height={isPhone ? 300 : 420}>
                       <PieChart>
                         <Pie
                           data={statusData}
@@ -618,8 +626,8 @@ const Statistics = () => {
                           nameKey="name"
                           cx="50%"
                           cy="50%"
-                          outerRadius={155}
-                          innerRadius={95}
+                          outerRadius="78%"
+                          innerRadius="48%"
                           paddingAngle={2}
                           isAnimationActive
                         >
@@ -695,16 +703,19 @@ const Statistics = () => {
             {barHasTypeInfo && barData.length > 0 && (
               <div className={styles.barCard}>
                 <div className={styles.barChartWrap}>
-                  <ResponsiveContainer width="100%" height={420}>
+                  <ResponsiveContainer width="100%" height={isPhone ? Math.max(280, barData.length * 60) : 420}>
                     <BarChart
                       data={barData}
-                      margin={{ top: 16, right: 24, bottom: 70, left: 8 }}
+                      layout={isPhone ? "vertical" : "horizontal"}
+                      margin={isPhone ? { top: 8, right: 16, bottom: 8, left: 0 } : { top: 16, right: 24, bottom: 70, left: 8 }}
                     >
                       <CartesianGrid
                         strokeDasharray="3 3"
                         stroke="rgba(0,0,0,0.08)"
                       />
-                      <XAxis
+                      {isPhone ? (
+                        <XAxis type="number" allowDecimals={false} />
+                      ) : (<XAxis
                         dataKey="name"
                         interval={0}
                         angle={-20}
@@ -716,9 +727,10 @@ const Statistics = () => {
                             : v
                         }
                       />
-                      <YAxis allowDecimals={false} />
+                      )}
+                      {isPhone ? <YAxis type="category" dataKey="name" width={100} interval={0} tick={{ fontSize: 12 }} tickFormatter={(name) => name.length > 15 ? `${name.slice(0, 14)}…` : name} /> : <YAxis allowDecimals={false} />}
                       <RechartsTooltip content={<BarTooltip />} />
-                      <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                      <Bar dataKey="value" radius={isPhone ? [0, 6, 6, 0] : [6, 6, 0, 0]}>
                         {barData.map((entry, index) => (
                           <Cell
                             key={`bar-${entry.typeId ?? entry.name}`}
@@ -729,6 +741,7 @@ const Statistics = () => {
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
+                {isPhone && <LegendBlock items={barData.map((d, i) => ({ key: d.typeId ?? "unassigned", color: COLORS[i % COLORS.length], label: `${d.name} — ${d.value}` }))} />}
               </div>
             )}
           </>
