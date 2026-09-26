@@ -4,6 +4,10 @@ test("only successful mutations to our API produce notifications",()=>{
  const ok={ok:true,status:200};
  expect(mutationNotice("/api/budgets/2",{method:"PUT"},ok)).toBe("Budget changes saved.");
  expect(mutationNotice("/api/projects/2/follow-ups",{method:"POST"},ok)).toBe("Follow-up changes saved.");
+ expect(mutationNotice("/api/projects/2/risks/9/reopen",{method:"POST"},ok)).toBe("Risk reopened.");
+ expect(mutationNotice("/api/projects/2/risks/9/close",{method:"POST"},ok)).toBe("Risk closed.");
+ expect(mutationNotice("/api/projects/2/risks/9/restore",{method:"PUT"},ok)).toBe("Risk restored.");
+ expect(mutationNotice("/api/projects/2/risks/9",{method:"DELETE"},ok)).toBe("Risk removed.");
  expect(mutationNotice("/api/budgets/2/currency-conversion/preview",{method:"POST"},ok)).toBeNull();
  expect(mutationNotice("/api/auth/login",{method:"POST"},ok)).toBeNull();
  expect(mutationNotice("/api/documents/3",{},ok)).toBeNull();

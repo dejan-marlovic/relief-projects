@@ -1,5 +1,6 @@
 import SuccessNotifications from "./components/SuccessNotifications/SuccessNotifications";
 import FollowUps from "./pages/FollowUps/FollowUps";
+import Risks from "./pages/Risks/Risks";
 // Import ReactDOM to render the React app into the DOM
 import ReactDOM from "react-dom/client";
 
@@ -61,6 +62,7 @@ export default function App() {
               <Route path="recipients" element={<Recipients />} />
               <Route path="documents" element={<Documents />} />
               <Route path="follow-ups" element={<FollowUps />} />
+              <Route path="risks" element={<Risks />} />
               <Route path="statistics" element={<Statistics />} />
               <Route path="organizations" element={<Organizations />} />
                 <Route

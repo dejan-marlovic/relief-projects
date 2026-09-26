@@ -1,6 +1,6 @@
 # Project risk register — proposed first slice
 
-Status: proposal for agreement, 26 September 2026. Owner: **Find and fix next project gap**. No production code, database, API contract or migration has been changed for this feature.
+Status: all three product choices agreed by the user on 26 September 2026. Owner: **Find and fix next project gap**. Implemented in the isolated risk branches; see the [implementation report](project-risk-register-frontend.md) for verification and pending live acceptance. The application database has not been changed.
 
 ## Evidence
 
@@ -39,7 +39,7 @@ Mutations require an explicitly active project and a persisted active authentica
 
 ## Proposed API and frontend
 
-These routes are a proposed shape, not available endpoints:
+The agreed route shape is implemented on the risk branch; availability in the running application depends on normal rollout:
 
 | Method | Route / purpose |
 |---|---|
@@ -63,7 +63,7 @@ Frontend: a dedicated Risks page for the selected project, reachable from existi
 - Mutation, revision, attribution and history insert commit atomically. Validation failure, stale revision, audit failure and commit failure leave both record and history unchanged.
 - Capture immutable changed values and readable actor/owner labels at event time; later renames must not rewrite prior events. Keep current display separate from recorded snapshots. No-op commands with a current revision produce no duplicate events; stale revisions still conflict.
 - Required shared integration points are SecurityConfig (specific risk matchers before broad project routes), structured exception handling, migration registration and frontend route/navigation. Coordinate those small edits before integration; isolate all other files.
-- Outgoing payments currently has an uncommitted V34 migration and extensive financial/audit changes. Do not select a risk migration number until the implementation checkout is synchronized and the other task confirms its migration allocation.
+- Outgoing payments now has committed V34. The backend task confirmed risk allocation V35, and the risk branch incorporates that completed baseline.
 - Use separate backend/frontend worktrees and scoped commits. No application database access, IntelliJ restart, applied-migration edits, file relocation or production data backfill. Use disposable databases only for verification.
 
 ## Verification and delivery
@@ -72,4 +72,4 @@ Backend: authorization including owner-without-manager role; required/null/unkno
 
 Frontend: read-only and editable roles from capabilities; creation/editing; partial assessments; filters; correct selected-project binding; retained inactive owner; close/reopen and history; soft delete/restore; draft preservation on conflict; no retries after uncertain writes; refresh/unmount handling; responsive keyboard-accessible forms. Run focused/full frontend tests, lint/build checks and a short manual workflow using demo data through the UI after the user's normal backend rollout.
 
-Before implementation, agree on the three product choices above. This checkpoint is part of the previously agreed proposal-first workflow; it is not a claim that the source documents prescribe these choices. Once agreed, this task can implement both repositories and write the final backend contract/frontend handoff without delegating new work to the busy financial task.
+The user agreed to the three product choices above before implementation. This checkpoint followed the established proposal-first workflow; it is not a claim that the source documents prescribe these choices. This task implements both repositories and provides the final contract/report without delegating implementation to the financial tasks.

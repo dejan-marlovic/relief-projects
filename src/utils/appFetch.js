@@ -14,6 +14,12 @@ export function mutationNotice(input, options = {}, response) {
   if (path.includes("bulk")) return null;
   if (response.status === 202) return "Request accepted for processing.";
   const segments = path.slice(5).split("/");
+  if (segments[0] === "projects" && segments[2] === "risks") {
+    if (/\/close$/.test(path)) return "Risk closed.";
+    if (/\/reopen$/.test(path)) return "Risk reopened.";
+    if (/\/restore$/.test(path)) return "Risk restored.";
+    return method === "DELETE" ? "Risk removed." : "Risk saved.";
+  }
   if (segments[0] === "outgoing-payments" || (segments[0] === "payment-orders" && segments[2] === "payments")) {
     if (/\/documents\/remove$/.test(path)) return "Payment evidence removed.";
     if (/\/documents$/.test(path)) return "Payment evidence linked.";
