@@ -102,3 +102,23 @@ test("unmounted loads cannot display a previous project", async () => {
   await act(async () => resolve(response(envelope)));
   expect(screen.queryByText("Project assessment")).not.toBeInTheDocument();
 });
+
+test("attention filter hides recorded and not-applicable items without changing saved decisions", async () => {
+  envelope.items = [
+    {...baseItem},
+    {...baseItem, itemKey: "RECORDED", label: "Recorded item", state: "EVIDENCE_RECORDED", order: 2, evidence: [evidence]},
+    {...baseItem, itemKey: "EXEMPT", label: "Exempt item", state: "NOT_APPLICABLE", order: 3},
+    {...baseItem, itemKey: "UNAVAILABLE", label: "Unavailable item", state: "EVIDENCE_UNAVAILABLE", order: 4},
+  ];
+  envelope.summary = {...envelope.summary, totalItems: 4, evidenceRecorded: 1, notApplicable: 1, evidenceUnavailable: 1};
+  await open();
+  expect(screen.getByRole("progressbar", {name: "Items with evidence recorded"})).toHaveAttribute("max", "3");
+  fireEvent.click(screen.getByLabelText("Needs attention only"));
+  expect(screen.queryByText("Recorded item")).not.toBeInTheDocument();
+  expect(screen.queryByText("Exempt item")).not.toBeInTheDocument();
+  expect(screen.getByText("Unavailable item")).toBeInTheDocument();
+  expect(screen.getByText("Project assessment")).toBeInTheDocument();
+  expect(writes()).toHaveLength(0);
+  fireEvent.click(screen.getByLabelText("Needs attention only"));
+  expect(screen.getByText("Recorded item")).toBeInTheDocument();
+});

@@ -7,6 +7,14 @@ import DocumentVersions from "../DocumentVersions/DocumentVersions";
 import styles from "./ProjectDocumentChecklist.module.scss";
 
 const states = { NEEDS_ASSESSMENT: "Needs assessment", MISSING_EVIDENCE: "Missing evidence", EVIDENCE_RECORDED: "Evidence recorded", EVIDENCE_UNAVAILABLE: "Evidence unavailable", NOT_APPLICABLE: "Not applicable" };
+const nextSteps = {
+  NEEDS_ASSESSMENT: "Decide whether this item applies to the project",
+  MISSING_EVIDENCE: "Choose a document to record evidence",
+  EVIDENCE_RECORDED: "Review linked documents or add more evidence",
+  EVIDENCE_UNAVAILABLE: "Review unavailable evidence and link an available version",
+  NOT_APPLICABLE: "Explanation recorded · reopen to change the decision",
+};
+const settled = (state) => ["EVIDENCE_RECORDED", "NOT_APPLICABLE"].includes(state);
 const counts = { needsAssessment: "Needs assessment", missingEvidence: "Missing evidence", evidenceRecorded: "Evidence recorded", evidenceUnavailable: "Evidence unavailable", notApplicable: "Not applicable" };
 const actor = (value) => value?.username || (value?.userId ? `User #${value.userId}` : "Unknown");
 
@@ -25,8 +33,12 @@ function Item({ item, generation, editable, documents, categories, busy, mutate,
     setValidation("");
     mutate(item, "applicability", "PUT", { applicability, ...(applicability === "NOT_APPLICABLE" ? { reason: reason.trim() } : {}) });
   };
-  return <details className={styles.item}>
-    <summary><span>{item.label}</span><span className={styles.badge}>{states[item.state] || item.state}</span></summary>
+  return <details className={styles.item} data-state={item.state}>
+    <summary>
+      <span className={styles.checkmark} aria-hidden="true">{item.state === "EVIDENCE_RECORDED" ? "✓" : item.state === "NOT_APPLICABLE" ? "−" : item.state === "EVIDENCE_UNAVAILABLE" ? "!" : ""}</span>
+      <span className={styles.itemHeading}><span>{item.label}</span><small>{nextSteps[item.state] || "Open to review this item"}</small></span>
+      <span className={styles.badge}>{states[item.state] || item.state}{evidence.length > 0 ? ` · ${evidence.length} linked` : ""}</span>
+    </summary>
     <div className={styles.body}>
       <p>{item.guidance}</p>
       <p className={styles.muted}>{item.applicabilitySource === "DEFAULT" ? "Default applicability — no user decision recorded." : `Explicit decision by ${actor(item.applicabilityChangedBy)} · ${uploadTimeLabel(item.applicabilityChangedAt)}`}</p>
@@ -63,6 +75,7 @@ function Item({ item, generation, editable, documents, categories, busy, mutate,
 
 function Panel({ projectId, authFetch, categories, refreshKey }) {
   const [data, setData] = useState(null);
+  const [attentionOnly, setAttentionOnly] = useState(false);
   const [generation, setGeneration] = useState(0);
   const [revision, setRevision] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -142,12 +155,17 @@ function Panel({ projectId, authFetch, categories, refreshKey }) {
     finally { downloads.current.delete(id); if (alive.current) setDownloading((v) => v.filter((value) => value !== id)); }
   };
   return <div className={styles.panel}>
-    <p className={styles.muted}>Evidence recorded does not mean complete, reviewed or approved. Missing evidence is not an overdue deadline. File availability is checked when downloading.</p>
+    <p className={styles.intro}>Work through each item: decide whether it applies, then link the supporting document. A checkmark means evidence is recorded, not reviewed or approved.</p>
     <button type="button" disabled={loading || busy} onClick={() => setRevision((v) => v + 1)}>Refresh checklist</button>
     {loading && <p role="status">Loading checklist…</p>}
     {error && <p role="alert">{error}</p>}
     {notice && <p role="status">{notice}</p>}
     {data && <>
+      <div className={styles.progressCard}>
+        <div><strong>{data.summary.evidenceRecorded} of {Math.max(0, data.summary.totalItems - data.summary.notApplicable)} applicable or unassessed items have evidence</strong><span>{data.summary.notApplicable} marked not applicable</span></div>
+        <progress aria-label="Items with evidence recorded" value={data.summary.evidenceRecorded} max={Math.max(1, data.summary.totalItems - data.summary.notApplicable)} />
+        <small>Evidence coverage only. Missing evidence is not an overdue deadline; file availability is checked when downloading.</small>
+      </div>
       <div className={styles.counts}>{Object.entries(counts).map(([key, label]) => <span key={key}><strong>{data.summary[key]}</strong> {label}</span>)}</div>
       <p className={styles.muted}>{data.summary.totalItems} items · {data.summary.evidenceLinks} evidence links · {data.summary.unavailableEvidenceLinks} unavailable links · Definition {data.definitionVersion}</p>
       {!data.editable && <p className={styles.muted}>Read-only. Only Admin and Project Manager can change a checklist on an active project.</p>}
@@ -157,7 +175,9 @@ function Panel({ projectId, authFetch, categories, refreshKey }) {
         <p className={styles.muted}>These filters only help find documents. Upload files below, then select evidence explicitly. Uploads remain if linking fails. To switch versions, link the new version before removing the old one; if removal fails, both links remain.</p>
         {documentError && <p role="alert">{documentError}</p>}
       </div>}
-      {[...data.items].sort((a, b) => a.order - b.order).map((item) => <Item key={item.itemKey} generation={generation} item={item} editable={data.editable} documents={documents} categories={categories} busy={busy || loading} mutate={mutate} download={download} downloading={downloading} showHistory={setHistory} />)}
+      <div className={styles.checklistToolbar}><strong>Checklist items</strong><label><input type="checkbox" checked={attentionOnly} onChange={(event) => setAttentionOnly(event.target.checked)} /> Needs attention only</label></div>
+      {attentionOnly && data.items.every((item) => settled(item.state)) && <p className={styles.muted}>No items need attention. Turn off the filter to review recorded evidence and not-applicable decisions.</p>}
+      {[...data.items].filter((item) => !attentionOnly || !settled(item.state)).sort((a, b) => a.order - b.order).map((item) => <Item key={item.itemKey} generation={generation} item={item} editable={data.editable} documents={documents} categories={categories} busy={busy || loading} mutate={mutate} download={download} downloading={downloading} showHistory={setHistory} />)}
       <p className={styles.muted}>Attribution shows the latest decisions and current links, not a full change history. Earlier explanations are replaced.</p>
     </>}
     {history && <DocumentVersions key={history.id} document={history} authFetch={authFetch} categories={categories} canEdit={false} canDelete={false} onDownload={download} downloading={downloading} revision={revision + refreshKey} onChanged={() => setRevision((v) => v + 1)} onClose={() => setHistory(null)} />}
