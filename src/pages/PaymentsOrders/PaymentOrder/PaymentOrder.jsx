@@ -1,3 +1,4 @@
+import OutgoingPayments from "../../../components/OutgoingPayments/OutgoingPayments";
 import PaymentAmount from "../../../components/PaymentAmount/PaymentAmount";
 import React from "react";
 import styles from "./PaymentOrder.module.scss";
@@ -68,6 +69,7 @@ const PaymentOrder = ({
   onReturnLifecycle,
   isReviewingLifecycle = false,
   historyRefreshKey = 0,
+  onPaymentChanged,
 }) => {
   const ev = editedValues || {};
   const isCreate = (po?.id ?? "") === "new";
@@ -394,6 +396,7 @@ const PaymentOrder = ({
       </Cell>
     </div>
     <RecordHistory entityType="PAYMENT_ORDER" entityId={po.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} />
+    <OutgoingPayments paymentOrderId={po.id} refreshKey={`${historyRefreshKey}:${lifecycleStatus}`} editingLocked={isEditing || saving || editingLocked} onChanged={onPaymentChanged} />
     <FinancialDocuments entityType="PAYMENT_ORDER" entityId={po.id} lifecycleStatus={lifecycleStatus} locked={locked} refreshKey={historyRefreshKey} editingLocked={isEditing || saving || editingLocked} />
     </>
   );

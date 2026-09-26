@@ -1,3 +1,4 @@
+import OutgoingPaymentAuditDetails from "../OutgoingPayments/OutgoingPaymentAuditDetails";
 import FundingReceiptAuditDetails from "../FundingReceipts/FundingReceiptAuditDetails";
 import PaymentCurrencyContext from "../PaymentCurrencyContext/PaymentCurrencyContext";
 import TransactionCurrencyContext from "../TransactionCurrencyContext/TransactionCurrencyContext";
@@ -70,7 +71,7 @@ function HistoryPage({ entityType, entityId, includeChildren }) {
           <tbody>{result.content.map((event) => <tr key={event.id}>
             <td data-label="Date and time"><time dateTime={event.occurredAt}>{timestamp(event.occurredAt)}</time></td>
             <td data-label="Action">{auditActionLabel(event)}</td>
-            <td data-label="Changes">{event.entityType === "FUNDING_RECEIPT" ? <FundingReceiptAuditDetails event={event} /> : event.entityType === "RECIPIENT" ? <RecipientAuditDetails event={event} /> : event.entityType === "SIGNATURE" ? <SignatureAuditDetails event={event} /> : event.entityType === "COST_DETAIL" ? <CostDetailAuditDetails event={event} /> : event.entityType === "COST_DETAIL_ALLOCATION" ? <AllocationAuditDetails event={event} /> : event.entityType === "PAYMENT_ORDER_LINE" ? <LineAuditDetails event={event} /> : event.action === "UPDATE" ? <AuditFieldChanges event={event} /> : hasAuditTransition(event) ? <>{readable(event.previousState)} → {readable(event.newState)}</> : "—"}<TransactionCurrencyContext event={event} /><PaymentCurrencyContext event={event} /><ReturnReason event={event} /></td>
+            <td data-label="Changes">{event.entityType === "OUTGOING_PAYMENT" ? <OutgoingPaymentAuditDetails event={event} /> : event.entityType === "FUNDING_RECEIPT" ? <FundingReceiptAuditDetails event={event} /> : event.entityType === "RECIPIENT" ? <RecipientAuditDetails event={event} /> : event.entityType === "SIGNATURE" ? <SignatureAuditDetails event={event} /> : event.entityType === "COST_DETAIL" ? <CostDetailAuditDetails event={event} /> : event.entityType === "COST_DETAIL_ALLOCATION" ? <AllocationAuditDetails event={event} /> : event.entityType === "PAYMENT_ORDER_LINE" ? <LineAuditDetails event={event} /> : event.action === "UPDATE" ? <AuditFieldChanges event={event} /> : hasAuditTransition(event) ? <>{readable(event.previousState)} → {readable(event.newState)}</> : "—"}<TransactionCurrencyContext event={event} /><PaymentCurrencyContext event={event} /><ReturnReason event={event} /></td>
             <td data-label="Performed by">{event.performedByDisplay || (event.performedBy ? `User #${event.performedBy}` : "Unknown user")}</td>
           </tr>)}</tbody>
         </table></div>}
@@ -91,7 +92,7 @@ function HistoryDisclosure({ entityType, entityId, lifecycleStatus, refreshKey =
   return <details data-entity-type={entityType} className={styles.history} onToggle={(event) => { if (event.target === event.currentTarget) setOpen(event.currentTarget.open); }}>
     <summary>History · {labels[entityType]} #{entityId}</summary>
     {open && ["BUDGET", "PAYMENT_ORDER", "TRANSACTION"].includes(entityType) && <label style={{ display: "block", padding: "0 1rem 0.5rem" }}>
-      <input type="checkbox" checked={includeChildren} onChange={(event) => setIncludeChildren(event.target.checked)} /> {entityType === "BUDGET" ? "Include cost-detail activity" : entityType === "TRANSACTION" ? "Include allocation and funding-receipt activity" : "Include line, signature, and recipient activity"}
+      <input type="checkbox" checked={includeChildren} onChange={(event) => setIncludeChildren(event.target.checked)} /> {entityType === "BUDGET" ? "Include cost-detail activity" : entityType === "TRANSACTION" ? "Include allocation and funding-receipt activity" : "Include line, signature, recipient, and outgoing-payment activity"}
     </label>}
     {open && <HistoryPage key={`${lifecycleStatus}:${refreshKey}:${includeChildren}`} entityType={entityType} entityId={entityId} includeChildren={includeChildren} />}
   </details>;

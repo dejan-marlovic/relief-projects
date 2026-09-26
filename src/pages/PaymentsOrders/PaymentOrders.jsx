@@ -1445,6 +1445,7 @@ function PaymentOrders() {
                   onApproveLifecycle={() => reviewPaymentOrder(po, "approve")}
                   onReturnLifecycle={() => setReturnTarget(po.id)}
                   isReviewingLifecycle={reviewingPoId === po.id}
+                  onPaymentChanged={() => setHistoryRefreshKeys(current => ({ ...current, [po.id]: (current[po.id] || 0) + 1 }))}
                   historyRefreshKey={historyRefreshKeys[po.id] || 0}
                 />
 

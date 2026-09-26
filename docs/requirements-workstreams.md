@@ -6,8 +6,8 @@ Coordination snapshot: 26 September 2026. This is a shared index, not a claim th
 
 | Task | Scope | State / boundary |
 |---|---|---|
-| Clarify next slice workflow | Main frontend integration, including funding receipts and notification improvements | Latest shared frontend commit at review: `b8bc517`. Leave receipt UI and shared auth/notifications with this task. |
-| Catch up on backend work | Outgoing payments | Active implementation confirmed by outgoing-payments.md, new payment services and uncommitted V34 migration. Reserve financial services, audit integration and this migration allocation for that task. |
+| Clarify next slice workflow | Outgoing-payment frontend integration | Frontend implemented: dedicated OutgoingPayments files, payment-order panel, shared audit display and notification labels. Backend V34 contract complete; 461 frontend tests passed. Production build passed with existing warnings; manual acceptance pending. See outgoing-payments-frontend.md. |
+| Catch up on backend work | Outgoing payments | Backend implementation reported complete in outgoing-payments.md with V34; 1,021 backend tests and disposable MySQL checks passed. Reserve financial services, audit integration and this migration allocation for that task. |
 | Find and fix next project gap | Project risk register | Proposal complete; awaiting agreement on rating, permission and history/closure choices. Owns [risk-register proposal](project-risk-register-proposal.md) and future isolated risk files. Shared security/error handling, migrations and frontend navigation need coordinated integration. |
 
 Scope notes were sent to both existing tasks. Risk proposal is documentation-only; no backend implementation or migration number has been reserved. The previous calendar slice is complete in commit ff47f59, merged through dev/master and included in codex/requirements-gaps. The user confirmed downloading the .ics file; calendar-client import acceptance remains manual. See [calendar export report](follow-up-calendar-export.md).

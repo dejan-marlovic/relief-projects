@@ -10,12 +10,13 @@ export const AUDIT_ACTION_LABELS = {
 };
 
 export const hasAuditTransition = (event) =>
-  !["FUNDING_RECEIPT", "PAYMENT_ORDER_LINE", "COST_DETAIL_ALLOCATION", "COST_DETAIL", "SIGNATURE", "RECIPIENT"].includes(event.entityType) &&
+  !["OUTGOING_PAYMENT", "FUNDING_RECEIPT", "PAYMENT_ORDER_LINE", "COST_DETAIL_ALLOCATION", "COST_DETAIL", "SIGNATURE", "RECIPIENT"].includes(event.entityType) &&
   !["CREATE", "UPDATE", "DELETE", "RESTORE"].includes(event.action) &&
   Boolean(event.previousState && event.newState);
 
 export const auditActionLabel = (event) => {
   const label = AUDIT_ACTION_LABELS[event.action] || event.action || "—";
+  if (event.entityType === "OUTGOING_PAYMENT") return `Outgoing payment #${event.entityId} ${label.toLowerCase()}`;
   if (event.entityType === "FUNDING_RECEIPT") return `Funding receipt #${event.entityId} ${label.toLowerCase()}`;
   if (event.entityType === "COST_DETAIL") {
     const moved = event.previousParentBudgetId != null && event.parentBudgetId != null &&

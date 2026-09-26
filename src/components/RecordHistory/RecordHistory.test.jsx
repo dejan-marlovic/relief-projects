@@ -19,7 +19,7 @@ test("payment-order history aggregates lines once and can return to exact header
   expect(await screen.findByText("Line #81 deleted")).toBeInTheDocument();
   expect(screen.getAllByRole("row")).toHaveLength(2);
   expect(fetch.mock.calls[0][0]).toContain("includeChildren=true");
-  fireEvent.click(screen.getByRole("checkbox", { name: "Include line, signature, and recipient activity" }));
+  fireEvent.click(screen.getByRole("checkbox", { name: "Include line, signature, recipient, and outgoing-payment activity" }));
   await screen.findByText("Draft → Submitted");
   expect(fetch.mock.calls[1][0]).not.toContain("includeChildren");
   expect(fetch.mock.calls[1][0]).toContain("entityType=PAYMENT_ORDER&entityId=7&page=0");
@@ -172,7 +172,7 @@ test("payment-order history aggregates signatures once and can return to exact h
   expect(await screen.findByText("Signature #81 deleted")).toBeInTheDocument();
   expect(screen.getAllByRole("row")).toHaveLength(2);
   expect(fetch.mock.calls[0][0]).toContain("includeChildren=true");
-  fireEvent.click(screen.getByRole("checkbox", { name: "Include line, signature, and recipient activity" }));
+  fireEvent.click(screen.getByRole("checkbox", { name: "Include line, signature, recipient, and outgoing-payment activity" }));
   await screen.findByText("Draft → Submitted");
   expect(fetch.mock.calls[1][0]).not.toContain("includeChildren");
   expect(fetch.mock.calls[1][0]).toContain("entityType=PAYMENT_ORDER&entityId=7&page=0");
@@ -186,7 +186,7 @@ test("payment-order history aggregates recipients once and can return to exact h
   expect(await screen.findByText("Recipient #81 deleted")).toBeInTheDocument();
   expect(screen.getAllByRole("row")).toHaveLength(2);
   expect(fetch.mock.calls[0][0]).toContain("includeChildren=true");
-  fireEvent.click(screen.getByRole("checkbox", { name: "Include line, signature, and recipient activity" }));
+  fireEvent.click(screen.getByRole("checkbox", { name: "Include line, signature, recipient, and outgoing-payment activity" }));
   await screen.findByText("Draft → Submitted");
   expect(fetch.mock.calls[1][0]).not.toContain("includeChildren");
   expect(fetch.mock.calls[1][0]).toContain("entityType=PAYMENT_ORDER&entityId=7&page=0");
