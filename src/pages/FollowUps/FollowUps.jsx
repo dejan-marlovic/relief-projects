@@ -5,6 +5,7 @@ import { ProjectContext } from "../../context/ProjectContext";
 import { BASE_URL } from "../../config/api";
 import { createAuthFetch } from "../../utils/http";
 import { readDocumentError, uploadTimeLabel } from "../../utils/documentMetadata";
+import { canExportFollowUp, downloadFollowUpCalendar } from "../../utils/followUpCalendar";
 import styles from "./FollowUps.module.scss";
 
 const buckets = { OVERDUE: "Overdue", DUE_TODAY: "Due today", UPCOMING: "Upcoming", LATER: "Later", COMPLETED: "Completed", INACTIVE: "Inactive" };
@@ -130,6 +131,13 @@ function Queue({ mode, projectId, authFetch }) {
         {task.description && <p className={styles.description}>{task.description}</p>}
         <details><summary>Attribution</summary><p>Created by {name(task.createdBy)} · {uploadTimeLabel(task.createdAt)}</p><p>Last changed by {name(task.updatedBy)} · {uploadTimeLabel(task.updatedAt)}</p>{task.completedAt && <p>Completed by {name(task.completedBy)} · {uploadTimeLabel(task.completedAt)}</p>}<p className={styles.muted}>Current attribution only; earlier edits and completion cycles are not retained.</p></details>
         <div className={styles.actions}>
+          {canExportFollowUp(task) && <button disabled={busy || loading} onClick={() => {
+            setError(""); setNotice("");
+            try {
+              downloadFollowUpCalendar(task);
+              setNotice("Calendar file downloaded. Import it into your calendar; later changes must be updated there manually.");
+            } catch (err) { setError(err.message || "Could not download the calendar file."); }
+          }}>Download calendar entry (.ics)</button>}
           {task.permissions?.canEdit && <button disabled={busy || loading} onClick={() => setForm({ task })}>Edit follow-up</button>}
           {task.permissions?.canComplete && <button disabled={busy || loading} onClick={() => mutate(task, "complete")}>Mark completed</button>}
           {task.permissions?.canReopen && <button disabled={busy || loading} onClick={() => { if (window.confirm("Reopen this follow-up? Its current completion attribution will be cleared.")) mutate(task, "reopen"); }}>Reopen</button>}
@@ -147,6 +155,7 @@ export default function FollowUps() {
   const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
   const [mode, setMode] = useState("project");
   return <section className={styles.page}><h2>Follow-ups</h2><p className={styles.muted}>Track project actions, deadlines and responsible people. Completing an action does not approve documents or satisfy a checklist.</p>
+    <p className={styles.muted}>Download an open follow-up as an all-day calendar entry on its deadline. The file contains its title, description, project and responsible employee. Import it into Outlook or another calendar yourself. This is a snapshot: edits, completion and deletion do not update imported entries. Reimporting may create duplicates. No invitation or automatic notification is sent.</p>
     <div className={styles.actions}><button aria-pressed={mode === "project"} onClick={() => setMode("project")}>Selected project</button><button aria-pressed={mode === "mine"} onClick={() => setMode("mine")}>My follow-ups</button></div>
     {mode === "mine" && <p className={styles.muted}>Your employee’s assigned work across all active projects, regardless of the project selected above.</p>}
     {mode === "project" && !selectedProjectId ? <p>Select a project to see its follow-ups.</p> : <Queue key={`${mode}-${mode === "project" ? selectedProjectId : "all"}`} mode={mode} projectId={mode === "project" ? selectedProjectId : null} authFetch={authFetch} />}
