@@ -1,6 +1,6 @@
 # Project risk register — proposed first slice
 
-Status: all three product choices agreed by the user on 26 September 2026. Owner: **Find and fix next project gap**. Implemented in the isolated risk branches; see the [implementation report](project-risk-register-frontend.md) for verification and pending live acceptance. The application database has not been changed.
+Status: all three product choices agreed by the user on 26 September 2026. Owner: **Find and fix next project gap**. Implemented and integrated into frontend codex/requirements-gaps and backend master; see the [implementation report](project-risk-register-frontend.md) for verification and pending rollout/live acceptance. The application database has not been changed.
 
 ## Evidence
 

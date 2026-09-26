@@ -1,6 +1,6 @@
 # Project risk register — implementation
 
-26 September 2026. Implements the [agreed proposal](project-risk-register-proposal.md) across isolated frontend/backend branches named codex/project-risk-register, based on the completed outgoing-payment commits.
+26 September 2026. Implements the [agreed proposal](project-risk-register-proposal.md). Developed on isolated codex/project-risk-register branches, then integrated at the user's request into frontend codex/requirements-gaps and backend master.
 
 ## Delivered
 
@@ -16,7 +16,7 @@ Existing theme variables, keyboard labels/focus styles and responsive layout are
 
 ## Contract and rollout
 
-Backend contract: D:/projects/relief_projects/docs/project-risk-register.md (available on the backend risk branch). V35 adds the risk register/history after outgoing-payment V34. Deploy the backend contract/migration before exposing the frontend route. This feature does not alter financial services, execution/reconciliation, document approvals, project approval, or the follow-up/calendar workflow.
+Backend contract: D:/projects/relief_projects/docs/project-risk-register.md (now on backend master). V35 adds the risk register/history after outgoing-payment V34. Deploy the backend contract/migration before using the frontend route. This feature does not alter financial services, execution/reconciliation, document approvals, project approval, or the follow-up/calendar workflow.
 
 ## Verification
 
@@ -25,7 +25,7 @@ Backend contract: D:/projects/relief_projects/docs/project-risk-register.md (ava
 - Migration: 22 disposable MySQL checks passed, including clean install, V34→V35 preservation, constraints and rollback. Temporary database processes, data and credentials were removed. The known unrelated application_themes.background_color schema-validation mismatch is documented in the backend contract.
 - Frontend logs are retained under the worktree's ignored build/risk-verification directory; backend logs are under its target directory. No production/application database was used.
 
-Both branches include the prior outgoing-payment commits (frontend c7a33fa, backend 8c1cf8e). The completed risk commits remain local on codex/project-risk-register; shared checkouts, dev/master and remotes are unchanged. Merge these branches through the normal integration workflow before rollout.
+Both branches include the prior outgoing-payment commits (frontend c7a33fa, backend 8c1cf8e). At the user's request, frontend codex/requirements-gaps was fast-forwarded to 2f443fa and backend master to e8ec04f. Both shared checkouts were clean before integration; no conflicts or code changes were needed. The verified feature commits are unchanged. Frontend dev/master and all remotes remain unchanged; no push or backend restart was performed. Normal backend rollout and live acceptance remain pending.
 
 The user should perform the following live acceptance after normal rollout:
 
