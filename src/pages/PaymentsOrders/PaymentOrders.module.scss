@@ -173,8 +173,8 @@
   border-radius: 14px;
   background: colors.$surface;
 
-  --po-header-bg: colors.$surface-tint;
-  --po-header-border: colors.$border-muted;
+  --po-header-bg: #{colors.$surface-tint};
+  --po-header-border: #{colors.$border-muted};
   --po-grid-cols: 190px;
 }
 
@@ -282,4 +282,32 @@
     width: 100%;
     justify-content: center;
   }
+}
+
+.filterDisclosure { display: contents; }
+.filterDisclosure > summary { display: none; }
+fieldset.headerRow { margin: 0; border: 0; min-inline-size: 0; }
+@media (max-width: 1100px) {
+  .page { padding: 8px; }
+  .shell { padding: 16px; min-width: 0; box-sizing: border-box; }
+  .pageHeader { flex-direction: column; }
+  .pageHeaderText { min-width: 0; overflow-wrap: anywhere; }
+  .headerActions { justify-content: flex-start; }
+  .headerActions button { min-height: 44px; }
+  .filterDisclosure { display: block; }
+  .filterDisclosure > summary { display: block; padding: 12px; color: colors.$primary; font-weight: 600; cursor: pointer; }
+  .headerRow { grid-template-columns: repeat(2, minmax(0, 1fr)); min-width: 0; width: auto; position: static; gap: 12px; }
+  .headerCell { min-width: 0; white-space: normal; }
+  .stickyColHeader { position: static; box-shadow: none; }
+  .headerRow button { min-width: 44px; min-height: 44px; }
+  .headerRow input[type="checkbox"] { width: 24px; height: 24px; }
+  .linesPanel { padding: 8px; min-width: 0; }
+}
+@media (max-width: 700px) {
+  .page { padding: 0; margin: 0; height: auto; }
+  .shell { padding: 12px; height: auto; }
+  .table { overflow: visible; flex: none; }
+  .headerRow { grid-template-columns: minmax(0, 1fr); }
+  .headerActions > button { flex: 1 1 auto; }
+  .linesPanel { padding: 0; }
 }

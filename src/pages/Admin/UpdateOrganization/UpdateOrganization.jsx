@@ -1,6 +1,7 @@
+import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiSave, FiRefreshCw, FiAlertCircle, FiEdit3 } from "react-icons/fi";
+import { FiSave, FiRefreshCw, FiEdit3 } from "react-icons/fi";
 
 import styles from "../UpdateUser/UpdateUser.module.scss";
 import { BASE_URL } from "../../../config/api";
@@ -9,6 +10,7 @@ import {
   safeReadJson,
   extractFieldErrors,
 } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const initialForm = {
   selectedId: "",
@@ -65,7 +67,7 @@ const UpdateOrganization = () => {
   const [saving, setSaving] = useState(false);
 
   const [formError, setFormError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useTransientMessage("");
   const [fieldErrors, setFieldErrors] = useState({});
 
   const selectedOrganization = useMemo(() => {
@@ -271,10 +273,7 @@ const UpdateOrganization = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {successMessage && (

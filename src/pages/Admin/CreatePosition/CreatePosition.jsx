@@ -1,8 +1,10 @@
+import { appFetch as fetch } from "../../../utils/appFetch";
 import React, { useState, useMemo } from "react";
 import { FiSave, FiX, FiBriefcase } from "react-icons/fi";
 import styles from "./CreatePosition.module.scss";
 import { useNavigate } from "react-router-dom";
 import { BASE_URL } from "../../../config/api";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 //Calling setPositionName("abc") causes React to re-run the component function CreatePosition
 const CreatePosition = () => {
@@ -205,7 +207,7 @@ const CreatePosition = () => {
         return;
       }
 
-      alert("Position was created successfully!");
+      // Successful mutations are announced by the shared notification banner.
       onResetClick();
       //Optional: navigate somewhere (list/details) after creation
       //navigate("/positions");
@@ -235,7 +237,7 @@ const CreatePosition = () => {
           </div>
         </div>
 
-        {formError && <div className={styles.errorBanner}>{formError}</div>}
+        {formError && <ErrorBanner message={formError} onDismiss={() => setFormError("")} />}
 
         <div className={styles.card}>
           <div className={styles.cardHeader}>

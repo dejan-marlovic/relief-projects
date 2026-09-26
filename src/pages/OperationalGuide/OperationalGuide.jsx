@@ -845,9 +845,6 @@ const OperationalGuide = () => {
                 <li>“This financier is providing money for this project”</li>
                 <li>“This amount was applied for”</li>
                 <li>“This amount was approved”</li>
-                <li>
-                  “The funding is split into first share and second share”
-                </li>
                 <li>“This is the planned date”</li>
                 <li>“This is the current transaction status”</li>
               </ul>
@@ -868,11 +865,9 @@ const OperationalGuide = () => {
 
               <h4>B) Amounts and planning fields</h4>
               <ul>
-                <li>Applied for amount</li>
-                <li>Approved amount</li>
-                <li>First share amount</li>
-                <li>Second share amount</li>
-                <li>Own contribution (Yes/No)</li>
+                <li>Requested funding (up to three decimal places)</li>
+                <li>Approved funding (up to three decimal places; not funds received)</li>
+                <li>Own contribution (recorded Yes/No flag, not an amount or percentage)</li>
                 <li>Date planned</li>
                 <li>OK status (Yes/No)</li>
               </ul>
@@ -978,8 +973,7 @@ const OperationalGuide = () => {
                   exceed budgeted amount)
                 </li>
                 <li>
-                  Paid safety rule (cannot reduce planned allocations below what
-                  is already paid)
+                  Commitment safety rule (cannot reduce planned allocations below recorded payment-order commitments)
                 </li>
               </ul>
 
@@ -999,7 +993,7 @@ const OperationalGuide = () => {
                 <li>Budgets must exist first</li>
                 <li>Budget and project must match</li>
                 <li>Allocations must stay inside limits</li>
-                <li>Payments protect allocations (paid safety rule)</li>
+                <li>Payment-order commitments protect allocations</li>
               </ul>
 
               <BackToTop />

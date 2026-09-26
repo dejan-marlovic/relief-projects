@@ -1,0 +1,24 @@
+@use "../../styles/colors" as colors;
+.dialog { width: min(850px, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); box-sizing: border-box; overflow: auto; padding: 1.5rem; border: 1px solid colors.$primary-border; border-radius: 16px; color: colors.$text; background: colors.$surface; box-shadow: 0 20px 60px #0003; }
+.dialog::backdrop { background: #0006; }
+.dialog h2, .dialog h3 { color: colors.$primary; margin-top: 0; }
+.dialog p { line-height: 1.5; }
+.dialog button { border: 1px solid colors.$primary-border; border-radius: 8px; padding: 0.7rem 1rem; background: colors.$primary-a04; color: colors.$primary; font: inherit; cursor: pointer; }
+.dialog button:disabled { opacity: 0.5; cursor: not-allowed; }
+.dialog :focus-visible { outline: 2px solid colors.$primary; outline-offset: 3px; }
+.choices, .fields { margin: 1rem 0; border: 1px solid colors.$border; border-radius: 10px; padding: 1rem; min-width: 0; }
+.choices label { display: block; margin: 0.5rem 0; }
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.fields label { font-weight: 600; }
+.fields select { display: block; width: 100%; min-width: 0; margin-top: 0.4rem; padding: 0.65rem; border: 1px solid colors.$border; border-radius: 8px; color: colors.$text; background: colors.$surface; font: inherit; }
+.fields small, .muted { color: colors.$text-muted; font-size: 0.85rem; font-weight: normal; }
+.notice, .preview { margin: 1rem 0; padding: 1rem; border-radius: 10px; background: colors.$primary-a04; overflow-wrap: anywhere; }
+.totals { display: flex; flex-wrap: wrap; gap: 1rem; }
+.totals div { flex: 1 1 180px; }
+.dialog dd { margin: 0.3rem 0 0.7rem; overflow-wrap: anywhere; }
+.row { padding: 0.8rem 0; border-top: 1px solid colors.$border; }
+.row summary { cursor: pointer; }
+.row dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
+.acknowledge { display: block; margin: 1rem 0; line-height: 1.5; }
+.actions { display: flex; justify-content: flex-end; margin-top: 1rem; }
+@media (max-width: 600px) { .dialog { padding: 1rem; } .fields, .row dl { grid-template-columns: 1fr; } }

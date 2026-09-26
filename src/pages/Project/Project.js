@@ -1,3 +1,4 @@
+import { appFetch as fetch } from "../../utils/appFetch";
 // Project.jsx
 import React, { useEffect, useState, useContext, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
@@ -23,11 +24,13 @@ import {
   FiPlus,
   FiUploadCloud,
   FiImage,
-  FiAlertCircle,
   FiDownload,
 } from "react-icons/fi";
 
 import { BASE_URL, ASSETS_URL } from "../../config/api";
+import ErrorBanner from "../../components/ErrorBanner/ErrorBanner";
+import { readApiError } from "../../utils/apiErrors";
+import { useUnsavedChange } from "../../context/UnsavedChangesContext";
 const coverImagePath = `${ASSETS_URL}/images/projects/`;
 
 // ✅ caption delimiter (must match backend)
@@ -1449,6 +1452,11 @@ Approximately:
   const canDeleteProject = hasRole("ADMIN");
 
   const [projectDetails, setProjectDetails] = useState(null);
+  const [hasUnsavedProjectChanges, setHasUnsavedProjectChanges] = useState(false);
+  useUnsavedChange(
+    `project-${selectedProjectId || "none"}`,
+    hasUnsavedProjectChanges,
+  );
   const [loading, setLoading] = useState(false);
   const [exportingProject, setExportingProject] = useState(false);
 
@@ -1554,6 +1562,7 @@ Approximately:
 
   // ✅ Update caption for a specific image index (writes back to delimiter-string)
   const setCaptionAtIndex = (idx, captionText) => {
+    setHasUnsavedProjectChanges(true);
     setProjectDetails((prev) => {
       if (!prev) return prev;
 
@@ -1625,6 +1634,7 @@ Approximately:
 
         // ✅ normalize captions length to match images
         setProjectDetails(normalizeProjectCaptions(projectDetailsData));
+        setHasUnsavedProjectChanges(false);
       } catch (error) {
         console.error("Error fetching project details:", error);
         setFormError("Failed to load project details.");
@@ -1924,6 +1934,7 @@ Approximately:
       ...prev,
       [name]: value,
     }));
+    setHasUnsavedProjectChanges(true);
   };
 
   // ✅ Upload cover image via FormData (appends on backend)
@@ -2094,11 +2105,12 @@ Approximately:
       );
     } catch (err) {
       console.error(err);
-      alert(err.message || "Error deleting image.");
+      setFormError(err.message || "Error deleting image.");
     }
   };
 
   const handleToggleSector = (sectorIdStr, checked) => {
+    setHasUnsavedProjectChanges(true);
     setSelectedSectorIds((prev) => {
       if (checked)
         return prev.includes(sectorIdStr) ? prev : [...prev, sectorIdStr];
@@ -2137,14 +2149,19 @@ Approximately:
       );
     } catch (e) {
       console.error(e);
-      alert("Failed to delete sector link.");
+      setFormError("Failed to delete sector link.");
     }
   };
 
   const handleAddProjectOrganization = async () => {
-    if (!projectDetails?.id) return alert("No project is selected.");
-    if (!selectedOrgId || !selectedOrgStatusId)
-      return alert("Please select both organization and status.");
+    if (!projectDetails?.id) {
+      setFormError("No project is selected.");
+      return;
+    }
+    if (!selectedOrgId || !selectedOrgStatusId) {
+      setFormError("Please select both organization and status.");
+      return;
+    }
 
     try {
       const res = await authFetch(`${BASE_URL}/api/project-organizations`, {
@@ -2180,7 +2197,7 @@ Approximately:
       setSelectedOrgStatusId("");
     } catch (e) {
       console.error(e);
-      alert(e.message || "Error adding organization to project.");
+      setFormError(e.message || "Error adding organization to project.");
     }
   };
 
@@ -2199,7 +2216,7 @@ Approximately:
       );
     } catch (e) {
       console.error(e);
-      alert(e.message || "Error deleting project organization.");
+      setFormError(e.message || "Error deleting project organization.");
     }
   };
 
@@ -2293,7 +2310,7 @@ Approximately:
       );
     } catch (e) {
       console.error(e);
-      alert(e.message || "Error deleting participant.");
+      setFormError(e.message || "Error deleting participant.");
     }
   };
 
@@ -2314,9 +2331,13 @@ Approximately:
         { method: "DELETE" },
       );
 
-      if (!response.ok) throw new Error("Failed to delete project");
+      if (!response.ok) {
+        throw new Error(
+          await readApiError(response, "Failed to delete project."),
+        );
+      }
 
-      alert("Project deleted successfully!");
+      // Successful mutations are announced by the shared notification banner.
 
       const updatedProjects = projects.filter(
         (p) => p.id !== projectDetails.id,
@@ -2338,7 +2359,7 @@ Approximately:
       setFieldErrors({});
     } catch (error) {
       console.error("Delete error:", error);
-      alert("Error deleting project.");
+      setFormError(error.message || "Error deleting project.");
     }
   };
 
@@ -2372,7 +2393,7 @@ Approximately:
         }
       } catch (e) {
         console.error(e);
-        alert(e.message || "Failed to add sector link.");
+        setFormError(e.message || "Failed to add sector link.");
       }
     }
 
@@ -2385,7 +2406,7 @@ Approximately:
         if (!res.ok) throw new Error("Failed to delete sector link");
       } catch (e) {
         console.error(e);
-        alert("Failed to delete sector link.");
+        setFormError("Failed to delete sector link.");
       }
     }
 
@@ -2457,9 +2478,11 @@ Approximately:
 
       await syncProjectSectors(projectDetails.id);
 
+      setHasUnsavedProjectChanges(false);
+
       setFormError("");
       setFieldErrors({});
-      alert("Project updated successfully!");
+      // Successful mutations are announced by the shared notification banner.
     } catch (error) {
       console.error("Update error:", error);
       setFormError("Unexpected error while updating project.");
@@ -2653,10 +2676,7 @@ Approximately:
           </div>
 
           {formError && (
-            <div className={styles.errorBanner}>
-              <FiAlertCircle />
-              <span>{formError}</span>
-            </div>
+            <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
           )}
 
           {Object.keys(fieldErrors).length > 0 && (
@@ -2676,6 +2696,7 @@ Approximately:
             projectName={getSelectedProjectName(projects, selectedProjectId)}
             participants={projectParticipants}
             employees={employeeOptions}
+            positions={positionOptions}
           />
 
           <div className={styles.imageAndFormWrapper}>

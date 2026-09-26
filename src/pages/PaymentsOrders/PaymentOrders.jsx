@@ -1,3 +1,6 @@
+import { appFetch as fetch } from "../../utils/appFetch";
+import { decimalUnits, matchesDecimalRange, fundingExcel, summaryExcel, summaryText, issueText, groupedPaymentTotals } from "../../utils/paymentFunding";
+import useMediaQuery from "../../hooks/useMediaQuery";
 import React, {
   useCallback,
   useContext,
@@ -7,15 +10,16 @@ import React, {
   useState,
 } from "react";
 import ExcelJS from "exceljs";
+import ReturnReasonDialog from "../../components/ReturnReasonDialog/ReturnReasonDialog";
 import { ProjectContext } from "../../context/ProjectContext";
 import { useAuth } from "../../context/AuthContext";
+import { useUnsavedChange } from "../../context/UnsavedChangesContext";
 import PaymentOrder from "./PaymentOrder/PaymentOrder";
 import styles from "./PaymentOrders.module.scss";
 import PaymentOrderLines from "./PaymentOrder/PaymentOrderLines/PaymentOrderLines";
 import {
   FiPlus,
   FiColumns,
-  FiAlertCircle,
   FiTrash2,
   FiDownload,
 } from "react-icons/fi";
@@ -27,6 +31,8 @@ import { matchesDateRange, matchesNumberRange, matchesText } from "../../utils/t
 import ColumnFilter from "../../components/ColumnFilter/ColumnFilter";
 import ClearFiltersButton from "../../components/ClearFiltersButton/ClearFiltersButton";
 import { getSelectedProjectName } from "../../utils/projectDisplay";
+import ErrorBanner from "../../components/ErrorBanner/ErrorBanner";
+import { formatApiError } from "../../utils/apiErrors";
 
 const headerLabels = [
   "Actions",
@@ -60,6 +66,28 @@ const blankPO = {
   pinCode: "",
 };
 
+export const approvedTransactionOptions = (
+  transactions = [],
+  currentTransactionId = null,
+) =>
+  transactions.filter(
+    (transaction) =>
+      transaction.lifecycleStatus === "APPROVED" ||
+      (currentTransactionId != null &&
+        String(transaction.id) === String(currentTransactionId)),
+  );
+
+export const paymentOrderLifecycleStatus = (paymentOrder) =>
+  paymentOrder?.lifecycleStatus || "DRAFT";
+
+export const isPaymentOrderLifecycleEditable = (paymentOrder) =>
+  ["DRAFT", "RETURNED"].includes(paymentOrderLifecycleStatus(paymentOrder));
+
+export const canSubmitPaymentOrderLifecycle = (paymentOrder, canSubmit) =>
+  Boolean(canSubmit) &&
+  !paymentOrder?.locked &&
+  ["DRAFT", "RETURNED"].includes(paymentOrderLifecycleStatus(paymentOrder));
+
 async function safeParseJsonResponse(res) {
   const raw = await res.text().catch(() => "");
   if (!raw) return null;
@@ -71,7 +99,15 @@ async function safeParseJsonResponse(res) {
 }
 
 function isLockedResponse(res, data) {
-  if (res?.status === 409) return true;
+  // Dependency-integrity conflicts are retryable after the listed dependent
+  // records are removed. They must not turn the payment order into a locally
+  // locked/read-only row merely because they also use HTTP 409.
+  if (data?.dependencies && Object.keys(data.dependencies).length > 0) {
+    return false;
+  }
+
+  if (res?.status !== 409) return false;
+
   const msg = (data?.message || "").toLowerCase();
   return (
     msg.includes("locked") ||
@@ -101,10 +137,12 @@ function normalizePO(po) {
     paymentOrderDescription:
       po.paymentOrderDescription ?? po.payment_order_description ?? "",
     // ✅ backend computed
-    amount: po.amount ?? 0,
+    amount: po.amount ?? null,
+    amountSummary: po.amountSummary ?? null,
     message: po.message ?? "",
     pinCode: po.pinCode ?? po.pin_code ?? "",
     locked: Boolean(po.locked ?? po.isLocked ?? false),
+    lifecycleStatus: po.lifecycleStatus || "DRAFT",
   };
 }
 
@@ -114,10 +152,17 @@ function PaymentOrders() {
   const canEditPaymentOrders = hasAnyRole("ADMIN", "FINANCE");
   const canDeletePaymentOrders = hasRole("ADMIN");
   const canManagePaymentOrderLines = hasAnyRole("ADMIN", "FINANCE");
+  const canReviewPaymentOrders = hasAnyRole("ADMIN", "APPROVER");
 
   const [orders, setOrders] = useState([]);
+  const [historyRefreshKeys, setHistoryRefreshKeys] = useState({});
+  const compact = useMediaQuery("(max-width: 1100px)");
+  const FilterContainer = compact ? "details" : React.Fragment;
+  const [saving, setSaving] = useState(false);
+  const saveInProgress = useRef(false);
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
+  useUnsavedChange("payment-orders-editor", editingId !== null);
   const [txOptions, setTxOptions] = useState([]);
 
   // UI
@@ -148,6 +193,9 @@ function PaymentOrders() {
 
   // Track which POs are known locked (based on a 409 response)
   const [lockedPoIds, setLockedPoIds] = useState(() => new Set());
+  const [submittingPoId, setSubmittingPoId] = useState(null);
+  const [reviewingPoId, setReviewingPoId] = useState(null);
+  const [returnTarget, setReturnTarget] = useState(null);
 
   const newRowRef = useRef(null);
 
@@ -318,7 +366,7 @@ function PaymentOrders() {
   }, [editingId]);
 
   const startEdit = (po) => {
-    if (!canEditPaymentOrders) return;
+    if (!canEditPaymentOrders || saving || (compact && editingId !== null)) return;
     setEditingId(po?.id ?? null);
     setEditedValues((prev) => ({
       ...prev,
@@ -342,7 +390,7 @@ function PaymentOrders() {
   };
 
   const startCreate = () => {
-    if (!canEditPaymentOrders) return;
+    if (!canEditPaymentOrders || saving || (compact && editingId !== null)) return;
     setEditingId("new");
     setEditedValues((prev) => ({ ...prev, new: { ...blankPO } }));
 
@@ -397,11 +445,13 @@ function PaymentOrders() {
   };
 
   const save = async () => {
-    if (!canEditPaymentOrders) return;
+    if (!canEditPaymentOrders || saveInProgress.current) return;
     const id = editingId;
     const v = editedValues[id];
     if (!v) return;
 
+    saveInProgress.current = true;
+    setSaving(true);
     const isCreate = id === "new";
 
     const payload = {
@@ -449,7 +499,7 @@ function PaymentOrders() {
         }
 
         const msg =
-          data?.message ||
+          data?.fieldErrors?.id || data?.message ||
           `Failed to ${isCreate ? "create" : "update"} payment order.`;
 
         setFormError(msg);
@@ -457,6 +507,7 @@ function PaymentOrders() {
       }
 
       // success -> clear banners
+      if (!isCreate) setHistoryRefreshKeys((current) => ({ ...current, [id]: (current[id] || 0) + 1 }));
       setLockedBanner("");
       setFormError("");
 
@@ -470,6 +521,9 @@ function PaymentOrders() {
             editingId === "new" ? "create" : "update"
           } payment order.`,
       );
+    } finally {
+      saveInProgress.current = false;
+      setSaving(false);
     }
   };
 
@@ -500,7 +554,7 @@ function PaymentOrders() {
           return;
         }
 
-        setFormError(data?.message || "Delete failed.");
+        setFormError(formatApiError(data, "Delete failed."));
         return;
       }
 
@@ -523,6 +577,79 @@ function PaymentOrders() {
     }
   };
 
+  const submitForApproval = async (po) => {
+    if (!canSubmitPaymentOrderLifecycle(po, canEditPaymentOrders)) return;
+    setFormError("");
+    setLockedBanner("");
+    setSubmittingPoId(po.id);
+
+    try {
+      const response = await fetch(
+        `${BASE_URL}/api/payment-orders/${po.id}/submit`,
+        { method: "POST", headers: authHeaders },
+      );
+      const data = await safeParseJsonResponse(response);
+
+      if (!response.ok) {
+        setFormError(
+          formatApiError(data, "Failed to submit payment order for approval."),
+        );
+        return;
+      }
+
+      const updated = normalizePO(data);
+      if (!updated) {
+        setFormError(
+          "The payment order was submitted, but no updated payment order was returned.",
+        );
+        return;
+      }
+
+      setOrders((current) =>
+        current.map((item) => (item.id === updated.id ? updated : item)),
+      );
+      if (updated.locked) markLocked(updated.id);
+    } catch (error) {
+      console.error("Error submitting payment order:", error);
+      setFormError(
+        error?.message || "Unexpected error while submitting payment order.",
+      );
+    } finally {
+      setSubmittingPoId(null);
+    }
+  };
+
+  const reviewPaymentOrder = async (po, action) => {
+    if (!canReviewPaymentOrders || paymentOrderLifecycleStatus(po) !== "SUBMITTED") return;
+    setFormError("");
+    setLockedBanner("");
+    setReviewingPoId(po.id);
+    try {
+      const response = await fetch(
+        `${BASE_URL}/api/payment-orders/${po.id}/${action}`,
+        { method: "POST", headers: authHeaders },
+      );
+      const data = await safeParseJsonResponse(response);
+      if (!response.ok) {
+        setFormError(formatApiError(data, `Failed to ${action} payment order.`));
+        return;
+      }
+      const updated = normalizePO(data);
+      if (!updated) {
+        const completedAction = action === "approve" ? "approved" : "returned";
+        setFormError(`The payment order was ${completedAction}, but no updated payment order was returned.`);
+        return;
+      }
+      setOrders((current) => current.map((item) => item.id === updated.id ? updated : item));
+      if (updated.locked) markLocked(updated.id);
+    } catch (error) {
+      console.error(`Error ${action}ing payment order:`, error);
+      setFormError(error?.message || `Unexpected error while ${action}ing payment order.`);
+    } finally {
+      setReviewingPoId(null);
+    }
+  };
+
   const gridCols = useMemo(() => {
     const parts = BASE_COL_WIDTHS.map((w, i) =>
       visibleCols[i] ? `${w}px` : "0px",
@@ -534,7 +661,7 @@ function PaymentOrders() {
   const filteredOrders = useMemo(() => orders.filter((po) =>
     matchesNumberRange(po.id, filters.id) && matchesNumberRange(po.transactionId, filters.transactionId) &&
     matchesDateRange(po.paymentOrderDate, filters.date) && matchesText(po.paymentOrderDescription, filters.description) &&
-    matchesNumberRange(po.amount, filters.amount) && matchesText(po.message, filters.message) && matchesText(po.pinCode, filters.pinCode)
+    matchesDecimalRange(po.amount, filters.amount) && matchesText(po.message, filters.message) && matchesText(po.pinCode, filters.pinCode)
   ), [filters, orders]);
   const displayedOrders = useMemo(() => {
     if (!sortConfig) return filteredOrders;
@@ -543,7 +670,7 @@ function PaymentOrders() {
       transactionId: (po) => toSortableNumber(po?.transactionId),
       date: (po) => toSortableDate(po?.paymentOrderDate),
       description: (po) => po?.paymentOrderDescription || null,
-      amount: (po) => toSortableNumber(po?.amount),
+      amount: (po) => decimalUnits(po?.amount),
       message: (po) => po?.message || null,
       pinCode: (po) => po?.pinCode || null,
     };
@@ -566,6 +693,9 @@ function PaymentOrders() {
   const selectedPoCount = [...selectedPoIds].filter((id) =>
     selectablePaymentOrders.some((po) => po.id === id),
   ).length;
+  const selectedContainsLifecycleLocked = orders.some(
+    (po) => selectedPoIds.has(po.id) && !isPaymentOrderLifecycleEditable(po),
+  );
   //creates a memoized calculated list.
   //create a list of payment orders that can be selected
   //This creates a constant variable.
@@ -642,7 +772,7 @@ function PaymentOrders() {
 
       if (!res.ok) {
         throw new Error(
-          data?.message || "Failed to remove selected payment orders",
+          formatApiError(data, "Failed to remove selected payment orders"),
         );
       }
 
@@ -727,11 +857,7 @@ function PaymentOrders() {
       .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, "")
       .trim();
 
-  const toExcelNumber = (value) => {
-    if (value == null || value === "") return 0;
-    const number = Number(value);
-    return Number.isFinite(number) ? number : 0;
-  };
+
 
   const formatExcelDate = (value) => {
     if (!value) return "Not specified";
@@ -953,11 +1079,10 @@ function PaymentOrders() {
       ];
       styleExcelHeader(headerRow);
 
-      let grandTotal = 0;
+
 
       sortedOrders.forEach((po, index) => {
-        const poAmount = toExcelNumber(po.amount);
-        grandTotal += poAmount;
+        const poAmount = summaryExcel(po);
 
         const orderRow = worksheet.addRow({
           paymentOrderId: `PO#${po.id}`,
@@ -971,14 +1096,14 @@ function PaymentOrders() {
           amount: poAmount,
           message: sanitizeExcelText(po.message) || "Not specified",
           pinCode: sanitizeExcelText(po.pinCode) || "Not specified",
-          status: po.locked ? "Booked / Locked" : "Editable",
+          status: `${po.locked ? "Booked / Locked" : "Editable"} | ${summaryText(po.amountSummary)} | ${issueText(po.amountSummary?.issues)}`,
         });
 
         styleExcelRow(orderRow, index);
         orderRow.eachCell((cell) => {
           cell.font = { ...(cell.font || {}), bold: true };
         });
-        orderRow.getCell(5).numFmt = "#,##0.00";
+        orderRow.getCell(5).numFmt = "#,##0.######";
 
         const lines = linesByPaymentOrderId.get(po.id) || [];
         const lineHeader = worksheet.addRow([]);
@@ -990,6 +1115,7 @@ function PaymentOrders() {
         lineHeader.getCell(4).value = "Cost Detail";
         lineHeader.getCell(5).value = "Amount";
         lineHeader.getCell(6).value = "Memo";
+        lineHeader.getCell(7).value = "Current currency";
 
         for (let column = 1; column <= 8; column += 1) {
           const cell = lineHeader.getCell(column);
@@ -1003,7 +1129,7 @@ function PaymentOrders() {
           applyExcelBorder(cell);
         }
 
-        let lineTotal = 0;
+
 
         if (lines.length === 0) {
           const emptyRow = worksheet.addRow([]);
@@ -1023,8 +1149,7 @@ function PaymentOrders() {
           }
         } else {
           lines.forEach((line, lineIndex) => {
-            const amount = toExcelNumber(line.amount);
-            lineTotal += amount;
+            const amount = fundingExcel(line.amount);
 
             const lineRow = worksheet.addRow([]);
             lineRow.outlineLevel = 1;
@@ -1039,9 +1164,10 @@ function PaymentOrders() {
             lineRow.getCell(3).value = getOrganizationName(line.organizationId);
             lineRow.getCell(4).value = getCostDetailLabel(line.costDetailId);
             lineRow.getCell(5).value = amount;
+            lineRow.getCell(7).value = line.amountCurrency?.availability === "AVAILABLE" ? `${line.amountCurrency.currency?.name || "Currency"} (#${line.amountCurrency.currency?.id})` : `Unavailable: ${line.amountCurrency?.availability || "Not recorded"}`;
             lineRow.getCell(6).value =
               sanitizeExcelText(line.memo) || "Not specified";
-            lineRow.getCell(5).numFmt = "#,##0.00";
+            lineRow.getCell(5).numFmt = "#,##0.######";
 
             for (let column = 1; column <= 8; column += 1) {
               const cell = lineRow.getCell(column);
@@ -1066,10 +1192,10 @@ function PaymentOrders() {
           lineTotalRow.hidden = true;
           lineTotalRow.getCell(1).value = "TOTAL";
           lineTotalRow.getCell(2).value = `Lines total for PO#${po.id}`;
-          lineTotalRow.getCell(5).value = Number(lineTotal.toFixed(2));
-          lineTotalRow.getCell(5).numFmt = "#,##0.00";
+          lineTotalRow.getCell(5).value = poAmount;
+          lineTotalRow.getCell(5).numFmt = "#,##0.######";
           lineTotalRow.getCell(6).value =
-            `Header amount: ${poAmount.toFixed(2)} | Difference: ${(poAmount - lineTotal).toFixed(2)}`;
+            `Calculated order total | ${summaryText(po.amountSummary)} | ${issueText(po.amountSummary?.issues)}`;
 
           for (let column = 1; column <= 8; column += 1) {
             const cell = lineTotalRow.getCell(column);
@@ -1085,20 +1211,14 @@ function PaymentOrders() {
         }
       });
 
-      const totalRow = worksheet.addRow([]);
-      totalRow.getCell(1).value = "GRAND TOTAL";
-      totalRow.getCell(5).value = Number(grandTotal.toFixed(2));
-      totalRow.getCell(5).numFmt = "#,##0.00";
-      for (let column = 1; column <= 8; column += 1) {
-        const cell = totalRow.getCell(column);
-        cell.font = { bold: true, color: { argb: excelColors.text } };
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: excelColors.paleGreen },
-        };
-        applyExcelBorder(cell);
+      for (const group of groupedPaymentTotals(sortedOrders)) {
+        const row = worksheet.addRow([]);
+        row.getCell(1).value = `TOTAL ${group.currency.name || "Currency"} (#${group.currency.id})`;
+        row.getCell(5).value = fundingExcel(group.amount);
+        row.getCell(5).numFmt = "#,##0.######";
+        row.font = { bold: true };
       }
+      worksheet.addRow(["Totals grouped by current currency ID; inconsistent, unavailable and unknown-currency totals excluded. Commitments are not settlement."]);
 
       worksheet.autoFilter = { from: "A4", to: "H4" };
 
@@ -1151,7 +1271,7 @@ function PaymentOrders() {
               type="button"
               className={styles.exportInlineBtn}
               onClick={handleExportSelected}
-              disabled={selectedPoCount === 0 || exportingSelected}
+              disabled={selectedPoCount === 0 || exportingSelected || saving || (compact && editingId !== null)}
               title="Export selected payment orders to Excel"
             >
               <FiDownload />
@@ -1165,15 +1285,23 @@ function PaymentOrders() {
                 type="button"
                 className={styles.dangerInlineBtn}
                 onClick={removeSelected}
-                disabled={selectedPoCount === 0 || exportingSelected}
-                title="Delete selected payment orders"
+                disabled={
+                  selectedPoCount === 0 ||
+                  exportingSelected ||
+                  selectedContainsLifecycleLocked || saving || (compact && editingId !== null)
+                }
+                title={
+                  selectedContainsLifecycleLocked
+                    ? "Submitted and approved payment orders cannot be deleted"
+                    : "Delete selected payment orders"
+                }
               >
                 <FiTrash2 />
                 Delete selected{" "}
                 {selectedPoCount > 0 ? `(${selectedPoCount})` : ""}
               </button>
             )}
-            <div className={styles.columnsBox}>
+            <div className={styles.columnsBox} hidden={compact}>
               <button
                 type="button"
                 className={styles.iconPillBtn}
@@ -1209,7 +1337,7 @@ function PaymentOrders() {
               <button
                 className={styles.primaryBtn}
                 onClick={startCreate}
-                disabled={!selectedProjectId || editingId === "new"}
+                disabled={!selectedProjectId || saving || (compact ? editingId !== null : editingId === "new")}
                 title={
                   !selectedProjectId
                     ? "Select a project first"
@@ -1227,28 +1355,27 @@ function PaymentOrders() {
 
         {/* ✅ Locked banner (same style as PaymentOrderLines) */}
         {lockedBannerText && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{lockedBannerText}</span>
-          </div>
+          <ErrorBanner
+            message={lockedBannerText}
+            onDismiss={() => setLockedBanner("")}
+          />
         )}
 
         {/* Other errors */}
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
-        <div className={styles.table} style={{ ["--po-grid-cols"]: gridCols }}>
-          <div className={`${styles.gridRow} ${styles.headerRow}`}>
+        <div className={styles.table} style={{ "--po-grid-cols": gridCols }}>
+          <FilterContainer {...(compact ? { className: styles.filterDisclosure } : {})}>
+          {compact && <summary>Sort, filter &amp; select</summary>}
+          <fieldset aria-label="Payment order controls" disabled={compact && (editingId !== null || saving)} className={`${styles.gridRow} ${styles.headerRow}`}>
             {headerLabels.map((h, i) => (
               <div
                 key={h}
                 className={`${styles.headerCell}
                   ${i === 0 ? styles.stickyColHeader : ""}
-                  ${!visibleCols[i] ? styles.hiddenCol : ""}
+                  ${!compact && !visibleCols[i] ? styles.hiddenCol : ""}
                   ${i === 0 ? styles.actionsCol : ""}`}
               >
                 {i === 0 ? (
@@ -1268,7 +1395,8 @@ function PaymentOrders() {
                 )}
               </div>
             ))}
-          </div>
+          </fieldset>
+          </FilterContainer>
 
           {!selectedProjectId ? (
             <p className={styles.noData}>
@@ -1276,10 +1404,15 @@ function PaymentOrders() {
             </p>
           ) : orders.length === 0 ? (
             <p className={styles.noData}>No payment orders for this project.</p>
+          ) : displayedOrders.length === 0 ? (
+            <p className={styles.noData}>No payment orders match your filters.</p>
           ) : (
             displayedOrders.map((po, idx) => (
               <React.Fragment key={po.id}>
                 <PaymentOrder
+                  compact={compact}
+                  saving={saving}
+                  editingLocked={compact && editingId !== null}
                   po={po}
                   locked={lockedPoIds.has(po.id)}
                   isEven={idx % 2 === 0}
@@ -1290,7 +1423,10 @@ function PaymentOrders() {
                   onSave={save}
                   onCancel={cancel}
                   onDelete={remove}
-                  transactions={txOptions}
+                  transactions={approvedTransactionOptions(
+                    txOptions,
+                    po.transactionId,
+                  )}
                   visibleCols={visibleCols}
                   fieldErrors={fieldErrors[po.id] || {}}
                   expanded={expandedPoId === po.id}
@@ -1300,18 +1436,32 @@ function PaymentOrders() {
                   isSelected={selectedPoIds.has(po.id)}
                   onSelectChange={toggleSelectedPo}
                   selectionDisabled={editingId === po.id}
-                  canEdit={canEditPaymentOrders}
-                  canDelete={canDeletePaymentOrders}
+                  canEdit={canEditPaymentOrders && isPaymentOrderLifecycleEditable(po)}
+                  canDelete={canDeletePaymentOrders && isPaymentOrderLifecycleEditable(po)}
+                  canSubmitLifecycle={canEditPaymentOrders}
+                  onSubmitLifecycle={() => submitForApproval(po)}
+                  isSubmittingLifecycle={submittingPoId === po.id}
+                  canReviewLifecycle={canReviewPaymentOrders}
+                  onApproveLifecycle={() => reviewPaymentOrder(po, "approve")}
+                  onReturnLifecycle={() => setReturnTarget(po.id)}
+                  isReviewingLifecycle={reviewingPoId === po.id}
+                  historyRefreshKey={historyRefreshKeys[po.id] || 0}
                 />
 
                 {expandedPoId === po.id && (
                   <div className={styles.linesPanel}>
                     <PaymentOrderLines
                       paymentOrderId={po.id}
+                      order={po}
+                      refreshKey={historyRefreshKeys[po.id] || 0}
                       txOptions={txOptions}
                       orgOptions={orgOptions}
                       costDetailOptions={costDetailOptions}
-                      canManage={canManagePaymentOrderLines}
+                      canManage={canManagePaymentOrderLines && isPaymentOrderLifecycleEditable(po)}
+                      onMutationSuccess={async () => {
+                        setHistoryRefreshKeys((current) => ({ ...current, [po.id]: (current[po.id] || 0) + 1 }));
+                        await Promise.all([fetchOrders(selectedProjectId), fetchTxOptions(selectedProjectId)]);
+                      }}
                     />
                   </div>
                 )}
@@ -1321,6 +1471,9 @@ function PaymentOrders() {
 
           {editingId === "new" && (
             <PaymentOrder
+                  compact={compact}
+                  saving={saving}
+                  editingLocked={compact && editingId !== null}
               po={{ id: "new", ...blankPO, amount: 0 }}
               isEditing
               editedValues={editedValues.new}
@@ -1328,7 +1481,7 @@ function PaymentOrders() {
               onSave={save}
               onCancel={cancel}
               onDelete={() => {}}
-              transactions={txOptions}
+              transactions={approvedTransactionOptions(txOptions)}
               visibleCols={visibleCols}
               isEven={false}
               fieldErrors={fieldErrors.new || {}}
@@ -1337,6 +1490,15 @@ function PaymentOrders() {
           )}
         </div>
       </div>
+      {returnTarget && canReviewPaymentOrders && orders.some((po) => po.id === returnTarget && paymentOrderLifecycleStatus(po) === "SUBMITTED") &&
+        <ReturnReasonDialog key={returnTarget} endpoint={`/api/payment-orders/${returnTarget}/return`}
+          recordLabel={`payment order #${returnTarget}`} onCancel={() => setReturnTarget(null)}
+          onSuccess={(data) => {
+            const updated = normalizePO(data);
+            setOrders((current) => current.map((item) => item.id === updated.id ? updated : item));
+            if (updated.locked) markLocked(updated.id);
+            setFormError(""); setLockedBanner(""); setReturnTarget(null);
+          }} />}
     </div>
   );
 }

@@ -1,7 +1,10 @@
+import { appFetch as fetch } from "../../../utils/appFetch";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { FiEdit, FiLink, FiPlus, FiSave, FiX } from "react-icons/fi";
 import { BASE_URL } from "../../../config/api";
 import styles from "./BankDetails.module.scss";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
+import { useUnsavedChange } from "../../../context/UnsavedChangesContext";
 
 const blankBankDetail = { bankName: "", accountNumber: "", branchName: "", swiftCode: "" };
 
@@ -20,6 +23,7 @@ const BankDetails = ({ organizationId, canManage = false }) => {
   const [selectedId, setSelectedId] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
+  useUnsavedChange(`bank-details-${organizationId}`, editingId !== null);
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
   const [busyAction, setBusyAction] = useState("");
@@ -178,10 +182,10 @@ const BankDetails = ({ organizationId, canManage = false }) => {
           {canManage && <button type="button" className={styles.unlinkBtn} onClick={() => unlink(id)} disabled={Boolean(editingId) || disabled} title="Remove from organization" aria-label={`Remove bank detail ${id} from organization`}><FiLink /></button>}
         </div>}
       </div>
-      <div className={styles.cell}>{renderField(id, row, "bankName", "Bank name")}</div>
-      <div className={styles.cell}>{renderField(id, row, "accountNumber", "Account number")}</div>
-      <div className={styles.cell}>{renderField(id, row, "branchName", "Branch")}</div>
-      <div className={styles.cell}>{renderField(id, row, "swiftCode", "SWIFT")}</div>
+      <div className={styles.cell}><span className={styles.fieldLabel}>Bank name</span>{renderField(id, row, "bankName", "Bank name")}</div>
+      <div className={styles.cell}><span className={styles.fieldLabel}>Account number</span>{renderField(id, row, "accountNumber", "Account number")}</div>
+      <div className={styles.cell}><span className={styles.fieldLabel}>Branch</span>{renderField(id, row, "branchName", "Branch")}</div>
+      <div className={styles.cell}><span className={styles.fieldLabel}>SWIFT</span>{renderField(id, row, "swiftCode", "SWIFT")}</div>
     </div>;
   };
 
@@ -199,7 +203,7 @@ const BankDetails = ({ organizationId, canManage = false }) => {
         <button type="button" className={styles.primaryBtn} onClick={startCreate} disabled={Boolean(editingId) || Boolean(busyAction)}><FiPlus /> New Bank Detail</button>
       </div>}
     </div>
-    {formError && <div className={styles.errorBanner} role="alert">{formError}</div>}
+    {formError && <ErrorBanner message={formError} onDismiss={() => setFormError("")} />}
     {!rows.length && editingId !== "new" && <p className={styles.noData}>No bank details linked to this organization.</p>}
     <div className={styles.table}>
       <div className={`${styles.gridRow} ${styles.headerRow}`}>

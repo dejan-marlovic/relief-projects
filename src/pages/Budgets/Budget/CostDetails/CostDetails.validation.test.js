@@ -1,10 +1,15 @@
-import { isValidCostDetail, validateCostDetail } from "./CostDetails";
+import {
+  isValidCostDetail,
+  readCostDetailsResponse,
+  validateCostDetail,
+} from "./CostDetails";
 
 const completeCostDetail = {
   costDescription: "Emergency shelter",
   costTypeId: 1,
   costId: 2,
   noOfUnits: 10,
+  frequencyMonths: 1,
   unitPrice: 100,
   percentageCharging: 50,
   amountLocalCurrency: 500,
@@ -12,6 +17,11 @@ const completeCostDetail = {
   amountGBP: 40,
   amountEuro: 45,
 };
+
+const costs = [
+  { id: 2, costName: "Shelter", costTypeId: 1 },
+  { id: 3, costName: "Monitoring", costTypeId: 2 },
+];
 
 describe("cost-detail required-field validation", () => {
   test("accepts a complete cost detail", () => {
@@ -23,12 +33,9 @@ describe("cost-detail required-field validation", () => {
     "costTypeId",
     "costId",
     "noOfUnits",
+    "frequencyMonths",
     "unitPrice",
     "percentageCharging",
-    "amountLocalCurrency",
-    "amountReportingCurrency",
-    "amountGBP",
-    "amountEuro",
   ])("rejects a cost detail with missing %s", (field) => {
     expect(
       isValidCostDetail({ ...completeCostDetail, [field]: "" })
@@ -41,5 +48,27 @@ describe("cost-detail required-field validation", () => {
         costDescription: "Description is required.",
         costId: "Category is required.",
       });
+  });
+
+  test("rejects a category that belongs to a different type", () => {
+    expect(validateCostDetail({ ...completeCostDetail, costId: 3 }, costs))
+      .toMatchObject({
+        costId: "Category must belong to the selected type.",
+      });
+  });
+
+  test("accepts a category belonging to the selected type", () => {
+    expect(isValidCostDetail(completeCostDetail, costs)).toBe(true);
+  });
+});
+
+describe("cost-detail list responses", () => {
+  test("treats 204 No Content as an empty list without parsing JSON", async () => {
+    const json = jest.fn();
+
+    await expect(
+      readCostDetailsResponse({ status: 204, ok: true, json }),
+    ).resolves.toEqual([]);
+    expect(json).not.toHaveBeenCalled();
   });
 });

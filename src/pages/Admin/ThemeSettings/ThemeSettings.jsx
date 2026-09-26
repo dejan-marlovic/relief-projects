@@ -13,6 +13,7 @@ import { BASE_URL } from "../../../config/api";
 import { useBranding } from "../../../context/BrandingContext";
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
 import { getAvailableThemes } from "../../../utils/theme";
+import { useUnsavedChange } from "../../../context/UnsavedChangesContext";
 
 import styles from "./ThemeSettings.module.scss";
 
@@ -48,6 +49,7 @@ function ThemeSettings() {
   const [formError, setFormError] = useState("");
   const [actionError, setActionError] = useState("");
   const [busyAction, setBusyAction] = useState("");
+  useUnsavedChange("theme-editor", showCreator || editingThemeId !== null);
 
   const themes = useMemo(
     () => getAvailableThemes(customThemes),

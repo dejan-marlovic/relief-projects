@@ -74,6 +74,43 @@ label {
   gap: 0.6rem;
 }
 
+.statusBadge {
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border: 1px solid colors.$border-subtle;
+  background: colors.$surface-striped;
+  color: colors.$text-muted;
+  white-space: nowrap;
+}
+
+.statusDRAFT {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #4b5563;
+}
+
+.statusSUBMITTED {
+  background: #fff7d6;
+  border-color: #e7c75d;
+  color: #755b00;
+}
+
+.statusAPPROVED {
+  background: #e5f6ec;
+  border-color: #86c99f;
+  color: #176b3a;
+}
+
+.statusRETURNED {
+  background: #fdeaea;
+  border-color: #e7a0a0;
+  color: #9b2c2c;
+}
+
 /* Cards */
 .card {
   background: colors.$surface;
@@ -141,6 +178,53 @@ label {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.submitButton {
+  @include forms.primary-button;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.approveButton {
+  @include forms.primary-button;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: colors.$success;
+
+  &:hover:not(:disabled) {
+    background: colors.$success-dark;
+  }
+}
+
+.returnButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 8px 14px;
+  border: 1px solid colors.$warning-border;
+  border-radius: 8px;
+  background: colors.$warning-soft;
+  color: colors.$warning-dark;
+  cursor: pointer;
+  font-weight: 600;
+
+  &:hover:not(:disabled) {
+    background: colors.$warning-soft-alt;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 }
 
 .exportButton {
@@ -272,4 +356,26 @@ label {
     font-size: 1.4rem;
     color: colors.$primary;
   }
+}
+
+@media (max-width: 1100px) {
+  .budgetContainer { padding: 0; min-width: 0; }
+  .formContainer { padding: 16px; min-width: 0; }
+  .card, .formGroup, .pageHeaderText { min-width: 0; }
+  .pageHeader, .headerActions, .cardHeader { flex-wrap: wrap; }
+  .grid { grid-template-columns: minmax(0, 1fr); }
+  .row2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .budgetContainer input:not([type="checkbox"]), .budgetContainer select, .budgetContainer textarea {
+    min-width: 0; max-width: 100%; box-sizing: border-box; min-height: 44px; font-size: 16px;
+  }
+  .budgetContainer button { min-height: 44px; }
+  .pageSubtitle, .cardMeta, .bottomActions { overflow-wrap: anywhere; }
+}
+@media (max-width: 700px) {
+  .formContainer, .card { padding: 12px; }
+  .row2 { grid-template-columns: minmax(0, 1fr); }
+  .bottomActions { align-items: stretch; flex-direction: column; }
+  .bottomActions > button { width: 100%; justify-content: center; }
+  .headerActions { width: 100%; }
+  .headerActions > button { flex: 1 1 auto; justify-content: center; }
 }

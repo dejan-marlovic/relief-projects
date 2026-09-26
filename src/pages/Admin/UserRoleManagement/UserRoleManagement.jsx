@@ -1,3 +1,4 @@
+import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiRefreshCw, FiSave, FiShield, FiUsers } from "react-icons/fi";
@@ -5,6 +6,7 @@ import { FiRefreshCw, FiSave, FiShield, FiUsers } from "react-icons/fi";
 import { BASE_URL } from "../../../config/api";
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
 import styles from "./UserRoleManagement.module.scss";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const ROLE_ORDER = [
   "ADMIN",
@@ -67,7 +69,7 @@ const UserRoleManagement = () => {
   const [savingUserId, setSavingUserId] = useState(null);
   const [roleErrorUserId, setRoleErrorUserId] = useState(null);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [success, setSuccess] = useTransientMessage("");
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -217,7 +219,7 @@ const UserRoleManagement = () => {
         </button>
       </div>
 
-      {error && <div className={styles.errorBanner}>{error}</div>}
+      {error && <ErrorBanner message={error} onDismiss={() => setError("")} />}
       {success && <div className={styles.successBanner}>{success}</div>}
 
       <div className={styles.summaryGrid}>
@@ -242,7 +244,7 @@ const UserRoleManagement = () => {
       </div>
 
       <div className={styles.tableScroll}>
-        <table className={styles.userTable}>
+        <table role="table" aria-label="User roles" className={styles.userTable}>
           <thead>
             <tr>
               <th>User</th>
@@ -258,13 +260,13 @@ const UserRoleManagement = () => {
             ) : users.map((user) => {
               const dirty = !sameRoles(draftRoles[user.id], user.roles);
               return (
-                <tr key={user.id} className={dirty ? styles.dirtyRow : ""}>
-                  <td>
+                <tr role="row" key={user.id} className={dirty ? styles.dirtyRow : ""}>
+                  <td role="cell" data-label="User">
                     <strong>{user.username}</strong>
                     <span>{user.email || `User #${user.id}`}</span>
                   </td>
                   {roles.map((role) => (
-                    <td key={role.name}>
+                    <td role="cell" data-label={role.name.replaceAll("_", " ")} key={role.name}>
                       <input
                         type="checkbox"
                         checked={(draftRoles[user.id] || []).includes(role.name)}
@@ -274,7 +276,7 @@ const UserRoleManagement = () => {
                       />
                     </td>
                   ))}
-                  <td>
+                  <td role="cell" data-label="Actions">
                     <div className={styles.rowActions}>
                       <button type="button" onClick={() => saveUser(user)} disabled={!dirty || savingUserId !== null}>
                         <FiSave /> {savingUserId === user.id ? "Saving..." : "Save"}
@@ -304,7 +306,7 @@ const UserRoleManagement = () => {
         <h3>Current access matrix</h3>
         <p>This reflects the authorization rules currently implemented in the backend and frontend.</p>
       </div>
-      <div className={styles.tableScroll}>
+      <div className={styles.tableScroll} role="region" aria-label="Current access matrix, scroll horizontally to compare roles" tabIndex={0}>
         <table className={styles.matrixTable}>
           <thead><tr><th>Area</th>{ROLE_ORDER.map((role) => <th key={role}>{role.replaceAll("_", " ")}</th>)}</tr></thead>
           <tbody>

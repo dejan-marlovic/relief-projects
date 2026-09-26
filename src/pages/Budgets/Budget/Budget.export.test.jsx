@@ -1,0 +1,36 @@
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import ExcelJS from "exceljs";
+import Budget from "./Budget";
+jest.mock("../../../context/AuthContext", () => ({ useAuth: () => ({ hasRole: () => false, hasAnyRole: () => false }) }));
+jest.mock("./CostDetails/CostDetails", () => () => null);
+jest.mock("exceljs", () => ({ Workbook: jest.fn() }));
+test("Excel exports persisted amounts and exact totals without recalculating from inputs", async () => {
+  ExcelJS.Workbook.mockImplementation(() => {
+    const ActualWorkbook = jest.requireActual("exceljs").Workbook;
+    const workbook = new ActualWorkbook();
+    workbook.xlsx.writeBuffer = jest.fn().mockResolvedValue(new Uint8Array());
+    return workbook;
+  });
+  localStorage.setItem("authToken", "token");
+  URL.createObjectURL = jest.fn(() => "blob:test"); URL.revokeObjectURL = jest.fn();
+  const click = jest.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+  const row = { costDetailId: 42, costDescription: "Saved cost", costTypeId: 1, costId: 2, noOfUnits: "18886.971409400761", frequencyMonths: 2, unitPrice: "19.99", percentageCharging: "25.000", amountLocalCurrency: "0.001", amountReportingCurrency: "99999999999999999.999", amountGBP: "0.000", amountEuro: "0.002" };
+  global.fetch = jest.fn(async (url) => ({ ok: true, status: 200, json: async () => url.includes("/cost-details/") ? [row, { ...row, costDetailId: 43, costDescription: "Second", amountReportingCurrency: "0.001" }] : url.includes("/currencies/") ? [{ id: 9, name: "USD" }] : [] }));
+  render(<MemoryRouter><Budget budget={{ id: 7, projectId: 2, lifecycleStatus: "DRAFT", totalAmount: "999999999999999999.999", localCurrencyId: 9, reportingCurrencySekId: 9 }} /></MemoryRouter>);
+  await screen.findAllByDisplayValue("USD");
+  fireEvent.click(screen.getByRole("button", { name: "Export to Excel" }));
+  await waitFor(() => expect(URL.createObjectURL).toHaveBeenCalled());
+  const sheet = ExcelJS.Workbook.mock.results[0].value.worksheets[0];
+  const rows = []; sheet.eachRow((entry) => rows.push(entry.values));
+  expect(rows.some((values) => values.includes("999999999999999999.999"))).toBe(true);
+  expect(rows.some((values) => values.some((value) => typeof value === "string" && value.includes("Budget limit (USD)") && value.includes("unconfirmed")))).toBe(true);
+  expect(rows.find((values) => values[1] === "Saved cost").slice(4)).toEqual(["18886.971409400761", 2, 19.99, 25, 0.001, "99999999999999999.999", 0, 0.002]);
+  expect(rows.find((values) => values[1] === "Grand Total").slice(8)).toEqual([0.002, "100000000000000000.000", 0, 0.004]);
+  expect(rows.find((values) => values[1] === "Description" && values[4] === "Units").slice(4)).toEqual(["Units", "Periods", "Unit Price", "Allocated %", "Local", "USD", "GBP", "EUR"]);
+  const exported = sheet.getRows(1, sheet.rowCount).find((entry) => entry.getCell(1).value === "Saved cost");
+  expect(exported.getCell(4).numFmt).toBe("#,##0.############");
+  expect(exported.getCell(6).numFmt).toBe("#,##0.############");
+  expect(exported.getCell(8).numFmt).toBe("#,##0.000");
+  click.mockRestore(); localStorage.clear();
+});

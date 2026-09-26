@@ -1,6 +1,12 @@
+import useTransientMessage from "../../../hooks/useTransientMessage";
+import BudgetPlanning from "../../../components/BudgetPlanning/BudgetPlanning";
+import BudgetCurrencyDialog from "../../../components/BudgetCurrencyDialog/BudgetCurrencyDialog";
+import { budgetLimitError } from "../../../utils/budgetLimit";
+import { budgetOptionLabel } from "../../../utils/budgetDisplay";
+import { normalizeBudgetName, budgetNameError } from "../../../utils/budgetDisplay";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiSave, FiRefreshCw, FiAlertCircle, FiEdit3 } from "react-icons/fi";
+import { FiSave, FiRefreshCw, FiEdit3 } from "react-icons/fi";
 
 import styles from "../UpdateUser/UpdateUser.module.scss";
 import { BASE_URL } from "../../../config/api";
@@ -9,10 +15,12 @@ import {
   safeReadJson,
   extractFieldErrors,
 } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const initialForm = {
   selectedId: "",
   projectId: "",
+  budgetName: "",
   budgetDescription: "",
   budgetPreparationDate: "",
   totalAmount: "",
@@ -37,11 +45,13 @@ const toInputDateTime = (value) => {
 
 const validate = (values) => {
   const errors = {};
+  const nameError = budgetNameError(values.budgetName);
+  if (nameError) errors.budgetName = nameError;
 
   if (!values.selectedId) errors.selectedId = "Please select a budget.";
   if (!values.projectId) errors.projectId = "Project is required.";
-  if (!values.totalAmount || Number(values.totalAmount) <= 0) {
-    errors.totalAmount = "Total amount must be greater than zero.";
+  if (!values.totalAmount || budgetLimitError(values.totalAmount)) {
+    errors.totalAmount = "Budget limit must be positive, within storage capacity and have at most three meaningful decimal places.";
   }
   if (!values.localCurrencyId)
     errors.localCurrencyId = "Local currency is required.";
@@ -70,9 +80,11 @@ const UpdateBudget = () => {
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [currencyOpen, setCurrencyOpen] = useState(false);
+  const [planningRefresh, setPlanningRefresh] = useState(0);
 
   const [formError, setFormError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useTransientMessage("");
   const [fieldErrors, setFieldErrors] = useState({});
 
   const selectedBudget = useMemo(() => {
@@ -174,6 +186,7 @@ const UpdateBudget = () => {
     setForm({
       selectedId,
       projectId: selected?.projectId ? String(selected.projectId) : "",
+      budgetName: selected?.budgetName || "",
       budgetDescription: selected?.budgetDescription || "",
       budgetPreparationDate: toInputDateTime(selected?.budgetPreparationDate),
       totalAmount:
@@ -235,6 +248,7 @@ const UpdateBudget = () => {
       projectId: selectedBudget.projectId
         ? String(selectedBudget.projectId)
         : "",
+      budgetName: selectedBudget.budgetName || "",
       budgetDescription: selectedBudget.budgetDescription || "",
       budgetPreparationDate: toInputDateTime(
         selectedBudget.budgetPreparationDate,
@@ -275,12 +289,14 @@ const UpdateBudget = () => {
     setSuccessMessage("");
   };
 
-  const handleUpdate = async () => {
+  const handleUpdate = async (currencyMode) => {
     try {
       setFormError("");
       setSuccessMessage("");
       setFieldErrors({});
 
+      const currencyChanged = selectedBudget && String(selectedBudget.localCurrencyId) !== String(form.localCurrencyId);
+      if (currencyChanged && currencyMode !== "KEEP_VALUES") { setCurrencyOpen(true); return; }
       const errors = validate(form);
       if (Object.keys(errors).length) {
         setFieldErrors(errors);
@@ -292,9 +308,11 @@ const UpdateBudget = () => {
 
       const payload = {
         projectId: Number(form.projectId),
+        budgetName: normalizeBudgetName(form.budgetName),
         budgetDescription: form.budgetDescription.trim(),
         budgetPreparationDate: form.budgetPreparationDate || null,
-        totalAmount: Number(form.totalAmount),
+        totalAmount: String(form.totalAmount),
+        ...(currencyChanged ? { confirmedLocalCurrencyId: Number(form.localCurrencyId) } : {}),
         localCurrencyId: Number(form.localCurrencyId),
         localCurrencyToGbpId: form.localCurrencyToGbpId
           ? Number(form.localCurrencyToGbpId)
@@ -341,7 +359,7 @@ const UpdateBudget = () => {
           item.id === Number(form.selectedId)
             ? {
                 ...item,
-                ...payload,
+                ...data,
                 id: item.id,
               }
             : item,
@@ -349,6 +367,7 @@ const UpdateBudget = () => {
       );
 
       setSuccessMessage("Budget updated successfully.");
+      setPlanningRefresh((value) => value + 1);
     } catch (err) {
       console.error("Update budget error:", err);
       setFormError(err?.message || "Unexpected error while updating budget.");
@@ -369,11 +388,21 @@ const UpdateBudget = () => {
           </div>
         </div>
 
+        {selectedBudget && <BudgetPlanning key={selectedBudget.id} budget={selectedBudget} refreshKey={planningRefresh} disabled={saving} onUpdated={(updated) => { setBudgets((rows) => rows.map((row) => row.id === updated.id ? updated : row)); setForm((old) => ({ ...old, totalAmount: updated.totalAmount })); }} />}
+        {selectedBudget && ["DRAFT", "RETURNED"].includes(selectedBudget.lifecycleStatus || "DRAFT") && <button type="button" className={styles.secondaryButton} disabled={saving || loading} onClick={() => setCurrencyOpen(true)}>Change budget currency</button>}
+        {currencyOpen && selectedBudget && <BudgetCurrencyDialog key={`currency-${selectedBudget.id}`} budget={selectedBudget} currencies={currencies} rates={exchangeRates}
+          initialTargetId={form.localCurrencyId}
+          dirty={Object.keys(initialForm).some((key) => key !== "selectedId" && String(form[key] ?? "") !== String(key === "budgetPreparationDate" ? toInputDateTime(selectedBudget[key]) : selectedBudget[key] ?? ""))}
+          keepReady={String(selectedBudget.localCurrencyId) !== String(form.localCurrencyId)}
+          onDiscard={resetForm} onKeep={() => { setCurrencyOpen(false); handleUpdate("KEEP_VALUES"); }} onClose={() => setCurrencyOpen(false)}
+          onUpdated={(updated) => {
+            setBudgets((rows) => rows.map((row) => row.id === updated.id ? updated : row));
+            setForm(Object.fromEntries(Object.keys(initialForm).map((key) => [key, key === "selectedId" ? String(updated.id) : key === "budgetPreparationDate" ? toInputDateTime(updated[key]) : String(updated[key] ?? "")])));
+            setPlanningRefresh((value) => value + 1); setFieldErrors({}); setFormError("");
+            authFetch(`${BASE_URL}/api/exchange-rates/active`).then(safeReadJson).then((fresh) => setExchangeRates(Array.isArray(fresh) ? fresh : [])).catch(() => setExchangeRates([]));
+          }} />}
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {successMessage && (
@@ -409,9 +438,7 @@ const UpdateBudget = () => {
                     <option value="">Select budget</option>
                     {budgets.map((item) => (
                       <option key={item.id} value={item.id}>
-                        {projectNameById[item.projectId] ||
-                          `Project #${item.projectId}`}{" "}
-                        - total: {item.totalAmount} (id: {item.id})
+                        {budgetOptionLabel(item)}
                       </option>
                     ))}
                   </select>
@@ -454,6 +481,12 @@ const UpdateBudget = () => {
                 </div>
 
                 <div className={styles.formGroup}>
+                <label htmlFor={`budget-name-${form.id || form.selectedId || "new"}`}>Budget name</label>
+                <input id={`budget-name-${form.id || form.selectedId || "new"}`} name="budgetName" value={form.budgetName || ""} onChange={handleInputChange} className={inputClass("budgetName")} required aria-invalid={Boolean(fieldErrors.budgetName)} aria-describedby={`budget-name-error-${form.id || form.selectedId || "new"}`} disabled={!form.selectedId || saving} placeholder="e.g. Water supply 2026" />
+                <span id={`budget-name-error-${form.id || form.selectedId || "new"}`} className={styles.fieldError}>{fieldErrors.budgetName}</span>
+              </div>
+
+              <div className={styles.formGroup}>
                   <label>Budget description</label>
                   <input
                     className={inputClass("budgetDescription")}
@@ -477,12 +510,11 @@ const UpdateBudget = () => {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>Total amount</label>
+                  <label>Budget limit (local currency)</label>
                   <input
                     className={inputClass("totalAmount")}
                     type="number"
-                    step="0.01"
-                    name="totalAmount"
+                    name="totalAmount" min="0.001" step="any"
                     value={form.totalAmount}
                     onChange={handleInputChange}
                     disabled={!form.selectedId || saving}

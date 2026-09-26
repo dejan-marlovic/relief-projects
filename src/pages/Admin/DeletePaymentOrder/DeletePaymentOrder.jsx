@@ -1,9 +1,10 @@
+import useTransientMessage from "../../../hooks/useTransientMessage";
+import PaymentAmount from "../../../components/PaymentAmount/PaymentAmount";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiTrash2,
   FiRefreshCw,
-  FiAlertCircle,
   FiFileText,
 } from "react-icons/fi";
 
@@ -11,6 +12,7 @@ import styles from "./DeletePaymentOrder.module.scss";
 import { BASE_URL } from "../../../config/api";
 
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const DeletePaymentOrder = () => {
   const navigate = useNavigate();
@@ -26,7 +28,7 @@ const DeletePaymentOrder = () => {
   const [selectedPaymentOrderId, setSelectedPaymentOrderId] = useState("");
 
   const [formError, setFormError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useTransientMessage("");
 
   const projectNameById = useMemo(() => {
     return projects.reduce((acc, project) => {
@@ -234,10 +236,7 @@ const DeletePaymentOrder = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {successMessage && (
@@ -349,9 +348,7 @@ const DeletePaymentOrder = () => {
 
                     <div className={styles.detailRow}>
                       <span className={styles.detailLabel}>Amount</span>
-                      <span className={styles.detailValue}>
-                        {selectedPaymentOrder.amount ?? "N/A"}
-                      </span>
+                      <div className={styles.detailValue}><PaymentAmount record={selectedPaymentOrder} /></div>
                     </div>
 
                     <div className={styles.detailRow}>

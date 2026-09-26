@@ -1,11 +1,13 @@
+import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiTrash2, FiRefreshCw, FiAlertCircle, FiFolder } from "react-icons/fi";
+import { FiTrash2, FiRefreshCw, FiFolder } from "react-icons/fi";
 
 import styles from "./DeleteProjectType.module.scss";
 import { BASE_URL } from "../../../config/api";
 
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const DeleteProjectType = () => {
   const navigate = useNavigate();
@@ -19,7 +21,7 @@ const DeleteProjectType = () => {
   const [selectedProjectTypeId, setSelectedProjectTypeId] = useState("");
 
   const [formError, setFormError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useTransientMessage("");
 
   const selectedProjectType = useMemo(() => {
     const id = Number(selectedProjectTypeId);
@@ -158,10 +160,7 @@ const DeleteProjectType = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {successMessage && (

@@ -1,7 +1,10 @@
+import { appFetch as fetch } from "../../../utils/appFetch";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { FiEdit, FiLink, FiPlus, FiSave, FiStar, FiX } from "react-icons/fi";
 import { BASE_URL } from "../../../config/api";
 import styles from "./AddressDetails.module.scss";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
+import { useUnsavedChange } from "../../../context/UnsavedChangesContext";
 
 const blankAddress = {
   street: "",
@@ -32,6 +35,7 @@ const AddressDetails = ({ organizationId, canManage = false }) => {
   const [selectedAddressId, setSelectedAddressId] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
+  useUnsavedChange(`address-details-${organizationId}`, editingId !== null);
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
   const [busyAction, setBusyAction] = useState("");
@@ -284,12 +288,12 @@ const AddressDetails = ({ organizationId, canManage = false }) => {
             </div>
           )}
         </div>
-        <div className={styles.cell}>{primary ? <span className={styles.primaryBadge}><FiStar /> Primary</span> : isNew ? "New" : "Additional"}</div>
-        <div className={styles.cell}>{renderField(rowKey, address, "street", "Street")}</div>
-        <div className={styles.cell}>{renderField(rowKey, address, "city", "City")}</div>
-        <div className={styles.cell}>{renderField(rowKey, address, "state", "State")}</div>
-        <div className={styles.cell}>{renderField(rowKey, address, "postalCode", "Postal code")}</div>
-        <div className={styles.cell}>{renderField(rowKey, address, "country", "Country")}</div>
+        <div className={styles.cell}><span className={styles.fieldLabel}>Type</span>{primary ? <span className={styles.primaryBadge}><FiStar /> Primary</span> : isNew ? "New" : "Additional"}</div>
+        <div className={styles.cell}><span className={styles.fieldLabel}>Street</span>{renderField(rowKey, address, "street", "Street")}</div>
+        <div className={styles.cell}><span className={styles.fieldLabel}>City</span>{renderField(rowKey, address, "city", "City")}</div>
+        <div className={styles.cell}><span className={styles.fieldLabel}>State</span>{renderField(rowKey, address, "state", "State")}</div>
+        <div className={styles.cell}><span className={styles.fieldLabel}>Postal code</span>{renderField(rowKey, address, "postalCode", "Postal code")}</div>
+        <div className={styles.cell}><span className={styles.fieldLabel}>Country</span>{renderField(rowKey, address, "country", "Country")}</div>
       </div>
     );
   };
@@ -314,7 +318,7 @@ const AddressDetails = ({ organizationId, canManage = false }) => {
         )}
       </div>
 
-      {formError && <div className={styles.errorBanner} role="alert">{formError}</div>}
+      {formError && <ErrorBanner message={formError} onDismiss={() => setFormError("")} />}
       {!associations.length && editingId !== "new" && <p className={styles.noData}>No active addresses linked to this organization.</p>}
 
       <div className={styles.table}>

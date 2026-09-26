@@ -1,0 +1,21 @@
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import PaymentOrderLines from "./PaymentOrderLines";
+import { jsonResponse } from "../../../../testUtils/authTestUtils";
+test("line creation sends exact strings and retains rejected inputs",async()=>{
+ const mutation=jest.fn();
+ global.fetch=jest.fn((url,options={})=>jsonResponse(options.method?{message:"Funding limit",fieldErrors:{amount:"Exceeds available allocation"}}:url.includes("cost-allocations")?[{costDetailId:4,plannedAmount:"99999999999999.999999"}]:[], options.method?400:200));
+ const error=jest.spyOn(console,"error").mockImplementation(()=>{});
+ render(<PaymentOrderLines paymentOrderId={7} order={{amount:"0",amountSummary:{status:"EMPTY"}}} txOptions={[{id:2,lifecycleStatus:"APPROVED"}]} orgOptions={[{id:3,name:"Org"}]} costDetailOptions={[{costDetailId:4,costDescription:"Equipment"}]} canManage onMutationSuccess={mutation}/>);
+ await waitFor(()=>expect(screen.getByLabelText("Transaction *")).toBeEnabled());
+ fireEvent.change(screen.getByLabelText("Transaction *"),{target:{value:"2"}});
+ await screen.findByRole("option",{name:"Equipment (CD#4)"});
+ fireEvent.change(screen.getByLabelText("Organization *"),{target:{value:"3"}});
+ fireEvent.change(screen.getByLabelText("Cost detail *"),{target:{value:"4"}});
+ fireEvent.change(screen.getByLabelText("Amount *"),{target:{value:"99999999999999.999999"}});
+ fireEvent.click(screen.getByRole("button",{name:/Add/}));
+ expect(await screen.findByText("Exceeds available allocation")).toBeInTheDocument();
+ const request=fetch.mock.calls.find(([,options])=>options?.method);
+ expect(JSON.parse(request[1].body).amount).toBe("99999999999999.999999");
+ expect(screen.getByLabelText("Amount *").value).toBe("99999999999999.999999");
+ expect(mutation).not.toHaveBeenCalled();error.mockRestore();
+});

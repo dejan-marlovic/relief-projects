@@ -13,3 +13,9 @@
 .actions { display:flex; justify-content:flex-end; gap:.45rem; margin-top:.8rem; }
 .actions button { padding:.4rem .65rem; border:1px solid colors.$border-subtle; border-radius:6px; background:colors.$surface; cursor:pointer; }
 .actions .apply { border-color:colors.$primary; background:colors.$primary; color:colors.$surface; }
+
+@media (max-width: 700px) {
+  .popover { box-sizing: border-box; max-width: calc(100vw - 16px); max-height: calc(100dvh - 16px); }
+  .popover input, .popover select { min-height: 44px; font-size: 16px; box-sizing: border-box; }
+  .actions button { min-height: 44px; }
+}

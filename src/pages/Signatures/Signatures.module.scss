@@ -175,8 +175,8 @@
   border-radius: 14px;
   background: colors.$surface;
 
-  --sig-header-bg: colors.$surface-tint;
-  --sig-header-border: colors.$border-muted;
+  --sig-header-bg: #{colors.$surface-tint};
+  --sig-header-border: #{colors.$border-muted};
   --sig-grid-cols: 110px; /* fallback */
 }
 
@@ -275,4 +275,29 @@
     width: 100%;
     justify-content: center;
   }
+}
+
+.compactTools { min-width: 0; border: 0; padding: 0; margin: 0 0 16px; display: grid; gap: 12px; color: colors.$text-secondary; }
+.compactTools legend { font-size: 0.8rem; color: colors.$text-muted; margin-bottom: 8px; }
+.compactTools summary { cursor: pointer; padding: 12px; border-radius: 8px; background: colors.$surface-muted; font-weight: 600; }
+.compactFilters { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px 16px; padding: 8px; }
+.compactFilters .sortAndFilterHeader { display: flex; justify-content: space-between; }
+.compactFilters button { min-width: 44px; min-height: 44px; }
+.selectAll { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.selectAll input { width: 24px; height: 24px; }
+.compactList { border: 0; border-radius: 0; background: transparent; }
+@media (max-width: 1100px) {
+  .page { padding: 0.5rem; }
+  .shell { padding: 1rem; min-width: 0; box-sizing: border-box; }
+  .pageHeader { flex-direction: column; align-items: stretch; }
+  .headerActions { justify-content: flex-start; gap: 8px; }
+  .headerActions > button { min-height: 44px; }
+}
+@media (max-width: 700px) {
+  .page { margin-top: 0; padding: 0; height: auto; min-width: 0; }
+  .shell { padding: 12px; height: auto; }
+  .pageSubtitle { overflow-wrap: anywhere; }
+  .headerActions > button { padding: 10px 12px; font-size: 0.85rem; flex: 1 1 auto; }
+  .compactList { overflow: visible; flex: none; }
+  .compactFilters { grid-template-columns: minmax(0, 1fr); }
 }

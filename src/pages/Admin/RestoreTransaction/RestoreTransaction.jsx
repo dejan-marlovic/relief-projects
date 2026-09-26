@@ -1,15 +1,19 @@
+import useTransientMessage from "../../../hooks/useTransientMessage";
+import { fundingCurrencyLabel } from "../../../utils/transactionFunding";
+import { budgetOptionLabel } from "../../../utils/budgetDisplay";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiRotateCcw,
   FiRefreshCw,
-  FiAlertCircle,
   FiRepeat,
 } from "react-icons/fi";
 
 import styles from "./RestoreTransaction.module.scss";
 import { BASE_URL } from "../../../config/api";
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
+import { formatApiError } from "../../../utils/apiErrors";
 
 const RestoreTransaction = () => {
   const navigate = useNavigate();
@@ -27,7 +31,7 @@ const RestoreTransaction = () => {
   const [selectedTransactionId, setSelectedTransactionId] = useState("");
 
   const [formError, setFormError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useTransientMessage("");
 
   const selectedTransaction = useMemo(() => {
     const id = Number(selectedTransactionId);
@@ -89,13 +93,7 @@ const RestoreTransaction = () => {
       return `Budget id: ${budgetId}`;
     }
 
-    const project = getProjectLabel(budget.projectId);
-    const amount =
-      budget.totalAmount !== null && budget.totalAmount !== undefined
-        ? budget.totalAmount
-        : "N/A";
-
-    return `${project} | amount: ${amount} | budget id: ${budgetId}`;
+    return budgetOptionLabel(budget);
   };
 
   const getTransactionStatusLabel = (transactionStatusId) => {
@@ -272,9 +270,10 @@ const RestoreTransaction = () => {
       if (!res.ok) {
         const data = await safeReadJson(res);
         setFormError(
-          data?.message ||
-            data?.detail ||
+          formatApiError(
+            data,
             "Failed to restore the transaction. Backend support may be missing.",
+          ),
         );
         return;
       }
@@ -310,11 +309,9 @@ const RestoreTransaction = () => {
           </div>
         </div>
 
+        {selectedTransaction && <p className={styles.pageSubtitle}>Current budget currency: {fundingCurrencyLabel(selectedTransaction.fundingCurrency)}. This is not verified historical denomination.</p>}
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {successMessage && (
@@ -443,25 +440,17 @@ const RestoreTransaction = () => {
 
                     <div className={styles.detailRow}>
                       <span className={styles.detailLabel}>
-                        Applied for amount
+                        Requested funding
                       </span>
                       <span className={styles.detailValue}>
                         {getAmountLabel(selectedTransaction.appliedForAmount)}
                       </span>
                     </div>
 
-                    <div className={styles.detailRow}>
-                      <span className={styles.detailLabel}>
-                        First share amount
-                      </span>
-                      <span className={styles.detailValue}>
-                        {getAmountLabel(selectedTransaction.firstShareAmount)}
-                      </span>
-                    </div>
 
                     <div className={styles.detailRow}>
                       <span className={styles.detailLabel}>
-                        Approved amount
+                        Approved funding
                       </span>
                       <span className={styles.detailValue}>
                         {getAmountLabel(selectedTransaction.approvedAmount)}
@@ -477,14 +466,6 @@ const RestoreTransaction = () => {
                       </span>
                     </div>
 
-                    <div className={styles.detailRow}>
-                      <span className={styles.detailLabel}>
-                        Second share amount
-                      </span>
-                      <span className={styles.detailValue}>
-                        {getAmountLabel(selectedTransaction.secondShareAmount)}
-                      </span>
-                    </div>
 
                     <div className={styles.detailRow}>
                       <span className={styles.detailLabel}>Date planned</span>

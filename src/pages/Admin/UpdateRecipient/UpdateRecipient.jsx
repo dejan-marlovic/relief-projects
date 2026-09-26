@@ -1,6 +1,8 @@
+import useTransientMessage from "../../../hooks/useTransientMessage";
+import { exactAmount, summaryAmount, summaryText } from "../../../utils/paymentFunding";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiSave, FiRefreshCw, FiAlertCircle, FiEdit3 } from "react-icons/fi";
+import { FiSave, FiRefreshCw, FiEdit3 } from "react-icons/fi";
 
 import styles from "../UpdateUser/UpdateUser.module.scss";
 import { BASE_URL } from "../../../config/api";
@@ -9,6 +11,7 @@ import {
   safeReadJson,
   extractFieldErrors,
 } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const initialForm = {
   selectedId: "",
@@ -39,7 +42,7 @@ const UpdateRecipient = () => {
   const [saving, setSaving] = useState(false);
 
   const [formError, setFormError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useTransientMessage("");
   const [fieldErrors, setFieldErrors] = useState({});
 
   const orgNameById = useMemo(() => {
@@ -213,7 +216,8 @@ const UpdateRecipient = () => {
                   data?.organizationId ?? Number(form.organizationId),
                 paymentOrderId:
                   data?.paymentOrderId ?? Number(form.paymentOrderId),
-                amount: data?.amount ?? item.amount,
+                amount: data?.amount ?? null,
+                amountSummary: data?.amountSummary ?? null,
               }
             : item,
         ),
@@ -244,10 +248,7 @@ const UpdateRecipient = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {successMessage && (
@@ -290,7 +291,7 @@ const UpdateRecipient = () => {
                         -{" "}
                         {paymentOrderLabelById[item.paymentOrderId] ||
                           `PO #${item.paymentOrderId}`}{" "}
-                        - amount: {item.amount ?? 0} (id: {item.id})
+                        - amount: {exactAmount(summaryAmount(item))} · {summaryText(item.amountSummary)} (id: {item.id})
                       </option>
                     ))}
                   </select>

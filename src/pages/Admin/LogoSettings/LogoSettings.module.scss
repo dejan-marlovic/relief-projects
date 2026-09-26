@@ -466,3 +466,14 @@ $error: colors.$danger-dark;
     object-fit: contain;
   }
 }
+
+@media (max-width: 700px) {
+  .pageHeader, .assetSection, .card { padding: 12px; }
+  .pageHeader, .assetSectionHeader, .cardHeader { flex-wrap: wrap; }
+  .assetSectionHeader > div { min-width: 0; }
+  .settingsGrid, .requirementGrid { grid-template-columns: minmax(0, 1fr); }
+  .dropzone { flex-direction: column; text-align: center; padding: 12px; }
+  .preview img { max-width: 100%; }
+  .restoreButton { min-height: 44px; }
+  .dropzoneText, .feedback, .requirementValue, .assetSectionSubtitle { overflow-wrap: anywhere; }
+}

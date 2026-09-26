@@ -3,6 +3,7 @@ $secondary-color: colors.$danger;
 
 .layoutShell {
   padding: 1rem;
+  min-width: 0;
 }
 
 /* List-heavy pages keep scrolling inside their tables, not on the document. */
@@ -26,8 +27,10 @@ $secondary-color: colors.$danger;
 /* ================= HEADER ================= */
 
 .headerBar {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas: "title controls logo";
+  align-items: start;
   gap: 1rem;
   padding: 1.2rem 1.3rem;
   margin-bottom: 1rem;
@@ -39,6 +42,9 @@ $secondary-color: colors.$danger;
 }
 
 .headerTitleBlock {
+  grid-area: title;
+  min-width: 0;
+  overflow-wrap: anywhere;
   display: flex;
   flex-direction: column;
 }
@@ -71,9 +77,32 @@ $secondary-color: colors.$danger;
 }
 
 .headerRight {
+  grid-area: controls;
+  align-self: center;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+.projectContextNote {
+  grid-area: context;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  min-width: 0;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid colors.$primary-border;
+  border-radius: 12px;
+  background: colors.$primary-soft;
+  color: colors.$text-muted;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+
+  > svg { flex-shrink: 0; margin-top: 0.15rem; color: colors.$primary; }
+  strong { display: block; margin-bottom: 0.2rem; color: colors.$text-secondary; font-weight: 600; }
+  p { margin: 0; }
 }
 
 .selectorInline {
@@ -96,6 +125,9 @@ $secondary-color: colors.$danger;
 }
 
 .logoWrap {
+  grid-area: logo;
+  justify-self: end;
+  align-self: start;
   padding: 0.5rem 0.75rem;
   background: colors.$surface;
   border-radius: 12px;
@@ -124,111 +156,205 @@ $secondary-color: colors.$danger;
 /* ================= TABS ================= */
 
 .nav {
-  margin-bottom: 0.75rem;
-  border-bottom: 1px solid colors.$primary-a35;
+  flex-shrink: 0;
+  min-width: 0;
+  margin-bottom: 1rem;
+  padding: 22px 8px;
+  border: 1px solid colors.$primary-border;
+  border-radius: 14px;
+  background: colors.$surface;
+  box-shadow: colors.$shadow-card;
 }
 
 .tabList {
   list-style: none;
   display: flex;
-  gap: 0.35rem;
+  align-items: stretch;
+  gap: 8px;
   margin: 0;
-  padding: 0;
+  padding: 2px;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 .tabItem {
+  display: flex;
   margin: 0;
   flex: 0 0 auto;
 }
 
-/* TAB look: top-rounded, flat bottom */
 .tabLink {
-  display: inline-block;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 66px;
   white-space: nowrap;
-  padding: 0.9rem 1.35rem;
-  font-size: 1rem;
-  font-weight: 700;
-  text-decoration: none;
+  padding: 11px 16px;
+  border: 1px solid colors.$primary-border;
+  border-radius: 12px;
+  background: colors.$surface;
   color: colors.$text-secondary;
-
-  background: colors.$surface-secondary;
-  border: 1px solid colors.$primary-a35;
-  border-bottom: none;
-
-  border-top-left-radius: 12px;
-  border-top-right-radius: 12px;
-
-  transition:
-    background 0.2s ease,
-    transform 0.1s ease;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-decoration: none;
+  box-shadow: none;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .tabLink:hover {
   background: colors.$primary-soft;
+  border-color: colors.$primary-border-strong;
+  color: colors.$primary-dark;
+  box-shadow: none;
 }
 
-/* Keep the selected-project tab slightly raised like a folder label. */
 .projectTab {
-  position: relative;
-  z-index: 3;
-  transform: translateY(-4px);
-  background: colors.$surface;
-  color: colors.$primary;
-  border-color: colors.$primary-a60;
-  box-shadow: 0 -4px 10px colors.$border-subtle;
+  max-width: 18rem;
+  overflow: hidden;
+  background: colors.$primary-soft;
+  border-color: colors.$primary-border;
+  color: colors.$primary-dark;
 }
 
-.projectTab:hover {
-  transform: translateY(-5px);
+.projectTabName {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 700;
 }
 
-/* ACTIVE TAB = visually connected to page */
-.active {
-  background: colors.$text-on-primary !important;
-  color: colors.$primary !important;
-  font-weight: 800;
-
-  position: relative;
-  top: 1px;
-
-  border-color: colors.$primary-a60;
-  box-shadow: 0 -2px 6px colors.$border-subtle;
-  z-index: 2;
+.projectTabSubtitle {
+  display: block;
+  margin-top: 3px;
+  color: colors.$text-muted;
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1.25;
 }
 
-.active.projectTab {
-  transform: translateY(-4px);
-  box-shadow: 0 -5px 12px colors.$border-subtle;
+.tabLink.active {
+  border-color: colors.$primary-border-strong;
+  background: colors.$primary-soft;
+  color: colors.$primary-dark;
+  font-weight: 700;
+  box-shadow: inset 0 -2px 0 colors.$primary;
 }
 
 /* Responsive */
+@media (min-width: 1101px) {
+  .headerBar {
+    grid-template-columns: fit-content(26vw) minmax(0, 1fr) minmax(200px, 24vw) auto;
+    grid-template-areas: "title context controls logo" ". . . logout";
+  }
+
+  .headerRight { display: contents; }
+  .projectContextNote {
+    justify-self: center;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 28rem;
+  }
+  .selectorInline { grid-area: controls; align-self: start; min-width: 0; }
+  .logoutIcon { grid-area: logout; justify-self: end; }
+}
+
 @media (max-width: 1100px) {
   .headerBar {
-    flex-direction: column;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "title logo" "context context" "controls controls";
   }
 
   .headerRight {
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    row-gap: 0.25rem;
   }
+
+  .selectorInline { display: contents; }
+  .selectorInline .selectorLabel { grid-column: 1; grid-row: 1; }
+  .selectorInline .selectInput { grid-column: 1; grid-row: 2; width: 100%; }
+  .logoutIcon { grid-column: 2; grid-row: 2; justify-self: end; }
+  .logoutIcon:only-child { grid-row: 1; }
 
   .tabList {
     overflow-x: auto;
   }
 }
 
-/* ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ Admin tab: subtle standout */
 .adminTab {
-  border-color: colors.$danger-border !important;
-  background: colors.$danger-soft !important;
-  color: colors.$danger-text !important;
+  border-color: colors.$danger-border;
+  color: colors.$danger-text;
 }
 
-.adminTab:hover {
-  background: colors.$danger-soft !important;
+.adminTab:hover, .tabLink.active.adminTab {
+  background: colors.$danger-soft;
+  border-color: colors.$danger-border;
+  color: colors.$danger-text;
 }
 
-/* If Admin is active, keep it ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“admin-coloredÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â while active */
-.active.adminTab {
-  border-color: colors.$danger-border !important;
-  color: colors.$danger-text !important;
+.tabLink.active.adminTab {
+  box-shadow: inset 0 -2px 0 colors.$danger;
+}
+
+// Pages use document scrolling on phones so forms remain
+// reachable when the software keyboard reduces the available height.
+@media (max-width: 700px) {
+  .layoutShell {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+    padding: 8px;
+    .content { overflow: visible; min-width: 0; padding: 0; }
+    .headerBar { padding: 12px; margin-bottom: 12px; }
+    .headerTitle { font-size: 1.4rem; }
+    .headerSubtitle { font-size: 0.8rem; }
+    .headerRight { flex-wrap: wrap; min-width: 0; }
+    .selectorInline { min-width: 0; flex: 1 1 180px; }
+    .selectInput { width: 100%; min-width: 0; box-sizing: border-box; }
+    .tabList { max-width: 100%; }
+    .tabLink { padding: 12px; font-size: 0.9rem; }
+  }
+}
+
+.pagePicker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  background: colors.$surface-secondary;
+  border: 1px solid colors.$primary-border;
+  border-radius: 12px;
+}
+
+.selectInput {
+  min-width: 0;
+  max-width: 100%;
+  color: colors.$text-secondary;
+  background: colors.$surface;
+}
+
+.tabLink:focus-visible, .selectInput:focus-visible, .logoutIcon:focus-visible {
+  outline: 2px solid colors.$primary;
+  outline-offset: -2px;
+}
+
+.headerBar { flex-shrink: 0; min-width: 0; }
+.headerRight { min-width: 0; }
+.selectorInline { max-width: 100%; }
+.logoutIcon { flex-shrink: 0; }
+
+@media (max-width: 700px) {
+  .logo { height: 36px; max-width: 140px; }
+  .nav { padding: 0; border: 0; box-shadow: none; background: transparent; }
+  .selectInput { min-height: 44px; font-size: 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tabLink { transition: none; }
 }

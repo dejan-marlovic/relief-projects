@@ -287,3 +287,31 @@
   font-size: 13px;
   fill: colors.$text-muted;
 }
+
+// Keep chart sizing inside the available page width.
+.page, .shell { box-sizing: border-box; min-width: 0; }
+.chartRow, .barChartWrap, .donutChartWrap { min-width: 0; }
+.legendItem { min-width: 0; max-width: 100%; }
+.legendLabel, .infoBanner, .errorBanner, .meta { overflow-wrap: anywhere; }
+.tooltipBox { max-width: min(360px, 70vw); overflow-wrap: anywhere; }
+
+@media (max-width: 1100px) {
+  .page { padding: 12px; }
+  .shell { padding: 16px; }
+  .chartLegendSpacer { height: 12px; }
+}
+
+@media (max-width: 700px) {
+  .page { padding: 0; margin-top: 12px; }
+  .shell { padding: 12px; }
+  .pageHeader { flex-direction: column; gap: 8px; }
+  .sectionHeader { align-items: flex-start; text-align: left; }
+  .legend { flex-direction: column; align-items: stretch; gap: 12px; }
+  .legendItem { align-items: flex-start; }
+  .legendSwatch { margin-top: 3px; }
+  .legendLabel { line-height: 1.4; }
+  .barCard, .donutCard { padding: 8px; }
+  .barChartWrap, .donutChartWrap { min-height: 0; }
+  .meta { justify-content: flex-start; gap: 8px 16px; }
+  .loadingSkeleton { height: 300px; }
+}

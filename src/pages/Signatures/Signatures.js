@@ -1,3 +1,5 @@
+import { appFetch as fetch } from "../../utils/appFetch";
+import useMediaQuery from "../../hooks/useMediaQuery";
 import React, {
   useCallback,
   useContext,
@@ -9,6 +11,7 @@ import React, {
 import ExcelJS from "exceljs";
 import { ProjectContext } from "../../context/ProjectContext";
 import { useAuth } from "../../context/AuthContext";
+import { useUnsavedChange } from "../../context/UnsavedChangesContext";
 import SignatureRow from "./Signature/Signature";
 import styles from "./Signatures.module.scss";
 import { FiPlus, FiColumns, FiTrash2, FiDownload } from "react-icons/fi";
@@ -19,7 +22,9 @@ import ColumnFilter from "../../components/ColumnFilter/ColumnFilter";
 import ClearFiltersButton from "../../components/ClearFiltersButton/ClearFiltersButton";
 import { getSelectedProjectName } from "../../utils/projectDisplay";
 
-import { BASE_URL } from "../../config/api"; // adjust path if needed
+import { BASE_URL } from "../../config/api";
+import ErrorBanner from "../../components/ErrorBanner/ErrorBanner"; // adjust path if needed
+import { formatApiError } from "../../utils/apiErrors";
 
 const headerLabels = [
   "Actions",
@@ -91,14 +96,28 @@ function normalizeSignature(s) {
   };
 }
 
+export const isSignaturePaymentOrderApproved = (paymentOrder) =>
+  paymentOrder?.lifecycleStatus === "APPROVED";
+
+export const approvedSignaturePaymentOrders = (paymentOrders = [], currentId = null) =>
+  paymentOrders.filter(
+    (paymentOrder) =>
+      isSignaturePaymentOrderApproved(paymentOrder) ||
+      (currentId != null && String(paymentOrder.id) === String(currentId)),
+  );
+
 function Signatures() {
   const { selectedProjectId, projects } = useContext(ProjectContext);
   const { hasAnyRole } = useAuth();
   const canManageSignatures = hasAnyRole("ADMIN", "APPROVER");
 
   const [items, setItems] = useState([]);
+  const compact = useMediaQuery("(max-width: 1100px)");
+  const [saving, setSaving] = useState(false);
+  const saveInProgress = useRef(false);
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
+  useUnsavedChange("signatures-editor", editingId !== null);
   //React allows a lazy initializer function
   //runs only when the component is first created.
   //So React says: I will call this function once to get the initial state.
@@ -242,6 +261,7 @@ function Signatures() {
               po.paymentOrderDate ?? po.payment_order_date ?? null,
             amount: po.amount ?? 0,
             locked: Boolean(po.locked ?? po.isLocked ?? false),
+            lifecycleStatus: po.lifecycleStatus || "DRAFT",
           }))
           .filter((x) => x.id != null);
 
@@ -334,7 +354,7 @@ function Signatures() {
   };
 
   const startEdit = (row) => {
-    if (!canManageSignatures) return;
+    if (!canManageSignatures || saving || (compact && editingId !== null)) return;
     setEditingId(row?.id ?? null);
     setEditedValues((prev) => ({
       ...prev,
@@ -358,7 +378,7 @@ function Signatures() {
   };
 
   const startCreate = () => {
-    if (!canManageSignatures) return;
+    if (!canManageSignatures || saving || (compact && editingId !== null)) return;
     setEditingId("new");
     setEditedValues((prev) => ({ ...prev, new: { ...blankSignature } }));
 
@@ -418,7 +438,7 @@ function Signatures() {
   };
 
   const save = async () => {
-    if (!canManageSignatures) return;
+    if (!canManageSignatures || saveInProgress.current) return;
     const id = editingId;
     const v = editedValues[id];
     if (!v) return;
@@ -429,6 +449,8 @@ function Signatures() {
     setFieldErrors((prev) => ({ ...prev, [id]: {} }));
 
     if (!validateClientSide(id, v)) return;
+    saveInProgress.current = true;
+    setSaving(true);
 
     const payload = {
       signatureStatusId: Number(v.signatureStatusId),
@@ -460,21 +482,21 @@ function Signatures() {
         const msg =
           data?.message ||
           (res.status === 409
-            ? "Conflict: this item is locked."
+            ? "Conflict: reload and retry the signature change."
             : `Failed to ${isCreate ? "create" : "update"} signature.`);
 
         setFormError(msg);
         return;
       }
 
-      await fetchSignatures(selectedProjectId);
+      await Promise.all([fetchSignatures(selectedProjectId), fetchPaymentOrders(selectedProjectId)]);
       cancel();
     } catch (e) {
       console.error(e);
       setFormError(
         e.message || `Failed to ${isCreate ? "create" : "update"} signature.`,
       );
-    }
+    } finally { saveInProgress.current = false; setSaving(false); }
   };
 
   /*
@@ -527,11 +549,12 @@ function Signatures() {
 
       if (!res.ok) {
         const data = await safeParseJsonResponse(res);
-        const msg =
-          data?.message ||
-          (res.status === 409
-            ? "Conflict: this item is locked."
-            : "Delete failed.");
+        const msg = formatApiError(
+          data,
+          res.status === 409
+            ? "Conflict: reload and retry the signature change."
+            : "Delete failed.",
+        );
         setFormError(msg);
         return;
       }
@@ -542,7 +565,7 @@ function Signatures() {
         return next;
       });
 
-      await fetchSignatures(selectedProjectId);
+      await Promise.all([fetchSignatures(selectedProjectId), fetchPaymentOrders(selectedProjectId)]);
     } catch (e) {
       console.error(e);
       setFormError("Delete failed.");
@@ -576,11 +599,11 @@ function Signatures() {
       if (!res.ok) {
         const data = await safeParseJsonResponse(res);
         throw new Error(
-          data?.message || "Failed to delete selected signatures.",
+          formatApiError(data, "Failed to delete selected signatures."),
         );
       }
       setSelectedSignatureIds(new Set());
-      await fetchSignatures(selectedProjectId);
+      await Promise.all([fetchSignatures(selectedProjectId), fetchPaymentOrders(selectedProjectId)]);
     } catch (err) {
       console.error(err);
       setFormError(err.message || "Failed to delete selected signatures.");
@@ -1059,7 +1082,7 @@ function Signatures() {
               type="button"
               className={styles.exportInlineBtn}
               onClick={handleExportSelected}
-              disabled={selectedSignatureCount === 0 || exportingSelected}
+              disabled={selectedSignatureCount === 0 || exportingSelected || saving || (compact && editingId !== null)}
               title="Export selected signatures to Excel"
             >
               <FiDownload />
@@ -1077,7 +1100,7 @@ function Signatures() {
                 type="button"
                 className={styles.dangerInlineBtn}
                 onClick={removeSelected}
-                disabled={selectedSignatureCount === 0 || exportingSelected}
+                disabled={selectedSignatureCount === 0 || exportingSelected || saving || (compact && editingId !== null)}
                 title="Delete selected signatures"
               >
                 <FiTrash2 />
@@ -1087,7 +1110,7 @@ function Signatures() {
                   : ""}
               </button>
             )}
-            <div className={styles.columnsBox}>
+            {!compact && <div className={styles.columnsBox}>
               <button
                 className={styles.columnsBtn}
                 onClick={() => setColumnsOpen((v) => !v)}
@@ -1116,14 +1139,16 @@ function Signatures() {
                   ))}
                 </div>
               )}
-            </div>
+            </div>}
 
             {canManageSignatures && (
               <button
                 className={styles.primaryBtn}
                 onClick={startCreate}
                 disabled={
-                  !selectedProjectId || editingId === "new" || exportingSelected
+                  !selectedProjectId ||
+                  saving || (compact ? editingId !== null : editingId === "new") ||
+                  exportingSelected
                 }
                 title={
                   !selectedProjectId
@@ -1141,10 +1166,25 @@ function Signatures() {
           </div>
         </div>
 
-        {formError && <div className={styles.errorBanner}>{formError}</div>}
+        {formError && <ErrorBanner message={formError} onDismiss={() => setFormError("")} />}
 
-        <div className={styles.table} style={{ ["--sig-grid-cols"]: gridCols }}>
-          <div className={`${styles.gridRow} ${styles.headerRow}`}>
+        {compact && <fieldset className={styles.compactTools} disabled={editingId !== null || saving}>
+          <legend>Signature controls</legend>
+          <details><summary>Sort &amp; filter{hasActiveFilters ? " · filters active" : ""}</summary>
+            <div className={styles.compactFilters}>
+              {headerLabels.slice(1).map((label, index) => {
+                const key = HEADER_SORT_KEYS[index + 1];
+                return <div key={key} className={styles.sortAndFilterHeader}>
+                  <SortableHeader label={label} sortKey={key} sortConfig={sortConfig} onSort={toggleSort} />
+                  <ColumnFilter label={label} type={key === "status" ? "select" : key === "paymentOrderId" ? "number" : key === "date" ? "date" : "text"} value={filters[key]} options={key === "status" ? statusOptions.map((status) => ({ value: status.id, label: status.label })) : []} onApply={(value) => setFilters((current) => ({ ...current, [key]: value }))} onClear={() => setFilters((current) => ({ ...current, [key]: emptyFilters()[key] }))} />
+                </div>;
+              })}
+            </div>
+          </details>
+          <label className={styles.selectAll}><input type="checkbox" checked={allVisibleSelected} disabled={!selectableSignatures.length} onChange={(event) => toggleSelectAllVisible(event.target.checked)} />Select all visible ({displayedItems.length})</label>
+        </fieldset>}
+        <div className={`${styles.table} ${compact ? styles.compactList : ""}`} style={{ "--sig-grid-cols": gridCols }}>
+          {!compact && <div className={`${styles.gridRow} ${styles.headerRow}`}>
             {headerLabels.map((h, i) => (
               <div
                 key={h}
@@ -1169,7 +1209,7 @@ function Signatures() {
                 )}
               </div>
             ))}
-          </div>
+          </div>}
 
           {!selectedProjectId ? (
             <p className={styles.noData}>
@@ -1177,9 +1217,13 @@ function Signatures() {
             </p>
           ) : items.length === 0 ? (
             <p className={styles.noData}>No signatures for this project.</p>
+          ) : displayedItems.length === 0 ? (
+            <p className={styles.noData}>No signatures match your filters.</p>
           ) : (
             displayedItems.map((s, idx) => (
               <SignatureRow
+                compact={compact}
+                saving={saving}
                 key={s.id}
                 row={s}
                 isEven={idx % 2 === 0}
@@ -1193,18 +1237,26 @@ function Signatures() {
                 isSelected={selectedSignatureIds.has(s.id)}
                 onSelectChange={toggleSelectedSignature}
                 selectionDisabled={editingId === s.id}
-                poOptions={poOptions}
+                poOptions={approvedSignaturePaymentOrders(poOptions, s.paymentOrderId)}
                 statusOptions={statusOptions}
                 employeeOptions={employeeOptions}
                 visibleCols={visibleCols}
                 fieldErrors={fieldErrors[s.id] || {}}
-                canManage={canManageSignatures}
+                canEdit={
+                  canManageSignatures && (!compact || editingId === null || editingId === s.id) &&
+                  isSignaturePaymentOrderApproved(
+                    poOptions.find((po) => String(po.id) === String(s.paymentOrderId)),
+                  )
+                }
+                canDelete={canManageSignatures && (!compact || editingId === null)}
               />
             ))
           )}
 
           {editingId === "new" && (
             <SignatureRow
+              compact={compact}
+              saving={saving}
               row={{
                 id: "new",
                 signatureStatusId: "",
@@ -1222,14 +1274,15 @@ function Signatures() {
               isSelected={false}
               onSelectChange={() => {}}
               selectionDisabled
-              poOptions={poOptions}
+              poOptions={approvedSignaturePaymentOrders(poOptions)}
               statusOptions={statusOptions}
               employeeOptions={employeeOptions}
               visibleCols={visibleCols}
               isEven={false}
               fieldErrors={fieldErrors.new || {}}
               rowRef={newRowRef}
-              canManage={canManageSignatures}
+              canEdit={canManageSignatures}
+              canDelete={false}
             />
           )}
         </div>

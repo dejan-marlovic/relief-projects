@@ -1,14 +1,25 @@
-import { render, screen } from "@testing-library/react";
+import { useEffect } from "react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import Layout from "./Layout";
 import styles from "./Layout.module.scss";
 import { ProjectContext } from "../../context/ProjectContext";
+import { useUnsavedChanges } from "../../context/UnsavedChangesContext";
 
 jest.mock("../../context/AuthContext", () => ({ useAuth: jest.fn() }));
 jest.mock("../../context/BrandingContext", () => ({ useBranding: () => ({ logoUrl: "/logo.png" }) }));
 const { useAuth } = require("../../context/AuthContext");
 
-const renderLayout = (roles, projectContext = {}) => {
+const DirtyProject = () => {
+  const { setUnsavedChange } = useUnsavedChanges();
+  useEffect(() => {
+    setUnsavedChange("budget-7", true);
+    return () => setUnsavedChange("budget-7", false);
+  }, [setUnsavedChange]);
+  return <div>Project with unsaved changes</div>;
+};
+
+const renderLayout = (roles, projectContext = {}, projectElement = <div>Project</div>) => {
   localStorage.setItem("authToken", "token");
   useAuth.mockReturnValue({
     clearAuth: jest.fn(),
@@ -23,14 +34,14 @@ const renderLayout = (roles, projectContext = {}) => {
       ...projectContext,
     }}>
       <MemoryRouter initialEntries={["/project"]}>
-        <Routes><Route path="/" element={<Layout />}><Route path="project" element={<div>Project</div>} /></Route></Routes>
+        <Routes><Route path="/" element={<Layout />}><Route path="project" element={projectElement} /><Route path="transactions" element={<div>Transaction page</div>} /></Route></Routes>
       </MemoryRouter>
     </ProjectContext.Provider>,
   );
 };
 
 describe("role-aware navigation", () => {
-  afterEach(() => { localStorage.clear(); jest.clearAllMocks(); });
+  afterEach(() => { localStorage.clear(); jest.restoreAllMocks(); });
 
   test("ADMIN sees Admin and New Project", () => {
     renderLayout(["ADMIN"]);
@@ -70,5 +81,65 @@ describe("role-aware navigation", () => {
   test("uses Project while no selected project name is available", () => {
     renderLayout(["VIEWER"]);
     expect(screen.getByRole("link", { name: "Project" })).toBeInTheDocument();
+  });
+
+  test("keeps the user on the current tab when unsaved budget changes are not discarded", () => {
+    const confirm = jest.spyOn(window, "confirm").mockReturnValue(false);
+    renderLayout(["FINANCE"], {}, <DirtyProject />);
+
+    fireEvent.click(screen.getByRole("link", { name: "Transactions" }));
+
+    expect(confirm).toHaveBeenCalledWith(
+      "You have unsaved changes. Leave this page without saving them?",
+    );
+    expect(screen.getByText("Project with unsaved changes")).toBeInTheDocument();
+  });
+});
+
+
+describe("phone navigation", () => {
+  beforeEach(() => {
+    window.matchMedia = jest.fn(() => ({ matches: true, addEventListener: jest.fn(), removeEventListener: jest.fn() }));
+  });
+  afterEach(() => {
+    delete window.matchMedia;
+    localStorage.clear();
+    jest.restoreAllMocks();
+  });
+
+  test.each([
+    ["ADMIN", true, true], ["PROJECT_MANAGER", false, true],
+    ["FINANCE", false, false], ["APPROVER", false, false], ["VIEWER", false, false],
+  ])("%s receives the correct page choices", (role, admin, create) => {
+    renderLayout([role]);
+    const menu = within(screen.getByRole("combobox", { name: "Current page" }));
+    expect(Boolean(menu.queryByRole("option", { name: "Admin" }))).toBe(admin);
+    expect(Boolean(menu.queryByRole("option", { name: "New Project" }))).toBe(create);
+    expect(screen.queryByRole("link", { name: "Transactions" })).not.toBeInTheDocument();
+  });
+
+  test("canceled navigation retains the selected page; confirmed navigation opens the destination", () => {
+    const confirm = jest.spyOn(window, "confirm").mockReturnValue(false);
+    renderLayout(["FINANCE"], {}, <DirtyProject />);
+    const menu = screen.getByRole("combobox", { name: "Current page" });
+    fireEvent.change(menu, { target: { value: "/transactions" } });
+    expect(menu).toHaveValue("/project");
+    expect(screen.getByText("Project with unsaved changes")).toBeInTheDocument();
+    confirm.mockReturnValue(true);
+    fireEvent.change(menu, { target: { value: "/transactions" } });
+    expect(menu).toHaveValue("/transactions");
+    expect(screen.getByText("Transaction page")).toBeInTheDocument();
+  });
+
+  test("project selection keeps its unsaved-change guard", () => {
+    jest.spyOn(window, "confirm").mockReturnValue(false);
+    const setSelectedProjectId = jest.fn();
+    renderLayout(["FINANCE"], {
+      projects: [{ id: 1, projectName: "First" }, { id: 2, projectName: "Second" }],
+      selectedProjectId: "1", setSelectedProjectId,
+    }, <DirtyProject />);
+    fireEvent.change(screen.getByRole("combobox", { name: "Project" }), { target: { value: "2" } });
+    expect(setSelectedProjectId).not.toHaveBeenCalled();
+    expect(screen.getByRole("combobox", { name: "Project" })).toHaveValue("1");
   });
 });

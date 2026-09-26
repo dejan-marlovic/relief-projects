@@ -1,11 +1,16 @@
+import useTransientMessage from "../../../hooks/useTransientMessage";
+import { fundingCurrencyLabel } from "../../../utils/transactionFunding";
+import { budgetOptionLabel } from "../../../utils/budgetDisplay";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiTrash2, FiRefreshCw, FiAlertCircle, FiRepeat } from "react-icons/fi";
+import { FiTrash2, FiRefreshCw, FiRepeat } from "react-icons/fi";
 
 import styles from "./DeleteTransaction.module.scss";
 import { BASE_URL } from "../../../config/api";
 
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
+import { formatApiError } from "../../../utils/apiErrors";
 
 const DeleteTransaction = () => {
   const navigate = useNavigate();
@@ -23,7 +28,7 @@ const DeleteTransaction = () => {
   const [selectedTransactionId, setSelectedTransactionId] = useState("");
 
   const [formError, setFormError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useTransientMessage("");
 
   const organizationNameById = useMemo(() => {
     return organizations.reduce((acc, organization) => {
@@ -41,9 +46,7 @@ const DeleteTransaction = () => {
 
   const budgetLabelById = useMemo(() => {
     return budgets.reduce((acc, budget) => {
-      const label = budget.budgetDescription
-        ? `${budget.budgetDescription} (id: ${budget.id})`
-        : `Budget #${budget.id}`;
+      const label = budgetOptionLabel(budget);
       acc[budget.id] = label;
       return acc;
     }, {});
@@ -264,7 +267,7 @@ const DeleteTransaction = () => {
       if (!res.ok) {
         const data = await safeReadJson(res);
         setFormError(
-          data?.message || data?.detail || "Failed to delete the transaction.",
+          formatApiError(data, "Failed to delete the transaction."),
         );
         return;
       }
@@ -304,11 +307,9 @@ const DeleteTransaction = () => {
           </div>
         </div>
 
+        {selectedTransaction && <p className={styles.pageSubtitle}>Current budget currency: {fundingCurrencyLabel(selectedTransaction.fundingCurrency)}. This is not verified historical denomination.</p>}
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {successMessage && (
@@ -426,25 +427,17 @@ const DeleteTransaction = () => {
 
                     <div className={styles.detailRow}>
                       <span className={styles.detailLabel}>
-                        Applied for amount
+                        Requested funding
                       </span>
                       <span className={styles.detailValue}>
                         {selectedTransaction.appliedForAmount ?? "N/A"}
                       </span>
                     </div>
 
-                    <div className={styles.detailRow}>
-                      <span className={styles.detailLabel}>
-                        First share amount
-                      </span>
-                      <span className={styles.detailValue}>
-                        {selectedTransaction.firstShareAmount ?? "N/A"}
-                      </span>
-                    </div>
 
                     <div className={styles.detailRow}>
                       <span className={styles.detailLabel}>
-                        Approved amount
+                        Approved funding
                       </span>
                       <span className={styles.detailValue}>
                         {selectedTransaction.approvedAmount ?? "N/A"}
@@ -460,14 +453,6 @@ const DeleteTransaction = () => {
                       </span>
                     </div>
 
-                    <div className={styles.detailRow}>
-                      <span className={styles.detailLabel}>
-                        Second share amount
-                      </span>
-                      <span className={styles.detailValue}>
-                        {selectedTransaction.secondShareAmount ?? "N/A"}
-                      </span>
-                    </div>
 
                     <div className={styles.detailRow}>
                       <span className={styles.detailLabel}>Date planned</span>

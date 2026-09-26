@@ -1,0 +1,22 @@
+@use "../../styles/colors" as colors;
+.page { margin: 1rem; padding: 1.2rem; background: colors.$surface; color: colors.$text; border: 1px solid colors.$primary-border; border-radius: 14px; min-width: 0; }
+.page h2 { color: colors.$primary; margin-top: 0; }
+.muted { color: colors.$text-muted; font-size: 0.85rem; line-height: 1.5; }
+.actions { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin: 0.8rem 0; }
+.page button { font: inherit; padding: 0.65rem 0.8rem; color: colors.$primary; background: colors.$primary-a04; border: 1px solid colors.$primary-border; border-radius: 8px; cursor: pointer; }
+.page button[aria-pressed=true] { background: colors.$primary; color: white; }
+.page button:disabled { opacity: 0.55; cursor: not-allowed; }
+.page input:not([type=checkbox]), .page select, .page textarea { box-sizing: border-box; width: 100%; min-width: 0; padding: 0.65rem; margin-top: 0.4rem; color: colors.$text; background: colors.$surface; border: 1px solid colors.$border; border-radius: 8px; font: inherit; }
+.page label { display: block; }
+.filters, .grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 0.8rem; margin: 1rem 0; }
+.form { padding: 1rem; border-radius: 10px; background: colors.$primary-a04; margin: 1rem 0; }
+.form label { margin: 0.7rem 0; }
+.list { list-style: none; padding: 0; }
+.list li { border: 1px solid colors.$border; border-radius: 10px; padding: 1rem; margin: 0.8rem 0; overflow-wrap: anywhere; }
+.heading { display: flex; gap: 1rem; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.heading h3 { margin: 0; }
+.badge { background: colors.$primary-a04; color: colors.$primary; padding: 0.4rem 0.6rem; border-radius: 8px; }
+.description { white-space: pre-wrap; }
+.page summary { cursor: pointer; color: colors.$primary; }
+.page :focus-visible { outline: 2px solid colors.$primary; outline-offset: 2px; }
+@media(max-width: 600px) { .page { margin: 0.5rem; padding: 0.8rem; } .filters, .grid { grid-template-columns: 1fr; } .actions button { flex: 1 1 auto; min-height: 44px; } }

@@ -208,3 +208,19 @@
   background: colors.$primary-a04;
   box-shadow: 0 6px 16px colors.$neutral-a04;
 }
+
+.fieldLabel { display: block; font-size: 0.8rem; font-weight: 600; color: colors.$text-muted; margin-bottom: 4px; }
+@media (max-width: 1100px) {
+  .gridRow { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 12px; padding: 16px; }
+  .cell { white-space: normal; overflow-wrap: anywhere; overflow: visible; }
+  .actionsCol { grid-column: 1 / -1; grid-row: 2; position: static; box-shadow: none; padding: 0; }
+  .actions { flex-wrap: wrap; }
+  .actions button { min-height: 44px; min-width: 44px; width: auto; height: auto; padding: 8px 12px; gap: 6px; border-radius: 8px; }
+  .input { width: 100%; min-width: 0; max-width: 100%; box-sizing: border-box; min-height: 44px; font-size: 16px; }
+  .detailsWrapperRow { padding: 12px; margin: 8px; min-width: 0; }
+}
+@media (max-width: 700px) {
+  .gridRow { grid-template-columns: minmax(0, 1fr); }
+  .actionsCol { grid-row: 3; }
+  .detailsWrapperRow { margin: 6px 0; padding: 8px; }
+}

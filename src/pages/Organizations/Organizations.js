@@ -1,12 +1,16 @@
+import { appFetch as fetch } from "../../utils/appFetch";
+import useMediaQuery from "../../hooks/useMediaQuery";
 import React, {
   useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
+  useRef,
 } from "react";
 import { ProjectContext } from "../../context/ProjectContext";
 import { useAuth } from "../../context/AuthContext";
+import { useUnsavedChange } from "../../context/UnsavedChangesContext";
 import OrganizationRow from "./Organization/Organization";
 import styles from "./Organizations.module.scss";
 import { FiColumns, FiPlus } from "react-icons/fi";
@@ -17,7 +21,9 @@ import ColumnFilter from "../../components/ColumnFilter/ColumnFilter";
 import ClearFiltersButton from "../../components/ClearFiltersButton/ClearFiltersButton";
 import { getSelectedProjectName } from "../../utils/projectDisplay";
 
-import { BASE_URL } from "../../config/api"; // adjust path if needed
+import { BASE_URL } from "../../config/api";
+import ErrorBanner from "../../components/ErrorBanner/ErrorBanner"; // adjust path if needed
+import { formatApiError } from "../../utils/apiErrors";
 
 const blankLink = {
   projectId: "",
@@ -54,9 +60,13 @@ const Organizations = () => {
   const canViewBankDetails = hasAnyRole("ADMIN", "FINANCE", "APPROVER");
   const canManageBankDetails = hasAnyRole("ADMIN", "FINANCE");
 
+  const compact = useMediaQuery("(max-width: 1100px)");
+  const [saving, setSaving] = useState(false);
+  const saveInProgress = useRef(false);
   const [links, setLinks] = useState([]); // project_organization rows
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
+  useUnsavedChange("project-organizations-editor", editingId !== null);
 
   // dropdown data
   const [orgOptions, setOrgOptions] = useState([]); // /organizations/active/options
@@ -179,7 +189,7 @@ const Organizations = () => {
   }, [fetchProjectOrganizations, selectedProjectId]);
 
   const startEdit = (link) => {
-    if (!canManageOrganizationLinks) return;
+    if (!canManageOrganizationLinks || saving || (compact && editingId !== null)) return;
     setEditingId(link?.id ?? null);
     setEditedValues((prev) => ({
       ...prev,
@@ -199,7 +209,7 @@ const Organizations = () => {
   };
 
   const startCreate = () => {
-    if (!canManageOrganizationLinks) return;
+    if (!canManageOrganizationLinks || saving || (compact && editingId !== null)) return;
     setEditingId("new");
     setEditedValues((prev) => ({
       ...prev,
@@ -228,11 +238,13 @@ const Organizations = () => {
   };
 
   const save = async () => {
-    if (!canManageOrganizationLinks) return;
+    if (!canManageOrganizationLinks || saveInProgress.current) return;
     const id = editingId;
     const values = editedValues[id];
     if (!values) return;
 
+    saveInProgress.current = true;
+    setSaving(true);
     const isCreate = id === "new";
     const effectiveProjectId = isCreate
       ? values.projectId || selectedProjectId
@@ -285,6 +297,9 @@ const Organizations = () => {
         err.message ||
           `Failed to ${isCreate ? "create" : "update"} organization link.`
       );
+    } finally {
+      saveInProgress.current = false;
+      setSaving(false);
     }
   };
 
@@ -324,7 +339,9 @@ const Organizations = () => {
 
       if (!res.ok) {
         const data = await safeParseJsonResponse(res);
-        setFormError(data?.message || "Failed to delete project organization.");
+        setFormError(
+          formatApiError(data, "Failed to delete project organization."),
+        );
         return;
       }
 
@@ -378,7 +395,7 @@ const Organizations = () => {
 
           <div className={styles.headerActions}>
             {hasActiveFilters && <ClearFiltersButton onClick={() => setFilters(emptyFilters())} />}
-            <div className={styles.columnsBox}>
+            <div className={styles.columnsBox} hidden={compact}>
               <button
                 className={styles.columnsBtn}
                 onClick={() => setColumnsOpen((v) => !v)}
@@ -412,7 +429,7 @@ const Organizations = () => {
             {canManageOrganizationLinks && <button
               className={styles.primaryBtn}
               onClick={startCreate}
-              disabled={!selectedProjectId || editingId === "new"}
+              disabled={!selectedProjectId || saving || (compact ? editingId !== null : editingId === "new")}
               title={
                 !selectedProjectId
                   ? "Select a project first"
@@ -428,21 +445,21 @@ const Organizations = () => {
           </div>
         </div>
 
-        {formError && <div className={styles.errorBanner}>{formError}</div>}
+        {formError && <ErrorBanner message={formError} onDismiss={() => setFormError("")} />}
 
-        <div className={styles.table} style={{ ["--org-grid-cols"]: gridCols }}>
-          <div className={`${styles.gridRow} ${styles.headerRow}`}>
+        <div className={styles.table} style={{ "--org-grid-cols": gridCols }}>
+          <fieldset disabled={compact && (editingId !== null || saving)} className={`${styles.gridRow} ${styles.headerRow}`}>
             {headerLabels.map((h, i) => (
               <div
                 key={h}
                 className={`${styles.headerCell}
                   ${i === 0 ? styles.stickyColHeader : ""}
-                  ${!visibleCols[i] ? styles.hiddenCol : ""}`}
+                  ${!compact && !visibleCols[i] ? styles.hiddenCol : ""}`}
               >
                 {i === 0 ? h : <div className={styles.sortAndFilterHeader}><SortableHeader label={h} sortKey={HEADER_SORT_KEYS[i]} sortConfig={sortConfig} onSort={toggleSort} /><ColumnFilter label={h} type={HEADER_SORT_KEYS[i] === "status" ? "select" : "text"} value={filters[HEADER_SORT_KEYS[i]]} options={HEADER_SORT_KEYS[i] === "status" ? statusOptions.map((s)=>({value:s.id,label:s.organizationStatusName})) : []} onApply={(v)=>setFilters((c)=>({...c,[HEADER_SORT_KEYS[i]]:v}))} onClear={()=>setFilters((c)=>({...c,[HEADER_SORT_KEYS[i]]:emptyFilters()[HEADER_SORT_KEYS[i]]}))} /></div>}
               </div>
             ))}
-          </div>
+          </fieldset>
 
           {!selectedProjectId ? (
             <p className={styles.noData}>
@@ -452,9 +469,14 @@ const Organizations = () => {
             <p className={styles.noData}>
               No organizations linked to this project.
             </p>
+          ) : displayedLinks.length === 0 ? (
+            <p className={styles.noData}>No organizations match your filters.</p>
           ) : (
             displayedLinks.map((link, idx) => (
               <OrganizationRow
+                compact={compact}
+                saving={saving}
+                editingLocked={compact && editingId !== null}
                 key={link.id}
                 link={link}
                 isEditing={editingId === link.id}
@@ -480,6 +502,9 @@ const Organizations = () => {
 
           {editingId === "new" && (
             <OrganizationRow
+                compact={compact}
+                saving={saving}
+                editingLocked={compact && editingId !== null}
               link={{
                 id: "new",
                 ...blankLink,

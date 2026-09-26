@@ -1,15 +1,16 @@
+import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiRotateCcw,
-  FiRefreshCw,
-  FiAlertCircle,
-  FiEdit3,
+  FiRefreshCw,  FiEdit3,
 } from "react-icons/fi";
 
 import styles from "./RestoreSignature.module.scss";
 import { BASE_URL } from "../../../config/api";
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
+import { formatApiError } from "../../../utils/apiErrors";
 
 const RestoreSignature = () => {
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ const RestoreSignature = () => {
   const [selectedSignatureId, setSelectedSignatureId] = useState("");
 
   const [formError, setFormError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useTransientMessage("");
 
   const selectedSignature = useMemo(() => {
     const id = Number(selectedSignatureId);
@@ -242,9 +243,7 @@ const RestoreSignature = () => {
       if (!res.ok) {
         const data = await safeReadJson(res);
         setFormError(
-          data?.message ||
-            data?.detail ||
-            "Failed to restore the signature. Backend support may be missing.",
+          formatApiError(data, "Failed to restore the signature."),
         );
         return;
       }
@@ -281,10 +280,7 @@ const RestoreSignature = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {successMessage && (

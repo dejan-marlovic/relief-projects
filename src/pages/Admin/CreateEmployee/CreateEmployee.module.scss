@@ -1,3 +1,4 @@
+@use "../responsiveForms" as responsive;
 @use "../../../styles/colors" as colors;
 @use "../../../styles/forms" as forms;
 
@@ -145,3 +146,5 @@ label {
     align-items: stretch;
   }
 }
+
+@include responsive.layout;

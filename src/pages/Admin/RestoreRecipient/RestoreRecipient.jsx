@@ -1,15 +1,18 @@
+import useTransientMessage from "../../../hooks/useTransientMessage";
+import PaymentAmount from "../../../components/PaymentAmount/PaymentAmount";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiRotateCcw,
   FiRefreshCw,
-  FiAlertCircle,
   FiUserCheck,
 } from "react-icons/fi";
 
 import styles from "./RestoreRecipient.module.scss";
 import { BASE_URL } from "../../../config/api";
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
+import { formatApiError } from "../../../utils/apiErrors";
 
 const RestoreRecipient = () => {
   const navigate = useNavigate();
@@ -25,7 +28,7 @@ const RestoreRecipient = () => {
   const [selectedRecipientId, setSelectedRecipientId] = useState("");
 
   const [formError, setFormError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useTransientMessage("");
 
   const selectedRecipient = useMemo(() => {
     const id = Number(selectedRecipientId);
@@ -214,9 +217,7 @@ const RestoreRecipient = () => {
       if (!res.ok) {
         const data = await safeReadJson(res);
         setFormError(
-          data?.message ||
-            data?.detail ||
-            "Failed to restore the recipient. Backend support may be missing.",
+          formatApiError(data, "Failed to restore the recipient."),
         );
         return;
       }
@@ -255,10 +256,7 @@ const RestoreRecipient = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {successMessage && (
@@ -356,9 +354,7 @@ const RestoreRecipient = () => {
 
                     <div className={styles.detailRow}>
                       <span className={styles.detailLabel}>Amount</span>
-                      <span className={styles.detailValue}>
-                        {getAmountLabel(selectedRecipient.amount)}
-                      </span>
+                      <div className={styles.detailValue}><PaymentAmount record={selectedRecipient} /></div>
                     </div>
                   </div>
                 ) : (

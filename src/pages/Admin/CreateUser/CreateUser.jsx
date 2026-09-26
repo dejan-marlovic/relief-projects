@@ -1,10 +1,12 @@
+import { appFetch as fetch } from "../../../utils/appFetch";
 // src/components/Admin/CreateUser/CreateUser.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiSave, FiX, FiAlertCircle } from "react-icons/fi";
+import { FiSave, FiX } from "react-icons/fi";
 
 import styles from "./CreateUser.module.scss";
 import { BASE_URL } from "../../../config/api";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const initialUserDetails = {
   employeeId: "",
@@ -212,9 +214,7 @@ const CreateUser = () => {
       }
 
       const created = await safeReadJson(res);
-      alert(
-        `User created successfully${created?.id ? ` (id: ${created.id})` : ""}!`,
-      );
+      // Successful mutations are announced by the shared notification banner.
       resetForm();
     } catch (err) {
       console.error("Create user error:", err);
@@ -242,10 +242,7 @@ const CreateUser = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {hasAnyFieldErrors && (

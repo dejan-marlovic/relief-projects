@@ -1,3 +1,6 @@
+import { appFetch as fetch } from "../../utils/appFetch";
+import { decimalUnits, matchesDecimalRange, fundingExcel, summaryExcel, summaryText, issueText, groupedPaymentTotals } from "../../utils/paymentFunding";
+import useMediaQuery from "../../hooks/useMediaQuery";
 import React, {
   useCallback,
   useContext,
@@ -9,6 +12,7 @@ import React, {
 import ExcelJS from "exceljs";
 import { ProjectContext } from "../../context/ProjectContext";
 import { useAuth } from "../../context/AuthContext";
+import { useUnsavedChange } from "../../context/UnsavedChangesContext";
 import RecipientRow from "./Recipient/Recipient";
 import styles from "./Recipients.module.scss";
 import { FiColumns, FiPlus, FiTrash2, FiDownload } from "react-icons/fi";
@@ -20,6 +24,8 @@ import { matchesNumberRange, matchesText } from "../../utils/tableSorting";
 import ColumnFilter from "../../components/ColumnFilter/ColumnFilter";
 import ClearFiltersButton from "../../components/ClearFiltersButton/ClearFiltersButton";
 import { getSelectedProjectName } from "../../utils/projectDisplay";
+import ErrorBanner from "../../components/ErrorBanner/ErrorBanner";
+import { formatApiError } from "../../utils/apiErrors";
 
 const headerLabels = ["Actions", "Organization", "Payment Order", "Amount"];
 const HEADER_SORT_KEYS = [null, "organization", "paymentOrderId", "amount"];
@@ -81,10 +87,26 @@ function normalizeRecipient(r) {
     //works only when you already have a variable called organizationId.
     organizationId,
     paymentOrderId,
-    amount: r.amount ?? 0,
+    amount: r.amount ?? null,
+    amountSummary: r.amountSummary ?? null,
     locked: Boolean(r.locked ?? r.isLocked ?? false),
   };
 }
+
+export const isRecipientPaymentOrderEditable = (paymentOrder) =>
+  Boolean(paymentOrder) &&
+  !paymentOrder.locked &&
+  ["DRAFT", "RETURNED"].includes(paymentOrder.lifecycleStatus || "DRAFT");
+
+export const editableRecipientPaymentOrders = (
+  paymentOrders = [],
+  currentId = null,
+) =>
+  paymentOrders.filter(
+    (paymentOrder) =>
+      isRecipientPaymentOrderEditable(paymentOrder) ||
+      (currentId != null && String(paymentOrder.id) === String(currentId)),
+  );
 
 function Recipients() {
   const { selectedProjectId, projects } = useContext(ProjectContext);
@@ -93,8 +115,12 @@ function Recipients() {
   const canBulkDeleteRecipients = hasRole("ADMIN");
 
   const [items, setItems] = useState([]);
+  const compact = useMediaQuery("(max-width: 700px)");
+  const [saving, setSaving] = useState(false);
+  const saveInProgress = useRef(false);
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
+  useUnsavedChange("recipients-editor", editingId !== null);
 
   // Lazy initializer function.
   // React calls this once when the component first mounts
@@ -231,7 +257,15 @@ function Recipients() {
         if (!res.ok) throw new Error(`Failed ${res.status}`);
 
         const data = await res.json();
-        setPoOptions(Array.isArray(data) ? data : data ? [data] : []);
+        const options = (Array.isArray(data) ? data : data ? [data] : [])
+          .map((po) => ({
+            ...po,
+            id: po.id ?? po.paymentOrderId ?? po.payment_order_id,
+            locked: Boolean(po.locked ?? po.isLocked ?? false),
+            lifecycleStatus: po.lifecycleStatus || "DRAFT",
+          }))
+          .filter((po) => po.id != null);
+        setPoOptions(options);
       } catch (e) {
         console.error(e);
         setPoOptions([]);
@@ -313,7 +347,7 @@ function Recipients() {
   };
 
   const startEdit = (row) => {
-    if (!canManageRecipients) return;
+    if (!canManageRecipients || (compact && editingId !== null)) return;
     setEditingId(row?.id ?? null);
     setEditedValues((prev) => ({
       ...prev,
@@ -334,7 +368,7 @@ function Recipients() {
   };
 
   const startCreate = () => {
-    if (!canManageRecipients) return;
+    if (!canManageRecipients || (compact && editingId !== null)) return;
     setEditingId("new");
     setEditedValues((prev) => ({ ...prev, new: { ...blankRecipient } }));
 
@@ -394,12 +428,14 @@ function Recipients() {
   };
 
   const save = async () => {
-    if (!canManageRecipients) return;
+    if (!canManageRecipients || saveInProgress.current) return;
     const id = editingId;
     const v = editedValues[id];
     if (!v) return;
 
     const isCreate = id === "new";
+    saveInProgress.current = true;
+    setSaving(true);
 
     const payload = {
       organizationId: v.organizationId !== "" ? Number(v.organizationId) : null,
@@ -457,7 +493,7 @@ function Recipients() {
 
           setLockedBanner(msg);
           setFormError("");
-          await fetchRecipients(selectedProjectId);
+          await Promise.all([fetchRecipients(selectedProjectId), fetchPaymentOrders(selectedProjectId)]);
           return;
         }
 
@@ -468,14 +504,14 @@ function Recipients() {
         return;
       }
 
-      await fetchRecipients(selectedProjectId);
+      await Promise.all([fetchRecipients(selectedProjectId), fetchPaymentOrders(selectedProjectId)]);
       cancel();
     } catch (e) {
       console.error(e);
       setFormError(
         e.message || `Failed to ${isCreate ? "create" : "update"} recipient.`,
       );
-    }
+    } finally { saveInProgress.current = false; setSaving(false); }
   };
 
   const remove = async (id) => {
@@ -501,7 +537,7 @@ function Recipients() {
 
           setLockedBanner(msg);
           setFormError("");
-          await fetchRecipients(selectedProjectId);
+          await Promise.all([fetchRecipients(selectedProjectId), fetchPaymentOrders(selectedProjectId)]);
           return;
         }
 
@@ -515,7 +551,7 @@ function Recipients() {
         return next;
       });
 
-      await fetchRecipients(selectedProjectId);
+      await Promise.all([fetchRecipients(selectedProjectId), fetchPaymentOrders(selectedProjectId)]);
     } catch (e) {
       console.error(e);
       setFormError("Delete failed.");
@@ -582,7 +618,7 @@ function Recipients() {
 
       if (!res.ok) {
         throw new Error(
-          data?.message || "Failed to delete selected recipients.",
+          formatApiError(data, "Failed to delete selected recipients."),
         );
       }
 
@@ -601,7 +637,7 @@ function Recipients() {
         ? data.lockedRecipientIds
         : [];
 
-      if (lockedIds.length > 0) {
+      if (data?.message || lockedIds.length > 0) {
         setLockedBanner(
           data?.message ||
             `Locked recipients were not deleted: ${lockedIds
@@ -613,7 +649,7 @@ function Recipients() {
       }
 
       setSelectedRecipientIds(new Set());
-      await fetchRecipients(selectedProjectId);
+      await Promise.all([fetchRecipients(selectedProjectId), fetchPaymentOrders(selectedProjectId)]);
     } catch (err) {
       console.error(err);
       setFormError(err.message || "Failed to delete recipients.");
@@ -649,12 +685,7 @@ function Recipients() {
       .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, "")
       .trim();
 
-  const toExcelNumber = (value) => {
-    if (value == null || value === "") return 0;
 
-    const number = Number(value);
-    return Number.isFinite(number) ? number : 0;
-  };
 
   const getOrganizationLabel = (id) => {
     const organization = orgOptions.find(
@@ -873,22 +904,21 @@ function Recipients() {
         applyExcelBorder(cell);
       }
 
-      let totalAmount = 0;
+
 
       sortedRecipients.forEach((recipient, index) => {
-        const amount = toExcelNumber(recipient.amount);
-        totalAmount += amount;
+        const amount = summaryExcel(recipient);
 
         const row = worksheet.addRow({
           recipientId: recipient.id,
           organization: getOrganizationLabel(recipient.organizationId),
           paymentOrder: getPaymentOrderLabel(recipient.paymentOrderId),
           amount,
-          state: getPaymentOrderState(recipient),
+          state: `${getPaymentOrderState(recipient)} | ${summaryText(recipient.amountSummary)} | ${issueText(recipient.amountSummary?.issues)}`,
           project: projectName,
         });
 
-        row.getCell(4).numFmt = "#,##0.00";
+        row.getCell(4).numFmt = "#,##0.######";
 
         for (let column = 1; column <= 6; column += 1) {
           const cell = row.getCell(column);
@@ -910,36 +940,12 @@ function Recipients() {
         }
       });
 
-      const totalRow = worksheet.addRow({
-        recipientId: "TOTAL",
-        organization: "",
-        paymentOrder: "",
-        amount: Number(totalAmount.toFixed(2)),
-        state: "",
-        project: "",
-      });
-
-      totalRow.getCell(4).numFmt = "#,##0.00";
-
-      for (let column = 1; column <= 6; column += 1) {
-        const cell = totalRow.getCell(column);
-
-        cell.font = {
-          bold: true,
-          color: { argb: excelColors.text },
-        };
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFE2F0D9" },
-        };
-        cell.alignment = {
-          vertical: "middle",
-          horizontal: "left",
-          wrapText: true,
-        };
-        applyExcelBorder(cell);
+      for (const group of groupedPaymentTotals(sortedRecipients)) {
+        const row = worksheet.addRow({recipientId: "TOTAL", organization: `${group.currency.name || "Currency"} (#${group.currency.id})`, amount: fundingExcel(group.amount)});
+        row.getCell(4).numFmt = "#,##0.######";
+        row.font = { bold: true };
       }
+      worksheet.addRow(["Subtotals grouped by current currency ID; inconsistent, unavailable and unknown-currency totals excluded. A valid recipient subtotal does not certify the full order."]);
 
       worksheet.autoFilter = {
         from: "A4",
@@ -999,14 +1005,14 @@ function Recipients() {
   useEffect(() => setFilters(emptyFilters()), [selectedProjectId]);
   const filteredItems = useMemo(() => items.filter((r) =>
     matchesText(organizationNames.get(String(r.organizationId)), filters.organization) &&
-    matchesNumberRange(r.paymentOrderId, filters.paymentOrderId) && matchesNumberRange(r.amount, filters.amount)
+    matchesNumberRange(r.paymentOrderId, filters.paymentOrderId) && matchesDecimalRange(r.amount, filters.amount)
   ), [filters, items, organizationNames]);
   const displayedItems = useMemo(() => {
     if (!sortConfig) return filteredItems;
     const getters = {
       organization: (r) => r?.organizationId == null ? null : organizationNames.get(String(r.organizationId)) || `Organization ${r.organizationId}`,
       paymentOrderId: (r) => toSortableNumber(r?.paymentOrderId),
-      amount: (r) => toSortableNumber(r?.amount),
+      amount: (r) => decimalUnits(r?.amount),
     };
     return sortRows(filteredItems, getters[sortConfig.key], sortConfig.direction);
   }, [filteredItems, organizationNames, sortConfig]);
@@ -1022,6 +1028,13 @@ function Recipients() {
   );
 
   const selectedRecipientCount = selectedRecipientIds.size;
+  const selectedContainsLifecycleLocked = items.some((recipient) => {
+    if (!selectedRecipientIds.has(recipient.id)) return false;
+    const paymentOrder = poOptions.find(
+      (po) => String(po.id) === String(recipient.paymentOrderId),
+    );
+    return !isRecipientPaymentOrderEditable(paymentOrder);
+  });
 
   const allVisibleSelected =
     selectableRecipients.length > 0 &&
@@ -1050,7 +1063,7 @@ function Recipients() {
               type="button"
               className={styles.exportInlineBtn}
               onClick={handleExportSelected}
-              disabled={selectedRecipientCount === 0 || exportingSelected}
+              disabled={selectedRecipientCount === 0 || exportingSelected || saving}
               title="Export selected recipients to Excel"
             >
               <FiDownload />
@@ -1068,8 +1081,18 @@ function Recipients() {
                 type="button"
                 className={styles.dangerInlineBtn}
                 onClick={removeSelected}
-                disabled={selectedRecipientCount === 0 || exportingSelected}
-                title="Delete selected recipients"
+                disabled={
+                  selectedRecipientCount === 0 ||
+                  saving ||
+                  (compact && editingId !== null) ||
+                  exportingSelected ||
+                  selectedContainsLifecycleLocked
+                }
+                title={
+                  selectedContainsLifecycleLocked
+                    ? "Recipients on submitted or approved payment orders cannot be deleted"
+                    : "Delete selected recipients"
+                }
               >
                 <FiTrash2 />
                 Delete selected{" "}
@@ -1079,7 +1102,7 @@ function Recipients() {
               </button>
             )}
 
-            <div className={styles.columnsBox}>
+            {!compact && <div className={styles.columnsBox}>
               <button
                 className={styles.columnsBtn}
                 onClick={() => setColumnsOpen((v) => !v)}
@@ -1108,14 +1131,17 @@ function Recipients() {
                   ))}
                 </div>
               )}
-            </div>
+            </div>}
 
             {canManageRecipients && (
               <button
                 className={styles.primaryBtn}
                 onClick={startCreate}
                 disabled={
-                  !selectedProjectId || editingId === "new" || exportingSelected
+                  !selectedProjectId ||
+                  saving ||
+                  (compact ? editingId !== null : editingId === "new") ||
+                  exportingSelected
                 }
                 title={
                   !selectedProjectId
@@ -1134,12 +1160,28 @@ function Recipients() {
         </div>
         {/*If lockedBanner is a non-empty string, the <div> is rendered.*/}
         {lockedBanner && (
-          <div className={styles.errorBanner}>{lockedBanner}</div>
+          <ErrorBanner message={lockedBanner} onDismiss={() => setLockedBanner("")} />
         )}
-        {formError && <div className={styles.errorBanner}>{formError}</div>}
+        {formError && <ErrorBanner message={formError} onDismiss={() => setFormError("")} />}
 
-        <div className={styles.table} style={{ ["--rec-grid-cols"]: gridCols }}>
-          <div className={`${styles.gridRow} ${styles.headerRow}`}>
+        {compact && <fieldset disabled={editingId !== null || saving} className={styles.mobileTools}>
+          <legend className={styles.mobileToolsLegend}>Recipient controls</legend>
+          <details>
+            <summary>Sort &amp; filter{hasActiveFilters ? " · filters active" : ""}</summary>
+            <div className={styles.mobileFilters}>
+              {headerLabels.slice(1).map((label, index) => {
+                const key = HEADER_SORT_KEYS[index + 1];
+                return <div key={key} className={styles.sortAndFilterHeader}>
+                  <SortableHeader label={label} sortKey={key} sortConfig={sortConfig} onSort={toggleSort} />
+                  <ColumnFilter label={label} type={key === "organization" ? "text" : "number"} value={filters[key]} onApply={(value) => setFilters((current) => ({ ...current, [key]: value }))} onClear={() => setFilters((current) => ({ ...current, [key]: emptyFilters()[key] }))} />
+                </div>;
+              })}
+            </div>
+          </details>
+          <label className={styles.mobileSelectAll}><input type="checkbox" checked={allVisibleSelected} disabled={!selectableRecipients.length} onChange={(event) => toggleSelectAllVisible(event.target.checked)} /> Select all visible ({displayedItems.length})</label>
+        </fieldset>}
+        <div className={styles.table} style={{ "--rec-grid-cols": gridCols, "--rec-tablet-cols": ["130px", "minmax(140px, 1fr)", "140px", "110px"].map((width, index) => visibleCols[index] ? width : "0px").join(" ") }}>
+          {!compact && <div className={`${styles.gridRow} ${styles.headerRow}`}>
             {headerLabels.map((h, i) => (
               <div
                 key={h}
@@ -1164,7 +1206,7 @@ function Recipients() {
                 )}
               </div>
             ))}
-          </div>
+          </div>}
 
           {!selectedProjectId ? (
             <p className={styles.noData}>
@@ -1172,9 +1214,13 @@ function Recipients() {
             </p>
           ) : items.length === 0 ? (
             <p className={styles.noData}>No recipients for this project.</p>
+          ) : displayedItems.length === 0 ? (
+            <p className={styles.noData}>No recipients match your filters.</p>
           ) : (
             displayedItems.map((r, idx) => (
               <RecipientRow
+                compact={compact}
+                saving={saving}
                 key={r.id}
                 row={r}
                 isEven={idx % 2 === 0}
@@ -1189,17 +1235,29 @@ function Recipients() {
                 onSelectChange={toggleSelectedRecipient}
                 selectionDisabled={editingId === r.id}
                 locked={lockedRecipientIds.has(r.id)}
-                poOptions={poOptions}
+                poOptions={editableRecipientPaymentOrders(
+                  poOptions,
+                  r.paymentOrderId,
+                )}
                 orgOptions={orgOptions}
                 visibleCols={visibleCols}
                 fieldErrors={fieldErrors[r.id] || {}}
-                canManage={canManageRecipients}
+                canManage={
+                  canManageRecipients && (!compact || editingId === null || editingId === r.id) &&
+                  isRecipientPaymentOrderEditable(
+                    poOptions.find(
+                      (po) => String(po.id) === String(r.paymentOrderId),
+                    ),
+                  )
+                }
               />
             ))
           )}
 
           {editingId === "new" && (
             <RecipientRow
+              compact={compact}
+              saving={saving}
               row={{
                 id: "new",
                 organizationId: "",
@@ -1215,7 +1273,7 @@ function Recipients() {
               isSelected={false}
               onSelectChange={() => {}}
               selectionDisabled
-              poOptions={poOptions}
+              poOptions={editableRecipientPaymentOrders(poOptions)}
               orgOptions={orgOptions}
               visibleCols={visibleCols}
               isEven={false}

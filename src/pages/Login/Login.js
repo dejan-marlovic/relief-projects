@@ -1,3 +1,5 @@
+import { notifySuccess } from "../../utils/successNotifications";
+import { appFetch as fetch } from "../../utils/appFetch";
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Login.module.scss";
@@ -45,6 +47,7 @@ function Login() {
       }
 
       // 3️⃣ Navigate to project page
+      notifySuccess("You are now signed in.");
       navigate("/project");
     } catch (error) {
       clearAuth();
@@ -54,8 +57,7 @@ function Login() {
   };
 
   return (
-    <div className={styles.container}>
-      {/* Centered logo above input fields */}
+    <div className={styles.page}>
       <div className={styles.logoWrapper}>
         <img
           src={logoUrl}
@@ -68,6 +70,7 @@ function Login() {
         />
       </div>
 
+      <div className={styles.container}>
       <h2>Login</h2>
 
       <form onSubmit={handleSubmit}>
@@ -99,6 +102,7 @@ function Login() {
       </form>
 
       {message && <p className={styles.message}>{message}</p>}
+      </div>
     </div>
   );
 }

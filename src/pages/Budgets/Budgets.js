@@ -1,3 +1,4 @@
+import { appFetch as fetch } from "../../utils/appFetch";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ProjectContext } from "../../context/ProjectContext";
 import { useAuth } from "../../context/AuthContext";
@@ -10,6 +11,7 @@ import styles from "./Budgets.module.scss";
 import { FiPlus } from "react-icons/fi";
 
 import { BASE_URL } from "../../config/api";
+import { useUnsavedChange } from "../../context/UnsavedChangesContext";
 
 const Budgets = () => {
   const { selectedProjectId, projects } = useContext(ProjectContext);
@@ -18,12 +20,15 @@ const Budgets = () => {
 
   const [budgets, setBudgets] = useState([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newBudgetId, setNewBudgetId] = useState(null);
+  useUnsavedChange("new-budget", showCreateForm);
 
   /*
    * Points to the wrapper around the create-budget form.
    * We scroll to this element after React has rendered the form.
    */
   const createFormRef = useRef(null);
+  const newBudgetRef = useRef(null);
 
   // Fetch budgets for the selected project.
   const fetchBudgets = async (projectId, token) => {
@@ -79,8 +84,21 @@ const Budgets = () => {
   };
 
   const handleNewBudget = (newBudget) => {
+    setNewBudgetId(newBudget.id);
     setBudgets((prev) => [...prev, newBudget]);
   };
+
+  useEffect(() => {
+    if (!newBudgetId || !newBudgetRef.current) return;
+    window.requestAnimationFrame(() => {
+      newBudgetRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+        inline: "nearest",
+      });
+      setNewBudgetId(null);
+    });
+  }, [budgets, newBudgetId]);
 
   const handleBudgetUpdate = (updatedBudget) => {
     setBudgets((prevBudgets) =>
@@ -155,12 +173,17 @@ const Budgets = () => {
             </p>
           ) : (
             budgets.map((budget) => (
-              <Budget
+              <div
                 key={budget.id}
-                budget={budget}
-                onUpdate={handleBudgetUpdate}
-                onDelete={handleBudgetDelete}
-              />
+                ref={budget.id === newBudgetId ? newBudgetRef : null}
+                className={styles.budgetSection}
+              >
+                <Budget
+                  budget={budget}
+                  onUpdate={handleBudgetUpdate}
+                  onDelete={handleBudgetDelete}
+                />
+              </div>
             ))
           )}
         </div>

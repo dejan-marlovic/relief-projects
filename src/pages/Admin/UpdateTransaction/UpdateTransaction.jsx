@@ -1,6 +1,9 @@
+import useTransientMessage from "../../../hooks/useTransientMessage";
+import { fundingErrors, fundingCurrencyLabel } from "../../../utils/transactionFunding";
+import { budgetOptionLabel } from "../../../utils/budgetDisplay";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiSave, FiRefreshCw, FiAlertCircle, FiEdit3 } from "react-icons/fi";
+import { FiSave, FiRefreshCw, FiEdit3 } from "react-icons/fi";
 
 import styles from "../UpdateUser/UpdateUser.module.scss";
 import { BASE_URL } from "../../../config/api";
@@ -9,6 +12,7 @@ import {
   safeReadJson,
   extractFieldErrors,
 } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const initialForm = {
   selectedId: "",
@@ -18,10 +22,8 @@ const initialForm = {
   financierOrganizationId: "",
   transactionStatusId: "",
   appliedForAmount: "",
-  firstShareAmount: "",
   approvedAmount: "",
   ownContribution: "",
-  secondShareAmount: "",
   datePlanned: "",
   okStatus: "",
 };
@@ -36,7 +38,7 @@ const toInputDateTime = (value) => {
 };
 
 const validate = (values) => {
-  const errors = {};
+  const errors = fundingErrors(values);
 
   if (!values.selectedId) errors.selectedId = "Please select a transaction.";
   if (!values.organizationId)
@@ -50,20 +52,16 @@ const validate = (values) => {
     errors.transactionStatusId = "Transaction status is required.";
   }
   if (values.appliedForAmount === "") {
-    errors.appliedForAmount = "Applied for amount is required.";
+    errors.appliedForAmount = "Requested funding is required.";
   }
-  if (values.firstShareAmount === "") {
-    errors.firstShareAmount = "First share amount is required.";
-  }
+
   if (values.approvedAmount === "") {
-    errors.approvedAmount = "Approved amount is required.";
+    errors.approvedAmount = "Approved funding is required.";
   }
   if (!values.ownContribution) {
     errors.ownContribution = "Own contribution is required.";
   }
-  if (values.secondShareAmount === "") {
-    errors.secondShareAmount = "Second share amount is required.";
-  }
+
   if (!values.datePlanned) {
     errors.datePlanned = "Date planned is required.";
   }
@@ -89,7 +87,7 @@ const UpdateTransaction = () => {
   const [saving, setSaving] = useState(false);
 
   const [formError, setFormError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useTransientMessage("");
   const [fieldErrors, setFieldErrors] = useState({});
 
   const selectedTransaction = useMemo(() => {
@@ -217,22 +215,14 @@ const UpdateTransaction = () => {
         selected?.appliedForAmount !== null
           ? String(selected.appliedForAmount)
           : "",
-      firstShareAmount:
-        selected?.firstShareAmount !== undefined &&
-        selected?.firstShareAmount !== null
-          ? String(selected.firstShareAmount)
-          : "",
+
       approvedAmount:
         selected?.approvedAmount !== undefined &&
         selected?.approvedAmount !== null
           ? String(selected.approvedAmount)
           : "",
       ownContribution: selected?.ownContribution || "",
-      secondShareAmount:
-        selected?.secondShareAmount !== undefined &&
-        selected?.secondShareAmount !== null
-          ? String(selected.secondShareAmount)
-          : "",
+
       datePlanned: toInputDateTime(selected?.datePlanned),
       okStatus: selected?.okStatus || "",
     });
@@ -284,22 +274,14 @@ const UpdateTransaction = () => {
         selectedTransaction.appliedForAmount !== null
           ? String(selectedTransaction.appliedForAmount)
           : "",
-      firstShareAmount:
-        selectedTransaction.firstShareAmount !== undefined &&
-        selectedTransaction.firstShareAmount !== null
-          ? String(selectedTransaction.firstShareAmount)
-          : "",
+
       approvedAmount:
         selectedTransaction.approvedAmount !== undefined &&
         selectedTransaction.approvedAmount !== null
           ? String(selectedTransaction.approvedAmount)
           : "",
       ownContribution: selectedTransaction.ownContribution || "",
-      secondShareAmount:
-        selectedTransaction.secondShareAmount !== undefined &&
-        selectedTransaction.secondShareAmount !== null
-          ? String(selectedTransaction.secondShareAmount)
-          : "",
+
       datePlanned: toInputDateTime(selectedTransaction.datePlanned),
       okStatus: selectedTransaction.okStatus || "",
     });
@@ -330,11 +312,9 @@ const UpdateTransaction = () => {
         budgetId: Number(form.budgetId),
         financierOrganizationId: Number(form.financierOrganizationId),
         transactionStatusId: Number(form.transactionStatusId),
-        appliedForAmount: Number(form.appliedForAmount),
-        firstShareAmount: Number(form.firstShareAmount),
-        approvedAmount: Number(form.approvedAmount),
+        appliedForAmount: String(form.appliedForAmount),
+        approvedAmount: String(form.approvedAmount),
         ownContribution: form.ownContribution,
-        secondShareAmount: Number(form.secondShareAmount),
         datePlanned: form.datePlanned,
         okStatus: form.okStatus,
       };
@@ -365,10 +345,13 @@ const UpdateTransaction = () => {
       setTransactions((prev) =>
         prev.map((item) =>
           item.id === Number(form.selectedId)
-            ? { ...item, ...payload, id: item.id }
+            ? { ...item, ...data, id: item.id }
             : item,
         ),
       );
+      setForm((previous) => ({ ...previous, ...Object.fromEntries(
+        ["appliedForAmount", "approvedAmount"].map((field) => [field, String(data?.[field] ?? "")]),
+      ) }));
 
       setSuccessMessage("Transaction updated successfully.");
     } catch (err) {
@@ -393,11 +376,10 @@ const UpdateTransaction = () => {
           </div>
         </div>
 
+        {selectedTransaction && <p className={styles.pageSubtitle}>Saved funding — current budget currency: {fundingCurrencyLabel(selectedTransaction.fundingCurrency)}. This is current configuration, not verified historical denomination.</p>}
+        <p className={styles.pageSubtitle}>Own contribution is a recorded Yes/No flag, not an amount or calculated share. Funding currency follows the selected budget.</p>
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {successMessage && (
@@ -501,9 +483,7 @@ const UpdateTransaction = () => {
                     <option value="">Select budget</option>
                     {budgetsForSelectedProject.map((item) => (
                       <option key={item.id} value={item.id}>
-                        {projectLabelById[item.projectId] ||
-                          `Project #${item.projectId}`}{" "}
-                        - total: {item.totalAmount} (id: {item.id})
+                        {budgetOptionLabel(item)}
                       </option>
                     ))}
                   </select>
@@ -546,40 +526,30 @@ const UpdateTransaction = () => {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>Applied for amount</label>
+                  <label htmlFor="funding-appliedForAmount">Requested funding</label>
                   <input
                     className={inputClass("appliedForAmount")}
                     type="number"
-                    name="appliedForAmount"
+                    id="funding-appliedForAmount" name="appliedForAmount" aria-invalid={Boolean(fieldErrors.appliedForAmount)} aria-describedby="funding-error-appliedForAmount" step="any" min="0"
                     value={form.appliedForAmount}
                     onChange={handleInputChange}
                     disabled={!form.selectedId || saving}
                   />
+              <span id="funding-error-appliedForAmount" className={styles.fieldError}>{fieldErrors.appliedForAmount}</span>
                 </div>
 
-                <div className={styles.formGroup}>
-                  <label>First share amount</label>
-                  <input
-                    className={inputClass("firstShareAmount")}
-                    type="number"
-                    step="0.01"
-                    name="firstShareAmount"
-                    value={form.firstShareAmount}
-                    onChange={handleInputChange}
-                    disabled={!form.selectedId || saving}
-                  />
-                </div>
 
                 <div className={styles.formGroup}>
-                  <label>Approved amount</label>
+                  <label htmlFor="funding-approvedAmount">Approved funding</label>
                   <input
                     className={inputClass("approvedAmount")}
                     type="number"
-                    name="approvedAmount"
+                    id="funding-approvedAmount" name="approvedAmount" aria-invalid={Boolean(fieldErrors.approvedAmount)} aria-describedby="funding-error-approvedAmount" step="any" min="0"
                     value={form.approvedAmount}
                     onChange={handleInputChange}
                     disabled={!form.selectedId || saving}
                   />
+              <span id="funding-error-approvedAmount" className={styles.fieldError}>{fieldErrors.approvedAmount}</span>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -597,18 +567,6 @@ const UpdateTransaction = () => {
                   </select>
                 </div>
 
-                <div className={styles.formGroup}>
-                  <label>Second share amount</label>
-                  <input
-                    className={inputClass("secondShareAmount")}
-                    type="number"
-                    step="0.01"
-                    name="secondShareAmount"
-                    value={form.secondShareAmount}
-                    onChange={handleInputChange}
-                    disabled={!form.selectedId || saving}
-                  />
-                </div>
 
                 <div className={styles.formGroup}>
                   <label>Date planned</label>

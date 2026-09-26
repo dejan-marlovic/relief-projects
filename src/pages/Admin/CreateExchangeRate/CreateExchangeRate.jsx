@@ -5,7 +5,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 //import named export useNavigate from module "react-router-dom"
 import { useNavigate } from "react-router-dom";
-import { FiSave, FiX, FiAlertCircle } from "react-icons/fi";
+import { FiSave, FiX } from "react-icons/fi";
 
 import styles from "./CreateExchangeRate.module.scss";
 import { BASE_URL } from "../../../config/api";
@@ -15,6 +15,7 @@ import {
   safeReadJson,
   extractFieldErrors,
 } from "../../../utils/http";
+import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 // Intial form state
 const initialExchangeRateDetails = {
@@ -257,11 +258,7 @@ const CreateExchangeRate = () => {
       const createdId =
         created?.id ?? created?.exchangeRateId ?? created?.exchange_rate_id;
 
-      alert(
-        `Exchange rate created successfully${
-          createdId ? ` (id: ${createdId})` : "!"
-        }`,
-      );
+      // Successful mutations are announced by the shared notification banner.
       resetForm();
     } catch (err) {
       console.error("Create exchange rate error", err);
@@ -294,10 +291,7 @@ const CreateExchangeRate = () => {
         </div>
 
         {formError && (
-          <div className={styles.errorBanner}>
-            <FiAlertCircle />
-            <span>{formError}</span>
-          </div>
+          <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
         {hasAnyFieldErrors && (
