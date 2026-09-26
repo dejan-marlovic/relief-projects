@@ -1,6 +1,7 @@
+import RecipientConflicts from "./RecipientConflicts";
 import PaymentAmount from "../../../../components/PaymentAmount/PaymentAmount";
 import { paymentAmountError, decimalUnits } from "../../../../utils/paymentFunding";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./PaymentOrderLines.module.scss";
 import {
   FiRefreshCw,
@@ -128,10 +129,11 @@ function normalizeLine(r) {
 /**
  * Creates an Error that also carries fieldErrors for UI placement.
  */
-function makeApiError(message, fieldErrors = null, status = null) {
+function makeApiError(message, fieldErrors = null, status = null, recipientConflicts = []) {
   const err = new Error(message || "Request failed.");
   err.fieldErrors = fieldErrors;
   err.status = status;
+  err.recipientConflicts = Array.isArray(recipientConflicts) ? recipientConflicts : [];
   return err;
 }
 
@@ -296,7 +298,10 @@ const PaymentOrderLines = ({
       const data = await res.json();
       const arr = Array.isArray(data) ? data : data ? [data] : [];
       const normalized = arr.map(normalizeLine).filter(Boolean);
-      setRows(normalized);
+      setRows((previous) => [
+        ...normalized,
+        ...previous.filter((old) => !normalized.some((fresh) => String(fresh.id) === String(old.id))).map((old) => ({ ...old, unavailable: true })),
+      ]);
       const transactionIds = [
         ...new Set(normalized.map((row) => row.transactionId).filter(Boolean)),
       ];
@@ -311,8 +316,7 @@ const PaymentOrderLines = ({
       }
     } catch (e) {
       console.error(e);
-      setRows([]);
-      setFormError(e.message || "Failed to fetch lines.");
+      setFormError(e.message || "Failed to fetch lines. Existing edits have been kept.");
     } finally {
       setLoading(false);
     }
@@ -356,7 +360,7 @@ const PaymentOrderLines = ({
         (res.status === 409 ? "The line could not be changed. Refresh lines and try again." : null) ||
         "Failed to create line.";
 
-      throw makeApiError(msg, data?.fieldErrors || null, res.status);
+      throw makeApiError(msg, data?.fieldErrors || null, res.status, data?.recipientConflicts);
     }
 
     return await res.json();
@@ -386,7 +390,7 @@ const PaymentOrderLines = ({
         "Failed to update line.";
 
       // IMPORTANT: don't set global fieldErrors here
-      throw makeApiError(msg, data?.fieldErrors || null, res.status);
+      throw makeApiError(msg, data?.fieldErrors || null, res.status, data?.recipientConflicts);
     }
 
     return await res.json();
@@ -416,7 +420,7 @@ const PaymentOrderLines = ({
           : "Failed to delete line.",
       );
 
-      throw new Error(msg);
+      throw makeApiError(msg, data?.fieldErrors || null, res.status, data?.recipientConflicts);
     }
   };
 
@@ -516,6 +520,7 @@ const PaymentOrderLines = ({
         [rowId]: {
           message: e.message || "Failed to update line.",
           fieldErrors: e.fieldErrors || null,
+          recipientConflicts: e.recipientConflicts || [],
         },
       }));
     }
@@ -537,11 +542,12 @@ const PaymentOrderLines = ({
 
     try {
       await apiDelete(id);
+      setRows((previous) => previous.filter((row) => row.id !== id));
       await onMutationSuccess?.();
       await fetchRows();
     } catch (e) {
       console.error(e);
-      setFormError(e.message || "Failed to delete line.");
+      setRowErrorsById((previous) => ({ ...previous, [id]: { message: e.message || "Failed to delete line.", recipientConflicts: e.recipientConflicts || [] } }));
     }
   };
 
@@ -719,7 +725,7 @@ const PaymentOrderLines = ({
           <div />
         </div>
 
-        {loading ? (
+        {loading && rows.length === 0 ? (
           <div className={styles.empty}>Loading…</div>
         ) : rows.length === 0 ? (
           <div className={styles.empty}>No lines yet.</div>
@@ -740,7 +746,7 @@ const PaymentOrderLines = ({
                   error?.message || "Failed to load eligible cost details.",
                 )
               }
-              locked={isLocked || !canManage}
+              locked={isLocked || !canManage || r.unavailable}
               canManage={canManage}
               rowError={rowErrorsById[r.id] || null}
               clearRowError={() =>
@@ -782,20 +788,18 @@ const LineRow = ({
   const [amount, setAmount] = useState(row.amount ?? "");
   const [memo, setMemo] = useState(row.memo ?? "");
 
+  // Refresh untouched fields while preserving values the user has changed.
+  const savedRow = useRef(row);
   useEffect(() => {
-    setTransactionId(row.transactionId ?? "");
-    setOrganizationId(row.organizationId ?? "");
-    setCostDetailId(row.costDetailId ?? "");
-    setAmount(row.amount ?? "");
-    setMemo(row.memo ?? "");
-  }, [
-    row.id,
-    row.transactionId,
-    row.organizationId,
-    row.costDetailId,
-    row.amount,
-    row.memo,
-  ]);
+    const previous = savedRow.current;
+    const retainEdit = (field) => (value) => String(value ?? "") === String(previous[field] ?? "") ? (row[field] ?? "") : value;
+    setTransactionId(retainEdit("transactionId"));
+    setOrganizationId(retainEdit("organizationId"));
+    setCostDetailId(retainEdit("costDetailId"));
+    setAmount(retainEdit("amount"));
+    setMemo(retainEdit("memo"));
+    savedRow.current = row;
+  }, [row]);
 
   const amountError = rowError?.fieldErrors?.amount || "";
   const orgError = rowError?.fieldErrors?.organizationId || "";
@@ -807,6 +811,7 @@ const LineRow = ({
       <div>
         <span className={styles.fieldLabel}>Transaction</span>
         <select
+          aria-label={`Transaction for line ${row.id}`}
           value={transactionId}
           disabled={locked}
           onChange={(e) => {
@@ -836,6 +841,7 @@ const LineRow = ({
       <div>
         <span className={styles.fieldLabel}>Organization</span>
         <select
+          aria-label={`Organization for line ${row.id}`}
           value={organizationId}
           disabled={locked}
           onChange={(e) => {
@@ -857,6 +863,7 @@ const LineRow = ({
       <div>
         <span className={styles.fieldLabel}>Cost detail</span>
         <select
+          aria-label={`Cost detail for line ${row.id}`}
           value={costDetailId}
           disabled={locked}
           onChange={(e) => {
@@ -884,6 +891,7 @@ const LineRow = ({
         <input
           type="number"
           step="any" min="0.000001"
+          aria-label={`Amount for line ${row.id}`}
           value={amount}
           disabled={locked}
           onChange={(e) => {
@@ -897,15 +905,14 @@ const LineRow = ({
           <div className={styles.fieldError}>{amountError}</div>
         ) : null}
 
-        {rowError?.message ? (
-          <div className={styles.rowError}>{rowError.message}</div>
-        ) : null}
+
       </div>
 
       <div>
         <span className={styles.fieldLabel}>Memo</span>
         <input
           type="text"
+          aria-label={`Memo for line ${row.id}`}
           value={memo}
           disabled={locked}
           onChange={(e) => {
@@ -922,7 +929,7 @@ const LineRow = ({
           className={styles.iconCircleBtn}
           disabled={locked}
           title={
-            locked ? "This payment order is Booked (locked)." : "Save line"
+            row.unavailable ? "This line is no longer available." : locked ? "This payment order is Booked (locked)." : "Save line"
           }
           onClick={() =>
             onSave({
@@ -941,7 +948,7 @@ const LineRow = ({
           className={styles.dangerIconBtn}
           disabled={locked}
           title={
-            locked ? "This payment order is Booked (locked)." : "Delete line"
+            row.unavailable ? "This line is no longer available." : locked ? "This payment order is Booked (locked)." : "Delete line"
           }
           onClick={onDelete}
         >
@@ -949,6 +956,13 @@ const LineRow = ({
           </button>
         </div>
       )}
+      {(row.unavailable || rowError?.message || rowError?.recipientConflicts?.length > 0) && <div className={styles.conflictPanel}>
+        {row.unavailable && <p role="status">This line is no longer available on this order. Entered values are kept for review; saving is disabled. Close and reopen the lines to dismiss it.</p>}
+        <RecipientConflicts conflicts={rowError?.recipientConflicts} />
+        {rowError?.message ? (
+          <div className={styles.rowError}>{rowError.message}</div>
+        ) : null}
+      </div>}
     </div>
   );
 };
