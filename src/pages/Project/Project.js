@@ -1,3 +1,4 @@
+import ProjectCloseout from "../../components/ProjectCloseout/ProjectCloseout";
 import { appFetch as fetch } from "../../utils/appFetch";
 // Project.jsx
 import React, { useEffect, useState, useContext, useMemo } from "react";
@@ -2690,6 +2691,8 @@ Approximately:
               </ul>
             </div>
           )}
+
+          <ProjectCloseout key={selectedProjectId} projectId={selectedProjectId} />
 
           <ProjectSnapshot
             projectId={selectedProjectId}

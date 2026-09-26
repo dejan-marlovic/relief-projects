@@ -1,0 +1,18 @@
+@use "../../styles/colors" as colors;
+.section { margin: 1rem 0; border: 1px solid colors.$border; border-radius: 12px; background: colors.$surface; color: colors.$text; min-width: 0; }
+.section > summary { padding: 1rem; cursor: pointer; color: colors.$primary; font-weight: 600; }
+.panel { padding: 0 1rem 1rem; min-width: 0; }
+.hint { color: colors.$text-muted; font-size: .85rem; line-height: 1.5; }
+.actions { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; margin: .85rem 0; }
+.panel button, .actions a { padding: .6rem .8rem; border: 1px solid colors.$primary-border; border-radius: 8px; background: colors.$primary-a04; color: colors.$primary; font: inherit; cursor: pointer; text-decoration: none; }
+.panel button:disabled { opacity: .55; cursor: not-allowed; }
+.panel :focus-visible { outline: 2px solid colors.$primary; outline-offset: 2px; }
+.card, .form { margin: 1rem 0; padding: 1rem; border: 1px solid colors.$border; border-radius: 10px; overflow-wrap: anywhere; }
+.form { background: colors.$primary-a04; }
+.form fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.form label { display: block; margin: .7rem 0; }
+.form input:not([type=checkbox]), .form textarea, .form select { box-sizing: border-box; display: block; width: 100%; min-width: 0; margin-top: .35rem; padding: .65rem; border: 1px solid colors.$border; border-radius: 8px; background: colors.$surface; color: colors.$text; font: inherit; }
+.fields { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(0, 3fr); gap: .5rem 1rem; }
+.fields dt { color: colors.$text-muted; }.fields dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.panel h4 { margin: 0 0 .7rem; }.panel li { margin: .5rem 0; }
+@media(max-width:700px) { .panel { padding: 0 .75rem .75rem; } .fields { grid-template-columns: 1fr; } .fields dd { margin-bottom: .6rem; } .actions button, .actions a { min-height:44px; box-sizing:border-box; } }
