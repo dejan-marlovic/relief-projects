@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useId, useMemo, useRef } from "react";
+import { createPortal } from "react-dom";
 import { FiX, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import styles from "./ImageZoomModal.module.scss";
 
@@ -7,22 +8,25 @@ const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
 const ImageZoomModal = ({
   open,
   images = [],
-  captions = [], // ✅ NEW
+  captions = [],
   index = 0,
   basePath = "",
   onClose,
   onChangeIndex,
 }) => {
+  const dialog = useRef(null);
+  const closeButton = useRef(null);
+  const captionId = useId();
   const safeIndex = useMemo(() => {
     const max = Math.max(0, images.length - 1);
-    return clamp(Number(index) || 0, 0, max);
+    return clamp(Math.trunc(Number(index)) || 0, 0, max);
   }, [index, images.length]);
 
   const filename = images[safeIndex] || "";
   const src = filename ? `${basePath}${filename}` : "";
   const alt = filename || "Cover image";
 
-  const caption = captions?.[safeIndex] || ""; // ✅ NEW
+  const caption = captions?.[safeIndex] || "";
 
   const canNav = images.length > 1;
 
@@ -38,33 +42,45 @@ const ImageZoomModal = ({
     onChangeIndex?.(next);
   };
 
-  // Close on ESC + navigate on arrows
+  // Native modality keeps keyboard focus and interaction inside the viewer.
   useEffect(() => {
     if (!open) return;
-
-    const onKeyDown = (e) => {
-      if (e.key === "Escape") onClose?.();
-      if (e.key === "ArrowLeft") goPrev();
-      if (e.key === "ArrowRight") goNext();
+    const previousFocus = document.activeElement;
+    const previousOverflow = document.body.style.overflow;
+    const element = dialog.current;
+    element.showModal();
+    closeButton.current.focus();
+    document.body.style.overflow = "hidden";
+    return () => {
+      element.close();
+      document.body.style.overflow = previousOverflow;
+      if (previousFocus?.isConnected) previousFocus.focus();
     };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, safeIndex, images.length, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
-  return (
-    <div
+  return createPortal(
+    <dialog
+      ref={dialog}
       className={styles.backdrop}
-      role="dialog"
+      aria-label="Project image viewer"
       aria-modal="true"
-      onMouseDown={() => onClose?.()}
+      aria-describedby={caption.trim() ? captionId : undefined}
+      onCancel={(event) => { event.preventDefault(); onClose?.(); }}
+      onKeyDown={(event) => {
+        if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+        if (canNav && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
+          event.preventDefault();
+          if (event.key === "ArrowLeft") goPrev();
+          else goNext();
+        }
+      }}
+      onMouseDown={(event) => { if (event.target === event.currentTarget) onClose?.(); }}
     >
-      <div className={styles.modal} onMouseDown={(e) => e.stopPropagation()}>
+      <div className={styles.modal}>
         <div className={styles.toolbar}>
-          <div className={styles.title}>
+          <div className={styles.title} aria-live="polite" aria-atomic="true">
             {alt}
             {images.length > 1 ? (
               <span className={styles.count}>
@@ -100,6 +116,7 @@ const ImageZoomModal = ({
             )}
 
             <button
+              ref={closeButton}
               type="button"
               className={styles.closeBtn}
               onClick={() => onClose?.()}
@@ -128,6 +145,7 @@ const ImageZoomModal = ({
                   onClick={() => onChangeIndex?.(i)}
                   title={img}
                   aria-label={`Open image ${i + 1}`}
+                  aria-current={active ? "true" : undefined}
                 >
                   <img
                     src={tSrc}
@@ -144,17 +162,16 @@ const ImageZoomModal = ({
 
         <div className={styles.canvas}>
           <div className={styles.imageWrapper}>
-            <img
+            {src ? <img
               src={src}
               alt={alt || "Zoomed cover"}
               className={styles.image}
               draggable={false}
-            />
+            /> : <p>No image available.</p>}
           </div>
 
-          {/* ✅ NEW: Caption */}
           {caption && caption.trim() ? (
-            <div className={styles.caption}>{caption}</div>
+            <div id={captionId} className={styles.caption}>{caption}</div>
           ) : null}
 
           <div className={styles.hint}>
@@ -163,7 +180,7 @@ const ImageZoomModal = ({
           </div>
         </div>
       </div>
-    </div>
+    </dialog>, document.body
   );
 };
 
