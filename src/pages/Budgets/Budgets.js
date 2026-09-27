@@ -182,6 +182,7 @@ const Budgets = () => {
                   budget={budget}
                   onUpdate={handleBudgetUpdate}
                   onDelete={handleBudgetDelete}
+                  onRevisionsChanged={(result) => { if (!budgets.some(row => row.id === result.budget.id)) setNewBudgetId(result.budget.id); fetchBudgets(selectedProjectId, localStorage.getItem("authToken")); }}
                 />
               </div>
             ))

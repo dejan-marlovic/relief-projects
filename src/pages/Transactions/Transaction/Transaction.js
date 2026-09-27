@@ -1,3 +1,4 @@
+import { financialBudgetEligible } from "../../../utils/budgetRevisions";
 import FundingReceipts from "../../../components/FundingReceipts/FundingReceipts";
 import { fundingCurrencyLabel } from "../../../utils/transactionFunding";
 import { budgetOptionLabel } from "../../../utils/budgetDisplay";
@@ -194,7 +195,7 @@ const Transaction = ({
       >
         <option value="">Select budget</option>
         {budgets.map((b) => (
-          <option key={b.id} value={b.id}>
+          <option key={b.id} value={b.id} disabled={!financialBudgetEligible(b)}>
             {budgetLabel(b)}
           </option>
         ))}

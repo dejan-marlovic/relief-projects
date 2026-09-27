@@ -1,3 +1,4 @@
+import { selectedPlanningBudgets } from "../../../utils/budgetRevisions";
 import { appFetch as fetch } from "../../../utils/appFetch";
 import { sumDecimals, reportingTotals } from "../../../utils/budgetCalculations";
 import React, { useEffect, useState } from "react";
@@ -189,6 +190,8 @@ const ProjectSnapshot = ({
   const [snapshot, setSnapshot] = useState(emptySnapshot);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [revisionRefresh, setRevisionRefresh] = useState(0);
+  useEffect(() => { const refresh = () => setRevisionRefresh(n => n + 1); window.addEventListener("budget-revisions-changed", refresh); window.addEventListener("focus", refresh); return () => { window.removeEventListener("budget-revisions-changed", refresh); window.removeEventListener("focus", refresh); }; }, []);
 
   useEffect(() => {
     if (!projectId) {
@@ -218,9 +221,9 @@ const ProjectSnapshot = ({
       setLoading(true);
       setError("");
       try {
-        const [budgets, transactions, paymentOrders, recipients, signatures, documents, allRelations, organizationOptions, currencyOptions] =
+        const [planning, transactions, paymentOrders, recipients, signatures, documents, allRelations, organizationOptions, currencyOptions] =
           await Promise.all([
-            fetchList(`/api/budgets/project/${projectId}`),
+            fetch(`${BASE_URL}/api/projects/${projectId}/budget-planning-basis`, { headers, signal: controller.signal }).then(async response => { if (!response.ok) throw new Error("Planning basis unavailable"); return selectedPlanningBudgets(await response.json()); }),
             fetchList(`/api/transactions/project/${projectId}`),
             fetchList(`/api/payment-orders/project/${projectId}`),
             fetchList(`/api/recipients/by-project/${projectId}`),
@@ -232,19 +235,19 @@ const ProjectSnapshot = ({
           ]);
 
         const costDetailGroups = await Promise.all(
-          budgets.map((budget) =>
-            fetchList(`/api/cost-details/by-budget/${budget.id ?? budget.budgetId}`).then((rows) => rows.map((row) => ({ ...row, reportingCurrencyLabel: currencyOptions.find((currency) => String(currency.id) === String(budget.reportingCurrencySekId))?.name || (budget.reportingCurrencySekId ? `Currency #${budget.reportingCurrencySekId}` : "Unconfigured reporting currency") })))
+          planning.budgets.map((budget) =>
+            fetchList(`/api/cost-details/by-budget/${budget.id ?? budget.budgetId}`).then((rows) => rows.map((row) => ({ ...row, reportingCurrencyLabel: `${currencyOptions.find((currency) => String(currency.id) === String(budget.reportingCurrencySekId))?.name || "Currency"} (#${budget.reportingCurrencySekId ?? "unknown"})` })))
           )
         );
         const relations = allRelations.filter(
           (relation) => String(relation.projectId) === String(projectId)
         );
 
-        setSnapshot(summarizeProjectSnapshot({
+        setSnapshot({ ...summarizeProjectSnapshot({
           costDetails: costDetailGroups.flat(), recipients, relations, transactions,
           paymentOrders, signatures, documents,
           organizationOptions,
-        }));
+        }), planningUnavailable: planning.unavailable });
       } catch (loadError) {
         if (loadError.name !== "AbortError") {
           console.error("Failed to load project snapshot:", loadError);
@@ -258,10 +261,10 @@ const ProjectSnapshot = ({
 
     loadSnapshot();
     return () => controller.abort();
-  }, [projectId]);
+  }, [projectId, revisionRefresh]);
 
   const cards = [
-    { label: "Reporting budget", value: (snapshot.reportingTotals || []).map(({ currency, amount }) => `${amount} ${currency}`).join(" / ") || "0.000", hint: "Cost details in reporting currency", icon: FiTrendingUp },
+    { label: "Reporting budget", value: snapshot.planningUnavailable ? "Unavailable / incomplete" : (snapshot.reportingTotals || []).map(({ currency, amount }) => `${amount} ${currency}`).join(" / ") || "0.000", hint: snapshot.planningUnavailable ? `${snapshot.planningUnavailable} planning basis unavailable; select a current plan for each revision family.` : "Selected plans and standalone budgets; not a financial balance", icon: FiTrendingUp },
     { label: "Recipients", value: snapshot.recipients, hint: "Project beneficiaries", icon: FiUsers },
     { label: "Partners", value: snapshot.partners, hint: "Linked organizations", icon: FiBriefcase },
     { label: "Transactions", value: snapshot.transactions, hint: "Funding transactions", icon: FiCreditCard },

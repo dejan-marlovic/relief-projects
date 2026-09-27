@@ -389,7 +389,7 @@ const UpdateBudget = () => {
         </div>
 
         {selectedBudget && <BudgetPlanning key={selectedBudget.id} budget={selectedBudget} refreshKey={planningRefresh} disabled={saving} onUpdated={(updated) => { setBudgets((rows) => rows.map((row) => row.id === updated.id ? updated : row)); setForm((old) => ({ ...old, totalAmount: updated.totalAmount })); }} />}
-        {selectedBudget && ["DRAFT", "RETURNED"].includes(selectedBudget.lifecycleStatus || "DRAFT") && <button type="button" className={styles.secondaryButton} disabled={saving || loading} onClick={() => setCurrencyOpen(true)}>Change budget currency</button>}
+        {selectedBudget && ["DRAFT", "RETURNED"].includes(selectedBudget.lifecycleStatus || "DRAFT") && <button type="button" className={styles.secondaryButton} disabled={saving || loading || Boolean(selectedBudget.revisionFamilyId)} onClick={() => setCurrencyOpen(true)}>Change budget currency</button>}
         {currencyOpen && selectedBudget && <BudgetCurrencyDialog key={`currency-${selectedBudget.id}`} budget={selectedBudget} currencies={currencies} rates={exchangeRates}
           initialTargetId={form.localCurrencyId}
           dirty={Object.keys(initialForm).some((key) => key !== "selectedId" && String(form[key] ?? "") !== String(key === "budgetPreparationDate" ? toInputDateTime(selectedBudget[key]) : selectedBudget[key] ?? ""))}

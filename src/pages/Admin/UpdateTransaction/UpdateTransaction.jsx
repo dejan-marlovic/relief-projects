@@ -1,3 +1,4 @@
+import { financialBudgetEligible } from "../../../utils/budgetRevisions";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import { fundingErrors, fundingCurrencyLabel } from "../../../utils/transactionFunding";
 import { budgetOptionLabel } from "../../../utils/budgetDisplay";
@@ -482,7 +483,7 @@ const UpdateTransaction = () => {
                   >
                     <option value="">Select budget</option>
                     {budgetsForSelectedProject.map((item) => (
-                      <option key={item.id} value={item.id}>
+                      <option key={item.id} value={item.id} disabled={!financialBudgetEligible(item)}>
                         {budgetOptionLabel(item)}
                       </option>
                     ))}

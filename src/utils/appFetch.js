@@ -14,6 +14,9 @@ export function mutationNotice(input, options = {}, response) {
   if (path.includes("bulk")) return null;
   if (response.status === 202) return "Request accepted for processing.";
   const segments = path.slice(5).split("/");
+  if (segments[0] === "budget-revision-families") return "Current planning budget selected.";
+  if (segments[0] === "budget-donor-decisions" || segments[2] === "donor-decisions") return "Recorded donor decision updated.";
+  if (segments[0] === "budgets" && segments[2] === "revisions") return "Planning revision created.";
   if (segments[0] === "projects" && segments[2] === "closeout") {
     if (/\/final-report-acceptance$/.test(path)) return "Final-report acceptance decision saved.";
     if (/\/archive\/revoke$/.test(path)) return "Archive marker revoked.";

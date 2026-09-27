@@ -1,3 +1,4 @@
+import { financialBudgetEligible } from "../../utils/budgetRevisions";
 import { appFetch as fetch } from "../../utils/appFetch";
 import { decimalUnits, fundingErrors, fundingCurrencyLabel, matchesDecimalRange, sumAmounts, remainingFunding, fundingExcel } from "../../utils/transactionFunding";
 import { budgetOptionLabel } from "../../utils/budgetDisplay";
@@ -47,7 +48,7 @@ export const approvedBudgetOptions = (
     (budget) =>
       (projectId == null ||
         String(budgetProjectId(budget)) === String(projectId)) &&
-      (budget.lifecycleStatus === "APPROVED" ||
+      ((financialBudgetEligible(budget) && budget.lifecycleStatus === "APPROVED") ||
         (currentBudgetId != null &&
           String(budget.id) === String(currentBudgetId))),
   );

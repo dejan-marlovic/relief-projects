@@ -1,3 +1,4 @@
+import { financialBudgetEligible } from "../../utils/budgetRevisions";
 import { appFetch as fetch } from "../../utils/appFetch";
 import { decimalUnits, matchesDecimalRange, fundingExcel, summaryExcel, summaryText, issueText, groupedPaymentTotals } from "../../utils/paymentFunding";
 import useMediaQuery from "../../hooks/useMediaQuery";
@@ -311,7 +312,7 @@ function PaymentOrders() {
           { headers: authHeaders },
         );
         const budgets = bRes.ok ? await bRes.json() : [];
-        const list = Array.isArray(budgets) ? budgets : [];
+        const list = Array.isArray(budgets) ? budgets.filter(financialBudgetEligible) : [];
 
         const all = [];
         for (const b of list) {

@@ -1,13 +1,13 @@
 # Requirements workstreams
 
-Coordination snapshot: 26 September 2026. This is a shared index, not a claim that every original requirement has been implemented or accepted. Each task owns its slice report; update this index at scope changes and completion. Do not rewrite another task's report or start its reserved work without coordination.
+Coordination snapshot: 27 September 2026. This is a shared index, not a claim that every original requirement has been implemented or accepted. Each task owns its slice report; update this index at scope changes and completion. Do not rewrite another task's report or start its reserved work without coordination.
 
 ## Current ownership
 
 | Task | Scope | State / boundary |
 |---|---|---|
-| Clarify next slice workflow | Project closeout frontend | Closeout/archive panel on Project, decision history, evidence and financial observations implemented; 484 frontend tests and production build passed with existing warnings. Live acceptance pending. See project-closeout-frontend.md. |
-| Catch up on backend work | Project closeout backend | V36 contract implemented: 1,050 backend tests, 14 disposable MySQL integration tests and 16 migration checks reported passed. Application rollout/live acceptance remain to verify. |
+| Clarify next slice workflow | Budget revisions frontend | Revision commands, donor decisions/evidence/history, explicit current-plan selection, revision-aware totals and financial selectors implemented. 493 frontend tests, targeted lint, production build and diff checks passed. Read-only live UI checks passed; user confirmed creation, approval, donor decision and current-plan selection for revision #27. Extensive operational testing remains planned. See budget-revisions-frontend.md. |
+| Catch up on backend work | Budget revisions backend | V37 reported complete: 1,073 backend tests, 23 disposable MySQL integration tests and 16 migration checks. User restarted backend. Executable successor budgets remain deferred. |
 | Find and fix next project gap | Project risk register | Integrated locally into frontend codex/requirements-gaps (2f443fa) and backend master (e8ec04f): backend V35, frontend Risks page, retained lifecycle history and conflict handling. 473 frontend tests, 1,033 full backend tests, final MySQL risk/payment checks and migration checks passed. See [implementation report](project-risk-register-frontend.md). User relayed backend confirmation that V35 is running and live create/edit, close/reopen, deletion, ADMIN restoration and history checks passed. |
 
 Scope notes were sent to both existing tasks. Risk V35 was coordinated after outgoing-payment V34; its isolated branches incorporate the completed outgoing-payment commits additively. The previous calendar slice is complete in commit ff47f59, merged through dev/master and included in codex/requirements-gaps. The user confirmed downloading the .ics file; calendar-client import acceptance remains manual. See [calendar export report](follow-up-calendar-export.md).
@@ -18,13 +18,13 @@ The [original assessment](original-requirements-assessment.md) is dated 18 Septe
 
 | Area | Current evidence | Remaining gap / owner |
 |---|---|---|
-| Financial planning and control | Budgets, precision, limits/conversion, requested/approved funding, allocations, payment commitments, lifecycle and audit contracts | Formal budget revision families and current-approved revision semantics remain separate product decisions. |
+| Financial planning and control | Budgets, precision, limits/conversion, requested/approved funding, allocations, payment commitments, lifecycle and audit contracts | V37 planning-only revision families, donor decisions and explicit current-plan selection implemented. Executable revisions, obligation carry-forward and family-wide capacity controls remain outstanding. |
 | Document foundation | Protected downloads, categories/date/attribution, versions, financial links and project checklist | Checklist evidence does not establish completeness, approval or physical archiving. |
 | Actions and deadlines | Assigned project follow-ups, personal queue, completion and date filters | Recurrence, reminders and immutable action history remain deferred. |
 | Calendar / Outlook | This slice adds an individual open-follow-up `.ics` snapshot download | Partial coverage only. No subscription, live Outlook sync, invitation sending, email filing or automatic reminders. |
 | Incoming funding | Backend funding-receipts contract and frontend commit `b8bc517` | Owned by existing backend/frontend tasks; their reports control verification and remaining acceptance. |
 | Outgoing actual payments and refunds | V34 and frontend completed; user verified a partial payment and matching remaining/excess totals | Refunds, reconciliation and per-cost actual expenditure remain separate. |
-| Project closeout and archive tracking | V36 backend contract complete; [frontend panel](project-closeout-frontend.md) implemented | Live acceptance pending. Retention calculations, transfer rules and archive packages remain deferred. |
+| Project closeout and archive tracking | V36 backend contract complete; [frontend panel](project-closeout-frontend.md) implemented | User confirmed acceptance, closeout and archive assertion with retained history; both sides committed. Retention calculations, transfer rules and archive packages remain deferred. |
 | Structured risks | [Agreed register and implementation](project-risk-register-frontend.md): ownership, separate assessments, mitigation, reviews and retained lifecycle history | Implemented, verified and integrated by Find and fix next project gap; V35 rollout and live acceptance reported passed by the backend task. Heatmaps, scoring, linked follow-ups/documents and global dashboards remain deferred. |
 | Results / indicators | Sectors and portfolio counts exist | Targets, observations, periods and cross-cutting markers remain unassigned. |
 | Trips and travel approval | Travel document category exists | Request/approval/itinerary/report workflow remains unassigned. |

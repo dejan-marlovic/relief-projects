@@ -1,3 +1,4 @@
+import { financialBudgetEligible } from "../../../utils/budgetRevisions";
 import { fundingErrors } from "../../../utils/transactionFunding";
 import { budgetOptionLabel } from "../../../utils/budgetDisplay";
 import React, { useEffect, useMemo, useState } from "react";
@@ -91,7 +92,7 @@ const CreateTransaction = () => {
 
         setOrganizations(Array.isArray(orgData) ? orgData : []);
         setProjects(Array.isArray(projectData) ? projectData : []);
-        setBudgets(Array.isArray(budgetData) ? budgetData : []);
+        setBudgets(Array.isArray(budgetData) ? budgetData.filter(financialBudgetEligible) : []);
         setTransactionStatuses(Array.isArray(statusData) ? statusData : []);
       } catch (err) {
         console.error("Error loading transaction form data:", err);
