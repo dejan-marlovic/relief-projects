@@ -4,10 +4,10 @@
 
 /* Page padding */
 .page {
-  padding: 1.25rem;
-  margin-top: 1rem;
+  padding: 0.25rem 0.5rem;
+  margin-top: 0;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  height: calc(100% - 1rem);
+  height: 100%;
   min-height: 0;
 }
 
@@ -17,7 +17,7 @@
   border-radius: 14px;
   border: 1px solid colors.$primary-focus;
   box-shadow: 0 10px 24px colors.$border-subtle;
-  padding: 1.25rem;
+  padding: 1rem;
   height: 100%;
   min-height: 0;
   display: flex;
@@ -30,8 +30,8 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
   border-bottom: 1px solid colors.$border-subtle;
 }
 

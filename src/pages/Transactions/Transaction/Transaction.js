@@ -1,3 +1,4 @@
+import RecordActivity from "../../../components/RecordActivity/RecordActivity";
 import { financialBudgetEligible } from "../../../utils/budgetRevisions";
 import FundingReceipts from "../../../components/FundingReceipts/FundingReceipts";
 import { fundingCurrencyLabel } from "../../../utils/transactionFunding";
@@ -482,9 +483,11 @@ const Transaction = ({
       </div>
 
       <p className={styles.currencyNote}>Current budget currency: <strong>{isCreate ? "Follows selected budget" : fundingCurrencyLabel(tx.fundingCurrency)}</strong> · Current configuration, not verified historical denomination.</p>
-      <RecordHistory entityType="TRANSACTION" entityId={tx.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} />
-      <FundingReceipts transactionId={tx.id} projectId={tx.projectId} refreshKey={`${historyRefreshKey}:${lifecycleStatus}`} editingLocked={isEditing || editingLocked} onChanged={onReceiptMutationSuccess} />
-      <FinancialDocuments entityType="TRANSACTION" entityId={tx.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} editingLocked={isEditing} />
+      {Boolean(tx.id) && <RecordActivity recordLabel={`Transaction #${tx.id}`}>
+        <RecordHistory entityType="TRANSACTION" entityId={tx.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} />
+        <FundingReceipts transactionId={tx.id} projectId={tx.projectId} refreshKey={`${historyRefreshKey}:${lifecycleStatus}`} editingLocked={isEditing || editingLocked} onChanged={onReceiptMutationSuccess} />
+        <FinancialDocuments entityType="TRANSACTION" entityId={tx.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} editingLocked={isEditing} />
+      </RecordActivity>}
       {expanded && !isCreate && (
         <div className={styles.expandedPanel}>
           <TransactionAllocations

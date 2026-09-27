@@ -1,3 +1,4 @@
+import RecordActivity from "../../../components/RecordActivity/RecordActivity";
 import OutgoingPayments from "../../../components/OutgoingPayments/OutgoingPayments";
 import PaymentAmount from "../../../components/PaymentAmount/PaymentAmount";
 import React from "react";
@@ -395,9 +396,11 @@ const PaymentOrder = ({
         {isEditing ? inputText("pinCode") : (po.pinCode ?? "-")}
       </Cell>
     </div>
-    <RecordHistory entityType="PAYMENT_ORDER" entityId={po.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} />
-    <OutgoingPayments paymentOrderId={po.id} refreshKey={`${historyRefreshKey}:${lifecycleStatus}`} editingLocked={isEditing || saving || editingLocked} onChanged={onPaymentChanged} />
-    <FinancialDocuments entityType="PAYMENT_ORDER" entityId={po.id} lifecycleStatus={lifecycleStatus} locked={locked} refreshKey={historyRefreshKey} editingLocked={isEditing || saving || editingLocked} />
+      {Boolean(po.id) && <RecordActivity recordLabel={`Payment order #${po.id}`}>
+        <RecordHistory entityType="PAYMENT_ORDER" entityId={po.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} />
+        <OutgoingPayments paymentOrderId={po.id} refreshKey={`${historyRefreshKey}:${lifecycleStatus}`} editingLocked={isEditing || saving || editingLocked} onChanged={onPaymentChanged} />
+        <FinancialDocuments entityType="PAYMENT_ORDER" entityId={po.id} lifecycleStatus={lifecycleStatus} locked={locked} refreshKey={historyRefreshKey} editingLocked={isEditing || saving || editingLocked} />
+      </RecordActivity>}
     </>
   );
 };
