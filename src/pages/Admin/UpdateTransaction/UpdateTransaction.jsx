@@ -1,4 +1,5 @@
-import { financialBudgetEligible } from "../../../utils/budgetRevisions";
+import useFinancialRefresh from "../../../hooks/useFinancialRefresh";
+import { financialBudgetEligible, financialReferenceEligible } from "../../../utils/budgetRevisions";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import { fundingErrors, fundingCurrencyLabel } from "../../../utils/transactionFunding";
 import { budgetOptionLabel } from "../../../utils/budgetDisplay";
@@ -81,6 +82,16 @@ const UpdateTransaction = () => {
   const [organizations, setOrganizations] = useState([]);
   const [projects, setProjects] = useState([]);
   const [budgets, setBudgets] = useState([]);
+  const financialRefresh = useFinancialRefresh();
+  useEffect(() => {
+    if (!financialRefresh) return undefined;
+    const controller = new AbortController();
+    authFetch(`${BASE_URL}/api/budgets/active`, { signal: controller.signal, cache: "no-store" })
+      .then(async response => response.ok ? safeReadJson(response) : [])
+      .then(items => { if (!controller.signal.aborted) setBudgets(Array.isArray(items) ? items : []); })
+      .catch(() => { if (!controller.signal.aborted) setBudgets([]); });
+    return () => controller.abort();
+  }, [authFetch, financialRefresh]);
   const [statuses, setStatuses] = useState([]);
   const [form, setForm] = useState(initialForm);
 
@@ -483,7 +494,7 @@ const UpdateTransaction = () => {
                   >
                     <option value="">Select budget</option>
                     {budgetsForSelectedProject.map((item) => (
-                      <option key={item.id} value={item.id} disabled={!financialBudgetEligible(item)}>
+                      <option key={item.id} value={item.id} disabled={!financialBudgetEligible(item) && !(String(item.id) === String(selectedTransaction?.budgetId) && financialReferenceEligible(item))}>
                         {budgetOptionLabel(item)}
                       </option>
                     ))}

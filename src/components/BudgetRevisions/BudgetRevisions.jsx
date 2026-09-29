@@ -1,3 +1,4 @@
+import BudgetExecution from "../BudgetExecution/BudgetExecution";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BASE_URL } from "../../config/api";
@@ -100,14 +101,15 @@ export function RevisionPanel({ budget, onChanged, disabled = false }) {
   const evidenceChoices = form?.action === "remove" ? (form.decision.currentEvidence || []).map(d => ({ id: d.documentId, documentName: d.capturedName })) : documents;
   const decisionFields = form && ["decision", "correct"].includes(form.action);
   return <div className={styles.panel}>
-    <p className={styles.hint}>Revisions are plans. Successors cannot receive transactions or allocations. Financial work stays on the original budget; selecting a revised plan creates no additional spending capacity.</p>
+    <p className={styles.hint}>Selecting a current plan changes planning displays. Financial execution requires separate activation with shared cost ceilings; existing awards and commitments retain their original references.</p>
     <button type="button" disabled={busy || loading} onClick={() => { setError(""); setRefresh(n => n + 1); }}>Refresh revisions and history</button>
     {loading && <p role="status">Loading revisions…</p>}{error && <p role="alert">{error}</p>}
     {data && <>
-      {family ? <><p>Current plan: <strong>{family.currentPlanBudgetId ? `Budget #${family.currentPlanBudgetId}` : "Not selected — family planning total unavailable"}</strong></p><p>Financial basis: <strong>Budget #{family.financialBudgetId}</strong> · Latest revision: Budget #{family.latestRevisionBudgetId}</p>
+      {family ? <><p>Current plan: <strong>{family.currentPlanBudgetId ? `Budget #${family.currentPlanBudgetId}` : "Not selected — family planning total unavailable"}</strong></p><p>Original financial budget: <strong>Budget #{family.financialBudgetId}</strong> · Latest revision: Budget #{family.latestRevisionBudgetId}</p>
         <ul>{members.map(m => <li key={m.id}>{budgetOptionLabel(m)} · Internal status: {words(m.lifecycleStatus)}{m.isDeleted ? " · Deleted" : ""}{m.id === family.currentPlanBudgetId ? " · Current plan" : ""}</li>)}</ul>
       </> : <p>Standalone budget. Creating a revision registers it as the original financial basis. No historical approval or family relationship is inferred.</p>}
-      {(data.issues || []).map((issue, i) => <p key={i} className={styles.hint}>{issue.message}</p>)}
+      {(data.issues || []).map((issue, i) => <p key={i} className={styles.hint}>{issue.code === "PLANNING_FINANCIAL_BASIS_DIFFER" ? "The current plan differs from the original budget. Financial execution below determines new funding eligibility; existing references are retained." : issue.message}</p>)}
+      {family && <BudgetExecution familyId={family.id} budgetId={budget.id} disabled={disabled || Boolean(form)} refreshKey={refresh} />}
       {!form && <div className={styles.actions}>
         {editor && approved && !unfinished && (!highestApproved || highestApproved.id === budget.id) && <button disabled={disabled || loading} onClick={() => open("copy")}>Create planning revision</button>}
         {editor && family && approved && <button disabled={disabled || loading} onClick={() => open("decision")}>Record donor decision / addendum</button>}

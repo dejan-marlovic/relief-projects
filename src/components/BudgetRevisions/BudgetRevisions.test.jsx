@@ -16,6 +16,11 @@ function setup(data, mutation) {
   });
 }
 const mount = onChanged => render(<BrowserRouter><RevisionPanel budget={budget} onChanged={onChanged} /></BrowserRouter>);
+test("legacy planning warning distinguishes execution from retained original references", async () => {
+  setup({ ...familyData(), issues: [{ code: "PLANNING_FINANCIAL_BASIS_DIFFER", message: "Financial records remain on budget 1." }] }); mount();
+  expect(await screen.findByText(/Financial execution below determines new funding eligibility/)).toBeInTheDocument();
+  expect(screen.queryByText("Financial records remain on budget 1.")).not.toBeInTheDocument();
+});
 test("copy uses source version, explicit name and optional new-only currency adoption", async () => {
   const data = { budget, family: null, members: [] };
   const changed = jest.fn(); setup(data, () => reply(familyData())); mount(changed);

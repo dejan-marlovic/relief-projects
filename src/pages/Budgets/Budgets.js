@@ -1,3 +1,4 @@
+import useFinancialRefresh from "../../hooks/useFinancialRefresh";
 import { appFetch as fetch } from "../../utils/appFetch";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ProjectContext } from "../../context/ProjectContext";
@@ -14,6 +15,7 @@ import { BASE_URL } from "../../config/api";
 import { useUnsavedChange } from "../../context/UnsavedChangesContext";
 
 const Budgets = () => {
+  const financialRefresh = useFinancialRefresh();
   const { selectedProjectId, projects } = useContext(ProjectContext);
   const { hasAnyRole } = useAuth();
   const canEditBudgets = hasAnyRole("ADMIN", "FINANCE");
@@ -62,7 +64,7 @@ const Budgets = () => {
       setBudgets([]);
       setShowCreateForm(false);
     }
-  }, [selectedProjectId]);
+  }, [selectedProjectId, financialRefresh]);
 
   /*
    * Opens the form and scrolls to it after React and the browser have completed

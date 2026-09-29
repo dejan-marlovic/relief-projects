@@ -1,3 +1,4 @@
+import useFinancialRefresh from "../../../hooks/useFinancialRefresh";
 import { financialBudgetEligible } from "../../../utils/budgetRevisions";
 import { fundingErrors } from "../../../utils/transactionFunding";
 import { budgetOptionLabel } from "../../../utils/budgetDisplay";
@@ -58,6 +59,16 @@ const CreateTransaction = () => {
   const [organizations, setOrganizations] = useState([]);
   const [projects, setProjects] = useState([]);
   const [budgets, setBudgets] = useState([]);
+  const financialRefresh = useFinancialRefresh();
+  useEffect(() => {
+    if (!financialRefresh) return undefined;
+    const controller = new AbortController();
+    authFetch(`${BASE_URL}/api/budgets/active`, { signal: controller.signal, cache: "no-store" })
+      .then(async response => response.ok ? safeReadJson(response) : [])
+      .then(items => { if (!controller.signal.aborted) setBudgets(Array.isArray(items) ? items.filter(financialBudgetEligible) : []); })
+      .catch(() => { if (!controller.signal.aborted) setBudgets([]); });
+    return () => controller.abort();
+  }, [authFetch, financialRefresh]);
   const [transactionStatuses, setTransactionStatuses] = useState([]);
 
   const filteredBudgets = useMemo(() => {

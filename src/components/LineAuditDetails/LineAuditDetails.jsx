@@ -1,4 +1,5 @@
 import React from "react";
+import ExecutionAuditContext from "../BudgetExecution/ExecutionAuditContext";
 import AuditFieldChanges, { formatFieldValue } from "../AuditFieldChanges/AuditFieldChanges";
 import styles from "./LineAuditDetails.module.scss";
 
@@ -16,5 +17,6 @@ export default function LineAuditDetails({ event }) {
           <div key={label}><dt>{label}</dt><dd>{formatFieldValue(value, type)}</dd></div>)}
       </dl>}
     {event.action === "UPDATE" && <div className={styles.changes}><AuditFieldChanges event={event} /></div>}
+    {context?.version === 1 && <ExecutionAuditContext context={context.execution} />}
   </div>;
 }

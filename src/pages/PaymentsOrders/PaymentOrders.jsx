@@ -1,4 +1,5 @@
-import { financialBudgetEligible } from "../../utils/budgetRevisions";
+import useFinancialRefresh from "../../hooks/useFinancialRefresh";
+import { financialReferenceEligible } from "../../utils/budgetRevisions";
 import { appFetch as fetch } from "../../utils/appFetch";
 import { decimalUnits, matchesDecimalRange, fundingExcel, summaryExcel, summaryText, issueText, groupedPaymentTotals } from "../../utils/paymentFunding";
 import useMediaQuery from "../../hooks/useMediaQuery";
@@ -312,7 +313,7 @@ function PaymentOrders() {
           { headers: authHeaders },
         );
         const budgets = bRes.ok ? await bRes.json() : [];
-        const list = Array.isArray(budgets) ? budgets.filter(financialBudgetEligible) : [];
+        const list = Array.isArray(budgets) ? budgets.filter(financialReferenceEligible) : [];
 
         const all = [];
         for (const b of list) {
@@ -331,6 +332,11 @@ function PaymentOrders() {
     },
     [authHeaders],
   );
+
+  const financialRefresh = useFinancialRefresh();
+  useEffect(() => {
+    if (financialRefresh) fetchCostDetailsForProject(selectedProjectId);
+  }, [financialRefresh, fetchCostDetailsForProject, selectedProjectId]);
 
   useEffect(() => {
     fetchOrders(selectedProjectId);

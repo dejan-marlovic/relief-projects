@@ -20,6 +20,15 @@ const validLine = {
   memo: null,
 };
 
+test("payment cost choices preserve exact assigned provenance across revisions and omit released reservations", () => {
+  expect(allocationCostDetailOptions([
+    { costDetailId: 272, plannedAmount: "0.000001", revisionFundingAssignmentId: 7 },
+    { costDetailId: 273, plannedAmount: "0.000000", revisionFundingAssignmentId: 8 },
+  ], [{ costDetailId: 272, budgetId: 27, costDescription: "Revised training" }])).toEqual([
+    { costDetailId: 272, budgetId: 27, costDescription: "Revised training", revisionFundingAssignmentId: 7 },
+  ]);
+});
+
 describe("payment order line validation", () => {
   test("accepts a complete line", () => {
     expect(validatePaymentOrderLine(validLine)).toEqual({});

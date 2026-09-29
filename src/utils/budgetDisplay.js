@@ -1,3 +1,4 @@
+import { budgetFinancialRole } from "./budgetRevisions";
 export const normalizeBudgetName = (value) => String(value ?? "").replace(/^[\p{White_Space}\uFEFF]+|[\p{White_Space}\uFEFF]+$/gu, "");
 
 export const budgetNameError = (value) => {
@@ -11,5 +12,5 @@ export const budgetOptionLabel = (budget) => {
   const id = budget?.id ?? budget?.budgetId;
   const name = normalizeBudgetName(budget?.budgetName);
   const label = name ? `${name} (ID: ${id})` : `Budget #${id}`;
-  return budget?.revisionFamilyId ? `${label} · Revision ${budget.revisionNumber} · ${budget.eligibleForFinancialUse === false ? "Planning only" : "Financial basis"}` : label;
+  return budget?.revisionFamilyId ? `${label} · Revision ${budget.revisionNumber} · ${budgetFinancialRole(budget)}` : label;
 };

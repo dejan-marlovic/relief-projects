@@ -226,6 +226,7 @@ const TransactionAllocations = ({
   };
 
   const onInlineUpdate = async (row, patch) => {
+    if (row.revisionFundingAssignmentId) return;
     if (!canManage) return;
     setRowErrorsById((prev) => {
       const next = { ...prev };
@@ -274,6 +275,7 @@ const TransactionAllocations = ({
   };
 
   const onDelete = async (id) => {
+    if (rows.some(row => row.id === id && row.revisionFundingAssignmentId)) return;
     if (!canManage) return;
     if (!window.confirm("Delete this allocation?")) return;
 
@@ -508,6 +510,7 @@ const TransactionAllocations = ({
                 const cd = costDetailOptions.find(
                   (x) => Number(x.costDetailId) === n,
                 );
+                if (r.revisionFundingAssignmentId) return `${cd?.costDescription || `Cost detail #${r.costDetailId}`} · Assignment #${r.revisionFundingAssignmentId} — manage under Details & activity → Revision funding assignments`;
                 return cd
                   ? `${cd.costDescription || "No description"} (CD#${
                       cd.costDetailId
@@ -525,7 +528,7 @@ const TransactionAllocations = ({
               }
               onSave={(patch) => onInlineUpdate(r, patch)}
               onDelete={() => onDelete(r.id)}
-              canManage={canManage}
+              canManage={canManage && !r.revisionFundingAssignmentId}
             />
           ))
         )}

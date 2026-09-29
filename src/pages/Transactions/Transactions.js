@@ -1,3 +1,4 @@
+import useFinancialRefresh from "../../hooks/useFinancialRefresh";
 import { financialBudgetEligible } from "../../utils/budgetRevisions";
 import { appFetch as fetch } from "../../utils/appFetch";
 import { decimalUnits, fundingErrors, fundingCurrencyLabel, matchesDecimalRange, sumAmounts, remainingFunding, fundingExcel } from "../../utils/transactionFunding";
@@ -289,6 +290,7 @@ const Transactions = ({ refreshTrigger }) => {
     }
   }, [editingId]);
 
+  const financialRefresh = useFinancialRefresh();
   // budgets + cost detail options
   useEffect(() => {
     let cancelled = false;
@@ -347,7 +349,7 @@ const Transactions = ({ refreshTrigger }) => {
     return () => {
       cancelled = true;
     };
-  }, [selectedProjectId]);
+  }, [selectedProjectId, financialRefresh]);
 
   const startEdit = (tx) => {
     if (!canEditTransactions || saving || (compact && editingId !== null)) return;

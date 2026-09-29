@@ -1,5 +1,6 @@
+import RevisionFundingAssignments from "../../../components/RevisionFundingAssignments/RevisionFundingAssignments";
 import RecordActivity from "../../../components/RecordActivity/RecordActivity";
-import { financialBudgetEligible } from "../../../utils/budgetRevisions";
+import { financialBudgetEligible, financialReferenceEligible } from "../../../utils/budgetRevisions";
 import FundingReceipts from "../../../components/FundingReceipts/FundingReceipts";
 import { fundingCurrencyLabel } from "../../../utils/transactionFunding";
 import { budgetOptionLabel } from "../../../utils/budgetDisplay";
@@ -196,7 +197,7 @@ const Transaction = ({
       >
         <option value="">Select budget</option>
         {budgets.map((b) => (
-          <option key={b.id} value={b.id} disabled={!financialBudgetEligible(b)}>
+          <option key={b.id} value={b.id} disabled={!financialBudgetEligible(b) && !(String(b.id) === String(tx.budgetId) && financialReferenceEligible(b))}>
             {budgetLabel(b)}
           </option>
         ))}
@@ -487,6 +488,7 @@ const Transaction = ({
         <RecordHistory entityType="TRANSACTION" entityId={tx.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} />
         <FundingReceipts transactionId={tx.id} projectId={tx.projectId} refreshKey={`${historyRefreshKey}:${lifecycleStatus}`} editingLocked={isEditing || editingLocked} onChanged={onReceiptMutationSuccess} />
         <FinancialDocuments entityType="TRANSACTION" entityId={tx.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} editingLocked={isEditing} />
+      <RevisionFundingAssignments transactionId={tx.id} originBudgetId={tx.budgetId} disabled={isEditing || editingLocked} refreshKey={historyRefreshKey} onChanged={onAllocationMutationSuccess} />
       </RecordActivity>}
       {expanded && !isCreate && (
         <div className={styles.expandedPanel}>

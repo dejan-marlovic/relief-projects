@@ -1,6 +1,15 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import TransactionAllocations, { getCostDetailPlannedAmount } from "./TransactionAllocations";
 
+test("managed allocations cannot be edited or deleted through generic controls", async () => {
+  global.fetch = jest.fn(async url => ({ ok: true, json: async () => url.includes("cost-allocations") ? [{ id: 81, costDetailId: 272, plannedAmount: "1500.000001", revisionFundingAssignmentId: 7 }] : { approvedAmount: "10000.000" } }));
+  render(<TransactionAllocations txId={42} canManage />);
+  await screen.findByText(/Assignment #7 — manage under Details/);
+  expect(screen.getByDisplayValue("1500.000001")).toBeDisabled();
+  expect(screen.queryByRole("button", { name: "Save allocation" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Delete allocation" })).not.toBeInTheDocument();
+});
+
 describe("transaction allocation defaults", () => {
   test("uses the cost detail local amount as the planned amount", () => {
     expect(

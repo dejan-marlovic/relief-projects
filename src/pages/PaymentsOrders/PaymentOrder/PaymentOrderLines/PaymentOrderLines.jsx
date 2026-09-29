@@ -1,4 +1,5 @@
 import { appFetch as fetch } from "../../../../utils/appFetch";
+import useFinancialRefresh from "../../../../hooks/useFinancialRefresh";
 import RecipientConflicts from "./RecipientConflicts";
 import PaymentAmount from "../../../../components/PaymentAmount/PaymentAmount";
 import { paymentAmountError, decimalUnits } from "../../../../utils/paymentFunding";
@@ -72,6 +73,7 @@ export const allocationCostDetailOptions = (
         : {
             ...(detail || {}),
             costDetailId,
+            ...(allocation.revisionFundingAssignmentId ? { revisionFundingAssignmentId: allocation.revisionFundingAssignmentId } : {}),
             costDescription:
               detail?.costDescription ||
               allocation.costDescription ||
@@ -123,6 +125,7 @@ function normalizeLine(r) {
     costDetailId,
     amount: r.amount ?? null,
     amountCurrency: r.amountCurrency ?? null,
+    revisionFundingAssignmentId: r.revisionFundingAssignmentId ?? null,
     memo: r.memo ?? "",
   };
 }
@@ -323,9 +326,10 @@ const PaymentOrderLines = ({
     }
   }, [paymentOrderId, authHeaders, loadEligibleCostDetails]);
 
+  const financialRefresh = useFinancialRefresh();
   useEffect(() => {
     fetchRows();
-  }, [fetchRows, refreshKey]);
+  }, [fetchRows, refreshKey, financialRefresh]);
 
   useEffect(() => {
     if (!draft.transactionId) return;
@@ -661,7 +665,7 @@ const PaymentOrderLines = ({
             <option value="">Select…</option>
             {eligibleCostDetails(draft.transactionId).map((cd) => (
               <option key={cd.costDetailId} value={cd.costDetailId}>
-                {cd.costDescription || "No description"} (CD#{cd.costDetailId})
+                {cd.costDescription || "No description"} (CD#{cd.costDetailId}){cd.revisionFundingAssignmentId ? ` · Funding assignment #${cd.revisionFundingAssignmentId}` : ""}
               </option>
             ))}
           </select>
@@ -878,7 +882,7 @@ const LineRow = ({
           <option value="">Select…</option>
           {costDetailOptions.map((cd) => (
             <option key={cd.costDetailId} value={cd.costDetailId}>
-              {cd.costDescription || "No description"} (CD#{cd.costDetailId})
+              {cd.costDescription || "No description"} (CD#{cd.costDetailId}){cd.revisionFundingAssignmentId ? ` · Funding assignment #${cd.revisionFundingAssignmentId}` : ""}
             </option>
           ))}
         </select>

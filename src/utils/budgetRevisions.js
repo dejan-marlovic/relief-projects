@@ -1,4 +1,6 @@
-export const financialBudgetEligible = budget => budget?.eligibleForFinancialUse !== false;
+export const financialBudgetEligible = budget => (budget?.canCreateFundingTransaction ?? budget?.eligibleForFinancialUse) !== false;
+export const financialReferenceEligible = budget => (budget?.financialReferenceEligible ?? budget?.eligibleForFinancialUse) !== false;
+export const budgetFinancialRole = budget => financialBudgetEligible(budget) ? "New funding eligible" : financialReferenceEligible(budget) ? "Existing financial references" : "Planning only";
 
 // A missing family selection is unknown, never a zero or a predecessor fallback.
 export function selectedPlanningBudgets(envelope) {

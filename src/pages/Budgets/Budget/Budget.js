@@ -1,3 +1,4 @@
+import { budgetFinancialRole, financialReferenceEligible } from "../../../utils/budgetRevisions";
 import BudgetRevisions from "../../../components/BudgetRevisions/BudgetRevisions";
 import { appFetch as fetch } from "../../../utils/appFetch";
 import BudgetPlanning from "../../../components/BudgetPlanning/BudgetPlanning";
@@ -43,6 +44,12 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
   const [normalizeMissingInputs, setNormalizeMissingInputs] = useState(false);
   const [budget, setBudget] = useState(initialBudget || {});
   const [historyRefreshKey, setHistoryRefreshKey] = useState(0);
+  const { canCreateFundingTransaction, financialReferenceEligible: referenceEligible, eligibleForFinancialUse } = initialBudget || {};
+  useEffect(() => {
+    const policy = { canCreateFundingTransaction, financialReferenceEligible: referenceEligible, eligibleForFinancialUse };
+    setSavedBudget(old => ({ ...old, ...policy }));
+    setBudget(old => ({ ...old, ...policy }));
+  }, [canCreateFundingTransaction, referenceEligible, eligibleForFinancialUse]);
   const refreshChildHistory = useCallback(() => setHistoryRefreshKey((value) => value + 1), []);
   const [currencies, setCurrencies] = useState([]);
   const [exchangeRates, setExchangeRates] = useState([]);
@@ -667,7 +674,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
 
       addLandscapeHeaderField(
         "Budget ID / Revision",
-        budget.revisionFamilyId ? `${budget.id} / Revision ${budget.revisionNumber} / ${budget.eligibleForFinancialUse === false ? "Planning only" : "Financial basis"}` : budget.id,
+        budget.revisionFamilyId ? `${budget.id} / Revision ${budget.revisionNumber} / ${budgetFinancialRole(budget)}` : budget.id,
         firstLabelRow,
         firstValueRow,
         1,
@@ -1765,8 +1772,8 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
           setHistoryRefreshKey((value) => value + 1); triggerRefreshCostDetails(); onUpdate?.(updated);
           fetchExchangeRates(localStorage.getItem("authToken")).then((fresh) => setExchangeRates(Array.isArray(fresh) ? fresh : [])).catch(() => setExchangeRates([]));
         }} />}
-      {savedBudget.revisionFamilyId && <p>Revision {savedBudget.revisionNumber} · Family #{savedBudget.revisionFamilyId} · {savedBudget.eligibleForFinancialUse === false ? "Planning only" : "Financial basis"}</p>}
-      {savedBudget.eligibleForFinancialUse === false && <p role="note">Planning-only revision · Transactions and allocations remain on the original financial budget. This revised plan grants no additional spending capacity.</p>}
+      {savedBudget.revisionFamilyId && <p>Revision {savedBudget.revisionNumber} · Family #{savedBudget.revisionFamilyId} · {budgetFinancialRole(savedBudget)}</p>}
+      {savedBudget.revisionFamilyId && <p role="note">{financialReferenceEligible(savedBudget) ? "Existing financial references remain valid. New funding follows the executable revision and shared family ceilings." : "Planning-only revision · Select it as the current plan and activate financial execution before using it for new funding."}</p>}
       <BudgetRevisions budget={savedBudget} disabled={hasUnsavedChanges || childEditing || loading || submitting || Boolean(reviewAction)} onChanged={(result) => { const updated = result.members.find(member => member.id === savedBudget.id); if (updated) { setBudget(updated); setSavedBudget(updated); } setHistoryRefreshKey(n => n + 1); onRevisionsChanged?.(result); }} />
       <BudgetPlanning key={`planning-${savedBudget.id}`} budget={savedBudget} refreshKey={historyRefreshKey} disabled={hasUnsavedChanges || childEditing || loading || submitting || Boolean(reviewAction)} onUpdated={(updated) => { setBudget(updated); setSavedBudget(updated); setHasUnsavedChanges(false); setHistoryRefreshKey((value) => value + 1); onUpdate?.(updated); }} />
       <RecordHistory entityType="BUDGET" entityId={budget.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} />
