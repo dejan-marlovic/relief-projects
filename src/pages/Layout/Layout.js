@@ -126,6 +126,7 @@ const Layout = () => {
     ["/documents", "Documents"],
     ["/follow-ups", "Follow-ups"],
     ["/risks", "Risks"],
+    ["/results", "Results"],
     ["/statistics", "Statistics"],
     ["/register-project", "New Project"],
     ["/operational-guide", "Guide"],

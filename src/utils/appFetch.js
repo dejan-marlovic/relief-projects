@@ -14,6 +14,15 @@ export function mutationNotice(input, options = {}, response) {
   if (path.includes("bulk")) return null;
   if (response.status === 202) return "Request accepted for processing.";
   const segments = path.slice(5).split("/");
+  if (segments[0] === "projects" && segments[2] === "indicators") {
+    if (/\/remove$/.test(path)) return "Result evidence association removed.";
+    if (segments.includes("evidence")) return "Result evidence linked.";
+    if (/\/correct$/.test(path)) return "Result correction saved.";
+    if (/\/void$/.test(path)) return "Result voided.";
+    if (/\/delete$/.test(path)) return "Indicator deleted.";
+    if (/\/restore$/.test(path)) return "Indicator restored.";
+    return segments.includes("results") ? "Result recorded." : "Indicator saved.";
+  }
   if (segments.includes("revision-funding-assignments")) return "Revision funding assignment saved.";
   if (segments.includes("execution-activations")) return "Budget execution activated or reaffirmed.";
   if (segments[0] === "budget-revision-families") return "Current planning budget selected.";
