@@ -6,7 +6,7 @@ import styles from "./Results.module.scss";
 export function Issues({ issues = [] }) { return issues.map((issue, i) => <p className={styles.muted} key={i}>{issue.message}</p>); }
 export function ReadState({ state }) { return <>{state.loading && <p role="status">Loading…</p>}{state.error && <p role="alert">{state.error} Use Refresh to try again.</p>}</>; }
 export function Pagination({ data, page, setPage, label, disabled }) {
-  return <div className={styles.actions}><button disabled={disabled || !page} onClick={() => setPage(n => n - 1)}>Previous {label}</button><span>{data?.totalElements ?? "…"} entries · Page {data?.totalPages ? page + 1 : 0} of {data?.totalPages ?? "…"}</span><button disabled={disabled || !data || page + 1 >= data.totalPages} onClick={() => setPage(n => n + 1)}>Next {label}</button></div>;
+  return <div className={styles.actions}><button type="button" disabled={disabled || !page} onClick={() => setPage(n => n - 1)}>Previous {label}</button><span>{data?.totalElements ?? "…"} entries · Page {data?.totalPages ? page + 1 : 0} of {data?.totalPages ?? "…"}</span><button type="button" disabled={disabled || !data || page + 1 >= data.totalPages} onClick={() => setPage(n => n + 1)}>Next {label}</button></div>;
 }
 export function ResultSummary({ summary, unit, direction }) {
   if (!summary) return <p>Latest report unavailable.</p>;

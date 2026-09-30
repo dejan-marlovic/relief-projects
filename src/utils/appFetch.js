@@ -14,6 +14,18 @@ export function mutationNotice(input, options = {}, response) {
   if (path.includes("bulk")) return null;
   if (response.status === 202) return "Request accepted for processing.";
   const segments = path.slice(5).split("/");
+  if (segments[0] === "projects" && segments[2] === "management-records") {
+    if (/\/remove$/.test(path)) return "Management record association removed.";
+    if (/\/actions$/.test(path)) return "Existing follow-up linked.";
+    if (/\/evidence$/.test(path)) return "Supporting document linked.";
+    if (/\/response$/.test(path)) return "Management response saved.";
+    if (/\/reviews$/.test(path)) return "Management review recorded.";
+    if (/\/resolve$/.test(path)) return "Management resolution recorded.";
+    if (/\/reopen$/.test(path)) return "Management record reopened.";
+    if (/\/delete$/.test(path)) return "Management record deleted.";
+    if (/\/restore$/.test(path)) return "Management record restored.";
+    return "Finding or lesson saved.";
+  }
   if (segments[0] === "projects" && segments[2] === "indicators") {
     if (/\/remove$/.test(path)) return "Result evidence association removed.";
     if (segments.includes("evidence")) return "Result evidence linked.";

@@ -2,6 +2,7 @@ import SuccessNotifications from "./components/SuccessNotifications/SuccessNotif
 import FollowUps from "./pages/FollowUps/FollowUps";
 import Risks from "./pages/Risks/Risks";
 import Results from "./pages/Results/Results";
+import Management from "./pages/Management/Management";
 // Import ReactDOM to render the React app into the DOM
 import ReactDOM from "react-dom/client";
 
@@ -65,6 +66,7 @@ export default function App() {
               <Route path="follow-ups" element={<FollowUps />} />
               <Route path="risks" element={<Risks />} />
               <Route path="results" element={<Results />} />
+              <Route path="findings-lessons" element={<Management />} />
               <Route path="statistics" element={<Statistics />} />
               <Route path="organizations" element={<Organizations />} />
                 <Route
