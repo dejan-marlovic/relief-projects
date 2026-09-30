@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import styles from "./Layout.module.scss";
 import { ProjectContext } from "../../context/ProjectContext";
@@ -8,10 +8,12 @@ import { useAuth } from "../../context/AuthContext";
 import { UnsavedChangesContext } from "../../context/UnsavedChangesContext";
 
 import useMediaQuery from "../../hooks/useMediaQuery";
+import NavigationGroup from "./NavigationGroup";
 
 const Layout = () => {
   const isPhone = useMediaQuery("(max-width: 700px)");
-  const tabListRef = useRef(null);
+  const [openGroup, setOpenGroup] = useState(null);
+  const closeGroup = useCallback(() => setOpenGroup(null), []);
   const location = useLocation();
   const navigate = useNavigate();
   const { logoUrl } = useBranding();
@@ -112,7 +114,7 @@ const Layout = () => {
     isAboutPage ||
     isAdminPage;
 
-  const isActive = (path) => location.pathname === path ||
+  const isActive = (path) => location.pathname === path || (path === "/project" && location.pathname === "/") ||
     (path === "/admin" && location.pathname.startsWith("/admin/"));
 
   const navigationItems = [
@@ -140,20 +142,15 @@ const Layout = () => {
 
   const currentPage = navigationItems.find(([path]) => isActive(path))?.[0] || "";
 
-  useEffect(() => {
-    const revealActiveTab = () => {
-      const list = tabListRef.current;
-      const active = list?.querySelector('[aria-current="page"]');
-      if (!active || list.scrollWidth <= list.clientWidth) return;
-      const bounds = list.getBoundingClientRect();
-      const tab = active.getBoundingClientRect();
-      if (tab.left < bounds.left) list.scrollLeft += tab.left - bounds.left;
-      else if (tab.right > bounds.right) list.scrollLeft += tab.right - bounds.right;
-    };
-    revealActiveTab();
-    window.addEventListener("resize", revealActiveTab);
-    return () => window.removeEventListener("resize", revealActiveTab);
-  }, [location.pathname, isPhone, projectTabLabel]);
+  const categories = [
+    { label: "Finance", paths: ["/budgets", "/transactions", "/payments", "/signatures", "/recipients"] },
+    // Future findings/lessons and travel belong here when their routes are implemented.
+    { label: "Project work", paths: ["/documents", "/follow-ups", "/risks", "/results", "/organizations"] },
+    { label: "Overview", paths: ["/statistics"] },
+    { label: "Help", paths: ["/operational-guide", "/about"] },
+  ].map(group => ({ ...group, items: navigationItems.filter(([path]) => group.paths.includes(path)) }));
+
+  useEffect(() => { setOpenGroup(null); }, [location.pathname, isPhone]);
 
   return (
     <div
@@ -242,12 +239,15 @@ const Layout = () => {
               }}
             >
               {!currentPage && <option value="" disabled>Select page</option>}
-              {navigationItems.map(([path, label]) => <option key={path} value={path}>{label}</option>)}
+              <option value="/project">{projectTabLabel}</option>
+              {hasAnyRole("ADMIN", "PROJECT_MANAGER") && <option value="/register-project">New Project</option>}
+              {categories.map(group => <optgroup key={group.label} label={group.label}>{group.items.map(([path, label]) => <option key={path} value={path}>{label}</option>)}</optgroup>)}
+              {hasRole("ADMIN") && <option value="/admin">Admin</option>}
             </select>
           </div>
         ) : (
-        <ul className={styles.tabList} ref={tabListRef}>
-          {navigationItems.map(([path, label]) => {
+        <ul className={styles.tabList}>
+          {navigationItems.filter(([path]) => path === "/project").map(([path, label]) => {
             const isAdminTab = path === "/admin";
             const isProjectTab = path === "/project";
 
@@ -282,6 +282,9 @@ const Layout = () => {
               </li>
             );
             })}
+          {categories.map(group => <NavigationGroup key={group.label} {...group} isActive={isActive} open={openGroup === group.label} onToggle={() => setOpenGroup(current => current === group.label ? null : group.label)} onClose={closeGroup} confirmNavigation={confirmDiscardUnsavedChanges} />)}
+          {hasAnyRole("ADMIN", "PROJECT_MANAGER") && <li className={styles.tabItem}><Link to="/register-project" className={`${styles.tabLink} ${isActive("/register-project") ? styles.active : ""}`} aria-current={isActive("/register-project") ? "page" : undefined} onClick={event => { if (!isActive("/register-project") && !confirmDiscardUnsavedChanges()) event.preventDefault(); }}>New Project</Link></li>}
+          {hasRole("ADMIN") && <li className={styles.tabItem}><Link to="/admin" className={`${styles.tabLink} ${styles.adminTab} ${isActive("/admin") ? styles.active : ""}`} aria-current={isActive("/admin") ? "page" : undefined} onClick={event => { if (!isActive("/admin") && !confirmDiscardUnsavedChanges()) event.preventDefault(); }}>Admin</Link></li>}
         </ul>
         )}
       </nav>

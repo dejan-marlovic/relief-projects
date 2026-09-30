@@ -57,6 +57,7 @@ describe("role-aware navigation", () => {
 
   test.each(["FINANCE", "APPROVER", "VIEWER"])("%s sees neither privileged navigation item", (role) => {
     renderLayout([role]);
+    fireEvent.click(screen.getByRole("button", { name: "Overview" }));
     expect(screen.queryByRole("link", { name: "Admin" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "New Project" })).not.toBeInTheDocument();
   });
@@ -87,6 +88,7 @@ describe("role-aware navigation", () => {
     const confirm = jest.spyOn(window, "confirm").mockReturnValue(false);
     renderLayout(["FINANCE"], {}, <DirtyProject />);
 
+    fireEvent.click(screen.getByRole("button", { name: "Finance" }));
     fireEvent.click(screen.getByRole("link", { name: "Transactions" }));
 
     expect(confirm).toHaveBeenCalledWith(
@@ -94,6 +96,22 @@ describe("role-aware navigation", () => {
     );
     expect(screen.getByText("Project with unsaved changes")).toBeInTheDocument();
   });
+});
+
+test("groups collapse on Escape/outside interaction and indicate the active child", () => {
+  renderLayout(["ADMIN"]);
+  const finance = screen.getByRole("button", { name: "Finance" });
+  fireEvent.click(finance);
+  expect(finance).toHaveAttribute("aria-expanded", "true");
+  fireEvent.keyDown(screen.getByRole("link", { name: "Transactions" }), { key: "Escape" });
+  expect(finance).toHaveFocus(); expect(finance).toHaveAttribute("aria-expanded", "false");
+  fireEvent.click(finance); fireEvent.pointerDown(document.body);
+  expect(finance).toHaveAttribute("aria-expanded", "false");
+  fireEvent.click(finance); fireEvent.click(screen.getByRole("link", { name: "Transactions" }));
+  expect(screen.getByText("Transaction page")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Finance Transactions" })).toHaveAttribute("aria-expanded", "false");
+  fireEvent.click(screen.getByRole("button", { name: "Finance Transactions" }));
+  expect(screen.getByRole("link", { name: "Transactions" })).toHaveAttribute("aria-current", "page");
 });
 
 

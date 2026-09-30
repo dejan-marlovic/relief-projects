@@ -156,6 +156,8 @@ $secondary-color: colors.$danger;
 /* ================= TABS ================= */
 
 .nav {
+  position: relative;
+  z-index: 40;
   flex-shrink: 0;
   min-width: 0;
   margin-bottom: 1rem;
@@ -168,24 +170,27 @@ $secondary-color: colors.$danger;
 
 .tabList {
   list-style: none;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   align-items: stretch;
   gap: 8px;
   margin: 0;
   padding: 2px;
   max-width: 100%;
-  overflow-x: auto;
-  scrollbar-width: thin;
+  overflow: visible;
 }
 
 .tabItem {
   display: flex;
+  min-width: 0;
   margin: 0;
   flex: 0 0 auto;
 }
 
 .tabLink {
   display: flex;
+  width: 100%;
+  min-width: 0;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
@@ -213,7 +218,7 @@ $secondary-color: colors.$danger;
 }
 
 .projectTab {
-  max-width: 18rem;
+  max-width: 100%;
   overflow: hidden;
   background: colors.$primary-soft;
   border-color: colors.$primary-border;
@@ -286,18 +291,46 @@ $secondary-color: colors.$danger;
   .logoutIcon:only-child { grid-row: 1; }
 
   .tabList {
-    overflow-x: auto;
+    overflow: visible;
   }
 }
 
+.groupItem { position: relative; }
+.groupTrigger { cursor: pointer; font-family: inherit; min-width: 8rem; }
+.groupTitle { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; }
+.groupTrigger[aria-expanded="true"] { background: colors.$primary-soft; border-color: colors.$primary-border-strong; }
+.groupTrigger[aria-expanded="true"] svg { transform: rotate(180deg); }
+.dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 13rem;
+  max-width: calc(100vw - 48px);
+  max-height: min(60vh, 25rem);
+  overflow-y: auto;
+  margin: 0;
+  padding: .4rem;
+  list-style: none;
+  border: 1px solid colors.$primary-border;
+  border-radius: 12px;
+  background: colors.$surface;
+  box-shadow: colors.$shadow-card;
+  li { margin: 0; }
+  a { display: block; padding: .8rem .9rem; border-radius: 8px; color: colors.$text-secondary; text-decoration: none; white-space: nowrap; }
+  a:hover, a[aria-current="page"] { background: colors.$primary-soft; color: colors.$primary-dark; }
+  a[aria-current="page"] { font-weight: 700; box-shadow: inset 3px 0 0 colors.$primary; }
+  a:focus-visible { outline: 2px solid colors.$primary; outline-offset: -2px; }
+}
+
 .adminTab {
-  border-color: colors.$danger-border;
+  background: colors.$danger-soft;
+  border-color: colors.$danger-border-strong;
   color: colors.$danger-text;
 }
 
 .adminTab:hover, .tabLink.active.adminTab {
-  background: colors.$danger-soft;
-  border-color: colors.$danger-border;
+  background: colors.$danger-soft-strong;
+  border-color: colors.$danger-border-strong;
   color: colors.$danger-text;
 }
 
