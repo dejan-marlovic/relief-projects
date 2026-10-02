@@ -1,5 +1,6 @@
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { FiCornerUpLeft } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { BASE_URL } from "../../config/api";
 import { createAuthFetch, safeReadJson } from "../../utils/http";
@@ -86,7 +87,7 @@ export default function ReturnReasonDialog({ endpoint, recordLabel, onSuccess, o
       {error && <p role="alert" className={styles.error}>{error}</p>}
       <div className={styles.actions}>
         <button type="button" disabled={busy} onClick={onCancel}>Cancel</button>
-        <button type="submit" disabled={busy}>{busy ? "Returning…" : "Confirm return"}</button>
+        <button type="submit" className={styles.confirmReturn} disabled={busy}><FiCornerUpLeft aria-hidden="true" />{busy ? "Returning…" : "Confirm return"}</button>
       </div>
     </form>
   </dialog>, document.body);

@@ -1,0 +1,34 @@
+@use "./colors" as colors;
+@use "./forms" as forms;
+
+// Budget approval actions are the shared visual reference. Tables retain their
+// compact icon footprint; labels, permissions and transitions remain local.
+@mixin action($kind, $compact: false) {
+  @include forms.primary-button;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+
+  @if $kind == approve {
+    background: colors.$success;
+    &:hover:not(:disabled) { background: colors.$success-dark; }
+  }
+  @if $kind == return {
+    padding: 8px 14px;
+    border: 1px solid colors.$warning-border;
+    border-radius: 8px;
+    background: colors.$warning-soft;
+    color: colors.$warning-dark;
+    &:hover:not(:disabled) { background: colors.$warning-soft-alt; }
+  }
+  @if $compact {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border-radius: 999px;
+  }
+  &:disabled { opacity: .6; cursor: not-allowed; }
+  &:focus-visible { outline: 2px solid colors.$primary; outline-offset: 2px; }
+  svg { flex-shrink: 0; }
+}

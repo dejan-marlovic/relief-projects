@@ -3,6 +3,7 @@ import FollowUps from "./pages/FollowUps/FollowUps";
 import Risks from "./pages/Risks/Risks";
 import Results from "./pages/Results/Results";
 import Management from "./pages/Management/Management";
+import Travel from "./pages/Travel/Travel";
 // Import ReactDOM to render the React app into the DOM
 import ReactDOM from "react-dom/client";
 
@@ -67,6 +68,7 @@ export default function App() {
               <Route path="risks" element={<Risks />} />
               <Route path="results" element={<Results />} />
               <Route path="findings-lessons" element={<Management />} />
+              <Route path="travel" element={<Travel />} />
               <Route path="statistics" element={<Statistics />} />
               <Route path="organizations" element={<Organizations />} />
                 <Route

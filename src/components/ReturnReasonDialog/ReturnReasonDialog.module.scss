@@ -1,3 +1,4 @@
+@use "../../styles/approval-actions" as approval;
 @use "../../styles/colors" as colors;
 .dialog { width: min(540px, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); overflow: auto; box-sizing: border-box; padding: 1.5rem; border: 1px solid colors.$primary-border; border-radius: 14px; background: colors.$surface; color: colors.$text; }
 .dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
@@ -18,3 +19,5 @@
   .actions { flex-wrap: wrap; }
   .actions button { flex: 1 1 120px; min-height: 44px; }
 }
+
+.actions button.confirmReturn { @include approval.action(return); }

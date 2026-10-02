@@ -1,3 +1,4 @@
+@use "../../../styles/approval-actions" as approval;
 @use "../../../styles/colors" as colors;
 /* src/components/Transactions/Transaction/Transaction.module.scss */
 @use "../../../styles/tables" as tables;
@@ -277,20 +278,9 @@
   color: #9b2c2c;
 }
 
-.submitBtn {
-  color: colors.$primary;
-  border-color: colors.$primary-a25;
-}
-
-.approveBtn {
-  color: #176b3a;
-  border-color: #86c99f;
-}
-
-.returnBtn {
-  color: #9b2c2c;
-  border-color: #e7a0a0;
-}
+.submitBtn { @include approval.action(submit, true); }
+.approveBtn { @include approval.action(approve, true); }
+.returnBtn { @include approval.action(return, true); }
 
 .fieldLabel { display: block; font-size: 0.8rem; font-weight: 600; color: colors.$text-muted; margin-bottom: 4px; }
 @media (max-width: 1100px) {

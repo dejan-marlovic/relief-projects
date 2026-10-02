@@ -43,6 +43,12 @@ const renderLayout = (roles, projectContext = {}, projectElement = <div>Project<
 describe("role-aware navigation", () => {
   afterEach(() => { localStorage.clear(); jest.restoreAllMocks(); });
 
+  test("Travel is available under Project work", () => {
+    renderLayout(["VIEWER"]);
+    fireEvent.click(screen.getByRole("button", { name: "Project work" }));
+    expect(screen.getByRole("link", { name: "Travel" })).toHaveAttribute("href", "/travel");
+  });
+
   test("ADMIN sees Admin and New Project", () => {
     renderLayout(["ADMIN"]);
     expect(screen.getByRole("link", { name: "Admin" })).toBeInTheDocument();
@@ -131,6 +137,7 @@ describe("phone navigation", () => {
   ])("%s receives the correct page choices", (role, admin, create) => {
     renderLayout([role]);
     const menu = within(screen.getByRole("combobox", { name: "Current page" }));
+    expect(menu.getByRole("option", { name: "Travel" })).toHaveValue("/travel");
     expect(Boolean(menu.queryByRole("option", { name: "Admin" }))).toBe(admin);
     expect(Boolean(menu.queryByRole("option", { name: "New Project" }))).toBe(create);
     expect(screen.queryByRole("link", { name: "Transactions" })).not.toBeInTheDocument();

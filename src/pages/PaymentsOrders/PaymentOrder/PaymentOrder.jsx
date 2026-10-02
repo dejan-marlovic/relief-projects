@@ -274,7 +274,7 @@ const PaymentOrder = ({
               <>
                 <button
                   type="button"
-                  className={`${styles.iconCircleBtn} ${styles.submitBtn}`}
+                  className={`${styles.iconCircleBtn} ${styles.approveBtn}`}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -288,7 +288,7 @@ const PaymentOrder = ({
                 </button>
                 <button
                   type="button"
-                  className={styles.iconCircleBtn}
+                  className={`${styles.iconCircleBtn} ${styles.returnBtn}`}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();

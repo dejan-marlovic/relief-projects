@@ -14,6 +14,11 @@ export function mutationNotice(input, options = {}, response) {
   if (path.includes("bulk")) return null;
   if (response.status === 202) return "Request accepted for processing.";
   const segments = path.slice(5).split("/");
+  if (segments[0] === "projects" && segments[2] === "travel-requests") {
+    if (/\/remove$/.test(path)) return "Travel association removed.";
+    const notices = { submit: "Travel request submitted.", approve: "Travel approval recorded.", return: "Travel request returned for changes.", "withdraw-approval": "Travel approval withdrawn.", cancel: "Travel request cancelled.", delete: "Travel request deleted.", restore: "Travel request restored.", actions: "Existing follow-up linked to travel.", evidence: "Supporting document linked to travel." };
+    return notices[segments.at(-1)] || "Travel request saved.";
+  }
   if (segments[0] === "projects" && segments[2] === "management-records") {
     if (/\/remove$/.test(path)) return "Management record association removed.";
     if (/\/actions$/.test(path)) return "Existing follow-up linked.";

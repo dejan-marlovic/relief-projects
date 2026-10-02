@@ -130,6 +130,7 @@ const Layout = () => {
     ["/risks", "Risks"],
     ["/results", "Results"],
     ["/findings-lessons", "Findings & lessons"],
+    ["/travel", "Travel"],
     ["/statistics", "Statistics"],
     ["/register-project", "New Project"],
     ["/operational-guide", "Guide"],
@@ -146,7 +147,7 @@ const Layout = () => {
   const categories = [
     { label: "Finance", paths: ["/budgets", "/transactions", "/payments", "/signatures", "/recipients"] },
     // Future travel and assessment pages can join this group when implemented.
-    { label: "Project work", paths: ["/documents", "/follow-ups", "/risks", "/results", "/findings-lessons", "/organizations"] },
+    { label: "Project work", paths: ["/documents", "/follow-ups", "/risks", "/results", "/findings-lessons", "/travel", "/organizations"] },
     { label: "Overview", paths: ["/statistics"] },
     { label: "Help", paths: ["/operational-guide", "/about"] },
   ].map(group => ({ ...group, items: navigationItems.filter(([path]) => group.paths.includes(path)) }));
