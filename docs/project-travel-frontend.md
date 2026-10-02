@@ -38,6 +38,8 @@ Visual follow-up: Travel uses the existing lifecycle badge palette. Shared `src/
 
 ## Verification and limits
 
+Travel presentation follow-up: existing requests now use two accessible expandable steps, Plan the trip and Travel approval. Draft/returned requests open on planning; other states open on approval. Users can inspect either section without executing a transition. The step containing an unsaved form stays visible. Request administration is separate; history uses a newest-first actor/action timeline with expandable snapshots. Reporting steps remain deferred until their contract is implemented. The 18 Travel tests, targeted ESLint and production build passed (existing unrelated build warnings remain). Live visual acceptance remains user-controlled.
+
 - **566 tests across 88 suites passed**, including 16 new travel tests and desktop/phone navigation coverage.
 - Targeted ESLint passed. Production build passed with existing unrelated lint and bundle-size warnings; no Travel warning was reported.
 - Final diff and new-file whitespace checks passed. No commit or push.

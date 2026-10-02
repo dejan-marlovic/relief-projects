@@ -41,10 +41,11 @@ export function Associations({ kind, endpoint, authFetch, refresh, open, locked,
     <Pagination data={state.data} page={page} setPage={setPage} label={kind} disabled={state.loading} />
   </section>;
 }
+const historyActions = { CREATE: "created the request", UPDATE: "updated the trip plan", SUBMIT: "submitted the plan", APPROVE: "approved the trip", RETURN: "returned the plan for changes", WITHDRAW_APPROVAL: "withdrew approval", CANCEL: "cancelled the request", DELETE: "deleted the request", RESTORE: "restored the request", EVIDENCE_LINKED: "linked a document", EVIDENCE_REMOVED: "removed a document link", ACTION_LINKED: "linked a follow-up", ACTION_REMOVED: "removed a follow-up link" };
 export function TravelHistory({ endpoint, authFetch, refresh }) {
   const [page, setPage] = useState(0);
   const state = useTravelRead(authFetch, `${endpoint}/history?page=${page}&size=20`, refresh);
-  return <section className={styles.panel} aria-label="Retained travel history"><h3>Retained history</h3><ReadState state={state} /><ol className={styles.history}>{state.data?.content.map(event => <li key={event.id}><h4>{label(event.action)} · Revision {event.revision}</h4><Attribution at={event.occurredAt} actor={event.actor} />{event.reason && <p>Reason: {event.reason}</p>}<details><summary>Before</summary><HistorySnapshot value={event.before} /></details><details><summary>After</summary><HistorySnapshot value={event.after} /></details></li>)}</ol><Pagination data={state.data} page={page} setPage={setPage} label="travel history" disabled={state.loading} /></section>;
+  return <section className={styles.panel} aria-label="Retained travel history"><h3>Travel history</h3><p className={styles.muted}>Newest first. Earlier plans and decisions remain available when a request is returned, changed or cancelled.</p><ReadState state={state} /><ol className={styles.timeline}>{state.data?.content.map(event => <li key={event.id}><h4>{event.actor?.username || "Recorded actor"} {historyActions[event.action] || label(event.action)}</h4><p className={styles.muted}>Revision {event.revision}</p><Attribution at={event.occurredAt} actor={event.actor} />{event.reason && <p>Reason: {event.reason}</p>}<details><summary>Before</summary><HistorySnapshot value={event.before} /></details><details><summary>After</summary><HistorySnapshot value={event.after} /></details></li>)}</ol><Pagination data={state.data} page={page} setPage={setPage} label="travel history" disabled={state.loading} /></section>;
 }
 
 

@@ -4,12 +4,12 @@ import { useNavigate } from "react-router-dom";
 import { ProjectContext } from "../../context/ProjectContext";
 import { BASE_URL } from "../../config/api";
 import { createAuthFetch } from "../../utils/http";
-import { readDocumentError, uploadTimeLabel } from "../../utils/documentMetadata";
+import { readDocumentError } from "../../utils/documentMetadata";
 import { canExportFollowUp, downloadFollowUpCalendar } from "../../utils/followUpCalendar";
 import styles from "./FollowUps.module.scss";
+import FollowUpSteps from "./FollowUpSteps";
 
 const buckets = { OVERDUE: "Overdue", DUE_TODAY: "Due today", UPCOMING: "Upcoming", LATER: "Later", COMPLETED: "Completed", INACTIVE: "Inactive" };
-const name = (person) => person?.username || (person?.userId ? `User #${person.userId}` : "Unknown");
 const employeeName = (person) => person.displayName || [person.firstName, person.lastName].filter(Boolean).join(" ") || `Employee #${person.id}`;
 function TaskForm({ task, employees, busy, onSave, onCancel }) {
   const [title, setTitle] = useState(task?.title || "");
@@ -123,13 +123,11 @@ function Queue({ mode, projectId, authFetch }) {
       {data.mappingStatus === "NO_EMPLOYEE" && <p>Your account has no employee mapping. Ask an administrator to check your account.</p>}
       {data.mappingStatus === "EMPLOYEE_INACTIVE" && <p>Your linked employee is inactive. Personal follow-ups are unavailable until the account mapping is resolved.</p>}
       {data.projectDeleted === true && <p>This project is deleted. Follow-ups are retained as read-only records.</p>}
-      {form && <><TaskForm key={form.task?.id || "new"} task={form.task} employees={employees} busy={busy || loading} onCancel={() => setForm(null)} onSave={(values) => mutate(form.task, "save", values)} />{employeeError && <p role="alert">{employeeError} Use Refresh follow-ups to retry.</p>}</>}
+      {form && (!form.task || !data.content.some(task => task.id === form.task.id)) && <><TaskForm key={form.task?.id || "new"} task={form.task} employees={employees} busy={busy || loading} onCancel={() => setForm(null)} onSave={(values) => mutate(form.task, "save", values)} />{employeeError && <p role="alert">{employeeError} Use Refresh follow-ups to retry.</p>}</>}
       {!loading && !data.content.length && (!data.mappingStatus || data.mappingStatus === "MAPPED") && <p>No follow-ups match these filters.</p>}
       <ul className={styles.list}>{data.content.map((task) => <li key={task.id}>
         <div className={styles.heading}><h3>{task.title}</h3><span className={styles.badge}>{buckets[task.dueBucket] || task.dueBucket}</span></div>
         <p className={styles.muted}>{task.projectName} · Due {task.dueDate} · {task.assignee?.displayName}{task.assignee?.isDeleted !== false ? " (inactive employee)" : ""}{task.isDeleted ? " · Deleted" : ""}</p>
-        {task.description && <p className={styles.description}>{task.description}</p>}
-        <details><summary>Attribution</summary><p>Created by {name(task.createdBy)} · {uploadTimeLabel(task.createdAt)}</p><p>Last changed by {name(task.updatedBy)} · {uploadTimeLabel(task.updatedAt)}</p>{task.completedAt && <p>Completed by {name(task.completedBy)} · {uploadTimeLabel(task.completedAt)}</p>}<p className={styles.muted}>Current attribution only; earlier edits and completion cycles are not retained.</p></details>
         <div className={styles.actions}>
           {canExportFollowUp(task) && <button disabled={busy || loading} onClick={() => {
             setError(""); setNotice("");
@@ -144,6 +142,7 @@ function Queue({ mode, projectId, authFetch }) {
           {task.permissions?.canDelete && <button disabled={busy || loading} onClick={() => { if (window.confirm("Delete this follow-up? An administrator can restore it.")) mutate(task, "delete"); }}>Delete follow-up</button>}
           {task.permissions?.canRestore && <button disabled={busy || loading} onClick={() => mutate(task, "restore")}>Restore follow-up</button>}
         </div>
+        <FollowUpSteps task={task} editing={form?.task?.id === task.id} editor={form?.task?.id === task.id && <><TaskForm key={task.id} task={form.task} employees={employees} busy={busy || loading} onCancel={() => setForm(null)} onSave={values => mutate(form.task, "save", values)} />{employeeError && <p role="alert">{employeeError} Use Refresh follow-ups to retry.</p>}</>} />
       </li>)}</ul>
       <div className={styles.actions}><button disabled={busy || loading || page === 0} onClick={() => setPage((v) => v - 1)}>Previous page</button><span>{data.totalElements} follow-ups · Page {data.totalPages ? page + 1 : 0} of {data.totalPages}</span><button disabled={busy || loading || page + 1 >= data.totalPages} onClick={() => setPage((v) => v + 1)}>Next page</button></div>
     </>}

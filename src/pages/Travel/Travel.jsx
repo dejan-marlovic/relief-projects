@@ -8,6 +8,7 @@ import { Attribution, Pagination, ReadState } from "../Results/ResultViews";
 import { commands, readTravel, tripDraft, useTravelRead } from "./travelApi";
 import { Associations, TravelDecisions, TravelHistory, TravelSummary } from "./TravelViews";
 import TravelEditor from "./TravelEditor";
+import TravelSteps from "./TravelSteps";
 import TravelActionIcon, { approvalStyle } from "./TravelActionIcon";
 import styles from "./Travel.module.scss";
 
@@ -39,17 +40,34 @@ function TravelDetail({ id, base, projectId, authFetch, refresh, reload, onClose
     } catch (error) { if (alive.current) setForm(f => ({ ...f, error: error.message, reviewRequired: true })); }
     finally { pending.current = false; if (alive.current) { setBusy(false); reload(); } }
   }
+  const planActions = ["edit", "evidence", "actions"];
+  const approvalActions = ["submit", "approve", "return", "withdraw-approval"];
+  const formStep = form ? (planActions.includes(form.action) || kind ? "plan" : approvalActions.includes(form.action) ? "approval" : null) : null;
+  const buttons = actions => <div className={styles.actions}>{actions.map(action => {
+    const [title, permission] = commands[action];
+    return record.permissions?.[permission] && <button key={action} className={approvalStyle(action, styles)} disabled={locked} onClick={() => open(action)}><TravelActionIcon action={action} />{title}</button>;
+  })}</div>;
+  const editor = form && <><TravelEditor key={form.action} form={form} setForm={setForm} projectId={projectId} authFetch={authFetch} refresh={refresh} busy={busy} blocked={blocked} onSave={save} onCancel={() => setForm(null)} onReview={() => setForm(f => ({ ...f, record, expectedRevision: record.revision, reviewRequired: false, error: "", draft: f.action === "actions" ? { ...f.draft, followUp: null } : f.draft }))} /><ReadState state={reviewHistory} /><ReadState state={removalPage} /></>;
   return <section className={styles.panel} aria-label="Travel request details">
     <div className={styles.actions}><button disabled={busy} onClick={reload}>Refresh request, links and history</button><button disabled={!!form || busy} onClick={onClose}>Close request</button></div><ReadState state={detail} />
-    {record && <><h3>{record.purpose} · #{record.id}</h3><TravelSummary record={record} />{record.notes && <p className={styles.text}>{record.notes}</p>}<p>Created <Attribution at={record.createdAt} actor={record.createdBy} /></p><TravelDecisions record={record} />
-      {record.state === "SUBMITTED" && <p>Trip details and associations are fixed while awaiting a decision. Return for changes before editing.</p>}
-      {record.state === "APPROVED" && <p>Withdraw approval before changing trip details or removing links included in the approved submission. Late documents and follow-ups remain outside that approval.</p>}
-      <div className={styles.actions}>{Object.entries(commands).map(([action, [title, permission]]) => record.permissions?.[permission] && <button key={action} className={approvalStyle(action, styles)} disabled={locked} onClick={() => open(action)}><TravelActionIcon action={action} />{title}</button>)}</div>
+    {record && <><h3>{record.purpose} · #{record.id}</h3>
+      <TravelSummary record={record} />
+      <TravelSteps record={record} editingStep={formStep} plan={<>
+        <h4>Trip details</h4><dl className={styles.snapshot}><dt>Traveller</dt><dd>{record.traveller?.displayName}</dd><dt>Purpose</dt><dd>{record.purpose}</dd><dt>Destination</dt><dd>{record.destination}</dd><dt>Planned dates</dt><dd>{record.departureDate} through {record.returnDate}</dd></dl>
+        {record.notes && <p className={styles.text}>{record.notes}</p>}<p>Created <Attribution at={record.createdAt} actor={record.createdBy} /></p>
+        <p className={styles.muted}>Supporting documents and follow-ups are optional. Later additions remain separate from an earlier approval.</p>
+        {buttons(planActions)}{formStep === "plan" && editor}
+        <Associations kind="actions" endpoint={endpoint} authFetch={authFetch} refresh={refresh} open={open} locked={locked} approved={record.state === "APPROVED"} />
+        <Associations kind="evidence" endpoint={endpoint} authFetch={authFetch} refresh={refresh} open={open} locked={locked} approved={record.state === "APPROVED"} />
+      </>} approval={<>
+        <p>An independent approver reviews the submitted plan. Returning or withdrawing approval allows changes and resubmission; previous decisions remain in the timeline.</p>
+        {record.state === "SUBMITTED" && <p>Trip details and associations are fixed while awaiting a decision. Return for changes before editing.</p>}
+        {record.state === "APPROVED" && <p>Withdraw approval before changing trip details or removing links included in the approved submission. Late documents and follow-ups remain outside that approval.</p>}
+        <TravelDecisions record={record} />{buttons(approvalActions)}{formStep === "approval" && editor}
+      </>} />
+      <section aria-label="Request administration"><h4>Request actions</h4>{buttons(["cancel", "delete", "restore"])}{!formStep && editor}</section>
     </>}
-    {form && <TravelEditor key={form.action} form={form} setForm={setForm} projectId={projectId} authFetch={authFetch} refresh={refresh} busy={busy} blocked={blocked} onSave={save} onCancel={() => setForm(null)} onReview={() => setForm(f => ({ ...f, record, expectedRevision: record.revision, reviewRequired: false, error: "", draft: f.action === "actions" ? { ...f.draft, followUp: null } : f.draft }))} />}
-    {form && <><ReadState state={reviewHistory} /><ReadState state={removalPage} /></>}
-    <Associations kind="actions" endpoint={endpoint} authFetch={authFetch} refresh={refresh} open={open} locked={locked || !record} approved={record?.state === "APPROVED"} />
-    <Associations kind="evidence" endpoint={endpoint} authFetch={authFetch} refresh={refresh} open={open} locked={locked || !record} approved={record?.state === "APPROVED"} />
+    {!record && editor}
     <TravelHistory endpoint={endpoint} authFetch={authFetch} refresh={refresh} />
   </section>;
 }

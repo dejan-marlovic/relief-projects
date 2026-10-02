@@ -1,3 +1,4 @@
+import { WorkflowIntro, WorkflowStep } from "../Workflow/Workflow";
 import useTransientMessage from "../../hooks/useTransientMessage";
 import React, { useEffect, useRef, useState } from "react";
 import { BASE_URL } from "../../config/api";
@@ -19,7 +20,7 @@ const settled = (state) => ["EVIDENCE_RECORDED", "NOT_APPLICABLE"].includes(stat
 const counts = { needsAssessment: "Needs assessment", missingEvidence: "Missing evidence", evidenceRecorded: "Evidence recorded", evidenceUnavailable: "Evidence unavailable", notApplicable: "Not applicable" };
 const actor = (value) => value?.username || (value?.userId ? `User #${value.userId}` : "Unknown");
 
-function Item({ item, generation, editable, documents, categories, busy, mutate, download, downloading, showHistory }) {
+function Item({ stage, item, generation, editable, documents, categories, busy, mutate, download, downloading, showHistory }) {
   const [applicability, setApplicability] = useState(item.applicability);
   const [reason, setReason] = useState(item.notApplicableReason || "");
   const [selected, setSelected] = useState("");
@@ -34,14 +35,14 @@ function Item({ item, generation, editable, documents, categories, busy, mutate,
     setValidation("");
     mutate(item, "applicability", "PUT", { applicability, ...(applicability === "NOT_APPLICABLE" ? { reason: reason.trim() } : {}) });
   };
-  return <details className={styles.item} data-state={item.state}>
+  return <details className={styles.item} data-state={item.state} aria-label={`${item.label} · ${stage}`}>
     <summary>
       <span className={styles.checkmark} aria-hidden="true">{item.state === "EVIDENCE_RECORDED" ? "✓" : item.state === "NOT_APPLICABLE" ? "−" : item.state === "EVIDENCE_UNAVAILABLE" ? "!" : ""}</span>
-      <span className={styles.itemHeading}><span>{item.label}</span><small>{nextSteps[item.state] || "Open to review this item"}</small></span>
+      <span className={styles.itemHeading}><span>{item.label}</span><small>{stage === "assessment" ? "Review applicability and the recorded explanation" : nextSteps[item.state] || "Open to review this item"}</small></span>
       <span className={styles.badge}>{states[item.state] || item.state}{evidence.length > 0 ? ` · ${evidence.length} linked` : ""}</span>
     </summary>
     <div className={styles.body}>
-      <p>{item.guidance}</p>
+      {stage === "assessment" && <><p>{item.guidance}</p>
       <p className={styles.muted}>{item.applicabilitySource === "DEFAULT" ? "Default applicability — no user decision recorded." : `Explicit decision by ${actor(item.applicabilityChangedBy)} · ${uploadTimeLabel(item.applicabilityChangedAt)}`}</p>
       {item.notApplicableReason && <p><strong>Not applicable because:</strong> {item.notApplicableReason}</p>}
       {item.lastChangedAt && <p className={styles.muted}>Last checklist change: {actor(item.lastChangedBy)} · {uploadTimeLabel(item.lastChangedAt)}</p>}
@@ -51,7 +52,8 @@ function Item({ item, generation, editable, documents, categories, busy, mutate,
         {validation && <p role="alert">{validation}</p>}
         <button disabled={busy} type="submit">Save applicability</button>
       </form>}
-      <h4>Evidence</h4>
+      </>}
+      {stage === "evidence" && <><h4>Evidence</h4>
       {item.applicability === "NOT_APPLICABLE" && <p className={styles.muted}>Existing links are retained. Change applicability before adding evidence.</p>}
       {!evidence.length && <p className={styles.muted}>No evidence linked.</p>}
       <ul className={styles.evidence}>{evidence.map((doc) => <li key={doc.documentId}>
@@ -70,6 +72,7 @@ function Item({ item, generation, editable, documents, categories, busy, mutate,
         <label>Document evidence<select value={selected} disabled={busy} onChange={(e) => setSelected(e.target.value)}><option value="">Select an exact document version</option>{documents.filter((doc) => !evidence.some((link) => link.documentId === doc.id)).map((doc) => <option key={doc.id} value={doc.id}>{doc.documentName} · Version {doc.versionNumber} · {statusLabel(doc.status)} · {doc.isCurrent ? "Current" : "Historical"} (#{doc.id})</option>)}</select></label>
         <button type="submit" disabled={busy || !selected}>Link evidence</button>
       </form>}
+      </>}
     </div>
   </details>;
 }
@@ -156,12 +159,28 @@ function Panel({ projectId, authFetch, categories, refreshKey }) {
     finally { downloads.current.delete(id); if (alive.current) setDownloading((v) => v.filter((value) => value !== id)); }
   };
   return <div className={styles.panel}>
-    <p className={styles.intro}>Work through each item: decide whether it applies, then link the supporting document. A checkmark means evidence is recorded, not reviewed or approved.</p>
+    <WorkflowIntro>Assess which document requirements apply, attach exact supporting versions and review remaining gaps. You can move between these steps at any time; there is no need to assess every item before linking evidence. A checkmark means evidence is recorded, not reviewed or approved.</WorkflowIntro>
     <button type="button" disabled={loading || busy} onClick={() => setRevision((v) => v + 1)}>Refresh checklist</button>
     {loading && <p role="status">Loading checklist…</p>}
     {error && <p role="alert">{error}</p>}
     {notice && <p role="status">{notice}</p>}
     {data && <>
+      {!data.editable && <p className={styles.muted}>Read-only. Only Admin and Project Manager can change a checklist on an active project.</p>}
+      <div className={styles.checklistToolbar}><strong>Checklist items</strong><label><input type="checkbox" checked={attentionOnly} onChange={(event) => setAttentionOnly(event.target.checked)} /> Needs attention only</label></div>
+      {attentionOnly && data.items.every((item) => settled(item.state)) && <p className={styles.muted}>No items need attention. Turn off the filter to review recorded evidence and not-applicable decisions.</p>}
+      <WorkflowStep number={1} title="Assess applicability" description="Open each requirement and use its guidance to decide whether it applies. Save Applicable, leave it needing assessment, or explain why it is Not applicable. You can revise that decision later.">
+      {[...data.items].filter((item) => !attentionOnly || !settled(item.state)).sort((a, b) => a.order - b.order).map((item) => <Item stage="assessment" key={item.itemKey} generation={generation} item={item} editable={data.editable} documents={documents} categories={categories} busy={busy || loading} mutate={mutate} download={download} downloading={downloading} showHistory={setHistory} />)}
+      </WorkflowStep>
+      <WorkflowStep number={2} title="Attach evidence" description="Open an item to link the exact document versions that support it. Upload missing files in the Documents area below. A replacement upload does not automatically replace an existing evidence link; link the new version explicitly.">
+      {data.editable && <div className={styles.form}>
+        <label>Evidence category<select value={category} disabled={busy} onChange={(e) => setCategory(e.target.value)}><option value="">All categories</option>{categories.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</select></label>
+        <label><input type="checkbox" checked={historical} disabled={busy} onChange={(e) => setHistorical(e.target.checked)} /> Include active historical versions</label>
+        <p className={styles.muted}>These filters only help find documents. Upload files below, then select evidence explicitly. Uploads remain if linking fails. To switch versions, link the new version before removing the old one; if removal fails, both links remain.</p>
+        {documentError && <p role="alert">{documentError}</p>}
+      </div>}
+      {[...data.items].filter((item) => !attentionOnly || !settled(item.state)).sort((a, b) => a.order - b.order).map((item) => <Item stage="evidence" key={item.itemKey} generation={generation} item={item} editable={data.editable} documents={documents} categories={categories} busy={busy || loading} mutate={mutate} download={download} downloading={downloading} showHistory={setHistory} />)}
+      </WorkflowStep>
+      <WorkflowStep number={3} title="Review coverage" description="Check unassessed requirements, missing evidence and unavailable links. Return to the earlier steps to resolve gaps or revisit decisions. Coverage is not certification of document quality, financial completion or project completion.">
       <div className={styles.progressCard}>
         <div><strong>{data.summary.evidenceRecorded} of {Math.max(0, data.summary.totalItems - data.summary.notApplicable)} applicable or unassessed items have evidence</strong><span>{data.summary.notApplicable} marked not applicable</span></div>
         <progress aria-label="Items with evidence recorded" value={data.summary.evidenceRecorded} max={Math.max(1, data.summary.totalItems - data.summary.notApplicable)} />
@@ -169,16 +188,8 @@ function Panel({ projectId, authFetch, categories, refreshKey }) {
       </div>
       <div className={styles.counts}>{Object.entries(counts).map(([key, label]) => <span key={key}><strong>{data.summary[key]}</strong> {label}</span>)}</div>
       <p className={styles.muted}>{data.summary.totalItems} items · {data.summary.evidenceLinks} evidence links · {data.summary.unavailableEvidenceLinks} unavailable links · Definition {data.definitionVersion}</p>
-      {!data.editable && <p className={styles.muted}>Read-only. Only Admin and Project Manager can change a checklist on an active project.</p>}
-      {data.editable && <div className={styles.form}>
-        <label>Evidence category<select value={category} disabled={busy} onChange={(e) => setCategory(e.target.value)}><option value="">All categories</option>{categories.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</select></label>
-        <label><input type="checkbox" checked={historical} disabled={busy} onChange={(e) => setHistorical(e.target.checked)} /> Include active historical versions</label>
-        <p className={styles.muted}>These filters only help find documents. Upload files below, then select evidence explicitly. Uploads remain if linking fails. To switch versions, link the new version before removing the old one; if removal fails, both links remain.</p>
-        {documentError && <p role="alert">{documentError}</p>}
-      </div>}
-      <div className={styles.checklistToolbar}><strong>Checklist items</strong><label><input type="checkbox" checked={attentionOnly} onChange={(event) => setAttentionOnly(event.target.checked)} /> Needs attention only</label></div>
-      {attentionOnly && data.items.every((item) => settled(item.state)) && <p className={styles.muted}>No items need attention. Turn off the filter to review recorded evidence and not-applicable decisions.</p>}
-      {[...data.items].filter((item) => !attentionOnly || !settled(item.state)).sort((a, b) => a.order - b.order).map((item) => <Item key={item.itemKey} generation={generation} item={item} editable={data.editable} documents={documents} categories={categories} busy={busy || loading} mutate={mutate} download={download} downloading={downloading} showHistory={setHistory} />)}
+      <p className={styles.muted}>These totals cover the whole checklist, including items hidden by Needs attention only. Turn that filter off to review evidence already recorded and Not applicable explanations.</p>
+      </WorkflowStep>
       <p className={styles.muted}>Attribution shows the latest decisions and current links, not a full change history. Earlier explanations are replaced.</p>
     </>}
     {history && <DocumentVersions key={history.id} document={history} authFetch={authFetch} categories={categories} canEdit={false} canDelete={false} onDownload={download} downloading={downloading} revision={revision + refreshKey} onChanged={() => setRevision((v) => v + 1)} onClose={() => setHistory(null)} />}
@@ -186,7 +197,7 @@ function Panel({ projectId, authFetch, categories, refreshKey }) {
 }
 export default function ProjectDocumentChecklist(props) {
   const [open, setOpen] = useState(false);
-  return <details className={styles.section} onToggle={(e) => { if (e.target === e.currentTarget) setOpen(e.currentTarget.open); }}>
+  return <details className={styles.section} aria-label="Project document checklist" onToggle={(e) => { if (e.target === e.currentTarget) setOpen(e.currentTarget.open); }}>
     <summary>Project document checklist</summary>
     {open && <Panel key={props.projectId} {...props} />}
   </details>;

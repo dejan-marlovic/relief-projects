@@ -34,3 +34,14 @@ The Documents tab now contains a collapsible Project document checklist for the 
 6. Optionally replace a linked document in Documents and verify the checklist retains the original version with a newer-version notice.
 
 Nothing committed. Backend contract: D:/projects/relief_projects/docs/project-document-checklist.md.
+
+
+## Guided checklist steps
+
+The checklist now uses the shared expandable workflow layout with an introduction and explanations for three stages:
+
+1. **Assess applicability:** review each requirement’s guidance and save applicability, including an explanation for Not applicable.
+2. **Attach evidence:** link exact document versions independently of other items’ assessments. Existing links, download/version actions and removal behavior remain intact, including retained links on Not applicable items.
+3. **Review coverage:** inspect whole-checklist counts and unavailable links. The attention filter affects the item lists, not these totals. Coverage does not certify document quality or project completion.
+
+The same requirements appear in the assessment and evidence stages, each with its own relevant controls. Both use the same current server record and revision. Collapsing a stage retains its local form state and never writes a decision. Permissions, validation, refresh/conflict behavior and endpoints are unchanged. Attribution still represents latest decisions and current links rather than an immutable checklist history.

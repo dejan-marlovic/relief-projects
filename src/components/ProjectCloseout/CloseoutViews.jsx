@@ -4,17 +4,17 @@ export const readable = value => value ? String(value).toLowerCase().replaceAll(
 export const stamp = value => value ? new Date(value).toLocaleString() : "Not recorded";
 const attribution = value => value?.recordedAt ? `${stamp(value.recordedAt)} · ${value.recordedBy?.username || "Unknown user"}` : "Not recorded";
 const evidenceNames = list => list?.length ? list.map(item => `${item.capturedName || "Document"} (#${item.documentId})`).join(", ") : "None";
-export function DecisionSnapshot({ value }) {
+export function DecisionSnapshot({ value, section }) {
   if (!value) return <p>No decision recorded.</p>;
   const a = value.acceptance || {}, c = value.closure, archive = value.archive || {};
   return <dl className={styles.fields}>
-    <dt>Acceptance</dt><dd>{readable(a.status)}{a.acceptedDate && ` · ${a.acceptedDate} · ${a.acceptedByLabel}`}{a.notApplicableReason && ` · ${a.notApplicableReason}`}</dd>
+    {(!section || section === "acceptance") && <><dt>Acceptance</dt><dd>{readable(a.status)}{a.acceptedDate && ` · ${a.acceptedDate} · ${a.acceptedByLabel}`}{a.notApplicableReason && ` · ${a.notApplicableReason}`}</dd>
     <dt>Acceptance recorded</dt><dd>{attribution(a)}</dd><dt>Selected evidence</dt><dd>{evidenceNames(value.acceptanceEvidenceLabels)}</dd>
-    <dt>Administrative closeout</dt><dd>{value.closeoutStatus === "CLOSED" ? "Administrative closeout recorded" : value.closeoutStatus === "REOPENED" ? "Reopened" : "No closeout decision recorded"}{value.closeoutReviewRequired && " · Review required"}</dd>
+    </>}{(!section || section === "closeout") && <><dt>Administrative closeout</dt><dd>{value.closeoutStatus === "CLOSED" ? "Administrative closeout recorded" : value.closeoutStatus === "REOPENED" ? "Reopened" : "No closeout decision recorded"}{value.closeoutReviewRequired && " · Review required"}</dd>
     {c && <><dt>Closeout date</dt><dd>{c.closedDate}</dd><dt>Closeout reason</dt><dd>{c.reason}</dd><dt>Closeout recorded</dt><dd>{attribution(c)}</dd><dt>Outstanding-item explanation</dt><dd>{c.outstandingReason || "None recorded"}</dd><dt>Acceptance relied on</dt><dd>{readable(c.acceptanceAtClose?.status)} · {c.acceptanceAtClose?.acceptedDate || c.acceptanceAtClose?.notApplicableReason || "—"} {c.acceptanceAtClose?.acceptedByLabel}</dd><dt>Evidence relied on</dt><dd>{evidenceNames(c.evidenceLabelsAtClose)}</dd></>}
-    <dt>Archive assertion</dt><dd>{archive.status === "MARKED_ARCHIVED" ? "Marked archived" : "Not recorded"}{archive.reviewRequired && " · Review required"}</dd>
+    </>}{(!section || section === "archive") && <><dt>Archive assertion</dt><dd>{archive.status === "MARKED_ARCHIVED" ? "Marked archived" : "Not recorded"}{archive.reviewRequired && " · Review required"}</dd>
     {archive.status === "MARKED_ARCHIVED" && <><dt>Archive date</dt><dd>{archive.archivedDate}</dd><dt>Physical archive reference</dt><dd>{archive.physicalArchiveReference}</dd><dt>Digital archive reference</dt><dd>{archive.digitalArchiveReference}</dd><dt>Archive note</dt><dd>{archive.archiveNote || "None"}</dd><dt>Archive recorded</dt><dd>{attribution(archive)}</dd></>}
-  </dl>;
+  </>}</dl>;
 }
 export function Observation({ value }) {
   if (!value) return <p>Observation unavailable.</p>;

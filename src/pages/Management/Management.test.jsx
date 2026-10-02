@@ -83,7 +83,7 @@ test("exact evidence picker excludes foreign documents and posts only the select
   fireEvent.change(screen.getByLabelText("Supporting document"), { target: { value: "92" } }); await save("Link supporting document"); await waitFor(() => expect(writes()).toHaveLength(1)); expect(JSON.parse(writes()[0][1].body)).toEqual({ expectedRevision: 2, documentId: 92 });
 });
 test("unavailable evidence retains captured/current names and can be removed with a reason", async () => {
-  await open(); expect(screen.getByText(/Original evaluation.pdf/)).toBeInTheDocument(); expect(screen.getByText(/Current name: Evaluation.pdf/)).toBeInTheDocument(); expect(screen.getByText("Download document #92 version 2")).toBeDisabled();
+  await open(); expect(await screen.findByText(/Original evaluation.pdf/)).toBeInTheDocument(); expect(screen.getByText(/Current name: Evaluation.pdf/)).toBeInTheDocument(); expect(screen.getByText("Download document #92 version 2")).toBeDisabled();
   fireEvent.click(screen.getByText("Remove evidence association #18")); fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "Wrong reference" } }); await save("Remove evidence association"); await waitFor(() => expect(writes()).toHaveLength(1)); expect(writes()[0][0]).toMatch(/evidence\/18\/remove$/); expect(JSON.parse(writes()[0][1].body)).toEqual({ expectedRevision: 2, reason: "Wrong reference" });
 });
 test("resolved records expose reopen rather than editing; task changes do not reopen them", async () => {
@@ -94,7 +94,7 @@ test("resolved records expose reopen rather than editing; task changes do not re
 test("reader permissions do not inherit task-assignee management rights", async () => {
   record.permissions = {}; actionLinks[0].permissions = {}; evidenceLinks[0].permissions = {};
   mount(); fireEvent.click(await screen.findByText("Open record #51")); await screen.findByText("Recorded management response");
-  expect(screen.queryByText("Record management response")).not.toBeInTheDocument(); expect(screen.queryByText("Edit observation")).not.toBeInTheDocument(); expect(screen.getByText(/Current title: Sample distribution lists/)).toBeInTheDocument(); expect(writes()).toHaveLength(0);
+  expect(screen.queryByText("Record management response")).not.toBeInTheDocument(); expect(screen.queryByText("Edit observation")).not.toBeInTheDocument(); expect(await screen.findByText(/Current title: Sample distribution lists/)).toBeInTheDocument(); expect(writes()).toHaveLength(0);
 });
 test.each([["delete", "Delete record"], ["restore", "Restore record"], ["reopen", "Reopen record"]])("%s is explicit and revision-protected", async (action, title) => {
   record.permissions = { canEdit: true, [action === "delete" ? "canDelete" : action === "restore" ? "canRestore" : "canReopen"]: true }; await open(); fireEvent.click(screen.getByText(title)); fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "Reviewed" } }); await save(title); await waitFor(() => expect(writes()).toHaveLength(1)); expect(writes()[0][0]).toMatch(new RegExp(`/${action}$`)); expect(JSON.parse(writes()[0][1].body)).toEqual({ reason: "Reviewed", expectedRevision: 2 });

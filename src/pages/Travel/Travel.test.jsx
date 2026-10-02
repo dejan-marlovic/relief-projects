@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { TravelRegister } from "./Travel";
+import TravelSteps from "./TravelSteps";
 import { travelPayload } from "./travelApi";
 import { mutationNotice } from "../../utils/appFetch";
 
@@ -24,7 +25,7 @@ beforeEach(() => {
   });
 });
 const mount = () => render(<MemoryRouter><TravelRegister projectId={7} authFetch={fetcher} /></MemoryRouter>);
-async function open() { mount(); fireEvent.click(await screen.findByText("Open request #31")); await screen.findByRole("region", { name: "Travel request details" }); await waitFor(() => expect(screen.getAllByText("Monitor distributions · #31")).toHaveLength(1)); }
+async function open() { mount(); fireEvent.click(await screen.findByText("Open request #31")); await screen.findByRole("region", { name: "Travel request details" }); await waitFor(() => expect(screen.getAllByText("Monitor distributions · #31")).toHaveLength(1)); for (const name of [/Plan the trip/, /Travel approval/]) { const step = screen.getByRole("button", { name }); if (step.getAttribute("aria-expanded") === "false") fireEvent.click(step); } }
 async function save(title) { const button = screen.getByText(`Save ${title.toLowerCase()}`); await waitFor(() => expect(button).toBeEnabled()); fireEvent.click(button); }
 function submitted() {
   record.state = "SUBMITTED"; record.currentSubmission = { id: 71, actor: { username: "manager" }, basis: { fields: { destination: "Original Amman" } } };
@@ -94,4 +95,19 @@ test("past drafts are preserved and payload rejects invalid ranges and oversized
 });
 test("successful travel decisions use specific transient notices", () => {
   expect(mutationNotice("/api/projects/7/travel-requests/31/withdraw-approval", { method: "POST" }, { ok: true })).toBe("Travel approval withdrawn.");
+});
+
+test("stepper opens the relevant stage and disclosure never writes a decision", async () => {
+  submitted(); mount(); fireEvent.click(await screen.findByText("Open request #31"));
+  const plan = await screen.findByRole("button", { name: /Plan the trip/ });
+  expect(plan).toHaveAttribute("aria-expanded", "false");
+  expect(screen.getByRole("button", { name: /Travel approval/ })).toHaveAttribute("aria-expanded", "true");
+  fireEvent.click(plan); expect(plan).toHaveAttribute("aria-expanded", "true"); expect(writes()).toHaveLength(0);
+});
+
+test("an open editor stays visible across external state changes", () => {
+  const view = render(<TravelSteps record={record} editingStep="plan" plan={<p>Unsaved trip form</p>} approval={<p>Decision panel</p>} />);
+  view.rerender(<TravelSteps record={{ ...record, state: "SUBMITTED" }} editingStep="plan" plan={<p>Unsaved trip form</p>} approval={<p>Decision panel</p>} />);
+  expect(screen.getByText("Unsaved trip form")).toBeVisible();
+  expect(screen.getByRole("button", { name: /Plan the trip/ })).toBeDisabled();
 });

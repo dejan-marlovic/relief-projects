@@ -1,3 +1,5 @@
+import { WorkflowIntro, WorkflowStep, HistoryIntro } from "../../components/Workflow/Workflow";
+import workflow from "../../components/Workflow/Workflow.module.scss";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ProjectContext } from "../../context/ProjectContext";
@@ -46,10 +48,10 @@ function History({ risk, endpoint, authFetch, onClose }) {
     })();
     return () => controller.abort();
   }, [endpoint, authFetch, risk.id, page, attempt]);
-  return <section className={styles.panel} aria-label="Risk history"><h3>History: {risk.title}</h3>
+  return <section className={styles.panel} aria-label="Risk history"><h3>History: {risk.title}</h3><HistoryIntro>Review changes to the risk assessment, mitigation and closure decision. A scheduled review date alone does not prove a review occurred.</HistoryIntro>
     <button onClick={onClose}>Close history</button>
     {error ? <p role="alert">{error} <button onClick={() => setAttempt(v => v + 1)}>Retry history</button></p> : !data && <p role="status">Loading history…</p>}
-    {data && <><ol className={styles.history}>{data.content.map(event => <li key={event.id}>
+    {data && <><ol className={workflow.timeline}>{data.content.map(event => <li key={event.id}>
       <h4>{event.action} · Revision {event.revision}</h4><p>{uploadTimeLabel(event.occurredAt)} · {event.actor?.username}</p>
       {event.reason && <p className={styles.text}>Reason: {event.reason}</p>}
       <details><summary>Before this change</summary><Snapshot value={event.before} /></details>
@@ -221,11 +223,11 @@ function Register({ projectId, authFetch }) {
       <ul className={styles.list}>{data.content.map(risk => <li key={risk.id}>
         <div className={styles.heading}><h3>{risk.title}</h3><span>{buckets[risk.reviewBucket] || risk.reviewBucket}{risk.isDeleted ? " · Deleted" : ""}</span></div>
         <p>{risk.ownerName}{risk.ownerInactive ? " (inactive employee)" : ""} · Review {risk.reviewDate} · {risk.status === "CLOSED" ? "Closed" : "Open"}</p>
-        <p>Likelihood: {rating(risk.likelihood)} · Impact: {rating(risk.impact)}</p>
+        <WorkflowIntro>Identify the risk, assess its likelihood and impact, and maintain a mitigation plan. Revisit the assessment as circumstances change; close or reopen it with an explicit decision.</WorkflowIntro><WorkflowStep number={1} title="Identify and assess" description="Describe what could go wrong, assign an owner and assess likelihood and impact. Use Edit risk to revise the assessment."><p>Likelihood: {rating(risk.likelihood)} · Impact: {rating(risk.impact)}</p>
         {risk.description && <p className={styles.text}>{risk.description}</p>}
-        {risk.mitigationPlan && <p className={styles.text}><strong>Mitigation: </strong>{risk.mitigationPlan}</p>}
-        {risk.closureReason && <p className={styles.text}><strong>Closure reason: </strong>{risk.closureReason}</p>}
-        <details><summary>Attribution</summary><p>Created by {risk.createdBy?.username} · {uploadTimeLabel(risk.createdAt)}</p><p>Last changed by {risk.updatedBy?.username} · {uploadTimeLabel(risk.updatedAt)}</p></details>
+        </WorkflowStep><WorkflowStep number={2} title="Mitigate and review" description="Maintain the mitigation plan and next review date. Review progress with the owner and update the record; a due date is a reminder, not a completed review."><p>Next review: {risk.reviewDate}</p>{risk.mitigationPlan && <p className={styles.text}><strong>Mitigation: </strong>{risk.mitigationPlan}</p>}
+        </WorkflowStep><WorkflowStep number={3} title="Close or reopen the risk" description="Close with a reason when further monitoring is no longer required. Reopen if circumstances change; the decision history remains available.">{risk.closureReason && <p className={styles.text}><strong>Closure reason: </strong>{risk.closureReason}</p>}
+        </WorkflowStep><details><summary>Attribution</summary><p>Created by {risk.createdBy?.username} · {uploadTimeLabel(risk.createdAt)}</p><p>Last changed by {risk.updatedBy?.username} · {uploadTimeLabel(risk.updatedAt)}</p></details>
         <div className={styles.actions}>
           {[["canEdit", "save", "Edit risk"], ["canClose", "close", "Close risk"], ["canReopen", "reopen", "Reopen risk"], ["canDelete", "delete", "Delete risk"], ["canRestore", "restore", "Restore risk"]].map(([permission, action, label]) => risk.permissions?.[permission] && <button key={action} disabled={locked || loading} onClick={() => openEditor(risk, action)}>{label}</button>)}
           <button disabled={busy} onClick={() => setHistory(risk)}>View history</button>

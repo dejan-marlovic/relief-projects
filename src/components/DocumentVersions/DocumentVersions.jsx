@@ -1,3 +1,4 @@
+import workflow from "../Workflow/Workflow.module.scss";
 import useTransientMessage from "../../hooks/useTransientMessage";
 import React, { useEffect, useRef, useState } from "react";
 import { BASE_URL } from "../../config/api";
@@ -84,12 +85,12 @@ export default function DocumentVersions({ document, authFetch, categories, canE
 
   return <section className={styles.metadataEditor} aria-label="Document version history">
     <div className={styles.docActions}><h3>Version history · {document.documentName}</h3><button type="button" className={styles.downloadLink} disabled={busy} onClick={onClose}>Close history</button><button type="button" className={styles.downloadLink} disabled={busy || loading} onClick={() => { setError(""); setReplacement(null); setRefresh((value) => value + 1); }}>Refresh history</button></div>
-    <p className={styles.infoText}>Final is a document label, not approval or proof of signing. Earlier versions are read-only.</p>
+    <p className={styles.infoText}>Follow this document’s replacement chain. Each entry is an exact version with its own upload attribution and download. Upload a replacement from the current version; existing evidence links continue to reference the version originally selected. Final is a document label, not approval or proof of signing. Earlier versions are read-only.</p>
     {error && <ErrorBanner message={error} onDismiss={() => setError("")} />}
     {message && <p role="status">{message}</p>}
     {loading && <p>Loading version history…</p>}
     {chain?.currentDocumentDeleted && <p role="status">The current version is deleted. There is no active current version; older versions have not been promoted.</p>}
-    {chain && <ol className={styles.versionList}>{chain.versions.map((version) => <li key={version.id} className={styles.documentItem}>
+    {chain && <ol className={workflow.timeline}>{chain.versions.map((version) => <li key={version.id} className={styles.documentItem}>
       <div className={styles.docInfo}>
         <strong>Version {version.versionNumber} · {version.documentName}</strong>
         <span>{statusLabel(version.status)} · {version.isCurrent ? "Current version" : "Historical version"} · {version.isDeleted === true ? "Deleted" : version.isDeleted === false ? "Active" : "Availability unknown"}</span>

@@ -1,3 +1,5 @@
+import { HistoryIntro } from "../../components/Workflow/Workflow";
+import workflow from "../../components/Workflow/Workflow.module.scss";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { BASE_URL } from "../../config/api";
@@ -18,11 +20,11 @@ export function DecisionSummary({ record }) {
     <Issues issues={record.issues} />
   </section>;
 }
-export function Decisions({ record }) {
+export function Decisions({ record, section }) {
   return <>
-    <section className={styles.panel}><h4>Recorded management response</h4>{record.response ? <><p><strong>{label(record.response.disposition)}</strong></p><p className={styles.text}>{record.response.text}</p><p>Response date: {record.response.responseDate} · Recorded <Attribution at={record.response.recordedAt} actor={record.response.actor} /></p><details><summary>Associations observed with this response</summary><HistorySnapshot value={record.response.associationBasis} /></details></> : <p>{record.type === "LESSON" ? "Response not recorded (optional for lesson)." : "No response recorded. A finding needs a response before resolution."}</p>}</section>
-    {record.latestReview && <section className={styles.panel}><h4>Latest review</h4><p>{record.latestReview.reviewDate} · {record.latestReview.note}</p><Attribution at={record.latestReview.recordedAt} actor={record.latestReview.actor} /><details><summary>Associations observed at review</summary><HistorySnapshot value={record.latestReview.associationBasis} /></details></section>}
-    {record.resolution && <section className={styles.panel}><h4>Recorded resolution</h4><p>Resolution date: {record.resolution.resolvedDate}</p><p>Reason: {record.resolution.reason}</p>{record.resolution.outstandingActionExplanation && <p>Outstanding-action explanation: {record.resolution.outstandingActionExplanation}</p>}<Attribution at={record.resolution.recordedAt} actor={record.resolution.actor} /><details><summary>Retained resolution basis</summary><HistorySnapshot value={record.resolution} /></details></section>}
+    {(!section || section === "response") && <section className={styles.panel}><h4>Recorded management response</h4>{record.response ? <><p><strong>{label(record.response.disposition)}</strong></p><p className={styles.text}>{record.response.text}</p><p>Response date: {record.response.responseDate} · Recorded <Attribution at={record.response.recordedAt} actor={record.response.actor} /></p><details><summary>Associations observed with this response</summary><HistorySnapshot value={record.response.associationBasis} /></details></> : <p>{record.type === "LESSON" ? "Response not recorded (optional for lesson)." : "No response recorded. A finding needs a response before resolution."}</p>}</section>}
+    {(!section || section === "review") && record.latestReview && <section className={styles.panel}><h4>Latest review</h4><p>{record.latestReview.reviewDate} · {record.latestReview.note}</p><Attribution at={record.latestReview.recordedAt} actor={record.latestReview.actor} /><details><summary>Associations observed at review</summary><HistorySnapshot value={record.latestReview.associationBasis} /></details></section>}
+    {(!section || section === "resolution") && record.resolution && <section className={styles.panel}><h4>Recorded resolution</h4><p>Resolution date: {record.resolution.resolvedDate}</p><p>Reason: {record.resolution.reason}</p>{record.resolution.outstandingActionExplanation && <p>Outstanding-action explanation: {record.resolution.outstandingActionExplanation}</p>}<Attribution at={record.resolution.recordedAt} actor={record.resolution.actor} /><details><summary>Retained resolution basis</summary><HistorySnapshot value={record.resolution} /></details></section>}
   </>;
 }
 
@@ -58,5 +60,5 @@ export function Associations({ kind, endpoint, authFetch, refresh, open, locked 
 export function ManagementHistory({ endpoint, authFetch, refresh }) {
   const [page, setPage] = useState(0);
   const state = useManagementRead(authFetch, `${endpoint}/history?page=${page}&size=20`, refresh);
-  return <section className={styles.panel} aria-label="Retained management history"><h3>Retained history</h3><ReadState state={state} /><ol className={styles.history}>{state.data?.content.map(event => <li key={event.id}><h4>{label(event.action)} · Revision {event.revision}</h4><Attribution at={event.occurredAt} actor={event.actor} />{event.reason && <p>Reason: {event.reason}</p>}<details><summary>Before</summary><HistorySnapshot value={event.before} /></details><details><summary>After</summary><HistorySnapshot value={event.after} /></details></li>)}</ol><Pagination data={state.data} page={page} setPage={setPage} label="management history" disabled={state.loading} /></section>;
+  return <section className={styles.panel} aria-label="Retained management history"><h3>Retained history</h3><HistoryIntro>Follow the observation, responses, associations and management decisions in the order returned by the register.</HistoryIntro><ReadState state={state} /><ol className={workflow.timeline}>{state.data?.content.map(event => <li key={event.id}><h4>{label(event.action)} · Revision {event.revision}</h4><Attribution at={event.occurredAt} actor={event.actor} />{event.reason && <p>Reason: {event.reason}</p>}<details><summary>Before</summary><HistorySnapshot value={event.before} /></details><details><summary>After</summary><HistorySnapshot value={event.after} /></details></li>)}</ol><Pagination data={state.data} page={page} setPage={setPage} label="management history" disabled={state.loading} /></section>;
 }

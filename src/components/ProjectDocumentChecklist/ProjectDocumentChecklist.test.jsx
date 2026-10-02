@@ -10,11 +10,11 @@ let envelope, api;
 const writes = () => api.mock.calls.filter(([, options]) => ["POST", "PUT", "DELETE"].includes(options?.method));
 const open = async () => {
   const view = render(<ProjectDocumentChecklist projectId={2} authFetch={api} categories={[]} refreshKey={0} />);
-  const details = view.container.querySelector("details");
+  const details = screen.getByRole("group", { name: "Project document checklist" });
   details.open = true; fireEvent(details, new Event("toggle"));
-  await screen.findByText("Project assessment");
+  await screen.findAllByText("Project assessment");
   await waitFor(() => expect(screen.queryByText("Loading checklist…")).not.toBeInTheDocument());
-  const item = view.container.querySelectorAll("details")[1]; item.open = true; fireEvent(item, new Event("toggle"));
+  screen.getAllByRole("group", { name: / · (assessment|evidence)$/ }).forEach(item => { item.open = true; fireEvent(item, new Event("toggle")); });
   return view;
 };
 beforeEach(() => {
@@ -65,6 +65,7 @@ test("read-only envelope blocks all mutation controls but permits exact linked d
   await waitFor(() => expect(downloadDocument).toHaveBeenCalledWith(10, api, expect.any(AbortSignal)));
 });
 test("links explicit exact version with revision, without changing applicability", async () => {
+  envelope.items = [{ ...baseItem, applicability: "NOT_ASSESSED", state: "NEEDS_ASSESSMENT" }];
   await open(); await screen.findByRole("option", { name: /New.pdf/ });
   fireEvent.change(screen.getByLabelText("Document evidence"), { target: { value: "11" } });
   fireEvent.click(screen.getByText("Link evidence"));
@@ -97,7 +98,7 @@ test("unmounted loads cannot display a previous project", async () => {
   let resolve;
   api.mockImplementation(() => new Promise((done) => { resolve = done; }));
   const view = render(<ProjectDocumentChecklist projectId={2} authFetch={api} categories={[]} refreshKey={0} />);
-  const details = view.container.querySelector("details"); details.open = true; fireEvent(details, new Event("toggle"));
+  const details = screen.getByRole("group", { name: "Project document checklist" }); details.open = true; fireEvent(details, new Event("toggle"));
   view.unmount();
   await act(async () => resolve(response(envelope)));
   expect(screen.queryByText("Project assessment")).not.toBeInTheDocument();
@@ -116,9 +117,25 @@ test("attention filter hides recorded and not-applicable items without changing 
   fireEvent.click(screen.getByLabelText("Needs attention only"));
   expect(screen.queryByText("Recorded item")).not.toBeInTheDocument();
   expect(screen.queryByText("Exempt item")).not.toBeInTheDocument();
-  expect(screen.getByText("Unavailable item")).toBeInTheDocument();
-  expect(screen.getByText("Project assessment")).toBeInTheDocument();
+  expect(screen.getAllByText("Unavailable item")[0]).toBeInTheDocument();
+  expect(screen.getAllByText("Project assessment")[0]).toBeInTheDocument();
   expect(writes()).toHaveLength(0);
   fireEvent.click(screen.getByLabelText("Needs attention only"));
-  expect(screen.getByText("Recorded item")).toBeInTheDocument();
+  expect(screen.getAllByText("Recorded item")[0]).toBeInTheDocument();
+});
+
+
+test("explained steps preserve unsaved applicability while evidence remains independently accessible", async () => {
+  await open();
+  fireEvent.change(screen.getByLabelText("Applicability"), { target: { value: "NOT_APPLICABLE" } });
+  fireEvent.change(screen.getByLabelText(/Explanation/), { target: { value: "Draft explanation" } });
+  const assessment = screen.getByRole("button", { name: /Assess applicability/ });
+  fireEvent.click(assessment);
+  expect(assessment).toHaveAttribute("aria-expanded", "false");
+  expect(screen.queryByRole("combobox", { name: "Applicability" })).not.toBeInTheDocument();
+  expect(screen.getByRole("combobox", { name: "Document evidence" })).toBeVisible();
+  expect(screen.getByRole("region", { name: "Review coverage" })).toHaveTextContent("These totals cover the whole checklist");
+  expect(writes()).toHaveLength(0);
+  fireEvent.click(assessment);
+  expect(screen.getByLabelText(/Explanation/)).toHaveValue("Draft explanation");
 });

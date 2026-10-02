@@ -1,3 +1,4 @@
+import { WorkflowIntro, WorkflowStep } from "../../components/Workflow/Workflow";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BASE_URL } from "../../config/api";
@@ -43,16 +44,17 @@ function RecordDetail({ id, base, projectId, authFetch, refresh, reload, onClose
     } catch (e) { if (alive.current) setForm(f => ({ ...f, error: e.message, reviewRequired: true })); }
     finally { pending.current = false; if (alive.current) { setBusy(false); reload(); } }
   }
+  const buttons = names => <div className={styles.actions}>{names.map(action => record?.permissions?.[commandPermission[action]] && <button key={action} disabled={locked} onClick={() => open(action)}>{titles[action]}</button>)}</div>;
   return <section className={styles.panel} aria-label="Finding or lesson details"><div className={styles.actions}><button disabled={busy} onClick={reload}>Refresh record, links and history</button><button disabled={!!form || busy} onClick={onClose}>Close record</button></div><ReadState state={detail} />
-    {record && <><h3>{record.title} · #{record.id}</h3><p>{label(record.type)} · {label(record.state)}{record.isDeleted ? " · Deleted" : ""}</p><p className={styles.text}>{record.observation}</p><p>Observed on {record.observedDate} · {label(record.sourceType)}{record.sourceReference ? ` · ${record.sourceReference}` : ""}</p><p>Created <Attribution at={record.createdAt} actor={record.createdBy} /></p>
-      <DecisionSummary record={record} /><Decisions record={record} />
+    {record && <><h3>{record.title} · #{record.id}</h3><p>{label(record.type)} · {label(record.state)}{record.isDeleted ? " · Deleted" : ""}</p><WorkflowIntro>Capture an observation, decide how to respond, link any follow-up work and record a reasoned management resolution. Lessons can be retained without a management response.</WorkflowIntro><WorkflowStep number={1} title="Understand the observation" description="Describe the finding or lesson, when it was observed and its source."><p className={styles.text}>{record.observation}</p><p>Observed on {record.observedDate} · {label(record.sourceType)}{record.sourceReference ? ` · ${record.sourceReference}` : ""}</p><p>Created <Attribution at={record.createdAt} actor={record.createdBy} /></p>
+      {buttons(["edit"])}</WorkflowStep><WorkflowStep number={2} title="Record the response" description="For a finding, record the management response before resolution. A lesson may be retained without a response."><Decisions record={record} section="response" />{buttons(["response"])}</WorkflowStep>
+      <WorkflowStep number={3} title="Link actions and evidence" description="Link existing follow-ups and exact document versions. Review progress here; complete tasks in Follow-ups."><Associations kind="actions" endpoint={endpoint} authFetch={authFetch} refresh={refresh} open={open} locked={locked || !record} /><Associations kind="evidence" endpoint={endpoint} authFetch={authFetch} refresh={refresh} open={open} locked={locked || !record} /><Decisions record={record} section="review" />{buttons(["actions", "evidence", "reviews"])}</WorkflowStep>
+      <WorkflowStep number={4} title="Resolve and reassess" description="Record a reasoned decision, explaining any outstanding actions. Resolution does not complete tasks. Reopen before making changes or reaffirming after linked work changes."><DecisionSummary record={record} /><Decisions record={record} section="resolution" />
       {record.state === "RESOLVED" && <p>Reopen before changing the observation, response, reviews or associations.</p>}
-      <div className={styles.actions}>{Object.entries(commandPermission).map(([action, permission]) => record.permissions?.[permission] && <button key={action} disabled={locked} onClick={() => open(action)}>{titles[action]}</button>)}</div>
+      {buttons(["resolve", "reopen"])}</WorkflowStep>{buttons(["delete", "restore"])}
     </>}
     {form && <ManagementEditor form={form} setForm={setForm} projectId={projectId} authFetch={authFetch} refresh={refresh} today={record?.today || form.record.today} busy={busy} blocked={blocked} onSave={save} onCancel={() => setForm(null)} onReview={() => setForm(f => ({ ...f, record, expectedRevision: record.revision, manifest: { ...record.expectedFollowUpRevisions }, reviewRequired: false, error: "", draft: f.action === "actions" ? { ...f.draft, followUp: null } : f.draft }))} />}
     {form && <><ReadState state={reviewHistory} /><ReadState state={removalPage} /></>}
-    <Associations kind="actions" endpoint={endpoint} authFetch={authFetch} refresh={refresh} open={open} locked={locked || !record} />
-    <Associations kind="evidence" endpoint={endpoint} authFetch={authFetch} refresh={refresh} open={open} locked={locked || !record} />
     <ManagementHistory endpoint={endpoint} authFetch={authFetch} refresh={refresh} />
   </section>;
 }

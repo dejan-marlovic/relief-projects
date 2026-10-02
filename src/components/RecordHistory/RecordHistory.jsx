@@ -57,6 +57,7 @@ function HistoryPage({ entityType, entityId, includeChildren }) {
 
   const { loading, error, result } = state;
   return <div className={styles.panel}>
+    <p>Review the recorded changes to this record. Each entry identifies the action, actor and saved changes; before and after values describe that event, not the current record. History records activity, not completion of a workflow.</p>
     <div className={styles.toolbar}>
       <span>Record activity · newest first</span>
       <button type="button" disabled={loading} onClick={() => { setPage(0); setRefresh((value) => value + 1); }}>Refresh history</button>
