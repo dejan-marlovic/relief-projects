@@ -1,9 +1,9 @@
 import TravelReport from "./TravelReport";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { BASE_URL } from "../../config/api";
 import { ProjectContext } from "../../context/ProjectContext";
-import { useUnsavedChange } from "../../context/UnsavedChangesContext";
+import { useUnsavedChange, useUnsavedChanges } from "../../context/UnsavedChangesContext";
 import { createAuthFetch } from "../../utils/http";
 import { Attribution, Pagination, ReadState } from "../Results/ResultViews";
 import { commands, readTravel, tripDraft, useTravelRead } from "./travelApi";
@@ -78,10 +78,10 @@ function TravelDetail({ id, base, projectId, authFetch, refresh, reload, onClose
 }
 
 const initialFilters = { state: "ALL", deleted: false, travellerEmployeeId: "", departureFrom: "", departureTo: "" };
-export function TravelRegister({ projectId, authFetch }) {
+export function TravelRegister({ projectId, authFetch, initialRequestId = null }) {
   const base = `${BASE_URL}/api/projects/${projectId}/travel-requests`;
   const [filters, setFilters] = useState(initialFilters), [page, setPage] = useState(0);
-  const [refresh, setRefresh] = useState(0), [selected, setSelected] = useState(null), [form, setForm] = useState(null), [busy, setBusy] = useState(false);
+  const [refresh, setRefresh] = useState(0), [selected, setSelected] = useState(initialRequestId), [form, setForm] = useState(null), [busy, setBusy] = useState(false);
   const pending = useRef(false), alive = useRef(true);
   const reload = () => setRefresh(n => n + 1);
   useEffect(() => {
@@ -116,8 +116,23 @@ export function TravelRegister({ projectId, authFetch }) {
   </>;
 }
 export default function Travel() {
-  const { selectedProjectId } = useContext(ProjectContext);
+  const { selectedProjectId, setSelectedProjectId } = useContext(ProjectContext);
+  const { confirmDiscardUnsavedChanges } = useUnsavedChanges();
+  const [params] = useSearchParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
-  return <section className={styles.page}><h2>Travel</h2><p>Plan a project trip and request independent approval. After travel concludes, record the actual outcome and request independent report review. Travel approval and report acceptance are separate decisions; neither verifies outcomes or approves expenses. Link preparation and reporting work from Follow-ups.</p>{selectedProjectId ? <TravelRegister key={selectedProjectId} projectId={selectedProjectId} authFetch={authFetch} /> : <p>Select a project to view its travel requests.</p>}</section>;
+  const projectId = params.get("projectId"), requestId = params.get("requestId");
+  const linked = projectId !== null || requestId !== null;
+  const valid = /^[1-9]\d*$/.test(projectId || "") && /^[1-9]\d*$/.test(requestId || "");
+  const projects = useTravelRead(authFetch, linked && valid ? `${BASE_URL}/api/projects/ids-names` : null, 0);
+  const available = projects.data?.some(project => String(project.id) === projectId);
+  const matching = String(selectedProjectId) === projectId;
+  const scheduleUrl = location.state?.scheduleUrl;
+  const back = typeof scheduleUrl === "string" && /^\/travel-schedule(?:\?|$)/.test(scheduleUrl) ? scheduleUrl : "/travel-schedule";
+  return <section className={styles.page}><h2>Travel</h2>
+    {linked && <button onClick={() => { if (confirmDiscardUnsavedChanges()) navigate(back); }}>Back to travel schedule</button>}
+    <p>Plan a project trip and request independent approval. After travel concludes, record the actual outcome and request independent report review. Travel approval and report acceptance are separate decisions; neither verifies outcomes or approves expenses. Link preparation and reporting work from Follow-ups.</p>
+    {linked ? <><ReadState state={projects} />{!valid && <p role="alert">This travel link needs a valid project and request ID.</p>}{valid && projects.data && !available && <p role="alert">This project's travel is no longer available in the active project list. Refresh the schedule.</p>}{available && !matching && <><p>This request belongs to project #{projectId}, which differs from your current selection.</p><button onClick={() => { if (confirmDiscardUnsavedChanges()) setSelectedProjectId(projectId); }}>Select request's project</button><button onClick={() => { if (confirmDiscardUnsavedChanges()) navigate("/travel"); }}>View selected project's travel</button></>}{available && matching && <TravelRegister key={`${projectId}-${requestId}`} projectId={projectId} authFetch={authFetch} initialRequestId={requestId} />}</> : selectedProjectId ? <TravelRegister key={selectedProjectId} projectId={selectedProjectId} authFetch={authFetch} /> : <p>Select a project to view its travel requests.</p>}
+  </section>;
 }

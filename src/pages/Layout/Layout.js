@@ -93,6 +93,7 @@ const Layout = () => {
 
   const isRegisterPage = location.pathname === "/register-project";
   const isStatisticsPage = location.pathname === "/statistics";
+  const isTravelSchedulePage = location.pathname === "/travel-schedule";
   const isOperationalGuidePage = location.pathname === "/operational-guide";
   const isAboutPage = location.pathname === "/about";
   const usesInternalTableScroll = [
@@ -110,6 +111,7 @@ const Layout = () => {
   const hideSelector =
     isRegisterPage ||
     isStatisticsPage ||
+    isTravelSchedulePage ||
     isOperationalGuidePage ||
     isAboutPage ||
     isAdminPage;
@@ -132,6 +134,7 @@ const Layout = () => {
     ["/findings-lessons", "Findings & lessons"],
     ["/travel", "Travel"],
     ["/statistics", "Statistics"],
+    ["/travel-schedule", "Travel schedule"],
     ["/register-project", "New Project"],
     ["/operational-guide", "Guide"],
     ["/about", "About"],
@@ -148,7 +151,7 @@ const Layout = () => {
     { label: "Finance", paths: ["/budgets", "/transactions", "/payments", "/signatures", "/recipients"] },
     // Future travel and assessment pages can join this group when implemented.
     { label: "Project work", paths: ["/documents", "/follow-ups", "/risks", "/results", "/findings-lessons", "/travel", "/organizations"] },
-    { label: "Overview", paths: ["/statistics"] },
+    { label: "Overview", paths: ["/statistics", "/travel-schedule"] },
     { label: "Help", paths: ["/operational-guide", "/about"] },
   ].map(group => ({ ...group, items: navigationItems.filter(([path]) => group.paths.includes(path)) }));
 
@@ -176,12 +179,12 @@ const Layout = () => {
         <aside className={styles.projectContextNote} aria-label="Project context">
           <FiInfo aria-hidden="true" />
           <div>
-            <strong>{selectedProject ? "Your selected project" : "Project context"}</strong>
+            <strong>{isTravelSchedulePage ? "Across projects" : selectedProject ? "Your selected project" : "Project context"}</strong>
             <p>
-              Most tabs show data for your selected project, including budgets,
+              {isTravelSchedulePage ? "The travel schedule uses its own project and date filters. Opening a request selects its project and takes you to Travel." : <>Most tabs show data for your selected project, including budgets,
               transactions and payment orders. {hideSelector
                 ? "Use the Project selector on a project page to switch projects. This page is not filtered by that selection."
-                : "Use the Project selector to switch projects."}
+                : "Use the Project selector to switch projects."}</>}
             </p>
           </div>
         </aside>
