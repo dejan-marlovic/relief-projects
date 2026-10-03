@@ -9,3 +9,9 @@
 .section button:disabled { opacity: .55; cursor: default; }
 .section :focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 .section dd { margin: .25rem 0 1rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+.countries { min-width: 0; border: 1px solid var(--color-primary-border); border-radius: 10px; padding: 1rem; margin: 1rem 0; }
+.countries legend { font-weight: 600; color: var(--color-text-secondary); }
+.countries input[type="search"] { display: block; width: 100%; box-sizing: border-box; padding: .65rem; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface); color: var(--color-text); }
+.countryChoices { max-height: 220px; overflow-y: auto; }
+.countryChoices label { display: flex; align-items: center; gap: .6rem; margin: .5rem 0; font-weight: 400; }
+.countryChoices input { width: auto; flex-shrink: 0; }

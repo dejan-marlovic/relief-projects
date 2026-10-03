@@ -11,6 +11,6 @@ export function projectApprovalLabel(project) {
   return text;
 }
 export function projectMetadataPayload(project) {
-  const { approved, assessmentSummary, approvalSource, projectNameSv, projectNameEn, targetGroupDescription, ...metadata } = project;
+  const { approved, assessmentSummary, approvalSource, projectNameSv, projectNameEn, targetGroupDescription, operatingCountryCodes, operatingCountries, ...metadata } = project;
   return metadata;
 }

@@ -1,3 +1,5 @@
+import CountryPicker from "../../components/ProjectClassification/CountryPicker";
+import { useCountryCatalogue } from "../../utils/projectGeography";
 import ClassificationFields from "../../components/ProjectClassification/ClassificationFields";
 import { classificationErrors, classificationChanges, supportsClassification } from "../../utils/projectClassification";
 import { appFetch as fetch } from "../../utils/appFetch";
@@ -25,6 +27,7 @@ const initialProjectDetails = {
   projectCode: "",
   refProjectNo: "",
   projectName: "",
+  operatingCountryCodes: [],
   projectNameSv: "",
   projectNameEn: "",
   targetGroupDescription: "",
@@ -133,6 +136,8 @@ const RegisterProject = () => {
 
     return res;
   };
+
+  const countryCatalogue = useCountryCatalogue(authFetch);
 
   // ✅ Safe JSON reader: handles 204 / empty body / non-json without crashing
   const safeReadJson = async (res) => {
@@ -298,10 +303,11 @@ const RegisterProject = () => {
   const buildPayload = (values) => {
     // remove legacy field if it exists
     // eslint-disable-next-line no-unused-vars
-    const { fundingSource, projectNameSv, projectNameEn, targetGroupDescription, ...rest } = values;
+    const { fundingSource, projectNameSv, projectNameEn, targetGroupDescription, operatingCountryCodes, ...rest } = values;
 
     return {
       ...rest,
+      ...(countryCatalogue.data && !countryCatalogue.error && !countryCatalogue.loading ? { operatingCountryCodes: values.operatingCountryCodes } : {}),
       ...(classificationSupported ? classificationChanges(values, {}) : {}),
       projectStatusId: toNumberOrNull(rest.projectStatusId),
       projectTypeId: toNumberOrNull(rest.projectTypeId),
@@ -322,6 +328,7 @@ const RegisterProject = () => {
       setFieldErrors({});
 
       // ✅ UX validation
+      if (projectDetails.operatingCountryCodes.length && (countryCatalogue.error || countryCatalogue.loading || !countryCatalogue.data)) { setFormError("Refresh the country lookup before submitting your selected countries."); return; }
       const errors = { ...validateProjectDetails(projectDetails), ...(classificationSupported ? classificationErrors(projectDetails) : {}) };
       if (Object.keys(errors).length > 0) {
         setFieldErrors(errors);
@@ -480,6 +487,7 @@ const RegisterProject = () => {
                 <div className={styles.cardTitle}>Language titles & target group</div>
                 {classificationSupported ? <ClassificationFields values={projectDetails} onChange={handleInputChange} errors={fieldErrors} disabled={loading} /> : <p>Optional details can be added from Project details after creation once backend support is confirmed.</p>}
               </div>
+              <div className={styles.card}><CountryPicker codes={projectDetails.operatingCountryCodes} catalogue={countryCatalogue} onChange={codes => setProjectDetails(previous => ({ ...previous, operatingCountryCodes: codes }))} disabled={loading} error={fieldErrors.operatingCountryCodes} /></div>
               {/* Card 1: Core details */}
               <div className={styles.card}>
                 <div className={styles.cardHeader}>

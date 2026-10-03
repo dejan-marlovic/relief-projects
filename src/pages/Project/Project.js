@@ -1,3 +1,4 @@
+import { supportsGeography, geographyExport } from "../../utils/projectGeography";
 import ProjectClassification from "../../components/ProjectClassification/ProjectClassification";
 import { supportsClassification, classificationFields, classificationValues } from "../../utils/projectClassification";
 import { projectApprovalLabel, projectMetadataPayload } from "../../utils/projectApproval";
@@ -735,6 +736,7 @@ Approximately:
       addReportField("Reference Number", projectDetails.refProjectNo);
 
       addReportField("Project Name", projectDetails.projectName);
+      if (supportsGeography(projectDetails)) addReportField("Operating countries/territories", geographyExport(projectDetails));
       if (supportsClassification(projectDetails)) classificationFields.forEach(field => addReportField(field.label, projectDetails[field.name] || "Not recorded"));
 
       addReportField("Funding Source", projectDetails.fundingSource);
@@ -2898,7 +2900,7 @@ Approximately:
             {/* Optional metadata saves use a fresh basis and omit untouched fields. */}
             {/* Right: form */}
             <section className={styles.formContent}>
-              <ProjectClassification key={selectedProjectId} projectId={selectedProjectId} authFetch={authFetch} canEdit={canEditProject} onSaved={saved => setProjectDetails(previous => ({ ...previous, ...classificationValues(saved), assessmentSummary: saved.assessmentSummary }))} />
+              <ProjectClassification key={selectedProjectId} projectId={selectedProjectId} authFetch={authFetch} canEdit={canEditProject} onSaved={saved => setProjectDetails(previous => ({ ...previous, ...classificationValues(saved), operatingCountryCodes: saved.operatingCountryCodes, operatingCountries: saved.operatingCountries, assessmentSummary: saved.assessmentSummary }))} />
               {loading ? (
                 <div className={styles.skeletonWrap}>
                   <div className={styles.skeletonLine} />

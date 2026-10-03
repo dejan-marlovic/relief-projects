@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import ProjectClassification from "./ProjectClassification";
 import { classificationChanges, classificationErrors, supportsClassification } from "../../utils/projectClassification";
 import { projectMetadataPayload } from "../../utils/projectApproval";
+jest.mock("../../utils/projectGeography", () => ({ ...jest.requireActual("../../utils/projectGeography"), useCountryCatalogue: () => ({ data: { maxSelections: 20, countries: [{ code: "LB", label: "Lebanon", selectable: true }] }, loading: false, error: "" }) }));
 
 const project = { id: 1, projectName: "Canonical", projectCode: "P1", projectTypeId: 2, projectStatusId: 1, projectNameSv: "Titel", projectNameEn: null, targetGroupDescription: "Households" };
 const response = data => ({ ok: true, json: async () => data });
@@ -52,4 +53,20 @@ test("read-only readers see plain values and no save control", async () => {
   await screen.findByText("Households");
   expect(screen.getByText("Not recorded")).toBeInTheDocument();
   expect(screen.queryByText("Save optional details")).not.toBeInTheDocument();
+});
+
+test("clearing countries sends an empty set without changing titles, target group or address", async () => {
+  const data = { ...project, addressId: 17, operatingCountryCodes: ["LB"], operatingCountries: [{ code: "LB", label: "Lebanon", selectable: true }] };
+  const fetch = jest.fn().mockResolvedValueOnce(response(data)).mockResolvedValueOnce(response(data)).mockResolvedValueOnce(response(data)).mockResolvedValueOnce(response({ ...data, operatingCountryCodes: [], operatingCountries: [] }));
+  const onSaved = jest.fn();
+  render(<ProjectClassification projectId={1} authFetch={fetch} canEdit onSaved={onSaved} />);
+  fireEvent.click(await screen.findByText("Remove LB"));
+  fireEvent.click(screen.getByText("Save optional details"));
+  await waitFor(() => expect(onSaved).toHaveBeenCalled());
+  const body = JSON.parse(fetch.mock.calls.find(([, options]) => options?.method === "PUT")[1].body);
+  expect(body.operatingCountryCodes).toEqual([]);
+  expect(body.addressId).toBe(17);
+  expect(body).not.toHaveProperty("operatingCountries");
+  expect(body).not.toHaveProperty("projectNameSv");
+  expect(body).not.toHaveProperty("targetGroupDescription");
 });
