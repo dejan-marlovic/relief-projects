@@ -28,8 +28,8 @@ export function AssessmentPanel({ projectId, authFetch }) {
   useEffect(() => {
     alive.current = true;
     const update = () => { if (document.visibilityState !== "hidden") setRefresh(n => n + 1); };
-    window.addEventListener("focus", update); document.addEventListener("visibilitychange", update);
-    return () => { alive.current = false; window.removeEventListener("focus", update); document.removeEventListener("visibilitychange", update); };
+    window.addEventListener("project-metadata-updated", update); window.addEventListener("focus", update); document.addEventListener("visibilitychange", update);
+    return () => { alive.current = false; window.removeEventListener("project-metadata-updated", update); window.removeEventListener("focus", update); document.removeEventListener("visibilitychange", update); };
   }, []);
   useUnsavedChange(`assessment-${projectId}`, !!form);
   const detail = useManagementRead(authFetch, base, refresh);

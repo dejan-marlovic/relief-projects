@@ -1,3 +1,5 @@
+import ProjectClassification from "../../components/ProjectClassification/ProjectClassification";
+import { supportsClassification, classificationFields, classificationValues } from "../../utils/projectClassification";
 import { projectApprovalLabel, projectMetadataPayload } from "../../utils/projectApproval";
 import ProjectCloseout from "../../components/ProjectCloseout/ProjectCloseout";
 import { appFetch as fetch } from "../../utils/appFetch";
@@ -733,6 +735,7 @@ Approximately:
       addReportField("Reference Number", projectDetails.refProjectNo);
 
       addReportField("Project Name", projectDetails.projectName);
+      if (supportsClassification(projectDetails)) classificationFields.forEach(field => addReportField(field.label, projectDetails[field.name] || "Not recorded"));
 
       addReportField("Funding Source", projectDetails.fundingSource);
 
@@ -2892,8 +2895,10 @@ Approximately:
               </div>
             </aside>
 
+            {/* Optional metadata saves use a fresh basis and omit untouched fields. */}
             {/* Right: form */}
             <section className={styles.formContent}>
+              <ProjectClassification key={selectedProjectId} projectId={selectedProjectId} authFetch={authFetch} canEdit={canEditProject} onSaved={saved => setProjectDetails(previous => ({ ...previous, ...classificationValues(saved), assessmentSummary: saved.assessmentSummary }))} />
               {loading ? (
                 <div className={styles.skeletonWrap}>
                   <div className={styles.skeletonLine} />

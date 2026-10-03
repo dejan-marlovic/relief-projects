@@ -1,3 +1,4 @@
+import ProjectClassification from "../../../components/ProjectClassification/ProjectClassification";
 import { projectApprovalLabel } from "../../../utils/projectApproval";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
@@ -377,6 +378,7 @@ const UpdateProject = () => {
   return (
     <div className={styles.updateContainer}>
       <div className={styles.formContainer}>
+        {form.selectedId && <ProjectClassification key={form.selectedId} projectId={form.selectedId} authFetch={authFetch} canEdit={!saving} onSaved={saved => setProjects(items => items.map(item => item.id === saved.id ? saved : item))} />}
         <div className={styles.pageHeader}>
           <div className={styles.pageHeaderText}>
             <h3 className={styles.pageTitle}>Update Project</h3>

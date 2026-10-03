@@ -1,3 +1,5 @@
+import ClassificationFields from "../../components/ProjectClassification/ClassificationFields";
+import { classificationErrors, classificationChanges, supportsClassification } from "../../utils/projectClassification";
 import { appFetch as fetch } from "../../utils/appFetch";
 // RegisterProject.jsx
 import React, { useEffect, useState, useContext, useMemo } from "react";
@@ -23,6 +25,9 @@ const initialProjectDetails = {
   projectCode: "",
   refProjectNo: "",
   projectName: "",
+  projectNameSv: "",
+  projectNameEn: "",
+  targetGroupDescription: "",
   pinCode: "",
   donorOrganizationId: "",
   implementingPartnerOrganizationId: "",
@@ -66,6 +71,7 @@ const RegisterProject = () => {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
+  const [classificationSupported, setClassificationSupported] = useState(false);
 
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
@@ -190,6 +196,10 @@ const RegisterProject = () => {
         setProjectTypes(Array.isArray(types) ? types : []);
         setAddresses(Array.isArray(addrs) ? addrs : []);
         setAvailableParentProjects(Array.isArray(projects) ? projects : []);
+        if (projects?.[0]?.id) {
+          const detail = await authFetch(`${BASE_URL}/api/projects/${projects[0].id}`);
+          if (detail.ok) setClassificationSupported(supportsClassification(await safeReadJson(detail)));
+        }
       } catch (error) {
         console.error("Error loading form options:", error);
         setProjectStatuses([]);
@@ -288,10 +298,11 @@ const RegisterProject = () => {
   const buildPayload = (values) => {
     // remove legacy field if it exists
     // eslint-disable-next-line no-unused-vars
-    const { fundingSource, ...rest } = values;
+    const { fundingSource, projectNameSv, projectNameEn, targetGroupDescription, ...rest } = values;
 
     return {
       ...rest,
+      ...(classificationSupported ? classificationChanges(values, {}) : {}),
       projectStatusId: toNumberOrNull(rest.projectStatusId),
       projectTypeId: toNumberOrNull(rest.projectTypeId),
       addressId: toNumberOrNull(rest.addressId),
@@ -311,7 +322,7 @@ const RegisterProject = () => {
       setFieldErrors({});
 
       // ✅ UX validation
-      const errors = validateProjectDetails(projectDetails);
+      const errors = { ...validateProjectDetails(projectDetails), ...(classificationSupported ? classificationErrors(projectDetails) : {}) };
       if (Object.keys(errors).length > 0) {
         setFieldErrors(errors);
         setFormError("Please fix the highlighted fields.");
@@ -465,6 +476,10 @@ const RegisterProject = () => {
         ) : (
           <>
             <div className={styles.grid}>
+              <div className={styles.card}>
+                <div className={styles.cardTitle}>Language titles & target group</div>
+                {classificationSupported ? <ClassificationFields values={projectDetails} onChange={handleInputChange} errors={fieldErrors} disabled={loading} /> : <p>Optional details can be added from Project details after creation once backend support is confirmed.</p>}
+              </div>
               {/* Card 1: Core details */}
               <div className={styles.card}>
                 <div className={styles.cardHeader}>
