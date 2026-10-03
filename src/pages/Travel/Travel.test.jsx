@@ -1,3 +1,4 @@
+jest.mock("./TravelReport", () => () => <div>Post-trip reporting integration</div>);
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { TravelRegister } from "./Travel";
@@ -25,7 +26,7 @@ beforeEach(() => {
   });
 });
 const mount = () => render(<MemoryRouter><TravelRegister projectId={7} authFetch={fetcher} /></MemoryRouter>);
-async function open() { mount(); fireEvent.click(await screen.findByText("Open request #31")); await screen.findByRole("region", { name: "Travel request details" }); await waitFor(() => expect(screen.getAllByText("Monitor distributions · #31")).toHaveLength(1)); for (const name of [/Plan the trip/, /Travel approval/]) { const step = screen.getByRole("button", { name }); if (step.getAttribute("aria-expanded") === "false") fireEvent.click(step); } }
+async function open() { mount(); fireEvent.click(await screen.findByText("Open request #31")); await screen.findByRole("region", { name: "Travel request details" }); await waitFor(() => expect(screen.getAllByText("Monitor distributions · Travel request #31")).toHaveLength(1)); for (const name of [/Plan the trip/, /Travel approval/]) { const step = screen.getByRole("button", { name }); if (step.getAttribute("aria-expanded") === "false") fireEvent.click(step); } }
 async function save(title) { const button = screen.getByText(`Save ${title.toLowerCase()}`); await waitFor(() => expect(button).toBeEnabled()); fireEvent.click(button); }
 function submitted() {
   record.state = "SUBMITTED"; record.currentSubmission = { id: 71, actor: { username: "manager" }, basis: { fields: { destination: "Original Amman" } } };

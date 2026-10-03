@@ -15,6 +15,11 @@ export function mutationNotice(input, options = {}, response) {
   if (response.status === 202) return "Request accepted for processing.";
   const segments = path.slice(5).split("/");
   if (segments[0] === "projects" && segments[2] === "travel-requests") {
+    if (segments[4] === "report") {
+      if (/\/remove$/.test(path)) return "Travel report association removed.";
+      const reportNotices = { submit: "Travel report submitted for review.", accept: "Travel report accepted.", return: "Travel report returned for changes.", reopen: "Travel report reopened.", basis: "Report plan basis changed.", delete: "Travel report deleted.", restore: "Travel report restored.", evidence: "Document linked to travel report.", actions: "Follow-up linked to travel report." };
+      return reportNotices[segments.at(-1)] || "Travel report saved.";
+    }
     if (/\/remove$/.test(path)) return "Travel association removed.";
     const notices = { submit: "Travel request submitted.", approve: "Travel approval recorded.", return: "Travel request returned for changes.", "withdraw-approval": "Travel approval withdrawn.", cancel: "Travel request cancelled.", delete: "Travel request deleted.", restore: "Travel request restored.", actions: "Existing follow-up linked to travel.", evidence: "Supporting document linked to travel." };
     return notices[segments.at(-1)] || "Travel request saved.";

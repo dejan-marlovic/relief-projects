@@ -38,7 +38,7 @@ Visual follow-up: Travel uses the existing lifecycle badge palette. Shared `src/
 
 ## Verification and limits
 
-Travel presentation follow-up: existing requests now use two accessible expandable steps, Plan the trip and Travel approval. Draft/returned requests open on planning; other states open on approval. Users can inspect either section without executing a transition. The step containing an unsaved form stays visible. Request administration is separate; history uses a newest-first actor/action timeline with expandable snapshots. Reporting steps remain deferred until their contract is implemented. The 18 Travel tests, targeted ESLint and production build passed (existing unrelated build warnings remain). Live visual acceptance remains user-controlled.
+Travel presentation follow-up: existing requests now use two accessible expandable steps, Plan the trip and Travel approval. Draft/returned requests open on planning; other states open on approval. Users can inspect either section without executing a transition. The step containing an unsaved form stays visible. Request administration is separate; history uses a newest-first actor/action timeline with expandable snapshots. The subsequent V42 integration adds reporting and independent review as steps 3 and 4; see [travel reporting frontend](project-travel-reporting-frontend.md). The 18 Travel tests, targeted ESLint and production build passed (existing unrelated build warnings remain). Live visual acceptance remains user-controlled.
 
 - **566 tests across 88 suites passed**, including 16 new travel tests and desktop/phone navigation coverage.
 - Targeted ESLint passed. Production build passed with existing unrelated lint and bundle-size warnings; no Travel warning was reported.
@@ -48,4 +48,4 @@ Travel presentation follow-up: existing requests now use two accessible expandab
 
 Logs are in the local temporary directory: `travel-full.log`, `travel-build.log`. Earlier focused runs identified and corrected test timing and desktop-versus-phone fixture assumptions; the final complete suite passed.
 
-This slice does not implement scheduling, itineraries, formal post-trip acceptance, expenses, bookings, payments or inferred task completion. Approval is a recorded authorization for the captured trip, not proof it occurred.
+The original V41 slice did not implement formal post-trip acceptance; V42 now adds it as a separate workflow. Scheduling, itineraries, expenses, bookings, payments and inferred task completion remain outside this travel workflow. Approval is a recorded authorization for the captured trip, not proof it occurred.

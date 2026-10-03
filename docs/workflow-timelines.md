@@ -4,7 +4,7 @@ The frontend groups multi-stage work into expandable sections, with an overview 
 
 ## Where to use the steps
 
-- Travel: prepare the trip, then request independent approval. Approval does not confirm booking, payment or travel. Post-trip reporting will be added when its backend contract is ready.
+- Travel: prepare the trip, then request independent approval. Approval does not confirm booking, payment or travel. Steps 3 and 4 record the actual outcome and obtain independent report acceptance. Report acceptance does not verify outcomes or approve expenses.
 - Follow-ups: define the action and owner, then track completion. Completion affects only the task. Its activity display contains current attribution, not an invented immutable event history.
 - Findings and lessons: understand the observation, record the response, link actions/evidence, then resolve and reassess. Responses are optional for lessons; management resolution can explicitly retain outstanding tasks.
 - Project closeout: record final-report acceptance, review attention and close administratively, then record archive filing. These decisions neither freeze project work nor move files.

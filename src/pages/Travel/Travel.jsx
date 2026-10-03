@@ -1,3 +1,4 @@
+import TravelReport from "./TravelReport";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BASE_URL } from "../../config/api";
@@ -16,6 +17,7 @@ function TravelDetail({ id, base, projectId, authFetch, refresh, reload, onClose
   const endpoint = `${base}/${id}`;
   const detail = useTravelRead(authFetch, endpoint, refresh);
   const [form, setForm] = useState(null), [busy, setBusy] = useState(false);
+  const [reportActive, setReportActive] = useState(false);
   const pending = useRef(false), alive = useRef(true);
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   useUnsavedChange(`travel-${projectId}-${id}`, !!form);
@@ -23,9 +25,11 @@ function TravelDetail({ id, base, projectId, authFetch, refresh, reload, onClose
   const kind = form?.action?.endsWith("-remove") ? form.action.split("-")[0] : null;
   const removalPage = useTravelRead(authFetch, kind ? `${endpoint}/${kind}?includeRemoved=${form.link.includeRemoved}&page=${form.link.page}&size=20` : null, refresh);
   const record = detail.data;
+  const retainedRecord = useRef(null);
+  if (record) retainedRecord.current = record;
   const permitted = !!record && (kind ? removalPage.data?.content.some(link => link.id === form.link.id && link.permissions?.canRemove) : record.permissions?.[commands[form?.action]?.[1]]);
   const blocked = !record || detail.loading || removalPage.loading || !permitted || (form?.reviewRequired && (reviewHistory.loading || !reviewHistory.data));
-  const locked = busy || !!form || detail.loading;
+  const locked = busy || !!form || detail.loading || reportActive;
   function open(action, link) {
     const draft = action === "edit" ? { ...tripDraft(record), reason: "" } : { reason: "", note: "", actionPurpose: "PREPARATION" };
     setForm({ action, link, draft, record, expectedRevision: record.revision });
@@ -49,8 +53,8 @@ function TravelDetail({ id, base, projectId, authFetch, refresh, reload, onClose
   })}</div>;
   const editor = form && <><TravelEditor key={form.action} form={form} setForm={setForm} projectId={projectId} authFetch={authFetch} refresh={refresh} busy={busy} blocked={blocked} onSave={save} onCancel={() => setForm(null)} onReview={() => setForm(f => ({ ...f, record, expectedRevision: record.revision, reviewRequired: false, error: "", draft: f.action === "actions" ? { ...f.draft, followUp: null } : f.draft }))} /><ReadState state={reviewHistory} /><ReadState state={removalPage} /></>;
   return <section className={styles.panel} aria-label="Travel request details">
-    <div className={styles.actions}><button disabled={busy} onClick={reload}>Refresh request, links and history</button><button disabled={!!form || busy} onClick={onClose}>Close request</button></div><ReadState state={detail} />
-    {record && <><h3>{record.purpose} · #{record.id}</h3>
+    <div className={styles.actions}><button disabled={busy} onClick={reload}>Refresh request, links and history</button><button disabled={!!form || busy || reportActive} onClick={onClose}>Close request</button></div><ReadState state={detail} />
+    {record && <><h3>{record.purpose} · Travel request #{record.id}</h3>
       <TravelSummary record={record} />
       <TravelSteps record={record} editingStep={formStep} plan={<>
         <h4>Trip details</h4><dl className={styles.snapshot}><dt>Traveller</dt><dd>{record.traveller?.displayName}</dd><dt>Purpose</dt><dd>{record.purpose}</dd><dt>Destination</dt><dd>{record.destination}</dd><dt>Planned dates</dt><dd>{record.departureDate} through {record.returnDate}</dd></dl>
@@ -65,8 +69,9 @@ function TravelDetail({ id, base, projectId, authFetch, refresh, reload, onClose
         {record.state === "APPROVED" && <p>Withdraw approval before changing trip details or removing links included in the approved submission. Late documents and follow-ups remain outside that approval.</p>}
         <TravelDecisions record={record} />{buttons(approvalActions)}{formStep === "approval" && editor}
       </>} />
-      <section aria-label="Request administration"><h4>Request actions</h4>{buttons(["cancel", "delete", "restore"])}{!formStep && editor}</section>
     </>}
+    {(record || retainedRecord.current) && <TravelReport endpoint={endpoint} projectId={projectId} travel={record || retainedRecord.current} authFetch={authFetch} refresh={refresh} reload={reload} parentLocked={!record || !!form || busy || detail.loading} onActivityChange={setReportActive} />}
+    {record && <section aria-label="Request administration"><h4>Request actions</h4>{buttons(["cancel", "delete", "restore"])}{!formStep && editor}</section>}
     {!record && editor}
     <TravelHistory endpoint={endpoint} authFetch={authFetch} refresh={refresh} />
   </section>;
@@ -114,5 +119,5 @@ export default function Travel() {
   const { selectedProjectId } = useContext(ProjectContext);
   const navigate = useNavigate();
   const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
-  return <section className={styles.page}><h2>Travel</h2><p>Plan a project trip, request independent approval and retain its decision history. Approval does not confirm booking, payment or that travel occurred. Link preparation and reporting work from Follow-ups.</p>{selectedProjectId ? <TravelRegister key={selectedProjectId} projectId={selectedProjectId} authFetch={authFetch} /> : <p>Select a project to view its travel requests.</p>}</section>;
+  return <section className={styles.page}><h2>Travel</h2><p>Plan a project trip and request independent approval. After travel concludes, record the actual outcome and request independent report review. Travel approval and report acceptance are separate decisions; neither verifies outcomes or approves expenses. Link preparation and reporting work from Follow-ups.</p>{selectedProjectId ? <TravelRegister key={selectedProjectId} projectId={selectedProjectId} authFetch={authFetch} /> : <p>Select a project to view its travel requests.</p>}</section>;
 }
