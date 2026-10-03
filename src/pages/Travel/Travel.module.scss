@@ -1,3 +1,4 @@
+@use "../../styles/workspace-page" as workspace;
 @use "../../styles/approval-actions" as approval;
 .page { max-width: 1100px; margin: 1rem auto; padding: 1.5rem; color: var(--color-text); background: var(--color-surface); border: 1px solid var(--color-primary-border); border-radius: 14px; }
 .page h2 { color: var(--color-primary); }
@@ -77,3 +78,5 @@
   .timeline { padding-left: .25rem; }
 }
 @media (prefers-reduced-motion: reduce) { .stepToggle > svg { transition: none; } }
+
+@include workspace.layout;

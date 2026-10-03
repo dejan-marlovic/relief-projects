@@ -1,3 +1,4 @@
+@use "../../styles/workspace-page" as workspace;
 @use "../../styles/colors" as colors;
 .page { margin: 1rem; padding: 1.2rem; background: colors.$surface; color: colors.$text; border: 1px solid colors.$primary-border; border-radius: 14px; min-width: 0; }
 .page h2 { color: colors.$primary; margin-top: 0; }
@@ -45,3 +46,5 @@
 .dragging { opacity: .6; }
 .dropAllowed { outline: 2px dashed colors.$primary-border; outline-offset: 2px; }
 .dropOver { outline: 3px solid colors.$primary; background: colors.$surface; }
+
+@include workspace.layout;
