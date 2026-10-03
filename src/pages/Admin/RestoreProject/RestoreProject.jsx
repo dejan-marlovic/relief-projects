@@ -1,9 +1,11 @@
+import { projectApprovalLabel } from "../../../utils/projectApproval";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiRotateCcw,
-  FiRefreshCw,  FiFolder,
+  FiRefreshCw,
+  FiFolder,
 } from "react-icons/fi";
 
 import styles from "./RestoreProject.module.scss";
@@ -413,9 +415,9 @@ const RestoreProject = () => {
                     </div>
 
                     <div className={styles.detailRow}>
-                      <span className={styles.detailLabel}>Approved</span>
+                      <span className={styles.detailLabel}>Assessment approval</span>
                       <span className={styles.detailValue}>
-                        {selectedProject.approved || "N/A"}
+                        {projectApprovalLabel(selectedProject)}
                       </span>
                     </div>
 

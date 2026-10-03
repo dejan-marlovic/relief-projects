@@ -32,7 +32,7 @@ const initialProjectDetails = {
   projectDescription: "",
   projectCoverImage: "",
   projectStatusId: "",
-  approved: "Yes",
+  approved: "No",
   projectPeriodMonths: "",
   projectDate: "",
   projectStart: "",
@@ -410,6 +410,7 @@ const RegisterProject = () => {
             <h3 className={styles.pageTitle}>Register New Project</h3>
             <p className={styles.pageSubtitle}>
               Create a project, upload a cover image, and fill in core details.
+              New projects start unassessed. Record initial approval later under Project work → Assessment.
             </p>
           </div>
 

@@ -1,3 +1,4 @@
+import Assessment from "./pages/Assessment/Assessment";
 import SuccessNotifications from "./components/SuccessNotifications/SuccessNotifications";
 import FollowUps from "./pages/FollowUps/FollowUps";
 import Risks from "./pages/Risks/Risks";
@@ -69,6 +70,7 @@ export default function App() {
               <Route path="risks" element={<Risks />} />
               <Route path="results" element={<Results />} />
               <Route path="findings-lessons" element={<Management />} />
+              <Route path="assessment" element={<Assessment />} />
               <Route path="travel" element={<Travel />} />
               <Route path="travel-schedule" element={<TravelSchedule />} />
               <Route path="statistics" element={<Statistics />} />

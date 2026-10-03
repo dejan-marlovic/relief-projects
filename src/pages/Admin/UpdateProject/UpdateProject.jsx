@@ -1,3 +1,4 @@
+import { projectApprovalLabel } from "../../../utils/projectApproval";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -69,7 +70,7 @@ const validate = (values) => {
     errors.projectName = "Project name is required.";
   if (!values.projectStatusId)
     errors.projectStatusId = "Project status is required.";
-  if (!values.approved) errors.approved = "Approval status is required.";
+
   if (!values.projectDate) errors.projectDate = "Project date is required.";
   if (!values.projectStart)
     errors.projectStart = "Project start date is required.";
@@ -315,7 +316,6 @@ const UpdateProject = () => {
         projectCoverImage: form.projectCoverImage.trim() || null,
         projectCoverImageCaption: form.projectCoverImageCaption.trim() || null,
         projectStatusId: Number(form.projectStatusId),
-        approved: form.approved,
         projectPeriodMonths: form.projectPeriodMonths
           ? Number(form.projectPeriodMonths)
           : null,
@@ -588,18 +588,9 @@ const UpdateProject = () => {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>Approved</label>
-                  <select
-                    className={inputClass("approved")}
-                    name="approved"
-                    value={form.approved}
-                    onChange={handleInputChange}
-                    disabled={!form.selectedId || saving}
-                  >
-                    <option value="">Select approval status</option>
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                  </select>
+                  <label>Assessment approval</label>
+                  <p>{form.selectedId ? projectApprovalLabel(selectedProject) : "Select a project"}</p>
+                  <p>Managed through Project work → Assessment; this form cannot grant approval.</p>
                 </div>
 
                 <div className={styles.formGroup}>

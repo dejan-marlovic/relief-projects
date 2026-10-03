@@ -1,3 +1,4 @@
+import { projectApprovalLabel, projectMetadataPayload } from "../../utils/projectApproval";
 import ProjectCloseout from "../../components/ProjectCloseout/ProjectCloseout";
 import { appFetch as fetch } from "../../utils/appFetch";
 // Project.jsx
@@ -752,7 +753,7 @@ Approximately:
 
       addReportField("Address", getAddressLabel(projectDetails.addressId));
 
-      addReportField("Approved", projectDetails.approved);
+      addReportField("Project assessment approval", projectApprovalLabel(projectDetails));
 
       // ------------------------
       // Dates
@@ -2068,7 +2069,7 @@ Approximately:
             {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(finalProject),
+              body: JSON.stringify(projectMetadataPayload(finalProject)),
             },
           );
 
@@ -2437,7 +2438,7 @@ Approximately:
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(projectDetails),
+          body: JSON.stringify(projectMetadataPayload(projectDetails)),
         },
       );
 
@@ -3018,22 +3019,9 @@ Approximately:
                       </div>
 
                       <div className={styles.formGroup}>
-                        <label>Approved:</label>
-                        <select
-                          name="approved"
-                          value={projectDetails.approved || ""}
-                          onChange={handleProjectInputChange}
-                          className={inputClass("approved")}
-                        >
-                          <option value="">Select...</option>
-                          <option value="Yes">Yes</option>
-                          <option value="No">No</option>
-                        </select>
-                        {getFieldError("approved") && (
-                          <div className={styles.fieldError}>
-                            {getFieldError("approved")}
-                          </div>
-                        )}
+                        <label>Assessment approval:</label>
+                        <p>{projectApprovalLabel(projectDetails)}</p>
+                        <p>Managed through Project work → Assessment. Operational status remains separate.</p>
                       </div>
                     </div>
 
