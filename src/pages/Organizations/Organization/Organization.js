@@ -1,5 +1,9 @@
+import { Link, useNavigate } from "react-router-dom";
+import { useUnsavedChanges } from "../../../context/UnsavedChangesContext";
+import { createAuthFetch } from "../../../utils/http";
+import OrganisationReviews from "../../OrganisationAssessment/OrganisationReviews";
 // src/pages/Organizations/Organization/Organization.jsx
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import styles from "./Organization.module.scss";
 import {
   FiEdit,
@@ -39,6 +43,10 @@ const Organization = ({
   canViewBankDetails = false,
   canManageBankDetails = false,
 }) => {
+  const navigate = useNavigate();
+  const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
+  const { confirmDiscardUnsavedChanges } = useUnsavedChanges();
+  const [showReviews, setShowReviews] = useState(false);
   const ev = editedValues || {};
   const isCreate = (link?.id ?? "") === "new";
   const autoSave = isEditing && !isCreate && !compact;
@@ -249,6 +257,7 @@ const Organization = ({
         </Cell>
       </div>
 
+      {!isCreate && <div className={`${styles.detailsWrapperRow} ${styles.assessmentActions}`}><Link to={`/organisation-assessments/${link.id}`} onClick={e => { if (!confirmDiscardUnsavedChanges()) e.preventDefault(); }}>Assess {orgName(link.organizationId)} · {statusName(link.organizationStatusId)}</Link>{" · "}<button type="button" onClick={() => setShowReviews(v => !v)} aria-expanded={showReviews}>Assessments across projects and roles</button>{showReviews && <OrganisationReviews organizationId={link.organizationId} authFetch={authFetch} />}</div>}
       {/* Inline address details panel */}
       {showAddressDetails && link.organizationId && (
         <div className={styles.detailsWrapperRow}>

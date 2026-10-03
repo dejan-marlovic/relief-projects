@@ -1,6 +1,6 @@
 # Requirements workstreams
 
-Coordination snapshot: 28 September 2026. This is a shared index, not a claim that every original requirement has been implemented or accepted. Each task owns its slice report; update this index at scope changes and completion. Do not rewrite another task's report or start its reserved work without coordination.
+Coordination snapshot: 3 October 2026. This is a shared index, not a claim that every original requirement has been implemented or accepted. Each task owns its slice report; update this index at scope changes and completion. Do not rewrite another task's report or start its reserved work without coordination.
 
 ## Current ownership
 
@@ -20,7 +20,7 @@ The [original assessment](original-requirements-assessment.md) is dated 18 Septe
 |---|---|---|
 | Financial planning and control | Budgets, precision, limits/conversion, requested/approved funding, allocations, payment commitments, lifecycle and audit contracts | V37 revision families and donor decisions plus V38 explicit execution, shared obligation ceilings and row-specific unused-funding assignments implemented. Live mutation acceptance remains. Original approved allocation release, funded splits/merges, atomic redistribution and per-award donor constraints remain deferred. |
 | Document foundation | Protected downloads, categories/date/attribution, versions, financial links and project checklist | Checklist evidence does not establish completeness, approval or physical archiving. |
-| Actions and deadlines | Assigned project follow-ups, personal queue, completion and date filters | Recurrence, reminders and immutable action history remain deferred. |
+| Actions and deadlines | Assigned follow-ups, personal queue, calendar export and V46 [List/Board workflow](follow-up-board-frontend.md) with To do/In progress/Done | User-requested board enhancement implemented; user reported coordinated V45/V46 rebuild/restart. Live smoke acceptance pending. Recurrence, reminders and immutable action history remain deferred. |
 | Calendar / Outlook | This slice adds an individual open-follow-up `.ics` snapshot download | Partial coverage only. No subscription, live Outlook sync, invitation sending, email filing or automatic reminders. |
 | Incoming funding | Backend funding-receipts contract and frontend commit `b8bc517` | Owned by existing backend/frontend tasks; their reports control verification and remaining acceptance. |
 | Outgoing actual payments and refunds | V34 and frontend completed; user verified a partial payment and matching remaining/excess totals | Refunds, reconciliation and per-cost actual expenditure remain separate. |
@@ -30,6 +30,7 @@ The [original assessment](original-requirements-assessment.md) is dated 18 Septe
 | Trips and travel approval | V41 requests and independent approval; V42 [post-trip reporting](project-travel-reporting-frontend.md); V43 [cross-project travel schedule](travel-schedule-frontend.md) frontend implemented on 3 October | User smoke-tested V41/V42 and reported a backend restart for V43. Schedule live acceptance remains pending. Detailed itineraries, reservations, calendar integration, traveller self-service and financial integration remain deferred. |
 | Management responses / lessons learned | V40 backend and frontend committed; [Findings and lessons frontend](project-management-responses-frontend.md) adds responses, reviews, task/evidence links and retained resolutions | User smoke-tested creation, response, follow-up linking, resolution with outstanding work and review-required after task completion on 1 October. Extensive realistic-data acceptance remains planned. No duplicate task system or automatic closeout effects. |
 | Project assessment / first-stage approval | V44 backend reported complete; [Assessment frontend](project-assessment-frontend.md) implemented with independent decisions, retained basis/history and provenance-aware approval displays | User confirmed V44 rollout and independent-approval smoke acceptance after the backend context-comparison rebuild on 3 October. Extensive acceptance remains planned. Informational approval only; committee quorum/signature verification, unavailable template reproduction and operational gates remain deferred. |
+| Organisation/partner assessment | V45 [relationship-scoped assessment frontend](organisation-assessment-frontend.md): independent role reviews, exact-version evidence, retained decisions/history and cross-project summaries | Implemented; user reported coordinated V45/V46 rebuild/restart. Live acceptance pending. No global accreditation, verified due diligence or new operational gate. |
 | Reference/prototype differences | See original assessment | Bilingual titles, geography/theme/target group, account-holder/sort-code and other legacy fields need explicit mapping decisions before implementation. |
 
 ## Coordination rules

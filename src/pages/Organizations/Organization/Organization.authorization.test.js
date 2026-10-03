@@ -1,5 +1,8 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import { fireEvent, render as rtlRender, screen } from "@testing-library/react";
 import Organization from "./Organization";
+
+const render = ui => rtlRender(ui, { wrapper: MemoryRouter });
 
 const link = { id: 11, projectId: 1, organizationId: 5, organizationStatusId: 2 };
 const baseProps = {

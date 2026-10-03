@@ -188,8 +188,20 @@ const Organizations = () => {
     setColumnsOpen(false);
   }, [fetchProjectOrganizations, selectedProjectId]);
 
-  const startEdit = (link) => {
-    if (!canManageOrganizationLinks || saving || (compact && editingId !== null)) return;
+  const currentProjectRef = useRef(selectedProjectId);
+  currentProjectRef.current = selectedProjectId;
+  const startEdit = async (link) => {
+    if (!canManageOrganizationLinks || saving || saveInProgress.current || (compact && editingId !== null)) return;
+    // Enrollment permanently fixes the relationship triple, including deleted assessments.
+    saveInProgress.current = true; setSaving(true);
+    try {
+      const response = await fetch(`${BASE_URL}/api/project-organizations/${link.id}/assessment`, { headers: authHeaders, cache: "no-store" });
+      if (!response.ok) throw new Error("Could not check assessment ownership. Refresh and try again.");
+      const assessment = await response.json();
+      if (String(currentProjectRef.current) !== String(link.projectId)) return;
+      if (assessment.assessment) { setFormError("This relationship has assessment history. Its project, organization and role cannot be changed. Create another relationship for a different role or project."); return; }
+    } catch (error) { setFormError(error.message); return; }
+    finally { saveInProgress.current = false; setSaving(false); }
     setEditingId(link?.id ?? null);
     setEditedValues((prev) => ({
       ...prev,

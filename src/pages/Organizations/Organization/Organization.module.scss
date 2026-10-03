@@ -224,3 +224,11 @@
   .actionsCol { grid-row: 3; }
   .detailsWrapperRow { margin: 6px 0; padding: 8px; }
 }
+
+.assessmentActions > a, .assessmentActions > button {
+  display: inline-flex; align-items: center; min-height: 40px; margin: .25rem;
+  padding: .5rem .75rem; border: 1px solid colors.$primary-border; border-radius: 8px;
+  color: colors.$primary; background: colors.$surface; font: inherit; text-decoration: none; cursor: pointer;
+  overflow-wrap: anywhere; max-width: 100%;
+}
+.assessmentActions > a:focus-visible, .assessmentActions > button:focus-visible { outline: 2px solid colors.$primary; outline-offset: 2px; }

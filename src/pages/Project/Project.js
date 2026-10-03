@@ -3,7 +3,7 @@ import ProjectCloseout from "../../components/ProjectCloseout/ProjectCloseout";
 import { appFetch as fetch } from "../../utils/appFetch";
 // Project.jsx
 import React, { useEffect, useState, useContext, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ExcelJS from "exceljs";
 
 import styles from "./Project.module.scss";
@@ -32,7 +32,7 @@ import {
 import { BASE_URL, ASSETS_URL } from "../../config/api";
 import ErrorBanner from "../../components/ErrorBanner/ErrorBanner";
 import { readApiError } from "../../utils/apiErrors";
-import { useUnsavedChange } from "../../context/UnsavedChangesContext";
+import { useUnsavedChange, useUnsavedChanges } from "../../context/UnsavedChangesContext";
 const coverImagePath = `${ASSETS_URL}/images/projects/`;
 
 // ✅ caption delimiter (must match backend)
@@ -1454,6 +1454,7 @@ Approximately:
   const canDeleteProject = hasRole("ADMIN");
 
   const [projectDetails, setProjectDetails] = useState(null);
+  const { confirmDiscardUnsavedChanges } = useUnsavedChanges();
   const [hasUnsavedProjectChanges, setHasUnsavedProjectChanges] = useState(false);
   useUnsavedChange(
     `project-${selectedProjectId || "none"}`,
@@ -3341,6 +3342,7 @@ Approximately:
                                         )}
                                       </div>
                                     </div>
+                                    <Link to={`/organisation-assessments/${po.id}`} onClick={e => { if (!confirmDiscardUnsavedChanges()) e.preventDefault(); }}>Assessment</Link>
                                     <button
                                       type="button"
                                       onClick={() =>

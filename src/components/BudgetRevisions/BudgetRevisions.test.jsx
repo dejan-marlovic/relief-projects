@@ -16,6 +16,15 @@ function setup(data, mutation) {
   });
 }
 const mount = onChanged => render(<BrowserRouter><RevisionPanel budget={budget} onChanged={onChanged} /></BrowserRouter>);
+test("standalone budgets show the whole workflow without enabling family commands", async () => {
+  setup({ budget, family: null, members: [] }); mount();
+  await screen.findByRole("region", { name: "Prepare the revised plan" });
+  for (const name of ["Record donor decisions", "Choose the current plan", "Activate financial execution"]) expect(screen.getByRole("region", { name })).toBeVisible();
+  expect(screen.getByText(/Available after creating a planning revision in step 1/)).toBeVisible();
+  expect(screen.queryByRole("button", { name: "Record donor decision / addendum" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Select as current plan" })).not.toBeInTheDocument();
+  expect(fetch.mock.calls.some(([url]) => url.includes("/execution"))).toBe(false);
+});
 test("legacy planning warning distinguishes execution from retained original references", async () => {
   setup({ ...familyData(), issues: [{ code: "PLANNING_FINANCIAL_BASIS_DIFFER", message: "Financial records remain on budget 1." }] }); mount();
   expect(await screen.findByText(/Financial execution below determines new funding eligibility/)).toBeInTheDocument();

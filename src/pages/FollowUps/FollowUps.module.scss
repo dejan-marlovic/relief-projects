@@ -19,21 +19,29 @@
 .description { white-space: pre-wrap; }
 .page summary { cursor: pointer; color: colors.$primary; }
 .page :focus-visible { outline: 2px solid colors.$primary; outline-offset: 2px; }
-.steps { list-style: none; padding: 0; margin: 1rem 0 0; }
-.step { position: relative; padding: 0 0 1rem 2.6rem; min-width: 0; }
-.step:not(:last-child)::before { content: ""; position: absolute; left: .9rem; top: 1.9rem; bottom: 0; width: 2px; background: colors.$primary-border; }
-.stepMarker { position: absolute; left: 0; top: .65rem; width: 1.9rem; height: 1.9rem; border-radius: 50%; background: colors.$primary; color: colors.$text-on-primary; display: flex; align-items: center; justify-content: center; font-weight: 700; }
-.page button.stepToggle { width: 100%; text-align: left; display: flex; justify-content: space-between; align-items: center; gap: .75rem; }
-.page button.stepToggle:disabled { opacity: 1; cursor: default; }
-.stepToggle > svg { flex-shrink: 0; }
+.details { margin-top: .8rem; border-top: 1px solid colors.$border; }
+.page button.detailsToggle { width: 100%; text-align: left; display: flex; justify-content: space-between; align-items: center; gap: .75rem; padding: .65rem 0; border: 0; background: transparent; }
+.detailsToggle > svg { flex-shrink: 0; }
 .chevronOpen { transform: rotate(180deg); }
-.stepDescription { display: block; margin-top: .35rem; color: colors.$text-muted; font-size: .85rem; }
-.stepBody { padding: .8rem; border: 1px solid colors.$border; border-top: 0; border-radius: 0 0 8px 8px; }
+.detailsBody { padding: .25rem 0; }
 .taskDetails { display: grid; grid-template-columns: minmax(100px, 1fr) 3fr; gap: .6rem; }
 .taskDetails dt { font-weight: 600; }
 .taskDetails dd { margin: 0; overflow-wrap: anywhere; }
 .timeline { list-style: none; padding: 0 0 0 .5rem; }
 .timeline > li { position: relative; border-left: 2px solid colors.$primary-border; padding: 0 0 1rem 1.25rem; }
 .timeline > li::before { content: ""; position: absolute; left: -.35rem; top: .25rem; width: .6rem; height: .6rem; border-radius: 50%; background: colors.$primary; }
-@media(max-width: 600px) { .step { padding-left: 2.2rem; } .stepBody { padding: .6rem; } .taskDetails { grid-template-columns: 1fr; } }
+@media(max-width: 600px) { .taskDetails { grid-template-columns: 1fr; } }
 @media(max-width: 600px) { .page { margin: 0.5rem; padding: 0.8rem; } .filters, .grid { grid-template-columns: 1fr; } .actions button { flex: 1 1 auto; min-height: 44px; } }
+
+.board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; align-items: start; }
+.column { min-width: 0; border-radius: 12px; padding: .8rem; background: colors.$primary-a04; border: 1px solid colors.$primary-border; }
+.column > h3 { display: flex; justify-content: space-between; align-items: center; margin: 0; }
+.column .list > li { background: colors.$surface; padding: .8rem; }
+@media (max-width: 1000px) { .board { grid-template-columns: 1fr; } }
+
+.dragHandle { display: inline-block; color: colors.$text-muted; font-size: .8rem; padding: .4rem 0; margin-bottom: .5rem; }
+.dragHandle[draggable=true] { cursor: grab; }
+.dragHandle[draggable=true]:active { cursor: grabbing; }
+.dragging { opacity: .6; }
+.dropAllowed { outline: 2px dashed colors.$primary-border; outline-offset: 2px; }
+.dropOver { outline: 3px solid colors.$primary; background: colors.$surface; }

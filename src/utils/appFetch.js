@@ -14,6 +14,12 @@ export function mutationNotice(input, options = {}, response) {
   if (path.includes("bulk")) return null;
   if (response.status === 202) return "Request accepted for processing.";
   const segments = path.slice(5).split("/");
+  if (segments[0] === "project-organizations" && segments[2] === "assessment") {
+    if (/\/remove$/.test(path)) return "Organisation assessment evidence link removed.";
+    const notices = { submit: "Organisation assessment submitted for review.", review: "Organisation role review recorded.", return: "Organisation assessment returned for changes.", "withdraw-submission": "Organisation assessment submission withdrawn.", "withdraw-review": "Organisation role review withdrawn.", evidence: "Organisation assessment evidence linked.", delete: "Organisation assessment deleted; history retained.", restore: "Organisation assessment restored without reinstating a review." };
+    return notices[segments[3]] || (method === "POST" ? "Organisation assessment created." : "Organisation assessment updated.");
+  }
+  if (segments[0] === "projects" && segments[2] === "follow-ups" && segments[4] === "progress") return "Follow-up progress updated.";
   if (segments[0] === "projects" && segments[2] === "assessment") {
     if (/\/remove$/.test(path)) return "Assessment evidence link removed.";
     const notices = { submit: "Assessment submitted for approval.", approve: "Assessment approval recorded.", return: "Assessment returned for changes.", "withdraw-submission": "Assessment submission withdrawn.", "withdraw-approval": "Assessment approval withdrawn.", evidence: "Assessment evidence linked.", delete: "Assessment deleted; history retained.", restore: "Assessment restored without reinstating approval." };
