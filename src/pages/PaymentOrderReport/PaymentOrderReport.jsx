@@ -11,6 +11,7 @@ const identity = item => item ? `${item.name || "Name unavailable"} (#${item.id}
 const actor = item => item ? `${item.username || "Unknown user"} (#${item.userId})` : "Unavailable";
 const flag = input => input === true ? "Yes" : input === false ? "No" : "Unknown";
 const stamp = input => input ? `${new Date(input).toLocaleString()} (${input})` : "Unavailable";
+const evidenceLabel = role => ({ SIGNED_PAYMENT_ORDER: "Signed payment order", COMBINED_PAYMENT_EVIDENCE: "Combined payment evidence" }[role] || value(role));
 function Issues({ issues = [] }) { return issues.length > 0 && <ul className={styles.issues}>{issues.map((issue, i) => <li key={i}>{issue.code}: {issue.message}{issue.lineId != null && ` · Line #${issue.lineId}`}</li>)}</ul>; }
 function Currency({ summary }) { return <><span>{value(summary?.status || summary?.availability)} · {paymentCurrency(summary?.currency)}</span><Issues issues={summary?.issues} /></>; }
 function Table({ title, headers, rows }) { return <section><h2>{title}</h2>{rows.length ? <div className={styles.tableWrap}><table><thead><tr>{headers.map(header => <th key={header} scope="col">{header}</th>)}</tr></thead><tbody>{rows.map((row, i) => <tr key={i}>{row.map((cell, j) => <td key={j}>{cell}</td>)}</tr>)}</tbody></table></div> : <p>No current records in this section.</p>}</section>; }
@@ -56,7 +57,7 @@ export function ReportContent({ data, onDownload, downloading, downloadError }) 
         <h3>{doc.documentName || "Name unavailable"} · Document #{doc.documentId}</h3>
         <p>Root #{value(doc.rootDocumentId)} · Version {value(doc.versionNumber)} · {value(doc.status)} · {value(doc.category)} · Date: {value(doc.documentDate)}</p>
         <p>Current chain head: {flag(doc.isCurrent)} · Newer version: {flag(doc.hasNewerVersion)} · Document deleted: {flag(doc.documentDeleted)} · Project deleted: {flag(doc.projectDeleted)} · Target deleted: {flag(doc.targetDeleted)}</p>
-        <ul>{associations.map((link, i) => <li key={i}>{link.entityType} #{link.entityId} · {link.status}{link.status === "VOIDED" && " — historical payment evidence"}</li>)}</ul>
+        <ul>{associations.map((link, i) => <li key={i}>{link.entityType === "PAYMENT_ORDER_FINAL_EVIDENCE" ? <>Late payment evidence · Attachment #{link.entityId} · {evidenceLabel(link.role)}. Not part of the approval decision. Attached {stamp(link.attachedAt)} by {actor(link.attachedBy)}.</> : <>{link.entityType} #{link.entityId} · {link.status}{link.status === "VOIDED" && " — historical payment evidence"}{(link.entityType === "PAYMENT_ORDER" || link.meaning === "ORDINARY_SUPPORT_APPROVAL_TIME_NOT_RECORDED") && " · Ordinary supporting documents — approval-time inclusion not recorded"}</>}</li>)}</ul>
         <p>{doc.downloadEligible ? "Eligible for a protected download at observation time; file contents not checked." : "Download unavailable at observation time."}</p>
         <button type="button" className={styles.noPrint} disabled={!doc.downloadEligible || downloading != null} onClick={() => onDownload(doc.documentId)}>Download exact version #{doc.documentId}</button>
       </div>)}
@@ -69,6 +70,12 @@ export default function PaymentOrderReport() {
   const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
   const [data, setData] = useState(null), [loading, setLoading] = useState(true), [error, setError] = useState("");
   const [refresh, setRefresh] = useState(0), [downloading, setDownloading] = useState(null), [downloadError, setDownloadError] = useState("");
+  useEffect(() => {
+    const changed = event => { if (String(event.detail?.paymentOrderId) === String(id)) setRefresh(n => n + 1); };
+    const stored = event => { if (event.key === "payment-order-evidence-changed") { try { changed({ detail: JSON.parse(event.newValue) }); } catch (_) { /* Ignore unrelated malformed storage values. */ } } };
+    window.addEventListener("payment-order-evidence-changed", changed); window.addEventListener("storage", stored);
+    return () => { window.removeEventListener("payment-order-evidence-changed", changed); window.removeEventListener("storage", stored); };
+  }, [id]);
   useEffect(() => {
     const controller = new AbortController(); setLoading(true); setData(null); setError(""); setDownloadError("");
     (async () => {

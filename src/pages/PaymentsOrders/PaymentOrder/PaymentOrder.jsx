@@ -1,4 +1,5 @@
 import RecordActivity from "../../../components/RecordActivity/RecordActivity";
+import PaymentOrderFinalEvidence from "../../../components/PaymentOrderFinalEvidence/PaymentOrderFinalEvidence";
 import OutgoingPayments from "../../../components/OutgoingPayments/OutgoingPayments";
 import PaymentAmount from "../../../components/PaymentAmount/PaymentAmount";
 import React from "react";
@@ -401,6 +402,7 @@ const PaymentOrder = ({
         <RecordHistory entityType="PAYMENT_ORDER" entityId={po.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} />
         <OutgoingPayments paymentOrderId={po.id} refreshKey={`${historyRefreshKey}:${lifecycleStatus}`} editingLocked={isEditing || saving || editingLocked} onChanged={onPaymentChanged} />
         <FinancialDocuments entityType="PAYMENT_ORDER" entityId={po.id} lifecycleStatus={lifecycleStatus} locked={locked} refreshKey={historyRefreshKey} editingLocked={isEditing || saving || editingLocked} />
+        <PaymentOrderFinalEvidence paymentOrderId={po.id} refreshKey={`${historyRefreshKey}:${lifecycleStatus}`} editingLocked={isEditing || saving || editingLocked} />
       </RecordActivity>}
     </>
   );

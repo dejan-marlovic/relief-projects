@@ -17,6 +17,13 @@ const report = {
 };
 const response = (data, ok = true) => ({ ok, status: ok ? 200 : 422, text: async () => JSON.stringify(data) });
 const mount = () => render(<MemoryRouter initialEntries={["/payment-orders/73/report"]}><Routes><Route path="/payment-orders/:id/report" element={<PaymentOrderReport />} /></Routes></MemoryRouter>);
+test("distinguishes late evidence and ordinary approval-time uncertainty in the index", () => {
+  const data = { ...report, documents: [{ ...report.documents[0], associations: [{ entityType: "PAYMENT_ORDER", entityId: 73 }, { entityType: "PAYMENT_ORDER_FINAL_EVIDENCE", entityId: 12, role: "COMBINED_PAYMENT_EVIDENCE", attachedBy: { userId: 9, username: "finance" } }] }] };
+  render(<ReportContent data={data} onDownload={jest.fn()} />);
+  expect(screen.getByText(/Ordinary supporting documents — approval-time inclusion not recorded/)).toBeInTheDocument();
+  expect(screen.getByText(/Late payment evidence · Attachment #12/)).toHaveTextContent("Not part of the approval decision");
+  expect(screen.getAllByRole("button", { name: "Download exact version #7" })).toHaveLength(1);
+});
 beforeEach(() => { jest.clearAllMocks(); localStorage.setItem("authToken", "test"); });
 afterEach(() => localStorage.clear());
 test("requires complete supported report for the requested order", () => {

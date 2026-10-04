@@ -130,6 +130,7 @@ function DocumentsPanel({ entityType, entityId, locked, lifecycleStatus, refresh
   const categoryLabel = (value) => categories.find((item) => item.id === value)?.label || value || "Uncategorized";
   const selectable = candidates.filter((doc) => !links.some((link) => link.documentId === doc.id));
   return <div className={styles.panel}>
+    {entityType === "PAYMENT_ORDER" && <p className={styles.hint}>Ordinary supporting documents — approval-time inclusion not recorded. Late payment evidence is managed separately.</p>}
     <p className={styles.hint}>Links keep the exact file version you select. A replacement never changes existing supporting evidence. Draft and Final are descriptive labels.</p>
     <button type="button" onClick={refresh} disabled={loading || busy}>Refresh supporting documents</button>
     {loading && <p role="status">Loading supporting documents…</p>}
