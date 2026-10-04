@@ -1,3 +1,4 @@
+import PaymentOrderReport from "./pages/PaymentOrderReport/PaymentOrderReport";
 import OrganisationAssessment from "./pages/OrganisationAssessment/OrganisationAssessment";
 import Assessment from "./pages/Assessment/Assessment";
 import SuccessNotifications from "./components/SuccessNotifications/SuccessNotifications";
@@ -53,6 +54,7 @@ export default function App() {
             <Routes>
               {/* Public route: login is outside the main layout */}
               <Route path="/login" element={<Login />} />
+              <Route path="/payment-orders/:id/report" element={<PaymentOrderReport />} />
 
               {/* Main route with Layout wrapper */}
               <Route path="/" element={<Layout />}>

@@ -397,6 +397,7 @@ const PaymentOrder = ({
       </Cell>
     </div>
       {Boolean(po.id) && <RecordActivity recordLabel={`Payment order #${po.id}`}>
+        <p><a href={`/payment-orders/${po.id}/report`} target="_blank" rel="noopener noreferrer">View / print payment-order report</a></p>
         <RecordHistory entityType="PAYMENT_ORDER" entityId={po.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} />
         <OutgoingPayments paymentOrderId={po.id} refreshKey={`${historyRefreshKey}:${lifecycleStatus}`} editingLocked={isEditing || saving || editingLocked} onChanged={onPaymentChanged} />
         <FinancialDocuments entityType="PAYMENT_ORDER" entityId={po.id} lifecycleStatus={lifecycleStatus} locked={locked} refreshKey={historyRefreshKey} editingLocked={isEditing || saving || editingLocked} />
