@@ -25,6 +25,15 @@ test("server totals span pages and Finance cannot correct or void", async () => 
   expect(screen.getByRole("button", { name: "Download evidence #81" })).toBeDisabled();
 });
 
+test("recorded returns block receipt correction and void without disabling evidence", async () => {
+  const data = envelope(); data.eligibility.canCorrect = true; data.eligibility.canVoid = true;
+  data.content = [{ ...receipt, returns: { blocksSourceChanges: true } }];
+  setup(data, () => reply(receipt)); mount();
+  expect(await screen.findByRole("button", { name: "Correct receipt #51" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Void receipt #51" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Add evidence #51" })).toBeEnabled();
+});
+
 test("uncertain delivery preserves exact body and UUID across remount and retry", async () => {
   let attempts = 0;
   setup(envelope(), () => { if (++attempts === 1) throw new Error("Connection lost"); return reply(receipt, 201); });
@@ -58,7 +67,7 @@ test("unavailable comparisons never display a zero remaining amount", async () =
   const data = envelope(); data.summary.status = "COMPARISON_UNAVAILABLE"; data.summary.remainingToReceive = null; data.summary.excessReceived = null; data.eligibility.canCreate = false;
   setup(data, () => reply(receipt)); mount();
   expect(await screen.findByText("Comparison unavailable")).toBeInTheDocument();
-  expect(screen.getByText("Remaining to receive").parentElement).toHaveTextContent("Unavailable");
+  expect(screen.getAllByText("Unavailable")).toHaveLength(2);
   expect(screen.queryByRole("button", { name: "Record funding receipt" })).not.toBeInTheDocument();
 });
 

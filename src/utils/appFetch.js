@@ -81,6 +81,13 @@ export function mutationNotice(input, options = {}, response) {
     if (/\/void$/.test(path)) return "Outgoing payment voided.";
     return "Outgoing payment recorded.";
   }
+  if (segments[0] === "funding-returns" || (segments[0] === "funding-receipts" && segments[2] === "returns")) {
+    if (/\/documents\/remove$/.test(path)) return "Financier return evidence removed.";
+    if (/\/documents$/.test(path)) return "Financier return evidence linked.";
+    if (/\/corrections$/.test(path)) return "Erroneous financier return corrected.";
+    if (/\/void$/.test(path)) return "Erroneous financier return voided.";
+    return "Money returned to financier recorded.";
+  }
   if (segments.includes("funding-receipts")) {
     if (/\/documents\/remove$/.test(path)) return "Receipt evidence removed.";
     if (/\/documents$/.test(path)) return "Receipt evidence linked.";

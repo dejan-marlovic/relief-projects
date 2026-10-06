@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import FundingReturns from "../FundingReturns/FundingReturns";
+import FundingReturnSummary from "../FundingReturns/FundingReturnSummary";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { BASE_URL } from "../../config/api";
@@ -68,6 +70,7 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
   const currency = data?.summary?.currentFundingCurrency?.currency;
   const can = kind => !editingLocked && !loading && !loadError && Boolean(eligibility[kind === "create" ? "canCreate" : kind === "correct" ? "canCorrect" : kind === "void" ? "canVoid" : "canManageEvidence"]);
   const open = (kind, receipt = null, document = null) => {
+    if (["correct", "void"].includes(kind) && receipt?.returns?.blocksSourceChanges) return;
     setError(""); setHistorical(false);
     setForm({ kind, receipt, document, currency, confirmRequired: eligibility.requiresDenominationConfirmation, amount: kind === "correct" ? receipt.amount : "", receivedDate: kind === "correct" ? receipt.receivedDate : stockholmToday(), externalReference: kind === "correct" ? receipt.externalReference || "" : "", note: kind === "correct" ? receipt.note || "" : "", reason: "", documentIds: [], documentId: "", confirmation: false });
   };
@@ -99,6 +102,7 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
   const submit = event => {
     event.preventDefault();
     if (!form || pending || !can(form.kind)) return;
+    if (["correct", "void"].includes(form.kind) && data?.content.find(row => row.id === form.receipt.id)?.returns?.blocksSourceChanges) { setError("This receipt has recorded returns and cannot be corrected or voided. Do not void genuine returns to bypass this guard."); return; }
     const financial = ["create", "correct"].includes(form.kind);
     if (financial && receiptAmountError(form.amount)) { setError(receiptAmountError(form.amount)); return; }
     if (!window.crypto?.randomUUID) { setError("A secure browser connection is required to generate a receipt request ID. Use HTTPS or localhost."); return; }
@@ -154,6 +158,8 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
       <h4>{receiptStatus(summary.status)}</h4>
       <p className={styles.hint}>Current funding currency: {receiptCurrency(currency)}. Totals include all pages and exclude voided entries.</p>
       <dl className={styles.totals}>{[["Approved funding", summary.approvedFunding], ["Received", summary.receivedTotal], ["Remaining to receive", summary.remainingToReceive], ["Excess received", summary.excessReceived]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{receiptMoney(value)}</dd></div>)}</dl>
+      <p className={styles.hint}>These are gross receipts versus approved funding; recorded returns do not change remaining-to-receive or excess comparisons.</p>
+      <FundingReturnSummary summary={summary.returns} />
       {summary.status === "OVER_RECEIVED" && <p role="status">Receipts exceed approved funding. The excess does not increase spending capacity.</p>}
       {summary.totalsByCurrency?.map(total => <p key={total.currencyId}>Recorded {total.recordedLabel} (#{total.currencyId}): {receiptMoney(total.amount)}</p>)}
       {[...(summary.issues || []), ...(eligibility.issues || [])].filter((issue, index, all) => all.findIndex(item => item.code === issue.code) === index).map(issue => <p key={issue.code} role="status">{issue.message}</p>)}
@@ -199,7 +205,10 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
       {receipt.replacementReceiptId && <p>Replaced by <button type="button" onClick={() => showRelated(receipt.replacementReceiptId)}>receipt #{receipt.replacementReceiptId}</button>.</p>}
       <ul className={styles.evidence}>{receipt.documents?.map(doc => <li key={doc.documentId}>{doc.documentName} · v{doc.versionNumber} · {doc.status || "Unknown status"}{doc.hasNewerVersion && " · Newer version exists; this evidence retains its version"}{!doc.downloadEligible && " · Unavailable for download"}<div className={styles.actions}><button type="button" disabled={!doc.downloadEligible || downloading != null} onClick={() => download(doc.documentId)}>Download evidence #{doc.documentId}</button>{receipt.status === "RECORDED" && can("remove") && <button type="button" disabled={busy || !!form || !!pending} onClick={() => open("remove", receipt, doc)}>Remove evidence #{doc.documentId}</button>}</div></li>)}</ul>
       {!receipt.documents?.length && <p className={styles.hint}>No evidence linked.</p>}
-      {receipt.status === "RECORDED" && <div className={styles.actions}>{[["add", "Add evidence"], ["correct", "Correct receipt"], ["void", "Void receipt"]].map(([kind, label]) => can(kind) && <button key={kind} type="button" disabled={busy || !!form || !!pending} onClick={() => open(kind, receipt)}>{label} #{receipt.id}</button>)}</div>}
+      {receipt.returns?.blocksSourceChanges && <p>Recorded returns prevent correcting or voiding this receipt. Do not void genuine returned money to bypass this guard.</p>}
+      {receipt.returns?.sourceChangeIssues?.map(issue => <p key={issue.code}>{issue.message}</p>)}
+      {receipt.status === "RECORDED" && <div className={styles.actions}>{[["add", "Add evidence"], ["correct", "Correct receipt"], ["void", "Void receipt"]].map(([kind, label]) => can(kind) && <button key={kind} type="button" disabled={busy || !!form || !!pending || (["correct", "void"].includes(kind) && receipt.returns?.blocksSourceChanges)} onClick={() => open(kind, receipt)}>{label} #{receipt.id}</button>)}</div>}
+      {receipt.returns ? <FundingReturns receipt={receipt} refreshKey={`${revision}:${refreshKey}`} editingLocked={editingLocked || busy || !!form || !!pending} onChanged={() => { refresh(); onChanged?.(); }} /> : <p className={styles.hint}>Returns feature unavailable for this receipt. Refresh after backend deployment; absence does not mean zero returns.</p>}
     </article>)}
     {data && <div className={styles.actions}><span>{data.totalElements} receipts · Page {page + 1} of {Math.max(1, Math.ceil(data.totalElements / 20))}</span><button type="button" disabled={busy || loading || !!form || !!pending || page === 0} onClick={() => setPage(value => value - 1)}>Previous receipts</button><button type="button" disabled={busy || loading || !!form || !!pending || (page + 1) * 20 >= data.totalElements} onClick={() => setPage(value => value + 1)}>Next receipts</button></div>}
   </div>;
