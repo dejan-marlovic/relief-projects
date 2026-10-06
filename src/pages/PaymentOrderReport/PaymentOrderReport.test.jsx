@@ -13,6 +13,7 @@ const report = {
   commitments: { amount: "10000.000001", amountSummary: { status: "CONSISTENT", currency: { id: 3, name: "USD" }, issues: [] } },
   lines: [], recipients: [], signatures: [{ id: 4, employee: { id: 2, name: "Named signer" }, status: { id: 1, name: "Approved" }, signatureDate: "2026-10-04T12:00:00" }],
   payments: { entries: [{ id: 8, recipientId: 9, amount: "4000.123456", currency: { id: 3, name: "USD" }, status: "VOIDED", replacementPaymentId: 10 }], summary: { status: "PARTIALLY_PAID", paidTotal: "4000.000000", recipientCommitment: "6000.000000", recipientRemaining: "2000.000000", orderRemaining: "6000.000000", issues: [] }, denominationConfirmation: null },
+  recipientReturns: { entries: [], summary: { status: "AVAILABLE", grossPaid: "4000.000000", returnedFromRecipient: "0.000000", netPaid: "4000.000000", recordedCount: 0, voidedCount: 0 } },
   documents: [{ document: { documentId: 7, documentName: "Original evidence.pdf", rootDocumentId: 7, versionNumber: 1, isCurrent: false, hasNewerVersion: true, currentDocumentId: 42, downloadEligible: true }, associations: [{ entityType: "OUTGOING_PAYMENT", entityId: 8, status: "VOIDED" }] }], issues: [],
 };
 const response = (data, ok = true) => ({ ok, status: ok ? 200 : 422, text: async () => JSON.stringify(data) });
@@ -31,6 +32,16 @@ test("requires complete supported report for the requested order", () => {
   expect(validReport(report, 74)).toBeFalsy();
   expect(validReport({ ...report, coverage: { metadataComplete: false } }, 73)).toBeFalsy();
   expect(validReport({ ...report, lines: null }, 73)).toBeFalsy();
+  expect(validReport({ ...report, recipientReturns: null }, 73)).toBeFalsy();
+});
+
+test("recipient returns stay separate with exact amounts, correction links and deduplicated evidence", () => {
+  const data = { ...report, recipientReturns: { summary: { status: "AVAILABLE", grossPaid: "4000.000000", returnedFromRecipient: "25.000001", netPaid: "3974.999999" }, entries: [{ id: 51, originalPaymentId: 8, recipientId: 9, organization: { id: 8, name: "Partner" }, amount: "25.000001", currency: { id: 3, name: "USD" }, returnedDate: "2026-10-06", status: "VOIDED", replacementReturnId: 52, reason: "Unused principal" }] }, documents: [{ ...report.documents[0], associations: [{ entityType: "RECIPIENT_RETURN", entityId: 51, originalPaymentId: 8, status: "VOIDED" }, ...report.documents[0].associations] }] };
+  render(<ReportContent data={data} onDownload={jest.fn()} />);
+  expect(screen.getByText("3974.999999")).toBeInTheDocument();
+  expect(screen.getByText("Replaced by return #52")).toBeInTheDocument();
+  expect(screen.getByText(/Recipient return #51/)).toHaveTextContent("Original payment #8");
+  expect(screen.getAllByRole("button", { name: "Download exact version #7" })).toHaveLength(1);
 });
 test("renders exact amounts, unknowns, escaped text and separate payment meanings", () => {
   render(<ReportContent data={report} onDownload={jest.fn()} />);

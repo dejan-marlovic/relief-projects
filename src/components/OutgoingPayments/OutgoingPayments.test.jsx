@@ -8,6 +8,16 @@ const reply = (body, status = 200) => ({ ok: status < 400, status, text: async (
 const row = () => ({ id: 41, revision: 3, recipientId: 17, status: "RECORDED", amount: "7000.000001", paidDate: "2026-09-25", currency: { id: 3, name: "USD" }, organization: { id: 8, name: "Recipient organization" }, documents: [{ documentId: 81, documentName: "Original evidence", versionNumber: 1, downloadEligible: false }], eligibility: { canVoid: false, canCorrect: false, canManageEvidence: true, voidIssues: [{ code: "INSUFFICIENT_PERMISSION", message: "ADMIN is required to void payments." }] } });
 const envelope = () => ({ content: [row()], page: 0, size: 20, totalElements: 41, summary: { status: "OVER_PAID", comparisonStatus: "AVAILABLE", paidTotal: "7000.000001", recipientCommitment: "6000.000000", recipientRemaining: "0.000000", recipientExcess: "1000.000001", orderCommitment: "10000.000000", orderRemaining: "2999.999999", orderExcess: "0.000000", currentOrderConfiguration: { projectId: 7, currency: { id: 3, name: "USD" } }, issues: [] }, eligibility: { canRecord: true, canVoid: false, canCorrect: false, canManageEvidence: false, requiresDenominationConfirmation: true, recipient: { id: 17, organizationName: "Recipient organization", contributingSubtotal: "6000.000000" }, recordingIssues: [] } });
 const mount = () => render(<BrowserRouter><PaymentsPanel paymentOrderId={12} /></BrowserRouter>);
+test("server return guards hide original-payment correction and void actions", async () => {
+  const data = envelope();
+  data.content[0].eligibility = { canManageEvidence: true, canCorrect: false, canVoid: false, correctionIssues: [{ code: "SOURCE_HAS_RECORDED_RETURNS", message: "Recorded recipient returns prevent correcting this payment." }] };
+  data.content[0].returns = { status: "AVAILABLE" };
+  setup(data); mount();
+  await screen.findByText("Recorded recipient returns prevent correcting this payment.");
+  expect(screen.queryByRole("button", { name: "Correct payment #41" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Void payment #41" })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Add evidence #41" })).toBeEnabled();
+});
 const setup = (data, post = () => reply(row(), 201)) => { global.fetch = jest.fn(async (url, options) => options?.method === "POST" ? post(url, options) : String(url).includes("/documents/project/") ? reply([{ id: 81, projectId: 7, isDeleted: false, documentName: "Advice", versionNumber: 1, isCurrent: false }]) : reply(data)); };
 beforeEach(() => { sessionStorage.clear(); Object.defineProperty(window, "crypto", { configurable: true, value: { randomUUID: jest.fn(() => "b52b9b5f-c099-457a-ab34-db595df7a1f1") } }); });
 

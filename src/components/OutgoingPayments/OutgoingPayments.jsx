@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import RecipientReturns from "../RecipientReturns/RecipientReturns";
+import RecipientReturnSummary from "../RecipientReturns/RecipientReturnSummary";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { BASE_URL } from "../../config/api";
@@ -157,6 +159,8 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
       <p>Recipient: <strong>{eligibility.recipient?.organizationName || binding?.organization?.name || "Unavailable"}</strong>{eligibility.recipient?.id && ` (#${eligibility.recipient.id})`}</p>
       <dl className={styles.totals}>{[["Paid", summary.paidTotal], ["Recipient commitments", summary.recipientCommitment], ["Recipient remaining", summary.recipientRemaining], ["Recipient excess", summary.recipientExcess]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{paymentMoney(value)}</dd></div>)}</dl>
       {summary.status === "OVER_PAID" && <p role="status">Payments exceed this recipient’s commitments. The excess does not increase spending capacity.</p>}
+      <p className={styles.hint}>Commitment comparisons use gross paid. Recipient returns do not change these statuses, remaining amounts or spending capacity.</p>
+      <RecipientReturnSummary summary={summary.returns} />
       <details><summary>Whole-order comparison</summary><p className={styles.hint}>Order remaining is not authorization to pay that amount to this recipient. The order can include other organizations’ commitments. These totals describe the same payments; do not add them to recipient totals.</p><dl className={styles.totals}>{[["Order commitments", summary.orderCommitment], ["Order remaining", summary.orderRemaining], ["Order excess", summary.orderExcess]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{paymentMoney(value)}</dd></div>)}</dl></details>
       <p className={styles.hint}>Comparison: {summary.comparisonStatus === "AVAILABLE" ? "Available" : summary.comparisonStatus === "UNCONFIRMED" ? "Awaiting explicit denomination confirmation" : "Unavailable; unknown amounts are not zero"}.</p>
       {summary.totalsByCurrency?.map(total => <p key={total.currencyId}>Recorded {total.recordedLabel} (#{total.currencyId}): {paymentMoney(total.amount)}</p>)}
@@ -206,6 +210,7 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
       <details><summary>Payment action availability</summary>{[...(payment.eligibility?.voidIssues || []), ...(payment.eligibility?.correctionIssues || []), ...(payment.eligibility?.evidenceIssues || [])].filter((issue, index, all) => all.findIndex(item => item.code === issue.code && item.message === issue.message) === index).map((issue, index) => <p key={index}>{issue.message}</p>)}</details>
       {!payment.documents?.length && <p className={styles.hint}>No evidence linked.</p>}
       {payment.status === "RECORDED" && <div className={styles.actions}>{[["add", "Add evidence"], ["correct", "Correct payment"], ["void", "Void payment"]].map(([kind, label]) => can(kind, payment) && <button key={kind} type="button" disabled={busy || !!form || !!pending} onClick={() => open(kind, payment)}>{label} #{payment.id}</button>)}</div>}
+      {payment.returns ? <RecipientReturns payment={{ ...payment, paymentOrderId }} refreshKey={`${revision}:${refreshKey}`} editingLocked={editingLocked || busy || !!form || !!pending} onChanged={() => { refresh(); onChanged?.(); }} /> : <p className={styles.hint}>Recipient-return information unavailable. Refresh after backend deployment; missing information does not mean zero returns.</p>}
     </article>)}
     {data && <div className={styles.actions}><span>{data.totalElements} payments · Page {page + 1} of {Math.max(1, Math.ceil(data.totalElements / 20))}</span><button type="button" disabled={busy || loading || !!form || !!pending || page === 0} onClick={() => setPage(value => value - 1)}>Previous payments</button><button type="button" disabled={busy || loading || !!form || !!pending || (page + 1) * 20 >= data.totalElements} onClick={() => setPage(value => value + 1)}>Next payments</button></div>}
   </div>;

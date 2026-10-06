@@ -1,5 +1,6 @@
 import React from "react";
 import FundingReturnSummary from "../FundingReturns/FundingReturnSummary";
+import RecipientReturnSummary from "../RecipientReturns/RecipientReturnSummary";
 import styles from "./ProjectCloseout.module.scss";
 export const readable = value => value ? String(value).toLowerCase().replaceAll("_", " ").replace(/^./, c => c.toUpperCase()) : "Not recorded";
 export const stamp = value => value ? new Date(value).toLocaleString() : "Not recorded";
@@ -36,6 +37,7 @@ export function FinancialRow({ row }) {
     <dl className={styles.fields}>{values.map(([label,value]) => <React.Fragment key={label}><dt>{label}</dt><dd>{value == null ? "Unavailable" : String(value)}</dd></React.Fragment>)}</dl>
     {s.totalsByCurrency?.map(t => <p key={t.currencyId}>Recorded {t.recordedLabel} (#{t.currencyId}): {String(t.amount)}</p>)}
     {!payment && <><p>Funding comparisons use gross receipts; returns do not change the recorded closeout decision.</p><FundingReturnSummary summary={s.returns} /></>}
+    {payment && <RecipientReturnSummary summary={s.returns} />}
     {payment && <p className={styles.hint}>Order remaining is not authorization to pay this recipient. This is an order-level diagnostic, not an amount attributed to this project.</p>}
     <ul>{s.issues?.map((issue,index) => <li key={index}>{issue.message || readable(issue.code)}</li>)}</ul>
   </article>;

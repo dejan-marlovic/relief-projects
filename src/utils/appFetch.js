@@ -74,6 +74,13 @@ export function mutationNotice(input, options = {}, response) {
     if (/\/restore$/.test(path)) return "Risk restored.";
     return method === "DELETE" ? "Risk removed." : "Risk saved.";
   }
+  if (segments[0] === "recipient-returns" || (segments[0] === "outgoing-payments" && segments[2] === "returns")) {
+    if (/\/documents\/remove$/.test(path)) return "Recipient return evidence removed.";
+    if (/\/documents$/.test(path)) return "Recipient return evidence linked.";
+    if (/\/corrections$/.test(path)) return "Erroneous recipient return corrected.";
+    if (/\/void$/.test(path)) return "Erroneous recipient return voided.";
+    return "Money returned by recipient recorded.";
+  }
   if (segments[0] === "outgoing-payments" || (segments[0] === "payment-orders" && segments[2] === "payments")) {
     if (/\/documents\/remove$/.test(path)) return "Payment evidence removed.";
     if (/\/documents$/.test(path)) return "Payment evidence linked.";
