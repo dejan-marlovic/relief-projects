@@ -71,3 +71,19 @@ test("read-only project exposes decisions without mutation controls",async()=>{
 test("re-entering disclosure refreshes observations",async()=>{
   setup(base());render(<BrowserRouter><ProjectCloseout projectId={1}/></BrowserRouter>);const details=screen.getByText("Closeout & archive").closest("details");details.open=true;fireEvent(details,new Event("toggle"));await screen.findByText("No closeout decision recorded");const before=fetch.mock.calls.length;details.open=false;fireEvent(details,new Event("toggle"));details.open=true;fireEvent(details,new Event("toggle"));await waitFor(()=>expect(fetch.mock.calls.length).toBeGreaterThan(before));
 });
+const reviewData = () => ({...base(), capabilities:{archiveReviewVersion:1}, archiveReview:{status:"NOT_RECORDED"}, archiveReviewObservation:{candidateDate:"2026-10-07",effectiveReviewDate:null,dueState:"UNAVAILABLE",businessDate:"2026-10-07",businessTimezone:"Europe/Stockholm",issues:[]},permissions:{canConfirmArchiveReview:true,canWithdrawArchiveReview:true}});
+test.each([["Confirm review basis","CONFIRMED"],["Mark basis unresolved","UNRESOLVED"]])("archive review %s sends only the command contract",async(label,status)=>{
+  setup(reviewData());mount();fireEvent.click(await screen.findByRole("button",{name:label}));reason();fireEvent.click(screen.getByRole("button",{name:"Save decision"}));
+  await waitFor(()=>expect(calls()).toHaveLength(1));expect(calls()[0][0]).toMatch(/\/archive-review$/);expect(calls()[0][1].method).toBe("PUT");expect(JSON.parse(calls()[0][1].body)).toEqual({expectedRevision:0,status,reason:"Reviewed the project"});
+  await waitFor(()=>expect(screen.queryByRole("form",{name:"Closeout decision"})).not.toBeInTheDocument());
+});
+test("archive capability is required even when permissions are present",async()=>{
+  const data=reviewData();delete data.capabilities;setup(data);mount();await screen.findByText("Storage review is unavailable with this backend version.");expect(screen.queryByRole("button",{name:"Confirm review basis"})).not.toBeInTheDocument();
+});
+test("flagged recorded review remains separate from the effective date and history",async()=>{
+  const data=reviewData();data.archiveReview={status:"CONFIRMED",reviewRequired:true,reviewDate:"2025-02-28",reason:"Original confirmation",basis:{acceptance:{acceptedDate:"2015-02-28",acceptedByLabel:"Original donor"},evidenceLabels:[{documentId:81,capturedName:"Exact approval"}]}};setup(data);mount();
+  expect(await screen.findByText("Confirmed · Basis needs confirmation")).toBeInTheDocument();expect(screen.getByText("2025-02-28")).toBeInTheDocument();expect(screen.getAllByText("Unavailable").length).toBeGreaterThan(0);expect(screen.getByText("Exact approval (#81)")).toBeInTheDocument();
+});
+test("archive stale failure retains reason and requires deliberate revision review",async()=>{
+  const data=reviewData();setup(data,()=>{data.revision=3;return reply({message:"Review basis changed"},409);});mount();fireEvent.click(await screen.findByRole("button",{name:"Confirm review basis"}));reason();fireEvent.click(screen.getByRole("button",{name:"Save decision"}));await screen.findByText(/Review basis changed/);expect(screen.getByLabelText("Decision reason")).toHaveValue("Reviewed the project");expect(screen.getByRole("button",{name:"Save decision"})).toBeDisabled();expect(calls()).toHaveLength(1);
+});

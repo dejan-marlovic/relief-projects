@@ -9,14 +9,14 @@ const evidenceNames = list => list?.length ? list.map(item => `${item.capturedNa
 export function DecisionSnapshot({ value, section }) {
   if (!value) return <p>No decision recorded.</p>;
   const a = value.acceptance || {}, c = value.closure, archive = value.archive || {};
-  return <dl className={styles.fields}>
+  return <><dl className={styles.fields}>
     {(!section || section === "acceptance") && <><dt>Acceptance</dt><dd>{readable(a.status)}{a.acceptedDate && ` · ${a.acceptedDate} · ${a.acceptedByLabel}`}{a.notApplicableReason && ` · ${a.notApplicableReason}`}</dd>
     <dt>Acceptance recorded</dt><dd>{attribution(a)}</dd><dt>Selected evidence</dt><dd>{evidenceNames(value.acceptanceEvidenceLabels)}</dd>
     </>}{(!section || section === "closeout") && <><dt>Administrative closeout</dt><dd>{value.closeoutStatus === "CLOSED" ? "Administrative closeout recorded" : value.closeoutStatus === "REOPENED" ? "Reopened" : "No closeout decision recorded"}{value.closeoutReviewRequired && " · Review required"}</dd>
     {c && <><dt>Closeout date</dt><dd>{c.closedDate}</dd><dt>Closeout reason</dt><dd>{c.reason}</dd><dt>Closeout recorded</dt><dd>{attribution(c)}</dd><dt>Outstanding-item explanation</dt><dd>{c.outstandingReason || "None recorded"}</dd><dt>Acceptance relied on</dt><dd>{readable(c.acceptanceAtClose?.status)} · {c.acceptanceAtClose?.acceptedDate || c.acceptanceAtClose?.notApplicableReason || "—"} {c.acceptanceAtClose?.acceptedByLabel}</dd><dt>Evidence relied on</dt><dd>{evidenceNames(c.evidenceLabelsAtClose)}</dd></>}
     </>}{(!section || section === "archive") && <><dt>Archive assertion</dt><dd>{archive.status === "MARKED_ARCHIVED" ? "Marked archived" : "Not recorded"}{archive.reviewRequired && " · Review required"}</dd>
     {archive.status === "MARKED_ARCHIVED" && <><dt>Archive date</dt><dd>{archive.archivedDate}</dd><dt>Physical archive reference</dt><dd>{archive.physicalArchiveReference}</dd><dt>Digital archive reference</dt><dd>{archive.digitalArchiveReference}</dd><dt>Archive note</dt><dd>{archive.archiveNote || "None"}</dd><dt>Archive recorded</dt><dd>{attribution(archive)}</dd></>}
-  </>}</dl>;
+  </>}</dl>{!section && value.archiveReview && <ArchiveReview value={value} historical />}</>;
 }
 export function Observation({ value }) {
   if (!value) return <p>Observation unavailable.</p>;
@@ -41,4 +41,24 @@ export function FinancialRow({ row }) {
     {payment && <p className={styles.hint}>Order remaining is not authorization to pay this recipient. This is an order-level diagnostic, not an amount attributed to this project.</p>}
     <ul>{s.issues?.map((issue,index) => <li key={index}>{issue.message || readable(issue.code)}</li>)}</ul>
   </article>;
+}
+
+export function ArchiveReview({ value, historical = false }) {
+  const review = value.archiveReview || {}, observation = value.archiveReviewObservation;
+  const basis = review.basis?.acceptance;
+  return <section aria-label={historical ? "Recorded storage review" : "Digital storage review"}>
+    <p>Storage review only: ten years after the confirmed donor final-report approval date. This is not a destruction deadline. Paper-storage timing remains unresolved.</p>
+    <dl className={styles.fields}>
+      <dt>Review decision</dt><dd>{readable(review.status)}{review.reviewRequired && " · Basis needs confirmation"}</dd>
+      {!historical && <><dt>Current acceptance basis</dt><dd>{value.acceptance?.acceptedDate || "No applicable date"} · {value.acceptance?.acceptedByLabel || "No accepting party recorded"}</dd>
+      <dt>Unconfirmed candidate date</dt><dd>{observation?.candidateDate || "Unavailable"}</dd>
+      <dt>Effective storage review date</dt><dd>{observation?.effectiveReviewDate || "Unavailable"}</dd>
+      <dt>Due status</dt><dd>{observation ? readable(observation.dueState) : "Unavailable"}</dd>
+      <dt>Observed business date</dt><dd>{observation?.businessDate || "Unavailable"} · {observation?.businessTimezone || "Timezone unavailable"}</dd></>}
+      {review.reviewDate && <><dt>Recorded review date</dt><dd>{review.reviewDate}</dd></>}
+      {basis && <><dt>Captured donor approval basis</dt><dd>{basis.acceptedDate} · {basis.acceptedByLabel}</dd><dt>Original acceptance attribution</dt><dd>{attribution(basis)}</dd><dt>Captured exact evidence</dt><dd>{evidenceNames(review.basis.evidenceLabels)}</dd></>}
+      {review.reason && <><dt>Review decision reason</dt><dd>{review.reason}</dd><dt>Review decision recorded</dt><dd>{attribution(review)}</dd></>}
+    </dl>
+    {!historical && observation?.issues?.map((issue, index) => <p key={index}>{issue.message}</p>)}
+  </section>;
 }

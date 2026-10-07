@@ -7,10 +7,10 @@ import { createAuthFetch, safeReadJson } from "../../utils/http";
 import { downloadDocument } from "../../utils/documentDownload";
 import { stockholmToday } from "../../utils/fundingReceipts";
 import { useUnsavedChange } from "../../context/UnsavedChangesContext";
-import { DecisionSnapshot, Observation, FinancialRow, readable, stamp } from "./CloseoutViews";
+import { DecisionSnapshot, Observation, FinancialRow, ArchiveReview, readable, stamp } from "./CloseoutViews";
 import styles from "./ProjectCloseout.module.scss";
 
-const actions = { acceptance: ["canEditAcceptance", "Record / update final-report acceptance", "/final-report-acceptance", "PUT"], close: ["canClose", "Record administrative closeout", "/close", "POST"], reopen: ["canReopen", "Reopen closeout", "/reopen", "POST"], archive: ["canMarkArchived", "Record / reaffirm archive filing", "/archive", "PUT"], revoke: ["canRevokeArchive", "Revoke archive marker", "/archive/revoke", "POST"] };
+const actions = { confirmReview: ["canConfirmArchiveReview", "Confirm review basis", "/archive-review", "PUT"], unresolvedReview: ["canWithdrawArchiveReview", "Mark basis unresolved", "/archive-review", "PUT"], acceptance: ["canEditAcceptance", "Record / update final-report acceptance", "/final-report-acceptance", "PUT"], close: ["canClose", "Record administrative closeout", "/close", "POST"], reopen: ["canReopen", "Reopen closeout", "/reopen", "POST"], archive: ["canMarkArchived", "Record / reaffirm archive filing", "/archive", "PUT"], revoke: ["canRevokeArchive", "Revoke archive marker", "/archive/revoke", "POST"] };
 async function read(response) {
   const body = await safeReadJson(response);
   if (!response.ok) throw new Error([...new Set([body?.message, ...Object.values(body?.fieldErrors || {})].filter(Boolean))].join(" ") || `Request failed (${response.status}).`);
@@ -35,7 +35,16 @@ export function CloseoutPanel({ projectId, refreshKey }) {
   const [loading, setLoading] = useState(true), [loadError, setLoadError] = useState(""), [historyError, setHistoryError] = useState("");
   const [revision, setRevision] = useState(0), [form, setForm] = useState(null), [busy, setBusy] = useState(false), [error, setError] = useState(""), [blocked, setBlocked] = useState(false);
   const [documents, setDocuments] = useState([]), [documentError, setDocumentError] = useState(""), [financeOpen, setFinanceOpen] = useState(false), [downloading, setDownloading] = useState(null);
-  const alive = useRef(true), pending = useRef(false);
+  const alive = useRef(true), pending = useRef(false), formRef = useRef(null);
+  const formAction = form?.action;
+  useEffect(() => {
+    if (!formAction || !formRef.current) return;
+    formRef.current.focus({ preventScroll: true });
+    formRef.current.scrollIntoView?.({
+      behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+      block: "start",
+    });
+  }, [formAction]);
   const refresh = () => setRevision(n => n + 1);
   useUnsavedChange(`closeout-${projectId}`, Boolean(form));
   useEffect(() => { alive.current = true; window.addEventListener("focus", refresh); return () => { alive.current = false; window.removeEventListener("focus", refresh); }; }, []);
@@ -65,8 +74,10 @@ export function CloseoutPanel({ projectId, refreshKey }) {
   const submit = async event => {
     event.preventDefault();
     if (!form || blocked || pending.current || loading || form.expectedRevision !== data?.revision || !data?.permissions?.[actions[form.action][0]]) return;
+    if (["confirmReview", "unresolvedReview"].includes(form.action) && data?.capabilities?.archiveReviewVersion !== 1) return;
     if (!form.reason.trim()) { setError("Enter a reason for this decision."); return; }
     const body = { expectedRevision: form.expectedRevision, reason: form.reason.trim() };
+    if (form.action === "confirmReview" || form.action === "unresolvedReview") body.status = form.action === "confirmReview" ? "CONFIRMED" : "UNRESOLVED";
     if (form.action === "acceptance") {
       if (!form.evidenceReviewed) { setError("Review and confirm the exact evidence selection, including an empty selection."); return; }
       Object.assign(body, { status: form.status, documentIds: form.documentIds.map(Number) }, form.status === "ACCEPTED" ? { acceptedDate: form.acceptedDate, acceptedByLabel: form.acceptedByLabel.trim() } : { notApplicableReason: form.notApplicableReason.trim() });
@@ -96,8 +107,11 @@ export function CloseoutPanel({ projectId, refreshKey }) {
       <h4>Current attention and coverage</h4><Observation value={data.readiness} />
       {data.issues?.map((issue,index) => <p key={index}>{issue.message}</p>)}
       {decisionButtons(["close", "reopen"])}</WorkflowStep><WorkflowStep number={3} title="Record archive filing" description="After closeout, record the physical and digital archive references. This records a filing assertion; it neither moves files nor hides the project. Reaffirm or revoke the marker explicitly when needed."><DecisionSnapshot value={data} section="archive" />{decisionButtons(["archive", "revoke"])}</WorkflowStep>
+      <WorkflowStep number={4} title="Review the digital storage date" description="Confirm which donor final-report approval establishes the ten-year storage review date, or explain why the basis remains unresolved. This does not authorise destruction or determine paper-storage timing.">
+        {data.capabilities?.archiveReviewVersion === 1 ? <><ArchiveReview value={data} />{decisionButtons(["confirmReview", "unresolvedReview"])}</> : <p>Storage review is unavailable with this backend version.</p>}
+      </WorkflowStep>
     </>}
-    {form && <form className={styles.form} aria-label="Closeout decision" onSubmit={submit}>
+    {form && <form ref={formRef} tabIndex={-1} className={styles.form} aria-label="Closeout decision" onSubmit={submit}>
       <h4>{actions[form.action][1]}</h4><p>Draft revision {form.expectedRevision}. Current revision: {data?.revision ?? "Unavailable"}.</p>
       {(blocked || stale) && <div role="alert"><p>Review current decisions and history below before continuing. If the intended decision already succeeded, cancel this draft.</p><button type="button" disabled={busy || loading || !data || !history || !!historyError} onClick={() => { setForm(current => ({ ...current, expectedRevision: data.revision })); setBlocked(false); setError(""); }}>I reviewed state and history; use current revision</button></div>}
       <fieldset disabled={busy}>
@@ -111,6 +125,8 @@ export function CloseoutPanel({ projectId, refreshKey }) {
         </>}
         {form.action === "close" && <><label>Administrative closeout date<input required type="date" min={data?.acceptance?.status === "ACCEPTED" ? data.acceptance.acceptedDate : "1000-01-01"} max={stockholmToday()} value={form.closedDate} onChange={e => change("closedDate",e.target.value)} /></label><label><input type="checkbox" required={warnings.length > 0} checked={form.acknowledgeOutstanding} onChange={e => change("acknowledgeOutstanding",e.target.checked)} /> I considered and acknowledge the outstanding warnings shown above.</label><label>Why closure can proceed with outstanding items<textarea required={warnings.length > 0 || form.acknowledgeOutstanding} maxLength={1000} value={form.outstandingReason} onChange={e => change("outstandingReason",e.target.value)} /></label></>}
         {form.action === "archive" && <><p className={styles.hint}>This records a human filing assertion. Both references are required plain text; no files are moved or verified.</p><label>Archive date<input required type="date" min={data?.closure?.closedDate || "1000-01-01"} max={stockholmToday()} value={form.archivedDate} onChange={e => change("archivedDate",e.target.value)} /></label>{[["physicalArchiveReference","Physical archive reference",500],["digitalArchiveReference","Digital archive reference",500],["archiveNote","Archive note (optional)",1000]].map(([field,label,max]) => <label key={field}>{label}<textarea required={field !== "archiveNote"} maxLength={max} value={form[field]} onChange={e => change(field,e.target.value)} /></label>)}</>}
+        {form.action === "confirmReview" && <p>I confirm that the current acceptance date ({data?.acceptance?.acceptedDate || "Unavailable"}) represents the applicable donor final-report approval event. Candidate storage review: {data?.archiveReviewObservation?.candidateDate || "Unavailable"}. If the event is ambiguous, cancel and mark the basis unresolved.</p>}
+        {form.action === "unresolvedReview" && <p>Explain why the donor approval basis is unresolved. This withdraws the effective review schedule; earlier decisions remain in history.</p>}
         <label>Decision reason<textarea required maxLength={1000} value={form.reason} onChange={e => change("reason",e.target.value)} /></label>
         <button type="submit" disabled={blocked || stale || loading || !data?.permissions?.[actions[form.action][0]]}>Save decision</button>
       </fieldset><div className={styles.actions}><button type="button" disabled={busy} onClick={() => { setForm(null); setBlocked(false); setError(""); }}>Cancel draft</button></div>
