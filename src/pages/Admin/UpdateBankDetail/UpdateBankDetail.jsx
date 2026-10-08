@@ -32,6 +32,8 @@ const validate = (values) => {
     errors.accountNumber = "Account number is required.";
   }
 
+  if (values.accountNumber?.trim().length > 50) errors.accountNumber = "Account number must not exceed 50 characters.";
+  if (values.swiftCode?.trim().length > 20) errors.swiftCode = "SWIFT code must not exceed 20 characters.";
   return errors;
 };
 
@@ -337,10 +339,13 @@ const UpdateBankDetail = () => {
                   <input
                     className={inputClass("accountNumber")}
                     name="accountNumber"
+                    aria-label="Account number"
+                    maxLength={50}
                     value={form.accountNumber}
                     onChange={handleInputChange}
                     disabled={!form.selectedId || saving}
                   />
+                  {fieldErrors.accountNumber && <div role="alert">{fieldErrors.accountNumber}</div>}
                 </div>
 
                 <div className={styles.formGroup}>
@@ -359,10 +364,13 @@ const UpdateBankDetail = () => {
                   <input
                     className={inputClass("swiftCode")}
                     name="swiftCode"
+                    aria-label="SWIFT code"
+                    maxLength={20}
                     value={form.swiftCode}
                     onChange={handleInputChange}
                     disabled={!form.selectedId || saving}
                   />
+                  {fieldErrors.swiftCode && <div role="alert">{fieldErrors.swiftCode}</div>}
                 </div>
               </div>
             </div>

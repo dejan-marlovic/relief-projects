@@ -110,6 +110,12 @@ const BankDetails = ({ organizationId, canManage = false }) => {
     const id = editingId;
     const values = editedValues[id];
     if (!values) return;
+    const errors = {};
+    if ((values.accountNumber || "").length > 50) errors.accountNumber = "Account number must not exceed 50 characters.";
+    if ((values.swiftCode || "").length > 20) errors.swiftCode = "SWIFT code must not exceed 20 characters.";
+    if (Object.keys(errors).length) {
+      setFieldErrors({ [id]: errors }); setFormError("Please fix the highlighted fields."); return;
+    }
     setBusyAction(`save-${id}`); setFormError(""); setFieldErrors({});
     try {
       const body = JSON.stringify({
@@ -162,7 +168,7 @@ const BankDetails = ({ organizationId, canManage = false }) => {
   const renderField = (id, row, field, placeholder) => {
     if (String(editingId) !== String(id)) return row?.[field] || "-";
     return <>
-      <input className={inputClassFor(id, field)} value={editedValues[id]?.[field] ?? ""}
+      <input aria-label={placeholder} maxLength={field === "accountNumber" ? 50 : field === "swiftCode" ? 20 : undefined} className={inputClassFor(id, field)} value={editedValues[id]?.[field] ?? ""}
         onChange={(event) => onChange(field, event.target.value)} placeholder={placeholder} />
       {getFieldError(id, field) && <div className={styles.fieldError}>{getFieldError(id, field)}</div>}
     </>;

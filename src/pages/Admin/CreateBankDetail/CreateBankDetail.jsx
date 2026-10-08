@@ -22,6 +22,8 @@ const validate = (values) => {
   if (!values.bankName?.trim()) errors.bankName = "Bank name is required.";
   if (!values.accountNumber?.trim())
     errors.accountNumber = "Account number is required.";
+  if (values.accountNumber?.trim().length > 50) errors.accountNumber = "Account number must not exceed 50 characters.";
+  if (values.swiftCode?.trim().length > 20) errors.swiftCode = "SWIFT code must not exceed 20 characters.";
   return errors;
 };
 
@@ -101,6 +103,7 @@ const CreateBankDetail = () => {
       const data = await safeReadJson(res);
 
       if (!res.ok) {
+        setFieldErrors(data?.fieldErrors || {});
         setFormError(
           data?.message ||
             data?.detail ||
@@ -197,9 +200,12 @@ const CreateBankDetail = () => {
               <input
                 className={inputClass("accountNumber")}
                 name="accountNumber"
+                    aria-label="Account number"
+                    maxLength={50}
                 value={form.accountNumber}
                 onChange={handleChange}
               />
+                  {fieldErrors.accountNumber && <div role="alert">{fieldErrors.accountNumber}</div>}
             </div>
 
             <div className={styles.formGroup}>
@@ -217,9 +223,12 @@ const CreateBankDetail = () => {
               <input
                 className={inputClass("swiftCode")}
                 name="swiftCode"
+                    aria-label="SWIFT code"
+                    maxLength={20}
                 value={form.swiftCode}
                 onChange={handleChange}
               />
+                  {fieldErrors.swiftCode && <div role="alert">{fieldErrors.swiftCode}</div>}
             </div>
           </div>
         </div>
