@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import styles from "./About.module.scss";
 import {
   FiHeart,
@@ -15,9 +16,9 @@ const About = () => {
       <div className={styles.shell}>
         <header className={styles.pageHeader}>
           <div className={styles.pageHeaderText}>
-            <h3 className={styles.pageTitle}>
-              <FiHeart /> About Relief Projects ERP
-            </h3>
+            <h1 className={styles.pageTitle}>
+              <FiHeart aria-hidden="true" /> About Relief Projects
+            </h1>
             <p className={styles.pageSubtitle}>
               A simple, shared workspace for planning, tracking, and delivering
               relief projects with clarity.
@@ -32,15 +33,14 @@ const About = () => {
               <FiBookOpen /> Welcome
             </div>
             <h2 className={styles.heroTitle}>
-              One system, one project file, fewer mistakes.
+              Follow the story from the first proposal to archive review.
             </h2>
             <p className={styles.heroText}>
-              Relief Projects ERP is designed to bring day-to-day project work
-              into one consistent place — so teams can spend less time searching
-              for information and more time delivering support. It connects the
-              “story of the project” (who, what, where, why) with the
-              operational controls (budgets, funding, payments, approvals, and
-              documents).
+              Relief Projects brings together the purpose of a project, the
+              people responsible, its plans and the record of what happened.
+              Teams can review proposals, explain budget changes, record money
+              received and paid, follow up on work, and keep supporting documents
+              alongside their decisions.
             </p>
           </div>
 
@@ -49,8 +49,8 @@ const About = () => {
               <div className={styles.statTitle}>Guiding idea</div>
               <div className={styles.statValue}>Keep context</div>
               <p className={styles.statText}>
-                Select a project once, then work confidently across modules
-                without mixing data.
+                Check the selected project as you work. Personal follow-ups,
+                the travel schedule and Statistics also help you look across projects.
               </p>
             </div>
 
@@ -67,7 +67,7 @@ const About = () => {
 
         {/* WHAT IT HELPS WITH */}
         <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>What the ERP helps you do</h2>
+          <h2 className={styles.sectionTitle}>What you can do</h2>
 
           <div className={styles.grid}>
             <div className={styles.card}>
@@ -76,8 +76,9 @@ const About = () => {
               </div>
               <h3 className={styles.cardTitle}>Coordinate teams</h3>
               <p className={styles.cardText}>
-                Keep projects, partners, staff roles, and notes connected so the
-                whole team shares the same “project file”.
+                Describe the project and its intended participants, connect
+                partners and staff, and assign follow-ups with deadlines.
+                Track work through To do, In progress and Done.
               </p>
             </div>
 
@@ -87,8 +88,9 @@ const About = () => {
               </div>
               <h3 className={styles.cardTitle}>Plan and track budgets</h3>
               <p className={styles.cardText}>
-                Create budgets, maintain cost details, and keep exchange-rate
-                logic consistent across planning and reporting currencies.
+                Build itemised budgets with quantities and prices. Review
+                revisions, donor decisions and which plan is current, while
+                keeping earlier financial references understandable.
               </p>
             </div>
 
@@ -96,10 +98,11 @@ const About = () => {
               <div className={styles.cardIcon}>
                 <FiShield />
               </div>
-              <h3 className={styles.cardTitle}>Control spending safely</h3>
+              <h3 className={styles.cardTitle}>Understand the financial record</h3>
               <p className={styles.cardText}>
-                Transactions, allocations, and payment orders work together to
-                reduce over-paying and protect approvals.
+                Keep requested and approved funding, commitments, receipts,
+                payments and returns distinct. Review limits and warnings
+                without mistaking an approved amount for money already received.
               </p>
             </div>
 
@@ -107,10 +110,29 @@ const About = () => {
               <div className={styles.cardIcon}>
                 <FiCheckCircle />
               </div>
-              <h3 className={styles.cardTitle}>Support approvals</h3>
+              <h3 className={styles.cardTitle}>Review decisions independently</h3>
               <p className={styles.cardText}>
-                Signatures provide a clear approval trail. Once booked, payment
-                orders become read-only for safer operations.
+                Submit project and partner-role assessments for independent
+                review. Record explanations, supporting evidence and corrections
+                so people can understand the basis of each decision.
+              </p>
+            </div>
+            <div className={styles.card}>
+              <div className={styles.cardIcon}><FiTrendingUp aria-hidden="true" /></div>
+              <h3 className={styles.cardTitle}>Follow delivery and learning</h3>
+              <p className={styles.cardText}>
+                Review risks, report results against targets and respond to
+                findings and lessons. Plan travel, obtain independent approval
+                and report what actually happened afterwards.
+              </p>
+            </div>
+            <div className={styles.card}>
+              <div className={styles.cardIcon}><FiBookOpen aria-hidden="true" /></div>
+              <h3 className={styles.cardTitle}>Keep evidence and closeout clear</h3>
+              <p className={styles.cardText}>
+                Link specific document versions, print payment-order reports
+                and retain late evidence. Record final-report acceptance,
+                administrative closeout, archive filing and digital-storage review.
               </p>
             </div>
           </div>
@@ -128,9 +150,9 @@ const About = () => {
                   A project is the main folder
                 </h3>
                 <p className={styles.flowText}>
-                  Everything attaches to a project: budgets, transactions,
-                  payment orders, signatures, recipients, documents, and
-                  reporting.
+                  The project connects its plans, partners, activities and
+                  documents. Shared organisation and staff records can be used
+                  across projects without making their assessments interchangeable.
                 </p>
               </div>
             </div>
@@ -153,8 +175,8 @@ const About = () => {
                   Transactions describe funding
                 </h3>
                 <p className={styles.flowText}>
-                  Transactions capture approvals and planned funding actions —
-                  and connect funding to the budget.
+                  Transactions record funding requested or approved from a
+                  financier. Receipts separately record money reported as received.
                 </p>
               </div>
             </div>
@@ -163,11 +185,13 @@ const About = () => {
               <div className={styles.flowNumber}>4</div>
               <div className={styles.flowBody}>
                 <h3 className={styles.flowTitle}>
-                  Payment orders execute spending
+                  Payment orders record commitments
                 </h3>
                 <p className={styles.flowText}>
-                  Payment orders group payments, keep totals consistent, and
-                  rely on allocations/approvals to reduce risk.
+                  Order lines commit amounts against funding and costs.
+                  Outgoing payments separately record money reported as paid.
+                  The system does not send bank transfers. Returns are recorded
+                  against the original receipt or payment.
                 </p>
               </div>
             </div>
@@ -176,11 +200,13 @@ const About = () => {
               <div className={styles.flowNumber}>5</div>
               <div className={styles.flowBody}>
                 <h3 className={styles.flowTitle}>
-                  Signatures and documents close the loop
+                  Decisions and evidence explain the record
                 </h3>
                 <p className={styles.flowText}>
-                  Signatures create an approval trail. Documents keep supporting
-                  evidence attached to the correct project.
+                  Recorded reviews and their document versions explain what
+                  people considered. Signature records and Booked status do not
+                  prove payment or verify signatures. Administrative closeout
+                  and archive filing are separate recorded decisions.
                 </p>
               </div>
             </div>
@@ -195,24 +221,58 @@ const About = () => {
             <div className={styles.principle}>
               <h3 className={styles.principleTitle}>Clarity</h3>
               <p className={styles.principleText}>
-                Use consistent names, codes, and classifications so reporting
-                stays reliable.
+                Explain what each amount, status and decision means. Unknown
+                information should remain visible as unknown.
               </p>
             </div>
 
             <div className={styles.principle}>
               <h3 className={styles.principleTitle}>Accountability</h3>
               <p className={styles.principleText}>
-                Keep approvals, payments, and documents connected so you can
-                explain what happened and why.
+                Keep decisions, reasons and supporting evidence connected.
+                Use the available correction and history views to understand
+                changes without assuming every ordinary field edit has a full history.
               </p>
             </div>
 
             <div className={styles.principle}>
               <h3 className={styles.principleTitle}>Operational safety</h3>
               <p className={styles.principleText}>
-                Use the project selector and module rules to avoid mixing data
-                between projects and exceeding approvals.
+                Review permissions, independent-review requirements and warnings
+                before acting. A completed task, approved assessment and recorded
+                payment each establish something different.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>What the records do not establish</h2>
+          <div className={styles.principles}>
+            <div className={styles.principle}>
+              <h3 className={styles.principleTitle}>Financial records need interpretation</h3>
+              <p className={styles.principleText}>
+                Recorded receipts and payments are user-entered facts, not bank
+                reconciliation. Returns do not create extra spending permission.
+                Actual payments can show an excess warning even where commitment
+                limits were respected.
+              </p>
+            </div>
+            <div className={styles.principle}>
+              <h3 className={styles.principleTitle}>Evidence supports human review</h3>
+              <p className={styles.principleText}>
+                A linked file does not certify its contents or completeness.
+                Reported results are not independently verified outcomes.
+                A digital-storage review date is not permission to destroy records.
+              </p>
+            </div>
+            <div className={styles.principle}>
+              <h3 className={styles.principleTitle}>Calendar publication is limited</h3>
+              <p className={styles.principleText}>
+                Calendar downloads are snapshots. The optional Outlook test
+                preview can publish new follow-ups, but automatic updates and
+                removals remain blocked. Existing copies need manual attention;
+                full synchronization is not available.
               </p>
             </div>
           </div>
@@ -221,9 +281,12 @@ const About = () => {
         {/* CTA */}
         <section className={styles.footerNote}>
           <p className={styles.footerText}>
-            Tip: If you’re new to the system, start with the{" "}
-            <strong>Operational Guide</strong> tab. It explains each module in
-            practical, step-by-step terms.
+            Start with the <Link to="/operational-guide">Operational guide</Link>
+            {" "}for everyday instructions, examples and explanations of what each
+            result means. Practise with records labelled “Fictional demo — for
+            training and testing only”. Illustrative photographs do not document
+            those fictional projects. Demo approvals and financial records
+            represent no real authorisation or money movement.
           </p>
         </section>
       </div>

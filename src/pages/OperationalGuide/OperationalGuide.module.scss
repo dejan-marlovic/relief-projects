@@ -62,6 +62,8 @@
   position: sticky;
   top: 1rem;
   align-self: start;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
 }
 
 @media (max-width: 1024px) {
@@ -118,6 +120,7 @@
 }
 
 .part {
+  scroll-margin-top: 1rem;
   background: colors.$surface;
   border: 1px solid colors.$primary-soft-active;
   border-radius: 14px;
@@ -193,7 +196,7 @@
 @media (max-width: 1100px) {
   .page { padding: 8px; }
   .layout { grid-template-columns: minmax(0, 1fr); }
-  .toc { position: static; min-width: 0; }
+  .toc { position: static; min-width: 0; max-height: none; overflow: visible; }
 }
 @media (max-width: 700px) {
   .page { padding: 0; }
