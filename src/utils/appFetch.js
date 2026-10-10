@@ -8,6 +8,7 @@ export function mutationNotice(input, options = {}, response) {
   try { url = new URL(typeof input === "string" ? input : input.url, window.location.origin); base = new URL(BASE_URL || window.location.origin, window.location.origin); } catch { return null; }
   if (url.origin !== base.origin || !url.pathname.startsWith("/api/")) return null;
   const path = url.pathname;
+  if (path.startsWith("/api/me/outlook-follow-ups")) return null;
   // Preview/read-like commands and authentication are handled by their caller.
   if (/\/(auth|preview|validate|search|download|export)(\/|$)/.test(path)) return null;
   // Bulk responses may contain individual failures; keep their detailed page feedback.

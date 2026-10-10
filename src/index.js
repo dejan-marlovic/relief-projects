@@ -70,6 +70,7 @@ export default function App() {
               <Route path="recipients" element={<Recipients />} />
               <Route path="documents" element={<Documents />} />
               <Route path="follow-ups" element={<FollowUps />} />
+              <Route path="follow-ups/outlook" element={<FollowUps key="outlook" initialMode="mine" />} />
               <Route path="risks" element={<Risks />} />
               <Route path="results" element={<Results />} />
               <Route path="findings-lessons" element={<Management />} />

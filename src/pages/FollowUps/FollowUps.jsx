@@ -1,3 +1,4 @@
+import OutlookFollowUps from "./OutlookFollowUps";
 import useTransientMessage from "../../hooks/useTransientMessage";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -222,15 +223,16 @@ function Queue({ mode, projectId, authFetch }) {
     </>}
   </>;
 }
-export default function FollowUps() {
+export default function FollowUps({ initialMode = "project" }) {
   const { selectedProjectId } = useContext(ProjectContext);
   const navigate = useNavigate();
   const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
-  const [mode, setMode] = useState("project");
+  const [mode, setMode] = useState(initialMode);
   const { confirmDiscardUnsavedChanges } = useUnsavedChanges();
   return <section className={styles.page}><h2>Follow-ups</h2><p className={styles.muted}>Track project actions, deadlines and responsible people. Completing an action does not approve documents or satisfy a checklist.</p>
     <p className={styles.muted}>Download an open follow-up as an all-day calendar entry on its deadline. The file contains its title, description, project and responsible employee. Import it into Outlook or another calendar yourself. This is a snapshot: edits, completion and deletion do not update imported entries. Reimporting may create duplicates. No invitation or automatic notification is sent.</p>
     <div className={styles.actions}><button aria-pressed={mode === "project"} onClick={() => { if (confirmDiscardUnsavedChanges()) setMode("project"); }}>Selected project</button><button aria-pressed={mode === "mine"} onClick={() => { if (confirmDiscardUnsavedChanges()) setMode("mine"); }}>My follow-ups</button></div>
+    {mode === "mine" && <OutlookFollowUps authFetch={authFetch} beforeConnect={confirmDiscardUnsavedChanges} />}
     {mode === "mine" && <p className={styles.muted}>Your employee’s assigned work across all active projects, regardless of the project selected above.</p>}
     {mode === "project" && !selectedProjectId ? <p>Select a project to see its follow-ups.</p> : <Queue key={`${mode}-${mode === "project" ? selectedProjectId : "all"}`} mode={mode} projectId={mode === "project" ? selectedProjectId : null} authFetch={authFetch} />}
   </section>;
