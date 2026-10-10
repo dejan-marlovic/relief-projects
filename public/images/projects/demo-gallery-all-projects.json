@@ -1,0 +1,128 @@
+{
+  "illustrativeOnly": true,
+  "projects": [
+    {
+      "projectCode": "DEMO-MZ-2026-01",
+      "projectName": "Demo — Riverplain household recovery",
+      "photos": [
+        {
+          "filename": "demo-gallery-mozambique-logistics.jpg",
+          "title": "190404-F-RP963-0639 (33715040608).jpg",
+          "creator": "USAFRICOM from Stuttgart, Germany",
+          "source": "https://commons.wikimedia.org/wiki/File:190404-F-RP963-0639_(33715040608).jpg",
+          "license": "CC BY 2.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+          "caption": "Illustrative photo for a fictional demo; not project evidence. Humanitarian supplies being prepared for transport in Maputo, Mozambique, in 2019. Photo: USAFRICOM from Stuttgart, Germany. CC BY 2.0 (https://creativecommons.org/licenses/by/2.0). Unmodified. Source: https://commons.wikimedia.org/wiki/File:190404-F-RP963-0639_(33715040608).jpg",
+          "changes": "None; original bytes",
+          "sha256": "dd672e1177157217a1d9d3f866855315b308f7dcb46d7bdfad6ee89d4d9cd824"
+        },
+        {
+          "filename": "demo-gallery-mozambique-distribution.jpg",
+          "title": "190406-F-PS957-0798 (32649604277).jpg",
+          "creator": "USAFRICOM from Stuttgart, Germany",
+          "source": "https://commons.wikimedia.org/wiki/File:190406-F-PS957-0798_(32649604277).jpg",
+          "license": "CC BY 2.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+          "caption": "Illustrative photo for a fictional demo; not project evidence. Food-aid distribution preparations in Nhagau, Mozambique, in 2019. Photo: USAFRICOM from Stuttgart, Germany. CC BY 2.0 (https://creativecommons.org/licenses/by/2.0). Unmodified. Source: https://commons.wikimedia.org/wiki/File:190406-F-PS957-0798_(32649604277).jpg",
+          "changes": "None; original bytes",
+          "sha256": "7c1d98629590ff1658402caa07b213216a27aa150a9f6b4f89916306a43a4f37"
+        },
+        {
+          "filename": "demo-gallery-mozambique-aid-delivery.jpg",
+          "title": "190408-F-RP963-0172 (32649603587).jpg",
+          "creator": "USAFRICOM from Stuttgart, Germany",
+          "source": "https://commons.wikimedia.org/wiki/File:190408-F-RP963-0172_(32649603587).jpg",
+          "license": "Public domain",
+          "licenseUrl": "https://commons.wikimedia.org/wiki/File:190408-F-RP963-0172_(32649603587).jpg",
+          "caption": "Illustrative photo for a fictional demo; not project evidence. Aid being unloaded in Bebedo, Mozambique, during the real 2019 Cyclone Idai response. Photo: USAFRICOM from Stuttgart, Germany. Public domain (https://commons.wikimedia.org/wiki/File:190408-F-RP963-0172_(32649603587).jpg). Unmodified. Source: https://commons.wikimedia.org/wiki/File:190408-F-RP963-0172_(32649603587).jpg",
+          "changes": "None; original bytes",
+          "sha256": "c06b36220880eb6755617858abc8fceedf1622c1330712cd3a4622e8054ab3ac"
+        }
+      ]
+    },
+    {
+      "projectCode": "DEMO-MW-2026-02",
+      "projectName": "Demo — Community water-point repair",
+      "photos": [
+        {
+          "filename": "demo-gallery-malawi-lakeshore.jpg",
+          "title": "Shore at malawi lake.jpg",
+          "creator": "i_pinz",
+          "source": "https://commons.wikimedia.org/wiki/File:Shore_at_malawi_lake.jpg",
+          "license": "CC BY-SA 2.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+          "caption": "Illustrative photo for a fictional demo; not project evidence. Lake Malawi shoreline; geographic context only, not the location of a fictional repaired water point. Photo: i_pinz. CC BY-SA 2.0 (https://creativecommons.org/licenses/by-sa/2.0). Display-size copy; no content edits. Source: https://commons.wikimedia.org/wiki/File:Shore_at_malawi_lake.jpg",
+          "changes": "Wikimedia display-size copy where available; no content edits",
+          "sha256": "5cc3cd7846fa02f04fb36a273d715c0208b28891a3d5f52b160f9914186130a8"
+        }
+      ]
+    },
+    {
+      "projectCode": "DEMO-MD-2026-03",
+      "projectName": "Demo — Winter learning continuity",
+      "photos": [
+        {
+          "filename": "demo-gallery-moldova-library.jpg",
+          "title": "Chisinau National Library.jpg",
+          "creator": "Mirek237",
+          "source": "https://commons.wikimedia.org/wiki/File:Chisinau_National_Library.jpg",
+          "license": "Public domain",
+          "licenseUrl": "https://commons.wikimedia.org/wiki/File:Chisinau_National_Library.jpg",
+          "caption": "Illustrative photo for a fictional demo; not project evidence. National Library in Chisinau, Moldova; a learning-resource illustration, not a project delivery site. Photo: Mirek237. Public domain (https://commons.wikimedia.org/wiki/File:Chisinau_National_Library.jpg). Display-size copy; no content edits. Source: https://commons.wikimedia.org/wiki/File:Chisinau_National_Library.jpg",
+          "changes": "Wikimedia display-size copy where available; no content edits",
+          "sha256": "9f9356154f756cb2a968f2c4696ecd7154ea8c8f808ae1eea49e22a220c5b988"
+        },
+        {
+          "filename": "demo-gallery-moldova-library-view.jpg",
+          "title": "National Library of Moldova 01.jpg",
+          "creator": "Tomasz Bladyniec",
+          "source": "https://commons.wikimedia.org/wiki/File:National_Library_of_Moldova_01.jpg",
+          "license": "CC BY 4.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+          "caption": "Illustrative photo for a fictional demo; not project evidence. Another view of the National Library in Chisinau; a public education setting, not a project delivery site. Photo: Tomasz Bladyniec. CC BY 4.0 (https://creativecommons.org/licenses/by/4.0). Display-size copy; no content edits. Source: https://commons.wikimedia.org/wiki/File:National_Library_of_Moldova_01.jpg",
+          "changes": "Wikimedia display-size copy where available; no content edits",
+          "sha256": "6d02f27a9e0a7926d6c3b2a3782002f2e59a4f8d0f7e7ec1e0438b17bc16f0df"
+        },
+        {
+          "filename": "demo-gallery-moldova-school.jpg",
+          "title": "Onitcani school.jpg",
+          "creator": "Resal",
+          "source": "https://commons.wikimedia.org/wiki/File:Onitcani_school.jpg",
+          "license": "Public domain",
+          "licenseUrl": "https://commons.wikimedia.org/wiki/File:Onitcani_school.jpg",
+          "caption": "Illustrative photo for a fictional demo; not project evidence. School exterior in Onitcani, Moldova; a real building used only as an educational illustration. Photo: Resal. Public domain (https://commons.wikimedia.org/wiki/File:Onitcani_school.jpg). Display-size copy; no content edits. Source: https://commons.wikimedia.org/wiki/File:Onitcani_school.jpg",
+          "changes": "Wikimedia display-size copy where available; no content edits",
+          "sha256": "61def50a26f2789f5ef054a00047325a048edc179052f52c64c385cb247545ab"
+        }
+      ]
+    },
+    {
+      "projectCode": "DEMO-NP-2016-04",
+      "projectName": "Demo — Accessible learning spaces",
+      "photos": [
+        {
+          "filename": "demo-gallery-nepal-school-community.jpg",
+          "title": "A safe environment to learn (8424388480).jpg",
+          "creator": "DFID - UK Department for International Development",
+          "source": "https://commons.wikimedia.org/wiki/File:A_safe_environment_to_learn_(8424388480).jpg",
+          "license": "CC BY 2.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+          "caption": "Illustrative photo for a fictional demo; not project evidence. Manakamana Primary School in Kailali, Nepal; an existing real school photographed for UK aid. Photo: DFID - UK Department for International Development. CC BY 2.0 (https://creativecommons.org/licenses/by/2.0). Display-size copy; no content edits. Source: https://commons.wikimedia.org/wiki/File:A_safe_environment_to_learn_(8424388480).jpg",
+          "changes": "Wikimedia display-size copy where available; no content edits",
+          "sha256": "5ddd7e550f0f922ea8192cb572f68b46040346e8ff582ced3c0b73200296fb49"
+        },
+        {
+          "filename": "demo-gallery-nepal-learning-space.jpg",
+          "title": "Better quality learning in a safe environment (8423292169).jpg",
+          "creator": "DFID - UK Department for International Development",
+          "source": "https://commons.wikimedia.org/wiki/File:Better_quality_learning_in_a_safe_environment_(8423292169).jpg",
+          "license": "CC BY 2.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+          "caption": "Illustrative photo for a fictional demo; not project evidence. Headmaster and pupils outside Manakamana Primary School in Kailali, Nepal; a real UK aid photograph. Photo: DFID - UK Department for International Development. CC BY 2.0 (https://creativecommons.org/licenses/by/2.0). Display-size copy; no content edits. Source: https://commons.wikimedia.org/wiki/File:Better_quality_learning_in_a_safe_environment_(8423292169).jpg",
+          "changes": "Wikimedia display-size copy where available; no content edits",
+          "sha256": "87f8a688e30d041b121458e2ec0cbbf414e18e1e8b2c6ded2c22518ea1eeb3ca"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "projectCode": "DEMO-MW-2026-02",
+  "illustrativeOnly": true,
+  "photos": [
+    {
+      "filename": "demo-gallery-malawi-irrigation.jpg",
+      "title": "Irrigiation of fields",
+      "creator": "Alexandria Riboul, USAID",
+      "source": "https://commons.wikimedia.org/wiki/File:Irrigiation_of_fields.JPG",
+      "license": "Public domain (US federal government work)",
+      "licenseUrl": "https://commons.wikimedia.org/wiki/File:Irrigiation_of_fields.JPG",
+      "caption": "Illustrative photo for a fictional demo; not project evidence. Irrigation in Malawi — Alexandria Riboul / USAID, public domain. Source: https://commons.wikimedia.org/wiki/File:Irrigiation_of_fields.JPG",
+      "changes": "None; original bytes",
+      "sha256": "e6f9276d928d5c21e4232285b30309013d1cded31305cc9c16ef5e4a90dc9f4f"
+    },
+    {
+      "filename": "demo-gallery-wind-pump.jpg",
+      "title": "Kijito Bore Hole",
+      "creator": "Sixtuskev",
+      "source": "https://commons.wikimedia.org/wiki/File:Kijito_Bore_Hole.jpg",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "caption": "Illustrative photo for a fictional demo; not project evidence. Wind-powered borehole in Kenya, an example of a different water technology, not a Malawi project site. Sixtuskev — CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/). Unmodified. Source: https://commons.wikimedia.org/wiki/File:Kijito_Bore_Hole.jpg",
+      "changes": "None; original bytes",
+      "sha256": "1a782a1e2598078db872994df32f7a7936ce3911f77536eb7da9bcf4f815bfa5"
+    }
+  ]
+}
