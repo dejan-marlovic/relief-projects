@@ -88,3 +88,21 @@ describe("Organization multi-address details", () => {
     );
   });
 });
+
+
+test("existing address autosaves after typing without changing other saved fields", async () => {
+  let stored = { ...linked[0].address };
+  global.fetch = jest.fn(async (url, options = {}) => {
+    if (options.method === "PUT") { stored = JSON.parse(options.body); return response(stored); }
+    return response(url.includes("/organizations/") ? [{ ...linked[0], address: stored }] : [stored]);
+  });
+  render(<AddressDetails organizationId={5} canManage />);
+  fireEvent.click(await screen.findByRole("button", { name: "Edit address 10" }));
+  expect(screen.queryByRole("button", { name: "Save address 10" })).not.toBeInTheDocument();
+  stored = { ...stored, postalCode: "22233" };
+  fireEvent.change(screen.getByPlaceholderText("Street"), { target: { value: "Updated street" } });
+  await waitFor(() => expect(screen.getByText("Saved")).toBeInTheDocument(), { timeout: 2500 });
+  expect(stored.street).toBe("Updated street");
+  expect(stored.postalCode).toBe("22233");
+  expect(screen.getByPlaceholderText("Postal code")).toHaveValue("22233");
+});

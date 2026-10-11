@@ -111,3 +111,29 @@ describe("Organization bank-detail relationships", () => {
     );
   });
 });
+
+
+test("existing bank details autosave on leaving a field and retain edits on failure", async () => {
+  let stored = { bankId: 21, organizationId: 5, bankName: "Demo Bank", accountNumber: "TEST-100", branchName: "Old", swiftCode: "TEST" };
+  let reject = true;
+  global.fetch = jest.fn(async (url, options = {}) => {
+    if (options.method === "PUT") {
+      if (reject) return response({ message: "Temporarily unavailable" }, false);
+      stored = JSON.parse(options.body);
+      return response(stored);
+    }
+    return response(url.includes("unlinked") ? [] : [stored]);
+  });
+  render(<BankDetails organizationId={5} canManage />);
+  fireEvent.click(await screen.findByRole("button", { name: "Edit bank detail 21" }));
+  expect(screen.queryByRole("button", { name: "Save bank detail 21" })).not.toBeInTheDocument();
+  fireEvent.change(screen.getByRole("textbox", { name: "Branch" }), { target: { value: "New branch" } });
+  fireEvent.blur(screen.getByRole("textbox", { name: "Branch" }));
+  expect(await screen.findByRole("button", { name: "Retry saving" })).toBeInTheDocument();
+  expect(screen.getByRole("textbox", { name: "Branch" })).toHaveValue("New branch");
+  reject = false;
+  fireEvent.click(screen.getByRole("button", { name: "Retry saving" }));
+  expect(await screen.findByText("Saved")).toBeInTheDocument();
+  expect(stored.branchName).toBe("New branch");
+  expect(stored.accountNumber).toBe("TEST-100");
+});

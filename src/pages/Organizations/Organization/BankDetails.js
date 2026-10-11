@@ -1,3 +1,5 @@
+import useRecordAutosave from "../../../utils/useRecordAutosave";
+import AutosaveStatus from "../../../components/ProjectClassification/AutosaveStatus";
 import { appFetch as fetch } from "../../../utils/appFetch";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { FiEdit, FiLink, FiPlus, FiSave, FiX } from "react-icons/fi";
@@ -23,7 +25,7 @@ const BankDetails = ({ organizationId, canManage = false }) => {
   const [selectedId, setSelectedId] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
-  useUnsavedChange(`bank-details-${organizationId}`, editingId !== null);
+
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
   const [busyAction, setBusyAction] = useState("");
@@ -88,11 +90,14 @@ const BankDetails = ({ organizationId, canManage = false }) => {
     setFormError("");
   };
   const cancel = () => {
+    if (autosave.busy) return;
+    if (autosave.dirty && !window.confirm("Discard unsaved changes? Previously saved changes will remain.")) return;
     setEditingId(null); setEditedValues({}); setFieldErrors({}); setFormError("");
   };
-  const onChange = (field, value) => setEditedValues((current) => ({
-    ...current, [editingId]: { ...current[editingId], [field]: value },
-  }));
+  const onChange = (field, value) => {
+    setEditedValues(current => ({ ...current, [editingId]: { ...current[editingId], [field]: value } }));
+    if (editingId !== "new") autosave.edit({ [field]: value }, rows.find(row => String(rowKeyOf(row)) === String(editingId)));
+  };
 
   const request = async (url, options, fallbackMessage) => {
     const response = await fetch(url, options);
@@ -104,6 +109,26 @@ const BankDetails = ({ organizationId, canManage = false }) => {
     }
     return response;
   };
+
+  const autosave = useRecordAutosave({
+    recordKey: `bank-${organizationId}-${editingId}`,
+    enabled: canManage && editingId !== null && editingId !== "new",
+    read: async () => {
+      const response = await request(`${BASE_URL}/api/organizations/${organizationId}/bank-details`, { headers: authHeaders, cache: "no-store" }, "Could not read the latest saved details.");
+      const items = await response.json();
+      const found = items.find(row => String(row.bankId ?? row.id) === String(editingId));
+      if (!found) throw new Error("This record is no longer linked to this organisation. Reload before editing.");
+      return found;
+    },
+    write: async (fresh, changes) => {
+      const merged = { ...fresh, ...changes };
+      const payload = Object.fromEntries(["bankName", "accountNumber", "branchName", "swiftCode"].map(field => [field, merged[field] || ""]));
+      await request(`${BASE_URL}/api/bank-details/${editingId}`, { method: "PUT", headers: authHeaders, silentSuccess: true, body: JSON.stringify({ ...payload, bankId: editingId, organizationId: Number(organizationId) }) }, "Could not save changes.");
+    },
+    validate: (value) => !value.bankName?.trim() || !value.accountNumber?.trim() ? "Enter a bank name and account number before saving." : value.accountNumber.length > 50 || (value.swiftCode || "").length > 20 ? "Check the account number and SWIFT lengths." : "",
+    onSaved: (saved, changes, pending) => { setEditedValues({ [editingId]: { ...saved, ...pending } }); setRows(rows => rows.map(row => String(row.bankId ?? row.id) === String(editingId) ? saved : row)); },
+  });
+  useUnsavedChange(`bank-details-${organizationId}`, editingId === "new" || autosave.dirty);
 
   const save = async () => {
     if (!canManage || !editingId) return;
@@ -169,7 +194,7 @@ const BankDetails = ({ organizationId, canManage = false }) => {
     if (String(editingId) !== String(id)) return row?.[field] || "-";
     return <>
       <input aria-label={placeholder} maxLength={field === "accountNumber" ? 50 : field === "swiftCode" ? 20 : undefined} className={inputClassFor(id, field)} value={editedValues[id]?.[field] ?? ""}
-        onChange={(event) => onChange(field, event.target.value)} placeholder={placeholder} />
+        onBlur={editingId !== "new" ? autosave.flush : undefined} onChange={(event) => onChange(field, event.target.value)} placeholder={placeholder} />
       {getFieldError(id, field) && <div className={styles.fieldError}>{getFieldError(id, field)}</div>}
     </>;
   };
@@ -177,12 +202,12 @@ const BankDetails = ({ organizationId, canManage = false }) => {
   const renderRow = (row, index, isNew = false) => {
     const id = isNew ? "new" : rowKeyOf(row);
     const editing = String(editingId) === String(id);
-    const disabled = Boolean(busyAction);
+    const disabled = Boolean(busyAction) || autosave.busy;
     return <div key={id} className={`${styles.gridRow} ${styles.dataRow} ${index % 2 === 0 ? styles.zebraEven : ""} ${styles.hoverable}`}>
       <div className={`${styles.cell} ${styles.stickyCol}`}>
         {editing ? <div className={styles.actions}>
-          <button type="button" className={styles.iconCircleBtn} onClick={save} disabled={disabled} aria-label={`Save bank detail ${id}`}><FiSave /></button>
-          <button type="button" className={styles.dangerIconBtn} onClick={cancel} disabled={disabled} aria-label={`Cancel bank detail ${id}`}><FiX /></button>
+          {isNew && <button type="button" className={styles.iconCircleBtn} onClick={save} disabled={disabled} aria-label={`Save bank detail ${id}`}><FiSave /></button>}
+          <button type="button" className={styles.dangerIconBtn} onClick={cancel} disabled={disabled} aria-label={`${isNew ? "Cancel" : "Done editing"} bank detail ${id}`}><FiX /></button>
         </div> : <div className={styles.actions}>
           {canManage && <button type="button" className={styles.iconCircleBtn} onClick={() => startEdit(row)} disabled={Boolean(editingId) || disabled} aria-label={`Edit bank detail ${id}`}><FiEdit /></button>}
           {canManage && <button type="button" className={styles.unlinkBtn} onClick={() => unlink(id)} disabled={Boolean(editingId) || disabled} title="Remove from organization" aria-label={`Remove bank detail ${id} from organization`}><FiLink /></button>}
@@ -209,6 +234,8 @@ const BankDetails = ({ organizationId, canManage = false }) => {
         <button type="button" className={styles.primaryBtn} onClick={startCreate} disabled={Boolean(editingId) || Boolean(busyAction)}><FiPlus /> New Bank Detail</button>
       </div>}
     </div>
+    {canManage && <p>Existing details save automatically after a short typing pause or when you leave a field. Wait for Saved before leaving. New records still require Save.</p>}
+    <AutosaveStatus save={autosave} />
     {formError && <ErrorBanner message={formError} onDismiss={() => setFormError("")} />}
     {!rows.length && editingId !== "new" && <p className={styles.noData}>No bank details linked to this organization.</p>}
     <div className={styles.table}>

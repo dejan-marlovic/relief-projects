@@ -49,7 +49,7 @@ const Organization = ({
   const [showReviews, setShowReviews] = useState(false);
   const ev = editedValues || {};
   const isCreate = (link?.id ?? "") === "new";
-  const autoSave = isEditing && !isCreate && !compact;
+
 
   const [showBankDetails, setShowBankDetails] = useState(false);
   const [showAddressDetails, setShowAddressDetails] = useState(false);
@@ -79,7 +79,6 @@ const Organization = ({
         disabled={saving}
         value={ev.organizationId ?? link.organizationId ?? ""}
         onChange={(e) => onChange("organizationId", toNum(e.target.value))}
-        onBlur={autoSave ? submit : undefined}
         className={inputClass("organizationId")}
       >
         <option value="">Select organization</option>
@@ -102,7 +101,6 @@ const Organization = ({
         onChange={(e) =>
           onChange("organizationStatusId", toNum(e.target.value))
         }
-        onBlur={autoSave ? submit : undefined}
         className={inputClass("organizationStatusId")}
       >
         <option value="">Select status</option>
@@ -135,7 +133,7 @@ const Organization = ({
         <Cell className={`${styles.stickyCol} ${styles.actionsCol} ${hc(0)}`}>
           {isEditing ? (
             <div className={styles.actions}>
-              {canManage && <button
+              {canManage && isCreate && <button
                 type="button"
                 className={styles.iconCircleBtn}
                 disabled={saving}
@@ -151,10 +149,10 @@ const Organization = ({
                 className={styles.dangerIconBtn}
                 disabled={saving}
                 onClick={onCancel}
-                title="Cancel"
-                aria-label="Cancel"
+                title={isCreate ? "Cancel" : "Done editing"}
+                aria-label={isCreate ? "Cancel" : "Done editing"}
               >
-                <FiX />{compact && <span>Cancel</span>}
+                <FiX />{compact && <span>{isCreate ? "Cancel" : "Done"}</span>}
               </button>
             </div>
           ) : (
@@ -201,6 +199,7 @@ const Organization = ({
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    if (showAddressDetails && !confirmDiscardUnsavedChanges()) return;
                     setShowAddressDetails((v) => !v);
                   }}
                   title={
@@ -228,6 +227,7 @@ const Organization = ({
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    if (showBankDetails && !confirmDiscardUnsavedChanges()) return;
                     setShowBankDetails((v) => !v);
                   }}
                   title={

@@ -1,3 +1,5 @@
+import useRecordAutosave from "../../../utils/useRecordAutosave";
+import AutosaveStatus from "../../../components/ProjectClassification/AutosaveStatus";
 import { appFetch as fetch } from "../../../utils/appFetch";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { FiEdit, FiLink, FiPlus, FiSave, FiStar, FiX } from "react-icons/fi";
@@ -35,7 +37,7 @@ const AddressDetails = ({ organizationId, canManage = false }) => {
   const [selectedAddressId, setSelectedAddressId] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
-  useUnsavedChange(`address-details-${organizationId}`, editingId !== null);
+
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
   const [busyAction, setBusyAction] = useState("");
@@ -117,6 +119,8 @@ const AddressDetails = ({ organizationId, canManage = false }) => {
   };
 
   const cancel = () => {
+    if (autosave.busy) return;
+    if (autosave.dirty && !window.confirm("Discard unsaved changes? Previously saved changes will remain.")) return;
     setEditingId(null);
     setEditedValues({});
     setFieldErrors({});
@@ -124,6 +128,7 @@ const AddressDetails = ({ organizationId, canManage = false }) => {
   };
 
   const onChange = (field, value) => {
+    if (editingId !== "new") autosave.edit({ [field]: value }, associations.find(row => String(row.addressId) === String(editingId))?.address);
     setEditedValues((current) => ({
       ...current,
       [editingId]: { ...current[editingId], [field]: value },
@@ -140,6 +145,26 @@ const AddressDetails = ({ organizationId, canManage = false }) => {
     }
     return response;
   };
+
+  const autosave = useRecordAutosave({
+    recordKey: `address-${organizationId}-${editingId}`,
+    enabled: canManage && editingId !== null && editingId !== "new",
+    read: async () => {
+      const response = await request(`${BASE_URL}/api/organizations/${organizationId}/addresses`, { headers: authHeaders, cache: "no-store" }, "Could not read the latest saved details.");
+      const items = await response.json();
+      const found = items.find(row => String(row.addressId) === String(editingId))?.address;
+      if (!found) throw new Error("This record is no longer linked to this organisation. Reload before editing.");
+      return found;
+    },
+    write: async (fresh, changes) => {
+      const merged = { ...fresh, ...changes };
+      const payload = Object.fromEntries(["street", "city", "state", "postalCode", "country"].map(field => [field, merged[field] || ""]));
+      await request(`${BASE_URL}/api/addresses/${editingId}`, { method: "PUT", headers: authHeaders, silentSuccess: true, body: JSON.stringify({ ...payload, id: editingId }) }, "Could not save changes.");
+    },
+    validate: (value) => !value.street?.trim() || !value.city?.trim() ? "Enter a street and city before saving." : "",
+    onSaved: (saved, changes, pending) => { setEditedValues({ [editingId]: { ...saved, ...pending } }); setAssociations(rows => rows.map(row => String(row.addressId) === String(editingId) ? { ...row, address: saved } : row)); },
+  });
+  useUnsavedChange(`address-details-${organizationId}`, editingId === "new" || autosave.dirty);
 
   const save = async () => {
     if (!canManage || !editingId) return;
@@ -256,7 +281,7 @@ const AddressDetails = ({ organizationId, canManage = false }) => {
         className={inputClassFor(rowKey, field)}
         type="text"
         value={editedValues[rowKey]?.[field] ?? ""}
-        onChange={(event) => onChange(field, event.target.value)}
+        onBlur={editingId !== "new" ? autosave.flush : undefined} onChange={(event) => onChange(field, event.target.value)}
         placeholder={placeholder}
       />
       {getFieldError(rowKey, field) && (
@@ -270,15 +295,15 @@ const AddressDetails = ({ organizationId, canManage = false }) => {
     const rowKey = isNew ? "new" : address.id;
     const editing = String(editingId) === String(rowKey);
     const primary = !isNew && association.primary;
-    const disabled = Boolean(busyAction);
+    const disabled = Boolean(busyAction) || autosave.busy;
 
     return (
       <div key={rowKey} className={`${styles.gridRow} ${styles.dataRow} ${styles.hoverable} ${primary ? styles.primaryRow : ""}`}>
         <div className={`${styles.cell} ${styles.stickyCol}`}>
           {editing ? (
             <div className={styles.actions}>
-              <button type="button" className={styles.iconCircleBtn} onClick={save} disabled={disabled} title="Save" aria-label={`Save address ${rowKey}`}><FiSave /></button>
-              <button type="button" className={styles.dangerIconBtn} onClick={cancel} disabled={disabled} title="Cancel" aria-label={`Cancel address ${rowKey}`}><FiX /></button>
+              {isNew && <button type="button" className={styles.iconCircleBtn} onClick={save} disabled={disabled} title="Save" aria-label={`Save address ${rowKey}`}><FiSave /></button>}
+              <button type="button" className={styles.dangerIconBtn} onClick={cancel} disabled={disabled} title={isNew ? "Cancel" : "Done editing"} aria-label={`${isNew ? "Cancel" : "Done editing"} address ${rowKey}`}><FiX /></button>
             </div>
           ) : (
             <div className={styles.actions}>
@@ -318,7 +343,9 @@ const AddressDetails = ({ organizationId, canManage = false }) => {
         )}
       </div>
 
-      {formError && <ErrorBanner message={formError} onDismiss={() => setFormError("")} />}
+      {canManage && <p>Existing details save automatically after a short typing pause or when you leave a field. Wait for Saved before leaving. New records still require Save.</p>}
+    <AutosaveStatus save={autosave} />
+    {formError && <ErrorBanner message={formError} onDismiss={() => setFormError("")} />}
       {!associations.length && editingId !== "new" && <p className={styles.noData}>No active addresses linked to this organization.</p>}
 
       <div className={styles.table}>

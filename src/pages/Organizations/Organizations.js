@@ -1,3 +1,5 @@
+import useRecordAutosave from "../../utils/useRecordAutosave";
+import AutosaveStatus from "../../components/ProjectClassification/AutosaveStatus";
 import { appFetch as fetch } from "../../utils/appFetch";
 import useMediaQuery from "../../hooks/useMediaQuery";
 import React, {
@@ -66,7 +68,7 @@ const Organizations = () => {
   const [links, setLinks] = useState([]); // project_organization rows
   const [editingId, setEditingId] = useState(null);
   const [editedValues, setEditedValues] = useState({});
-  useUnsavedChange("project-organizations-editor", editingId !== null);
+
 
   // dropdown data
   const [orgOptions, setOrgOptions] = useState([]); // /organizations/active/options
@@ -107,6 +109,36 @@ const Organizations = () => {
         : { "Content-Type": "application/json" },
     [token]
   );
+
+  const autosave = useRecordAutosave({
+    recordKey: `organisation-link-${selectedProjectId}-${editingId}`,
+    enabled: canManageOrganizationLinks && editingId !== null && editingId !== "new",
+    read: async () => {
+      const response = await fetch(`${BASE_URL}/api/project-organizations/active`, { headers: authHeaders, cache: "no-store" });
+      if (!response.ok) throw new Error("Could not read the latest organisation relationship.");
+      const rows = await response.json();
+      const row = rows.find(item => String(item.id) === String(editingId) && String(item.projectId) === String(selectedProjectId));
+      if (!row) throw new Error("This relationship is no longer available. Reload before editing.");
+      return row;
+    },
+    write: async (fresh, changes) => {
+      const value = { ...fresh, ...changes };
+      const response = await fetch(`${BASE_URL}/api/project-organizations/${editingId}`, {
+        method: "PUT", headers: authHeaders, silentSuccess: true,
+        body: JSON.stringify({ projectId: value.projectId, organizationId: value.organizationId, organizationStatusId: value.organizationStatusId }),
+      });
+      if (!response.ok) {
+        const body = await safeParseJsonResponse(response);
+        throw new Error(formatApiError(body, "Could not save the organisation relationship."));
+      }
+    },
+    validate: value => !value.organizationId || !value.organizationStatusId ? "Select an organisation and role before saving." : "",
+    onSaved: (saved, changes, pending) => {
+      setLinks(rows => rows.map(row => row.id === saved.id ? saved : row));
+      setEditedValues({ [editingId]: { ...saved, ...pending } });
+    },
+  });
+  useUnsavedChange("project-organizations-editor", editingId === "new" || autosave.dirty);
 
   const fetchProjectOrganizations = useCallback(
     async (projectId) => {
@@ -191,7 +223,7 @@ const Organizations = () => {
   const currentProjectRef = useRef(selectedProjectId);
   currentProjectRef.current = selectedProjectId;
   const startEdit = async (link) => {
-    if (!canManageOrganizationLinks || saving || saveInProgress.current || (compact && editingId !== null)) return;
+    if (!canManageOrganizationLinks || saving || saveInProgress.current || (editingId !== null)) return;
     // Enrollment permanently fixes the relationship triple, including deleted assessments.
     saveInProgress.current = true; setSaving(true);
     try {
@@ -221,7 +253,7 @@ const Organizations = () => {
   };
 
   const startCreate = () => {
-    if (!canManageOrganizationLinks || saving || (compact && editingId !== null)) return;
+    if (!canManageOrganizationLinks || saving || (editingId !== null)) return;
     setEditingId("new");
     setEditedValues((prev) => ({
       ...prev,
@@ -240,6 +272,7 @@ const Organizations = () => {
   };
 
   const onChange = (field, value) => {
+    if (editingId !== "new") autosave.edit({ [field]: value }, links.find(row => row.id === editingId), true);
     setEditedValues((prev) => ({
       ...prev,
       [editingId]: {
@@ -316,6 +349,8 @@ const Organizations = () => {
   };
 
   const cancel = () => {
+    if (autosave.busy) return;
+    if (autosave.dirty && !window.confirm("Discard unsaved changes? Previously saved changes will remain.")) return;
     const id = editingId;
     setEditingId(null);
 
@@ -441,7 +476,7 @@ const Organizations = () => {
             {canManageOrganizationLinks && <button
               className={styles.primaryBtn}
               onClick={startCreate}
-              disabled={!selectedProjectId || saving || (compact ? editingId !== null : editingId === "new")}
+              disabled={!selectedProjectId || saving || editingId !== null}
               title={
                 !selectedProjectId
                   ? "Select a project first"
@@ -457,10 +492,12 @@ const Organizations = () => {
           </div>
         </div>
 
+        <p>Existing organisation and role selections save automatically. Addresses and bank details save after a short typing pause or when you leave a field. Adding and removing records remain separate actions.</p>
+        <AutosaveStatus save={autosave} />
         {formError && <ErrorBanner message={formError} onDismiss={() => setFormError("")} />}
 
         <div className={styles.table} style={{ "--org-grid-cols": gridCols }}>
-          <fieldset disabled={compact && (editingId !== null || saving)} className={`${styles.gridRow} ${styles.headerRow}`}>
+          <fieldset disabled={editingId !== null || saving} className={`${styles.gridRow} ${styles.headerRow}`}>
             {headerLabels.map((h, i) => (
               <div
                 key={h}
@@ -487,8 +524,8 @@ const Organizations = () => {
             displayedLinks.map((link, idx) => (
               <OrganizationRow
                 compact={compact}
-                saving={saving}
-                editingLocked={compact && editingId !== null}
+                saving={saving || autosave.busy}
+                editingLocked={editingId !== null}
                 key={link.id}
                 link={link}
                 isEditing={editingId === link.id}
@@ -515,8 +552,8 @@ const Organizations = () => {
           {editingId === "new" && (
             <OrganizationRow
                 compact={compact}
-                saving={saving}
-                editingLocked={compact && editingId !== null}
+                saving={saving || autosave.busy}
+                editingLocked={editingId !== null}
               link={{
                 id: "new",
                 ...blankLink,

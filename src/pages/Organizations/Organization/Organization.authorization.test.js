@@ -58,22 +58,18 @@ describe("Organization row permissions", () => {
 });
 
 
-test("compact editing uses explicit save and retains draft across viewport changes", () => {
-  const onSave = jest.fn();
-  const props = { ...baseProps, canManage: true, isEditing: true, onSave,
+test("existing relationships use the same change handler on mobile and desktop without a Save button", () => {
+  const onChange = jest.fn();
+  const props = { ...baseProps, canManage: true, isEditing: true, onChange,
     editedValues: { organizationId: 5, organizationStatusId: 2 } };
   const { rerender } = render(<Organization {...props} compact />);
-  fireEvent.blur(screen.getByRole("combobox", { name: "Organization" }));
-  expect(onSave).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole("button", { name: "Save" }));
-  expect(onSave).toHaveBeenCalledTimes(1);
+  fireEvent.change(screen.getByRole("combobox", { name: "Organization" }), { target: { value: "5" } });
+  expect(onChange).toHaveBeenCalledWith("organizationId", 5);
+  expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
   rerender(<Organization {...props} compact={false} />);
-  expect(screen.getByRole("combobox", { name: "Organization" })).toHaveValue("5");
-  fireEvent.blur(screen.getByRole("combobox", { name: "Status" }));
-  expect(onSave).toHaveBeenCalledTimes(2);
+  expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
   rerender(<Organization {...props} compact saving />);
-  expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
-  expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Done editing" })).toBeDisabled();
   expect(screen.getByRole("combobox", { name: "Status" })).toBeDisabled();
 });
 

@@ -58,7 +58,7 @@ const sections = [
     intro: "An organisation can take part in several projects or hold different roles. Its contact and bank information belong to the organisation; an assessment concerns its particular role in a particular project.",
     steps: [
       "Open Organizations or the related organisations in Project details. Create or select the organisation and link it to the project with the appropriate role.",
-      "Check its address and contact information. Staff with the appropriate finance permissions can maintain bank details. An organisation can have more than one account.",
+      "Check its address and contact information. Staff with the appropriate finance permissions can maintain bank details. An organisation can have more than one account. On the Organizations page, use Edit to change existing details; organisation and role selections save automatically, and addresses and bank details save after a short typing pause or when you leave a field. Wait for Saved. New records still require Save, and linking or removing records remains an explicit action.",
       "Choose Assessment beside the project relationship. Describe capacity, suitability for this role and material concerns, then select supporting documents from the same project.",
       "Submit for independent review. An eligible reviewer records the outcome and explanation; contributors cannot review their own submission.",
       "Review history and any warnings before relying on an earlier decision. Follow the withdrawal or correction actions offered if the assessment needs changing."
