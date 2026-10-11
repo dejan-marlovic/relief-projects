@@ -120,8 +120,9 @@ export function mutationNotice(input, options = {}, response) {
   return method === "POST" && segments.length === 1 ? `${entity} created.` : `${entity} changes saved.`;
 }
 export async function appFetch(input, options) {
-  const response = await window.fetch(input, options);
-  const message = mutationNotice(input, options, response);
+  const { silentSuccess, ...requestOptions } = options || {};
+  const response = await window.fetch(input, requestOptions);
+  const message = silentSuccess ? null : mutationNotice(input, options, response);
   if (message) notifySuccess(message);
   return response;
 }

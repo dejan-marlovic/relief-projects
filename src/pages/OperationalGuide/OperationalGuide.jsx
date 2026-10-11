@@ -26,10 +26,10 @@ const sections = [
     intro: "A project brings together its plans, people, partners, documents and financial records. Start with a description that explains the need, who will benefit, what will happen and how you will know whether it helped.",
     steps: [
       "Open New Project. Enter the required name, identifying details, dates and other information shown in the form, then register the project.",
-      "Select the project and open Project details to review or update it. Save your changes before moving to another page.",
-      "Use Language titles, target group & operating countries for the optional Swedish and English titles, intended participants and countries where activities will take place. Save these optional details with their own Save button.",
+      "Select the project and open Project details to review or update it. Ordinary details save automatically after a short typing pause or when you leave a field. Wait for Saved before moving to another page; if saving fails, your edits remain available with a retry option.",
+      "Use Language titles, target group & operating countries for the optional Swedish and English titles, intended participants and countries where activities will take place. These optional details save automatically too.",
       "Add the relevant sectors, related organisations and staff participants. Use memos for useful working notes.",
-      "Add appropriate project pictures and captions. Check that an upload succeeded; saving project information and uploading a picture are separate actions."
+      "Add appropriate project pictures and captions. Check that an upload succeeded; saving project information and uploading a picture are separate actions. Captions save automatically after a short typing pause."
     ],
     notes: [
       ["Explain the project clearly", "Include the local context, planned activities, delivery responsibilities and main uncertainties. Keep the project name short enough to recognise in lists. The optional language titles supplement that name. Operating countries describe planned coverage; an empty selection means not recorded, rather than worldwide."],

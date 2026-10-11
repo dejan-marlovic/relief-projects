@@ -1,7 +1,9 @@
 import { supportsGeography, geographyExport } from "../../utils/projectGeography";
+import useProjectAutosave, { validateProjectDates, withProjectSave } from "../../utils/useProjectAutosave";
+import AutosaveStatus from "../../components/ProjectClassification/AutosaveStatus";
 import ProjectClassification from "../../components/ProjectClassification/ProjectClassification";
 import { supportsClassification, classificationFields, classificationValues } from "../../utils/projectClassification";
-import { projectApprovalLabel, projectMetadataPayload } from "../../utils/projectApproval";
+import { projectApprovalLabel } from "../../utils/projectApproval";
 import ProjectCloseout from "../../components/ProjectCloseout/ProjectCloseout";
 import { appFetch as fetch } from "../../utils/appFetch";
 // Project.jsx
@@ -25,7 +27,6 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiX,
-  FiSave,
   FiPlus,
   FiUploadCloud,
   FiImage,
@@ -1459,8 +1460,26 @@ Approximately:
   const canDeleteProject = hasRole("ADMIN");
 
   const [projectDetails, setProjectDetails] = useState(null);
-  const { confirmDiscardUnsavedChanges } = useUnsavedChanges();
-  const [hasUnsavedProjectChanges, setHasUnsavedProjectChanges] = useState(false);
+  const { confirmDiscardUnsavedChanges, hasUnsavedChanges } = useUnsavedChanges();
+  const coreSave = useProjectAutosave({
+    projectId: selectedProjectId, authFetch, enabled: canEditProject && String(projectDetails?.id) === String(selectedProjectId),
+    validate: value => {
+      if (!value.projectName?.trim() || !value.projectCode?.trim()) return "Project name and code are required.";
+      if (!value.projectDate || !value.projectStart || !value.projectEnd) return "Complete the project date, start and end before saving.";
+      return validateProjectDates(value);
+    },
+    onSaved: (saved, sent) => {
+      setProjectDetails(previous => {
+        if (String(previous?.id) !== String(saved.id)) return previous;
+        const next = { ...previous, assessmentSummary: saved.assessmentSummary };
+        for (const key of Object.keys(sent)) if (String(previous[key] ?? "") === String(sent[key] ?? "")) next[key] = saved[key];
+        return next;
+      });
+      setProjects(previous => previous.map(project => project.id === saved.id ? { ...project, projectName: saved.projectName } : project));
+    }
+  });
+  const hasUnsavedProjectChanges = coreSave.dirty;
+  const [sectorBusy, setSectorBusy] = useState(false);
   useUnsavedChange(
     `project-${selectedProjectId || "none"}`,
     hasUnsavedProjectChanges,
@@ -1483,6 +1502,7 @@ Approximately:
   // ✅ Cover image upload state
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  useUnsavedChange(`project-links-${selectedProjectId}`, sectorBusy || uploadingCover);
 
   // ✅ Slideshow state (for multiple images)
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -1570,7 +1590,9 @@ Approximately:
 
   // ✅ Update caption for a specific image index (writes back to delimiter-string)
   const setCaptionAtIndex = (idx, captionText) => {
-    setHasUnsavedProjectChanges(true);
+    const nextCaptions = [...imageCaptions];
+    nextCaptions[idx] = captionText;
+    coreSave.edit({ projectCoverImageCaption: buildCaptionString(nextCaptions) }, projectDetails);
     setProjectDetails((prev) => {
       if (!prev) return prev;
 
@@ -1625,6 +1647,7 @@ Approximately:
   // Fetch full project details from backend when selectedProjectId changes
   useEffect(() => {
     if (!selectedProjectId) return;
+    let active = true;
 
     const fetchProjectDetails = async () => {
       try {
@@ -1640,11 +1663,12 @@ Approximately:
         if (!response.ok) throw new Error("Failed to fetch project details");
         const projectDetailsData = await response.json();
 
+        if (!active) return;
         // ✅ normalize captions length to match images
         setProjectDetails(normalizeProjectCaptions(projectDetailsData));
-        setHasUnsavedProjectChanges(false);
       } catch (error) {
         console.error("Error fetching project details:", error);
+        if (!active) return;
         setFormError("Failed to load project details.");
       } finally {
         setLoading(false);
@@ -1652,6 +1676,7 @@ Approximately:
     };
 
     fetchProjectDetails();
+    return () => { active = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProjectId]);
 
@@ -1938,17 +1963,18 @@ Approximately:
 
   const handleProjectInputChange = (e) => {
     const { name, value } = e.target;
+    coreSave.edit({ [name]: value }, projectDetails, e.target.tagName === "SELECT");
     setProjectDetails((prev) => ({
       ...prev,
       [name]: value,
     }));
-    setHasUnsavedProjectChanges(true);
   };
 
   // ✅ Upload cover image via FormData (appends on backend)
   const uploadCoverImage = async (file) => {
     if (!canEditProject) return;
     if (!file || !projectDetails?.id) return;
+    if (coreSave.dirty) { setUploadError("Wait for project changes to save before uploading a picture."); return; }
 
     setUploadError("");
     setUploadingCover(true);
@@ -1958,7 +1984,7 @@ Approximately:
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch(
+      const response = await withProjectSave(projectDetails.id, () => fetch(
         `${BASE_URL}/api/projects/${projectDetails.id}/cover-image`,
         {
           method: "POST",
@@ -1967,7 +1993,7 @@ Approximately:
           },
           body: formData,
         },
-      );
+      ));
 
       if (response.status === 401) {
         localStorage.removeItem("authToken");
@@ -1984,7 +2010,7 @@ Approximately:
 
       // ✅ normalize captions length to match images
       const normalized = normalizeProjectCaptions(updatedProject);
-      setProjectDetails(normalized);
+      setProjectDetails(previous => ({ ...previous, projectCoverImage: normalized.projectCoverImage, projectCoverImageCaption: normalized.projectCoverImageCaption }));
 
       setProjects((prev) =>
         prev.map((p) =>
@@ -2018,9 +2044,11 @@ Approximately:
   const handleDeleteImage = async (filename) => {
     if (!canEditProject) return;
     if (!projectDetails?.id) return;
+    if (coreSave.dirty || uploadingCover) { setUploadError("Wait for changes to save before deleting a picture."); return; }
     if (!window.confirm(`Delete image "${filename}" from this project?`))
       return;
 
+    setUploadingCover(true);
     // snapshot current mapping: filename -> caption (by index)
     const prevImages = parseImages(projectDetails);
     const prevCaps = parseCaptions(projectDetails.projectCoverImageCaption);
@@ -2029,12 +2057,12 @@ Approximately:
     );
 
     try {
-      const response = await authFetch(
+      const response = await withProjectSave(projectDetails.id, () => authFetch(
         `${BASE_URL}/api/projects/${
           projectDetails.id
         }/cover-image/${encodeURIComponent(filename)}`,
         { method: "DELETE" },
-      );
+      ));
 
       if (!response.ok) {
         const text = await response.text().catch(() => "");
@@ -2067,31 +2095,9 @@ Approximately:
           }
         : normalizeProjectCaptions(updatedProjectRaw);
 
-      // ✅ NEW: persist rebuilt captions back to backend if it wiped them
-      if (backendLooksBad) {
-        try {
-          const persistRes = await authFetch(
-            `${BASE_URL}/api/projects/${finalProject.id}`,
-            {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(projectMetadataPayload(finalProject)),
-            },
-          );
+      if (backendLooksBad) coreSave.edit({ projectCoverImageCaption: rebuiltCaptionString }, updatedProjectRaw, true);
 
-          if (persistRes.ok) {
-            const persisted = await safeReadJson(persistRes);
-            if (persisted) finalProject = normalizeProjectCaptions(persisted);
-          } else {
-            const msg = await persistRes.text().catch(() => "");
-            console.warn("Caption persist after delete failed:", msg);
-          }
-        } catch (e) {
-          console.warn("Caption persist after delete threw:", e);
-        }
-      }
-
-      setProjectDetails(finalProject);
+      setProjectDetails(previous => ({ ...previous, projectCoverImage: finalProject.projectCoverImage, projectCoverImageCaption: finalProject.projectCoverImageCaption }));
 
       // keep indices in bounds
       setCurrentImageIndex((prevIdx) => {
@@ -2114,19 +2120,30 @@ Approximately:
     } catch (err) {
       console.error(err);
       setFormError(err.message || "Error deleting image.");
-    }
+    } finally { setUploadingCover(false); }
   };
 
-  const handleToggleSector = (sectorIdStr, checked) => {
-    setHasUnsavedProjectChanges(true);
-    setSelectedSectorIds((prev) => {
-      if (checked)
-        return prev.includes(sectorIdStr) ? prev : [...prev, sectorIdStr];
-      return prev.filter((id) => id !== sectorIdStr);
-    });
+  const handleToggleSector = async (sectorIdStr, checked) => {
+    if (sectorBusy || !canEditProject) return;
+    if (!checked) { await handleRemoveSectorClick(sectorIdStr); return; }
+    setSectorBusy(true); setFormError("");
+    try {
+      const response = await authFetch(`${BASE_URL}/api/project-sectors`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId: Number(selectedProjectId), sectorId: Number(sectorIdStr) })
+      });
+      if (!response.ok) throw new Error("Could not add the sector. Check the saved sectors before retrying.");
+      const listResponse = await authFetch(`${BASE_URL}/api/project-sectors/active`, { cache: "no-store" });
+      if (!listResponse.ok) throw new Error("Sector may have saved. Reload the project to check before retrying.");
+      const links = (await listResponse.json()).filter(link => String(link.projectId) === String(selectedProjectId));
+      setCurrentProjectSectorLinks(links);
+      setSelectedSectorIds(links.map(link => String(link.sectorId)));
+    } catch (error) { setFormError(error.message); }
+    finally { setSectorBusy(false); }
   };
 
   const handleRemoveSectorClick = async (sectorId) => {
+    if (sectorBusy || !canEditProject) return;
     const link = currentProjectSectorLinks.find(
       (l) => String(l.sectorId) === String(sectorId),
     );
@@ -2139,6 +2156,7 @@ Approximately:
     }
 
     if (!window.confirm("Remove this sector from the project?")) return;
+    setSectorBusy(true);
 
     try {
       const res = await authFetch(
@@ -2158,7 +2176,7 @@ Approximately:
     } catch (e) {
       console.error(e);
       setFormError("Failed to delete sector link.");
-    }
+    } finally { setSectorBusy(false); }
   };
 
   const handleAddProjectOrganization = async () => {
@@ -2371,132 +2389,6 @@ Approximately:
     }
   };
 
-  const syncProjectSectors = async (projectId) => {
-    const currentBySectorId = new Map(
-      currentProjectSectorLinks.map((l) => [String(l.sectorId), l]),
-    );
-
-    const selectedSet = new Set(selectedSectorIds.map(String));
-
-    const toAdd = [...selectedSet].filter(
-      (sid) => !currentBySectorId.has(String(sid)),
-    );
-    const toRemove = currentProjectSectorLinks.filter(
-      (l) => !selectedSet.has(String(l.sectorId)),
-    );
-
-    for (const sid of toAdd) {
-      try {
-        const res = await authFetch(`${BASE_URL}/api/project-sectors`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            projectId: Number(projectId),
-            sectorId: Number(sid),
-          }),
-        });
-        if (!res.ok) {
-          const msg = await res.text().catch(() => "");
-          throw new Error(`Failed to link sector ${sid}. ${msg}`);
-        }
-      } catch (e) {
-        console.error(e);
-        setFormError(e.message || "Failed to add sector link.");
-      }
-    }
-
-    for (const link of toRemove) {
-      try {
-        const res = await authFetch(
-          `${BASE_URL}/api/project-sectors/${link.id}`,
-          { method: "DELETE" },
-        );
-        if (!res.ok) throw new Error("Failed to delete sector link");
-      } catch (e) {
-        console.error(e);
-        setFormError("Failed to delete sector link.");
-      }
-    }
-
-    try {
-      const res = await authFetch(`${BASE_URL}/api/project-sectors/active`, {
-        headers: { "Content-Type": "application/json" },
-      });
-      const links = res.ok ? await res.json() : [];
-      const byProject = (Array.isArray(links) ? links : []).filter(
-        (ps) => String(ps.projectId) === String(projectId),
-      );
-      setCurrentProjectSectorLinks(byProject);
-      setSelectedSectorIds(byProject.map((ps) => String(ps.sectorId)));
-    } catch (e) {
-      console.error("Failed to refresh project sectors after sync:", e);
-    }
-  };
-
-  const handleSave = async () => {
-    if (!canEditProject) return;
-    try {
-      setFormError("");
-      setFieldErrors({});
-
-      const response = await authFetch(
-        `${BASE_URL}/api/projects/${projectDetails.id}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(projectMetadataPayload(projectDetails)),
-        },
-      );
-
-      const text = await response.text();
-
-      if (!response.ok) {
-        let data = null;
-        try {
-          data = text ? JSON.parse(text) : null;
-        } catch (parseErr) {
-          console.warn("Failed to parse backend error JSON:", parseErr);
-        }
-
-        if (data) {
-          if (data.fieldErrors) setFieldErrors(data.fieldErrors);
-          setFormError(
-            data.message || "There was a problem updating the project.",
-          );
-        } else {
-          setFormError("There was a problem updating the project.");
-        }
-        return;
-      }
-
-      const updatedProject = text ? JSON.parse(text) : null;
-
-      if (updatedProject) {
-        // ✅ normalize captions length to match images
-        setProjectDetails(normalizeProjectCaptions(updatedProject));
-
-        setProjects((prevProjects) =>
-          prevProjects.map((proj) =>
-            proj.id === updatedProject.id
-              ? { ...proj, projectName: updatedProject.projectName }
-              : proj,
-          ),
-        );
-      }
-
-      await syncProjectSectors(projectDetails.id);
-
-      setHasUnsavedProjectChanges(false);
-
-      setFormError("");
-      setFieldErrors({});
-      // Successful mutations are announced by the shared notification banner.
-    } catch (error) {
-      console.error("Update error:", error);
-      setFormError("Unexpected error while updating project.");
-    }
-  };
-
   const getSectorLabel = (id) => {
     const s = sectorOptions.find(
       (x) => String(x.id ?? x.sectorId ?? x.sector_id) === String(id),
@@ -2653,28 +2545,18 @@ Approximately:
                 type="button"
                 onClick={handleExportProject}
                 className={styles.exportButton}
-                disabled={loading || exportingProject || !projectDetails}
+                disabled={loading || exportingProject || !projectDetails || hasUnsavedChanges || coreSave.dirty}
               >
                 <FiDownload />
                 {exportingProject ? "Exporting..." : "Export to Excel"}
               </button>
-              {canEditProject && (
-                <button
-                  type="button"
-                  onClick={handleSave}
-                  className={styles.saveButton}
-                  disabled={loading}
-                >
-                  <FiSave />
-                  Save
-                </button>
-              )}
+              {canEditProject && <AutosaveStatus save={coreSave} />}
               {canDeleteProject && (
                 <button
                   type="button"
                   onClick={handleDelete}
                   className={styles.deleteButton}
-                  disabled={loading}
+                  disabled={loading || hasUnsavedChanges || coreSave.dirty}
                 >
                   <FiTrash2 />
                   Delete
@@ -2683,6 +2565,7 @@ Approximately:
             </div>
           </div>
 
+          {canEditProject && <p>Project details save automatically after a short pause. Changes to assessed information may require a new review. Wait for “Saved” before leaving.</p>}
           {formError && (
             <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
           )}
@@ -2818,7 +2701,7 @@ Approximately:
                       )}
                     </div>
 
-                    {/* ✅ Caption editor (saved when clicking Save) */}
+                    {/* Caption changes use the same autosave queue as core details. */}
                     <div style={{ marginTop: 12 }}>
                       <div
                         style={{
@@ -2838,13 +2721,13 @@ Approximately:
                         placeholder="Write a caption for this image..."
                         className={styles.textareaInput}
                         style={{ minHeight: 64 }}
-                        disabled={!canEditProject}
+                        disabled={!canEditProject || uploadingCover}
                       />
 
                       <div
                         style={{ fontSize: 12, color: "#666", marginTop: 6 }}
                       >
-                        Captions are saved when you click <strong>Save</strong>.
+                        Captions save automatically after you stop typing.
                       </div>
                     </div>
 
@@ -2909,8 +2792,8 @@ Approximately:
                 </div>
               ) : (
                 <form>
-                  <fieldset
-                    disabled={!canEditProject}
+                  <fieldset onBlur={coreSave.flush}
+                    disabled={!canEditProject || uploadingCover}
                     style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}
                   >
                   {/* Description */}
@@ -3247,8 +3130,7 @@ Approximately:
                           <div className={styles.sectionTitle}>
                             <span style={{ fontWeight: 700 }}>Sectors</span>
                             <span className={styles.sectionHint}>
-                              Click checkbox to add; click pill “x” to remove
-                              immediately
+                              Selections save immediately; click “x” to remove
                             </span>
                           </div>
 
@@ -3278,6 +3160,7 @@ Approximately:
                                   >
                                     <input
                                       type="checkbox"
+                                      disabled={sectorBusy}
                                       checked={checked}
                                       onChange={(e) =>
                                         handleToggleSector(

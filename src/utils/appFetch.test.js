@@ -25,3 +25,12 @@ test("wrapper leaves the response body untouched and propagates failures",async(
  await expect(appFetch("/api/recipients",{method:"POST"})).rejects.toThrow("offline");
  expect(listener).toHaveBeenCalledTimes(1);unsubscribe();
 });
+
+test("autosave can use local feedback without triggering a success banner", async () => {
+ const listener = jest.fn(); const unsubscribe = subscribeSuccess(listener);
+ global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200 });
+ await appFetch("/api/projects/1", { method: "PUT", silentSuccess: true });
+ expect(listener).not.toHaveBeenCalled();
+ expect(global.fetch).toHaveBeenCalledWith("/api/projects/1", { method: "PUT" });
+ unsubscribe();
+});

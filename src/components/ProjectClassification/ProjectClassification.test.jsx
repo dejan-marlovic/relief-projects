@@ -22,7 +22,7 @@ test("save uses fresh required fields and sends only the edited optional propert
   const onSaved = jest.fn();
   render(<ProjectClassification projectId={1} authFetch={fetch} canEdit onSaved={onSaved} />);
   fireEvent.change(await screen.findByLabelText(/Swedish title/), { target: { value: "" } });
-  fireEvent.click(screen.getByText("Save optional details"));
+  fireEvent.blur(screen.getByLabelText(/Swedish title/));
   await waitFor(() => expect(onSaved).toHaveBeenCalled());
   const body = JSON.parse(fetch.mock.calls.find(([, options]) => options?.method === "PUT")[1].body);
   expect(body.projectCode).toBe("LATEST");
@@ -30,19 +30,19 @@ test("save uses fresh required fields and sends only the edited optional propert
   expect(body).not.toHaveProperty("projectNameEn");
   expect(body).not.toHaveProperty("targetGroupDescription");
 });
-test("failed save retains draft, blocks retry, and refresh does not make untouched fields dirty", async () => {
+test("failed save retains the draft and offers an explicit retry", async () => {
   const fetch = jest.fn().mockResolvedValueOnce(response(project)).mockResolvedValueOnce(response(project)).mockRejectedValueOnce(new Error("Network failed"));
   render(<ProjectClassification projectId={1} authFetch={fetch} canEdit />);
   fireEvent.change(await screen.findByLabelText(/Swedish title/), { target: { value: "Ny titel" } });
-  fireEvent.click(screen.getByText("Save optional details"));
+  fireEvent.blur(screen.getByLabelText(/Swedish title/));
   await screen.findByText(/Network failed/);
-  expect(screen.getByText("Save optional details")).toBeDisabled();
   expect(screen.getByLabelText(/Swedish title/)).toHaveValue("Ny titel");
-  fetch.mockResolvedValueOnce(response({ ...project, projectNameEn: "Someone else's edit" }));
-  fireEvent.click(screen.getByText("Refresh saved values for review"));
-  await waitFor(() => expect(screen.getByLabelText(/English title/)).toHaveValue("Someone else's edit"));
+  fetch.mockResolvedValueOnce(response(project)).mockResolvedValueOnce(response(project)).mockResolvedValueOnce(response({ ...project, projectNameSv: "Ny titel" }));
+  fireEvent.click(screen.getByRole("button", { name: "Retry saving" }));
+  await screen.findByText("Saved");
   expect(screen.getByLabelText(/Swedish title/)).toHaveValue("Ny titel");
 });
+
 test("old backend exposes no editable new fields", async () => {
   render(<ProjectClassification projectId={1} authFetch={async () => response({ id: 1 })} canEdit />);
   await screen.findByText(/unavailable on this backend/);
@@ -61,7 +61,7 @@ test("clearing countries sends an empty set without changing titles, target grou
   const onSaved = jest.fn();
   render(<ProjectClassification projectId={1} authFetch={fetch} canEdit onSaved={onSaved} />);
   fireEvent.click(await screen.findByText("Remove LB"));
-  fireEvent.click(screen.getByText("Save optional details"));
+  fireEvent.blur(screen.getByLabelText(/Swedish title/));
   await waitFor(() => expect(onSaved).toHaveBeenCalled());
   const body = JSON.parse(fetch.mock.calls.find(([, options]) => options?.method === "PUT")[1].body);
   expect(body.operatingCountryCodes).toEqual([]);
