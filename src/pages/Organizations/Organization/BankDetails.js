@@ -1,7 +1,7 @@
 import useRecordAutosave from "../../../utils/useRecordAutosave";
 import AutosaveStatus from "../../../components/ProjectClassification/AutosaveStatus";
 import { appFetch as fetch } from "../../../utils/appFetch";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiEdit, FiLink, FiPlus, FiSave, FiX } from "react-icons/fi";
 import { BASE_URL } from "../../../config/api";
 import styles from "./BankDetails.module.scss";
@@ -20,10 +20,19 @@ const formatBankDetailLabel = (value) =>
   [value?.bankName, value?.accountNumber, value?.branchName].filter(Boolean).join(" — ");
 
 const BankDetails = ({ organizationId, canManage = false }) => {
+  const newRowRef = useRef(null);
   const [rows, setRows] = useState([]);
   const [unlinkedOptions, setUnlinkedOptions] = useState([]);
   const [selectedId, setSelectedId] = useState("");
   const [editingId, setEditingId] = useState(null);
+  useEffect(() => {
+    if (editingId !== "new") return;
+    const row = newRowRef.current;
+    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    row?.scrollIntoView?.({ behavior: reduceMotion ? "auto" : "smooth", block: "center" });
+    row?.querySelector("input")?.focus({ preventScroll: true });
+  }, [editingId]);
+
   const [editedValues, setEditedValues] = useState({});
 
   const [formError, setFormError] = useState("");
@@ -203,7 +212,7 @@ const BankDetails = ({ organizationId, canManage = false }) => {
     const id = isNew ? "new" : rowKeyOf(row);
     const editing = String(editingId) === String(id);
     const disabled = Boolean(busyAction) || autosave.busy;
-    return <div key={id} className={`${styles.gridRow} ${styles.dataRow} ${index % 2 === 0 ? styles.zebraEven : ""} ${styles.hoverable}`}>
+    return <div key={id} ref={isNew ? newRowRef : undefined} className={`${styles.gridRow} ${styles.dataRow} ${index % 2 === 0 ? styles.zebraEven : ""} ${styles.hoverable}`}>
       <div className={`${styles.cell} ${styles.stickyCol}`}>
         {editing ? <div className={styles.actions}>
           {isNew && <button type="button" className={styles.iconCircleBtn} onClick={save} disabled={disabled} aria-label={`Save bank detail ${id}`}><FiSave /></button>}
