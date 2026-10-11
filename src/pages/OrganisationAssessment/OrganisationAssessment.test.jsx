@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { OrganisationAssessmentPanel } from "./OrganisationAssessment";
 import OrganisationReviews from "./OrganisationReviews";
@@ -83,4 +83,50 @@ test("success messages distinguish informational review from project approval", 
   expect(mutationNotice("/api/project-organizations/11/assessment/review", { method: "POST" }, { ok: true })).toBe("Organisation role review recorded.");
   expect(mutationNotice("/api/project-organizations/11/assessment/submit", { method: "POST" }, { ok: true })).toBe("Organisation assessment submitted for review.");
   expect(mutationNotice("/api/projects/7/follow-ups/9/progress", { method: "POST" }, { ok: true })).toBe("Follow-up progress updated.");
+});
+
+test("returning to the page refreshes assessment, evidence and history without a refresh button", async () => {
+  existing(); mount();
+  await screen.findByText("create · Revision 0");
+  expect(screen.queryByRole("button", { name: /Refresh assessment/ })).not.toBeInTheDocument();
+  fetcher.mockClear();
+  fireEvent.focus(window);
+  fireEvent(document, new Event("visibilitychange"));
+  await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(3));
+  expect(fetcher.mock.calls.some(([url]) => url.includes("/history?"))).toBe(true);
+  expect(fetcher.mock.calls.some(([url]) => url.includes("/evidence?"))).toBe(true);
+});
+
+test("automatic refresh waits while editing, then cancellation reloads the latest state", async () => {
+  existing(); mount(); await start("Edit assessment");
+  fireEvent.change(screen.getByLabelText("Capacity"), { target: { value: "My unsaved assessment" } });
+  fetcher.mockClear();
+  fireEvent.focus(window); fireEvent.online(window);
+  await act(async () => { await new Promise(resolve => setTimeout(resolve, 150)); });
+  expect(fetcher).not.toHaveBeenCalled();
+  expect(screen.getByLabelText("Capacity")).toHaveValue("My unsaved assessment");
+  fireEvent.click(screen.getByRole("button", { name: "Cancel assessment draft" }));
+  await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(3));
+});
+
+test("a failed load offers Retry and reconnecting refreshes again", async () => {
+  fetcher.mockRejectedValueOnce(new Error("Connection unavailable"));
+  mount();
+  fireEvent.click(await screen.findByRole("button", { name: "Retry assessment" }));
+  await screen.findByText(/Project: Water project/);
+  expect(screen.queryByRole("button", { name: "Retry assessment" })).not.toBeInTheDocument();
+  fetcher.mockClear();
+  fireEvent.online(window);
+  await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(1));
+});
+
+test("hidden pages do not refresh on focus or reconnect", async () => {
+  mount(); await screen.findByText(/Project: Water project/);
+  const visibility = jest.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
+  try {
+    fetcher.mockClear();
+    fireEvent.focus(window); fireEvent.online(window);
+    await act(async () => { await new Promise(resolve => setTimeout(resolve, 150)); });
+    expect(fetcher).not.toHaveBeenCalled();
+  } finally { visibility.mockRestore(); }
 });

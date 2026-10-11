@@ -26,9 +26,7 @@ export function OrganisationAssessmentPanel({ relationshipId, authFetch }) {
   const reload = () => setRefresh(n => n + 1);
   useEffect(() => {
     alive.current = true;
-    const update = () => { if (document.visibilityState !== "hidden") setRefresh(n => n + 1); };
-    window.addEventListener("focus", update); document.addEventListener("visibilitychange", update);
-    return () => { alive.current = false; window.removeEventListener("focus", update); document.removeEventListener("visibilitychange", update); };
+    return () => { alive.current = false; };
   }, []);
   useUnsavedChange(`organisation-assessment-${relationshipId}`, !!form);
   const detail = useManagementRead(authFetch, base, refresh);
@@ -36,6 +34,25 @@ export function OrganisationAssessmentPanel({ relationshipId, authFetch }) {
   const projectId = data?.scope?.projectId;
   const evidence = useManagementRead(authFetch, record ? `${base}/evidence?includeRemoved=${removed}&page=${evidencePage}&size=20` : null, refresh);
   const history = useManagementRead(authFetch, record ? `${base}/history?page=${historyPage}&size=20` : null, refresh);
+  useEffect(() => {
+    if (form || busy) return undefined;
+    let timer;
+    const update = () => {
+      clearTimeout(timer);
+      if (document.visibilityState !== "hidden") {
+        timer = setTimeout(() => setRefresh(n => n + 1), 100);
+      }
+    };
+    window.addEventListener("focus", update);
+    window.addEventListener("online", update);
+    document.addEventListener("visibilitychange", update);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("focus", update);
+      window.removeEventListener("online", update);
+      document.removeEventListener("visibilitychange", update);
+    };
+  }, [form, busy]);
   const canAct = form && (form.action === "evidence-remove" ? evidence.data?.content.some(link => link.id === form.link.id && link.permissions?.canRemove) : data?.permissions?.[commands[form.action][1]]);
   const blocked = !data || detail.loading || !canAct || (form?.action === "evidence-remove" && evidence.loading);
   const reviewBlocked = blocked || (record && (history.loading || evidence.loading || history.data?.assessmentRevision !== record.revision || evidence.data?.assessmentRevision !== record.revision));
@@ -54,9 +71,9 @@ export function OrganisationAssessmentPanel({ relationshipId, authFetch }) {
   }
   const buttons = actions => <div className={styles.actions}>{actions.map(action => data?.permissions?.[commands[action][1]] && <button key={action} disabled={locked} className={approvalStyle(action, styles)} onClick={() => open(action)}><TravelActionIcon action={action} />{commands[action][0]}</button>)}</div>;
   const editorStep = form ? ["create", "edit"].includes(form.action) ? 1 : ["evidence", "evidence-remove"].includes(form.action) ? 2 : ["submit", "review", "return", "withdraw-submission"].includes(form.action) ? 3 : 4 : 0;
-  const editor = form && <AssessmentEditor key={form.action} form={form} setForm={setForm} projectId={projectId} authFetch={authFetch} refresh={refresh} busy={busy} blocked={blocked} reviewBlocked={reviewBlocked} onSave={save} onCancel={() => setForm(null)} onReview={() => setForm(f => ({ ...f, record, expectedRevision: record?.revision, reviewRequired: false, error: "" }))} />;
+  const editor = form && <AssessmentEditor key={form.action} form={form} setForm={setForm} projectId={projectId} authFetch={authFetch} refresh={refresh} busy={busy} blocked={blocked} reviewBlocked={reviewBlocked} onSave={save} onCancel={() => { setForm(null); reload(); }} onReview={() => setForm(f => ({ ...f, record, expectedRevision: record?.revision, reviewRequired: false, error: "" }))} />;
   return <>
-    <div className={styles.actions}><button disabled={busy} onClick={reload}>Refresh assessment, evidence and history</button></div><ReadState state={detail} />
+    <ReadState state={detail} onRetry={reload} retryLabel="Retry assessment" retryDisabled={busy} />
     {data && <section className={styles.summary} aria-label="Organisation assessment scope"><h3>{data.scope.organizationName} · {data.scope.organizationStatusLabel}</h3><p>Project: {data.scope.projectName} (#{data.scope.projectId}) · Relationship #{relationshipId}</p><p>{decisionLabel(record?.currentDecision?.decision)}</p>{record && <span className={`${styles.statusBadge} ${styles[`status${record.state}`] || ""}`}>{record.state}{record.deleted && " · Deleted"}</span>}{!data.scopeAvailable && <p>This relationship or one of its owners is unavailable. Retained assessment information is read-only.</p>}<Issues issues={data.issues} /><Issues issues={record?.reviewIssues} />{record?.reviewRequired && <p>Review required. The retained outcome remains recorded; withdraw, revise and resubmit to reaffirm the decision.</p>}{record && <p>This relationship’s project, organisation and role are fixed by assessment history, including after deletion. Create another relationship for a different scope.</p>}</section>}
     <WorkflowIntro>Assess an organisation for its specific role in this project, select evidence and request independent review. Outcomes are informational; they do not certify due diligence, change the assigned role or grant funding.</WorkflowIntro>
     <WorkflowStep number={1} title="Prepare the assessment" description="Describe capacity, suitability for this role and material concerns. Drafts may be incomplete; all three narratives are needed before submission." keepOpen={editorStep === 1}>
@@ -65,7 +82,7 @@ export function OrganisationAssessmentPanel({ relationshipId, authFetch }) {
     </WorkflowStep>
     <WorkflowStep number={2} title="Select supporting evidence" description="Link exact document versions from this project. Evidence is optional; an empty selection requires an explanation at review. Unavailable selected evidence blocks submission and review. Links are not inherited from the checklist." keepOpen={editorStep === 2}>
       {record?.evidenceSummary && <p>Across all active links: {record.evidenceSummary.activeLinks} linked · {record.evidenceSummary.includedInDecision} in decision · {record.evidenceSummary.lateLinks} late · {record.evidenceSummary.unavailableLinks} unavailable.</p>}
-      {record && <><label><input type="checkbox" disabled={!!form || busy} checked={removed} onChange={e => { setRemoved(e.target.checked); setEvidencePage(0); }} />Include removed evidence</label><ReadState state={evidence} />{evidence.data?.content.map(row => <article className={styles.panel} key={row.id}><h4>{row.capturedName || `Document #${row.documentId}`} · Version {row.versionNumber ?? "unknown"}</h4><p>{label(row.purpose)} · {row.associationActive ? "Active link" : "Removed link"} · {label(row.availability)}</p>{record.currentDecision && <p>{row.includedInCurrentDecision ? "Included in current review" : row.associationActive ? "Added after review — outside the decision basis" : "Outside current review"}</p>}<p>Current name: {row.currentName || "Unavailable"} · Status: {row.currentStatus || "Unknown"}</p><p>Linked <Attribution at={row.linkedAt} actor={row.linkedBy} /></p>{row.removedAt && <p>Removed <Attribution at={row.removedAt} actor={row.removedBy} /> · {row.removalReason}</p>}<div className={styles.actions}><button disabled={!row.downloadEligible} onClick={async () => { setDownloadError(""); try { await downloadDocument(row.documentId, authFetch); } catch (error) { setDownloadError(error.message); } }}>Download document #{row.documentId}</button>{row.permissions?.canRemove && <button disabled={locked || evidence.loading} onClick={() => open("evidence-remove", row)}>Remove evidence #{row.id}</button>}</div></article>)}{evidence.data && !evidence.data.content.length && <p>No evidence on this page.</p>}<Pagination data={evidence.data} page={evidencePage} setPage={setEvidencePage} label="assessment evidence" disabled={!!form || busy || evidence.loading} /></>}
+      {record && <><label><input type="checkbox" disabled={!!form || busy} checked={removed} onChange={e => { setRemoved(e.target.checked); setEvidencePage(0); }} />Include removed evidence</label><ReadState state={evidence} onRetry={reload} retryLabel="Retry evidence" retryDisabled={busy} />{evidence.data?.content.map(row => <article className={styles.panel} key={row.id}><h4>{row.capturedName || `Document #${row.documentId}`} · Version {row.versionNumber ?? "unknown"}</h4><p>{label(row.purpose)} · {row.associationActive ? "Active link" : "Removed link"} · {label(row.availability)}</p>{record.currentDecision && <p>{row.includedInCurrentDecision ? "Included in current review" : row.associationActive ? "Added after review — outside the decision basis" : "Outside current review"}</p>}<p>Current name: {row.currentName || "Unavailable"} · Status: {row.currentStatus || "Unknown"}</p><p>Linked <Attribution at={row.linkedAt} actor={row.linkedBy} /></p>{row.removedAt && <p>Removed <Attribution at={row.removedAt} actor={row.removedBy} /> · {row.removalReason}</p>}<div className={styles.actions}><button disabled={!row.downloadEligible} onClick={async () => { setDownloadError(""); try { await downloadDocument(row.documentId, authFetch); } catch (error) { setDownloadError(error.message); } }}>Download document #{row.documentId}</button>{row.permissions?.canRemove && <button disabled={locked || evidence.loading} onClick={() => open("evidence-remove", row)}>Remove evidence #{row.id}</button>}</div></article>)}{evidence.data && !evidence.data.content.length && <p>No evidence on this page.</p>}<Pagination data={evidence.data} page={evidencePage} setPage={setEvidencePage} label="assessment evidence" disabled={!!form || busy || evidence.loading} /></>}
       {downloadError && <p role="alert">{downloadError}</p>}{buttons(["evidence"])}{editorStep === 2 && editor}
     </WorkflowStep>
     <WorkflowStep number={3} title="Submit and decide independently" description="Submission freezes the assessment and selected evidence. An independent ADMIN or APPROVER with an active Employee identity reviews it. Creators, submitters and contributors cannot review, including through another account." keepOpen={editorStep === 3}>
@@ -74,7 +91,7 @@ export function OrganisationAssessmentPanel({ relationshipId, authFetch }) {
     <WorkflowStep number={4} title="Review and correct explicitly" description="Withdraw the recorded review before corrections, then resubmit for a new independent decision. Late evidence stays outside the reviewed basis. Deletion and restoration retain history and never reinstate a withdrawn review." keepOpen={editorStep === 4}>
       {buttons(["withdraw-review", "delete", "restore"])}{editorStep === 4 && editor}<div className={styles.actions}>{[["/project", "Project details"], ["/documents", "Document checklist"], ["/risks", "Risks"], ["/results", "Results"], ["/follow-ups", "Follow-ups"]].map(([to, title]) => <Link key={to} to={to} onClick={e => { if (!confirmDiscardUnsavedChanges()) e.preventDefault(); }}>{title}</Link>)}</div>
     </WorkflowStep>
-    <section className={styles.panel} aria-label="Assessment history"><h3>Assessment history</h3><HistoryIntro>Newest first. Submissions, decisions, corrections and evidence changes remain attributed to their recorded actors.</HistoryIntro><ReadState state={history} /><ol className={styles.timeline}>{history.data?.content.map(event => <li key={event.id}><h4>{label(event.action)} · Revision {event.revision}</h4><Attribution at={event.occurredAt} actor={event.actor} />{event.reason && <p>Reason: {event.reason}</p>}<details><summary>Before</summary><HistorySnapshot value={event.before} /></details><details><summary>After</summary><HistorySnapshot value={event.after} /></details></li>)}</ol><Pagination data={history.data} page={historyPage} setPage={setHistoryPage} label="assessment history" disabled={history.loading || busy} /></section>
+    <section className={styles.panel} aria-label="Assessment history"><h3>Assessment history</h3><HistoryIntro>Newest first. Submissions, decisions, corrections and evidence changes remain attributed to their recorded actors.</HistoryIntro><ReadState state={history} onRetry={reload} retryLabel="Retry history" retryDisabled={busy} /><ol className={styles.timeline}>{history.data?.content.map(event => <li key={event.id}><h4>{label(event.action)} · Revision {event.revision}</h4><Attribution at={event.occurredAt} actor={event.actor} />{event.reason && <p>Reason: {event.reason}</p>}<details><summary>Before</summary><HistorySnapshot value={event.before} /></details><details><summary>After</summary><HistorySnapshot value={event.after} /></details></li>)}</ol><Pagination data={history.data} page={historyPage} setPage={setHistoryPage} label="assessment history" disabled={history.loading || busy} /></section>
   </>;
 }
 export default function OrganisationAssessment() {
@@ -82,11 +99,12 @@ export default function OrganisationAssessment() {
   const { selectedProjectId, setSelectedProjectId, projects = [] } = useContext(ProjectContext);
   const navigate = useNavigate();
   const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
-  const scope = useManagementRead(authFetch, `${BASE_URL}/api/project-organizations/${relationshipId}/assessment`, 0);
+  const [scopeRefresh, setScopeRefresh] = useState(0);
+  const scope = useManagementRead(authFetch, `${BASE_URL}/api/project-organizations/${relationshipId}/assessment`, scopeRefresh);
   const projectId = scope.data?.scope?.projectId;
   const sameProject = String(selectedProjectId) === String(projectId);
   const available = projects.some(p => String(p.id) === String(projectId));
-  return <section className={styles.page}><h2>Organisation assessment</h2><p>A recorded review of one organisation’s role in one project. This is separate from project assessment and has no organisation-wide approval.</p><ReadState state={scope} />
+  return <section className={styles.page}><h2>Organisation assessment</h2><p>A recorded review of one organisation’s role in one project. This is separate from project assessment and has no organisation-wide approval.</p><ReadState state={scope} onRetry={() => setScopeRefresh(n => n + 1)} retryLabel="Retry organisation assessment" />
     {!sameProject && scope.data && <p>This assessment belongs to {scope.data.scope.projectName} (#{projectId}), not the selected project. {available ? <button onClick={() => setSelectedProjectId(String(projectId))}>Select this project to open assessment</button> : "Its project is unavailable in the selector; retained information follows below."}</p>}
     {scope.data && (sameProject || !available) && <OrganisationAssessmentPanel key={relationshipId} relationshipId={relationshipId} authFetch={authFetch} />}
   </section>;
