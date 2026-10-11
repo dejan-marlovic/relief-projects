@@ -15,6 +15,7 @@ export function mutationNotice(input, options = {}, response) {
   if (path.includes("bulk")) return null;
   if (response.status === 202) return "Request accepted for processing.";
   const segments = path.slice(5).split("/");
+  if (segments[0] === "projects" && segments[2] === "cover-image") return "Project changes saved.";
   if (segments[0] === "project-organizations" && segments[2] === "assessment") {
     if (/\/remove$/.test(path)) return "Organisation assessment evidence link removed.";
     const notices = { submit: "Organisation assessment submitted for review.", review: "Organisation role review recorded.", return: "Organisation assessment returned for changes.", "withdraw-submission": "Organisation assessment submission withdrawn.", "withdraw-review": "Organisation role review withdrawn.", evidence: "Organisation assessment evidence linked.", delete: "Organisation assessment deleted; history retained.", restore: "Organisation assessment restored without reinstating a review." };

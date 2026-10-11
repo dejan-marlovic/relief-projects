@@ -12,6 +12,29 @@ function setup(extra = {}) {
   const view = renderHook(({ id = 1 } = {}) => useProjectAutosave({ projectId: id, authFetch: fetch, enabled: true, onSaved, ...extra }));
   return { ...view, fetch, onSaved, changeSaved: value => { saved = { ...saved, ...value }; } };
 }
+
+test("caption padding after an upload does not produce a false conflict", async () => {
+  const { result, fetch, changeSaved } = setup();
+  changeSaved({ projectCoverImage: "one.jpg,two.jpg", projectCoverImageCaption: null });
+  act(() => result.current.edit({ projectCoverImageCaption: "First caption|||" }, {
+    projectCoverImage: "one.jpg,two.jpg", projectCoverImageCaption: "|||",
+  }));
+  await act(async () => result.current.flush());
+  expect(result.current.message).toBe("Saved");
+  expect(result.current.dirty).toBe(false);
+  expect(fetch.mock.calls.filter(([, options]) => options?.method === "PUT")).toHaveLength(1);
+});
+
+test("caption saving still blocks when image order changes", async () => {
+  const { result, fetch, changeSaved } = setup();
+  changeSaved({ projectCoverImage: "two.jpg,one.jpg", projectCoverImageCaption: null });
+  act(() => result.current.edit({ projectCoverImageCaption: "Caption|||" }, {
+    projectCoverImage: "one.jpg,two.jpg", projectCoverImageCaption: "|||",
+  }));
+  await act(async () => result.current.flush());
+  expect(result.current.conflicts).toHaveProperty("projectCoverImage");
+  expect(fetch.mock.calls.some(([, options]) => options?.method === "PUT")).toBe(false);
+});
 test("debounces typing, preserves unrelated fresh values and excludes approval", async () => {
   jest.useFakeTimers();
   try {

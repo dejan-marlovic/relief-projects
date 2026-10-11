@@ -14,6 +14,11 @@ export async function withProjectSave(id, work) {
 }
 const equal = (a, b) => JSON.stringify(a ?? "") === JSON.stringify(b ?? "") || (!Array.isArray(a) && !Array.isArray(b) && String(a ?? "") === String(b ?? ""));
 
+// Empty trailing caption slots added by the gallery are equivalent to omitted slots.
+const fieldEqual = (key, a, b) => key === "projectCoverImageCaption"
+  ? String(a ?? "").replace(/(\|\|\|)+$/, "") === String(b ?? "").replace(/(\|\|\|)+$/, "")
+  : equal(a, b);
+
 export function validateProjectDates(project) {
   for (const [start, end] of [["projectStart", "projectEnd"], ["projectStartRev", "projectEndRev"]]) {
     if (project[start] && project[end] && project[start] > project[end]) return "The end date must be on or after the start date. Your changes have not been saved.";
@@ -52,7 +57,7 @@ export default function useProjectAutosave({ projectId, authFetch, enabled, onSa
         };
         const fresh = await read();
         if (!current.active) return;
-        const conflicts = Object.keys(sent).filter(key => !equal(fresh[key], sent[key].before) && !equal(fresh[key], changes[key]));
+        const conflicts = Object.keys(sent).filter(key => !fieldEqual(key, fresh[key], sent[key].before) && !fieldEqual(key, fresh[key], changes[key]));
         // Captions are positional; never apply them against a changed image list.
         if (sent.projectCoverImageCaption && fresh.projectCoverImage !== sent.projectCoverImageCaption.images) conflicts.push("projectCoverImage");
         if (conflicts.length) {
@@ -62,7 +67,7 @@ export default function useProjectAutosave({ projectId, authFetch, enabled, onSa
         }
         const invalid = options.current.validate({ ...fresh, ...changes }, changes);
         if (invalid) { const error = new Error(invalid); error.validation = true; throw error; }
-        if (!Object.keys(changes).every(key => equal(fresh[key], changes[key]))) {
+        if (!Object.keys(changes).every(key => fieldEqual(key, fresh[key], changes[key]))) {
           const response = await options.current.authFetch(url, { method: "PUT", headers: { "Content-Type": "application/json" }, silentSuccess: true, body: JSON.stringify({ ...projectMetadataPayload(fresh), ...changes }) });
           if (!response.ok) {
             const body = await response.json().catch(() => ({}));
