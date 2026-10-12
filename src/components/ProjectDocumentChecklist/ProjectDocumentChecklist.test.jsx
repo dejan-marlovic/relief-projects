@@ -175,3 +175,26 @@ test("Needs assessment enables evidence only after Applicable is saved", async (
   expect(screen.getByLabelText("Document evidence")).toBeDisabled();
   expect(screen.getByText("Link evidence")).toBeDisabled();
 });
+
+test("background refresh keeps controls enabled and is cancelled before a decision is saved", async () => {
+  const view = await open();
+  const normal = api.getMockImplementation();
+  let refreshSignal;
+  api.mockImplementation((url, options) => {
+    if (url.endsWith("/document-checklist") && !options?.method) {
+      refreshSignal = options.signal;
+      return new Promise(() => {});
+    }
+    return normal(url, options);
+  });
+  view.rerender(<ProjectDocumentChecklist projectId={2} authFetch={api} categories={[]} refreshKey={1} />);
+  await waitFor(() => expect(refreshSignal).toBeDefined());
+  expect(screen.queryByText("Loading checklist…")).not.toBeInTheDocument();
+  expect(screen.getByLabelText("Applicability")).toBeEnabled();
+  expect(screen.getByText("Save applicability")).toBeEnabled();
+  const interruptedRefresh = refreshSignal;
+  fireEvent.click(screen.getByText("Save applicability"));
+  await waitFor(() => expect(writes()).toHaveLength(1));
+  expect(interruptedRefresh.aborted).toBe(true);
+  await act(async () => {});
+});

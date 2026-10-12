@@ -60,6 +60,7 @@ function Item({ item, generation, editable, documents, categories, busy, mutate:
         <label>Applicability<select value={applicability} disabled={busy} onChange={(e) => { setDirty(true); setApplicability(e.target.value); }}><option value="APPLICABLE">Applicable</option><option value="NOT_ASSESSED">Needs assessment</option><option value="NOT_APPLICABLE">Not applicable</option></select></label>
         {applicability === "NOT_APPLICABLE" && <label>Explanation<textarea value={reason} disabled={busy} onChange={(e) => { setDirty(true); setReason(e.target.value); }} rows={3} /><small>Required, up to 1,000 characters. This replaces the current explanation.</small></label>}
         {validation && <p role="alert">{validation}</p>}
+        <small>Save this decision explicitly. Document details autosave, but checklist decisions and evidence links use their own buttons.</small>
         <button disabled={busy} type="submit">Save applicability</button>
       </form>}
       <h4>Evidence</h4>
@@ -106,6 +107,7 @@ function Panel({ projectId, authFetch, categories, refreshKey }) {
   useAutomaticRefresh(() => setRevision(value => value + 1), loading || busy || hasUnsavedChanges);
   const alive = useRef(true);
   const pending = useRef(false);
+  const checklistRequest = useRef(null);
   const downloads = useRef(new Map());
   const endpoint = `${BASE_URL}/api/projects/${projectId}/document-checklist`;
   useEffect(() => {
@@ -115,6 +117,7 @@ function Panel({ projectId, authFetch, categories, refreshKey }) {
   }, []);
   useEffect(() => {
     const controller = new AbortController();
+    checklistRequest.current = controller;
     setLoading(true); setError("");
     (async () => {
       try {
@@ -148,7 +151,9 @@ function Panel({ projectId, authFetch, categories, refreshKey }) {
     return () => controller.abort();
   }, [authFetch, projectId, data, loading, historical, category]);
   const mutate = async (item, path, method, body) => {
-    if (pending.current || loading || !data?.editable) return;
+    if (pending.current || !data?.editable) return;
+    checklistRequest.current?.abort();
+    setLoading(false);
     pending.current = true; setBusy(true); setNotice("");
     try {
       const url = `${endpoint}/${item.itemKey}/${path}${method === "DELETE" ? `?expectedRevision=${item.revision}` : ""}`;
@@ -187,7 +192,7 @@ function Panel({ projectId, authFetch, categories, refreshKey }) {
         <p className={styles.muted}>These filters only help find documents. Upload files below, then select evidence explicitly. Uploads remain if linking fails. To switch versions, link the new version before removing the old one; if removal fails, both links remain.</p>
         {documentError && <p role="alert">{documentError}</p>}
       </div>}
-      {[...data.items].filter((item) => !attentionOnly || !settled(item.state)).sort((a, b) => a.order - b.order).map((item) => <Item key={item.itemKey} generation={generation} item={item} editable={data.editable} documents={documents} categories={categories} busy={busy || loading} mutate={mutate} download={download} downloading={downloading} showHistory={setHistory} />)}
+      {[...data.items].filter((item) => !attentionOnly || !settled(item.state)).sort((a, b) => a.order - b.order).map((item) => <Item key={item.itemKey} generation={generation} item={item} editable={data.editable} documents={documents} categories={categories} busy={busy} mutate={mutate} download={download} downloading={downloading} showHistory={setHistory} />)}
       </WorkflowStep>
       <WorkflowStep number={2} title="Review coverage" description="Check unassessed requirements, missing evidence and unavailable links. Return to the earlier steps to resolve gaps or revisit decisions. Coverage is not certification of document quality, financial completion or project completion.">
       <div className={styles.progressCard}>
