@@ -1,3 +1,4 @@
+import { FiUploadCloud } from "react-icons/fi";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import { useUnsavedChange, useUnsavedChanges } from "../../context/UnsavedChangesContext";
 import workflow from "../Workflow/Workflow.module.scss";
@@ -20,6 +21,16 @@ export default function DocumentVersions({ document, authFetch, categories, canE
   const { hasUnsavedChanges, confirmDiscardUnsavedChanges } = useUnsavedChanges();
   useUnsavedChange(`document-replacement-${document.id}`, !!replacement || busy);
   useAutomaticRefresh(() => setRefresh(value => value + 1), loading || busy || !!replacement || hasUnsavedChanges);
+  const replacementInput = useRef(null);
+  const [dragging, setDragging] = useState(false);
+  const chooseReplacement = files => {
+    if (busy || !replacement || !files?.length) return;
+    if (files.length !== 1) { setError("Choose one replacement file at a time."); return; }
+    const validation = validateFile(files[0]);
+    if (validation) { setError(validation); return; }
+    setError("");
+    setReplacement(current => ({ ...current, file: files[0] }));
+  };
   const alive = useRef(true);
   const mutation = useRef(false);
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
@@ -115,8 +126,19 @@ export default function DocumentVersions({ document, authFetch, categories, canE
         <label>Replacement category<select disabled={busy} value={replacement.category} onChange={(e) => setReplacement({ ...replacement, category: e.target.value })}><option value="">Inherit current category</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
         <label>Replacement document date<input type="date" min="1000-01-01" max="9999-12-31" disabled={busy} value={replacement.date} onChange={(e) => setReplacement({ ...replacement, date: e.target.value })} /></label>
         <DocumentStatus label="Replacement status" value={replacement.status} disabled={busy} onChange={(e) => setReplacement({ ...replacement, status: e.target.value })} />
-        <label>Replacement file<input type="file" disabled={busy} onChange={(e) => setReplacement({ ...replacement, file: e.target.files?.[0] || null })} /></label>
+
       </div>
+      <button type="button" className={`${styles.uploadArea} ${styles.replacementUpload}`} disabled={busy} aria-label="Choose replacement file" data-dragging={dragging}
+        onClick={() => replacementInput.current?.click()}
+        onDragOver={event => { event.preventDefault(); if (!busy) setDragging(true); }}
+        onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget)) setDragging(false); }}
+        onDrop={event => { event.preventDefault(); setDragging(false); chooseReplacement(event.dataTransfer.files); }}>
+        <FiUploadCloud size={24} className={styles.uploadIcon} />
+        <span>{busy ? "Uploading…" : replacement.file ? replacement.file.name : "Choose a file, or drag and drop it here"}</span>
+        <span className={styles.uploadFormats}>{replacement.file ? "Choose or drop another file to change your selection." : "Select one replacement file."} Upload starts when you choose Save replacement.</span>
+      </button>
+      <input ref={replacementInput} className={styles.hiddenFileInput} type="file" aria-label="Replacement file" disabled={busy}
+        onChange={event => { chooseReplacement(event.target.files); event.target.value = ""; }} />
       <div className={styles.docActions}><button type="submit" className={styles.downloadLink} disabled={busy}>{busy ? "Uploading…" : "Save replacement"}</button><button type="button" className={styles.downloadLink} disabled={busy} onClick={() => setReplacement(null)}>Cancel replacement</button></div>
     </form>}
   </section>;

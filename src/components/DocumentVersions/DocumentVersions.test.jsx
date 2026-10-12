@@ -82,3 +82,19 @@ test("unknown deletion state cannot download or replace", async () => {
   expect(screen.queryByRole("button", { name: /Download version/ })).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Upload replacement" })).not.toBeInTheDocument();
 });
+
+test("drop selects one file without uploading and rejects multiple files", async () => {
+  mount();
+  fireEvent.click(await screen.findByRole("button", { name: "Upload replacement" }));
+  const picker = screen.getByRole("button", { name: "Choose replacement file" });
+  const file = new File(["test"], "dropped.pdf", { type: "application/pdf" });
+  fireEvent.drop(picker, { dataTransfer: { files: [file] } });
+  expect(picker).toHaveTextContent("dropped.pdf");
+  expect(api.mock.calls.some(([, options]) => options?.method === "POST")).toBe(false);
+  fireEvent.drop(picker, { dataTransfer: { files: [file, file] } });
+  expect(await screen.findByRole("alert")).toHaveTextContent("Choose one replacement file at a time");
+  expect(picker).toHaveTextContent("dropped.pdf");
+  fireEvent.click(screen.getByRole("button", { name: "Save replacement" }));
+  await screen.findByText("Replacement uploaded. The previous version is retained.");
+  expect(api.mock.calls.find(([, options]) => options?.method === "POST")[1].body.get("file").name).toBe("dropped.pdf");
+});
