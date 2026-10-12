@@ -22,17 +22,20 @@ const settled = (state) => ["EVIDENCE_RECORDED", "NOT_APPLICABLE"].includes(stat
 const counts = { needsAssessment: "Needs assessment", missingEvidence: "Missing evidence", evidenceRecorded: "Evidence recorded", evidenceUnavailable: "Evidence unavailable", notApplicable: "Not applicable" };
 const actor = (value) => value?.username || (value?.userId ? `User #${value.userId}` : "Unknown");
 
-function Item({ stage, item, generation, editable, documents, categories, busy, mutate: performMutation, download, downloading, showHistory }) {
+function Item({ item, generation, editable, documents, categories, busy, mutate: performMutation, download, downloading, showHistory }) {
   const [applicability, setApplicability] = useState(item.applicability);
   const [reason, setReason] = useState(item.notApplicableReason || "");
   const [selected, setSelected] = useState("");
   const [validation, setValidation] = useState("");
   const [dirty, setDirty] = useState(false);
   const [draftRevision, setDraftRevision] = useState(item.revision);
-  useUnsavedChange(`checklist-${stage}-${item.itemKey}`, dirty);
+  useUnsavedChange(`checklist-${item.itemKey}`, dirty);
   const mutate = async (record, ...args) => { if (await performMutation({ ...record, revision: draftRevision }, ...args)) setDirty(false); };
   useEffect(() => { if (dirty) return; setDraftRevision(item.revision); setApplicability(item.applicability); setReason(item.notApplicableReason || ""); setSelected(""); setValidation(""); }, [generation, item.applicability, item.notApplicableReason, item.revision, dirty]);
   const evidence = item.evidence || [];
+  const availableDocuments = documents.filter(doc => !evidence.some(link => link.documentId === doc.id));
+  const decisionChanged = applicability !== item.applicability || reason !== (item.notApplicableReason || "");
+  const canLink = item.applicability === "APPLICABLE" && !decisionChanged;
   const save = (event) => {
     event.preventDefault();
     if (applicability === "NOT_APPLICABLE" && (!reason.trim() || [...reason.trim()].length > 1000)) {
@@ -41,15 +44,15 @@ function Item({ stage, item, generation, editable, documents, categories, busy, 
     setValidation("");
     mutate(item, "applicability", "PUT", { applicability, ...(applicability === "NOT_APPLICABLE" ? { reason: reason.trim() } : {}) });
   };
-  return <details className={styles.item} data-state={item.state} aria-label={`${item.label} · ${stage}`}>
+  return <details className={styles.item} data-state={item.state} aria-label={item.label}>
     <summary>
       <span className={styles.checkmark} aria-hidden="true">{item.state === "EVIDENCE_RECORDED" ? "✓" : item.state === "NOT_APPLICABLE" ? "−" : item.state === "EVIDENCE_UNAVAILABLE" ? "!" : ""}</span>
-      <span className={styles.itemHeading}><span>{item.label}</span><small>{stage === "assessment" ? "Review applicability and the recorded explanation" : nextSteps[item.state] || "Open to review this item"}</small></span>
+      <span className={styles.itemHeading}><span>{item.label}</span><small>{nextSteps[item.state] || "Open to review this item"}</small></span>
       <span className={styles.badge}>{states[item.state] || item.state}{evidence.length > 0 ? ` · ${evidence.length} linked` : ""}</span>
     </summary>
     <div className={styles.body}>
       {dirty && item.revision !== draftRevision && <p role="alert">This item changed while you were editing. Your draft is retained; saving will check for a conflict. <button type="button" disabled={busy} onClick={() => { if (window.confirm("Discard this draft and use the latest saved checklist values?")) setDirty(false); }}>Use latest saved values</button></p>}
-      {stage === "assessment" && <><p>{item.guidance}</p>
+      <p>{item.guidance}</p>
       <p className={styles.muted}>{item.applicabilitySource === "DEFAULT" ? "Default applicability — no user decision recorded." : `Explicit decision by ${actor(item.applicabilityChangedBy)} · ${uploadTimeLabel(item.applicabilityChangedAt)}`}</p>
       {item.notApplicableReason && <p><strong>Not applicable because:</strong> {item.notApplicableReason}</p>}
       {item.lastChangedAt && <p className={styles.muted}>Last checklist change: {actor(item.lastChangedBy)} · {uploadTimeLabel(item.lastChangedAt)}</p>}
@@ -59,8 +62,7 @@ function Item({ stage, item, generation, editable, documents, categories, busy, 
         {validation && <p role="alert">{validation}</p>}
         <button disabled={busy} type="submit">Save applicability</button>
       </form>}
-      </>}
-      {stage === "evidence" && <><h4>Evidence</h4>
+      <h4>Evidence</h4>
       {item.applicability === "NOT_APPLICABLE" && <p className={styles.muted}>Existing links are retained. Change applicability before adding evidence.</p>}
       {!evidence.length && <p className={styles.muted}>No evidence linked.</p>}
       <ul className={styles.evidence}>{evidence.map((doc) => <li key={doc.documentId}>
@@ -72,14 +74,15 @@ function Item({ stage, item, generation, editable, documents, categories, busy, 
         <div className={styles.actions}>
           <button type="button" disabled={doc.downloadEligible !== true || downloading.includes(doc.documentId)} onClick={() => download(doc.documentId)}>Download linked version</button>
           <button type="button" onClick={() => showHistory({ id: doc.documentId, documentName: doc.documentName })}>Version history</button>
-          {editable && <button type="button" disabled={busy} onClick={() => { if (window.confirm("Remove this evidence link? The document and file will be kept.")) mutate(item, `evidence/${doc.documentId}`, "DELETE"); }}>Remove evidence link</button>}
+          {editable && <button type="button" disabled={busy || decisionChanged} onClick={() => { if (window.confirm("Remove this evidence link? The document and file will be kept.")) mutate(item, `evidence/${doc.documentId}`, "DELETE"); }}>Remove evidence link</button>}
         </div>
       </li>)}</ul>
-      {editable && item.applicability !== "NOT_APPLICABLE" && <form className={styles.form} onSubmit={(e) => { e.preventDefault(); if (selected) mutate(item, "evidence", "POST", { documentId: Number(selected) }); }}>
-        <label>Document evidence<select value={selected} disabled={busy} onChange={(e) => { setDirty(true); setSelected(e.target.value); }}><option value="">Select an exact document version</option>{documents.filter((doc) => !evidence.some((link) => link.documentId === doc.id)).map((doc) => <option key={doc.id} value={doc.id}>{doc.documentName} · Version {doc.versionNumber} · {statusLabel(doc.status)} · {doc.isCurrent ? "Current" : "Historical"} (#{doc.id})</option>)}</select></label>
-        <button type="submit" disabled={busy || !selected}>Link evidence</button>
+      {editable && !canLink && <p className={styles.muted}>Save Applicable above before adding evidence. Existing links remain available.</p>}
+      {editable && <form className={styles.form} onSubmit={(e) => { e.preventDefault(); if (selected && canLink && availableDocuments.some(doc => String(doc.id) === selected)) mutate(item, "evidence", "POST", { documentId: Number(selected) }); }}>
+        <label>Document evidence<select value={selected} disabled={busy || !canLink || !availableDocuments.length} onChange={(e) => { setDirty(true); setSelected(e.target.value); }}><option value="">{availableDocuments.length ? "Select an exact document version" : "No additional document versions available"}</option>{availableDocuments.map((doc) => <option key={doc.id} value={doc.id}>{doc.documentName} · Version {doc.versionNumber} · {statusLabel(doc.status)} · {doc.isCurrent ? "Current" : "Historical"} (#{doc.id})</option>)}</select></label>
+        {!availableDocuments.length && <p className={styles.muted}>No additional document versions available. Upload another document or adjust the evidence filters.</p>}
+        <button type="submit" disabled={busy || !canLink || !selected || !availableDocuments.some(doc => String(doc.id) === selected)}>Link evidence</button>
       </form>}
-      </>}
     </div>
   </details>;
 }
@@ -168,7 +171,7 @@ function Panel({ projectId, authFetch, categories, refreshKey }) {
     finally { downloads.current.delete(id); if (alive.current) setDownloading((v) => v.filter((value) => value !== id)); }
   };
   return <div className={styles.panel}>
-    <WorkflowIntro>Assess which document requirements apply, attach exact supporting versions and review remaining gaps. You can move between these steps at any time; there is no need to assess every item before linking evidence. A checkmark means evidence is recorded, not reviewed or approved.</WorkflowIntro>
+    <WorkflowIntro>Work through each requirement in one card: save whether it applies, then attach supporting document versions when it is Applicable. A checkmark means evidence is recorded, not reviewed or approved.</WorkflowIntro>
     {error && <button type="button" disabled={loading || busy} onClick={() => setRevision((v) => v + 1)}>Retry loading checklist</button>}
     {loading && !data && <p role="status">Loading checklist…</p>}
     {error && <p role="alert">{error}</p>}
@@ -177,19 +180,16 @@ function Panel({ projectId, authFetch, categories, refreshKey }) {
       {!data.editable && <p className={styles.muted}>Read-only. Only Admin and Project Manager can change a checklist on an active project.</p>}
       <div className={styles.checklistToolbar}><strong>Checklist items</strong><label><input type="checkbox" checked={attentionOnly} onChange={(event) => { if (confirmDiscardUnsavedChanges()) setAttentionOnly(event.target.checked); }} /> Needs attention only</label></div>
       {attentionOnly && data.items.every((item) => settled(item.state)) && <p className={styles.muted}>No items need attention. Turn off the filter to review recorded evidence and not-applicable decisions.</p>}
-      <WorkflowStep number={1} title="Assess applicability" description="Open each requirement and use its guidance to decide whether it applies. Save Applicable, leave it needing assessment, or explain why it is Not applicable. You can revise that decision later.">
-      {[...data.items].filter((item) => !attentionOnly || !settled(item.state)).sort((a, b) => a.order - b.order).map((item) => <Item stage="assessment" key={item.itemKey} generation={generation} item={item} editable={data.editable} documents={documents} categories={categories} busy={busy || loading} mutate={mutate} download={download} downloading={downloading} showHistory={setHistory} />)}
-      </WorkflowStep>
-      <WorkflowStep number={2} title="Attach evidence" description="Open an item to link the exact document versions that support it. Upload missing files in the Documents area below. A replacement upload does not automatically replace an existing evidence link; link the new version explicitly.">
+      <WorkflowStep number={1} title="Review requirements and attach evidence" description="Open a requirement, save its applicability and link supporting document versions in the same card. Upload missing files in Documents below. Replacement uploads do not change existing evidence links.">
       {data.editable && <div className={styles.form}>
         <label>Evidence category<select value={category} disabled={busy} onChange={(e) => setCategory(e.target.value)}><option value="">All categories</option>{categories.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</select></label>
         <label><input type="checkbox" checked={historical} disabled={busy} onChange={(e) => setHistorical(e.target.checked)} /> Include active historical versions</label>
         <p className={styles.muted}>These filters only help find documents. Upload files below, then select evidence explicitly. Uploads remain if linking fails. To switch versions, link the new version before removing the old one; if removal fails, both links remain.</p>
         {documentError && <p role="alert">{documentError}</p>}
       </div>}
-      {[...data.items].filter((item) => !attentionOnly || !settled(item.state)).sort((a, b) => a.order - b.order).map((item) => <Item stage="evidence" key={item.itemKey} generation={generation} item={item} editable={data.editable} documents={documents} categories={categories} busy={busy || loading} mutate={mutate} download={download} downloading={downloading} showHistory={setHistory} />)}
+      {[...data.items].filter((item) => !attentionOnly || !settled(item.state)).sort((a, b) => a.order - b.order).map((item) => <Item key={item.itemKey} generation={generation} item={item} editable={data.editable} documents={documents} categories={categories} busy={busy || loading} mutate={mutate} download={download} downloading={downloading} showHistory={setHistory} />)}
       </WorkflowStep>
-      <WorkflowStep number={3} title="Review coverage" description="Check unassessed requirements, missing evidence and unavailable links. Return to the earlier steps to resolve gaps or revisit decisions. Coverage is not certification of document quality, financial completion or project completion.">
+      <WorkflowStep number={2} title="Review coverage" description="Check unassessed requirements, missing evidence and unavailable links. Return to the earlier steps to resolve gaps or revisit decisions. Coverage is not certification of document quality, financial completion or project completion.">
       <div className={styles.progressCard}>
         <div><strong>{data.summary.evidenceRecorded} of {Math.max(0, data.summary.totalItems - data.summary.notApplicable)} applicable or unassessed items have evidence</strong><span>{data.summary.notApplicable} marked not applicable</span></div>
         <progress aria-label="Items with evidence recorded" value={data.summary.evidenceRecorded} max={Math.max(1, data.summary.totalItems - data.summary.notApplicable)} />

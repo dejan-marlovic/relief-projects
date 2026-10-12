@@ -14,7 +14,7 @@ const open = async () => {
   details.open = true; fireEvent(details, new Event("toggle"));
   await screen.findAllByText("Project assessment");
   await waitFor(() => expect(screen.queryByText("Loading checklist…")).not.toBeInTheDocument());
-  screen.getAllByRole("group", { name: / · (assessment|evidence)$/ }).forEach(item => { item.open = true; fireEvent(item, new Event("toggle")); });
+  screen.getAllByRole("group", { name: "Project assessment" }).forEach(item => { item.open = true; fireEvent(item, new Event("toggle")); });
   return view;
 };
 beforeEach(() => {
@@ -64,7 +64,7 @@ test("retains unavailable evidence under Not applicable, allows unlink, and reve
   expect(screen.getByText("Original.pdf")).toBeVisible();
   expect(screen.getByText("Download linked version")).toBeDisabled();
   expect(screen.getByText("Remove evidence link")).toBeEnabled();
-  expect(screen.queryByLabelText("Document evidence")).not.toBeInTheDocument();
+  expect(screen.getByLabelText("Document evidence")).toBeDisabled();
   fireEvent.change(screen.getByLabelText("Applicability"), { target: { value: "NOT_ASSESSED" } });
   fireEvent.click(screen.getByText("Save applicability"));
   await waitFor(() => expect(writes()).toHaveLength(1));
@@ -79,7 +79,7 @@ test("read-only envelope blocks all mutation controls but permits exact linked d
   await waitFor(() => expect(downloadDocument).toHaveBeenCalledWith(10, api, expect.any(AbortSignal)));
 });
 test("links explicit exact version with revision, without changing applicability", async () => {
-  envelope.items = [{ ...baseItem, applicability: "NOT_ASSESSED", state: "NEEDS_ASSESSMENT" }];
+  envelope.items = [{ ...baseItem }];
   await open(); await screen.findByRole("option", { name: /New.pdf/ });
   fireEvent.change(screen.getByLabelText("Document evidence"), { target: { value: "11" } });
   fireEvent.click(screen.getByText("Link evidence"));
@@ -139,17 +139,39 @@ test("attention filter hides recorded and not-applicable items without changing 
 });
 
 
-test("explained steps preserve unsaved applicability while evidence remains independently accessible", async () => {
+test("combined cards preserve drafts when collapsed and block evidence while the decision is unsaved", async () => {
   await open();
   fireEvent.change(screen.getByLabelText("Applicability"), { target: { value: "NOT_APPLICABLE" } });
   fireEvent.change(screen.getByLabelText(/Explanation/), { target: { value: "Draft explanation" } });
-  const assessment = screen.getByRole("button", { name: /Assess applicability/ });
+  const assessment = screen.getByRole("button", { name: /Review requirements and attach evidence/ });
   fireEvent.click(assessment);
   expect(assessment).toHaveAttribute("aria-expanded", "false");
   expect(screen.queryByRole("combobox", { name: "Applicability" })).not.toBeInTheDocument();
-  expect(screen.getByRole("combobox", { name: "Document evidence" })).toBeVisible();
+  expect(screen.queryByRole("combobox", { name: "Document evidence" })).not.toBeInTheDocument();
   expect(screen.getByRole("region", { name: "Review coverage" })).toHaveTextContent("These totals cover the whole checklist");
   expect(writes()).toHaveLength(0);
   fireEvent.click(assessment);
   expect(screen.getByLabelText(/Explanation/)).toHaveValue("Draft explanation");
+});
+
+test("Needs assessment enables evidence only after Applicable is saved", async () => {
+  envelope.items = [{ ...baseItem, applicability: "NOT_ASSESSED", state: "NEEDS_ASSESSMENT" }];
+  const normal = api.getMockImplementation();
+  api.mockImplementation(async (url, options) => {
+    if (options?.method === "PUT") {
+      envelope = { ...envelope, items: [{ ...baseItem, revision: 4 }] };
+      return response(envelope.items[0]);
+    }
+    return normal(url, options);
+  });
+  await open();
+  expect(screen.getAllByRole("group", { name: "Project assessment" })).toHaveLength(1);
+  expect(screen.getByLabelText("Document evidence")).toBeDisabled();
+  fireEvent.change(screen.getByLabelText("Applicability"), { target: { value: "APPLICABLE" } });
+  expect(screen.getByLabelText("Document evidence")).toBeDisabled();
+  fireEvent.click(screen.getByText("Save applicability"));
+  await waitFor(() => expect(screen.getByLabelText("Document evidence")).toBeEnabled());
+  fireEvent.change(screen.getByLabelText("Applicability"), { target: { value: "NOT_APPLICABLE" } });
+  expect(screen.getByLabelText("Document evidence")).toBeDisabled();
+  expect(screen.getByText("Link evidence")).toBeDisabled();
 });

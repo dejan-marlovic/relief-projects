@@ -156,7 +156,7 @@ const sections = [
       "Read removed and unavailable evidence labels and retained history before correcting links. Removing an association does not delete the file."
     ],
     notes: [
-      ["Checklist and document status", "A category describes a document’s kind; a checklist item describes why it is needed. Draft or Final labels and linked files do not certify completeness or approval. Record applicability and explanations only where the checklist offers them."],
+      ["Checklist and document status", "A category describes a document’s kind; a checklist item describes why it is needed. Draft or Final labels and linked files do not certify completeness or approval. In each checklist card, save whether the requirement applies, then link evidence in that same card. New links are available only while the saved decision is Applicable and there are no unsaved decision changes. Existing links remain visible if the decision changes to Not applicable or Needs assessment."],
       ["Late payment evidence", "For an eligible approved order, including a Booked order, open Late payment evidence. Select the externally prepared signed order or combined evidence file and give a reason. Replacement and removal retain history. No outgoing payment entry is required, and these attachments remain outside the earlier approval decision."],
       ["Access and missing files", "Downloads require the appropriate access. A deleted or unavailable document may remain visible in history. Ask an authorised administrator about restoration instead of uploading a different file under an old version’s identity. Stay within the upload limits shown in the form."]
     ]
