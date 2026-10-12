@@ -9,7 +9,8 @@ import { WorkflowIntro, WorkflowStep, HistoryIntro } from "../../components/Work
 import { Attribution, HistorySnapshot, Issues, Pagination, ReadState } from "../Results/ResultViews";
 import { label, readManagement, useManagementRead } from "../Management/managementApi";
 import TravelActionIcon, { approvalStyle } from "../Travel/TravelActionIcon";
-import { commands, draftFrom, fields, decisionLabel } from "./assessmentApi";
+import { commands, draftFrom, fields, decisionLabel, assessmentPayload } from "./assessmentApi";
+import { assessmentDraftKey, readAssessmentDraft, storeAssessmentDraft, clearAssessmentDraft } from "./assessmentDrafts";
 import AssessmentEditor from "./AssessmentEditor";
 import styles from "../Travel/Travel.module.scss";
 
@@ -57,21 +58,58 @@ export function OrganisationAssessmentPanel({ relationshipId, authFetch }) {
   const blocked = !data || detail.loading || !canAct || (form?.action === "evidence-remove" && evidence.loading);
   const reviewBlocked = blocked || (record && (history.loading || evidence.loading || history.data?.assessmentRevision !== record.revision || evidence.data?.assessmentRevision !== record.revision));
   const locked = busy || !!form || detail.loading;
-  function open(action, link) { setForm({ action, link, record, expectedRevision: record?.revision, draft: draftFrom(action === "edit" ? record : null) }); }
-  async function save(body) {
+  function open(action, link) {
+    const storageKey = assessmentDraftKey(relationshipId, action, link?.id);
+    const recovered = readAssessmentDraft(storageKey) || (action === "edit" ? readAssessmentDraft(assessmentDraftKey(relationshipId, "create")) : null);
+    const draft = draftFrom(action === "edit" ? record : null);
+    setForm({ action, link, record, storageKey, expectedRevision: record?.revision,
+      draft: recovered ? { ...draft, ...recovered.draft } : draft,
+      savedDraft: JSON.stringify(draft),
+      reviewRequired: !!recovered,
+      error: recovered ? "Recovered text from this tab. Check the current assessment before continuing." : "" });
+  }
+  const [localSaved, setLocalSaved] = useState(false);
+  useEffect(() => {
+    if (!form) return;
+    if (!form.reviewRequired && JSON.stringify(form.draft) === form.savedDraft) {
+      clearAssessmentDraft(form.storageKey); setLocalSaved(false);
+    } else setLocalSaved(storeAssessmentDraft(form.storageKey, form));
+  }, [form]);
+
+  async function save(body, keepOpen = false) {
     if (pending.current || blocked || form.reviewRequired) return;
     pending.current = true; setBusy(true);
     const action = form.action;
     const path = ["create", "edit"].includes(action) ? "" : action === "evidence-remove" ? `/evidence/${form.link.id}/remove` : `/${action}`;
     try {
-      await authFetch(`${base}${path}`, { method: action === "edit" ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...body, ...(action === "create" ? { expectedAbsent: true } : { expectedRevision: form.expectedRevision }) }) }).then(readManagement);
-      if (alive.current) { setForm(null); setHistoryPage(0); }
+      const result = await authFetch(`${base}${path}`, { method: action === "edit" ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...body, ...(action === "create" ? { expectedAbsent: true } : { expectedRevision: form.expectedRevision }) }) }).then(readManagement);
+      if (keepOpen && (!result?.assessment || !Number.isInteger(result.assessment.revision))) throw new Error("Save response could not be verified. Check the refreshed assessment.");
+      clearAssessmentDraft(form.storageKey);
+      if (["create", "edit"].includes(action)) clearAssessmentDraft(assessmentDraftKey(relationshipId, "create"));
+      if (alive.current) {
+        if (keepOpen) {
+          const nextKey = assessmentDraftKey(relationshipId, "edit");
+          setForm(f => ({ ...f, action: "edit", record: result.assessment, expectedRevision: result.assessment.revision,
+            storageKey: nextKey, savedDraft: JSON.stringify(f.draft), error: "", reviewRequired: false }));
+        } else setForm(null);
+        setHistoryPage(0);
+      }
     } catch (error) { if (alive.current) { setForm(f => ({ ...f, error: error.message, reviewRequired: true })); setHistoryPage(0); } }
     finally { pending.current = false; if (alive.current) { setBusy(false); reload(); } }
   }
+  useEffect(() => {
+    if (!form || !["create", "edit"].includes(form.action) || busy || blocked || form.reviewRequired || JSON.stringify(form.draft) === form.savedDraft) return undefined;
+    const timer = setTimeout(() => {
+      try { const body = assessmentPayload(form.action, form.draft, form.record); save(body, true); }
+      catch { /* Incomplete or invalid fields remain in the local recovery draft. */ }
+    }, 1000);
+    return () => clearTimeout(timer);
+    // save uses the exact form and revision represented by these dependencies.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form, busy, blocked]);
   const buttons = actions => <div className={styles.actions}>{actions.map(action => data?.permissions?.[commands[action][1]] && <button key={action} disabled={locked} className={approvalStyle(action, styles)} onClick={() => open(action)}><TravelActionIcon action={action} />{commands[action][0]}</button>)}</div>;
   const editorStep = form ? ["create", "edit"].includes(form.action) ? 1 : ["evidence", "evidence-remove"].includes(form.action) ? 2 : ["submit", "review", "return", "withdraw-submission"].includes(form.action) ? 3 : 4 : 0;
-  const editor = form && <AssessmentEditor key={form.action} form={form} setForm={setForm} projectId={projectId} authFetch={authFetch} refresh={refresh} busy={busy} blocked={blocked} reviewBlocked={reviewBlocked} onSave={save} onCancel={() => { setForm(null); reload(); }} onReview={() => setForm(f => ({ ...f, record, expectedRevision: record?.revision, reviewRequired: false, error: "" }))} />;
+  const editor = form && <AssessmentEditor key={["create", "edit"].includes(form.action) ? "narrative" : form.action} form={form} setForm={setForm} projectId={projectId} authFetch={authFetch} refresh={refresh} localSaved={localSaved} busy={busy} blocked={blocked} reviewBlocked={reviewBlocked} onSave={body => save(body, ["create", "edit"].includes(form.action))} onDiscard={() => { clearAssessmentDraft(form.storageKey); setForm(null); reload(); }} onCancel={() => { if (!localSaved && JSON.stringify(form.draft) !== form.savedDraft && !confirmDiscardUnsavedChanges()) return; setForm(null); reload(); }} onReview={() => setForm(f => ({ ...f, record, expectedRevision: record?.revision, reviewRequired: false, error: "" }))} />;
   return <>
     <ReadState state={detail} onRetry={reload} retryLabel="Retry assessment" retryDisabled={busy} />
     {data && <section className={styles.summary} aria-label="Organisation assessment scope"><h3>{data.scope.organizationName} · {data.scope.organizationStatusLabel}</h3><p>Project: {data.scope.projectName} (#{data.scope.projectId}) · Relationship #{relationshipId}</p><p>{decisionLabel(record?.currentDecision?.decision)}</p>{record && <span className={`${styles.statusBadge} ${styles[`status${record.state}`] || ""}`}>{record.state}{record.deleted && " · Deleted"}</span>}{!data.scopeAvailable && <p>This relationship or one of its owners is unavailable. Retained assessment information is read-only.</p>}<Issues issues={data.issues} /><Issues issues={record?.reviewIssues} />{record?.reviewRequired && <p>Review required. The retained outcome remains recorded; withdraw, revise and resubmit to reaffirm the decision.</p>}{record && <p>This relationship’s project, organisation and role are fixed by assessment history, including after deletion. Create another relationship for a different scope.</p>}</section>}

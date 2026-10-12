@@ -8,6 +8,7 @@ const response = (data, status = 200) => ({ ok: status < 400, status, text: asyn
 let envelope, fetcher, links, writes, writer;
 const page = content => ({ content, page: 0, size: 20, totalElements: content.length, totalPages: content.length ? 1 : 0, assessmentRevision: envelope.assessment?.revision });
 beforeEach(() => {
+  sessionStorage.clear(); localStorage.clear();
   envelope = { scope: { relationshipId: 11, projectId: 7, projectName: "Water project", organizationName: "Relief partner", organizationStatusLabel: "Implementing partner" }, scopeAvailable: true, assessment: null, permissions: { canCreate: true }, issues: [] };
   links = []; writes = []; writer = () => response(envelope);
   fetcher = jest.fn(async (url, options = {}) => {
@@ -24,7 +25,7 @@ function existing(state = "DRAFT", permissions = { canEdit: true, canSubmit: tru
 }
 const mount = () => render(<MemoryRouter><OrganisationAssessmentPanel relationshipId={11} authFetch={fetcher} /></MemoryRouter>);
 async function start(name) { fireEvent.click(await screen.findByRole("button", { name, exact: true })); }
-async function save(name) { const button = screen.getByRole("button", { name: `Save ${name.toLowerCase()}` }); await waitFor(() => expect(button).toBeEnabled()); fireEvent.click(button); }
+async function save(name) { const button = screen.getAllByRole("button", { name: ["Create assessment", "Edit assessment"].includes(name) ? "Save draft now" : name, exact: true }).at(-1); await waitFor(() => expect(button).toBeEnabled()); fireEvent.click(button); }
 test("create is relationship-owned and sends only narratives plus expectedAbsent", async () => {
   mount(); await start("Create assessment"); fireEvent.change(screen.getByLabelText("Capacity"), { target: { value: " Experienced team " } }); await save("Create assessment");
   await waitFor(() => expect(writes).toHaveLength(1)); expect(writes[0].url).toMatch(/project-organizations\/11\/assessment$/);
@@ -59,7 +60,7 @@ test("review basis evidence is protected while late evidence can be removed", as
 test("stale writes retain draft and require deliberate review before using a new revision", async () => {
   existing(); writer = () => { envelope.assessment.revision = 4; return response({ message: "Assessment changed." }, 409); };
   mount(); await start("Edit assessment"); fireEvent.change(screen.getByLabelText("Capacity"), { target: { value: "Keep my draft" } }); await save("Edit assessment");
-  await screen.findByText("Assessment changed."); expect(screen.getByLabelText("Capacity")).toHaveValue("Keep my draft"); expect(screen.getByRole("button", { name: "Save edit assessment" })).toBeDisabled();
+  await screen.findByText("Assessment changed."); expect(screen.getByLabelText("Capacity")).toHaveValue("Keep my draft"); expect(screen.getByRole("button", { name: "Save draft now" })).toBeDisabled();
   const review = screen.getByText("I reviewed the refreshed state; enable retry"); await waitFor(() => expect(review).toBeEnabled()); writer = () => response(envelope); fireEvent.click(review); await save("Edit assessment");
   await waitFor(() => expect(writes).toHaveLength(2)); expect(writes[1].body.expectedRevision).toBe(4);
 });
@@ -105,7 +106,7 @@ test("automatic refresh waits while editing, then cancellation reloads the lates
   await act(async () => { await new Promise(resolve => setTimeout(resolve, 150)); });
   expect(fetcher).not.toHaveBeenCalled();
   expect(screen.getByLabelText("Capacity")).toHaveValue("My unsaved assessment");
-  fireEvent.click(screen.getByRole("button", { name: "Cancel assessment draft" }));
+  fireEvent.click(screen.getByRole("button", { name: "Close" }));
   await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(3));
 });
 
@@ -129,4 +130,76 @@ test("hidden pages do not refresh on focus or reconnect", async () => {
     await act(async () => { await new Promise(resolve => setTimeout(resolve, 150)); });
     expect(fetcher).not.toHaveBeenCalled();
   } finally { visibility.mockRestore(); }
+});
+
+
+test("typing creates one draft and later autosaves use the returned revision", async () => {
+  writer = () => {
+    const last = writes.at(-1);
+    const revision = envelope.assessment ? envelope.assessment.revision + 1 : 1;
+    existing();
+    envelope.assessment = { ...envelope.assessment, ...last.body, revision };
+    return response(envelope);
+  };
+  mount(); await start("Create assessment");
+  fireEvent.change(screen.getByLabelText("Capacity"), { target: { value: "First automatic draft" } });
+  await waitFor(() => expect(writes).toHaveLength(1), { timeout: 2500 });
+  await screen.findByText("Draft saved to the project.");
+  fireEvent.change(screen.getByLabelText("Notes"), { target: { value: "Second automatic draft" } });
+  await waitFor(() => expect(writes).toHaveLength(2), { timeout: 2500 });
+  expect(writes[0].method).toBe("POST");
+  expect(writes[1].method).toBe("PUT");
+  expect(writes[1].body.expectedRevision).toBe(1);
+  expect(writes.every(w => w.url.endsWith("/assessment"))).toBe(true);
+});
+
+test("review draft survives remount but never records a decision automatically", async () => {
+  localStorage.setItem("authToken", `header.${btoa(JSON.stringify({ sub: "reviewer" }))}.signature`);
+  existing("SUBMITTED", { canReview: true });
+  const view = mount(); await start("Record independent review");
+  fireEvent.change(screen.getByLabelText("Decision explanation"), { target: { value: "My unfinished review" } });
+  await screen.findByText("Unfinished work saved in this browser tab.");
+  view.unmount(); mount(); await start("Record independent review");
+  expect(screen.getByLabelText("Decision explanation")).toHaveValue("My unfinished review");
+  expect(screen.getAllByRole("button", { name: "Record independent review", exact: true }).at(-1)).toBeDisabled();
+  await act(async () => { await new Promise(resolve => setTimeout(resolve, 1100)); });
+  expect(writes).toHaveLength(0);
+});
+
+test("automatic save conflict retains text and stops further automatic attempts", async () => {
+  existing(); writer = () => response({ message: "Someone else changed this assessment." }, 409);
+  mount(); await start("Edit assessment");
+  fireEvent.change(screen.getByLabelText("Capacity"), { target: { value: "Keep this work" } });
+  await screen.findByText("Someone else changed this assessment.", {}, { timeout: 2500 });
+  fireEvent.change(screen.getByLabelText("Notes"), { target: { value: "More local work" } });
+  await act(async () => { await new Promise(resolve => setTimeout(resolve, 1100)); });
+  expect(writes).toHaveLength(1);
+  expect(screen.getByLabelText("Capacity")).toHaveValue("Keep this work");
+});
+
+
+test("withdrawal reasons recover without withdrawing and remain isolated by account", async () => {
+  const token = name => `header.${btoa(JSON.stringify({ sub: name }))}.signature`;
+  localStorage.setItem("authToken", token("first-reviewer"));
+  existing("REVIEWED", { canWithdrawReview: true });
+  const { unmount: unmountFirst } = mount(); await start("Withdraw review");
+  fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "Pending correction reason" } });
+  await screen.findByText("Unfinished work saved in this browser tab.");
+  unmountFirst();
+  localStorage.setItem("authToken", token("second-reviewer"));
+  const { unmount: unmountSecond } = mount(); await start("Withdraw review");
+  expect(screen.getByLabelText("Reason")).toHaveValue("");
+  unmountSecond();
+  localStorage.setItem("authToken", token("first-reviewer"));
+  mount(); await start("Withdraw review");
+  expect(screen.getByLabelText("Reason")).toHaveValue("Pending correction reason");
+  expect(writes).toHaveLength(0);
+});
+
+test("invalid draft stays local and explains why automatic saving is waiting", async () => {
+  existing(); mount(); await start("Edit assessment");
+  fireEvent.change(screen.getByLabelText("Notes"), { target: { value: "x".repeat(2001) } });
+  expect(screen.getByText(/Automatic saving is waiting/)).toBeInTheDocument();
+  await act(async () => { await new Promise(resolve => setTimeout(resolve, 1100)); });
+  expect(writes).toHaveLength(0);
 });
