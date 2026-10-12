@@ -127,8 +127,9 @@ function Panel({ projectId, authFetch, categories, refreshKey }) {
   }, [authFetch, endpoint, revision, refreshKey]);
   useEffect(() => {
     const controller = new AbortController();
-    setDocuments([]); setDocumentError("");
-    if (!data?.editable || loading) return;
+    setDocumentError("");
+    if (!data?.editable) { setDocuments([]); return; }
+    if (loading) return;
     const query = new URLSearchParams();
     if (!historical) query.set("currentOnly", "true");
     if (category) query.set("category", category);
@@ -169,7 +170,7 @@ function Panel({ projectId, authFetch, categories, refreshKey }) {
   return <div className={styles.panel}>
     <WorkflowIntro>Assess which document requirements apply, attach exact supporting versions and review remaining gaps. You can move between these steps at any time; there is no need to assess every item before linking evidence. A checkmark means evidence is recorded, not reviewed or approved.</WorkflowIntro>
     {error && <button type="button" disabled={loading || busy} onClick={() => setRevision((v) => v + 1)}>Retry loading checklist</button>}
-    {loading && <p role="status">Loading checklist…</p>}
+    {loading && !data && <p role="status">Loading checklist…</p>}
     {error && <p role="alert">{error}</p>}
     {notice && <p role="status">{notice}</p>}
     {data && <>

@@ -142,6 +142,7 @@ const Documents = () => {
   const [documents, setDocuments] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [listLoaded, setListLoaded] = useState(false);
   const [listError, setListError] = useState("");
 
   const [uploading, setUploading] = useState(false);
@@ -203,7 +204,7 @@ const Documents = () => {
     fetchEmployees();
   }, [authHeaders]);
 
-  useEffect(() => { setDocuments([]); }, [selectedProjectId, categoryFilter, currentOnly]);
+  useEffect(() => { setDocuments([]); setListLoaded(false); }, [selectedProjectId, categoryFilter, currentOnly]);
 
   // Fetch documents for selected project
   useEffect(() => {
@@ -233,7 +234,7 @@ const Documents = () => {
         }
 
         const data = await res.json();
-        if (!controller.signal.aborted) setDocuments(Array.isArray(data) ? data : []);
+        if (!controller.signal.aborted) { setDocuments(Array.isArray(data) ? data : []); setListLoaded(true); }
       } catch (err) {
         if (controller.signal.aborted) return;
         console.error(err);
@@ -523,11 +524,11 @@ const Documents = () => {
             </form>}
             {historyDocument && <DocumentVersions key={`${selectedProjectId}-${historyDocument.id}`} document={historyDocument} authFetch={authFetch} categories={categories} canEdit={canUploadDocuments} canDelete={canDeleteDocuments} onDownload={handleDownload} downloading={downloading} revision={listRevision} onChanged={() => { setListRevision((value) => value + 1); }} onClose={() => setHistoryDocument(null)} validateFile={validateDocumentFile} />}
 
-            {loading && (
+            {loading && !listLoaded && (
               <p className={styles.loadingText}>Loading documents...</p>
             )}
 
-            {!loading && documents.length === 0 && !listError && (
+            {listLoaded && documents.length === 0 && !listError && (
               <p className={styles.emptyText}>{categoryFilter ? "No documents match this category." : currentOnly ? "No active current documents. Use All active versions to find retained earlier versions." : "No active documents."}</p>
             )}
 

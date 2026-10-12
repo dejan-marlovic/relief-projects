@@ -93,7 +93,7 @@ export default function DocumentVersions({ document, authFetch, categories, canE
     <p className={styles.infoText}>Follow this document’s replacement chain. Each entry is an exact version with its own upload attribution and download. Upload a replacement from the current version; existing evidence links continue to reference the version originally selected. Final is a document label, not approval or proof of signing. Earlier versions are read-only.</p>
     {error && <ErrorBanner message={error} onDismiss={() => setError("")} />}
     {message && <p role="status">{message}</p>}
-    {loading && <p>Loading version history…</p>}
+    {loading && !chain && <p>Loading version history…</p>}
     {chain?.currentDocumentDeleted && <p role="status">The current version is deleted. There is no active current version; older versions have not been promoted.</p>}
     {chain && <ol className={workflow.timeline}>{chain.versions.map((version) => <li key={version.id} className={styles.documentItem}>
       <div className={styles.docInfo}>
