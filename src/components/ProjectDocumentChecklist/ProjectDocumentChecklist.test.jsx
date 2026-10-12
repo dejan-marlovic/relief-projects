@@ -27,6 +27,20 @@ beforeEach(() => {
   downloadDocument.mockResolvedValue();
 });
 afterEach(() => jest.restoreAllMocks());
+
+test("keeps an unfinished explanation and its original revision after a refresh", async () => {
+  const view = await open();
+  fireEvent.change(screen.getByLabelText("Applicability"), { target: { value: "NOT_APPLICABLE" } });
+  fireEvent.change(screen.getByLabelText(/Explanation/), { target: { value: "My unfinished explanation" } });
+  envelope = { ...envelope, items: [{ ...baseItem, revision: 4 }] };
+  view.rerender(<ProjectDocumentChecklist projectId={2} authFetch={api} categories={[]} refreshKey={1} />);
+  await screen.findByText(/This item changed while you were editing/);
+  expect(screen.getByLabelText(/Explanation/)).toHaveValue("My unfinished explanation");
+  await waitFor(() => expect(screen.getByText("Save applicability")).toBeEnabled());
+  fireEvent.click(screen.getByText("Save applicability"));
+  await waitFor(() => expect(writes()).toHaveLength(1));
+  expect(JSON.parse(writes()[0][1].body).expectedRevision).toBe(3);
+});
 test("uses server guidance and states, distinguishing default from explicit decisions", async () => {
   await open();
   expect(screen.getByText(baseItem.guidance)).toBeVisible();

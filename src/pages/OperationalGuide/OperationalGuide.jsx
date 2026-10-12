@@ -147,7 +147,7 @@ const sections = [
   },
   {
     id: "part-8", title: "Documents: upload, select versions and retain evidence",
-    intro: "Documents holds project files. A checklist, assessment, payment or report can refer to a specific version of one of those files. Uploading and linking are separate steps.",
+    intro: "Documents holds project files. A checklist, assessment, payment or report can refer to a specific version of one of those files. Uploading and linking are separate steps. When you edit a document’s category, date or Draft/Final label, changes save automatically. Wait for Saved before leaving. Lists and history refresh automatically while you are not editing, including when you return to the tab. Uploading, replacing files and saving checklist decisions still use their own buttons.",
     steps: [
       "Select the owning project and open Documents. Upload the file with a clear name and the appropriate category, document date and other details requested.",
       "Download the file to check it opens and contains what you intended. A successful metadata save alone does not prove the file is available.",

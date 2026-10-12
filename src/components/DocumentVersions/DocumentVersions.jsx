@@ -1,3 +1,5 @@
+import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
+import { useUnsavedChange, useUnsavedChanges } from "../../context/UnsavedChangesContext";
 import workflow from "../Workflow/Workflow.module.scss";
 import useTransientMessage from "../../hooks/useTransientMessage";
 import React, { useEffect, useRef, useState } from "react";
@@ -15,13 +17,16 @@ export default function DocumentVersions({ document, authFetch, categories, canE
   const [busy, setBusy] = useState(false);
   const [replacement, setReplacement] = useState(null);
   const [message, setMessage] = useTransientMessage("");
+  const { hasUnsavedChanges, confirmDiscardUnsavedChanges } = useUnsavedChanges();
+  useUnsavedChange(`document-replacement-${document.id}`, !!replacement || busy);
+  useAutomaticRefresh(() => setRefresh(value => value + 1), loading || busy || !!replacement || hasUnsavedChanges);
   const alive = useRef(true);
   const mutation = useRef(false);
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
-    setChain(null);
+    setError("");
     (async () => {
       try {
         const res = await authFetch(`${BASE_URL}/api/documents/${document.id}/versions`, { signal: controller.signal });
@@ -84,7 +89,7 @@ export default function DocumentVersions({ document, authFetch, categories, canE
   };
 
   return <section className={styles.metadataEditor} aria-label="Document version history">
-    <div className={styles.docActions}><h3>Version history · {document.documentName}</h3><button type="button" className={styles.downloadLink} disabled={busy} onClick={onClose}>Close history</button><button type="button" className={styles.downloadLink} disabled={busy || loading} onClick={() => { setError(""); setReplacement(null); setRefresh((value) => value + 1); }}>Refresh history</button></div>
+    <div className={styles.docActions}><h3>Version history · {document.documentName}</h3><button type="button" className={styles.downloadLink} disabled={busy} onClick={() => { if (confirmDiscardUnsavedChanges()) onClose(); }}>Close history</button>{error && <button type="button" className={styles.downloadLink} disabled={busy || loading} onClick={() => setRefresh(value => value + 1)}>Retry loading history</button>}</div>
     <p className={styles.infoText}>Follow this document’s replacement chain. Each entry is an exact version with its own upload attribution and download. Upload a replacement from the current version; existing evidence links continue to reference the version originally selected. Final is a document label, not approval or proof of signing. Earlier versions are read-only.</p>
     {error && <ErrorBanner message={error} onDismiss={() => setError("")} />}
     {message && <p role="status">{message}</p>}

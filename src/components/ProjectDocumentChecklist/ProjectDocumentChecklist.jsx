@@ -1,3 +1,5 @@
+import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
+import { useUnsavedChange, useUnsavedChanges } from "../../context/UnsavedChangesContext";
 import { WorkflowIntro, WorkflowStep } from "../Workflow/Workflow";
 import useTransientMessage from "../../hooks/useTransientMessage";
 import React, { useEffect, useRef, useState } from "react";
@@ -20,12 +22,16 @@ const settled = (state) => ["EVIDENCE_RECORDED", "NOT_APPLICABLE"].includes(stat
 const counts = { needsAssessment: "Needs assessment", missingEvidence: "Missing evidence", evidenceRecorded: "Evidence recorded", evidenceUnavailable: "Evidence unavailable", notApplicable: "Not applicable" };
 const actor = (value) => value?.username || (value?.userId ? `User #${value.userId}` : "Unknown");
 
-function Item({ stage, item, generation, editable, documents, categories, busy, mutate, download, downloading, showHistory }) {
+function Item({ stage, item, generation, editable, documents, categories, busy, mutate: performMutation, download, downloading, showHistory }) {
   const [applicability, setApplicability] = useState(item.applicability);
   const [reason, setReason] = useState(item.notApplicableReason || "");
   const [selected, setSelected] = useState("");
   const [validation, setValidation] = useState("");
-  useEffect(() => { setApplicability(item.applicability); setReason(item.notApplicableReason || ""); setSelected(""); setValidation(""); }, [generation, item.applicability, item.notApplicableReason]);
+  const [dirty, setDirty] = useState(false);
+  const [draftRevision, setDraftRevision] = useState(item.revision);
+  useUnsavedChange(`checklist-${stage}-${item.itemKey}`, dirty);
+  const mutate = async (record, ...args) => { if (await performMutation({ ...record, revision: draftRevision }, ...args)) setDirty(false); };
+  useEffect(() => { if (dirty) return; setDraftRevision(item.revision); setApplicability(item.applicability); setReason(item.notApplicableReason || ""); setSelected(""); setValidation(""); }, [generation, item.applicability, item.notApplicableReason, item.revision, dirty]);
   const evidence = item.evidence || [];
   const save = (event) => {
     event.preventDefault();
@@ -42,13 +48,14 @@ function Item({ stage, item, generation, editable, documents, categories, busy, 
       <span className={styles.badge}>{states[item.state] || item.state}{evidence.length > 0 ? ` · ${evidence.length} linked` : ""}</span>
     </summary>
     <div className={styles.body}>
+      {dirty && item.revision !== draftRevision && <p role="alert">This item changed while you were editing. Your draft is retained; saving will check for a conflict. <button type="button" disabled={busy} onClick={() => { if (window.confirm("Discard this draft and use the latest saved checklist values?")) setDirty(false); }}>Use latest saved values</button></p>}
       {stage === "assessment" && <><p>{item.guidance}</p>
       <p className={styles.muted}>{item.applicabilitySource === "DEFAULT" ? "Default applicability — no user decision recorded." : `Explicit decision by ${actor(item.applicabilityChangedBy)} · ${uploadTimeLabel(item.applicabilityChangedAt)}`}</p>
       {item.notApplicableReason && <p><strong>Not applicable because:</strong> {item.notApplicableReason}</p>}
       {item.lastChangedAt && <p className={styles.muted}>Last checklist change: {actor(item.lastChangedBy)} · {uploadTimeLabel(item.lastChangedAt)}</p>}
       {editable && <form onSubmit={save} className={styles.form}>
-        <label>Applicability<select value={applicability} disabled={busy} onChange={(e) => setApplicability(e.target.value)}><option value="APPLICABLE">Applicable</option><option value="NOT_ASSESSED">Needs assessment</option><option value="NOT_APPLICABLE">Not applicable</option></select></label>
-        {applicability === "NOT_APPLICABLE" && <label>Explanation<textarea value={reason} disabled={busy} onChange={(e) => setReason(e.target.value)} rows={3} /><small>Required, up to 1,000 characters. This replaces the current explanation.</small></label>}
+        <label>Applicability<select value={applicability} disabled={busy} onChange={(e) => { setDirty(true); setApplicability(e.target.value); }}><option value="APPLICABLE">Applicable</option><option value="NOT_ASSESSED">Needs assessment</option><option value="NOT_APPLICABLE">Not applicable</option></select></label>
+        {applicability === "NOT_APPLICABLE" && <label>Explanation<textarea value={reason} disabled={busy} onChange={(e) => { setDirty(true); setReason(e.target.value); }} rows={3} /><small>Required, up to 1,000 characters. This replaces the current explanation.</small></label>}
         {validation && <p role="alert">{validation}</p>}
         <button disabled={busy} type="submit">Save applicability</button>
       </form>}
@@ -69,7 +76,7 @@ function Item({ stage, item, generation, editable, documents, categories, busy, 
         </div>
       </li>)}</ul>
       {editable && item.applicability !== "NOT_APPLICABLE" && <form className={styles.form} onSubmit={(e) => { e.preventDefault(); if (selected) mutate(item, "evidence", "POST", { documentId: Number(selected) }); }}>
-        <label>Document evidence<select value={selected} disabled={busy} onChange={(e) => setSelected(e.target.value)}><option value="">Select an exact document version</option>{documents.filter((doc) => !evidence.some((link) => link.documentId === doc.id)).map((doc) => <option key={doc.id} value={doc.id}>{doc.documentName} · Version {doc.versionNumber} · {statusLabel(doc.status)} · {doc.isCurrent ? "Current" : "Historical"} (#{doc.id})</option>)}</select></label>
+        <label>Document evidence<select value={selected} disabled={busy} onChange={(e) => { setDirty(true); setSelected(e.target.value); }}><option value="">Select an exact document version</option>{documents.filter((doc) => !evidence.some((link) => link.documentId === doc.id)).map((doc) => <option key={doc.id} value={doc.id}>{doc.documentName} · Version {doc.versionNumber} · {statusLabel(doc.status)} · {doc.isCurrent ? "Current" : "Historical"} (#{doc.id})</option>)}</select></label>
         <button type="submit" disabled={busy || !selected}>Link evidence</button>
       </form>}
       </>}
@@ -92,6 +99,8 @@ function Panel({ projectId, authFetch, categories, refreshKey }) {
   const [category, setCategory] = useState("");
   const [history, setHistory] = useState(null);
   const [downloading, setDownloading] = useState([]);
+  const { hasUnsavedChanges, confirmDiscardUnsavedChanges } = useUnsavedChanges();
+  useAutomaticRefresh(() => setRevision(value => value + 1), loading || busy || hasUnsavedChanges);
   const alive = useRef(true);
   const pending = useRef(false);
   const downloads = useRef(new Map());
@@ -99,9 +108,7 @@ function Panel({ projectId, authFetch, categories, refreshKey }) {
   useEffect(() => {
     alive.current = true;
     const requests = downloads.current;
-    const focus = () => { if (!pending.current) setRevision((v) => v + 1); };
-    window.addEventListener("focus", focus);
-    return () => { alive.current = false; window.removeEventListener("focus", focus); requests.forEach((c) => c.abort()); };
+    return () => { alive.current = false; requests.forEach((c) => c.abort()); };
   }, []);
   useEffect(() => {
     const controller = new AbortController();
@@ -113,7 +120,7 @@ function Panel({ projectId, authFetch, categories, refreshKey }) {
         const result = await res.json();
         if (!Array.isArray(result.items) || !result.summary) throw new Error("Could not load checklist.");
         if (!controller.signal.aborted) { setData(result); setGeneration((v) => v + 1); }
-      } catch (err) { if (!controller.signal.aborted) { setData(null); setError(err.message); } }
+      } catch (err) { if (!controller.signal.aborted) { setError(err.message); } }
       finally { if (!controller.signal.aborted) setLoading(false); }
     })();
     return () => controller.abort();
@@ -148,6 +155,7 @@ function Panel({ projectId, authFetch, categories, refreshKey }) {
         if (alive.current) setData((previous) => ({ ...previous, items: previous.items.map((value) => value.itemKey === item.itemKey ? updated : value) }));
       }
       if (alive.current) setNotice("Checklist updated.");
+      return true;
     } catch (err) { if (alive.current) setNotice(`${err.message} Reloading the checklist. Review the current state before trying again; your change has not been retried.`); }
     finally { pending.current = false; if (alive.current) { setBusy(false); setRevision((v) => v + 1); } }
   };
@@ -160,13 +168,13 @@ function Panel({ projectId, authFetch, categories, refreshKey }) {
   };
   return <div className={styles.panel}>
     <WorkflowIntro>Assess which document requirements apply, attach exact supporting versions and review remaining gaps. You can move between these steps at any time; there is no need to assess every item before linking evidence. A checkmark means evidence is recorded, not reviewed or approved.</WorkflowIntro>
-    <button type="button" disabled={loading || busy} onClick={() => setRevision((v) => v + 1)}>Refresh checklist</button>
+    {error && <button type="button" disabled={loading || busy} onClick={() => setRevision((v) => v + 1)}>Retry loading checklist</button>}
     {loading && <p role="status">Loading checklist…</p>}
     {error && <p role="alert">{error}</p>}
     {notice && <p role="status">{notice}</p>}
     {data && <>
       {!data.editable && <p className={styles.muted}>Read-only. Only Admin and Project Manager can change a checklist on an active project.</p>}
-      <div className={styles.checklistToolbar}><strong>Checklist items</strong><label><input type="checkbox" checked={attentionOnly} onChange={(event) => setAttentionOnly(event.target.checked)} /> Needs attention only</label></div>
+      <div className={styles.checklistToolbar}><strong>Checklist items</strong><label><input type="checkbox" checked={attentionOnly} onChange={(event) => { if (confirmDiscardUnsavedChanges()) setAttentionOnly(event.target.checked); }} /> Needs attention only</label></div>
       {attentionOnly && data.items.every((item) => settled(item.state)) && <p className={styles.muted}>No items need attention. Turn off the filter to review recorded evidence and not-applicable decisions.</p>}
       <WorkflowStep number={1} title="Assess applicability" description="Open each requirement and use its guidance to decide whether it applies. Save Applicable, leave it needing assessment, or explain why it is Not applicable. You can revise that decision later.">
       {[...data.items].filter((item) => !attentionOnly || !settled(item.state)).sort((a, b) => a.order - b.order).map((item) => <Item stage="assessment" key={item.itemKey} generation={generation} item={item} editable={data.editable} documents={documents} categories={categories} busy={busy || loading} mutate={mutate} download={download} downloading={downloading} showHistory={setHistory} />)}
@@ -196,9 +204,10 @@ function Panel({ projectId, authFetch, categories, refreshKey }) {
   </div>;
 }
 export default function ProjectDocumentChecklist(props) {
+  const { confirmDiscardUnsavedChanges } = useUnsavedChanges();
   const [open, setOpen] = useState(false);
   return <details className={styles.section} aria-label="Project document checklist" onToggle={(e) => { if (e.target === e.currentTarget) setOpen(e.currentTarget.open); }}>
-    <summary>Project document checklist</summary>
+    <summary onClick={event => { if (open && !confirmDiscardUnsavedChanges()) event.preventDefault(); }}>Project document checklist</summary>
     {open && <Panel key={props.projectId} {...props} />}
   </details>;
 }

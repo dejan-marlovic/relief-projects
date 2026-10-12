@@ -12,12 +12,14 @@ const mount = () => render(<MemoryRouter><ProjectContext.Provider value={{ selec
 beforeEach(() => {
   localStorage.setItem("authToken", "token");
   useAuth.mockReturnValue({ user: { ...makeUser(["ADMIN"]), employeeId: 2 }, hasRole: () => true, hasAnyRole: () => true });
+  let stored = { ...row };
   global.fetch = jest.fn((url, options) => {
     if (url.endsWith("/categories")) return Promise.resolve(jsonResponse(categories));
     if (url.includes("/employees/")) return Promise.resolve(jsonResponse([{ id: 2, firstName: "Attributed", lastName: "Employee" }]));
-    if (options?.method === "PUT" || options?.method === "POST") return Promise.resolve(jsonResponse(row));
+    if (options?.method === "PUT") { stored = { ...stored, ...JSON.parse(options.body) }; return Promise.resolve(jsonResponse(stored)); }
+    if (options?.method === "POST") return Promise.resolve(jsonResponse(stored));
     if (url.includes("?category=UNCATEGORIZED")) return Promise.resolve(jsonResponse([]));
-    return Promise.resolve(jsonResponse([row]));
+    return Promise.resolve(jsonResponse([stored]));
   });
 });
 afterEach(() => { localStorage.clear(); jest.restoreAllMocks(); });
@@ -40,7 +42,7 @@ test("editing clears a date with null, resets classification and omits immutable
   fireEvent.click(screen.getByRole("button", { name: "Edit details" }));
   fireEvent.change(screen.getByLabelText("Category", { exact: true }), { target: { value: "UNCATEGORIZED" } });
   fireEvent.change(screen.getByLabelText("Document date", { exact: true }), { target: { value: "" } });
-  fireEvent.click(screen.getByRole("button", { name: "Save details" }));
+  fireEvent.blur(screen.getByLabelText("Document date", { exact: true }));
   await waitFor(() => expect(fetch.mock.calls.some(([, options]) => options?.method === "PUT")).toBe(true));
   const request = fetch.mock.calls.find(([, options]) => options?.method === "PUT")[1];
   expect(JSON.parse(request.body)).toEqual({ id: 7, projectId: 1, employeeId: 2, documentName: "Report.pdf", category: "UNCATEGORIZED", documentDate: null });
@@ -84,9 +86,10 @@ test("validation errors keep the edit form open and explain the invalid field", 
   mount();
   await screen.findByText("Report.pdf");
   fireEvent.click(screen.getByRole("button", { name: "Edit details" }));
-  fireEvent.click(screen.getByRole("button", { name: "Save details" }));
+  fireEvent.change(screen.getByLabelText("Document date", { exact: true }), { target: { value: "2024-03-01" } });
+  fireEvent.blur(screen.getByLabelText("Document date", { exact: true }));
   expect(await screen.findByRole("alert")).toHaveTextContent("Use a valid document date.");
-  expect(screen.getByLabelText("Document date", { exact: true })).toHaveValue("2024-02-29");
+  expect(screen.getByLabelText("Document date", { exact: true })).toHaveValue("2024-03-01");
 });
 
 test("lookup failure can be retried without losing access to downloads", async () => {
@@ -123,7 +126,31 @@ test("current metadata can set Final without sending relationship fields", async
   await screen.findByText('Report.pdf');
   fireEvent.click(screen.getByRole('button', { name: 'Edit details' }));
   fireEvent.change(screen.getByLabelText('Status', { exact: true }), { target: { value: 'FINAL' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Save details' }));
+  fireEvent.blur(screen.getByLabelText('Status', { exact: true }));
   await waitFor(() => expect(fetch.mock.calls.some(([, options]) => options?.method === 'PUT')).toBe(true));
   expect(JSON.parse(fetch.mock.calls.find(([, options]) => options?.method === 'PUT')[1].body)).toEqual({ id: 7, projectId: 1, employeeId: 2, documentName: 'Report.pdf', status: 'FINAL' });
+});
+
+
+test("a replacement discovered before autosave blocks the write and retains the draft", async () => {
+  const normal = fetch.getMockImplementation();
+  fetch.mockImplementation((url, options) => url.endsWith("/project/1")
+    ? Promise.resolve(jsonResponse([{ ...row, isCurrent: false }])) : normal(url, options));
+  mount();
+  await screen.findByText("Report.pdf");
+  fireEvent.click(screen.getByRole("button", { name: "Edit details" }));
+  fireEvent.change(screen.getByLabelText("Document date", { exact: true }), { target: { value: "2026-10-12" } });
+  fireEvent.blur(screen.getByLabelText("Document date", { exact: true }));
+  expect(await screen.findByRole("alert")).toHaveTextContent("no longer an active current version");
+  expect(screen.getByLabelText("Document date", { exact: true })).toHaveValue("2026-10-12");
+  expect(fetch.mock.calls.some(([, options]) => options?.method === "PUT")).toBe(false);
+});
+
+test("returning to the page refreshes the list without a routine refresh button", async () => {
+  mount();
+  await screen.findByText("Report.pdf");
+  expect(screen.queryByRole("button", { name: "Refresh list" })).not.toBeInTheDocument();
+  const before = fetch.mock.calls.filter(([url]) => url.includes("/project/1")).length;
+  fireEvent(window, new Event("focus"));
+  await waitFor(() => expect(fetch.mock.calls.filter(([url]) => url.includes("/project/1")).length).toBeGreaterThan(before));
 });
