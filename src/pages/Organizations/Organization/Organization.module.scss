@@ -232,3 +232,40 @@
   overflow-wrap: anywhere; max-width: 100%;
 }
 .assessmentActions > a:focus-visible, .assessmentActions > button:focus-visible { outline: 2px solid colors.$primary; outline-offset: 2px; }
+
+.relationshipCard {
+  border: 1px solid #efcdd6;
+  border-radius: 14px;
+  background: white;
+  overflow: hidden;
+  margin: 16px 0;
+  button, a { font: inherit; color: #be4667; border: 1px solid #efcdd6; border-radius: 8px; padding: 9px 12px; background: white; cursor: pointer; text-decoration: none; display: inline-flex; gap: 6px; align-items: center; }
+  button:disabled { opacity: .55; cursor: not-allowed; }
+  button:focus-visible, a:focus-visible { outline: 2px solid #be4667; outline-offset: 2px; }
+}
+.cardHeader { display: flex; justify-content: space-between; gap: 20px; padding: 20px; background: #fcf8f9; flex-wrap: wrap; h3 { margin: 0; color: #be4667; } p { margin: 8px 0 0; } }
+.cardActions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
+.relationshipActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 12px;
+  margin-top: 12px;
+  > button { min-height: 42px; justify-content: center; }
+  &:empty { display: none; }
+}
+.cardBody .reviewsPanel {
+  margin-top: 16px;
+  > section {
+    margin: 0;
+    padding: 20px;
+    min-width: 0;
+    box-sizing: border-box;
+    > h3:first-child { margin-top: 0; }
+  }
+  @media (max-width: 700px) {
+    > section { padding: 12px; }
+  }
+}
+.cardBody { padding: 0 20px 20px; section { padding: 18px 0; border-top: 1px solid #eee; } h4 { margin: 0 0 10px; } p { color: #64748b; max-width: 75ch; line-height: 1.6; } label { display: block; margin: 12px 0; } select { display: block; width: 100%; margin-top: 6px; } }
+.removal { border-top: 1px solid #eee; padding-top: 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; small { color: #64748b; } }

@@ -23,6 +23,7 @@ const baseProps = {
 describe("Organization row permissions", () => {
   test("PROJECT_MANAGER can edit/remove links and open addresses but cannot open bank details", () => {
     render(<Organization {...baseProps} canManage canManageAddresses />);
+    fireEvent.click(screen.getByRole("button", { name: "Show details" }));
     expect(screen.getByRole("button", { name: "Edit" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Delete organization relation" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Show address details" })).toBeInTheDocument();
@@ -31,8 +32,9 @@ describe("Organization row permissions", () => {
 
   test("VIEWER can view the link and open addresses without mutation or bank controls", () => {
     render(<Organization {...baseProps} />);
+    fireEvent.click(screen.getByRole("button", { name: "Show details" }));
     expect(screen.getByText("Relief Partner")).toBeInTheDocument();
-    expect(screen.getByText("Partner")).toBeInTheDocument();
+    expect(screen.getByText(/Role in this project:/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Delete organization relation" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Show address details" })).toBeInTheDocument();
@@ -41,6 +43,7 @@ describe("Organization row permissions", () => {
 
   test("APPROVER can open bank details but cannot mutate the organization link", () => {
     render(<Organization {...baseProps} canViewBankDetails />);
+    fireEvent.click(screen.getByRole("button", { name: "Show details" }));
     expect(screen.getByRole("button", { name: "Show bank details" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Delete organization relation" })).not.toBeInTheDocument();
@@ -50,6 +53,7 @@ describe("Organization row permissions", () => {
     const onEdit = jest.fn();
     const onDelete = jest.fn();
     render(<Organization {...baseProps} onEdit={onEdit} onDelete={onDelete} canManage canViewBankDetails />);
+    fireEvent.click(screen.getByRole("button", { name: "Show details" }));
     fireEvent.click(screen.getByRole("button", { name: "Edit" }));
     fireEvent.click(screen.getByRole("button", { name: "Delete organization relation" }));
     expect(onEdit).toHaveBeenCalledTimes(1);
@@ -70,11 +74,12 @@ test("existing relationships use the same change handler on mobile and desktop w
   expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
   rerender(<Organization {...props} compact saving />);
   expect(screen.getByRole("button", { name: "Done editing" })).toBeDisabled();
-  expect(screen.getByRole("combobox", { name: "Status" })).toBeDisabled();
+  expect(screen.getByRole("combobox", { name: "Role in this project" })).toBeDisabled();
 });
 
 test("compact viewer has address access but no link mutation or bank access", () => {
   render(<Organization {...baseProps} compact />);
+  fireEvent.click(screen.getByRole("button", { name: "Show details" }));
   expect(screen.getByRole("button", { name: "Show address details" })).toBeEnabled();
   expect(screen.queryByRole("button", { name: "Show bank details" })).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();

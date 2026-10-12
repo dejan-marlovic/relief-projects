@@ -246,3 +246,60 @@
 @media (max-width: 700px) {
   .dataRow { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Keep supporting records readable inside relationship cards at every width. */
+.table { overflow: visible; max-height: none; }
+.headerRow { display: none; }
+.dataRow { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; padding: 14px; margin: 12px 0; border: 1px solid #efcdd6; border-radius: 10px; }
+.cell { white-space: normal; overflow-wrap: anywhere; overflow: visible; min-width: 0; }
+.stickyCol { grid-column: 1 / -1; position: static; box-shadow: none; }
+.fieldLabel { display: block; color: #64748b; font-size: .8rem; font-weight: 600; margin-bottom: 6px; }
+@media (max-width: 500px) { .dataRow { grid-template-columns: minmax(0, 1fr); } }
+
+/* Match the project tiles and keep actions legible inside each record. */
+.container .table {
+  border: 0;
+  background: transparent;
+  display: grid;
+  gap: 16px;
+}
+.container .dataRow {
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid colors.$primary-border;
+  border-radius: 14px;
+  background: colors.$surface;
+  box-shadow: colors.$shadow-card;
+  align-items: start;
+  gap: 16px;
+}
+.container .fieldLabel {
+  color: colors.$text-secondary;
+  font-size: .875rem;
+  font-weight: 600;
+}
+.container .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid colors.$border-muted;
+}
+.container .actions button {
+  width: auto;
+  height: auto;
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  color: colors.$text-strong;
+  background: colors.$surface;
+  border: 1px solid colors.$primary-border;
+  gap: 8px;
+  font-size: .9rem;
+  svg { width: 18px; height: 18px; flex: 0 0 18px; stroke-width: 2; }
+  &:hover:not(:disabled) { background: colors.$primary-soft; }
+}
+.container .actions .unlinkBtn {
+  color: colors.$danger-text;
+  border-color: colors.$danger-border;
+}

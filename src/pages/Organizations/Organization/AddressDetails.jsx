@@ -1,7 +1,7 @@
 import useRecordAutosave from "../../../utils/useRecordAutosave";
 import AutosaveStatus from "../../../components/ProjectClassification/AutosaveStatus";
 import { appFetch as fetch } from "../../../utils/appFetch";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiEdit, FiLink, FiPlus, FiSave, FiStar, FiX } from "react-icons/fi";
 import { BASE_URL } from "../../../config/api";
 import styles from "./AddressDetails.module.scss";
@@ -36,6 +36,13 @@ const AddressDetails = ({ organizationId, canManage = false }) => {
   const [addressOptions, setAddressOptions] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState("");
   const [editingId, setEditingId] = useState(null);
+  const newAddressRef = useRef(null);
+  useEffect(() => {
+    if (editingId !== "new") return;
+    const row = newAddressRef.current;
+    row?.scrollIntoView?.({ behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
+    row?.querySelector("input")?.focus({ preventScroll: true });
+  }, [editingId]);
   const [editedValues, setEditedValues] = useState({});
 
   const [formError, setFormError] = useState("");
@@ -298,18 +305,18 @@ const AddressDetails = ({ organizationId, canManage = false }) => {
     const disabled = Boolean(busyAction) || autosave.busy;
 
     return (
-      <div key={rowKey} className={`${styles.gridRow} ${styles.dataRow} ${styles.hoverable} ${primary ? styles.primaryRow : ""}`}>
+      <div key={rowKey} ref={isNew ? newAddressRef : undefined} className={`${styles.gridRow} ${styles.dataRow} ${styles.hoverable} ${primary ? styles.primaryRow : ""}`}>
         <div className={`${styles.cell} ${styles.stickyCol}`}>
           {editing ? (
             <div className={styles.actions}>
-              {isNew && <button type="button" className={styles.iconCircleBtn} onClick={save} disabled={disabled} title="Save" aria-label={`Save address ${rowKey}`}><FiSave /></button>}
-              <button type="button" className={styles.dangerIconBtn} onClick={cancel} disabled={disabled} title={isNew ? "Cancel" : "Done editing"} aria-label={`${isNew ? "Cancel" : "Done editing"} address ${rowKey}`}><FiX /></button>
+              {isNew && <button type="button" className={styles.iconCircleBtn} onClick={save} disabled={disabled} title="Save" aria-label={`Save address ${rowKey}`}><FiSave /> Save</button>}
+              <button type="button" className={styles.dangerIconBtn} onClick={cancel} disabled={disabled} title={isNew ? "Cancel" : "Done editing"} aria-label={`${isNew ? "Cancel" : "Done editing"} address ${rowKey}`}><FiX /> {isNew ? "Cancel" : "Done editing"}</button>
             </div>
           ) : (
             <div className={styles.actions}>
-              {canManage && <button type="button" className={styles.iconCircleBtn} onClick={() => startEdit(address)} disabled={Boolean(editingId) || disabled} title="Edit address" aria-label={`Edit address ${address.id}`}><FiEdit /></button>}
-              {canManage && !primary && <button type="button" className={styles.iconCircleBtn} onClick={() => makePrimary(address.id)} disabled={Boolean(editingId) || disabled} title="Make primary" aria-label={`Make address ${address.id} primary`}><FiStar /></button>}
-              {canManage && <button type="button" className={styles.unlinkBtn} onClick={() => unlink(address.id)} disabled={associations.length <= 1 || Boolean(editingId) || disabled} title={associations.length <= 1 ? "An organization must keep one address" : "Remove from organization"} aria-label={`Remove address ${address.id} from organization`}><FiLink /></button>}
+              {canManage && <button type="button" className={styles.iconCircleBtn} onClick={() => startEdit(address)} disabled={Boolean(editingId) || disabled} title="Edit address" aria-label={`Edit address ${address.id}`}><FiEdit /> Edit</button>}
+              {canManage && !primary && <button type="button" className={styles.iconCircleBtn} onClick={() => makePrimary(address.id)} disabled={Boolean(editingId) || disabled} title="Make primary" aria-label={`Make address ${address.id} primary`}><FiStar /> Make primary</button>}
+              {canManage && <button type="button" className={styles.unlinkBtn} onClick={() => unlink(address.id)} disabled={associations.length <= 1 || Boolean(editingId) || disabled} title={associations.length <= 1 ? "An organization must keep one address" : "Remove from organization"} aria-label={`Remove address ${address.id} from organization`}><FiLink /> Unlink</button>}
             </div>
           )}
         </div>

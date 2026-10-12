@@ -19,11 +19,12 @@ test("mobile relationship selection saves immediately and keeps the editor open"
     throw new Error(`Unexpected request: ${url}`);
   });
   render(<MemoryRouter><ProjectContext.Provider value={{ selectedProjectId: 1, projects: [{ id: 1, projectName: "Demo Project" }] }}><Organizations /></ProjectContext.Provider></MemoryRouter>);
-  fireEvent.click(await screen.findByRole("button", { name: "Edit" }));
-  const status = await screen.findByRole("combobox", { name: "Status" });
+  fireEvent.click(await screen.findByRole("button", { name: "Show details" }));
+  fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+  const status = await screen.findByRole("combobox", { name: "Role in this project" });
   fireEvent.change(status, { target: { value: "3" } });
   expect(await screen.findByText("Saved")).toBeInTheDocument();
   expect(row.organizationStatusId).toBe(3);
-  expect(screen.getByRole("combobox", { name: "Status" })).toHaveValue("3");
+  expect(screen.getByRole("combobox", { name: "Role in this project" })).toHaveValue("3");
   expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
 });

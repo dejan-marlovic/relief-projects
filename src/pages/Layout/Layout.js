@@ -101,7 +101,6 @@ const Layout = () => {
     "/payments",
     "/signatures",
     "/recipients",
-    "/organizations",
   ].includes(location.pathname);
 
   // ✅ NEW: Admin page is global (no project context needed)

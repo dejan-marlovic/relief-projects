@@ -8,7 +8,7 @@
   padding: 1.25rem;
   margin-top: 1rem;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  height: calc(100% - 1rem);
+  height: auto;
   min-height: 0;
 }
 
@@ -19,7 +19,7 @@
   border: 1px solid colors.$primary-focus;
   box-shadow: 0 10px 24px colors.$border-subtle;
   padding: 1.25rem;
-  height: 100%;
+  height: auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -209,3 +209,6 @@ fieldset.headerRow { margin: 0; border: 0; border-bottom: 1px solid colors.$bord
   .table { overflow: visible; flex: none; }
   .headerRow { grid-template-columns: minmax(0, 1fr); }
 }
+
+.cardList { width: 100%; min-width: 0; }
+.cardFilters { border: 0; padding: 0; margin: 20px 0; display: flex; flex-wrap: wrap; gap: 16px; label { flex: 1 1 220px; font-weight: 600; } input, select { display: block; width: 100%; box-sizing: border-box; margin-top: 6px; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font: inherit; background: white; } }

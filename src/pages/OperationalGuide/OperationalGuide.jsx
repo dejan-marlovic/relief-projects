@@ -59,7 +59,7 @@ const sections = [
     steps: [
       "Open Organizations or the related organisations in Project details. Create or select the organisation and link it to the project with the appropriate role.",
       "Check its address and contact information. Staff with the appropriate finance permissions can maintain bank details. An organisation can have more than one account. On the Organizations page, use Edit to change existing details; organisation and role selections save automatically, and addresses and bank details save after a short typing pause or when you leave a field. Wait for Saved. New records still require Save, and linking or removing records remains an explicit action.",
-      "Choose Assessment beside the project relationship. Describe capacity, suitability for this role and material concerns, then select supporting documents from the same project.",
+      "Each organisation–role relationship has its own card. Use Show details for addresses, bank details and relationship editing. Choose Open assessment at the top of the card. Describe capacity, suitability for this role and material concerns, then select supporting documents from the same project.",
       "Submit for independent review. An eligible reviewer records the outcome and explanation; contributors cannot review their own submission.",
       "Review history and any warnings before relying on an earlier decision. Follow the withdrawal or correction actions offered if the assessment needs changing."
     ],

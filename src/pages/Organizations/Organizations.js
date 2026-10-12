@@ -1,7 +1,6 @@
 import useRecordAutosave from "../../utils/useRecordAutosave";
 import AutosaveStatus from "../../components/ProjectClassification/AutosaveStatus";
 import { appFetch as fetch } from "../../utils/appFetch";
-import useMediaQuery from "../../hooks/useMediaQuery";
 import React, {
   useCallback,
   useContext,
@@ -15,11 +14,9 @@ import { useAuth } from "../../context/AuthContext";
 import { useUnsavedChange } from "../../context/UnsavedChangesContext";
 import OrganizationRow from "./Organization/Organization";
 import styles from "./Organizations.module.scss";
-import { FiColumns, FiPlus } from "react-icons/fi";
-import SortableHeader from "../../components/SortableHeader/SortableHeader";
+import { FiPlus } from "react-icons/fi";
 import { sortRows } from "../../utils/tableSorting";
 import { matchesSelect, matchesText } from "../../utils/tableSorting";
-import ColumnFilter from "../../components/ColumnFilter/ColumnFilter";
 import ClearFiltersButton from "../../components/ClearFiltersButton/ClearFiltersButton";
 import { getSelectedProjectName } from "../../utils/projectDisplay";
 
@@ -32,17 +29,6 @@ const blankLink = {
   organizationId: "",
   organizationStatusId: "",
 };
-
-// Only 3 columns: Actions, Organization, Status
-const headerLabels = ["Actions", "Organization", "Status"];
-const HEADER_SORT_KEYS = [null, "organization", "status"];
-
-// ✅ Actions wider: edit/delete/address/bank
-const BASE_COL_WIDTHS = [
-  230, // Actions
-  240, // Organization
-  180, // Status
-];
 
 async function safeParseJsonResponse(res) {
   const raw = await res.text().catch(() => "");
@@ -62,7 +48,7 @@ const Organizations = () => {
   const canViewBankDetails = hasAnyRole("ADMIN", "FINANCE", "APPROVER");
   const canManageBankDetails = hasAnyRole("ADMIN", "FINANCE");
 
-  const compact = useMediaQuery("(max-width: 1100px)");
+
   const [saving, setSaving] = useState(false);
   const saveInProgress = useRef(false);
   const [links, setLinks] = useState([]); // project_organization rows
@@ -76,10 +62,6 @@ const Organizations = () => {
   const [statusOptions, setStatusOptions] = useState([]); // /organization-statuses/active
 
   // UI state
-  const [columnsOpen, setColumnsOpen] = useState(false);
-  const [visibleCols, setVisibleCols] = useState(() =>
-    Array(headerLabels.length).fill(true)
-  );
   const [sortConfig, setSortConfig] = useState(null);
   const emptyFilters = () => ({organization:"",status:""});
   const [filters, setFilters] = useState(emptyFilters);
@@ -88,15 +70,6 @@ const Organizations = () => {
   // errors
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({}); // { [rowId]: { fieldName: message } }
-
-  const toggleCol = (i) => {
-    if (i === 0) return; // lock Actions
-    setVisibleCols((prev) => {
-      const next = [...prev];
-      next[i] = !next[i];
-      return next;
-    });
-  };
 
   const token = useMemo(() => localStorage.getItem("authToken"), []);
   const authHeaders = useMemo(
@@ -217,7 +190,7 @@ const Organizations = () => {
     setEditedValues({});
     setFieldErrors({});
     setFormError("");
-    setColumnsOpen(false);
+
   }, [fetchProjectOrganizations, selectedProjectId]);
 
   const currentProjectRef = useRef(selectedProjectId);
@@ -399,13 +372,6 @@ const Organizations = () => {
     }
   };
 
-  const gridCols = useMemo(() => {
-    const parts = BASE_COL_WIDTHS.map((w, i) =>
-      visibleCols[i] ? `${w}px` : "0px"
-    );
-    return parts.join(" ");
-  }, [visibleCols]);
-
   const organizationNames = useMemo(() => new Map(orgOptions.map((o) => [String(o.id), o.name])), [orgOptions]);
   const statusNames = useMemo(() => new Map(statusOptions.map((s) => [String(s.id), s.organizationStatusName])), [statusOptions]);
   useEffect(() => setFilters(emptyFilters()), [selectedProjectId]);
@@ -421,7 +387,7 @@ const Organizations = () => {
     };
     return sortRows(filteredLinks, getters[sortConfig.key], sortConfig.direction);
   }, [filteredLinks, organizationNames, sortConfig, statusNames]);
-  const toggleSort = (key) => setSortConfig((current) => ({ key, direction: current?.key === key && current.direction === "asc" ? "desc" : "asc" }));
+
 
   const totalCount = links.length;
 
@@ -442,37 +408,6 @@ const Organizations = () => {
 
           <div className={styles.headerActions}>
             {hasActiveFilters && <ClearFiltersButton onClick={() => setFilters(emptyFilters())} />}
-            <div className={styles.columnsBox} hidden={compact}>
-              <button
-                className={styles.columnsBtn}
-                onClick={() => setColumnsOpen((v) => !v)}
-                title="Choose visible columns"
-                type="button"
-              >
-                <FiColumns />
-                Columns
-              </button>
-
-              {columnsOpen && (
-                <div className={styles.columnsPanel}>
-                  {headerLabels.map((h, i) => (
-                    <label key={h} className={styles.colItem}>
-                      <input
-                        type="checkbox"
-                        checked={visibleCols[i]}
-                        disabled={i === 0}
-                        onChange={() => toggleCol(i)}
-                      />
-                      <span>{h}</span>
-                      {i === 0 && (
-                        <em className={styles.lockNote}> (locked)</em>
-                      )}
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-
             {canManageOrganizationLinks && <button
               className={styles.primaryBtn}
               onClick={startCreate}
@@ -487,7 +422,7 @@ const Organizations = () => {
               type="button"
             >
               <FiPlus />
-              New
+              Add organisation
             </button>}
           </div>
         </div>
@@ -496,20 +431,12 @@ const Organizations = () => {
         <AutosaveStatus save={autosave} />
         {formError && <ErrorBanner message={formError} onDismiss={() => setFormError("")} />}
 
-        <div className={styles.table} style={{ "--org-grid-cols": gridCols }}>
-          <fieldset disabled={editingId !== null || saving} className={`${styles.gridRow} ${styles.headerRow}`}>
-            {headerLabels.map((h, i) => (
-              <div
-                key={h}
-                className={`${styles.headerCell}
-                  ${i === 0 ? styles.stickyColHeader : ""}
-                  ${!compact && !visibleCols[i] ? styles.hiddenCol : ""}`}
-              >
-                {i === 0 ? h : <div className={styles.sortAndFilterHeader}><SortableHeader label={h} sortKey={HEADER_SORT_KEYS[i]} sortConfig={sortConfig} onSort={toggleSort} /><ColumnFilter label={h} type={HEADER_SORT_KEYS[i] === "status" ? "select" : "text"} value={filters[HEADER_SORT_KEYS[i]]} options={HEADER_SORT_KEYS[i] === "status" ? statusOptions.map((s)=>({value:s.id,label:s.organizationStatusName})) : []} onApply={(v)=>setFilters((c)=>({...c,[HEADER_SORT_KEYS[i]]:v}))} onClear={()=>setFilters((c)=>({...c,[HEADER_SORT_KEYS[i]]:emptyFilters()[HEADER_SORT_KEYS[i]]}))} /></div>}
-              </div>
-            ))}
-          </fieldset>
-
+        <fieldset className={styles.cardFilters} disabled={editingId !== null || saving}>
+          <label>Find organisation<input value={filters.organization} onChange={e => setFilters(v => ({ ...v, organization: e.target.value }))} /></label>
+          <label>Filter by role<select value={filters.status} onChange={e => setFilters(v => ({ ...v, status: e.target.value }))}><option value="">All roles</option>{statusOptions.map(s => <option key={s.id} value={s.id}>{s.organizationStatusName}</option>)}</select></label>
+          <label>Sort by<select value={sortConfig?.key || ""} onChange={e => setSortConfig(e.target.value ? { key: e.target.value, direction: "asc" } : null)}><option value="">Original order</option><option value="organization">Organisation name</option><option value="status">Role</option></select></label>
+        </fieldset>
+        <div className={styles.cardList}>
           {!selectedProjectId ? (
             <p className={styles.noData}>
               Select a project to see its organizations.
@@ -521,9 +448,8 @@ const Organizations = () => {
           ) : displayedLinks.length === 0 ? (
             <p className={styles.noData}>No organizations match your filters.</p>
           ) : (
-            displayedLinks.map((link, idx) => (
+            displayedLinks.map((link) => (
               <OrganizationRow
-                compact={compact}
                 saving={saving || autosave.busy}
                 editingLocked={editingId !== null}
                 key={link.id}
@@ -538,8 +464,6 @@ const Organizations = () => {
                 organizations={orgOptions}
                 projects={projectOptions}
                 statuses={statusOptions}
-                visibleCols={visibleCols}
-                isEven={idx % 2 === 0}
                 fieldErrors={fieldErrors[link.id] || {}}
                 canManage={canManageOrganizationLinks}
                 canManageAddresses={canManageAddresses}
@@ -551,7 +475,6 @@ const Organizations = () => {
 
           {editingId === "new" && (
             <OrganizationRow
-                compact={compact}
                 saving={saving || autosave.busy}
                 editingLocked={editingId !== null}
               link={{
@@ -568,7 +491,6 @@ const Organizations = () => {
               organizations={orgOptions}
               projects={projectOptions}
               statuses={statusOptions}
-              visibleCols={visibleCols}
               isEven={false}
               fieldErrors={fieldErrors.new || {}}
               canManage={canManageOrganizationLinks}

@@ -199,8 +199,12 @@ const BankDetails = ({ organizationId, canManage = false }) => {
 
   const getFieldError = (id, field) => fieldErrors?.[id]?.[field];
   const inputClassFor = (id, field) => `${styles.input} ${getFieldError(id, field) ? styles.inputError : ""}`;
+  const [revealedAccounts, setRevealedAccounts] = useState({});
   const renderField = (id, row, field, placeholder) => {
-    if (String(editingId) !== String(id)) return row?.[field] || "-";
+    if (String(editingId) !== String(id)) {
+      if (field === "accountNumber" && row?.[field]) return <span>{revealedAccounts[id] ? row[field] : `•••• ${String(row[field]).slice(-4)}`} <button type="button" onClick={() => setRevealedAccounts(current => ({ ...current, [id]: !current[id] }))}>{revealedAccounts[id] ? "Hide account number" : "Show account number"}</button></span>;
+      return row?.[field] || "-";
+    }
     return <>
       <input aria-label={placeholder} maxLength={field === "accountNumber" ? 50 : field === "swiftCode" ? 20 : undefined} className={inputClassFor(id, field)} value={editedValues[id]?.[field] ?? ""}
         onBlur={editingId !== "new" ? autosave.flush : undefined} onChange={(event) => onChange(field, event.target.value)} placeholder={placeholder} />
@@ -215,11 +219,11 @@ const BankDetails = ({ organizationId, canManage = false }) => {
     return <div key={id} ref={isNew ? newRowRef : undefined} className={`${styles.gridRow} ${styles.dataRow} ${index % 2 === 0 ? styles.zebraEven : ""} ${styles.hoverable}`}>
       <div className={`${styles.cell} ${styles.stickyCol}`}>
         {editing ? <div className={styles.actions}>
-          {isNew && <button type="button" className={styles.iconCircleBtn} onClick={save} disabled={disabled} aria-label={`Save bank detail ${id}`}><FiSave /></button>}
-          <button type="button" className={styles.dangerIconBtn} onClick={cancel} disabled={disabled} aria-label={`${isNew ? "Cancel" : "Done editing"} bank detail ${id}`}><FiX /></button>
+          {isNew && <button type="button" className={styles.iconCircleBtn} onClick={save} disabled={disabled} aria-label={`Save bank detail ${id}`}><FiSave /> Save</button>}
+          <button type="button" className={styles.dangerIconBtn} onClick={cancel} disabled={disabled} aria-label={`${isNew ? "Cancel" : "Done editing"} bank detail ${id}`}><FiX /> {isNew ? "Cancel" : "Done editing"}</button>
         </div> : <div className={styles.actions}>
-          {canManage && <button type="button" className={styles.iconCircleBtn} onClick={() => startEdit(row)} disabled={Boolean(editingId) || disabled} aria-label={`Edit bank detail ${id}`}><FiEdit /></button>}
-          {canManage && <button type="button" className={styles.unlinkBtn} onClick={() => unlink(id)} disabled={Boolean(editingId) || disabled} title="Remove from organization" aria-label={`Remove bank detail ${id} from organization`}><FiLink /></button>}
+          {canManage && <button type="button" className={styles.iconCircleBtn} onClick={() => startEdit(row)} disabled={Boolean(editingId) || disabled} aria-label={`Edit bank detail ${id}`}><FiEdit /> Edit</button>}
+          {canManage && <button type="button" className={styles.unlinkBtn} onClick={() => unlink(id)} disabled={Boolean(editingId) || disabled} title="Remove from organization" aria-label={`Remove bank detail ${id} from organization`}><FiLink /> Unlink</button>}
         </div>}
       </div>
       <div className={styles.cell}><span className={styles.fieldLabel}>Bank name</span>{renderField(id, row, "bankName", "Bank name")}</div>
