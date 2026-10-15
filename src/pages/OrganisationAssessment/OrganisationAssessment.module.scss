@@ -1,0 +1,66 @@
+@use "../../styles/colors" as colors;
+
+.page.page { max-width: 1440px; margin: 1rem auto; padding: clamp(12px, 2vw, 28px); }
+.assessment {
+  line-height: 1.65;
+  min-width: 0;
+  p { max-width: 85ch; }
+  h3, h4, h5 { line-height: 1.35; }
+  h5 { font-size: .95rem; margin: 0 0 8px; }
+  button, a { overflow-wrap: anywhere; }
+}
+.overview, .narrativeTile, .decisionCard, .evidenceCard, .history {
+  min-width: 0;
+  border: 1px solid colors.$primary-border;
+  border-radius: 14px;
+  background: colors.$surface;
+  padding: 20px;
+  box-shadow: colors.$shadow-card;
+  overflow-wrap: anywhere;
+}
+.overview {
+  margin: 20px 0 24px;
+  border-left: 4px solid colors.$primary;
+  background: colors.$primary-soft;
+  h3 { margin: 0 0 12px; }
+  > span { font-size: .8rem; padding: 6px 10px; }
+}
+.outcome { font-size: 1.15rem; font-weight: 700; color: colors.$primary-dark; }
+.narrativeGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin: 18px 0; }
+.narrativeTile {
+  dt { font-weight: 700; margin-bottom: 12px; color: colors.$text-strong; }
+  dd { margin: 0; white-space: pre-wrap; max-width: 70ch; }
+}
+.decisions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 20px; margin: 20px 0; }
+.decisionCard {
+  header { border-bottom: 1px solid colors.$border-muted; padding-bottom: 12px; margin-bottom: 18px; }
+  h4 { margin: 0 0 10px; font-size: 1.1rem; }
+  header p { margin-bottom: 0; color: colors.$text-muted; }
+}
+.readingBlock { margin: 20px 0; p { margin: 0; white-space: pre-wrap; } }
+.evidenceCard { margin: 18px 0; h4 { margin-top: 0; } }
+.history { margin-top: 16px; h3 { margin-top: 0; } }
+.disclosure {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border: 1px solid colors.$border-muted;
+  border-radius: 10px;
+  > summary { font-weight: 600; cursor: pointer; }
+}
+.snapshotGroup { min-width: 0; }
+.snapshotFields {
+  display: block;
+  margin: 12px 0;
+  > div { padding: 12px 0; border-bottom: 1px solid colors.$border-muted; }
+  dt { font-weight: 600; color: colors.$text-secondary; margin-bottom: 6px; }
+  dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .snapshotFields { padding-left: 14px; border-left: 2px solid colors.$primary-border; }
+}
+.snapshotList { padding-left: 20px; > li { margin-bottom: 16px; } }
+.references { font-size: .85rem; color: colors.$text-muted; margin: 8px 0; }
+@media (max-width: 1000px) { .decisions { grid-template-columns: 1fr; } }
+@media (max-width: 700px) {
+  .narrativeGrid { grid-template-columns: 1fr; }
+  .overview, .narrativeTile, .decisionCard, .evidenceCard, .history { padding: 14px; }
+  .disclosure { padding: 10px; }
+}
