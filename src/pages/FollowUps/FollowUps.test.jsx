@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { MemoryRouter } from "react-router-dom";
 import { ProjectContext } from "../../context/ProjectContext";
 import FollowUps from "./FollowUps";
+import SuccessNotifications from "../../components/SuccessNotifications/SuccessNotifications";
 let data;
 const task = { id: 9, projectId: 2, projectName: "Demo", title: "Prepare report", dueDate: "2026-09-22", dueBucket: "UPCOMING", revision: 4, status: "OPEN", assignee: { employeeId: 3, displayName: "Alex", isDeleted: false }, permissions: { canEdit: true, canComplete: true, canDelete: true } };
 const response = (value, status = 200) => ({ ok: status < 400, status, json: async () => value });
@@ -17,6 +18,32 @@ beforeEach(() => {
   });
 });
 afterEach(() => { localStorage.clear(); jest.restoreAllMocks(); });
+
+test("manual save confirms an already saved form without another write", async () => {
+  render(<SuccessNotifications />); mount();
+  fireEvent.click(await screen.findByText("Edit follow-up"));
+  fireEvent.click(screen.getByText("Save follow-up"));
+  expect(await screen.findByText("All follow-up changes are already saved.")).toBeVisible();
+  expect(writes()).toHaveLength(0);
+});
+
+test("autosave displays its corner confirmation only after the response is validated", async () => {
+  let finish;
+  const normal = fetch.getMockImplementation();
+  fetch.mockImplementation((url, options) => options?.method === "PUT" ? Promise.resolve({ok:true,status:200,json:()=>new Promise(resolve=>{finish=resolve;})}) : normal(url,options));
+  render(<SuccessNotifications />); mount();
+  fireEvent.click(await screen.findByText("Edit follow-up"));
+  fireEvent.change(screen.getByLabelText("Description (optional)"),{target:{value:"Confirmed description"}});
+  await waitFor(()=>expect(writes()).toHaveLength(1),{timeout:2500});
+  expect(screen.getByText("Saving follow-up…")).toBeDisabled();
+  expect(screen.queryByText("Follow-up changes saved.")).not.toBeInTheDocument();
+  await act(async()=>finish({...task,revision:5,description:"Confirmed description"}));
+  expect(await screen.findByText("Follow-up changes saved.")).toBeVisible();
+  await waitFor(()=>expect(screen.getByText("Save follow-up")).toBeEnabled());
+  fireEvent.click(screen.getByText("Save follow-up"));
+  expect(await screen.findByText("All follow-up changes are already saved.")).toBeVisible();
+  expect(writes()).toHaveLength(1);
+});
 test("uses server buckets, date boundaries and permissions", async () => {
   data.content = [{ ...task, dueBucket: "COMPLETED", permissions: { canReopen: true } }]; data.canCreate = false;
   mount(); await screen.findByText("Prepare report");

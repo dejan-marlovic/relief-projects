@@ -54,9 +54,13 @@ function TaskForm({ task, projectId, employees, busy, onSave, onCancel, blocked 
   const active = useRef(true);
   useEffect(() => { active.current = true; return () => { active.current = false; }; }, []);
   useUnsavedChange(`follow-up-editor-${projectId}`, dirty || busy);
-  const flush = useCallback(async () => {
+  const flush = useCallback(async (manual = false) => {
     const current = latest.current;
-    if (running.current || current.busy || current.blocked || !current.reviewed || !current.dirty || !current.valid) return;
+    if (running.current || current.busy || current.blocked || !current.reviewed || !current.valid) return;
+    if (!current.dirty) {
+      if (manual) notifySuccess("All follow-up changes are already saved.");
+      return;
+    }
     running.current = true;
     setError("");
     try {
@@ -80,7 +84,7 @@ function TaskForm({ task, projectId, employees, busy, onSave, onCancel, blocked 
   return <form ref={formRef} className={styles.form} onBlur={event => { if (event.target.matches("input, textarea, select") && event.relatedTarget?.tagName !== "BUTTON") flush(); }} onSubmit={(event) => {
     event.preventDefault();
     if (!valid) { setError("Enter a title (up to 200 characters), deadline and responsible employee. Description may contain up to 4,000 characters."); return; }
-    flush();
+    flush(true);
   }}>
     <h3>{task ? "Edit follow-up" : "New follow-up"}</h3>
     <p className={styles.muted}>Details save automatically after a short pause or when you leave a field. A new follow-up is created once its title, deadline and responsible employee are filled in. A corner notification confirms when your changes are saved.</p>
@@ -94,7 +98,7 @@ function TaskForm({ task, projectId, employees, busy, onSave, onCancel, blocked 
       <label>Responsible employee<select required value={assignee} onChange={(e) => setAssignee(e.target.value)}><option value="">Select an employee</option>{task?.assignee && !employees.some((p) => p.id === task.assignee.employeeId) && <option value={task.assignee.employeeId}>{task.assignee.displayName} (retained assignment)</option>}{employees.map((p) => <option key={p.id} value={p.id}>{employeeName(p)}</option>)}</select></label>
     </div>
     {error && <p role="alert">{error}</p>}
-    <div className={styles.actions}><button disabled={busy || blocked || !reviewed} type="submit">Save follow-up</button><button disabled={busy} type="button" onClick={onCancel}>Close</button><button disabled={busy} type="button" onClick={() => { if (window.confirm("Discard these unfinished follow-up entries?")) { clearDraft(key); onCancel(); } }}>Discard unfinished entries</button></div>
+    <div className={styles.actions}><button disabled={busy || blocked || !reviewed} type="submit">{busy ? "Saving follow-up…" : "Save follow-up"}</button><button disabled={busy} type="button" onClick={onCancel}>Close</button><button disabled={busy} type="button" onClick={() => { if (window.confirm("Discard these unfinished follow-up entries?")) { clearDraft(key); onCancel(); } }}>Discard unfinished entries</button></div>
   </form>;
 }
 function Queue({ mode, projectId, authFetch }) {
@@ -222,7 +226,7 @@ function Queue({ mode, projectId, authFetch }) {
     else if (action === "progress") { url += "/progress"; method = "POST"; body = { expectedRevision: task.revision, target: values.target }; }
     else if (["complete", "reopen", "restore"].includes(action)) { url += `/${action}`; method = action === "restore" ? "PUT" : "POST"; body = { expectedRevision: task.revision }; }
     try {
-      const res = await authFetch(url, { method, ...(method === "DELETE" ? {} : { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }) });
+      const res = await authFetch(url, { method, silentSuccess: action === "save", ...(method === "DELETE" ? {} : { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }) });
       if (!res.ok) throw new Error(await readDocumentError(res, "Could not save follow-up."));
       if (action === "save") {
         const savedTask = await res.json();

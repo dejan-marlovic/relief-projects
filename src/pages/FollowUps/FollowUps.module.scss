@@ -91,3 +91,5 @@
 .page button.attachmentDrop { display: flex; width: 100%; flex-direction: column; align-items: center; gap: .6rem; padding: 1.3rem .8rem; border: 2px dashed colors.$primary-border; background: colors.$surface; }
 .attachmentDrop svg { width: 1.5rem; height: 1.5rem; }
 .attachmentDrop small { color: colors.$text-muted; }
+
+.form button[type="submit"]:active:not(:disabled) { background: colors.$primary; color: white; transform: translateY(1px); }
