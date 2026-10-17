@@ -276,7 +276,7 @@ function Queue({ mode, projectId, authFetch }) {
           {task.permissions?.canReopen && <button disabled={taskActionsDisabled} onClick={() => { if (window.confirm("Reopen this follow-up? Its current completion attribution will be cleared.")) mutate(task, "reopen"); }}>Reopen</button>}
           {task.permissions?.canDelete && <button disabled={taskActionsDisabled} onClick={() => { if (window.confirm("Delete this follow-up? An administrator can restore it.")) mutate(task, "delete"); }}>Delete follow-up</button>}
           {task.permissions?.canRestore && <button disabled={taskActionsDisabled} onClick={() => mutate(task, "restore")}>Restore follow-up</button>}
-        </div><FollowUpDetails task={task} />
+        </div><FollowUpDetails task={task} authFetch={authFetch} />
       </li>;
   const retryPermission = retry && (retry.action === "progress" ? retry.values.target === "TODO" ? "canReturnToTodo" : "canStartWork" : { save: "canEdit", complete: "canComplete", reopen: "canReopen", delete: "canDelete", restore: "canRestore" }[retry.action]);
   const loadedColumns = columns ? boardColumns(columns) : null;

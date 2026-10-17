@@ -67,3 +67,15 @@
 .form .draftHint { margin: .25rem 0 1rem; }
 
 .form { scroll-margin-top: 1rem; }
+
+.history { margin-top: 1rem; }
+.historyEntry { padding: 0; background: transparent; }
+.historyEntry > summary { color: colors.$text; }
+.historyEntry[open] > summary { margin-bottom: .75rem; }
+.historyEntry summary span { display: block; font-size: .85rem; color: colors.$text-muted; margin-top: .4rem; }
+.historyNotice { padding: .8rem; border-radius: 8px; background: colors.$primary-a04; line-height: 1.5; }
+.historyChange { padding: .75rem 0; border-bottom: 1px solid colors.$border; overflow-wrap: anywhere; }
+.historyChange p { white-space: pre-wrap; margin: .4rem 0; }
+.historyValues { margin: .8rem 0; }
+.historyValues dt { font-weight: 600; }
+.historyValues dd { margin: .25rem 0 .8rem; white-space: pre-wrap; overflow-wrap: anywhere; }
