@@ -3,8 +3,8 @@ import { BASE_URL } from "../../config/api";
 import { uploadTimeLabel, readDocumentError } from "../../utils/documentMetadata";
 import styles from "./FollowUps.module.scss";
 
-const actions = { CREATE: "Created", UPDATE: "Details changed", PROGRESS: "Progress changed", COMPLETE: "Completed", REOPEN: "Reopened", DELETE: "Deleted", RESTORE: "Restored" };
-const labels = { title: "Title", description: "Description", dueDate: "Deadline", assignee: "Responsible employee", status: "Status", workflowState: "Progress", completedAt: "Completed at", completedBy: "Completed by", isDeleted: "Deleted", deletedAt: "Deleted at", id: "Follow-up reference", projectId: "Project reference", revision: "Revision", createdAt: "Created at", createdBy: "Created by", updatedAt: "Changed at", updatedBy: "Changed by" };
+const actions = { CREATE: "Created", UPDATE: "Details changed", PROGRESS: "Progress changed", COMPLETE: "Completed", REOPEN: "Reopened", DELETE: "Deleted", RESTORE: "Restored", ATTACHMENT_ADDED: "Attachment added", ATTACHMENT_REMOVED: "Attachment removed" };
+const labels = { attachment: "Attachment", title: "Title", description: "Description", dueDate: "Deadline", assignee: "Responsible employee", status: "Status", workflowState: "Progress", completedAt: "Completed at", completedBy: "Completed by", isDeleted: "Deleted", deletedAt: "Deleted at", id: "Follow-up reference", projectId: "Project reference", revision: "Revision", createdAt: "Created at", createdBy: "Created by", updatedAt: "Changed at", updatedBy: "Changed by" };
 const states = { TODO: "To do", IN_PROGRESS: "In progress", DONE: "Done", OPEN: "Open", COMPLETED: "Completed" };
 function actionLabel(entry) {
   if (entry.action === "PROGRESS") {
@@ -15,6 +15,7 @@ function actionLabel(entry) {
 }
 function valueLabel(key, value) {
   if (value == null || value === "") return "Not recorded";
+  if (key === "attachment") return `${value.documentName || "Document"} · Version ${value.versionNumber ?? "unknown"} · Document #${value.documentId} · ${value.linked ? "Linked" : "Not linked"}`;
   if (key === "assignee") return value.displayName || `Employee #${value.employeeId}`;
   if (key.endsWith("By")) return value.username || `User #${value.userId}`;
   if (key.endsWith("At")) return uploadTimeLabel(value);
@@ -23,7 +24,7 @@ function valueLabel(key, value) {
 }
 function Snapshot({ snapshot }) {
   if (!snapshot) return <p>No earlier state: this entry records creation.</p>;
-  return <dl className={styles.historyValues}>{Object.entries(snapshot).map(([key, value]) => <React.Fragment key={key}><dt>{labels[key] || key}</dt><dd>{valueLabel(key, value)}{value && typeof value === "object" && <small> · Reference {value.employeeId ?? value.userId}</small>}</dd></React.Fragment>)}</dl>;
+  return <dl className={styles.historyValues}>{Object.entries(snapshot).map(([key, value]) => <React.Fragment key={key}><dt>{labels[key] || key}</dt><dd>{valueLabel(key, value)}{value && typeof value === "object" && key !== "attachment" && <small> · Reference {value.employeeId ?? value.userId}</small>}</dd></React.Fragment>)}</dl>;
 }
 export default function FollowUpHistory({ task, authFetch }) {
   const [paging, setPaging] = useState({ revision: task.revision, page: 0 });

@@ -1,13 +1,16 @@
+import FollowUpAttachments from "./FollowUpAttachments";
 import FollowUpHistory from "./FollowUpHistory";
 import React, { useId, useState } from "react";
 import { FiChevronDown } from "react-icons/fi";
 import styles from "./FollowUps.module.scss";
 
 
-export default function FollowUpDetails({ task, authFetch }) {
+export default function FollowUpDetails({ task, authFetch, disabled, onAttachmentOperation, observation }) {
   const id = useId();
   const [expanded, setExpanded] = useState(false);
-  return <div className={styles.details}>
+  return <>
+    {authFetch && Number.isInteger(task.attachmentCount) && <FollowUpAttachments task={task} authFetch={authFetch} disabled={disabled} onOperation={onAttachmentOperation} observation={observation} />}
+    <div className={styles.details}>
     <button type="button" className={styles.detailsToggle} aria-expanded={expanded} aria-controls={id} onClick={() => setExpanded(value => !value)}>
       <span>Details &amp; activity</span><FiChevronDown aria-hidden="true" className={expanded ? styles.chevronOpen : undefined} />
     </button>
@@ -19,5 +22,5 @@ export default function FollowUpDetails({ task, authFetch }) {
       </dl>
       {expanded && authFetch && <FollowUpHistory key={`${task.projectId}-${task.id}`} task={task} authFetch={authFetch} />}
     </div>
-  </div>;
+  </div></>;
 }

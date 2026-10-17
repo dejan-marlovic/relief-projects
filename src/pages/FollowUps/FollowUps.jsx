@@ -240,6 +240,20 @@ function Queue({ mode, projectId, authFetch }) {
       if (alive.current) { setRetry({ task, action, values }); setNotice(`${err.message} The list is being refreshed. Review it before trying again${task ? "; no change was automatically retried." : " to avoid creating a duplicate task."}`); }
     } finally { pending.current = false; if (alive.current) { setBusy(false); refresh(); } }
   };
+  // Share the synchronous write lock with autosaves and workflow actions.
+  const attachmentOperation = async operation => {
+    if (pending.current || loading || form || retry) throw new Error("Finish the current task action before changing attachments.");
+    pending.current = true; setBusy(true); readController.current?.abort();
+    try {
+      const saved = await operation();
+      if (alive.current && saved) {
+        const replace = row => row.id === saved.id && row.projectId === saved.projectId ? saved : row;
+        setData(value => value ? { ...value, content: value.content.map(replace) } : value);
+        setColumns(value => value ? Object.fromEntries(Object.entries(value).map(([key, column]) => [key, { ...column, content: column.content.map(replace) }])) : value);
+      }
+      return saved;
+    } finally { pending.current = false; if (alive.current) { setBusy(false); refresh(); } }
+  };
   const filtersDisabled = busy || !!form || !!retry;
   const taskActionsDisabled = busy || loading || !!form || !!retry;
   const clearDrag = () => { dragSource.current = null; setDragged(null); setDropTarget(null); };
@@ -276,7 +290,7 @@ function Queue({ mode, projectId, authFetch }) {
           {task.permissions?.canReopen && <button disabled={taskActionsDisabled} onClick={() => { if (window.confirm("Reopen this follow-up? Its current completion attribution will be cleared.")) mutate(task, "reopen"); }}>Reopen</button>}
           {task.permissions?.canDelete && <button disabled={taskActionsDisabled} onClick={() => { if (window.confirm("Delete this follow-up? An administrator can restore it.")) mutate(task, "delete"); }}>Delete follow-up</button>}
           {task.permissions?.canRestore && <button disabled={taskActionsDisabled} onClick={() => mutate(task, "restore")}>Restore follow-up</button>}
-        </div><FollowUpDetails task={task} authFetch={authFetch} />
+        </div><FollowUpDetails task={task} authFetch={authFetch} disabled={taskActionsDisabled} onAttachmentOperation={attachmentOperation} observation={revision} />
       </li>;
   const retryPermission = retry && (retry.action === "progress" ? retry.values.target === "TODO" ? "canReturnToTodo" : "canStartWork" : { save: "canEdit", complete: "canComplete", reopen: "canReopen", delete: "canDelete", restore: "canRestore" }[retry.action]);
   const loadedColumns = columns ? boardColumns(columns) : null;
@@ -309,8 +323,8 @@ function Queue({ mode, projectId, authFetch }) {
       {!board && !loading && !data.content.length && (!data.mappingStatus || data.mappingStatus === "MAPPED") && <p>No follow-ups match these filters.</p>}
       {board ? <div className={styles.board}>{Object.entries(workflowLabels).map(([state, title]) => <section key={state} className={`${styles.column} ${dragged && moveCommand(dragged, state) ? styles.dropAllowed : ""} ${dropTarget === state ? styles.dropOver : ""}`} aria-label={`${title} column`} onDragOver={event => {
         if (!taskActionsDisabled && moveCommand(dragSource.current, state)) { event.preventDefault(); event.dataTransfer.dropEffect = "move"; setDropTarget(state); }
-      }} onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget)) setDropTarget(null); }} onDrop={event => drop(event, state)}><h3>{title} <span className={styles.badge}>{columns?.[state]?.totalElements ?? "…"}</span></h3>{loadedColumns && <><ul className={styles.list}>{loadedColumns[state].map(renderTask)}</ul>{!loadedColumns[state].length && <p>No cards on this page.</p>}<div className={styles.actions}><button disabled={busy || loading || columnPages[state] === 0} onClick={() => setColumnPages(p => ({ ...p, [state]: p[state] - 1 }))}>Previous {title}</button><span>Page {columns[state].totalPages ? columnPages[state] + 1 : 0} of {columns[state].totalPages}</span><button disabled={busy || loading || columnPages[state] + 1 >= columns[state].totalPages} onClick={() => setColumnPages(p => ({ ...p, [state]: p[state] + 1 }))}>Next {title}</button></div></>}</section>)}</div> : <ul className={styles.list}>{data.content.map(renderTask)}</ul>}
-      {!board && <div className={styles.actions}><button disabled={busy || loading || page === 0} onClick={() => setPage((v) => v - 1)}>Previous page</button><span>{data.totalElements} follow-ups · Page {data.totalPages ? page + 1 : 0} of {data.totalPages}</span><button disabled={busy || loading || page + 1 >= data.totalPages} onClick={() => setPage((v) => v + 1)}>Next page</button></div>}
+      }} onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget)) setDropTarget(null); }} onDrop={event => drop(event, state)}><h3>{title} <span className={styles.badge}>{columns?.[state]?.totalElements ?? "…"}</span></h3>{loadedColumns && <><ul className={styles.list}>{loadedColumns[state].map(renderTask)}</ul>{!loadedColumns[state].length && <p>No cards on this page.</p>}<div className={styles.actions}><button disabled={filtersDisabled || loading || columnPages[state] === 0} onClick={() => setColumnPages(p => ({ ...p, [state]: p[state] - 1 }))}>Previous {title}</button><span>Page {columns[state].totalPages ? columnPages[state] + 1 : 0} of {columns[state].totalPages}</span><button disabled={filtersDisabled || loading || columnPages[state] + 1 >= columns[state].totalPages} onClick={() => setColumnPages(p => ({ ...p, [state]: p[state] + 1 }))}>Next {title}</button></div></>}</section>)}</div> : <ul className={styles.list}>{data.content.map(renderTask)}</ul>}
+      {!board && <div className={styles.actions}><button disabled={filtersDisabled || loading || page === 0} onClick={() => setPage((v) => v - 1)}>Previous page</button><span>{data.totalElements} follow-ups · Page {data.totalPages ? page + 1 : 0} of {data.totalPages}</span><button disabled={filtersDisabled || loading || page + 1 >= data.totalPages} onClick={() => setPage((v) => v + 1)}>Next page</button></div>}
     </>}
   </>;
 }

@@ -23,6 +23,34 @@ beforeEach(() => {
 });
 afterEach(() => { localStorage.clear(); });
 async function board() { fireEvent.click(await screen.findByRole("button", { name: "Board", exact: true })); await waitFor(() => expect(screen.getByRole("button", { name: "New follow-up" })).toBeEnabled()); }
+
+test("attachment writes lock task actions and advance the revision used by progress changes", async () => {
+  current = { ...task, attachmentCount: 0 };
+  const original = fetch.getMockImplementation();
+  let finish;
+  fetch.mockImplementation(async (url, options = {}) => {
+    if (url.endsWith("/categories")) return response([{id:"UNCATEGORIZED",label:"Uncategorized"}]);
+    if (url.includes("/documents/project/")) return response([{id:71,documentName:"Plan.pdf",versionNumber:1,isCurrent:true}]);
+    if (url.includes("/attachments?")) return response({projectId:2,followUpId:9,followUpRevision:current.revision,page:0,totalPages:0,totalElements:0,content:[],permissions:{canLink:true}});
+    if (url.includes("/history?")) return response({projectId:2,followUpId:9,coverage:"PARTIAL_LEGACY",page:0,totalPages:0,totalElements:0,content:[]});
+    if (url.endsWith("/attachments") && options.method === "POST") return new Promise(resolve=>{finish=()=>{current={...current,revision:5,attachmentCount:1};resolve(response(current));};});
+    return original(url,options);
+  });
+  mount(); await board();
+  fireEvent.click(screen.getByRole("button",{name:/Details & activity/}));
+  fireEvent.click(await screen.findByText("Link existing project document"));
+  await screen.findByRole("option",{name:/Plan.pdf/});
+  fireEvent.change(screen.getByLabelText("Exact document version"),{target:{value:"71"}});
+  fireEvent.click(screen.getByText("Link selected version"));
+  await waitFor(()=>expect(screen.getByText("Start work")).toBeDisabled());
+  expect(screen.getByText("Edit follow-up")).toBeDisabled();
+  finish();
+  await waitFor(()=>expect(screen.getByText("Start work")).toBeEnabled());
+  expect(screen.getByText(/1 attachment$/)).toBeVisible();
+  fireEvent.click(screen.getByText("Start work"));
+  await waitFor(()=>expect(writes()).toHaveLength(2));
+  expect(JSON.parse(writes()[1][1].body).expectedRevision).toBe(5);
+});
 test("capability detection precedes board queries; old servers remain in List", async () => {
   supported = false; localStorage.setItem("follow-up-view", "board"); mount(); await screen.findByText("Prepare report");
   expect(screen.queryByRole("button", { name: "Board", exact: true })).not.toBeInTheDocument();

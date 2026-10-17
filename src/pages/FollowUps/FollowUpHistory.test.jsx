@@ -4,6 +4,16 @@ const task = { id: 3, projectId: 7, revision: 1, title: "Task", assignee: {displ
 const event = {id:10, action:"UPDATE", revision:1, occurredAt:"2026-10-17T10:00:00Z", actor:{userId:1,username:"manager",employeeName:"Historical name"}, changedFields:["description","assignee"], before:{description:null,assignee:{employeeId:2,displayName:"Original owner"}}, after:{description:"<b>Plain text</b>",assignee:{employeeId:3,displayName:"New owner"}}};
 const listing = {projectId:7,followUpId:3,coverage:"PARTIAL_LEGACY",page:0,totalElements:1,totalPages:1,content:[event]};
 const response = data => ({ok:true,json:async()=>data});
+
+test.each([["ATTACHMENT_ADDED", "Attachment added"], ["ATTACHMENT_REMOVED", "Attachment removed"]])("renders %s exact-version history without object placeholders", async (action, label) => {
+  const attachment = { documentId: 71, documentName: "Original report.pdf", versionNumber: 1 };
+  const fetch = jest.fn(async () => response({ ...listing, content: [{ ...event, action, changedFields: ["attachment"], before: { attachment: { ...attachment, linked: action === "ATTACHMENT_REMOVED" } }, after: { attachment: { ...attachment, linked: action === "ATTACHMENT_ADDED" } } }] }));
+  render(<FollowUpDetails task={task} authFetch={fetch} />);
+  fireEvent.click(screen.getByText("Details & activity"));
+  fireEvent.click(await screen.findByText(label));
+  expect(screen.getAllByText(/Original report.pdf · Version 1 · Document #71/)[0]).toBeVisible();
+  expect(screen.queryByText(/\[object Object\]/)).not.toBeInTheDocument();
+});
 test("loads lazily using the task project and renders captured changes as text", async () => {
   const fetch = jest.fn(async()=>response(listing));
   render(<FollowUpDetails task={task} authFetch={fetch} />);
