@@ -25,6 +25,13 @@ function draftKey(projectId, taskId) {
 function clearDraft(key) { try { if (key) sessionStorage.removeItem(key); } catch { /* Storage can be unavailable. */ } }
 const taskValues = task => ({ title: task?.title?.trim() || "", description: task?.description?.trim() || null, dueDate: task?.dueDate || "", assigneeEmployeeId: Number(task?.assignee?.employeeId || 0) });
 function TaskForm({ task, projectId, employees, busy, onSave, onCancel, blocked = false }) {
+  const formRef = useRef(null);
+  const titleRef = useRef(null);
+  useEffect(() => {
+    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    titleRef.current?.focus({ preventScroll: true });
+    formRef.current?.scrollIntoView?.({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+  }, []);
   const key = draftKey(task?.projectId || projectId, task?.id);
   const [recovered] = useState(() => {
     try { return key ? JSON.parse(sessionStorage.getItem(key)) : null; } catch { return null; }
@@ -70,7 +77,7 @@ function TaskForm({ task, projectId, employees, busy, onSave, onCancel, blocked 
       setStored(true);
     } catch { setStored(false); }
   }, [key, title, description, date, assignee, dirty, saved]);
-  return <form className={styles.form} onBlur={event => { if (event.target.matches("input, textarea, select") && event.relatedTarget?.tagName !== "BUTTON") flush(); }} onSubmit={(event) => {
+  return <form ref={formRef} className={styles.form} onBlur={event => { if (event.target.matches("input, textarea, select") && event.relatedTarget?.tagName !== "BUTTON") flush(); }} onSubmit={(event) => {
     event.preventDefault();
     if (!valid) { setError("Enter a title (up to 200 characters), deadline and responsible employee. Description may contain up to 4,000 characters."); return; }
     flush();
@@ -80,7 +87,7 @@ function TaskForm({ task, projectId, employees, busy, onSave, onCancel, blocked 
     <div className={styles.saveFeedback}><AutosaveStatus save={{ message: busy ? "Saving…" : blocked ? "Automatic saving paused. Review the message below before saving again." : !dirty ? "" : !reviewed ? "Check the restored draft before saving." : valid ? "Changes waiting to save…" : "Complete the required fields to save." }} /></div>
     <p className={`${styles.muted} ${styles.draftHint}`}>{dirty && !stored ? "Keep this page open until your changes are saved; tab recovery is unavailable." : "Unfinished entries are also kept in this tab until saved. Closing the tab removes these drafts."}</p>
     {!reviewed && <div className={styles.recovery}><p>Unfinished entries have been restored. Check the current task and board before saving; an earlier save may already have succeeded.</p><label><input type="checkbox" checked={reviewed} onChange={e => setReviewed(e.target.checked)} /> I have checked the current records</label></div>}
-    <label>Title<input required value={title} onChange={(e) => setTitle(e.target.value)} /></label>
+    <label>Title<input ref={titleRef} required value={title} onChange={(e) => setTitle(e.target.value)} /></label>
     <label>Description (optional)<textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} /></label>
     <div className={styles.grid}>
       <label>Deadline<input required type="date" min="1000-01-01" max="9999-12-31" value={date} onChange={(e) => setDate(e.target.value)} /></label>

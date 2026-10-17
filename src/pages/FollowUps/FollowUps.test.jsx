@@ -212,3 +212,24 @@ test("an earlier save cannot erase recovery of newer incomplete edits", async ()
   expect(writes()).toHaveLength(1);
   sessionStorage.clear();
 });
+
+
+test("opening an editor focuses its title and scrolls the form into view only once", async () => {
+  const previous = HTMLElement.prototype.scrollIntoView;
+  const scroll = jest.fn();
+  HTMLElement.prototype.scrollIntoView = scroll;
+  try {
+    mount(); fireEvent.click(await screen.findByText("Edit follow-up"));
+    expect(screen.getByLabelText("Title")).toHaveFocus();
+    expect(scroll).toHaveBeenCalledTimes(1);
+    expect(scroll.mock.instances[0].tagName).toBe("FORM");
+    expect(scroll).toHaveBeenCalledWith({behavior:"smooth", block:"start"});
+    fireEvent.change(screen.getByLabelText("Description (optional)"), {target:{value:"Keep editing here"}});
+    fireEvent.click(screen.getByText("Save follow-up"));
+    await waitFor(() => expect(screen.getByText("Close")).toBeEnabled());
+    expect(scroll).toHaveBeenCalledTimes(1);
+  } finally {
+    if (previous) HTMLElement.prototype.scrollIntoView = previous;
+    else delete HTMLElement.prototype.scrollIntoView;
+  }
+});
