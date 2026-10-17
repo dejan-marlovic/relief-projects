@@ -39,12 +39,12 @@ test("personal queue exports the loaded task's project, not the project selected
   expect(downloadFollowUpCalendar).toHaveBeenCalledWith(other);
 });
 
-test("disables old data while refresh is pending and excludes completed data after refresh", async () => {
+test("keeps the calendar snapshot available during background refresh and excludes completed data afterwards", async () => {
   mount(); await screen.findByText("Prepare report");
   let finish;
   fetch.mockImplementationOnce(() => new Promise((resolve) => { finish = resolve; }));
-  fireEvent.click(screen.getByText("Refresh follow-ups"));
-  expect(screen.getByRole("button", { name: /Download calendar/ })).toBeDisabled();
+  fireEvent.focus(window);
+  expect(screen.getByRole("button", { name: /Download calendar/ })).toBeEnabled();
   finish(response([{ ...task, status: "COMPLETED" }]));
   await waitFor(() => expect(screen.queryByRole("button", { name: /Download calendar/ })).not.toBeInTheDocument());
 });

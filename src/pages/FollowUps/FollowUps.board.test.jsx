@@ -22,7 +22,7 @@ beforeEach(() => {
   });
 });
 afterEach(() => { localStorage.clear(); });
-async function board() { fireEvent.click(await screen.findByRole("button", { name: "Board", exact: true })); await waitFor(() => expect(screen.getByRole("button", { name: "Refresh follow-ups" })).toBeEnabled()); }
+async function board() { fireEvent.click(await screen.findByRole("button", { name: "Board", exact: true })); await waitFor(() => expect(screen.getByRole("button", { name: "New follow-up" })).toBeEnabled()); }
 test("capability detection precedes board queries; old servers remain in List", async () => {
   supported = false; localStorage.setItem("follow-up-view", "board"); mount(); await screen.findByText("Prepare report");
   expect(screen.queryByRole("button", { name: "Board", exact: true })).not.toBeInTheDocument();
@@ -125,13 +125,14 @@ test("failed drag retains action and does not move optimistically or retry", asy
   expect(within(screen.getByRole("region", { name: "To do column" })).getByText("Prepare report")).toBeInTheDocument();
   expect(writes()).toHaveLength(1);
 });
-test("refresh cancels an in-flight drag instead of writing its stale snapshot", async () => {
+test("background refresh waits until dragging finishes", async () => {
   mount(); await board();
   const dataTransfer = transfer();
   fireEvent.dragStart(screen.getByText(/Drag to move/), { dataTransfer });
-  fireEvent.click(screen.getByText("Refresh follow-ups"));
-  await waitFor(() => expect(screen.getByText("Refresh follow-ups")).toBeEnabled());
-  fireEvent.drop(screen.getByRole("region", { name: "Done column" }), { dataTransfer });
+  const reads = fetch.mock.calls.length;
+  fireEvent.focus(window);
+  expect(fetch.mock.calls).toHaveLength(reads);
+  fireEvent.dragEnd(screen.getByText(/Drag to move/), { dataTransfer });
   expect(writes()).toHaveLength(0);
 });
 test("an explicit List preference is retained", async () => {

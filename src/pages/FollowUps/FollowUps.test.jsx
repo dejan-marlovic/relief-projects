@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { ProjectContext } from "../../context/ProjectContext";
 import FollowUps from "./FollowUps";
@@ -96,4 +96,119 @@ test("reopen explains attribution clearing before sending action", async () => {
   await waitFor(() => expect(writes()).toHaveLength(1));
   expect(window.confirm).toHaveBeenCalledWith(expect.stringContaining("completion attribution will be cleared"));
   expect(writes()[0][0]).toMatch(/\/9\/reopen$/);
+});
+
+
+test("background refresh keeps cards mounted and does not show loading", async () => {
+  mount(); const title = await screen.findByText("Prepare report");
+  const normal = fetch.getMockImplementation();
+  let resolveRead;
+  fetch.mockImplementation(() => new Promise(resolve => { resolveRead = resolve; }));
+  fireEvent.focus(window);
+  expect(screen.getByText("Prepare report")).toBe(title);
+  expect(screen.queryByText("Loading follow-ups…")).not.toBeInTheDocument();
+  expect(screen.queryByText("Refresh follow-ups")).not.toBeInTheDocument();
+  await act(async () => resolveRead(response(data)));
+  expect(screen.getByText("Prepare report")).toBe(title);
+  fetch.mockImplementation(normal);
+});
+
+test("new draft survives closing and reopening without creating a task", async () => {
+  localStorage.setItem("authToken", `x.${btoa(JSON.stringify({sub:"draft-user"}))}.x`);
+  sessionStorage.clear();
+  mount(); fireEvent.click(await screen.findByText("New follow-up"));
+  fireEvent.change(screen.getByLabelText("Title"), {target:{value:"Keep this unfinished task"}});
+  expect(screen.getByLabelText("Due from")).toBeDisabled();
+  const reads = fetch.mock.calls.length;
+  fireEvent.focus(window);
+  expect(fetch.mock.calls).toHaveLength(reads);
+  fireEvent.click(screen.getByText("Close"));
+  fireEvent.click(screen.getByText("New follow-up"));
+  await screen.findByRole("option", { name: "Alex" });
+  expect(screen.getByLabelText("Title")).toHaveValue("Keep this unfinished task");
+  expect(screen.getByText("Save follow-up")).toBeDisabled();
+  expect(writes()).toHaveLength(0);
+  sessionStorage.clear();
+});
+
+
+test("automatically saves valid edits and shows the project saving indicator", async () => {
+  mount(); fireEvent.click(await screen.findByText("Edit follow-up"));
+  fireEvent.change(screen.getByLabelText("Title"), {target:{value:"Automatically saved title"}});
+  await waitFor(() => expect(writes()).toHaveLength(1), {timeout:2500});
+  expect(JSON.parse(writes()[0][1].body)).toMatchObject({title:"Automatically saved title",expectedRevision:4});
+  await waitFor(() => expect(screen.getByText("Close")).toBeEnabled());
+  expect(screen.queryByText("Saved", {exact:true})).not.toBeInTheDocument();
+  expect(screen.getByLabelText("Title")).toHaveValue("Automatically saved title");
+});
+
+test("creates once and queues edits made during the save using the returned revision", async () => {
+  let finish;
+  const normal = fetch.getMockImplementation();
+  fetch.mockImplementation((url, options) => options?.method === "POST" ? new Promise(resolve => { finish = resolve; }) : normal(url, options));
+  mount(); fireEvent.click(await screen.findByText("New follow-up"));
+  await screen.findByRole("option", {name:"Alex"});
+  fireEvent.change(screen.getByLabelText("Title"), {target:{value:"Created automatically"}});
+  fireEvent.change(screen.getByLabelText("Deadline"), {target:{value:"2026-10-28"}});
+  expect(writes()).toHaveLength(0);
+  fireEvent.change(screen.getByLabelText("Responsible employee"), {target:{value:"3"}});
+  await waitFor(() => expect(writes()).toHaveLength(1), {timeout:2500});
+  expect(screen.getByText("Saving…")).toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText("Description (optional)"), {target:{value:"Typed while saving"}});
+  await act(async () => finish(response({...task, revision:5, title:"Created automatically"})));
+  await waitFor(() => expect(writes()).toHaveLength(2), {timeout:2500});
+  expect(writes().map(([,o])=>o.method)).toEqual(["POST","PUT"]);
+  expect(writes()[1][0]).toMatch(/follow-ups\/9$/);
+  expect(JSON.parse(writes()[1][1].body)).toMatchObject({expectedRevision:5,description:"Typed while saving"});
+  await waitFor(() => expect(screen.getByText("Close")).toBeEnabled());
+  expect(screen.queryByText("Saved", {exact:true})).not.toBeInTheDocument();
+});
+
+test("uncertain creation pauses autosave and keeps the entered text", async () => {
+  const normal = fetch.getMockImplementation();
+  fetch.mockImplementation((url, options) => options?.method === "POST" ? Promise.reject(new Error("Connection lost")) : normal(url,options));
+  mount(); fireEvent.click(await screen.findByText("New follow-up"));
+  await screen.findByRole("option", {name:"Alex"});
+  fireEvent.change(screen.getByLabelText("Title"), {target:{value:"Do not duplicate"}});
+  fireEvent.change(screen.getByLabelText("Deadline"), {target:{value:"2026-10-28"}});
+  fireEvent.change(screen.getByLabelText("Responsible employee"), {target:{value:"3"}});
+  await screen.findByText(/Connection lost/, {}, {timeout:2500});
+  fireEvent.change(screen.getByLabelText("Description (optional)"), {target:{value:"Retain this too"}});
+  await act(async () => { await new Promise(resolve => setTimeout(resolve,1200)); });
+  expect(writes()).toHaveLength(1);
+  expect(screen.getByLabelText("Title")).toHaveValue("Do not duplicate");
+  expect(screen.getByText("Save follow-up")).toBeDisabled();
+});
+
+
+test("leaving a field saves immediately without waiting for the typing pause", async () => {
+  mount(); fireEvent.click(await screen.findByText("Edit follow-up"));
+  fireEvent.change(screen.getByLabelText("Description (optional)"), {target:{value:"Save on leaving"}});
+  expect(writes()).toHaveLength(0);
+  fireEvent.blur(screen.getByLabelText("Description (optional)"), {relatedTarget:screen.getByLabelText("Deadline")});
+  expect(writes()).toHaveLength(1);
+  await waitFor(() => expect(screen.getByText("Close")).toBeEnabled());
+  expect(screen.queryByText("Saved", {exact:true})).not.toBeInTheDocument();
+});
+
+
+test("an earlier save cannot erase recovery of newer incomplete edits", async () => {
+  localStorage.setItem("authToken", `x.${btoa(JSON.stringify({sub:"queued-draft-user"}))}.x`);
+  sessionStorage.clear();
+  let finish;
+  const normal = fetch.getMockImplementation();
+  fetch.mockImplementation((url,options) => options?.method === "PUT" ? new Promise(resolve => {finish=resolve;}) : normal(url,options));
+  mount(); fireEvent.click(await screen.findByText("Edit follow-up"));
+  fireEvent.change(screen.getByLabelText("Title"), {target:{value:"Sent title"}});
+  fireEvent.click(screen.getByText("Save follow-up"));
+  fireEvent.change(screen.getByLabelText("Title"), {target:{value:""}});
+  fireEvent.change(screen.getByLabelText("Description (optional)"), {target:{value:"Keep later text"}});
+  await act(async () => finish(response({...task,title:"Sent title",revision:5})));
+  fireEvent.click(screen.getByText("Close"));
+  fireEvent.click(screen.getByText("Edit follow-up"));
+  await screen.findByRole("option", {name:"Alex"});
+  expect(screen.getByLabelText("Title")).toHaveValue("");
+  expect(screen.getByLabelText("Description (optional)")).toHaveValue("Keep later text");
+  expect(writes()).toHaveLength(1);
+  sessionStorage.clear();
 });

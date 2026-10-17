@@ -48,3 +48,20 @@
 .dropOver { outline: 3px solid colors.$primary; background: colors.$surface; }
 
 @include workspace.layout;
+
+.filterPanel { padding: 1.2rem; margin: 1rem 0; border: 1px solid colors.$primary-border; border-radius: 14px; background: colors.$primary-a04; }
+.filterPanel h3 { margin: 0 0 .5rem; color: colors.$primary; }
+.filterPanel p { margin: .4rem 0; max-width: 75ch; }
+.filterPanel .filters { align-items: end; }
+.form { border: 1px solid colors.$primary-border; background: colors.$surface; padding: 1.4rem; }
+.form h3 { margin-top: 0; color: colors.$primary; }
+.recovery { border-left: 3px solid colors.$primary; padding: .5rem 1rem; background: colors.$primary-a04; }
+
+.saveFeedback {
+  min-height: 1.5em;
+  color: colors.$text-muted;
+  font-size: .85rem;
+  line-height: 1.5;
+}
+.saveFeedback p { margin: 0; }
+.form .draftHint { margin: .25rem 0 1rem; }
