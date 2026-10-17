@@ -35,7 +35,10 @@ test("three bounded compatible queries keep deadline and progress separate", asy
   for (const state of ["TODO", "IN_PROGRESS", "DONE"]) expect(fetch.mock.calls.some(([url]) => url.includes("status=ALL") && url.includes(`workflowState=${state}`) && url.includes("size=20"))).toBe(true);
   const column = screen.getByRole("region", { name: "To do column" });
   expect(within(column).getByText("Overdue")).toBeInTheDocument();
-  expect(screen.getByLabelText("Status")).toBeDisabled(); expect(screen.getByLabelText("Deadline group")).toBeDisabled();
+  expect(screen.queryByLabelText("Status")).not.toBeInTheDocument(); expect(screen.queryByLabelText("Deadline group")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "List", exact: true }));
+  expect(await screen.findByLabelText("Status")).toBeEnabled();
+  expect(screen.getByLabelText("Deadline group")).toBeEnabled();
 });
 test("start work uses only the captured revision and target; refresh moves the card", async () => {
   write = async () => { current = { ...current, workflowState: "IN_PROGRESS", revision: 5, permissions: { canReturnToTodo: true } }; return response(current); };

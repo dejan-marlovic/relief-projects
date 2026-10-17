@@ -288,14 +288,14 @@ function Queue({ mode, projectId, authFetch }) {
     <p className={styles.muted}>These controls change which tasks you see. To assign a task, use Responsible employee in its form.</p>
     {form && <p className={styles.muted}>Close or save your draft to change filters.</p>}
     <div className={styles.filters}>
-      <label>Status<select value={filters.status} disabled={filtersDisabled || board} onChange={(e) => changeFilter("status", e.target.value)}><option value="OPEN">Open</option><option value="COMPLETED">Completed</option><option value="ALL">All statuses</option></select></label>
-      <label>Deadline group<select value={filters.due} disabled={filtersDisabled || board || filters.status !== "OPEN" || filters.deleted} onChange={(e) => changeFilter("due", e.target.value)}><option value="">All deadlines</option>{Object.entries(buckets).slice(0, 4).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
+      {!board && <><label>Status<select value={filters.status} disabled={filtersDisabled || board} onChange={(e) => changeFilter("status", e.target.value)}><option value="OPEN">Open</option><option value="COMPLETED">Completed</option><option value="ALL">All statuses</option></select></label>
+      <label>Deadline group<select value={filters.due} disabled={filtersDisabled || board || filters.status !== "OPEN" || filters.deleted} onChange={(e) => changeFilter("due", e.target.value)}><option value="">All deadlines</option>{Object.entries(buckets).slice(0, 4).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label></>}
       <label>Due from<input type="date" value={filters.dueFrom} disabled={filtersDisabled} onChange={(e) => changeFilter("dueFrom", e.target.value)} /></label>
       <label>Due through<input type="date" value={filters.dueTo} disabled={filtersDisabled} onChange={(e) => changeFilter("dueTo", e.target.value)} /></label>
       {mode === "project" && supported && <label>Assigned employee<select value={filters.assigneeEmployeeId} disabled={filtersDisabled} onChange={e => changeFilter("assigneeEmployeeId", e.target.value)}><option value="">All employees</option>{employees.map(person => <option key={person.id} value={person.id}>{employeeName(person)}</option>)}</select></label>}
       {mode === "project" && <label><input type="checkbox" checked={filters.deleted} disabled={filtersDisabled} onChange={(e) => changeFilter("deleted", e.target.checked)} /> Deleted follow-ups only</label>}
     </div>
-    {board && <p className={styles.muted}>Status and deadline-group filters apply to List only. Date and employee filters apply to both views.</p>}
+    {board && <p className={styles.muted}>Switch to List to filter by status or deadline group.</p>}
     </section>
     <div className={styles.actions}>{data?.canCreate && <button disabled={taskActionsDisabled} onClick={() => setForm({ task: null })}>New follow-up</button>}</div>
     {loading && !data && <p role="status">Loading follow-ups…</p>}{error && <p role="alert">{error}</p>}{notice && <p role="status">{notice}</p>}
