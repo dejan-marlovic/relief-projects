@@ -1,3 +1,4 @@
+import { notifySuccess } from "../../../utils/successNotifications";
 import { budgetFinancialRole, financialReferenceEligible } from "../../../utils/budgetRevisions";
 import BudgetRevisions from "../../../components/BudgetRevisions/BudgetRevisions";
 import { appFetch as fetch } from "../../../utils/appFetch";
@@ -6,7 +7,7 @@ import BudgetCurrencyDialog from "../../../components/BudgetCurrencyDialog/Budge
 import { budgetLimitError } from "../../../utils/budgetLimit";
 import { normalizeBudgetName, budgetNameError } from "../../../utils/budgetDisplay";
 import { addDecimals, excelDecimal } from "../../../utils/budgetCalculations";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import ExcelJS from "exceljs";
 import styles from "./Budget.module.scss";
 import CostDetails from "./CostDetails/CostDetails";
@@ -55,6 +56,9 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
   const [exchangeRates, setExchangeRates] = useState([]);
   const [refreshCostDetailsTrigger, setRefreshCostDetailsTrigger] = useState(0);
 
+  const saveLock = useRef(false);
+  const conflictBudget = useRef(null);
+  const saveLatest = useRef(null);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [reviewAction, setReviewAction] = useState("");
@@ -83,7 +87,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
       RETURNED: "Returned",
     }[lifecycleStatus] || lifecycleStatus;
 
-  useUnsavedChange(`budget-${budget?.id || "unknown"}`, hasUnsavedChanges);
+  useUnsavedChange(`budget-${budget?.id || "unknown"}`, hasUnsavedChanges || loading || submitting || Boolean(reviewAction) || childEditing || currencyOpen);
 
   const triggerRefreshCostDetails = () =>
     setRefreshCostDetailsTrigger((prev) => prev + 1);
@@ -1118,10 +1122,12 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
   };
 
   // 💾 Save/Update Budget
-  const handleSave = async (currencyMode) => {
-    if (!canEditBudget) return;
+  const handleSave = async (currencyMode, automatic = false) => {
+    if (!canEditBudget || saveLock.current || loading || childEditing || submitting || reviewAction) return;
+    if (!hasUnsavedChanges && currencyMode !== "KEEP_VALUES") { if (!automatic) notifySuccess("All budget details are already saved."); return; }
     const currencyChanged = String(savedBudget.localCurrencyId) !== String(budget.localCurrencyId);
     if (currencyChanged && currencyMode !== "KEEP_VALUES") { setCurrencyOpen(true); return; }
+    saveLock.current = true;
     try {
       setLoading(true);
       const token = localStorage.getItem("authToken");
@@ -1230,8 +1236,17 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
         reportingExchangeRateEurId: eurRateIdNum,
       };
 
+      const check = await fetch(`${BASE_URL}/api/budgets/${budget.id}`, { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" });
+      if (!check.ok) throw new Error("Could not check the current budget. Your edits are retained.");
+      const fresh = await check.json();
+      const editableFields = ["budgetName", "budgetDescription", "budgetPreparationDate", "totalAmount", "localCurrencyId", "reportingCurrencySekId", "reportingCurrencyEurId", "localExchangeRateToGbpId", "reportingExchangeRateSekId", "reportingExchangeRateEurId"];
+      const comparable = (record, key) => key === "totalAmount" && record[key] != null ? addDecimals(record[key], "0") : String(record[key] ?? "");
+      if (fresh.id !== budget.id || !["DRAFT", "RETURNED"].includes(fresh.lifecycleStatus || "DRAFT") || editableFields.some(key => comparable(fresh, key) !== comparable(savedBudget, key))) {
+        conflictBudget.current = fresh.id === budget.id ? fresh : null;
+        throw new Error("The saved budget changed elsewhere. Your edits are retained. Copy them before discarding header edits to review the latest budget.");
+      }
       const response = await fetch(`${BASE_URL}/api/budgets/${budget.id}`, {
-        method: "PUT",
+        method: "PUT", silentSuccess: true,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -1261,6 +1276,8 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
       }
 
       const updated = await response.json();
+      if (updated.id !== budget.id) throw new Error("The saved budget could not be confirmed.");
+      notifySuccess("Budget details saved.");
       setBudget(updated);
       setSavedBudget(updated);
       setHistoryRefreshKey((value) => value + 1);
@@ -1276,8 +1293,9 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
       // Successful mutations are announced by the shared notification banner.
     } catch (error) {
       console.error("Error updating budget:", error);
-      setFormError("Unexpected error while saving budget.");
+      setFormError(error.message || "Unexpected error while saving budget. Your edits are retained.");
     } finally {
+      saveLock.current = false;
       setLoading(false);
     }
   };
@@ -1434,6 +1452,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
       : value;
 
     if (name === "localCurrencyId") {
+      setHasUnsavedChanges(true);
       setBudget((prev) => ({
         ...prev,
         localCurrencyId: castValue,
@@ -1454,6 +1473,18 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
     setBudget((prev) => ({ ...prev, [name]: castValue }));
     setHasUnsavedChanges(true);
   };
+
+  saveLatest.current = () => handleSave(undefined, true);
+  useEffect(() => {
+    if (!hasUnsavedChanges || !canEditBudget || loading || childEditing || submitting || reviewAction || currencyOpen || formError || String(savedBudget.localCurrencyId) !== String(budget.localCurrencyId)) return;
+    const timer = setTimeout(() => saveLatest.current(), 900);
+    return () => clearTimeout(timer);
+  }, [budget, hasUnsavedChanges, canEditBudget, loading, childEditing, submitting, reviewAction, currencyOpen, formError, savedBudget.localCurrencyId]);
+  useEffect(() => {
+    if (!hasUnsavedChanges && !loading && !childEditing && !submitting && !reviewAction && !currencyOpen) {
+      setBudget(initialBudget); setSavedBudget(initialBudget);
+    }
+  }, [initialBudget]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const hasBudget = Boolean(budget?.id);
 
@@ -1477,7 +1508,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
             <div className={styles.pageHeaderText}>
               <h3 className={styles.pageTitle}>Budget Details</h3>
               <p className={styles.pageSubtitle}>
-                Update description, totals, currencies, and exchange rates.
+                Draft details save after a short pause. Submission, approval and currency conversion remain manual actions.
               </p>
             </div>
             <div
@@ -1488,11 +1519,12 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
             </div>
           </div>
 
+          <p role="status" className={styles.saveFeedback}>{loading ? "Saving or updating budget…" : hasUnsavedChanges ? "Changes waiting to save…" : "Saved"}</p>
           {formError && (
             <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
           )}
 
-          {loading ? (
+          {loading && !budget.id ? (
             <div className={styles.skeletonWrap}>
               <div className={styles.skeletonLine} />
               <div className={styles.skeletonLine} />
@@ -1501,7 +1533,8 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
           ) : (
             <>
               <fieldset
-                disabled={!canEditBudget}
+                onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget) && !formError && String(savedBudget.localCurrencyId) === String(budget.localCurrencyId)) saveLatest.current(); }}
+                disabled={!canEditBudget || loading}
                 style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}
               >
               <div className={styles.grid}>
@@ -1701,7 +1734,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
                   disabled={loading || exportingBudget || childEditing}
                 >
                   <FiSave />
-                  Save changes
+                  {loading ? "Saving changes…" : "Save changes"}
                 </button>}
                 {canSubmitBudget && <button
                   type="button"
@@ -1761,11 +1794,11 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
         <button type="button" className={styles.saveButton} onClick={handleRecalculate} disabled={loading || childEditing || hasUnsavedChanges} title="Save or cancel edits first. Uses persisted inputs and current selected rates.">Recalculate saved costs</button>
         {recalculationMessage && <p role="status">{recalculationMessage}</p>}
       </div>}
-      {hasUnsavedChanges && <button type="button" className={styles.saveButton} disabled={loading || submitting || Boolean(reviewAction)} onClick={() => { setBudget(savedBudget); setHasUnsavedChanges(false); setFieldErrors({}); setFormError(""); }}>Discard header edits</button>}
+      {hasUnsavedChanges && <button type="button" className={styles.saveButton} disabled={loading || submitting || Boolean(reviewAction)} onClick={() => { setBudget(conflictBudget.current || savedBudget); setSavedBudget(conflictBudget.current || savedBudget); conflictBudget.current = null; setHasUnsavedChanges(false); setFieldErrors({}); setFormError(""); }}>Discard header edits</button>}
       {currencyOpen && canEditBudget && <BudgetCurrencyDialog key={`currency-${savedBudget.id}`} budget={savedBudget} currencies={currencies} rates={exchangeRates}
         initialTargetId={budget.localCurrencyId} dirty={hasUnsavedChanges}
         keepReady={String(savedBudget.localCurrencyId) !== String(budget.localCurrencyId)}
-        onDiscard={() => { setBudget(savedBudget); setHasUnsavedChanges(false); setFieldErrors({}); setFormError(""); }}
+        onDiscard={() => { setBudget(conflictBudget.current || savedBudget); setSavedBudget(conflictBudget.current || savedBudget); conflictBudget.current = null; setHasUnsavedChanges(false); setFieldErrors({}); setFormError(""); }}
         onKeep={() => { setCurrencyOpen(false); handleSave("KEEP_VALUES"); }} onClose={() => setCurrencyOpen(false)}
         onUpdated={(updated) => {
           setBudget(updated); setSavedBudget(updated); setHasUnsavedChanges(false); setFieldErrors({}); setFormError("");

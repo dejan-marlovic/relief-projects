@@ -2,7 +2,9 @@
 
 //we are importing deafult react exports from "react" module + named exports: useEffect + useMemo + useState
 //default export + selected named exports.
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import useExchangeRateDraft from "../../../hooks/useExchangeRateDraft";
+import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
 //import named export useNavigate from module "react-router-dom"
 import { useNavigate } from "react-router-dom";
 import { FiSave, FiX } from "react-icons/fi";
@@ -51,7 +53,7 @@ const toLocalDateTimeSeconds = (dtLocal) => {
 // - baseCurrencyId: required
 // - quoteCurrencyId: required
 // - rate: required
-// - base != quote
+// - matching currencies require an identity rate of exactly 1
 // - rate should be > 0
 const validateExchangeRateDetails = (values) => {
   const errors = {};
@@ -65,8 +67,8 @@ const validateExchangeRateDetails = (values) => {
   if (!base) errors.baseCurrencyId = "Base currency is required.";
   if (!quote) errors.quoteCurrencyId = "Quote currency is required.";
 
-  if (base && quote && String(base) === String(quote)) {
-    errors.quoteCurrencyId = "Base and quote currency must be different.";
+  if (base && quote && String(base) === String(quote) && !/^0*1(?:\.0+)?$/.test(rateRaw)) {
+    errors.rate = "For matching currencies, the rate must be exactly 1.";
   }
 
   if (!rateRaw) errors.rate = "Exchange rate is required (e.g. 10.5321).";
@@ -98,7 +100,9 @@ const CreateExchangeRate = () => {
   const [currencies, setCurrencies] = useState([]);
 
   //Form state
-  const [exchangeRateDetails, setExchangeRateDetails] = useState(() => ({
+  const formRef = useRef(null);
+  const reading = useRef(false);
+  const [exchangeRateDetails, setExchangeRateDetails, clearDraft, draftMessage] = useExchangeRateDraft("create", () => ({
     ...initialExchangeRateDetails,
     rateDate: nowAsDatetimeLocal(),
   }));
@@ -113,7 +117,7 @@ const CreateExchangeRate = () => {
 
   //use setters to clean all states
   const resetForm = () => {
-    setExchangeRateDetails({
+    clearDraft({
       ...initialExchangeRateDetails,
       rateDate: nowAsDatetimeLocal(),
     });
@@ -152,9 +156,11 @@ const CreateExchangeRate = () => {
   };
 
   // Load currencies for dropdowns from your Currency API: GET /api/currencies/active
-  const loadCurrencies = async () => {
+  const loadCurrencies = async (quiet = false) => {
+    if (reading.current) return;
+    reading.current = true;
     try {
-      setLoadingCurrencies(true);
+      if (!quiet) setLoadingCurrencies(true);
       setFormError("");
 
       const token = localStorage.getItem("authToken");
@@ -200,16 +206,20 @@ const CreateExchangeRate = () => {
         err?.message || "Unexpected error while loading currencies.",
       );
     } finally {
+      reading.current = false;
       setLoadingCurrencies(false);
     }
   };
 
+  useAutomaticRefresh(() => loadCurrencies(true), loading || loadingCurrencies || Boolean(exchangeRateDetails.baseCurrencyId || exchangeRateDetails.quoteCurrencyId || exchangeRateDetails.rate));
+  useEffect(() => { if (!loadingCurrencies) formRef.current?.querySelector('select')?.focus(); }, [loadingCurrencies]);
   useEffect(() => {
     loadCurrencies();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authFetch]);
 
   const handleCreate = async () => {
+    if (loading) return;
     try {
       setFormError("");
       setFieldErrors({});
@@ -254,10 +264,6 @@ const CreateExchangeRate = () => {
         return;
       }
 
-      const created = await safeReadJson(res);
-      const createdId =
-        created?.id ?? created?.exchangeRateId ?? created?.exchange_rate_id;
-
       // Successful mutations are announced by the shared notification banner.
       resetForm();
     } catch (err) {
@@ -271,7 +277,7 @@ const CreateExchangeRate = () => {
   };
 
   const hasAnyFieldErrors = useMemo(
-    () => Object.keys(fieldErrors || {}).length > 0,
+    () => Object.values(fieldErrors || {}).some(Boolean),
     [fieldErrors],
   );
 
@@ -280,16 +286,17 @@ const CreateExchangeRate = () => {
 
   return (
     <div className={styles.createContainer}>
-      <div className={styles.formContainer}>
+      <div className={styles.formContainer} ref={formRef}>
         <div className={styles.pageHeader}>
           <div className={styles.pageHeaderText}>
             <h3 className={styles.pageTitle}>Create Exchange Rate</h3>
             <p className={styles.pageSubtitle}>
-              Add an exchange rate (base + quote + rate + date).
+              Choose the currencies, rate and date. Create applies this shared rate to the system; unfinished entries are retained only in this tab.
             </p>
           </div>
         </div>
 
+        {draftMessage && <p role="status" className={styles.mutedHint}>{draftMessage}</p>}
         {formError && (
           <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
@@ -297,9 +304,9 @@ const CreateExchangeRate = () => {
         {hasAnyFieldErrors && (
           <div className={styles.errorList}>
             <ul>
-              {Object.entries(fieldErrors).map(([field, message]) => (
+              {Object.entries(fieldErrors).filter(([, message]) => Boolean(message)).map(([field, message]) => (
                 <li key={field}>
-                  <strong>{field}</strong>: {message}
+                  {message}
                 </li>
               ))}
             </ul>
@@ -325,10 +332,10 @@ const CreateExchangeRate = () => {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>Base currency</label>
+                  <label htmlFor="create-exchange-baseCurrencyId">Base currency</label>
                   <select
                     className={inputClass("baseCurrencyId")}
-                    name="baseCurrencyId"
+                    id="create-exchange-baseCurrencyId" name="baseCurrencyId"
                     value={baseId}
                     onChange={handleInputChange}
                     disabled={loading}
@@ -348,10 +355,10 @@ const CreateExchangeRate = () => {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>Quote currency</label>
+                  <label htmlFor="create-exchange-quoteCurrencyId">Quote currency</label>
                   <select
                     className={inputClass("quoteCurrencyId")}
-                    name="quoteCurrencyId"
+                    id="create-exchange-quoteCurrencyId" name="quoteCurrencyId"
                     value={quoteId}
                     onChange={handleInputChange}
                     disabled={loading}
@@ -361,8 +368,6 @@ const CreateExchangeRate = () => {
                       <option
                         key={c.id}
                         value={c.id}
-                        // UX: prevent selecting same currency (still validated server-side too)
-                        disabled={String(baseId) === String(c.id) && !!baseId}
                       >
                         {currencyLabel(c)}
                       </option>
@@ -372,6 +377,9 @@ const CreateExchangeRate = () => {
                     <div className={styles.fieldError}>
                       {fieldErrors.quoteCurrencyId}
                     </div>
+                  )}
+                  {baseId && String(baseId) === String(quoteId) && (
+                    <p className={styles.mutedHint}>Matching currencies use a rate of exactly 1 (for example, 1 SEK = 1 SEK).</p>
                   )}
                 </div>
 
@@ -391,10 +399,10 @@ const CreateExchangeRate = () => {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>Rate</label>
+                  <label htmlFor="create-exchange-rate">Rate</label>
                   <input
                     className={inputClass("rate")}
-                    name="rate"
+                    id="create-exchange-rate" name="rate"
                     placeholder="e.g. 10.5321"
                     value={exchangeRateDetails.rate}
                     onChange={handleInputChange}
@@ -411,11 +419,11 @@ const CreateExchangeRate = () => {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>Rate date</label>
+                  <label htmlFor="create-exchange-rateDate">Rate date</label>
                   <input
                     className={inputClass("rateDate")}
                     type="datetime-local"
-                    name="rateDate"
+                    id="create-exchange-rateDate" name="rateDate"
                     value={exchangeRateDetails.rateDate}
                     onChange={handleInputChange}
                     disabled={loading}
@@ -428,11 +436,7 @@ const CreateExchangeRate = () => {
                 </div>
 
                 <div className={styles.mutedHint}>
-                  Note: your DB unique constraint is{" "}
-                  <strong>
-                    (base_currency_id, quote_currency_id, rate_date)
-                  </strong>
-                  .
+                  Each currency pair can have one rate for a given date and time.
                 </div>
               </div>
             </div>

@@ -1,3 +1,4 @@
+import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import useFinancialRefresh from "../../hooks/useFinancialRefresh";
 import { appFetch as fetch } from "../../utils/appFetch";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
@@ -12,7 +13,7 @@ import styles from "./Budgets.module.scss";
 import { FiPlus } from "react-icons/fi";
 
 import { BASE_URL } from "../../config/api";
-import { useUnsavedChange } from "../../context/UnsavedChangesContext";
+import { useUnsavedChange, useUnsavedChanges } from "../../context/UnsavedChangesContext";
 
 const Budgets = () => {
   const financialRefresh = useFinancialRefresh();
@@ -20,9 +21,16 @@ const Budgets = () => {
   const { hasAnyRole } = useAuth();
   const canEditBudgets = hasAnyRole("ADMIN", "FINANCE");
 
+  const { hasUnsavedChanges } = useUnsavedChanges();
+  const [readError, setReadError] = useState("");
+  const [reading, setReading] = useState(false);
+  const request = useRef(null);
+  const activeProject = useRef(selectedProjectId); activeProject.current = selectedProjectId;
   const [budgets, setBudgets] = useState([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newBudgetId, setNewBudgetId] = useState(null);
+  const refreshBlocked = useRef(false);
+  refreshBlocked.current = showCreateForm || hasUnsavedChanges;
   useUnsavedChange("new-budget", showCreateForm);
 
   /*
@@ -34,9 +42,12 @@ const Budgets = () => {
 
   // Fetch budgets for the selected project.
   const fetchBudgets = async (projectId, token) => {
+    request.current?.abort();
+    const controller = new AbortController(); request.current = controller;
+    setReading(true);
     try {
       const res = await fetch(`${BASE_URL}/api/budgets/project/${projectId}`, {
-        method: "GET",
+        method: "GET", signal: controller.signal, cache: "no-store",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -48,13 +59,17 @@ const Budgets = () => {
       }
 
       const data = await res.json();
-      setBudgets(Array.isArray(data) ? data : []);
+      if (!Array.isArray(data)) throw new Error("Could not read budgets.");
+      if (!controller.signal.aborted && activeProject.current === projectId && !refreshBlocked.current) { setBudgets(data); setReadError(""); }
     } catch (err) {
-      console.error("Failed to fetch budgets", err);
-      setBudgets([]);
+      if (!controller.signal.aborted) setReadError("Could not refresh budgets. Previously loaded budgets are retained; automatic refresh will retry.");
+    } finally {
+      if (!controller.signal.aborted) setReading(false);
     }
   };
 
+  useAutomaticRefresh(() => { if (selectedProjectId) fetchBudgets(selectedProjectId, localStorage.getItem("authToken")); }, reading || showCreateForm || hasUnsavedChanges);
+  useEffect(() => { setBudgets([]); setShowCreateForm(false); setReadError(""); return () => request.current?.abort(); }, [selectedProjectId]);
   useEffect(() => {
     const token = localStorage.getItem("authToken");
 
@@ -103,6 +118,8 @@ const Budgets = () => {
   }, [budgets, newBudgetId]);
 
   const handleBudgetUpdate = (updatedBudget) => {
+    request.current?.abort();
+    setReading(false);
     setBudgets((prevBudgets) =>
       prevBudgets.map((budget) =>
         budget.id === updatedBudget.id ? updatedBudget : budget,
@@ -157,13 +174,14 @@ const Budgets = () => {
 
         {canEditBudgets && showCreateForm && (
           <div ref={createFormRef} className={styles.createFormSection}>
-            <CreateNewBudget
+            <CreateNewBudget key={selectedProjectId}
               onClose={() => setShowCreateForm(false)}
               onBudgetCreated={handleNewBudget}
             />
           </div>
         )}
 
+        {readError && <p role="alert">{readError}</p>}
         <div className={styles.budgetList}>
           {!selectedProjectId ? (
             <p className={styles.noData}>
@@ -171,7 +189,7 @@ const Budgets = () => {
             </p>
           ) : budgets.length === 0 ? (
             <p className={styles.noData}>
-              No budgets available for this project.
+              {reading ? "Loading budgets…" : readError ? "Budgets could not be loaded." : "No budgets available for this project."}
             </p>
           ) : (
             budgets.map((budget) => (

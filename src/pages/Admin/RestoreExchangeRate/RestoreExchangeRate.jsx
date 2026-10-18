@@ -1,9 +1,10 @@
+import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
 import useTransientMessage from "../../../hooks/useTransientMessage";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiRotateCcw,
-  FiRefreshCw,  FiTrendingUp,
+  FiTrendingUp,
 } from "react-icons/fi";
 
 import styles from "./RestoreExchangeRate.module.scss";
@@ -13,6 +14,8 @@ import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const RestoreExchangeRate = () => {
   const navigate = useNavigate();
+  const formRef = useRef(null);
+  const reading = useRef(false);
   const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
 
   const [loading, setLoading] = useState(false);
@@ -62,9 +65,11 @@ const RestoreExchangeRate = () => {
     return `${baseCurrencyLabel} → ${quoteCurrencyLabel}`;
   };
 
-  const loadDeletedExchangeRates = async () => {
+  const loadDeletedExchangeRates = async (quiet = false) => {
+    if (reading.current) return;
+    reading.current = true;
     try {
-      setLoading(true);
+      if (!quiet) setLoading(true);
       setFormError("");
       setSuccessMessage("");
 
@@ -79,7 +84,6 @@ const RestoreExchangeRate = () => {
 
       if (!exchangeRatesRes.ok && exchangeRatesRes.status !== 204) {
         const data = await safeReadJson(exchangeRatesRes);
-        setDeletedExchangeRates([]);
         setFormError(
           data?.message ||
             data?.detail ||
@@ -90,7 +94,6 @@ const RestoreExchangeRate = () => {
 
       if (!currenciesRes.ok && currenciesRes.status !== 204) {
         const data = await safeReadJson(currenciesRes);
-        setCurrenciesById({});
         setFormError(
           data?.message ||
             data?.detail ||
@@ -128,23 +131,25 @@ const RestoreExchangeRate = () => {
       }
     } catch (err) {
       console.error("Error loading deleted exchange rates:", err);
-      setDeletedExchangeRates([]);
-      setCurrenciesById({});
       setFormError(
         err?.message ||
           "Unexpected error while loading deleted exchange rates. Backend support may be missing.",
       );
     } finally {
+      reading.current = false;
       setLoading(false);
     }
   };
 
+  useAutomaticRefresh(() => loadDeletedExchangeRates(true), loading || restoring || Boolean(selectedExchangeRateId));
+  useEffect(() => { if (!loading) formRef.current?.querySelector("select")?.focus(); }, [loading]);
   useEffect(() => {
     loadDeletedExchangeRates();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleRestore = async () => {
+    if (restoring) return;
     try {
       setFormError("");
       setSuccessMessage("");
@@ -198,7 +203,7 @@ const RestoreExchangeRate = () => {
 
   return (
     <div className={styles.restoreContainer}>
-      <div className={styles.formContainer}>
+      <div className={styles.formContainer} ref={formRef}>
         <div className={styles.pageHeader}>
           <div className={styles.pageHeaderText}>
             <h3 className={styles.pageTitle}>Restore Exchange Rate</h3>
@@ -330,14 +335,7 @@ const RestoreExchangeRate = () => {
             </div>
 
             <div className={styles.bottomActions}>
-              <button
-                type="button"
-                onClick={loadDeletedExchangeRates}
-                className={styles.secondaryButton}
-                disabled={loading || restoring}
-              >
-                <FiRefreshCw /> Refresh list
-              </button>
+
 
               <button
                 type="button"

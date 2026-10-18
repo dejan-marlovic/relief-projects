@@ -337,3 +337,7 @@ label {
   .headerActions { width: 100%; }
   .headerActions > button { flex: 1 1 auto; justify-content: center; }
 }
+
+.saveFeedback { min-height: 1.5em; color: #52657a; font-size: .9rem; }
+.formContainer { scroll-margin-top: 1rem; }
+.saveButton:active:not(:disabled) { transform: translateY(1px); }

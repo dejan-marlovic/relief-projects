@@ -1,9 +1,10 @@
+import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
 import useTransientMessage from "../../../hooks/useTransientMessage";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiTrash2,
-  FiRefreshCw,  FiTrendingUp,
+  FiTrendingUp,
 } from "react-icons/fi";
 
 import styles from "./DeleteExchangeRate.module.scss";
@@ -14,6 +15,8 @@ import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const DeleteExchangeRate = () => {
   const navigate = useNavigate();
+  const formRef = useRef(null);
+  const reading = useRef(false);
 
   const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
 
@@ -88,9 +91,11 @@ const DeleteExchangeRate = () => {
     return Array.isArray(data) ? data : [];
   };
 
-  const loadData = async () => {
+  const loadData = async (quiet = false) => {
+    if (reading.current) return;
+    reading.current = true;
     try {
-      setLoading(true);
+      if (!quiet) setLoading(true);
       setFormError("");
       setSuccessMessage("");
 
@@ -112,14 +117,15 @@ const DeleteExchangeRate = () => {
       }
     } catch (err) {
       console.error("Error loading exchange-rate delete data:", err);
-      setCurrencies([]);
-      setExchangeRates([]);
       setFormError(err?.message || "Unexpected error while loading data.");
     } finally {
+      reading.current = false;
       setLoading(false);
     }
   };
 
+  useAutomaticRefresh(() => loadData(true), loading || deleting || Boolean(selectedExchangeRateId));
+  useEffect(() => { if (!loading) formRef.current?.querySelector("select")?.focus(); }, [loading]);
   useEffect(() => {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -132,6 +138,7 @@ const DeleteExchangeRate = () => {
   };
 
   const handleDelete = async () => {
+    if (deleting) return;
     try {
       setFormError("");
       setSuccessMessage("");
@@ -202,7 +209,7 @@ const DeleteExchangeRate = () => {
 
   return (
     <div className={styles.deleteContainer}>
-      <div className={styles.formContainer}>
+      <div className={styles.formContainer} ref={formRef}>
         <div className={styles.pageHeader}>
           <div className={styles.pageHeaderText}>
             <h3 className={styles.pageTitle}>Delete Exchange Rate</h3>
@@ -334,14 +341,7 @@ const DeleteExchangeRate = () => {
             </div>
 
             <div className={styles.bottomActions}>
-              <button
-                type="button"
-                onClick={loadData}
-                className={styles.secondaryButton}
-                disabled={loading || deleting}
-              >
-                <FiRefreshCw /> Refresh list
-              </button>
+
 
               <button
                 type="button"

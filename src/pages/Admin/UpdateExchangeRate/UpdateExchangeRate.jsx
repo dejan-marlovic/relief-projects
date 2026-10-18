@@ -1,5 +1,8 @@
 import useTransientMessage from "../../../hooks/useTransientMessage";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import useExchangeRateDraft from "../../../hooks/useExchangeRateDraft";
+import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
+import { notifySuccess } from "../../../utils/successNotifications";
 import { useNavigate } from "react-router-dom";
 import { FiSave, FiRefreshCw, FiEdit3 } from "react-icons/fi";
 
@@ -27,6 +30,8 @@ const validate = (values) => {
   if (!values.quoteCurrencyId)
     errors.quoteCurrencyId = "Quote currency is required.";
   if (!values.rate) errors.rate = "Rate is required.";
+  else if (values.baseCurrencyId && String(values.baseCurrencyId) === String(values.quoteCurrencyId) && !/^0*1(?:\.0+)?$/.test(String(values.rate).trim()))
+    errors.rate = "For matching currencies, the rate must be exactly 1.";
   return errors;
 };
 
@@ -36,7 +41,9 @@ const UpdateExchangeRate = () => {
 
   const [items, setItems] = useState([]);
   const [currencies, setCurrencies] = useState([]);
-  const [form, setForm] = useState(initialForm);
+  const [form, setForm, clearDraft, draftMessage] = useExchangeRateDraft("update", initialForm);
+  const formRef = useRef(null);
+  const reading = useRef(false);
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -69,9 +76,11 @@ const UpdateExchangeRate = () => {
     return `${base} → ${quote} | rate: ${item.rate} | id: ${item.id}`;
   };
 
-  const loadData = async () => {
+  const loadData = async (quiet = false) => {
+    if (reading.current) return;
+    reading.current = true;
     try {
-      setLoading(true);
+      if (!quiet) setLoading(true);
       setFormError("");
       setSuccessMessage("");
 
@@ -86,27 +95,32 @@ const UpdateExchangeRate = () => {
 
       const exchangeData = await safeReadJson(exchangeRes);
       const currencyData = await safeReadJson(currencyRes);
+      if (!exchangeRes.ok || !currencyRes.ok) throw new Error("Could not refresh exchange rates. Previously loaded data is retained; automatic refresh will retry.");
 
       setItems(Array.isArray(exchangeData) ? exchangeData : []);
       setCurrencies(Array.isArray(currencyData) ? currencyData : []);
     } catch (err) {
       console.error("Load exchange rates error:", err);
-      setItems([]);
-      setCurrencies([]);
       setFormError(
         err?.message || "Unexpected error while loading exchange rates.",
       );
     } finally {
+      reading.current = false;
       setLoading(false);
     }
   };
 
+  useAutomaticRefresh(() => loadData(true), loading || saving || Boolean(form.selectedId));
+  useEffect(() => {
+    if (!loading) formRef.current?.querySelector(form.selectedId ? '[name="baseCurrencyId"]' : 'select')?.focus();
+  }, [loading, form.selectedId]);
   useEffect(() => {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSelectChange = (e) => {
+    if (form.selectedId && form.baseline && (String(form.baseCurrencyId) !== String(form.baseline.baseCurrencyId) || String(form.quoteCurrencyId) !== String(form.baseline.quoteCurrencyId) || String(form.rate) !== String(form.baseline.rate)) && !window.confirm("Discard unfinished edits and select another exchange rate?")) return;
     const selectedId = e.target.value;
     setFieldErrors({});
     setFormError("");
@@ -128,6 +142,7 @@ const UpdateExchangeRate = () => {
         ? String(selected.quoteCurrencyId)
         : "",
       rate: selected?.rate ?? "",
+      baseline: selected,
     });
   };
 
@@ -141,11 +156,11 @@ const UpdateExchangeRate = () => {
 
   const resetForm = () => {
     if (!selectedItem) {
-      setForm(initialForm);
+      clearDraft(initialForm);
       return;
     }
 
-    setForm({
+    clearDraft({
       selectedId: String(selectedItem.id),
       baseCurrencyId: selectedItem.baseCurrencyId
         ? String(selectedItem.baseCurrencyId)
@@ -154,6 +169,7 @@ const UpdateExchangeRate = () => {
         ? String(selectedItem.quoteCurrencyId)
         : "",
       rate: selectedItem.rate ?? "",
+      baseline: selectedItem,
     });
     setFieldErrors({});
     setFormError("");
@@ -161,6 +177,11 @@ const UpdateExchangeRate = () => {
   };
 
   const handleUpdate = async () => {
+    if (saving) return;
+    if (form.baseline && ["baseCurrencyId", "quoteCurrencyId", "rate"].every(key => String(form[key]) === String(form.baseline[key]))) {
+      notifySuccess("All exchange-rate changes are already saved.");
+      return;
+    }
     try {
       setFormError("");
       setSuccessMessage("");
@@ -175,10 +196,20 @@ const UpdateExchangeRate = () => {
 
       setSaving(true);
 
+      const currentResponse = await authFetch(`${BASE_URL}/api/exchange-rates/${Number(form.selectedId)}`, { cache: "no-store" });
+      if (!currentResponse.ok) throw new Error("Could not check this exchange rate. Your draft is retained.");
+      const current = await safeReadJson(currentResponse);
+      const baseline = form.baseline || selectedItem;
+      if (!baseline || ["id", "baseCurrencyId", "quoteCurrencyId", "rate", "rateDate"].some(key => String(current?.[key] ?? "") !== String(baseline[key] ?? ""))) {
+        if (current?.id) setItems(old => old.map(row => row.id === current.id ? current : row));
+        throw new Error("This exchange rate changed elsewhere. Your edits are retained. Copy them before using Reset form to load the current values.");
+      }
+
       const payload = {
         baseCurrencyId: Number(form.baseCurrencyId),
         quoteCurrencyId: Number(form.quoteCurrencyId),
         rate: form.rate,
+        rateDate: current.rateDate,
       };
 
       const res = await authFetch(
@@ -196,12 +227,14 @@ const UpdateExchangeRate = () => {
         const fe = extractFieldErrors(data);
         if (fe) setFieldErrors(fe);
         setFormError(
-          data?.message ||
+          [data?.message ||
             data?.detail ||
             "There was a problem updating the exchange rate.",
+          ...Object.values(fe || {}).filter(Boolean)].join(" "),
         );
         return;
       }
+      clearDraft({ ...form, baseline: { ...current, ...payload, ...data } });
 
       setItems((prev) =>
         prev.map((item) =>
@@ -231,16 +264,17 @@ const UpdateExchangeRate = () => {
 
   return (
     <div className={styles.updateContainer}>
-      <div className={styles.formContainer}>
+      <div className={styles.formContainer} ref={formRef}>
         <div className={styles.pageHeader}>
           <div className={styles.pageHeaderText}>
             <h3 className={styles.pageTitle}>Update Exchange Rate</h3>
             <p className={styles.pageSubtitle}>
-              Select an active exchange rate and update its currencies and rate.
+              Select a shared exchange rate. Edits are retained in this tab and applied only when you choose Save changes.
             </p>
           </div>
         </div>
 
+        {draftMessage && <p role="status">{draftMessage}</p>}
         {formError && (
           <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
@@ -270,10 +304,10 @@ const UpdateExchangeRate = () => {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>Exchange rate</label>
+                  <label htmlFor="update-exchange-selected">Exchange rate</label>
                   <select
                     className={inputClass("selectedId")}
-                    value={form.selectedId}
+                    id="update-exchange-selected" value={form.selectedId}
                     onChange={handleSelectChange}
                     disabled={saving}
                   >
@@ -292,12 +326,13 @@ const UpdateExchangeRate = () => {
                   <div className={styles.cardTitle}>Edit details</div>
                   <div className={styles.cardMeta}>Currencies and rate</div>
                 </div>
+                {selectedItem && <p>Rate date: {String(form.baseline?.rateDate || selectedItem.rateDate || "Not recorded").replace("T", " ")}. The original date is preserved when saving.</p>}
 
                 <div className={styles.formGroup}>
-                  <label>Base currency</label>
+                  <label htmlFor="update-exchange-baseCurrencyId">Base currency</label>
                   <select
                     className={inputClass("baseCurrencyId")}
-                    name="baseCurrencyId"
+                    id="update-exchange-baseCurrencyId" name="baseCurrencyId"
                     value={form.baseCurrencyId}
                     onChange={handleInputChange}
                     disabled={!form.selectedId || saving}
@@ -312,10 +347,10 @@ const UpdateExchangeRate = () => {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>Quote currency</label>
+                  <label htmlFor="update-exchange-quoteCurrencyId">Quote currency</label>
                   <select
                     className={inputClass("quoteCurrencyId")}
-                    name="quoteCurrencyId"
+                    id="update-exchange-quoteCurrencyId" name="quoteCurrencyId"
                     value={form.quoteCurrencyId}
                     onChange={handleInputChange}
                     disabled={!form.selectedId || saving}
@@ -330,12 +365,12 @@ const UpdateExchangeRate = () => {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>Rate</label>
+                  <label htmlFor="update-exchange-rate">Rate</label>
                   <input
                     className={inputClass("rate")}
                     type="number"
                     step="0.00000001"
-                    name="rate"
+                    id="update-exchange-rate" name="rate"
                     value={form.rate}
                     onChange={handleInputChange}
                     disabled={!form.selectedId || saving}
@@ -345,14 +380,7 @@ const UpdateExchangeRate = () => {
             </div>
 
             <div className={styles.bottomActions}>
-              <button
-                type="button"
-                onClick={loadData}
-                className={styles.secondaryButton}
-                disabled={loading || saving}
-              >
-                <FiRefreshCw /> Refresh list
-              </button>
+
               <button
                 type="button"
                 onClick={resetForm}
@@ -367,7 +395,7 @@ const UpdateExchangeRate = () => {
                 className={styles.saveButton}
                 disabled={saving}
               >
-                <FiSave /> {saving ? "Saving..." : "Update exchange rate"}
+                <FiSave /> {saving ? "Saving..." : "Save changes"}
               </button>
             </div>
           </>

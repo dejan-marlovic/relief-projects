@@ -16,6 +16,7 @@ beforeEach(() => {
  jest.spyOn(window,"alert").mockImplementation(()=>{});
  global.fetch=jest.fn(async(url,options={}) => {
    if(options.method === "POST" || options.method === "PUT") return response({...saved,...JSON.parse(options.body)});
+   if (url.endsWith("/api/budgets/7")) return response(saved);
    return response(url.includes("exchange-rates") ? rates : currencies);
  });
 });
@@ -31,7 +32,7 @@ const mount = async (edit) => {
    change("totalAmount","100");change("localCurrencyId","1");
    change("localExchangeRateToGbpId","12");change("reportingExchangeRateSekId","13");change("reportingExchangeRateEurId","14");
  }
- return {onSaved,change,save:()=>fireEvent.click(screen.getAllByRole("button",{name:edit?"Save changes":"Save",exact:true})[0])};
+ return {onSaved,change,save:()=>fireEvent.click(screen.getAllByRole("button",{name:edit?"Save changes":"Create budget",exact:true})[0])};
 };
 
 test.each([false,true])("%s: saves normalized names and preserves description",async(edit)=>{
@@ -54,4 +55,37 @@ test("server name validation is associated with the creation field",async()=>{
  save();
  expect(await screen.findByText("Server name validation")).toBeInTheDocument();
  expect(screen.getByLabelText("Budget name")).toHaveAttribute("aria-invalid","true");
+});
+
+test("draft details autosave without submitting or approving", async () => {
+ const {change,onSaved}=await mount(true);
+ change("budgetDescription","Updated draft narrative");
+ await waitFor(()=>expect(onSaved).toHaveBeenCalledWith(expect.objectContaining({budgetDescription:"Updated draft narrative"})),{timeout:3000});
+ expect(fetch.mock.calls.filter(([,o])=>o?.method==="PUT")).toHaveLength(1);
+ expect(fetch.mock.calls.some(([,o])=>o?.method==="POST")).toBe(false);
+ expect(screen.getByLabelText("Budget name")).toBeInTheDocument();
+});
+
+test("autosave retains edits and refuses to overwrite a changed budget", async () => {
+ jest.spyOn(console,"error").mockImplementation(()=>{});
+ const {change}=await mount(true);
+ fetch.mockImplementation(async()=>response({...saved,budgetName:"Changed elsewhere"}));
+ change("budgetName","My unsaved name");
+ await screen.findByText(/The saved budget changed elsewhere/,{},{timeout:3000});
+ expect(screen.getByLabelText("Budget name")).toHaveValue("My unsaved name");
+ expect(fetch.mock.calls.some(([,o])=>o?.method==="PUT")).toBe(false);
+ fireEvent.click(screen.getByText("Discard header edits"));
+ expect(screen.getByLabelText("Budget name")).toHaveValue("Changed elsewhere");
+});
+
+test("new budget entries recover in the same tab without creating a record",async()=>{
+ localStorage.setItem("authToken",`x.${btoa(JSON.stringify({sub:"draft-test"}))}.x`);
+ const {unmount}=render(<ProjectContext.Provider value={{selectedProjectId:2}}><CreateNewBudget/></ProjectContext.Provider>);
+ await screen.findByLabelText("Budget name");
+ fireEvent.change(screen.getByLabelText("Budget name"),{target:{name:"budgetName",value:"Recovered draft"}});
+ unmount();
+ render(<ProjectContext.Provider value={{selectedProjectId:2}}><CreateNewBudget/></ProjectContext.Provider>);
+ expect(await screen.findByLabelText("Budget name")).toHaveValue("Recovered draft");
+ expect(fetch.mock.calls.some(([,o])=>o?.method==="POST")).toBe(false);
+ localStorage.removeItem("authToken"); sessionStorage.clear();
 });

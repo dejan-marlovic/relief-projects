@@ -22,6 +22,7 @@ const response = (body) => ({ ok: true, status: 200, json: async () => body, tex
 beforeEach(() => {
   global.fetch = jest.fn(async (url, options = {}) => {
     if (options.method === "PUT") return response({ ...saved, ...JSON.parse(options.body) });
+    if (url.endsWith("/api/budgets/7")) return response(saved);
     return response(url.includes("exchange-rates") ? rates : url.includes("currencies") ? currencies : url.includes("budgets/active") ? [saved] : [{ id: 2, projectName: "Test project" }]);
   });
   jest.spyOn(window, "alert").mockImplementation(() => {});

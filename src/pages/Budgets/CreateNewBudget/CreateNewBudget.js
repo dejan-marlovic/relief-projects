@@ -1,7 +1,8 @@
 import { appFetch as fetch } from "../../../utils/appFetch";
+import { notifySuccess } from "../../../utils/successNotifications";
 import { budgetLimitError } from "../../../utils/budgetLimit";
 import { normalizeBudgetName, budgetNameError } from "../../../utils/budgetDisplay";
-import React, { useState, useEffect, useContext, useMemo } from "react";
+import React, { useState, useEffect, useContext, useMemo, useRef } from "react";
 import styles from "../Budget/Budget.module.scss"; // ✅ reuse Budget styling
 import { ProjectContext } from "../../../context/ProjectContext";
 
@@ -14,11 +15,23 @@ import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner"; // adjust
 const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
   const { selectedProjectId } = useContext(ProjectContext);
 
+  const formRef = useRef(null);
+  const savingRef = useRef(false);
+  const draftEdited = useRef(false);
+  const [saving, setSaving] = useState(false);
+  const draftKey = useMemo(() => {
+    try { const token = localStorage.getItem("authToken"); const subject = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).sub;
+      return subject ? `new-budget:${encodeURIComponent(subject)}:${selectedProjectId}` : null;
+    } catch { return null; }
+  }, [selectedProjectId]);
+  const [draftMessage, setDraftMessage] = useState("");
   const [currencies, setCurrencies] = useState([]);
   const [exchangeRates, setExchangeRates] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const [budget, setBudget] = useState({
+  const [budget, setBudget] = useState(() => {
+    try { const stored = draftKey && JSON.parse(sessionStorage.getItem(draftKey)); if (stored) return stored; } catch {}
+    return {
     budgetName: "",
     budgetDescription: "",
     totalAmount: "",
@@ -29,8 +42,24 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
     localExchangeRateToGbpId: "",
     reportingExchangeRateSekId: "",
     reportingExchangeRateEurId: "",
-  });
+  }; });
 
+  useEffect(() => {
+    if (!draftKey || saving) return;
+    try {
+      sessionStorage.setItem(draftKey, JSON.stringify(budget));
+      setDraftMessage("Unfinished entries saved in this tab. Create budget records them in the project; closing this tab removes unfinished entries.");
+      if (draftEdited.current) {
+        const timer = setTimeout(() => {
+          draftEdited.current = false;
+          notifySuccess("Draft saved in this tab.");
+        }, 900);
+        return () => clearTimeout(timer);
+      }
+    }
+    catch { setDraftMessage("Unfinished entries could not be stored. Keep this page open until you create the budget."); }
+  }, [budget, draftKey, saving]);
+  useEffect(() => { if (!loading) formRef.current?.querySelector('input[name="budgetName"]')?.focus(); }, [loading]);
   // 🔴 Error state
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
@@ -133,6 +162,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
   }, []);
 
   const handleChange = (e) => {
+    draftEdited.current = true;
     const { name, value } = e.target;
 
     const numericFields = [
@@ -205,6 +235,8 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
   }, [budget.localCurrencyId, budget.reportingCurrencyEurId, exchangeRates]);
 
   const handleSave = async () => {
+    if (savingRef.current || loading) return;
+    savingRef.current = true; setSaving(true);
     const token = localStorage.getItem("authToken");
 
     // Clear previous errors
@@ -212,7 +244,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
     setFieldErrors({});
 
     try {
-      setLoading(true);
+
 
       // ✅ lightweight frontend validation (matches Budget behavior)
       const newFieldErrors = {};
@@ -330,6 +362,8 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
       }
 
       const created = await res.json();
+      if (!created?.id || Number(created.projectId) !== Number(selectedProjectId)) throw new Error("Creation could not be confirmed. Check the budget list before trying again.");
+      if (draftKey) sessionStorage.removeItem(draftKey);
       onBudgetCreated?.(created);
 
       setFormError("");
@@ -339,13 +373,13 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
       console.error("Create budget error:", err);
       setFormError("Unexpected error while creating budget.");
     } finally {
-      setLoading(false);
+      savingRef.current = false; setSaving(false);
     }
   };
 
   return (
     <div className={styles.budgetContainer}>
-      <div className={styles.formContainer}>
+      <div ref={formRef} className={styles.formContainer}>
         {/* Header like Budget */}
         <div className={styles.pageHeader}>
           <div className={styles.pageHeaderText}>
@@ -360,16 +394,16 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
               type="button"
               onClick={handleSave}
               className={styles.saveButton}
-              disabled={loading}
+              disabled={loading || saving}
             >
               <FiSave />
-              Save
+              {saving ? "Creating budget…" : "Create budget"}
             </button>
             <button
               type="button"
               onClick={onClose}
               className={styles.deleteButton}
-              disabled={loading}
+              disabled={loading || saving}
               title="Cancel"
             >
               <FiX />
@@ -378,6 +412,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
           </div>
         </div>
 
+        <p role="status" className={styles.saveFeedback}>{saving ? "Creating budget…" : draftMessage}</p>
         {formError && (
           <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
@@ -389,7 +424,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
             <div className={styles.skeletonLineShort} />
           </div>
         ) : (
-          <div className={styles.grid}>
+          <fieldset disabled={saving} style={{ border: 0, padding: 0, margin: 0 }}><div className={styles.grid}>
             {/* Left card */}
             <div className={styles.card}>
               <div className={styles.cardHeader}>
@@ -576,7 +611,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
                 </div>
               </div>
             </div>
-          </div>
+          </div></fieldset>
         )}
 
         {/* Bottom actions (same as Budget/Project) */}
@@ -585,16 +620,16 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
             type="button"
             onClick={handleSave}
             className={styles.saveButton}
-            disabled={loading}
+            disabled={loading || saving}
           >
             <FiSave />
-            Create budget
+            {saving ? "Creating budget…" : "Create budget"}
           </button>
           <button
             type="button"
             onClick={onClose}
             className={styles.deleteButton}
-            disabled={loading}
+            disabled={loading || saving}
           >
             <FiX />
             Cancel
