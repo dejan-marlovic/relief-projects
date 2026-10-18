@@ -9,6 +9,7 @@ import { useUnsavedChange } from "../../context/UnsavedChangesContext";
 import useDocumentCategories from "../../hooks/useDocumentCategories";
 import { statusLabel } from "../../components/DocumentStatus/DocumentStatus";
 import styles from "./FollowUps.module.scss";
+import AttachmentDetailsEditor from "./AttachmentDetailsEditor";
 
 const issues = {
   ACTIVE_USER_REQUIRED: "An active account is required to change attachments.",
@@ -30,6 +31,7 @@ export default function FollowUpAttachments({ task, authFetch, disabled = false,
   const key = recoveryKey(task);
   const [recovered] = useState(() => { try { return key ? JSON.parse(sessionStorage.getItem(key)) : null; } catch { return null; } });
   const root = `${BASE_URL}/api/projects/${task.projectId}/follow-ups/${task.id}/attachments`;
+  const [editingId, setEditingId] = useState(null);
   const [data, setData] = useState(null);
   const [page, setPage] = useState(0);
   const [attempt, setAttempt] = useState(0);
@@ -100,7 +102,7 @@ export default function FollowUpAttachments({ task, authFetch, disabled = false,
   }, [authFetch, task.projectId, showExisting, documentAttempt]);
 
   const blocked = disabled || busy || loading || !!readError || reviewRequired || !onOperation;
-  const canUpload = !blocked && data?.permissions?.canUpload && !uploaded && !uncertainUpload && categories.some(item => item.id === category);
+  const canUpload = !editingId && !blocked && data?.permissions?.canUpload && !uploaded && !uncertainUpload && categories.some(item => item.id === category);
   const command = async (documentId, remove = false) => {
     const response = await authFetch(remove ? `${root}/${documentId}?expectedRevision=${data.followUpRevision}` : root, {
       method: remove ? "DELETE" : "POST", silentSuccess: true,
@@ -112,7 +114,7 @@ export default function FollowUpAttachments({ task, authFetch, disabled = false,
     return result;
   };
   const run = async (operation, message = "Attachment linked to follow-up.") => {
-    if (blocked || running.current) return;
+    if (editingId || blocked || running.current) return;
     running.current = true; setBusy(true); setError(""); readController.current?.abort();
     try {
       await onOperation(operation);
@@ -179,16 +181,22 @@ export default function FollowUpAttachments({ task, authFetch, disabled = false,
         <p className={styles.muted}>Uploaded: {uploadTimeLabel(item.uploadedAt)} · {actor(item.uploadedBy)}<br />Linked: {uploadTimeLabel(item.linkedAt)} · {actor(item.linkedBy)}</p>
         {item.hasNewerVersion && <p className={styles.muted}>A newer version exists. This card still links to version {item.versionNumber}.</p>}
         {!item.downloadEligible && <p>Document unavailable. The link is retained.</p>}
-        <div className={styles.actions}><button type="button" disabled={!item.downloadEligible || downloading !== null} onClick={() => download(item.documentId)}><FiDownload aria-hidden="true" /> {downloading === item.documentId ? "Downloading…" : "Download linked version"}</button>{item.canUnlink && <button type="button" disabled={blocked || !data.permissions?.canUnlink} onClick={() => { if (window.confirm(`Remove the link to ${item.documentName}? The document will remain in Project Documents.`)) run(() => command(item.documentId, true), "Attachment link removed. The file remains in Project Documents."); }}>Remove link</button>}</div>
+        {item.isCurrent && item.downloadEligible && data.permissions?.canLink && <button type="button" disabled={blocked || !!editingId || !categories.length} onClick={() => setEditingId(item.documentId)}>Edit details</button>}
+        {editingId === item.documentId && <AttachmentDetailsEditor item={item} projectId={task.projectId} authFetch={authFetch} categories={categories} disabled={disabled || busy || !data.permissions?.canLink || !item.isCurrent || !item.downloadEligible} onOperation={onOperation} onClose={() => setEditingId(null)} onSaved={doc => {
+          readController.current?.abort(); setLoading(false);
+          setData(current => ({ ...current, content: current.content.map(row => row.documentId === doc.id ? { ...row, category: doc.category, status: doc.status, documentDate: doc.documentDate } : row) }));
+          setAttempt(value => value + 1); setDocumentAttempt(value => value + 1);
+        }} />}
+        <div className={styles.actions}><button type="button" disabled={!item.downloadEligible || downloading !== null} onClick={() => download(item.documentId)}><FiDownload aria-hidden="true" /> {downloading === item.documentId ? "Downloading…" : "Download linked version"}</button>{item.canUnlink && <button type="button" disabled={!!editingId || blocked || !data.permissions?.canUnlink} onClick={() => { if (window.confirm(`Remove the link to ${item.documentName}? The document will remain in Project Documents.`)) run(() => command(item.documentId, true), "Attachment link removed. The file remains in Project Documents."); }}>Remove link</button>}</div>
       </li>)}</ul>
-      {data.totalPages > 1 && <div className={styles.actions}><button type="button" disabled={busy || loading || page === 0} onClick={() => setPage(value => value - 1)}>Previous attachments</button><span>{data.totalElements} attachments · Page {data.totalPages ? data.page + 1 : 0} of {data.totalPages}</span><button type="button" disabled={busy || loading || page + 1 >= data.totalPages} onClick={() => setPage(value => value + 1)}>Next attachments</button></div>}
+      {data.totalPages > 1 && <div className={styles.actions}><button type="button" disabled={!!editingId || busy || loading || page === 0} onClick={() => setPage(value => value - 1)}>Previous attachments</button><span>{data.totalElements} attachments · Page {data.totalPages ? data.page + 1 : 0} of {data.totalPages}</span><button type="button" disabled={!!editingId || busy || loading || page + 1 >= data.totalPages} onClick={() => setPage(value => value + 1)}>Next attachments</button></div>}
       {(data.permissions?.issues || []).map(issue => <p className={styles.muted} key={issue}>{issues[issue] || "Attachment actions are currently unavailable."}</p>)}
       {data.permissions?.canLink && <>
         <button type="button" disabled={busy} onClick={() => setShowExisting(value => !value)}>{showExisting ? "Hide document selector" : "Link existing project document"}</button>
         {showExisting && <div className={styles.attachmentEditor}>
           {documentsError && <p role="alert">{documentsError} <button type="button" onClick={() => setDocumentAttempt(value => value + 1)}>Retry project documents</button></p>}
           {!documents && !documentsError && <p role="status">Loading project documents…</p>}
-          {documents && <><label>Exact document version<select value={selected} disabled={blocked} onChange={event => setSelected(event.target.value)}><option value="">Select a document version</option>{documents.map(doc => <option key={doc.id} value={doc.id}>{doc.documentName} · Version {doc.versionNumber} · {doc.isCurrent ? "Current" : "Historical"} · #{doc.id}</option>)}</select></label>{!documents.length && <p>No active project documents available.</p>}<p className={styles.muted}>Includes active historical versions. Linking an already attached version does not create a duplicate.</p><button type="button" disabled={blocked || !selected} onClick={() => run(() => command(Number(selected)))}>Link selected version</button></>}
+          {documents && <><label>Exact document version<select value={selected} disabled={blocked} onChange={event => setSelected(event.target.value)}><option value="">Select a document version</option>{documents.map(doc => <option key={doc.id} value={doc.id}>{doc.documentName} · Version {doc.versionNumber} · {doc.isCurrent ? "Current" : "Historical"} · #{doc.id}</option>)}</select></label>{!documents.length && <p>No active project documents available.</p>}<p className={styles.muted}>Includes active historical versions. Linking an already attached version does not create a duplicate.</p><button type="button" disabled={!!editingId || blocked || !selected} onClick={() => run(() => command(Number(selected)))}>Link selected version</button></>}
         </div>}
       </>}
       {data.permissions?.canUpload && <div className={styles.attachmentEditor}>

@@ -92,4 +92,4 @@
 .attachmentDrop svg { width: 1.5rem; height: 1.5rem; }
 .attachmentDrop small { color: colors.$text-muted; }
 
-.form button[type="submit"]:active:not(:disabled) { background: colors.$primary; color: white; transform: translateY(1px); }
+.form button[type="submit"]:active:not(:disabled), .attachmentEditor button[type="submit"]:active:not(:disabled) { background: colors.$primary; color: white; transform: translateY(1px); }

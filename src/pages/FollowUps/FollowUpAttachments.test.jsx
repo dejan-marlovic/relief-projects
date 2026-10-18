@@ -133,3 +133,15 @@ test("upload respects shared busy lock and rejects unsupported files", async () 
   expect(await screen.findByText(/Unsupported file type/)).toBeVisible();
   expect(onOperation).not.toHaveBeenCalled();
 });
+
+ test("only available current attachments with change permission offer Edit details", async () => {
+  current = {...envelope, content:[attachment]};
+  const view = mount(); await screen.findByText("Report.pdf");
+  expect(screen.queryByRole("button", {name:"Edit details"})).not.toBeInTheDocument();
+  current = {...current,content:[{...attachment,isCurrent:true}]};
+  view.rerender(<FollowUpAttachments task={task} authFetch={fetch} onOperation={onOperation} observation={1} />);
+  expect(await screen.findByRole("button", {name:"Edit details"})).toBeEnabled();
+  current = {...current, permissions:{...permissions,canLink:false}};
+  view.rerender(<FollowUpAttachments task={task} authFetch={fetch} onOperation={onOperation} observation={2} />);
+  await waitFor(() => expect(screen.queryByRole("button", {name:"Edit details"})).not.toBeInTheDocument());
+});
