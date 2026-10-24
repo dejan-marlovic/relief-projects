@@ -1,0 +1,17 @@
+.handle {
+  position: absolute;
+  right: -4px;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  min-height: 24px;
+  cursor: col-resize;
+  touch-action: none;
+  user-select: none;
+  z-index: 2;
+  border-radius: 3px;
+  &::after { content: ""; position: absolute; left: 3px; top: 15%; bottom: 15%; border-left: 2px solid currentColor; opacity: .25; }
+  &:hover::after, &:focus-visible::after { opacity: 1; }
+  &:focus-visible { outline: 2px solid currentColor; }
+}
+@media (max-width: 1100px), print { .handle { display: none; } }

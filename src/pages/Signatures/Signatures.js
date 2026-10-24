@@ -1,3 +1,4 @@
+import ColumnResize, { useColumnWidths } from "../../components/ColumnResize/ColumnResize";
 import { appFetch as fetch } from "../../utils/appFetch";
 import useMediaQuery from "../../hooks/useMediaQuery";
 import React, {
@@ -1010,12 +1011,13 @@ function Signatures() {
     }
   };
 
+  const { widths: columnWidths, resize: resizeColumn } = useColumnWidths("signatures", BASE_COL_WIDTHS);
   const gridCols = useMemo(() => {
-    const parts = BASE_COL_WIDTHS.map((w, i) =>
+    const parts = columnWidths.map((w, i) =>
       visibleCols[i] ? `${w}px` : "0px",
     );
     return parts.join(" ");
-  }, [visibleCols]);
+  }, [visibleCols, columnWidths]);
 
   const statusNames = useMemo(
     () => new Map(statusOptions.map((status) => [String(status.id), status.label])),
@@ -1188,6 +1190,7 @@ function Signatures() {
             {headerLabels.map((h, i) => (
               <div
                 key={h}
+                style={i > 0 ? { position: "relative", paddingRight: 10 } : undefined}
                 className={`${styles.headerCell}
                   ${i === 0 ? styles.stickyColHeader : ""}
                   ${!visibleCols[i] ? styles.hiddenCol : ""}`}
@@ -1207,6 +1210,7 @@ function Signatures() {
                 ) : (
                   <div className={styles.sortAndFilterHeader}><SortableHeader label={h} sortKey={HEADER_SORT_KEYS[i]} sortConfig={sortConfig} onSort={toggleSort} /><ColumnFilter label={h} type={HEADER_SORT_KEYS[i] === "status" ? "select" : HEADER_SORT_KEYS[i] === "paymentOrderId" ? "number" : HEADER_SORT_KEYS[i] === "date" ? "date" : "text"} value={filters[HEADER_SORT_KEYS[i]]} options={HEADER_SORT_KEYS[i] === "status" ? statusOptions.map((s)=>({value:s.id,label:s.label})) : []} onApply={(v)=>setFilters((c)=>({...c,[HEADER_SORT_KEYS[i]]:v}))} onClear={()=>setFilters((c)=>({...c,[HEADER_SORT_KEYS[i]]:emptyFilters()[HEADER_SORT_KEYS[i]]}))} /></div>
                 )}
+                {!compact && i > 0 && visibleCols[i] && <ColumnResize label={h} width={columnWidths[i]} defaultWidth={BASE_COL_WIDTHS[i]} onResize={width => resizeColumn(i, width)} />}
               </div>
             ))}
           </div>}

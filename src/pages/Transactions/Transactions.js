@@ -1,3 +1,5 @@
+import ApprovalDialog from "../../components/ApprovalDialog/ApprovalDialog";
+import ColumnResize, { useColumnWidths } from "../../components/ColumnResize/ColumnResize";
 import useFinancialRefresh from "../../hooks/useFinancialRefresh";
 import { financialBudgetEligible } from "../../utils/budgetRevisions";
 import { appFetch as fetch } from "../../utils/appFetch";
@@ -607,8 +609,11 @@ const Transactions = ({ refreshTrigger }) => {
     }
   };
 
+  const [approvalTarget, setApprovalTarget] = useState(null);
+
   const reviewTransaction = async (tx, action) => {
     if (!canReviewTransactions || tx.lifecycleStatus !== "SUBMITTED") return;
+    if (action === "approve") { setApprovalTarget(tx.id); return; }
     setFormError("");
     setReviewingTxId(tx.id);
     try {
@@ -646,12 +651,13 @@ const Transactions = ({ refreshTrigger }) => {
     }
   };
 
+  const { widths: columnWidths, resize: resizeColumn } = useColumnWidths("transactions", BASE_COL_WIDTHS);
   const gridCols = useMemo(() => {
-    const parts = BASE_COL_WIDTHS.map((w, i) =>
+    const parts = columnWidths.map((w, i) =>
       visibleCols[i] ? `${w}px` : "0px",
     );
     return parts.join(" ");
-  }, [visibleCols]);
+  }, [visibleCols, columnWidths]);
 
   const selectedCount = selectedTxIds.size;
   const selectedContainsLifecycleLocked = transactions.some(
@@ -1558,6 +1564,11 @@ const Transactions = ({ refreshTrigger }) => {
 
   return (
     <div className={styles.container}>
+      {approvalTarget && <ApprovalDialog key={approvalTarget} endpoint={`/api/transactions/${approvalTarget}`}
+        recordLabel={`transaction #${approvalTarget}`} onCancel={() => setApprovalTarget(null)}
+        onRefresh={record => { const updated = record; setTransactions(current => current.map(item => item.id === updated.id ? updated : item)); setHistoryRefreshKeys(keys => ({ ...keys, [updated.id]: (keys[updated.id] || 0) + 1 })); }}
+        onSuccess={record => { const updated = record; setTransactions(current => current.map(item => item.id === updated.id ? updated : item)); setHistoryRefreshKeys(keys => ({ ...keys, [updated.id]: (keys[updated.id] || 0) + 1 })); setApprovalTarget(null); }} />}
+
       <div className={styles.card}>
         <div className={styles.cardHeader}>
           <div className={styles.headerText}>
@@ -1662,6 +1673,7 @@ const Transactions = ({ refreshTrigger }) => {
             {headerLabels.map((h, i) => (
               <div
                 key={h}
+                style={i > 0 ? { position: "relative", paddingRight: 10 } : undefined}
                 className={`${styles.headerCell} ${
                   i === 0 ? styles.stickyColHeader : ""
                 } ${!compact && !visibleCols[i] ? styles.hiddenCol : ""} ${
@@ -1685,6 +1697,7 @@ const Transactions = ({ refreshTrigger }) => {
                 ) : (
                   h
                 )}
+                {!compact && i > 0 && visibleCols[i] && <ColumnResize label={h} width={columnWidths[i]} defaultWidth={BASE_COL_WIDTHS[i]} onResize={width => resizeColumn(i, width)} />}
               </div>
             ))}
           </fieldset>

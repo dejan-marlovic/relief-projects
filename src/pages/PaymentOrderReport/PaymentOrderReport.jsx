@@ -14,6 +14,19 @@ const stamp = input => input ? `${new Date(input).toLocaleString()} (${input})` 
 const evidenceLabel = role => ({ SIGNED_PAYMENT_ORDER: "Signed payment order", COMBINED_PAYMENT_EVIDENCE: "Combined payment evidence" }[role] || value(role));
 function Issues({ issues = [] }) { return issues.length > 0 && <ul className={styles.issues}>{issues.map((issue, i) => <li key={i}>{issue.code}: {issue.message}{issue.lineId != null && ` · Line #${issue.lineId}`}</li>)}</ul>; }
 function Currency({ summary }) { return <><span>{value(summary?.status || summary?.availability)} · {paymentCurrency(summary?.currency)}</span><Issues issues={summary?.issues} /></>; }
+const sameId = (left, right) => left != null && right != null && String(left) === String(right);
+function FundingContext({ line, data }) {
+  const funding = line.amountCurrency;
+  const matchingBudget = data.lines.find(item => sameId(item.budgetId, funding?.budgetId));
+  const budgetName = funding?.budgetName || matchingBudget?.budgetName;
+  return <>
+    <p>Funding budget: {sameId(funding?.budgetId, line.budgetId)
+      ? "Same as cost budget"
+      : funding?.budgetId != null ? <>{budgetName || "Name unavailable"} <small>(#{funding.budgetId})</small></> : "Unavailable"}</p>
+    {!sameId(funding?.projectId, data.project?.id) && <p>Funding project: {funding?.projectId != null
+      ? <>{funding.projectName || "Name unavailable"} <small>(#{funding.projectId})</small></> : "Unavailable"}</p>}
+  </>;
+}
 function Table({ title, headers, rows }) { return <section><h2>{title}</h2>{rows.length ? <div className={styles.tableWrap}><table><thead><tr>{headers.map(header => <th key={header} scope="col">{header}</th>)}</tr></thead><tbody>{rows.map((row, i) => <tr key={i}>{row.map((cell, j) => <td key={j}>{cell}</td>)}</tr>)}</tbody></table></div> : <p>No current records in this section.</p>}</section>; }
 
 export function validReport(data, id) {
@@ -36,7 +49,7 @@ export function ReportContent({ data, onDownload, downloading, downloadError }) 
       <dt>Booked lock</dt><dd>{flag(data.order.locked)}</dd><dt>Deleted</dt><dd>{flag(data.order.deleted)}</dd>
       <dt>Order commitments</dt><dd>{paymentMoney(data.commitments.amount)} · <Currency summary={data.commitments.amountSummary} /></dd>
     </dl><p>Commitments are not money paid. Their currency reflects current budget configuration, not verified historical denomination. Unavailable amounts are unknown, not zero.</p><Issues issues={data.issues} /></section>
-    <Table title="Payment lines" headers={["Line / transaction", "Cost budget / revision", "Cost detail", "Organisation", "Commitment", "Currency observation"]} rows={data.lines.map(line => [<span>#{line.id} · TX #{value(line.transactionId)}</span>, <span>{value(line.budgetName)} (#{value(line.budgetId)})<br />Family #{value(line.revisionFamilyId)} · Revision {value(line.revisionNumber)}</span>, <span>#{value(line.costDetailId)} · {value(line.costDescription)}</span>, identity(line.organization), paymentMoney(line.amount), <><Currency summary={line.amountSummary || line.amountCurrency} /><p>Funding budget #{value(line.amountCurrency?.budgetId)} · Project #{value(line.amountCurrency?.projectId)}</p></>])} />
+    <Table title="Payment lines" headers={["Line / transaction", "Cost budget / revision", "Cost detail", "Organisation", "Commitment", "Currency observation"]} rows={data.lines.map(line => [<span>#{line.id} · TX #{value(line.transactionId)}</span>, <span>{value(line.budgetName)} (#{value(line.budgetId)})<br />Family #{value(line.revisionFamilyId)} · Revision {value(line.revisionNumber)}</span>, <span>#{value(line.costDetailId)} · {value(line.costDescription)}</span>, identity(line.organization), paymentMoney(line.amount), <><Currency summary={line.amountSummary || line.amountCurrency} /><FundingContext line={line} data={data} /></>])} />
     <Table title="Recipient commitments" headers={["Recipient", "Organisation", "Contributing subtotal", "Currency observation"]} rows={data.recipients.map(row => [`#${row.id}`, identity(row.organization), paymentMoney(row.amount), <Currency summary={row.amountSummary} />])} />
     <p>Recipient subtotals are part of the order commitments. Do not add them to the order total.</p>
     <section><h2>Recorded outgoing payments · {paymentStatus(summary.status)}</h2><p>Totals exclude voided entries and include all recorded entries. Voiding corrects an entry; it does not record a refund.</p>

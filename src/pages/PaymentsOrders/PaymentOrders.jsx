@@ -1,3 +1,5 @@
+import ApprovalDialog from "../../components/ApprovalDialog/ApprovalDialog";
+import ColumnResize, { useColumnWidths } from "../../components/ColumnResize/ColumnResize";
 import useFinancialRefresh from "../../hooks/useFinancialRefresh";
 import { financialReferenceEligible } from "../../utils/budgetRevisions";
 import { appFetch as fetch } from "../../utils/appFetch";
@@ -626,8 +628,11 @@ function PaymentOrders() {
     }
   };
 
+  const [approvalTarget, setApprovalTarget] = useState(null);
+
   const reviewPaymentOrder = async (po, action) => {
     if (!canReviewPaymentOrders || paymentOrderLifecycleStatus(po) !== "SUBMITTED") return;
+    if (action === "approve") { setApprovalTarget(po.id); return; }
     setFormError("");
     setLockedBanner("");
     setReviewingPoId(po.id);
@@ -657,12 +662,13 @@ function PaymentOrders() {
     }
   };
 
+  const { widths: columnWidths, resize: resizeColumn } = useColumnWidths("payments", BASE_COL_WIDTHS);
   const gridCols = useMemo(() => {
-    const parts = BASE_COL_WIDTHS.map((w, i) =>
+    const parts = columnWidths.map((w, i) =>
       visibleCols[i] ? `${w}px` : "0px",
     );
     return parts.join(" ");
-  }, [visibleCols]);
+  }, [visibleCols, columnWidths]);
 
   useEffect(() => setFilters(emptyFilters()), [selectedProjectId]);
   const filteredOrders = useMemo(() => orders.filter((po) =>
@@ -1265,6 +1271,11 @@ function PaymentOrders() {
 
   return (
     <div className={styles.page}>
+      {approvalTarget && <ApprovalDialog key={approvalTarget} endpoint={`/api/payment-orders/${approvalTarget}`}
+        recordLabel={`payment order #${approvalTarget}`} onCancel={() => setApprovalTarget(null)}
+        onRefresh={record => { const updated = normalizePO(record); setOrders(current => current.map(item => item.id === updated.id ? updated : item)); setHistoryRefreshKeys(keys => ({ ...keys, [updated.id]: (keys[updated.id] || 0) + 1 })); if (updated.locked) markLocked(updated.id); }}
+        onSuccess={record => { const updated = normalizePO(record); setOrders(current => current.map(item => item.id === updated.id ? updated : item)); setHistoryRefreshKeys(keys => ({ ...keys, [updated.id]: (keys[updated.id] || 0) + 1 })); if (updated.locked) markLocked(updated.id); setApprovalTarget(null); }} />}
+
       <div className={styles.shell}>
         <div className={styles.pageHeader}>
           <div className={styles.pageHeaderText}>
@@ -1380,6 +1391,7 @@ function PaymentOrders() {
             {headerLabels.map((h, i) => (
               <div
                 key={h}
+                style={i > 0 ? { position: "relative", paddingRight: 10 } : undefined}
                 className={`${styles.headerCell}
                   ${i === 0 ? styles.stickyColHeader : ""}
                   ${!compact && !visibleCols[i] ? styles.hiddenCol : ""}
@@ -1400,6 +1412,7 @@ function PaymentOrders() {
                 ) : (
                   <div className={styles.sortAndFilterHeader}><SortableHeader label={h} sortKey={HEADER_SORT_KEYS[i]} sortConfig={sortConfig} onSort={toggleSort} /><ColumnFilter label={h} type={["id","transactionId","amount"].includes(HEADER_SORT_KEYS[i]) ? "number" : HEADER_SORT_KEYS[i] === "date" ? "date" : "text"} value={filters[HEADER_SORT_KEYS[i]]} onApply={(v)=>setFilters((c)=>({...c,[HEADER_SORT_KEYS[i]]:v}))} onClear={()=>setFilters((c)=>({...c,[HEADER_SORT_KEYS[i]]:emptyFilters()[HEADER_SORT_KEYS[i]]}))} /></div>
                 )}
+                {!compact && i > 0 && visibleCols[i] && <ColumnResize label={h} width={columnWidths[i]} defaultWidth={BASE_COL_WIDTHS[i]} onResize={width => resizeColumn(i, width)} />}
               </div>
             ))}
           </fieldset>

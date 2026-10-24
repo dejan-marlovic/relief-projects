@@ -1,3 +1,4 @@
+import ColumnResize, { useColumnWidths } from "../../components/ColumnResize/ColumnResize";
 import { appFetch as fetch } from "../../utils/appFetch";
 import { decimalUnits, matchesDecimalRange, fundingExcel, summaryExcel, summaryText, issueText, groupedPaymentTotals } from "../../utils/paymentFunding";
 import useMediaQuery from "../../hooks/useMediaQuery";
@@ -985,12 +986,13 @@ function Recipients() {
     }
   };
 
+  const { widths: columnWidths, resize: resizeColumn } = useColumnWidths("recipients", BASE_COL_WIDTHS);
   const gridCols = useMemo(() => {
-    const parts = BASE_COL_WIDTHS.map((w, i) =>
+    const parts = columnWidths.map((w, i) =>
       visibleCols[i] ? `${w}px` : "0px",
     );
     return parts.join(" ");
-  }, [visibleCols]);
+  }, [visibleCols, columnWidths]);
 
   const organizationNames = useMemo(
     () =>
@@ -1185,6 +1187,7 @@ function Recipients() {
             {headerLabels.map((h, i) => (
               <div
                 key={h}
+                style={i > 0 ? { position: "relative", paddingRight: 10 } : undefined}
                 className={`${styles.headerCell}
                   ${i === 0 ? styles.stickyColHeader : ""}
                   ${!visibleCols[i] ? styles.hiddenCol : ""}`}
@@ -1204,6 +1207,7 @@ function Recipients() {
                 ) : (
                   <div className={styles.sortAndFilterHeader}><SortableHeader label={h} sortKey={HEADER_SORT_KEYS[i]} sortConfig={sortConfig} onSort={toggleSort} /><ColumnFilter label={h} type={HEADER_SORT_KEYS[i] === "organization" ? "text" : "number"} value={filters[HEADER_SORT_KEYS[i]]} onApply={(v)=>setFilters((c)=>({...c,[HEADER_SORT_KEYS[i]]:v}))} onClear={()=>setFilters((c)=>({...c,[HEADER_SORT_KEYS[i]]:emptyFilters()[HEADER_SORT_KEYS[i]]}))} /></div>
                 )}
+                {!compact && i > 0 && visibleCols[i] && <ColumnResize label={h} width={columnWidths[i]} defaultWidth={BASE_COL_WIDTHS[i]} onResize={width => resizeColumn(i, width)} />}
               </div>
             ))}
           </div>}

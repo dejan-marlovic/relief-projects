@@ -18,6 +18,26 @@ const report = {
 };
 const response = (data, ok = true) => ({ ok, status: ok ? 200 : 422, text: async () => JSON.stringify(data) });
 const mount = () => render(<MemoryRouter initialEntries={["/payment-orders/73/report"]}><Routes><Route path="/payment-orders/:id/report" element={<PaymentOrderReport />} /></Routes></MemoryRouter>);
+test("matching funding references avoid repeated names without equating unknown identities", () => {
+  const data = { ...report, project: { id: 8, name: "Riverbend" }, lines: [
+    { id: 1, budgetId: 12, budgetName: "Repair budget", amountCurrency: { budgetId: "12", projectId: "8" } },
+    { id: 2, amountCurrency: {} },
+  ] };
+  render(<ReportContent data={data} onDownload={jest.fn()} />);
+  expect(screen.getAllByText("Funding budget: Same as cost budget")).toHaveLength(1);
+  expect(screen.getByText("Funding budget: Unavailable")).toBeInTheDocument();
+  expect(screen.getAllByText(/Funding project:/)).toHaveLength(1);
+});
+test("different funding references use names when supplied and retain explicit missing-name references", () => {
+  const data = { ...report, lines: [
+    { id: 1, budgetId: 12, amountCurrency: { budgetId: 13, budgetName: "Funding award", projectId: 9, projectName: "Other project" } },
+    { id: 2, budgetId: 12, amountCurrency: { budgetId: 14, projectId: 10 } },
+  ] };
+  render(<ReportContent data={data} onDownload={jest.fn()} />);
+  expect(screen.getByText(/Funding budget: Funding award/)).toHaveTextContent("(#13)");
+  expect(screen.getByText(/Funding project: Other project/)).toHaveTextContent("(#9)");
+  expect(screen.getByText(/Funding budget: Name unavailable/)).toHaveTextContent("(#14)");
+});
 test("distinguishes late evidence and ordinary approval-time uncertainty in the index", () => {
   const data = { ...report, documents: [{ ...report.documents[0], associations: [{ entityType: "PAYMENT_ORDER", entityId: 73 }, { entityType: "PAYMENT_ORDER_FINAL_EVIDENCE", entityId: 12, role: "COMBINED_PAYMENT_EVIDENCE", attachedBy: { userId: 9, username: "finance" } }] }] };
   render(<ReportContent data={data} onDownload={jest.fn()} />);

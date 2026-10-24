@@ -340,10 +340,10 @@ const Transaction = ({
                       onApproveLifecycle?.();
                     }}
                     disabled={isReviewingLifecycle || saving || editingLocked}
-                    title="Approve transaction"
-                    aria-label={`Approve transaction ${tx.id}`}
+                    title="Review transaction approval"
+                    aria-label={`Review transaction ${tx.id} approval`}
                   >
-                    <FiCheck />{compact && <span>Approve</span>}
+                    <FiCheck />{compact && <span>Review approval</span>}
                   </button>
                   <button
                     type="button"

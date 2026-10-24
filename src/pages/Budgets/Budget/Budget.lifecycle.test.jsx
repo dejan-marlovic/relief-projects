@@ -137,7 +137,7 @@ test("shows a structured backend conflict inline", async () => {
 });
 
 test.each([
-  ["approve", "Approve budget", "APPROVED", "Approved"],
+  ["approve", "Review budget approval", "APPROVED", "Approved"],
   ["return", "Return budget", "RETURNED", "Returned"],
 ])(
   "APPROVER can %s a submitted budget",
@@ -149,9 +149,17 @@ test.each([
       { lifecycleStatus: "SUBMITTED" },
       onUpdate,
     );
+    if (action === "approve") {
+      fetch.mockResolvedValueOnce(jsonResponse({ ...budget, lifecycleStatus: "SUBMITTED" }))
+        .mockResolvedValueOnce(jsonResponse({ entityId: 7, submissionId: 301, canAttemptApproval: true, issues: [] }));
+    }
     fetch.mockResolvedValueOnce(jsonResponse(updated));
 
     fireEvent.click(screen.getByRole("button", { name: buttonName }));
+    if (action === "approve") {
+      fireEvent.click(await screen.findByRole("checkbox", { name: /I have reviewed/ }));
+      fireEvent.click(screen.getByRole("button", { name: "Confirm approval" }));
+    }
     if (action === "return") {
       expect(fetch).toHaveBeenCalledTimes(2);
       fireEvent.change(screen.getByLabelText("Return reason (required)"), { target: { value: "Correct the amounts." } });
@@ -173,7 +181,7 @@ test.each([
 
 test("review controls are restricted to submitted budgets and reviewer roles", async () => {
   await renderBudget(["FINANCE"], { lifecycleStatus: "SUBMITTED" });
-  expect(screen.queryByRole("button", { name: "Approve budget" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Review budget approval" })).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Return budget" })).not.toBeInTheDocument();
 });
 

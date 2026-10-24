@@ -282,10 +282,10 @@ const PaymentOrder = ({
                     onApproveLifecycle?.();
                   }}
                   disabled={isReviewingLifecycle || saving || editingLocked}
-                  title="Approve payment order"
-                  aria-label={`Approve payment order ${po.id}`}
+                  title="Review payment order approval"
+                  aria-label={`Review payment order ${po.id} approval`}
                 >
-                  <FiCheck />{compact && <span>Approve</span>}
+                  <FiCheck />{compact && <span>Review approval</span>}
                 </button>
                 <button
                   type="button"

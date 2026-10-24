@@ -1,3 +1,4 @@
+import ApprovalDialog from "../../../components/ApprovalDialog/ApprovalDialog";
 import { notifySuccess } from "../../../utils/successNotifications";
 import { budgetFinancialRole, financialReferenceEligible } from "../../../utils/budgetRevisions";
 import BudgetRevisions from "../../../components/BudgetRevisions/BudgetRevisions";
@@ -1348,8 +1349,11 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
     }
   };
 
+  const [approvalTarget, setApprovalTarget] = useState(null);
+
   const handleReviewTransition = async (action) => {
     if (!canReviewBudget || reviewAction) return;
+    if (action === "approve") { setApprovalTarget(budget.id); return; }
     const actionInProgress = action === "approve" ? "approving" : "returning";
 
     try {
@@ -1490,6 +1494,11 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
 
   return (
     <div className={styles.budgetContainer}>
+      {approvalTarget && <ApprovalDialog key={approvalTarget} endpoint={`/api/budgets/${approvalTarget}`}
+        recordLabel={`budget #${approvalTarget}`} onCancel={() => setApprovalTarget(null)}
+        onRefresh={record => { setBudget(record); setSavedBudget(record); setHistoryRefreshKey(value => value + 1); onUpdate?.(record); }}
+        onSuccess={record => { setBudget(record); setSavedBudget(record); setHistoryRefreshKey(value => value + 1); onUpdate?.(record); setApprovalTarget(null); }} />}
+
       {!hasBudget && (
         <div className={styles.emptyState}>
           <FiAlertCircle />
@@ -1762,7 +1771,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
                   disabled={loading || exportingBudget || Boolean(reviewAction)}
                 >
                   <FiCheck />
-                  {reviewAction === "approve" ? "Approving..." : "Approve budget"}
+                  {reviewAction === "approve" ? "Approving..." : "Review budget approval"}
                 </button>}
                 {canReviewBudget && <button
                   type="button"
