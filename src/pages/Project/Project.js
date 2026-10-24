@@ -2588,6 +2588,38 @@ Approximately:
             </div>
           )}
 
+          {!loading && (
+            <fieldset
+              onBlur={coreSave.flush}
+              disabled={!canEditProject || uploadingCover}
+              style={{ border: 0, padding: 0, margin: "0 0 16px", minWidth: 0 }}
+            >
+              {/* Description */}
+              <div className={styles.card}>
+                <div className={styles.cardHeader}>
+                  <div className={styles.cardTitle}>Description</div>
+                  <div className={styles.cardMeta}>Overview</div>
+                </div>
+
+                <div className={styles.fullWidthField}>
+                  <label htmlFor="project-description">Project Description:</label>
+                  <textarea
+                    id="project-description"
+                    name="projectDescription"
+                    value={projectDetails.projectDescription || ""}
+                    onChange={(e) => {
+                      handleProjectInputChange(e);
+                      autoResize(e.target);
+                    }}
+                    ref={(el) => el && autoResize(el)}
+                    className={styles.textareaInput}
+                    placeholder="Write a short summary of the project..."
+                  />
+                </div>
+              </div>
+            </fieldset>
+          )}
+
           <ProjectCloseout key={selectedProjectId} projectId={selectedProjectId} />
 
           <ProjectSnapshot
@@ -2803,29 +2835,6 @@ Approximately:
                     disabled={!canEditProject || uploadingCover}
                     style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}
                   >
-                  {/* Description */}
-                  <div className={styles.card}>
-                    <div className={styles.cardHeader}>
-                      <div className={styles.cardTitle}>Description</div>
-                      <div className={styles.cardMeta}>Overview</div>
-                    </div>
-
-                    <div className={styles.fullWidthField}>
-                      <label>Project Description:</label>
-                      <textarea
-                        name="projectDescription"
-                        value={projectDetails.projectDescription || ""}
-                        onChange={(e) => {
-                          handleProjectInputChange(e);
-                          autoResize(e.target);
-                        }}
-                        ref={(el) => el && autoResize(el)}
-                        className={styles.textareaInput}
-                        placeholder="Write a short summary of the project..."
-                      />
-                    </div>
-                  </div>
-
                   <div className={styles.grid}>
                     {/* Left column card */}
                     <div className={styles.card}>
