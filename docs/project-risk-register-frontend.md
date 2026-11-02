@@ -36,3 +36,16 @@ The user should perform the following live acceptance after normal rollout:
 5. Check retained inactive owners, filters/pagination, project switching, narrow layouts and keyboard navigation.
 
 Live acceptance is pending. No application database changes or backend restart were performed during implementation.
+
+
+## Risk editor usability update — 2 November 2026
+
+Valid create/edit details autosave after a one-second pause. A new risk requires title, owner and review date before its first server save; incomplete entries remain tab-local. Save risk remains available, and the editor stays open after saves using the returned record identity and revision. Close/reopen/delete/restore remain explicit actions.
+
+Recovery is scoped to the signed-in identity, project, risk and action using session storage. Recovery is unavailable when browser storage or identity cannot be read; the editor reports unsaved state and uses the shared navigation guard. Closing the tab removes recovery data. Recovered drafts require comparison before writing. Save failures pause automatic retries; uncertain creates require checking the register before explicitly enabling a manual save. A verified comparison permits either replacing the draft or retaining its fields against the latest revision for an explicit save.
+
+Focus, reconnect and visibility events refresh the register only outside editing/saving. Manual refresh remains available during editing for comparison and duplicate checks. Filters and editor text are retained. History is closed after a successful mutation so reopening loads current events.
+
+Validation: 16 focused risk-page tests passed, covering existing actions plus autosave revision advancement, recovery, refresh protection and retained conflict drafts. Live browser acceptance remains separate from these tests.
+
+The CI-mode production build was blocked by pre-existing ESLint warnings in unrelated files (Admin, budgets, financial pages and documentDownload). No risk-page warnings were reported. No deployment or commit was performed.

@@ -7,6 +7,8 @@ import { BASE_URL } from "../../config/api";
 import { createAuthFetch } from "../../utils/http";
 import { readDocumentError, uploadTimeLabel } from "../../utils/documentMetadata";
 import useTransientMessage from "../../hooks/useTransientMessage";
+import { useUnsavedChange, useUnsavedChanges } from "../../context/UnsavedChangesContext";
+import { assessmentDraftKey, readAssessmentDraft, storeAssessmentDraft, clearAssessmentDraft } from "../OrganisationAssessment/assessmentDrafts";
 import styles from "./Risks.module.scss";
 
 const rating = value => ({ LOW: "Low", MEDIUM: "Medium", HIGH: "High" }[value] || "Not assessed");
@@ -14,6 +16,11 @@ const employeeName = person => person.displayName || [person.firstName, person.l
 const buckets = { OVERDUE: "Overdue review", DUE_TODAY: "Review today", UPCOMING: "Upcoming review", CLOSED: "Closed", INACTIVE: "Inactive" };
 const fields = ["title", "description", "ownerEmployeeId", "likelihood", "impact", "mitigationPlan", "reviewDate"];
 const draftFrom = risk => Object.fromEntries(fields.map(key => [key, risk?.[key] ?? ""]));
+function riskPayload(draft) {
+  if (!draft.title.trim() || [...draft.title.trim()].length > 200 || [...draft.description.trim()].length > 4000 || [...draft.mitigationPlan.trim()].length > 4000 || !draft.ownerEmployeeId || !/^[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}$/.test(draft.reviewDate)) return null;
+  return { ...draft, title: draft.title.trim(), description: draft.description.trim() || null, mitigationPlan: draft.mitigationPlan.trim() || null, ownerEmployeeId: Number(draft.ownerEmployeeId), likelihood: draft.likelihood || null, impact: draft.impact || null };
+}
+const recoveryKey = (projectId, risk, action) => assessmentDraftKey(`risk-${projectId}-${risk?.id || "new"}`, action);
 function RatingOptions({ filter = false }) {
   return <>{filter && <option value="">All ratings</option>}<option value={filter ? "UNASSESSED" : ""}>Not assessed</option>{["LOW", "MEDIUM", "HIGH"].map(value => <option key={value} value={value}>{rating(value)}</option>)}</>;
 }
@@ -62,7 +69,7 @@ function History({ risk, endpoint, authFetch, onClose }) {
     </>}
   </section>;
 }
-function Editor({ editor, employees, busy, blocked, onDraft, onSave, onCancel }) {
+function Editor({ editor, employees, busy, blocked, onDraft, onSave, onCancel, localSaved, onDiscard }) {
   const { risk, action, draft } = editor;
   const [error, setError] = useState("");
   const editing = action === "save";
@@ -79,6 +86,9 @@ function Editor({ editor, employees, busy, blocked, onDraft, onSave, onCancel })
     }
   }}>
     <h3>{editing ? risk ? "Edit risk" : "New risk" : `${action[0].toUpperCase() + action.slice(1)} risk: ${risk.title}`}</h3>
+    <p role="status">{busy ? "Saving…" : editing && editor.savedDraft === JSON.stringify(draft) && risk ? "Risk saved to the project." : localSaved ? "Unfinished work saved in this browser tab." : "Changes are not yet saved. Keep this page open."}</p>
+    <p>{editing ? "Valid risk details save automatically after a short pause. A title, owner and review date are required. Saving does not close the risk." : "Use the confirmation button to record this action; it is never automatic."} Unfinished entries are kept only in this tab, not on other devices, and are lost when the tab closes.</p>
+    {editing && !riskPayload(draft) && <p>Automatic saving is waiting for a valid title, owner and review date, with description and mitigation no longer than 4,000 characters each.</p>}
     {risk && <p>Editing revision {risk.revision}.</p>}
     <fieldset disabled={busy}><legend className={styles.srOnly}>Risk details</legend>
       {editing ? <>
@@ -95,7 +105,7 @@ function Editor({ editor, employees, busy, blocked, onDraft, onSave, onCancel })
         <label>Mitigation plan (optional)<textarea rows={4} value={draft.mitigationPlan} onChange={e => onDraft("mitigationPlan", e.target.value)} /></label>
       </> : ["close", "reopen"].includes(action) ? <label>Reason<textarea required rows={3} value={draft.reason || ""} onChange={e => onDraft("reason", e.target.value)} /></label> : <p>{action === "delete" ? "Delete this risk? Its history is retained. An administrator can restore it." : "Restore this risk with its previous open or closed status?"}</p>}
       {error && <p role="alert">{error}</p>}
-      <div className={styles.actions}><button type="submit" disabled={blocked}>{editing ? "Save risk" : "Confirm " + action}</button><button type="button" onClick={onCancel}>Cancel</button></div>
+      <div className={styles.actions}><button type="submit" disabled={blocked}>{editing ? "Save risk" : "Confirm " + action}</button><button type="button" onClick={onCancel}>Close editor</button><button type="button" onClick={onDiscard}>Discard unfinished entries</button></div>
     </fieldset>
   </form>;
 }
@@ -115,6 +125,22 @@ function Register({ projectId, authFetch }) {
   const [busy, setBusy] = useState(false);
   const [blocked, setBlocked] = useState(false);
   const [latest, setLatest] = useState(null);
+  const [localSaved, setLocalSaved] = useState(false);
+  const { confirmDiscardUnsavedChanges } = useUnsavedChanges();
+  useUnsavedChange(`risk-${projectId}`, !!editor && (busy || blocked || editor.savedDraft !== JSON.stringify(editor.draft)));
+  useEffect(() => {
+    if (!editor) return;
+    if (!blocked && editor.savedDraft === JSON.stringify(editor.draft)) { clearAssessmentDraft(editor.storageKey); setLocalSaved(false); }
+    else setLocalSaved(storeAssessmentDraft(editor.storageKey, { ...editor, reviewRequired: blocked }));
+  }, [editor, blocked]);
+  useEffect(() => {
+    if (editor || busy) return undefined;
+    const refresh = () => { if (document.visibilityState !== "hidden") setAttempt(v => v + 1); };
+    window.addEventListener("focus", refresh);
+    window.addEventListener("online", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => { window.removeEventListener("focus", refresh); window.removeEventListener("online", refresh); document.removeEventListener("visibilitychange", refresh); };
+  }, [editor, busy]);
   const alive = useRef(true), pending = useRef(false), readController = useRef(null);
   useEffect(() => { alive.current = true; return () => { alive.current = false; readController.current?.abort(); }; }, []);
   useEffect(() => {
@@ -152,8 +178,18 @@ function Register({ projectId, authFetch }) {
   const changeFilter = (key, value) => {
     setPage(0); setFilters(old => ({ ...old, [key]: value, ...((key === "status" && value !== "OPEN") || (key === "deleted" && value) ? { overdue: false } : {}) }));
   };
-  const openEditor = (risk, action) => { setEditor({ risk, action, draft: action === "save" ? draftFrom(risk) : { reason: "" } }); setBlocked(false); setLatest(null); setNotice(""); };
-  const cancelEditor = () => { readController.current?.abort(); setEditor(null); setBlocked(false); setLatest(null); setNotice(""); };
+  const openEditor = (risk, action, recover = true) => {
+    const storageKey = recoveryKey(projectId, risk, action);
+    const saved = recover && readAssessmentDraft(storageKey);
+    const draft = action === "save" ? draftFrom(risk) : { reason: "" };
+    setEditor({ risk, action, storageKey, draft: saved ? { ...draft, ...saved.draft } : draft, savedDraft: JSON.stringify(draft) });
+    setBlocked(!!saved); setLatest(null);
+    setNotice(saved ? "Recovered unfinished entries. Compare the current record before saving; an earlier request may already have succeeded." : "");
+  };
+  const cancelEditor = () => {
+    if (!localSaved && editor.savedDraft !== JSON.stringify(editor.draft) && !confirmDiscardUnsavedChanges()) return;
+    readController.current?.abort(); setEditor(null); setBlocked(false); setLatest(null); setNotice(""); setAttempt(v => v + 1);
+  };
   const mutate = async values => {
     if (pending.current || blocked || !editor) return;
     pending.current = true; setBusy(true); setNotice(""); setLatest(null);
@@ -168,10 +204,19 @@ function Register({ projectId, authFetch }) {
       if (!res.ok) {
         const err = new Error(await readDocumentError(res, "Could not save risk.")); err.status = res.status; throw err;
       }
-      // A successful HTTP response confirms the write, even if a proxy stripped its body.
-      if (alive.current) { setEditor(null); setHistory(null); setNotice("Risk saved. Check the filters if it no longer appears."); setAttempt(v => v + 1); }
+      if (action === "save") {
+        const saved = await res.json();
+        if (!saved?.id || !Number.isInteger(saved.revision) || (risk && saved.id !== risk.id)) throw new Error("Save response could not be verified.");
+        clearAssessmentDraft(editor.storageKey);
+        if (alive.current) setEditor({ ...editor, risk: saved, storageKey: recoveryKey(projectId, saved, action), savedDraft: JSON.stringify(editor.draft), autoPaused: false });
+      } else {
+        clearAssessmentDraft(editor.storageKey);
+        if (alive.current) setEditor(null);
+      }
+      if (alive.current) { setHistory(null); setNotice("Risk saved. Check the filters if it no longer appears."); setAttempt(v => v + 1); }
     } catch (err) {
       if (alive.current) {
+        setEditor(old => ({ ...old, autoPaused: true }));
         const uncertain = !err.status || err.status >= 500;
         setBlocked(err.status === 409 || err.status === 403 || err.status === 404 || uncertain);
         const mustRefresh = [403, 404, 409].includes(err.status) || uncertain;
@@ -179,6 +224,15 @@ function Register({ projectId, authFetch }) {
       }
     } finally { pending.current = false; if (alive.current) setBusy(false); }
   };
+  useEffect(() => {
+    if (!editor || editor.action !== "save" || editor.autoPaused || blocked || busy || editor.savedDraft === JSON.stringify(editor.draft)) return undefined;
+    const values = riskPayload(editor.draft);
+    if (!values) return undefined;
+    const timer = setTimeout(() => mutate(values), 1000);
+    return () => clearTimeout(timer);
+    // The timer uses the draft and revision represented by editor.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor, blocked, busy]);
   const loadLatest = async () => {
     if (pending.current) return;
     const controller = new AbortController(); readController.current?.abort(); readController.current = controller; setBusy(true);
@@ -204,16 +258,18 @@ function Register({ projectId, authFetch }) {
       <label><input type="checkbox" checked={filters.overdue} disabled={locked || filters.status !== "OPEN" || filters.deleted} onChange={e => changeFilter("overdue", e.target.checked)} /> Overdue reviews only</label>
       <label><input type="checkbox" checked={filters.deleted} disabled={locked} onChange={e => changeFilter("deleted", e.target.checked)} /> Deleted risks only</label>
     </div>
-    <div className={styles.actions}><button disabled={busy || loading} onClick={() => setAttempt(v => v + 1)}>Refresh register</button>{data?.canCreate && <button disabled={locked || loading} onClick={() => openEditor(null, "save")}>New risk</button>}</div>
+    <div className={styles.actions}>{data?.canCreate && <button className={styles.primaryAction} disabled={locked || loading} onClick={() => openEditor(null, "save")}>New risk</button>}<button className={styles.secondaryAction} disabled={busy || loading} onClick={() => setAttempt(v => v + 1)}>Refresh register</button></div>
     {loading && <p role="status">Loading risks…</p>}{error && <p role="alert">{error}</p>}{employeeError && <p role="alert">{employeeError} Use Refresh register to retry.</p>}
     {notice && <p role={blocked ? "alert" : "status"}>{notice}</p>}
     {editor && <>
-      <Editor key={`${editor.risk?.id || "new"}-${editor.risk?.revision || 0}-${editor.action}`} editor={editor} employees={employees} busy={busy} blocked={blocked} onDraft={(key, value) => setEditor(old => ({ ...old, draft: { ...old.draft, [key]: value } }))} onSave={mutate} onCancel={cancelEditor} />
+      <Editor key={`${editor.risk?.id || "new"}-${editor.risk?.revision || 0}-${editor.action}`} editor={editor} employees={employees} busy={busy} blocked={blocked} onDraft={(key, value) => setEditor(old => ({ ...old, autoPaused: false, draft: { ...old.draft, [key]: value } }))} onSave={mutate} onCancel={cancelEditor} localSaved={localSaved} onDiscard={() => { if (window.confirm("Discard unfinished entries? Changes already saved to the project will remain.")) { clearAssessmentDraft(editor.storageKey); setEditor(null); setBlocked(false); setLatest(null); setNotice(""); setAttempt(v => v + 1); } }} />
       {blocked && editor.risk && <button disabled={busy} onClick={loadLatest}>Load latest risk for comparison</button>}
-      {blocked && !editor.risk && <p>Refresh the register and check whether this risk was created. Cancel this draft once you have checked; start a new risk only if needed.</p>}
+      {blocked && !editor.risk && <p>Refresh the register and check all statuses and filters for an existing record before creating again. Close the editor to change filters; your unfinished entries stay in this tab.</p>}
+      {blocked && !editor.risk && <button disabled={busy || loading} onClick={() => { if (window.confirm("Have you checked the register and confirmed this risk was not already created?")) { setBlocked(false); setEditor(old => ({ ...old, autoPaused: true })); setNotice("Draft retained. Choose Save risk to create it after checking for duplicates."); } }}>I checked the register; enable manual save</button>}
       {latest && <section className={styles.panel} aria-label="Latest risk"><h3>Latest record · Revision {latest.revision}</h3><Snapshot value={latest} />
         <p>Your draft above is unchanged. Replacing it discards your unsaved fields and reason.</p>
-        <button disabled={busy || !latest.permissions?.[({ save: "canEdit", close: "canClose", reopen: "canReopen", delete: "canDelete", restore: "canRestore" })[editor.action]]} onClick={() => openEditor(latest, editor.action)}>Replace draft with latest record</button>
+        <button disabled={busy || !latest.permissions?.[({ save: "canEdit", close: "canClose", reopen: "canReopen", delete: "canDelete", restore: "canRestore" })[editor.action]]} onClick={() => { clearAssessmentDraft(editor.storageKey); openEditor(latest, editor.action, false); }}>Replace draft with latest record</button>
+        {editor.action === "save" && <button disabled={busy || !latest.permissions?.canEdit} onClick={() => { setEditor(old => ({ ...old, risk: latest, autoPaused: true })); setBlocked(false); setLatest(null); setNotice("Draft retained against the latest revision. Review your fields, then choose Save risk."); }}>Keep my draft after comparison</button>}
       </section>}
     </>}
     {data && <>

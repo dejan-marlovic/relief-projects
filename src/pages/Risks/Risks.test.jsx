@@ -9,7 +9,8 @@ const tree = projectId => <MemoryRouter><ProjectContext.Provider value={{ select
 const mount = (projectId = 2) => render(tree(projectId));
 const writes = () => fetch.mock.calls.filter(([, options]) => ["POST", "PUT", "DELETE"].includes(options?.method));
 beforeEach(() => {
-  localStorage.setItem("authToken", "test");
+  sessionStorage.clear();
+  localStorage.setItem("authToken", `header.${btoa(JSON.stringify({ sub: "tester" }))}.signature`);
   data = { content: [risk], canCreate: true, today: "2026-09-21", businessTimezone: "Europe/Stockholm", totalElements: 1, totalPages: 1 };
   global.fetch = jest.fn(async (url, options) => {
     if (url.includes("employees/active")) return response([{ id: 3, firstName: "Alex" }]);
@@ -124,4 +125,59 @@ test("project switch discards anchored editor and ignores late write results", a
   finish(response(risk));
   await waitFor(() => expect(screen.queryByRole("form", { name: "Risk editor" })).not.toBeInTheDocument());
   expect(screen.queryByText(/Risk saved/)).not.toBeInTheDocument(); expect(writes()[0][0]).toMatch(/projects\/2\/risks\/9$/);
+});
+
+
+test("autosaves valid edits and uses the returned revision for the next save", async () => {
+  const normal = fetch.getMockImplementation();
+  let revision = 4;
+  fetch.mockImplementation((url, options) => options?.method === "PUT"
+    ? Promise.resolve(response({ ...risk, ...JSON.parse(options.body), revision: ++revision })) : normal(url, options));
+  mount(); fireEvent.click(await screen.findByText("Edit risk"));
+  fireEvent.change(screen.getByLabelText("Title"), { target: { value: "Updated automatically" } });
+  await waitFor(() => expect(writes()).toHaveLength(1), { timeout: 2500 });
+  await screen.findByText("Editing revision 5.");
+  expect(screen.getByLabelText("Title")).toHaveValue("Updated automatically");
+  fireEvent.change(screen.getByLabelText("Description (optional)"), { target: { value: "More detail" } });
+  await waitFor(() => expect(writes()).toHaveLength(2), { timeout: 2500 });
+  expect(JSON.parse(writes()[1][1].body).expectedRevision).toBe(5);
+});
+
+test("recovers unfinished draft after remount without automatically writing it", async () => {
+  const view = mount(); fireEvent.click(await screen.findByText("New risk"));
+  fireEvent.change(screen.getByLabelText("Title"), { target: { value: "Incomplete draft" } });
+  await screen.findByText("Unfinished work saved in this browser tab.");
+  view.unmount(); mount(); fireEvent.click(await screen.findByText("New risk"));
+  expect(screen.getByLabelText("Title")).toHaveValue("Incomplete draft");
+  expect(screen.getByText("Save risk")).toBeDisabled();
+  expect(writes()).toHaveLength(0);
+});
+
+test("focus refreshes the register but never overwrites an open editor", async () => {
+  mount(); await screen.findByText("Delivery delay");
+  data = { ...data, content: [{ ...risk, title: "Updated elsewhere" }] };
+  fireEvent.focus(window);
+  await screen.findByText("Updated elsewhere");
+  fireEvent.click(screen.getByText("Edit risk"));
+  fireEvent.change(screen.getByLabelText("Title"), { target: { value: "" } });
+  const calls = fetch.mock.calls.length;
+  fireEvent.focus(window); fireEvent(window, new Event("online"));
+  expect(fetch.mock.calls).toHaveLength(calls);
+  expect(screen.getByLabelText("Title")).toHaveValue("");
+});
+
+test("keeping a conflict draft requires explicit save and uses compared revision", async () => {
+  const normal = fetch.getMockImplementation();
+  fetch.mockImplementation((url, options) => options?.method === "PUT" ? Promise.resolve(response({ message: "Conflict" }, 409)) : normal(url, options));
+  mount(); fireEvent.click(await screen.findByText("Edit risk"));
+  fireEvent.change(screen.getByLabelText("Title"), { target: { value: "My changes" } });
+  fireEvent.click(screen.getByText("Save risk"));
+  fireEvent.click(await screen.findByText("Load latest risk for comparison"));
+  fireEvent.click(await screen.findByText("Keep my draft after comparison"));
+  expect(screen.getByLabelText("Title")).toHaveValue("My changes");
+  expect(writes()).toHaveLength(1);
+  fetch.mockImplementation(normal);
+  fireEvent.click(screen.getByText("Save risk"));
+  await waitFor(() => expect(writes()).toHaveLength(2));
+  expect(JSON.parse(writes()[1][1].body).expectedRevision).toBe(5);
 });

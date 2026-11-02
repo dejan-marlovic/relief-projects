@@ -28,3 +28,17 @@
 @media (max-width: 600px) { .page { padding: .75rem; } .snapshot { grid-template-columns: 1fr; } }
 
 @include workspace.layout;
+
+.page .primaryAction {
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  border-color: var(--color-primary);
+}
+.page .secondaryAction {
+  padding: .4rem .6rem;
+  font-size: .8rem;
+  font-weight: 400;
+  background: transparent;
+  color: var(--color-text-secondary);
+  border-color: var(--color-border);
+}
