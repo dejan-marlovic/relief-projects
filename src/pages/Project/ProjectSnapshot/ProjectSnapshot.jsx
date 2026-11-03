@@ -17,6 +17,7 @@ import {
 } from "recharts";
 import { BASE_URL } from "../../../config/api";
 import styles from "./ProjectSnapshot.module.scss";
+import useMediaQuery from "../../../hooks/useMediaQuery";
 import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 
 const emptySnapshot = {
@@ -187,6 +188,7 @@ const ProjectSnapshot = ({
   employees = [],
   positions = [],
 }) => {
+  const isPhone = useMediaQuery("(max-width: 700px)");
   const [snapshot, setSnapshot] = useState(emptySnapshot);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -328,13 +330,13 @@ const ProjectSnapshot = ({
             <div className={styles.chartTitle}>Operational activity</div>
             <div className={styles.chartSubtitle}>Record counts across the selected project</div>
             <div className={styles.chartWrap}>
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={chartData} margin={{ top: 16, right: 20, left: 0, bottom: 8 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" interval={0} tick={{ fontSize: 12 }} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+              <ResponsiveContainer width="100%" height={isPhone ? Math.max(280, chartData.length * 60) : 300}>
+                <BarChart data={chartData} layout={isPhone ? "vertical" : "horizontal"} margin={isPhone ? { top: 8, right: 16, left: 0, bottom: 8 } : { top: 16, right: 20, left: 0, bottom: 60 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={isPhone} horizontal={!isPhone} />
+                  {isPhone ? <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12 }} /> : <XAxis dataKey="name" interval={0} angle={-20} textAnchor="end" height={60} tick={{ fontSize: 12 }} />}
+                  {isPhone ? <YAxis type="category" dataKey="name" width={110} interval={0} tick={{ fontSize: 12 }} tickFormatter={name => name.length > 15 ? `${name.slice(0, 14)}…` : name} /> : <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />}
                   <Tooltip content={<ActivityTooltip />} cursor={{ fill: "rgba(61, 133, 198, 0.08)" }} />
-                  <Bar dataKey="value" name="Records" radius={[8, 8, 0, 0]}>
+                  <Bar dataKey="value" name="Records" radius={isPhone ? [0, 8, 8, 0] : [8, 8, 0, 0]}>
                     {chartData.map((entry) => (
                       <Cell key={entry.name} fill={entry.color} />
                     ))}
@@ -342,6 +344,7 @@ const ProjectSnapshot = ({
                 </BarChart>
               </ResponsiveContainer>
             </div>
+            {isPhone && <ul aria-label="Operational activity counts">{chartData.map(entry => <li key={entry.name}>{entry.name}: {entry.value}</li>)}</ul>}
           </div>
 
           <div className={styles.chartCard}>
