@@ -34,7 +34,7 @@ const renderLayout = (roles, projectContext = {}, projectElement = <div>Project<
       ...projectContext,
     }}>
       <MemoryRouter initialEntries={["/project"]}>
-        <Routes><Route path="/" element={<Layout />}><Route path="project" element={projectElement} /><Route path="transactions" element={<div>Transaction page</div>} /></Route></Routes>
+        <Routes><Route path="/" element={<Layout />}><Route path="project" element={projectElement} /><Route path="budgets" element={<div>Budget page</div>} /><Route path="transactions" element={<div>Transaction page</div>} /></Route></Routes>
       </MemoryRouter>
     </ProjectContext.Provider>,
   );
@@ -154,6 +154,26 @@ describe("phone navigation", () => {
     fireEvent.change(menu, { target: { value: "/transactions" } });
     expect(menu).toHaveValue("/transactions");
     expect(screen.getByText("Transaction page")).toBeInTheDocument();
+  });
+
+  test("swipes respect unsaved changes and stop at the first top-level tab", () => {
+    const confirm = jest.spyOn(window, "confirm").mockReturnValue(false);
+    renderLayout(["VIEWER"], {}, <DirtyProject />);
+    const swipe = (x, end) => {
+      const surface = screen.getByRole("main");
+      fireEvent.touchStart(surface, { touches: [{ identifier: 1, clientX: x, clientY: 100 }] });
+      fireEvent.touchEnd(surface, { touches: [], changedTouches: [{ identifier: 1, clientX: end, clientY: 100 }] });
+    };
+    swipe(100, 300);
+    expect(confirm).not.toHaveBeenCalled();
+    swipe(300, 100);
+    expect(confirm).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("Project with unsaved changes")).toBeInTheDocument();
+    confirm.mockReturnValue(true);
+    swipe(300, 100);
+    expect(screen.getByText("Budget page")).toBeInTheDocument();
+    swipe(100, 300);
+    expect(screen.getByText("Project with unsaved changes")).toBeInTheDocument();
   });
 
   test("project selection keeps its unsaved-change guard", () => {

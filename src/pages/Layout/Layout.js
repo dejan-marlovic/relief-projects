@@ -8,6 +8,7 @@ import { useAuth } from "../../context/AuthContext";
 import { UnsavedChangesContext } from "../../context/UnsavedChangesContext";
 
 import useMediaQuery from "../../hooks/useMediaQuery";
+import useSwipeNavigation from "../../hooks/useSwipeNavigation";
 import NavigationGroup from "./NavigationGroup";
 
 const Layout = () => {
@@ -155,6 +156,21 @@ const Layout = () => {
     { label: "Help", paths: ["/operational-guide", "/about"] },
   ].map(group => ({ ...group, items: navigationItems.filter(([path]) => group.paths.includes(path)) }));
 
+  const swipeTabs = [
+    { paths: ["/project"], destination: "/project" },
+    ...categories.map(group => ({ paths: group.paths, destination: group.paths[0] })),
+    ...navigationItems.filter(([path]) => ["/register-project", "/admin"].includes(path)).map(([path]) => ({ paths: [path], destination: path })),
+  ];
+  const swipeHandlers = useSwipeNavigation({
+    enabled: isPhone && !openGroup,
+    route: location.pathname,
+    onSwipe: direction => {
+      const current = swipeTabs.findIndex(tab => tab.paths.some(path => isActive(path)));
+      const next = current >= 0 && swipeTabs[current + direction];
+      if (next && confirmDiscardUnsavedChanges()) navigate(next.destination);
+    },
+  });
+
   useEffect(() => { setOpenGroup(null); }, [location.pathname, isPhone]);
 
   return (
@@ -294,7 +310,7 @@ const Layout = () => {
         )}
       </nav>
 
-      <main className={styles.content}>
+      <main className={styles.content} {...swipeHandlers}>
         <UnsavedChangesContext.Provider value={unsavedChangesContextValue}>
           <Outlet />
         </UnsavedChangesContext.Provider>
