@@ -1,3 +1,4 @@
+import ScrollToForm from "../ScrollToForm/ScrollToForm";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BASE_URL } from "../../config/api";
@@ -65,7 +66,7 @@ export default function BudgetExecution({ familyId, budgetId, disabled = false, 
       <details><summary>Shared cost ceilings</summary><CapacityBasis rows={data.buckets} /></details>
       {data.eligibility.mayManageActivation && <button disabled={disabled || busy || loading || !data.eligibility.canRequestActivation} onClick={getPreview}>{preview ? "Request fresh activation preview" : "Preview activation of this budget"}</button>}
     </>}
-    {preview && <form className={styles.form} onSubmit={confirm}>
+    {preview && <ScrollToForm className={styles.form} onSubmit={confirm}>
       <h4>Activation preview · Budget #{budgetId}</h4><p>This observation is not a reservation. Saving revalidates all obligations.</p>
       <p>Budget limit: {exactAmount(preview.limit)} · Planned costs: {exactAmount(preview.plannedCosts)} · Governing donor decision #{preview.donorDecisionId ?? "unavailable"}</p>
       {preview.blockingIssues.map((issue, i) => <p role="alert" key={i}>{issue.message}</p>)}
@@ -73,6 +74,6 @@ export default function BudgetExecution({ familyId, budgetId, disabled = false, 
       {(stale || blocked) && <p role="alert">This preview cannot be submitted. Review refreshed state/history and request a fresh preview.</p>}
       <label>Activation reason<textarea required maxLength={1000} value={reason} disabled={busy} onChange={e => setReason(e.target.value)} /></label>
       <div className={styles.actions}><button disabled={disabled || busy || loading || !data || blocked || stale || !preview.eligibility.canActivate}>Confirm activation / reaffirmation</button><button type="button" disabled={busy} onClick={() => { setPreview(null); setReason(""); setBlocked(false); }}>Cancel activation</button></div>
-    </form>}
+    </ScrollToForm>}
   </section>;
 }

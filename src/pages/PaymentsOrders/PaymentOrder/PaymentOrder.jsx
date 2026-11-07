@@ -1,3 +1,4 @@
+import useScrollToEditor from "../../../hooks/useScrollToEditor";
 import RecordActivity from "../../../components/RecordActivity/RecordActivity";
 import PaymentOrderFinalEvidence from "../../../components/PaymentOrderFinalEvidence/PaymentOrderFinalEvidence";
 import OutgoingPayments from "../../../components/OutgoingPayments/OutgoingPayments";
@@ -75,6 +76,7 @@ const PaymentOrder = ({
 }) => {
   const ev = editedValues || {};
   const isCreate = (po?.id ?? "") === "new";
+  const editorRef = useScrollToEditor(isEditing && !isCreate, rowRef);
   const autoSave = isEditing && !isCreate && !compact;
 
   const submit = (e) => {
@@ -179,7 +181,7 @@ const PaymentOrder = ({
   return (
     <>
     <div
-      ref={rowRef || undefined}
+      ref={editorRef}
       className={`${styles.row} ${styles.gridRow} ${
         isEven ? styles.zebraEven : ""
       } ${styles.hoverable}`}

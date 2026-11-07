@@ -1,3 +1,4 @@
+import ScrollToForm from "../ScrollToForm/ScrollToForm";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import FundingReturns from "../FundingReturns/FundingReturns";
 import FundingReturnSummary from "../FundingReturns/FundingReturnSummary";
@@ -166,7 +167,7 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
       {editingLocked && <p>Finish editing the transaction before changing receipts.</p>}
       {binding && <p className={styles.hint}>Currency interpretation adopted: {binding.capturedName} (#{binding.currencyId}), approved amount {receiptMoney(binding.approvedAmountAtConfirmation)}, by {actor(binding.confirmedBy)} on {stamp(binding.confirmedAt)}. This is not historical verification.{binding.labelChanged && ` Current label: ${binding.currentName}.`}</p>}
     </>}
-    {form && !pending && <form className={styles.form} onSubmit={submit}>
+    {form && !pending && <ScrollToForm scrollKey={form.kind} className={styles.form} onSubmit={submit}>
       <h4>{{ create: "Record funding receipt", correct: `Correct receipt #${form.receipt?.id}`, void: `Void receipt #${form.receipt?.id}`, add: `Add evidence to receipt #${form.receipt?.id}`, remove: `Remove evidence from receipt #${form.receipt?.id}` }[form.kind]}</h4>
       <fieldset disabled={busy || !can(form.kind)}>
         {financialForm && <>
@@ -192,7 +193,7 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
       </fieldset>
       <div className={styles.actions}><button type="button" disabled={busy} onClick={() => { setForm(null); setError(""); }}>Cancel</button><button type="button" disabled={busy || loading} onClick={refresh}>Reload for review (keep input)</button></div>
       {form.receipt && data && !data.content.some(row => row.id === form.receipt.id && row.revision === form.receipt.revision) && <p role="status">This draft keeps the original revision. Cancel and reopen the action after reviewing current receipts to use a new revision.</p>}
-    </form>}
+    </ScrollToForm>}
     {!loading && data?.content.length === 0 && <p>No receipts on this page.</p>}
     {data?.content.map(receipt => <article key={receipt.id} className={`${styles.entry} ${receipt.status === "VOIDED" ? styles.voided : ""}`} aria-label={`Receipt ${receipt.id}`}>
       <h4>Receipt #{receipt.id} · {receipt.status === "VOIDED" ? "Voided" : "Recorded"}</h4>

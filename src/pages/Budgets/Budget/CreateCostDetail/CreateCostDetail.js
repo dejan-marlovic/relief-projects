@@ -1,3 +1,4 @@
+import ScrollToForm from "../../../../components/ScrollToForm/ScrollToForm";
 import { appFetch as fetch } from "../../../../utils/appFetch";
 import { calculationErrors, costDetailInputs } from "../../../../utils/budgetCalculations";
 import { readApiError } from "../../../../utils/apiErrors";
@@ -106,7 +107,7 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className={styles.formContainer}>
+    <ScrollToForm onSubmit={handleSubmit} className={styles.formContainer}>
       <h4 className={styles.formTitle}>Add New Cost Detail Row</h4>
 
       {formError && (
@@ -220,7 +221,7 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
           </button>
         </div>
       </div>
-    </form>
+    </ScrollToForm>
   );
 };
 

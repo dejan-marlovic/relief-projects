@@ -1,3 +1,4 @@
+import ScrollToForm from "../../components/ScrollToForm/ScrollToForm";
 import React, { useState } from "react";
 import { BASE_URL } from "../../config/api";
 import { indicatorPayload, measurementError, useIndicatorRead } from "./indicatorApi";
@@ -24,7 +25,7 @@ export default function ResultsEditor({ form, setForm, indicator, authFetch, pro
   const input = (key, label, props = {}) => <label>{label}<input value={draft[key] ?? ""} onChange={e => change(key, e.target.value)} {...props} /></label>;
   const needsReason = !["create", "report", "evidence"].includes(action);
   const title = { create: "Create indicator", edit: "Edit indicator", report: "Record result", correct: "Correct report", reuse: "Report again for voided date", void: "Void report", delete: "Delete indicator", restore: "Restore indicator", evidence: "Add supporting document", remove: "Remove evidence association" }[action];
-  return <form className={styles.panel} aria-label={title} onSubmit={event => {
+  return <ScrollToForm scrollKey={action} className={styles.panel} aria-label={title} onSubmit={event => {
     event.preventDefault(); setError("");
     if (isIndicator || isReport) {
       const type = isIndicator ? draft.measurementType : action === "correct" ? result.basis?.measurementType : indicator.measurementType;
@@ -80,5 +81,5 @@ export default function ResultsEditor({ form, setForm, indicator, authFetch, pro
       {form.reviewRequired && <p>Draft retained. Inspect the refreshed records and history before retrying. A failed response may follow a successful save. {action === "create" && "Check every relevant list page before creating again; retrying can create a duplicate indicator."} <button type="button" disabled={blocked} onClick={onReview}>I reviewed the refreshed records; enable retry</button></p>}
       <div className={styles.actions}><button type="submit" disabled={blocked || form.reviewRequired || (action === "evidence" && !draft.documentId)}>Save {title.toLowerCase()}</button><button type="button" onClick={onCancel}>Cancel</button></div>
     </fieldset>
-  </form>;
+  </ScrollToForm>;
 }

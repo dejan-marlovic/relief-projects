@@ -1,3 +1,4 @@
+import ScrollToForm from "../ScrollToForm/ScrollToForm";
 import { FiUploadCloud } from "react-icons/fi";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import { useUnsavedChange, useUnsavedChanges } from "../../context/UnsavedChangesContext";
@@ -119,7 +120,7 @@ export default function DocumentVersions({ document, authFetch, categories, canE
         {canDelete && typeof version.isDeleted === "boolean" && <button type="button" className={styles.downloadLink} disabled={busy} onClick={() => changeDeletion(version)}>{version.isDeleted ? "Restore" : "Delete"} version {version.versionNumber}</button>}
       </div>
     </li>)}</ol>}
-    {replacement && <form onSubmit={replace} className={styles.metadataEditor}>
+    {replacement && <ScrollToForm onSubmit={replace} className={styles.metadataEditor}>
       <h4>Replace {replacement.name}</h4>
       <p className={styles.infoText}>This creates a new version. Category is inherited unless changed; document date starts empty and status starts as Draft.</p>
       <div className={styles.metadataControls}>
@@ -140,6 +141,6 @@ export default function DocumentVersions({ document, authFetch, categories, canE
       <input ref={replacementInput} className={styles.hiddenFileInput} type="file" aria-label="Replacement file" disabled={busy}
         onChange={event => { chooseReplacement(event.target.files); event.target.value = ""; }} />
       <div className={styles.docActions}><button type="submit" className={styles.downloadLink} disabled={busy}>{busy ? "Uploading…" : "Save replacement"}</button><button type="button" className={styles.downloadLink} disabled={busy} onClick={() => setReplacement(null)}>Cancel replacement</button></div>
-    </form>}
+    </ScrollToForm>}
   </section>;
 }

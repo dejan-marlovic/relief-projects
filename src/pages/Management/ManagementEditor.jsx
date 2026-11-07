@@ -1,3 +1,4 @@
+import ScrollToForm from "../../components/ScrollToForm/ScrollToForm";
 import React, { useState } from "react";
 import { DecisionSummary, EvidencePicker, TaskPicker } from "./ManagementViews";
 import { observationPayload } from "./managementApi";
@@ -11,7 +12,7 @@ export default function ManagementEditor({ form, setForm, projectId, authFetch, 
   const requiredReason = ["edit", "resolve", "reopen", "delete", "restore", "actions-remove", "evidence-remove"].includes(action) || (action === "response" && !!record.response);
   const dateInput = (key, name, min = "1000-01-01") => <label>{name}<input type="date" required min={min} max={today || "9999-12-31"} value={draft[key] || ""} onChange={e => update(key, e.target.value)} /></label>;
   const textArea = (key, name, required = true) => <label>{name}<textarea rows={3} required={required} value={draft[key] || ""} onChange={e => update(key, e.target.value)} /></label>;
-  return <form className={styles.panel} aria-label={titles[action]} onSubmit={e => {
+  return <ScrollToForm scrollKey={action} className={styles.panel} aria-label={titles[action]} onSubmit={e => {
     e.preventDefault(); if (busy || blocked || form.reviewRequired) return;
     setError("");
     if (requiredReason && (!draft.reason?.trim() || [...draft.reason.trim()].length > 1000)) { setError("Enter a reason of 1–1,000 characters."); return; }
@@ -66,5 +67,5 @@ export default function ManagementEditor({ form, setForm, projectId, authFetch, 
       {form.reviewRequired && <div role="alert"><p>Draft retained. Review the refreshed record, links and history before trying again. A failed response may follow a successful save.{action === "create" ? " Check the list before creating again to avoid duplicates." : ""}</p><button type="button" disabled={blocked} onClick={onReview}>I reviewed the refreshed state; enable retry</button></div>}
       <div className={styles.actions}><button type="submit" disabled={busy || blocked || form.reviewRequired}>Save {titles[action].toLowerCase()}</button><button type="button" onClick={onCancel}>Cancel</button></div>
     </fieldset>
-  </form>;
+  </ScrollToForm>;
 }

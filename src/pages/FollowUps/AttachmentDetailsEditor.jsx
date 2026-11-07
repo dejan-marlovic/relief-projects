@@ -1,3 +1,4 @@
+import ScrollToForm from "../../components/ScrollToForm/ScrollToForm";
 import React, { useEffect, useState } from "react";
 import { BASE_URL } from "../../config/api";
 import useRecordAutosave from "../../utils/useRecordAutosave";
@@ -50,7 +51,7 @@ export default function AttachmentDetailsEditor({ item, projectId, authFetch, ca
   useEffect(() => { if (!disabled && save.dirty && !save.busy && !save.error) save.flush(); }, [disabled]); // eslint-disable-line react-hooks/exhaustive-deps
   const edit = (field, value) => { setForm(current => ({ ...current, [field]: value })); save.edit({ [field]: value }, original); };
   const close = () => { if (!save.dirty || window.confirm("Discard unsaved document details? Previously saved changes will remain.")) onClose(); };
-  return <form className={styles.attachmentEditor} aria-label={`Edit details for ${item.documentName}`} onSubmit={event => {
+  return <ScrollToForm className={styles.attachmentEditor} aria-label={`Edit details for ${item.documentName}`} onSubmit={event => {
     event.preventDefault();
     if (!save.dirty) notifySuccess("All document details are already saved.");
     else save.flush();
@@ -66,5 +67,5 @@ export default function AttachmentDetailsEditor({ item, projectId, authFetch, ca
       <label>Document date<input type="date" min="1000-01-01" max="9999-12-31" value={form.documentDate} disabled={disabled || save.busy} onChange={e => edit("documentDate", e.target.value)} /></label>
     </div><div className={styles.actions}><button type="submit" disabled={disabled || save.busy || !!save.error}>{save.busy ? "Saving details…" : "Save details"}</button></div></>}
     <button type="button" disabled={save.busy} onClick={close}>Close details</button>
-  </form>;
+  </ScrollToForm>;
 }

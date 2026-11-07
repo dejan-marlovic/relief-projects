@@ -1,3 +1,4 @@
+import ScrollToForm from "../../components/ScrollToForm/ScrollToForm";
 import React, { useState } from "react";
 import { EvidencePicker, TaskPicker } from "../Management/ManagementViews";
 import { ApprovalBasisPicker, ReportDecisions } from "./TravelReportViews";
@@ -11,7 +12,7 @@ export default function TravelReportEditor({ form, setForm, endpoint, projectId,
   const update = (key, value) => setForm(f => ({ ...f, draft: { ...f.draft, [key]: value } }));
   const text = (key, title, required = false) => <label>{title}<textarea rows={3} required={required} value={draft[key] || ""} onChange={e => update(key, e.target.value)} /></label>;
   const styleAction = action === "accept" ? "approve" : action === "reopen" ? "return" : action;
-  return <form aria-label={reportTitles[action]} className={styles.panel} onSubmit={e => {
+  return <ScrollToForm scrollKey={action} aria-label={reportTitles[action]} className={styles.panel} onSubmit={e => {
     e.preventDefault(); if (busy || blocked || reviewRequired) return;
     setError(""); try { onSave(reportPayload(form)); } catch (err) { setError(err.message); }
   }}>
@@ -43,5 +44,5 @@ export default function TravelReportEditor({ form, setForm, endpoint, projectId,
       <p className={styles.muted}>Selected travel revision: {form.expectedTravelRevision}{form.expectedRevision != null ? ` · Report revision: ${form.expectedRevision}` : " · New report"}. Refreshing retains this draft and its original revisions until you explicitly review.</p>
       <div className={styles.actions}><button type="submit" disabled={busy || blocked || reviewRequired} className={approvalStyle(styleAction, styles)}><TravelActionIcon action={styleAction} />Save {reportTitles[action].toLowerCase()}</button><button type="button" onClick={onCancel}>Cancel report draft</button></div>
     </fieldset>
-  </form>;
+  </ScrollToForm>;
 }

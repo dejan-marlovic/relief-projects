@@ -1,3 +1,4 @@
+import ScrollToForm from "../ScrollToForm/ScrollToForm";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -109,7 +110,7 @@ export function FinalEvidencePanel({ paymentOrderId, refreshKey, editingLocked }
       </div></li>)}</ul>
       {data.permissions?.canAttach && !form && <button disabled={busy || editingLocked} onClick={() => start("attach")}>Attach late evidence</button>}
     </>}
-    {form && <form className={styles.picker} onSubmit={save}>
+    {form && <ScrollToForm className={styles.picker} onSubmit={save}>
       <h4>{form.action === "attach" ? "Attach late evidence" : `${form.action === "remove" ? "Remove" : "Replace"} attachment #${form.entryId}`}</h4>
       {selecting && <>
         <p>All active exact versions from the header transaction’s project are listed, including historical versions. FINANCE classification is suggested, not required.</p>
@@ -123,7 +124,7 @@ export function FinalEvidencePanel({ paymentOrderId, refreshKey, editingLocked }
       {form.action === "replace" && <p>The old association is removed only if the new attachment succeeds. Both entries remain in history.</p>}
       {reviewRequired && <label><input type="checkbox" disabled={loading || !!error} onChange={e => { if (e.target.checked) setReviewRequired(false); }} /> I compared the refreshed collection and history and want to issue this command.</label>}
       <div className={styles.actions}><button type="submit" disabled={!allowed || busy || loading || editingLocked || reviewRequired || !form.reason.trim() || (selecting && (candidateLoading || !!candidateError || !selected))}>Save {form.action}</button><button type="button" disabled={busy} onClick={() => setForm(null)}>Cancel</button></div>
-    </form>}
+    </ScrollToForm>}
     <p className={styles.hint}>{hasAnyRole("ADMIN", "PROJECT_MANAGER") ? <a href="/documents" target="_blank" rel="noopener noreferrer">Open Documents to upload to the order’s project</a> : "Select a file already uploaded by an authorised uploader."} Uploading and attaching are separate actions; a failed attachment never deletes the uploaded file.</p>
     <h4>Late evidence decision history</h4>
     {history && <><ol>{history.content.map(decision => <li key={decision.id}><details><summary>{decision.action} · Decision #{decision.id} · Revision {decision.revision} · {uploadTimeLabel(decision.occurredAt)} · {actor(decision.actor)}</summary><p>Reason: {decision.reason}</p>{decision.entries.map(entry => <p key={entry.id}>Attachment #{entry.id} · {entry.state} · {evidenceRole(entry.role)} · {entry.capturedDocumentName || "Name unavailable"} · Document #{entry.documentId} · Version {entry.versionNumber ?? "Unknown"}{entry.replacesEntryId && ` · Replaces #${entry.replacesEntryId}`}{entry.replacementEntryId && ` · Replaced by #${entry.replacementEntryId}`}</p>)}</details></li>)}</ol><div className={styles.actions}><button disabled={loading || busy || page === 0} onClick={() => setPage(n => n - 1)}>Previous evidence history</button><span>{history.totalElements} decisions · Page {page + 1}</span><button disabled={loading || busy || (page + 1) * 20 >= history.totalElements} onClick={() => setPage(n => n + 1)}>Next evidence history</button></div></>}

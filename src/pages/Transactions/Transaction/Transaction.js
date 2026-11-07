@@ -1,3 +1,4 @@
+import useScrollToEditor from "../../../hooks/useScrollToEditor";
 import RevisionFundingAssignments from "../../../components/RevisionFundingAssignments/RevisionFundingAssignments";
 import RecordActivity from "../../../components/RecordActivity/RecordActivity";
 import { financialBudgetEligible, financialReferenceEligible } from "../../../utils/budgetRevisions";
@@ -80,6 +81,7 @@ const Transaction = ({
 }) => {
   const ev = editedValues || {};
   const isCreate = (tx?.id ?? "") === "new";
+  const editorRef = useScrollToEditor(isEditing && !isCreate, rowRef);
   const autoSave = isEditing && !isCreate && !compact;
 
   const submit = (e) => {
@@ -248,7 +250,7 @@ const Transaction = ({
   return (
     <>
       <div
-        ref={rowRef || undefined}
+        ref={editorRef}
         className={`${styles.row} ${styles.gridRow} ${
           isEven ? styles.zebraEven : ""
         } ${styles.hoverable}`}

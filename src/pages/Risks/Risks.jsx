@@ -1,3 +1,4 @@
+import ScrollToForm from "../../components/ScrollToForm/ScrollToForm";
 import { WorkflowIntro, WorkflowStep, HistoryIntro } from "../../components/Workflow/Workflow";
 import workflow from "../../components/Workflow/Workflow.module.scss";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
@@ -73,7 +74,7 @@ function Editor({ editor, employees, busy, blocked, onDraft, onSave, onCancel, l
   const { risk, action, draft } = editor;
   const [error, setError] = useState("");
   const editing = action === "save";
-  return <form className={styles.panel} aria-label="Risk editor" onSubmit={event => {
+  return <ScrollToForm className={styles.panel} aria-label="Risk editor" onSubmit={event => {
     event.preventDefault(); setError("");
     if (editing) {
       if (!draft.title.trim() || [...draft.title.trim()].length > 200 || [...draft.description.trim()].length > 4000 || [...draft.mitigationPlan.trim()].length > 4000 || !draft.ownerEmployeeId || !/^[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}$/.test(draft.reviewDate)) {
@@ -107,7 +108,7 @@ function Editor({ editor, employees, busy, blocked, onDraft, onSave, onCancel, l
       {error && <p role="alert">{error}</p>}
       <div className={styles.actions}><button type="submit" disabled={blocked}>{editing ? "Save risk" : "Confirm " + action}</button><button type="button" onClick={onCancel}>Close editor</button><button type="button" onClick={onDiscard}>Discard unfinished entries</button></div>
     </fieldset>
-  </form>;
+  </ScrollToForm>;
 }
 function Register({ projectId, authFetch }) {
   const endpoint = `${BASE_URL}/api/projects/${projectId}/risks`;
@@ -262,7 +263,7 @@ function Register({ projectId, authFetch }) {
     {loading && <p role="status">Loading risks…</p>}{error && <p role="alert">{error}</p>}{employeeError && <p role="alert">{employeeError} Use Refresh register to retry.</p>}
     {notice && <p role={blocked ? "alert" : "status"}>{notice}</p>}
     {editor && <>
-      <Editor key={`${editor.risk?.id || "new"}-${editor.risk?.revision || 0}-${editor.action}`} editor={editor} employees={employees} busy={busy} blocked={blocked} onDraft={(key, value) => setEditor(old => ({ ...old, autoPaused: false, draft: { ...old.draft, [key]: value } }))} onSave={mutate} onCancel={cancelEditor} localSaved={localSaved} onDiscard={() => { if (window.confirm("Discard unfinished entries? Changes already saved to the project will remain.")) { clearAssessmentDraft(editor.storageKey); setEditor(null); setBlocked(false); setLatest(null); setNotice(""); setAttempt(v => v + 1); } }} />
+      <Editor key={editor.action} editor={editor} employees={employees} busy={busy} blocked={blocked} onDraft={(key, value) => setEditor(old => ({ ...old, autoPaused: false, draft: { ...old.draft, [key]: value } }))} onSave={mutate} onCancel={cancelEditor} localSaved={localSaved} onDiscard={() => { if (window.confirm("Discard unfinished entries? Changes already saved to the project will remain.")) { clearAssessmentDraft(editor.storageKey); setEditor(null); setBlocked(false); setLatest(null); setNotice(""); setAttempt(v => v + 1); } }} />
       {blocked && editor.risk && <button disabled={busy} onClick={loadLatest}>Load latest risk for comparison</button>}
       {blocked && !editor.risk && <p>Refresh the register and check all statuses and filters for an existing record before creating again. Close the editor to change filters; your unfinished entries stay in this tab.</p>}
       {blocked && !editor.risk && <button disabled={busy || loading} onClick={() => { if (window.confirm("Have you checked the register and confirmed this risk was not already created?")) { setBlocked(false); setEditor(old => ({ ...old, autoPaused: true })); setNotice("Draft retained. Choose Save risk to create it after checking for duplicates."); } }}>I checked the register; enable manual save</button>}

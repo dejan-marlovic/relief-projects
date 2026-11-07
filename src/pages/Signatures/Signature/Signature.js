@@ -1,3 +1,4 @@
+import useScrollToEditor from "../../../hooks/useScrollToEditor";
 import React from "react";
 import styles from "./Signature.module.scss";
 import { FiEdit, FiTrash2, FiSave, FiX } from "react-icons/fi";
@@ -50,6 +51,7 @@ const SignatureRow = ({
 }) => {
   const ev = editedValues || {};
   const isCreate = (row?.id ?? "") === "new";
+  const editorRef = useScrollToEditor(isEditing && !isCreate, rowRef);
   const autoSave = isEditing && !isCreate && !compact;
 
   const submit = (e) => {
@@ -294,7 +296,7 @@ const SignatureRow = ({
   );
 
   if (compact) return (
-    <section ref={rowRef || undefined} className={styles.compactCard} aria-label={isCreate ? "New signature" : `Signature ${row.id}`}>
+    <section ref={editorRef} className={styles.compactCard} aria-label={isCreate ? "New signature" : `Signature ${row.id}`}>
       <div className={styles.cardTitle}>{isCreate ? "New signature" : `Signature #${row.id}`}</div>
       <div className={styles.cardSummary}>
         <div><span className={styles.fieldLabel}>Status</span>{isEditing ? selectStatus : statusLabelById(row.signatureStatusId)}</div>
@@ -314,7 +316,7 @@ const SignatureRow = ({
 
   return (
     <div
-      ref={rowRef || undefined}
+      ref={editorRef}
       className={`${styles.row} ${styles.gridRow} ${
         isEven ? styles.zebraEven : ""
       } ${styles.hoverable}`}

@@ -1,3 +1,4 @@
+import ScrollToForm from "../../components/ScrollToForm/ScrollToForm";
 import React, { useState } from "react";
 import { EvidencePicker } from "../Management/ManagementViews";
 import { assessmentPayload, commands, fields } from "./assessmentApi";
@@ -13,7 +14,7 @@ export default function AssessmentEditor({ form, setForm, projectId, authFetch, 
   }
   const update = (key, value) => setForm(f => ({ ...f, draft: { ...f.draft, [key]: value } }));
   const textarea = (key, title, required = false) => <label>{title}<textarea rows={3} required={required} value={draft[key] || ""} onChange={e => update(key, e.target.value)} /></label>;
-  return <form className={styles.panel} aria-label={commands[action][0]} onSubmit={e => { e.preventDefault(); if (busy || blocked || form.reviewRequired) return; try { setError(""); onSave(assessmentPayload(action, draft, record)); } catch (failure) { setError(failure.message); } }}>
+  return <ScrollToForm scrollKey={action} className={styles.panel} aria-label={commands[action][0]} onSubmit={e => { e.preventDefault(); if (busy || blocked || form.reviewRequired) return; try { setError(""); onSave(assessmentPayload(action, draft, record)); } catch (failure) { setError(failure.message); } }}>
     <h3>{commands[action][0]}</h3>
     <p role="status">{busy ? "Saving…" : ["create", "edit"].includes(action) && form.savedDraft === JSON.stringify(draft) && action === "edit" ? "Draft saved to the project." : localSaved ? "Unfinished work saved in this browser tab." : "Changes are not yet saved. Keep this page open."}</p>
     <p>{["create", "edit"].includes(action) ? "Assessment text saves automatically after a short pause. Saving a draft does not submit it for review." : "Your unfinished entries are kept in this tab. Use the action button below to record the change; nothing is submitted automatically."} Tab drafts are not shared with other devices and are lost when this tab is closed.</p>
@@ -28,5 +29,5 @@ export default function AssessmentEditor({ form, setForm, projectId, authFetch, 
       {form.reviewRequired && <div role="alert"><p>Your draft is retained. Review the refreshed assessment, evidence and history before retrying. The earlier request may have succeeded; do not repeat it if the intended result is already recorded.</p><button type="button" disabled={reviewBlocked} onClick={onReview}>I reviewed the refreshed state; enable retry</button></div>}
       <div className={styles.actions}><button type="submit" className={approvalStyle(action, styles)} disabled={busy || blocked || form.reviewRequired}><TravelActionIcon action={action} />{["create", "edit"].includes(action) ? "Save draft now" : commands[action][0]}</button><button type="button" onClick={onCancel}>Close</button><button type="button" onClick={() => { if (window.confirm("Discard the unfinished entries in this tab? Any draft already saved to the project will remain.")) onDiscard(); }}>Discard unfinished entries</button></div>
     </fieldset>
-  </form>;
+  </ScrollToForm>;
 }

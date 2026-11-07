@@ -1,3 +1,4 @@
+import ScrollToForm from "../ScrollToForm/ScrollToForm";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import RecipientReturns from "../RecipientReturns/RecipientReturns";
 import RecipientReturnSummary from "../RecipientReturns/RecipientReturnSummary";
@@ -168,7 +169,7 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
       {editingLocked && <p>Finish editing the payment order before changing payments.</p>}
       {binding && <p className={styles.hint}>Currency interpretation adopted: {binding.capturedName} (#{binding.currencyId}), recipient commitments {paymentMoney(binding.recipientCommitment)}; order commitments {paymentMoney(binding.orderCommitment)}, by {actor(binding.confirmedBy)} on {stamp(binding.confirmedAt)}. This is not historical verification.{binding.labelChanged && ` Current label: ${binding.currentName}.`}</p>}
     </>}
-    {form && !pending && <form className={styles.form} onSubmit={submit}>
+    {form && !pending && <ScrollToForm scrollKey={form.kind} className={styles.form} onSubmit={submit}>
       <h4>{{ create: "Record outgoing payment", correct: `Correct payment #${form.payment?.id}`, void: `Void payment #${form.payment?.id}`, add: `Add evidence to payment #${form.payment?.id}`, remove: `Remove evidence from payment #${form.payment?.id}` }[form.kind]}</h4>
       <fieldset disabled={busy || !can(form.kind, data?.content.find(row => row.id === form.payment?.id))}>
         {financialForm && <>
@@ -195,7 +196,7 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
       </fieldset>
       <div className={styles.actions}><button type="button" disabled={busy} onClick={() => { setForm(null); setError(""); }}>Cancel</button><button type="button" disabled={busy || loading} onClick={refresh}>Reload for review (keep input)</button></div>
       {form.payment && data && !data.content.some(row => row.id === form.payment.id && row.revision === form.payment.revision) && <p role="status">This draft keeps the original revision. Cancel and reopen the action after reviewing current payments to use a new revision.</p>}
-    </form>}
+    </ScrollToForm>}
     {!loading && data?.content.length === 0 && <p>No payments on this page.</p>}
     {data?.content.map(payment => <article key={payment.id} className={`${styles.entry} ${payment.status === "VOIDED" ? styles.voided : ""}`} aria-label={`Payment ${payment.id}`}>
       <h4>Payment #{payment.id} · {payment.status === "VOIDED" ? "Voided" : "Recorded"}</h4>

@@ -1,3 +1,4 @@
+import ScrollToForm from "../ScrollToForm/ScrollToForm";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -138,7 +139,7 @@ export function FundingReturnsPanel({ receipt, refreshKey, editingLocked, onChan
     {pending && <div role="alert"><p>A return command needs confirmation. Retry sends the identical request ID and body; do not enter the movement again.</p><button disabled={busy} onClick={() => send(pending)}>Retry same return request</button></div>}
     {data && <><FundingReturnSummary summary={data.summary} /><p>Original amount not yet recorded as returned: <strong>{receiptMoney(data.remainingReturnable)} {receiptCurrency(receipt.currency)}</strong>. This is a recording limit, not available spending.</p>{summaryIssues(data.eligibility).filter(issue => issue.code !== "SELECT_RETURN").map(issue => <p key={issue.code}>{issue.message}</p>)}</>}
     {can("create") && !form && !pending && <button onClick={() => open("create")}>Record money returned to financier</button>}
-    {form && !pending && <form className={styles.form} onSubmit={submit}>
+    {form && !pending && <ScrollToForm scrollKey={form.kind} className={styles.form} onSubmit={submit}>
       <h4>{{ create: "Record money returned to financier", correct: "Correct erroneous return", void: "Void erroneous return", add: "Add exact return evidence", remove: "Remove return evidence" }[kind]}</h4>
       <fieldset disabled={busy || editingLocked}>
         {financial && <><p>Captured receipt currency: {receiptCurrency(receipt.currency)}. No conversion is performed.</p><div className={styles.grid}><label>Amount returned<input required inputMode="decimal" value={form.amount} onChange={e => change("amount", e.target.value)} /></label><label>Date returned<input required type="date" min={receipt.receivedDate || "1000-01-01"} max={stockholmToday()} value={form.returnedDate} onChange={e => change("returnedDate", e.target.value)} /></label></div><label>Reference (optional)<input maxLength={150} value={form.externalReference} onChange={e => change("externalReference", e.target.value)} /></label><label>Note (optional)<textarea maxLength={1000} value={form.note} onChange={e => change("note", e.target.value)} /></label></>}
@@ -152,7 +153,7 @@ export function FundingReturnsPanel({ receipt, refreshKey, editingLocked, onChan
       {reviewRequired && <p>Review refreshed entries before preparing another command. No retry has been sent.</p>}
       {data && (reviewRequired || form.expectedReturnsRevision !== data.returnsRevision || form.expectedSourceRevision !== data.sourceRevision) && <button type="button" disabled={busy || loading || !!loadError} onClick={() => { setForm(current => ({ ...current, expectedReturnsRevision: data.returnsRevision, expectedSourceRevision: data.sourceRevision })); setReviewRequired(false); }}>Use refreshed revisions after review (keep input)</button>}
       <button type="button" disabled={busy} onClick={() => setForm(null)}>Cancel return action</button>
-    </form>}
+    </ScrollToForm>}
     {related && <aside><h4>Related return detail</h4>{entry(related, true)}<button onClick={() => setRelated(null)}>Close related return</button></aside>}
     {!loading && data?.content.length === 0 && <p>No returns on this page.</p>}
     {data?.content.map(row => entry(row))}

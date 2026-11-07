@@ -1,3 +1,4 @@
+import useScrollToEditor from "../../../hooks/useScrollToEditor";
 import PaymentAmount from "../../../components/PaymentAmount/PaymentAmount";
 // src/components/Recipients/Recipient/Recipient.jsx
 import React from "react";
@@ -33,6 +34,7 @@ const RecipientRow = ({
 }) => {
   const ev = editedValues || {};
   const isCreate = (row?.id ?? "") === "new";
+  const editorRef = useScrollToEditor(isEditing && !isCreate, rowRef);
   const autoSave = isEditing && !isCreate && !compact;
 
   const submit = (e) => {
@@ -141,7 +143,7 @@ const RecipientRow = ({
     <div
       role="group"
       aria-label={isCreate ? "New recipient" : `Recipient ${row.id}`}
-      ref={rowRef || undefined}
+      ref={editorRef}
       className={`${styles.row} ${styles.gridRow} ${
         isEven ? styles.zebraEven : ""
       } ${styles.hoverable}`}

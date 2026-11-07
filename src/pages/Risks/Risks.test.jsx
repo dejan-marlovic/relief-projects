@@ -129,6 +129,9 @@ test("project switch discards anchored editor and ignores late write results", a
 
 
 test("autosaves valid edits and uses the returned revision for the next save", async () => {
+  const scroll = jest.fn();
+  const originalScroll = Element.prototype.scrollIntoView;
+  Element.prototype.scrollIntoView = scroll;
   const normal = fetch.getMockImplementation();
   let revision = 4;
   fetch.mockImplementation((url, options) => options?.method === "PUT"
@@ -141,6 +144,9 @@ test("autosaves valid edits and uses the returned revision for the next save", a
   fireEvent.change(screen.getByLabelText("Description (optional)"), { target: { value: "More detail" } });
   await waitFor(() => expect(writes()).toHaveLength(2), { timeout: 2500 });
   expect(JSON.parse(writes()[1][1].body).expectedRevision).toBe(5);
+  expect(scroll).toHaveBeenCalledTimes(1);
+  expect(scroll).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
+  Element.prototype.scrollIntoView = originalScroll;
 });
 
 test("recovers unfinished draft after remount without automatically writing it", async () => {

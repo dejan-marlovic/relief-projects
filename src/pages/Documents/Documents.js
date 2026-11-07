@@ -1,3 +1,4 @@
+import ScrollToForm from "../../components/ScrollToForm/ScrollToForm";
 import useRecordAutosave from "../../utils/useRecordAutosave";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import AutosaveStatus from "../../components/ProjectClassification/AutosaveStatus";
@@ -455,7 +456,7 @@ const Documents = () => {
               <label>Filter by category<select value={categoryFilter} disabled={!!editing || !categories.length} onChange={(e) => { setCategoryFilter(e.target.value); setEditing(null); }}><option value="">All categories</option>{categoryOptions}</select></label>
               {listError && <button type="button" onClick={() => setListRevision(value => value + 1)} disabled={loading}>Retry loading documents</button>}
             </div>
-            {editing && <form className={styles.metadataEditor} onSubmit={event => event.preventDefault()} onBlur={metadataSave.flush}>
+            {editing && <ScrollToForm className={styles.metadataEditor} onSubmit={event => event.preventDefault()} onBlur={metadataSave.flush}>
               <h4>Edit details · {editing.original.documentName}</h4>
               <AutosaveStatus save={metadataSave} />
               <p>Details save automatically. Final is a descriptive label, not approval.</p>
@@ -466,7 +467,7 @@ const Documents = () => {
               </div>
               <p className={styles.infoText}>Leave the date empty to clear it. Choose Uncategorized to remove a classification.</p>
               <button className={styles.downloadLink} type="button" disabled={saving} onClick={closeEditor}>Done editing</button>
-            </form>}
+            </ScrollToForm>}
             {historyDocument && <DocumentVersions key={`${selectedProjectId}-${historyDocument.id}`} document={historyDocument} authFetch={authFetch} categories={categories} canEdit={canUploadDocuments} canDelete={canDeleteDocuments} onDownload={handleDownload} downloading={downloading} revision={listRevision} onChanged={() => { setListRevision((value) => value + 1); }} onClose={() => setHistoryDocument(null)} validateFile={validateDocumentFile} />}
 
             {loading && !listLoaded && (

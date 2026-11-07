@@ -1,3 +1,4 @@
+import useScrollToEditor from "../../../hooks/useScrollToEditor";
 import { Link, useNavigate } from "react-router-dom";
 import { useUnsavedChanges } from "../../../context/UnsavedChangesContext";
 import { createAuthFetch } from "../../../utils/http";
@@ -124,8 +125,9 @@ const Organization = ({
   const statusName = (id) =>
     statuses.find((s) => s.id === id)?.organizationStatusName || (id ?? "-");
 
+  const editorRef = useScrollToEditor(isEditing);
   const open = expanded || isEditing;
-  return <article className={styles.relationshipCard}>
+  return <article ref={editorRef} tabIndex={-1} className={styles.relationshipCard}>
     <header className={styles.cardHeader}>
       <div><h3>{isCreate ? "Add organisation to this project" : orgName(link.organizationId)}</h3>
         {!isCreate && <p><strong>Role in this project:</strong> {statusName(link.organizationStatusId)}</p>}

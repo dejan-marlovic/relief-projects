@@ -1,3 +1,4 @@
+import ScrollToForm from "../ScrollToForm/ScrollToForm";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BASE_URL } from "../../config/api";
@@ -75,7 +76,7 @@ export function AssignmentPanel({ transactionId, originBudgetId, disabled = fals
         {!form && <div className={styles.actions}>{(row.eligibility.canIncrease || row.eligibility.canReduce) && <button disabled={disabled || busy || loading} onClick={() => open(row)}>Change amount #{row.id}</button>}{row.eligibility.canRelease && <button disabled={disabled || busy || loading} onClick={() => open(row, true)}>Release assignment #{row.id}</button>}</div>}
       </article>)}
     </>}
-    {form && <form className={styles.form} onSubmit={submit}><h4>{form.id ? `Change assignment #${form.id}` : "Assign unused approved funding"}</h4><fieldset disabled={busy || disabled}>
+    {form && <ScrollToForm className={styles.form} onSubmit={submit}><h4>{form.id ? `Change assignment #${form.id}` : "Assign unused approved funding"}</h4><fieldset disabled={busy || disabled}>
       {!form.id ? <label>Revised cost row<select required value={form.targetCostDetailId} onChange={e => change("targetCostDetailId", e.target.value)}><option value="">Select revised cost</option>{(data?.targets || []).filter(row => row.canAssign).map(row => <option key={row.targetCostDetailId} value={row.targetCostDetailId}>Budget #{row.targetBudgetId} · Cost detail #{row.targetCostDetailId} · Additional maximum {exactAmount(row.maximumAdditionalAmount)}</option>)}</select></label> : <p>Target cost #{form.targetCostDetailId} is fixed. Reduce and separately assign elsewhere if permitted; no capacity is reserved between commands.</p>}
       {target && <p>Additional maximum: {exactAmount(target.maximumAdditionalAmount)} — limited by unused award funding, the concrete row and the shared family ceiling.</p>}
       <label>Assignment amount<input required type="text" inputMode="decimal" value={form.amount} onChange={e => change("amount", e.target.value)} /></label>
@@ -83,7 +84,7 @@ export function AssignmentPanel({ transactionId, originBudgetId, disabled = fals
       <label><input type="checkbox" required checked={form.acknowledged} onChange={e => change("acknowledged", e.target.checked)} /> I understand this uses unused approved funding, not cash, and cannot release original approved allocations. Zero releases only this managed assignment subject to commitment coverage.</label>
       {(blocked || stale) && <><p role="alert">Review refreshed assignments and transaction history. If creation already succeeded, cancel this draft and use the existing assignment's amount control.</p><button type="button" disabled={loading || !data || Boolean(form.id && !assignment)} onClick={() => { setForm(old => ({ ...old, expectedFamilyRevision: data.familyRevision, expectedExecutionRevision: data.executionRevision, expectedAssignmentRevision: assignment?.revision })); setBlocked(false); setError(""); }}>I reviewed state and history; use current revisions</button></>}
       <div className={styles.actions}><button disabled={busy || blocked || stale || loading || !data}>Save assignment</button><button type="button" onClick={() => { setForm(null); setBlocked(false); setError(""); }}>Cancel assignment</button></div>
-    </fieldset></form>}
+    </fieldset></ScrollToForm>}
   </div>;
 }
 
