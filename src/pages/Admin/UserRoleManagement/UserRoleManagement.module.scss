@@ -21,8 +21,7 @@
   p { margin: 0.35rem 0 0; color: colors.$text-muted; }
 }
 
-.panelHeader button,
-.rowActions button {
+.panelHeader button {
   @include forms.primary-button;
   display: inline-flex;
   align-items: center;
@@ -92,17 +91,6 @@
 }
 .userTable input[type="checkbox"] { width: 18px; height: 18px; accent-color: colors.$primary; cursor: pointer; }
 .dirtyRow { background: colors.$primary-a04; }
-.rowActions { display: flex; gap: 0.45rem; justify-content: flex-end; }
-.rowActions .resetButton { @include forms.ghost-button(colors.$primary); }
-.rowError {
-  display: block;
-  margin-top: 0.4rem;
-  color: colors.$danger-text;
-  font-size: 0.78rem;
-  font-weight: 600;
-  text-align: right;
-  white-space: nowrap;
-}
 .safetyNote { color: colors.$text-muted; font-size: 0.85rem; line-height: 1.45; }
 .matrixHeader { margin: 1.5rem 0 0.75rem; }
 .matrixTable td { min-width: 120px; font-size: 0.84rem; }
@@ -133,12 +121,8 @@
   .userTable td:first-child { display: block; min-width: 0; }
   .userTable td[data-label]::before { content: attr(data-label); font-size: 0.8rem; font-weight: 700; }
   .userTable td:first-child::before { display: block; margin-bottom: 6px; }
-  .userTable td:last-child { display: block; }
   .userTable input[type="checkbox"] { width: 28px; height: 28px; margin: 8px; flex-shrink: 0; }
-  .rowActions { flex-wrap: wrap; justify-content: flex-start; margin-top: 8px; }
-  .rowActions button, .panelHeader button { min-height: 44px; justify-content: center; }
-  .rowActions button { flex: 1; }
-  .rowError { white-space: normal; text-align: left; }
+  .panelHeader button { min-height: 44px; justify-content: center; }
   .matrixTable th:first-child, .matrixTable td:first-child { position: sticky; left: 0; background: colors.$surface; min-width: 120px; max-width: 150px; overflow-wrap: anywhere; }
   .safetyNote, .matrixHeader, .errorBanner, .successBanner { overflow-wrap: anywhere; }
 }

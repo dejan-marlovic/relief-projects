@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import UserRoleManagement from "./UserRoleManagement";
 import { jsonResponse } from "../../../testUtils/authTestUtils";
@@ -26,61 +26,91 @@ describe("UserRoleManagement", () => {
     mockInitialLoads();
     renderManagement();
     expect(await screen.findByText("role.test")).toBeInTheDocument();
+    expect(screen.queryByRole("columnheader", { name: "Save status" })).not.toBeInTheDocument();
     expect(screen.getByLabelText("Assign VIEWER to role.test")).toBeChecked();
     expect(screen.getByLabelText("Assign FINANCE to role.test")).not.toBeChecked();
   });
 
-  test("Reset restores persisted roles without sending PUT", async () => {
+  test("automatically saves a role change without Save or Reset buttons", async () => {
     mockInitialLoads();
+    fetch.mockReturnValueOnce(jsonResponse({ ...users[0], roles: ["FINANCE", "VIEWER"] }));
     renderManagement();
-    const finance = await screen.findByLabelText("Assign FINANCE to role.test");
-    fireEvent.click(finance);
-    const row = screen.getByRole("row", { name: /role\.test/ });
-    fireEvent.click(within(row).getByRole("button", { name: "Reset" }));
-    expect(finance).not.toBeChecked();
-    expect(fetch).toHaveBeenCalledTimes(2);
-  });
-
-  test("saves multiple roles in the expected request body", async () => {
-    mockInitialLoads();
-    fetch.mockReturnValueOnce(jsonResponse({ ...users[0], roles: ["FINANCE", "APPROVER"] }));
-    renderManagement();
-    await screen.findByText("role.test");
-    fireEvent.click(screen.getByLabelText("Assign VIEWER to role.test"));
-    fireEvent.click(screen.getByLabelText("Assign FINANCE to role.test"));
-    fireEvent.click(screen.getByLabelText("Assign APPROVER to role.test"));
-    fireEvent.click(within(screen.getByRole("row", { name: /role\.test/ })).getByRole("button", { name: /Save/ }));
-
-    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(3));
-    const [, options] = fetch.mock.calls[2];
-    expect(options.method).toBe("PUT");
-    expect(JSON.parse(options.body)).toEqual({ roles: ["FINANCE", "APPROVER"] });
+    fireEvent.click(await screen.findByLabelText("Assign FINANCE to role.test"));
     expect(await screen.findByText("Roles updated for role.test.")).toBeInTheDocument();
+    expect(JSON.parse(fetch.mock.calls[2][1].body)).toEqual({ roles: ["FINANCE", "VIEWER"] });
+    expect(fetch.mock.calls[2][1].method).toBe("PUT");
+    expect(screen.queryByRole("button", { name: /^Save|Reset$/ })).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Assign FINANCE to role.test")).toBeChecked();
   });
 
-  test("rejects an empty role selection without calling PUT", async () => {
+  test("keeps the user's only role and does not send an invalid update", async () => {
     mockInitialLoads();
     renderManagement();
-    await screen.findByText("role.test");
-    fireEvent.click(screen.getByLabelText("Assign VIEWER to role.test"));
-    fireEvent.click(within(screen.getByRole("row", { name: /role\.test/ })).getByRole("button", { name: /Save/ }));
-    expect(await screen.findByText("At least one role is required for role.test.")).toBeInTheDocument();
-    expect(screen.getByText("Select at least one role.")).toBeInTheDocument();
+    const viewer = await screen.findByLabelText("Assign VIEWER to role.test");
+    fireEvent.click(viewer);
+    expect(await screen.findByText(/At least one role is required for role.test/)).toBeInTheDocument();
+    expect(viewer).toBeChecked();
     expect(fetch).toHaveBeenCalledTimes(2);
   });
 
-  test("shows the backend final-admin conflict", async () => {
-    const adminUsers = [{ ...users[0], roles: ["ADMIN"] }];
-    fetch.mockReturnValueOnce(jsonResponse(adminUsers)).mockReturnValueOnce(jsonResponse(roles));
-    fetch.mockReturnValueOnce(jsonResponse({ message: "The final active administrator cannot lose the ADMIN role." }, 409));
-    const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+  test("blocks removal of the final administrator locally", async () => {
+    fetch.mockReturnValueOnce(jsonResponse([{ ...users[0], roles: ["ADMIN", "VIEWER"] }])).mockReturnValueOnce(jsonResponse(roles));
     renderManagement();
-    await screen.findByText("role.test");
-    fireEvent.click(screen.getByLabelText("Assign VIEWER to role.test"));
-    fireEvent.click(screen.getByLabelText("Assign ADMIN to role.test"));
-    fireEvent.click(within(screen.getByRole("row", { name: /role\.test/ })).getByRole("button", { name: /Save/ }));
+    const admin = await screen.findByLabelText("Assign ADMIN to role.test");
+    fireEvent.click(admin);
     expect(await screen.findByText("The final active administrator cannot lose the ADMIN role.")).toBeInTheDocument();
-    errorSpy.mockRestore();
+    expect(admin).toBeChecked();
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  test("honours a backend final-admin conflict when the loaded counts are stale", async () => {
+    fetch.mockReturnValueOnce(jsonResponse([
+      { ...users[0], roles: ["ADMIN", "VIEWER"] },
+      { id: 11, username: "other.admin", roles: ["ADMIN"] },
+    ])).mockReturnValueOnce(jsonResponse(roles));
+    fetch.mockReturnValueOnce(jsonResponse({ message: "The final active administrator cannot lose the ADMIN role." }, 409));
+    jest.spyOn(console, "error").mockImplementation(() => {});
+    renderManagement();
+    fireEvent.click(await screen.findByLabelText("Assign ADMIN to role.test"));
+    expect(await screen.findByText(/The final active administrator cannot lose the ADMIN role./)).toBeInTheDocument();
+    expect(screen.getByLabelText("Assign ADMIN to role.test")).toBeChecked();
+    expect(screen.getByLabelText("Assign ADMIN to role.test")).toBeDisabled();
+    expect(screen.queryByText("Roles updated for role.test.")).not.toBeInTheDocument();
+  });
+
+  test("serializes changes and uses confirmed roles for the next update", async () => {
+    mockInitialLoads();
+    let resolveSave;
+    fetch.mockReturnValueOnce(new Promise(resolve => { resolveSave = resolve; }));
+    renderManagement();
+    fireEvent.click(await screen.findByLabelText("Assign FINANCE to role.test"));
+    expect(screen.getByText("Saving...")).toBeInTheDocument();
+    expect(screen.getByLabelText("Assign VIEWER to role.test")).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Refresh/ })).toBeDisabled();
+    resolveSave(await jsonResponse({ ...users[0], roles: ["FINANCE", "VIEWER"] }));
+    await waitFor(() => expect(screen.getByLabelText("Assign VIEWER to role.test")).toBeEnabled());
+    fetch.mockReturnValueOnce(jsonResponse({ ...users[0], roles: ["FINANCE"] }));
+    fireEvent.click(screen.getByLabelText("Assign VIEWER to role.test"));
+    await waitFor(() => expect(screen.getByLabelText("Assign VIEWER to role.test")).toBeEnabled());
+    expect(JSON.parse(fetch.mock.calls[3][1].body)).toEqual({ roles: ["FINANCE"] });
+    expect(screen.getByLabelText("Assign VIEWER to role.test")).not.toBeChecked();
+  });
+
+  test("refreshes uncertain assignments after a network failure without silently retrying", async () => {
+    mockInitialLoads();
+    fetch.mockRejectedValueOnce(new Error("Connection lost"));
+    jest.spyOn(console, "error").mockImplementation(() => {});
+    renderManagement();
+    fireEvent.click(await screen.findByLabelText("Assign FINANCE to role.test"));
+    expect(await screen.findByText(/Connection lost/)).toBeInTheDocument();
+    expect(screen.getByLabelText("Assign FINANCE to role.test")).toBeDisabled();
+    expect(fetch).toHaveBeenCalledTimes(3);
+    // The server may have committed before the connection was lost.
+    fetch.mockReturnValueOnce(jsonResponse([{ ...users[0], roles: ["FINANCE", "VIEWER"] }])).mockReturnValueOnce(jsonResponse(roles));
+    fireEvent.click(screen.getByRole("button", { name: /Refresh/ }));
+    await waitFor(() => expect(screen.getByLabelText("Assign FINANCE to role.test")).toBeEnabled());
+    expect(screen.getByLabelText("Assign FINANCE to role.test")).toBeChecked();
+    expect(fetch).toHaveBeenCalledTimes(5);
   });
 
   test("Refresh reloads users and roles", async () => {

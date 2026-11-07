@@ -1,7 +1,7 @@
 import useTransientMessage from "../../../hooks/useTransientMessage";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiRefreshCw, FiSave, FiShield, FiUsers } from "react-icons/fi";
+import { FiRefreshCw, FiShield, FiUsers } from "react-icons/fi";
 
 import { BASE_URL } from "../../../config/api";
 import { createAuthFetch, safeReadJson } from "../../../utils/http";
@@ -67,7 +67,8 @@ const UserRoleManagement = () => {
   const [draftRoles, setDraftRoles] = useState({});
   const [loading, setLoading] = useState(true);
   const [savingUserId, setSavingUserId] = useState(null);
-  const [roleErrorUserId, setRoleErrorUserId] = useState(null);
+  const [needsRefresh, setNeedsRefresh] = useState(false);
+  const savingRef = useRef(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useTransientMessage("");
 
@@ -106,6 +107,7 @@ const UserRoleManagement = () => {
           (a, b) => ROLE_ORDER.indexOf(a.name) - ROLE_ORDER.indexOf(b.name),
         );
 
+      setNeedsRefresh(false);
       setUsers(nextUsers);
       setRoles(nextRoles);
       setDraftRoles(
@@ -141,40 +143,32 @@ const UserRoleManagement = () => {
     [roles, users],
   );
 
-  const toggleRole = (userId, roleName) => {
+  const toggleRole = (user, roleName) => {
+    if (savingRef.current || loading || needsRefresh) return;
+    const next = new Set(sortRoles(user.roles));
+    if (next.has(roleName)) next.delete(roleName);
+    else next.add(roleName);
+    const nextRoles = sortRoles([...next]);
     setError("");
     setSuccess("");
-    setRoleErrorUserId(null);
-    setDraftRoles((current) => {
-      const next = new Set(current[userId] || []);
-      if (next.has(roleName)) next.delete(roleName);
-      else next.add(roleName);
-      return { ...current, [userId]: sortRoles([...next]) };
-    });
-  };
-
-  const resetUser = (user) => {
-    setDraftRoles((current) => ({
-      ...current,
-      [user.id]: sortRoles(user.roles),
-    }));
-    setError("");
-    setSuccess("");
-    setRoleErrorUserId(null);
-  };
-
-  const saveUser = async (user) => {
-    const nextRoles = sortRoles(draftRoles[user.id]);
-    if (nextRoles.length === 0) {
-      setError(`At least one role is required for ${user.username}.`);
-      setRoleErrorUserId(user.id);
+    if (sortRoles(user.roles).includes("ADMIN") && !next.has("ADMIN") && roleCounts.ADMIN <= 1) {
+      setError("The final active administrator cannot lose the ADMIN role.");
       return;
     }
+    if (nextRoles.length === 0) {
+      setError(`At least one role is required for ${user.username}. Add another role before removing this one.`);
+      return;
+    }
+    saveUser(user, nextRoles);
+  };
 
+  const saveUser = async (user, nextRoles) => {
+    // Serialize role changes so administrator counts use confirmed assignments.
+    savingRef.current = true;
+    setDraftRoles((current) => ({ ...current, [user.id]: nextRoles }));
     setSavingUserId(user.id);
     setError("");
     setSuccess("");
-    setRoleErrorUserId(null);
 
     try {
       const response = await authFetch(
@@ -201,8 +195,11 @@ const UserRoleManagement = () => {
       setSuccess(`Roles updated for ${user.username}.`);
     } catch (requestError) {
       console.error("Failed to update user roles:", requestError);
-      setError(requestError.message || "Failed to update user roles.");
+      setDraftRoles((current) => ({ ...current, [user.id]: sortRoles(user.roles) }));
+      setNeedsRefresh(true);
+      setError(`${requestError.message || "Failed to update user roles."} Refresh to confirm current roles before making further changes.`);
     } finally {
+      savingRef.current = false;
       setSavingUserId(null);
     }
   };
@@ -212,7 +209,7 @@ const UserRoleManagement = () => {
       <div className={styles.panelHeader}>
         <div>
           <h3><FiUsers /> Users & role access</h3>
-          <p>Review active users, assign one or more roles, and see what each role permits.</p>
+          <p>Role changes save automatically when selected. Wait for confirmation before leaving. To replace a user’s only role, add the new role first.</p>
         </div>
         <button type="button" onClick={loadData} disabled={loading || savingUserId !== null}>
           <FiRefreshCw /> Refresh
@@ -220,7 +217,9 @@ const UserRoleManagement = () => {
       </div>
 
       {error && <ErrorBanner message={error} onDismiss={() => setError("")} />}
-      {success && <div className={styles.successBanner}>{success}</div>}
+      {savingUserId !== null && <p role="status">Saving...</p>}
+      {needsRefresh && <p role="status">Refresh to confirm current roles before making further changes.</p>}
+      {success && <div role="status" className={styles.successBanner}>{success}</div>}
 
       <div className={styles.summaryGrid}>
         <div className={styles.summaryCard}>
@@ -249,14 +248,13 @@ const UserRoleManagement = () => {
             <tr>
               <th>User</th>
               {roles.map((role) => <th key={role.name}>{role.name.replaceAll("_", " ")}</th>)}
-              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={roles.length + 2}>Loading users and roles...</td></tr>
+              <tr><td colSpan={roles.length + 1}>Loading users and roles...</td></tr>
             ) : users.length === 0 ? (
-              <tr><td colSpan={roles.length + 2}>No active users found.</td></tr>
+              <tr><td colSpan={roles.length + 1}>No active users found.</td></tr>
             ) : users.map((user) => {
               const dirty = !sameRoles(draftRoles[user.id], user.roles);
               return (
@@ -270,27 +268,12 @@ const UserRoleManagement = () => {
                       <input
                         type="checkbox"
                         checked={(draftRoles[user.id] || []).includes(role.name)}
-                        onChange={() => toggleRole(user.id, role.name)}
-                        disabled={savingUserId !== null}
+                        onChange={() => toggleRole(user, role.name)}
+                        disabled={loading || savingUserId !== null || needsRefresh}
                         aria-label={`Assign ${role.name} to ${user.username}`}
                       />
                     </td>
                   ))}
-                  <td role="cell" data-label="Actions">
-                    <div className={styles.rowActions}>
-                      <button type="button" onClick={() => saveUser(user)} disabled={!dirty || savingUserId !== null}>
-                        <FiSave /> {savingUserId === user.id ? "Saving..." : "Save"}
-                      </button>
-                      <button type="button" className={styles.resetButton} onClick={() => resetUser(user)} disabled={!dirty || savingUserId !== null}>
-                        Reset
-                      </button>
-                    </div>
-                    {roleErrorUserId === user.id && (
-                      <span className={styles.rowError} role="alert">
-                        Select at least one role.
-                      </span>
-                    )}
-                  </td>
                 </tr>
               );
             })}
