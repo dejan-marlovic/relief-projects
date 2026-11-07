@@ -11,6 +11,7 @@ import { readDocumentError } from "../../utils/documentMetadata";
 import { canExportFollowUp, downloadFollowUpCalendar } from "../../utils/followUpCalendar";
 import styles from "./FollowUps.module.scss";
 import FollowUpDetails from "./FollowUpDetails";
+import EmployeeFilter from "./EmployeeFilter";
 import { workflowLabels, workflowLabel, boardColumns, moveCommand } from "./workflow";
 import { useUnsavedChange, useUnsavedChanges } from "../../context/UnsavedChangesContext";
 
@@ -310,7 +311,7 @@ function Queue({ mode, projectId, authFetch }) {
       <label>Deadline group<select value={filters.due} disabled={filtersDisabled || board || filters.status !== "OPEN" || filters.deleted} onChange={(e) => changeFilter("due", e.target.value)}><option value="">All deadlines</option>{Object.entries(buckets).slice(0, 4).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label></>}
       <label>Due from<input type="date" value={filters.dueFrom} disabled={filtersDisabled} onChange={(e) => changeFilter("dueFrom", e.target.value)} /></label>
       <label>Due through<input type="date" value={filters.dueTo} disabled={filtersDisabled} onChange={(e) => changeFilter("dueTo", e.target.value)} /></label>
-      {mode === "project" && supported && <label>Assigned employee<select value={filters.assigneeEmployeeId} disabled={filtersDisabled} onChange={e => changeFilter("assigneeEmployeeId", e.target.value)}><option value="">All employees</option>{employees.map(person => <option key={person.id} value={person.id}>{employeeName(person)}</option>)}</select></label>}
+      {mode === "project" && supported && <EmployeeFilter employees={employees} value={filters.assigneeEmployeeId} disabled={filtersDisabled} onChange={value => changeFilter("assigneeEmployeeId", value)} />}
       {mode === "project" && <label><input type="checkbox" checked={filters.deleted} disabled={filtersDisabled} onChange={(e) => changeFilter("deleted", e.target.checked)} /> Deleted follow-ups only</label>}
     </div>
     {board && <p className={styles.muted}>Switch to List to filter by status or deadline group.</p>}

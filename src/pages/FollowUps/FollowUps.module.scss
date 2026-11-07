@@ -9,6 +9,10 @@
 .page button:disabled { opacity: 0.55; cursor: not-allowed; }
 .page input:not([type=checkbox]), .page select, .page textarea { box-sizing: border-box; width: 100%; min-width: 0; padding: 0.65rem; margin-top: 0.4rem; color: colors.$text; background: colors.$surface; border: 1px solid colors.$border; border-radius: 8px; font: inherit; }
 .page label { display: block; }
+.employeeFilter { position: relative; min-width: 0; }
+.employeeOptions { position: absolute; z-index: 20; top: 100%; left: 0; right: 0; max-height: 240px; overflow-y: auto; margin: .25rem 0 0; padding: .25rem; list-style: none; background: colors.$surface; border: 1px solid colors.$border; border-radius: 8px; box-shadow: 0 4px 12px #0002; }
+.employeeOptions li { padding: .65rem; cursor: pointer; overflow-wrap: anywhere; }
+.employeeOptions li:hover, .activeEmployee { background: colors.$primary-a04; color: colors.$primary; }
 .filters, .grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 0.8rem; margin: 1rem 0; }
 .form { padding: 1rem; border-radius: 10px; background: colors.$primary-a04; margin: 1rem 0; }
 .form label { margin: 0.7rem 0; }
