@@ -58,7 +58,11 @@ describe("UserRoleManagement", () => {
     renderManagement();
     const admin = await screen.findByLabelText("Assign ADMIN to role.test");
     fireEvent.click(admin);
-    expect(await screen.findByText("The final active administrator cannot lose the ADMIN role.")).toBeInTheDocument();
+    expect(await screen.findByRole("alert")).toHaveTextContent("The last administrator cannot be removed. Assign ADMIN to another active user first.");
+    fireEvent.click(screen.getByRole("button", { name: "Dismiss error message" }));
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    fireEvent.click(admin);
+    expect(await screen.findByRole("alert")).toHaveTextContent("The last administrator cannot be removed.");
     expect(admin).toBeChecked();
     expect(fetch).toHaveBeenCalledTimes(2);
   });

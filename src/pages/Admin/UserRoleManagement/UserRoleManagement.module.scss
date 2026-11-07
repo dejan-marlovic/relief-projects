@@ -126,3 +126,22 @@
   .matrixTable th:first-child, .matrixTable td:first-child { position: sticky; left: 0; background: colors.$surface; min-width: 120px; max-width: 150px; overflow-wrap: anywhere; }
   .safetyNote, .matrixHeader, .errorBanner, .successBanner { overflow-wrap: anywhere; }
 }
+
+// Keep blocked role changes visible even when the user list is scrolled.
+.errorNotification {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  z-index: 10001;
+  width: min(28rem, calc(100vw - 2.5rem));
+  > div { margin: 0; box-shadow: 0 6px 24px colors.$neutral-a10; }
+  span { overflow-wrap: anywhere; }
+  button { min-width: 32px; min-height: 32px; }
+}
+@media (max-width: 700px) {
+  .errorNotification {
+    right: .75rem;
+    bottom: max(.75rem, env(safe-area-inset-bottom));
+    width: calc(100vw - 1.5rem);
+  }
+}

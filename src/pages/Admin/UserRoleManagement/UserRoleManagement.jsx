@@ -152,7 +152,7 @@ const UserRoleManagement = () => {
     setError("");
     setSuccess("");
     if (sortRoles(user.roles).includes("ADMIN") && !next.has("ADMIN") && roleCounts.ADMIN <= 1) {
-      setError("The final active administrator cannot lose the ADMIN role.");
+      setError("The last administrator cannot be removed. Assign ADMIN to another active user first.");
       return;
     }
     if (nextRoles.length === 0) {
@@ -216,7 +216,7 @@ const UserRoleManagement = () => {
         </button>
       </div>
 
-      {error && <ErrorBanner message={error} onDismiss={() => setError("")} />}
+      {error && <div className={styles.errorNotification}><ErrorBanner message={error} onDismiss={() => setError("")} /></div>}
       {savingUserId !== null && <p role="status">Saving...</p>}
       {needsRefresh && <p role="status">Refresh to confirm current roles before making further changes.</p>}
       {success && <div role="status" className={styles.successBanner}>{success}</div>}
