@@ -83,3 +83,10 @@ test("quantity history preserves new decimal strings and historical integer even
   expect(formatFieldValue("18886.971409400761", "DECIMAL")).toBe("18886.971409400761");
   expect(formatFieldValue("9223372036854775807", "INTEGER")).toBe("9223372036854775807");
 });
+
+
+test("uses retained document or project names for references without changing redaction", () => {
+  expect(formatFieldValue({ id: 42, capturedName: "Original.pdf" }, "REFERENCE")).toBe("Original.pdf (ID 42)");
+  expect(formatFieldValue({ id: 7, projectName: "Riverbend" }, "REFERENCE")).toBe("Riverbend (ID 7)");
+  expect(formatFieldValue({ id: 42, capturedName: "Hidden.pdf" }, "REDACTED")).toBe("Values not retained");
+});

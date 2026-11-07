@@ -1,3 +1,4 @@
+import RecordReference from "../../components/RecordReference/RecordReference";
 import { HistoryPagination, HistoryTimeline, HistoryEntry } from "../../components/ActivityHistory/ActivityHistory";
 import React, { useEffect, useState } from "react";
 import { BASE_URL } from "../../config/api";
@@ -23,9 +24,9 @@ function valueLabel(key, value) {
   if (typeof value === "boolean") return value ? "Yes" : "No";
   return ["status", "workflowState"].includes(key) && Object.prototype.hasOwnProperty.call(states, value) ? states[value] : String(value);
 }
-function Snapshot({ snapshot }) {
+function Snapshot({ snapshot, task }) {
   if (!snapshot) return <p>No earlier state: this entry records creation.</p>;
-  return <dl className={styles.historyValues}>{Object.entries(snapshot).map(([key, value]) => <React.Fragment key={key}><dt>{labels[key] || key}</dt><dd>{valueLabel(key, value)}{value && typeof value === "object" && key !== "attachment" && <small> · Reference {value.employeeId ?? value.userId}</small>}</dd></React.Fragment>)}</dl>;
+  return <dl className={styles.historyValues}>{Object.entries(snapshot).map(([key, value]) => <React.Fragment key={key}><dt>{labels[key] || key}</dt><dd>{["id", "projectId"].includes(key) ? <RecordReference field={key} value={value} record={snapshot} currentProject={{ id: task.projectId, projectName: task.projectName }} /> : valueLabel(key, value)}{value && typeof value === "object" && key !== "attachment" && <small> · Reference {value.employeeId ?? value.userId}</small>}</dd></React.Fragment>)}</dl>;
 }
 export default function FollowUpHistory({ task, authFetch }) {
   const [paging, setPaging] = useState({ revision: task.revision, page: 0 });
@@ -62,7 +63,7 @@ export default function FollowUpHistory({ task, authFetch }) {
       {data.coverage === "PARTIAL_LEGACY" && <p className={styles.historyNotice}>Detailed history is available from the introduction of this feature. Earlier changes are not available.</p>}
       {data.coverage === "FROM_CREATION" && <p className={styles.muted}>History recorded from creation.</p>}
       {!data.content.length && <p>No detailed changes have yet been recorded.</p>}
-      <HistoryTimeline>{data.content.map(entry => <HistoryEntry key={entry.id} title={actionLabel(entry)} at={entry.occurredAt} actor={entry.actor?.employeeName || entry.actor?.username || (entry.actor?.employeeId ? `Employee #${entry.actor.employeeId}` : `User #${entry.actor?.userId}`)} metadata={<>Account: {entry.actor?.username || `User #${entry.actor?.userId}`} · Revision {entry.revision}</>} references={<><p>Entry #{entry.id} · Account #{entry.actor?.userId}{entry.actor?.employeeId != null ? ` · Employee #${entry.actor.employeeId}` : " · No employee attribution recorded"}</p><h5>Before</h5><Snapshot snapshot={entry.before} /><h5>After</h5><Snapshot snapshot={entry.after} /></>}>
+      <HistoryTimeline>{data.content.map(entry => <HistoryEntry key={entry.id} title={actionLabel(entry)} at={entry.occurredAt} actor={entry.actor?.employeeName || entry.actor?.username || (entry.actor?.employeeId ? `Employee #${entry.actor.employeeId}` : `User #${entry.actor?.userId}`)} metadata={<>Account: {entry.actor?.username || `User #${entry.actor?.userId}`} · Revision {entry.revision}</>} references={<><p>Entry #{entry.id} · Account #{entry.actor?.userId}{entry.actor?.employeeId != null ? ` · Employee #${entry.actor.employeeId}` : " · No employee attribution recorded"}</p><h5>Before</h5><Snapshot snapshot={entry.before} task={task} /><h5>After</h5><Snapshot snapshot={entry.after} task={task} /></>}>
           {(entry.changedFields || []).map(field => <div key={field} className={styles.historyChange}><strong>{labels[field] || field}</strong>{entry.before && <p><b>Before: </b>{valueLabel(field, entry.before[field])}</p>}<p><b>{entry.before ? "After" : "Initial value"}: </b>{valueLabel(field, entry.after?.[field])}</p></div>)}
 </HistoryEntry>)}
       {data.coverage === "PARTIAL_LEGACY" && task.createdAt && data.page >= Math.max(0, data.totalPages - 1) && <li key="legacy-creation">

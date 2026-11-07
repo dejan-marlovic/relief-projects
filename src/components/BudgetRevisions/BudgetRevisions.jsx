@@ -1,3 +1,4 @@
+import RecordReference, { isRecordReference } from "../RecordReference/RecordReference";
 import { HistoryPagination, HistoryTimeline, HistoryEntry } from "../ActivityHistory/ActivityHistory";
 import ScrollToForm from "../ScrollToForm/ScrollToForm";
 import { WorkflowIntro, WorkflowStep, HistoryIntro } from "../Workflow/Workflow";
@@ -143,7 +144,7 @@ function HistoryDetails({ details }) {
   if (details == null) return <span>Not set</span>;
   if (typeof details !== "object") return <span>{String(details)}</span>;
   if (Array.isArray(details)) return <ul>{details.map((entry, i) => <li key={i}><HistoryDetails details={entry} /></li>)}</ul>;
-  return <dl className={styles.fields}>{Object.entries(details).filter(([key]) => key !== "version").map(([key, value]) => <React.Fragment key={key}><dt>{key.replace(/([A-Z])/g, " $1")}</dt><dd><HistoryDetails details={value} /></dd></React.Fragment>)}</dl>;
+  return <dl className={styles.fields}>{Object.entries(details).filter(([key]) => key !== "version").map(([key, value]) => <React.Fragment key={key}><dt>{key.replace(/([A-Z])/g, " $1")}</dt><dd>{isRecordReference(key) && (value == null || typeof value !== "object") ? <RecordReference field={key} value={value} record={details} /> : <HistoryDetails details={value} />}</dd></React.Fragment>)}</dl>;
 }
 export default function BudgetRevisions(props) {
   const [opened, setOpened] = useState(false);

@@ -89,3 +89,17 @@ test.each([["IN_PROGRESS","Started work"],["TODO","Returned to To do"]])("uses a
   fireEvent.click(screen.getByText("Details & activity"));
   expect(await screen.findByText(label)).toBeVisible();
 });
+
+
+test("pairs follow-up IDs with historical titles and labels a current project name", async () => {
+  const fetch = jest.fn(async () => response({ ...listing, content: [{ ...event,
+    before: { id: 3, projectId: 7, title: "Original task" },
+    after: { id: 3, projectId: 7, title: "Updated task" }, changedFields: ["title"] }] }));
+  render(<FollowUpDetails task={{ ...task, projectName: "Riverbend" }} authFetch={fetch} />);
+  fireEvent.click(screen.getByText("Details & activity"));
+  fireEvent.click(await screen.findByText("Details changed"));
+  fireEvent.click(screen.getByText("Full recorded details and references"));
+  expect(screen.getByText("Original task · Reference 3")).toBeVisible();
+  expect(screen.getByText("Updated task · Reference 3")).toBeVisible();
+  expect(screen.getAllByText("Riverbend (current name) · Reference 7")).toHaveLength(2);
+});

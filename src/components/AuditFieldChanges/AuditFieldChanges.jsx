@@ -27,7 +27,8 @@ export const formatFieldValue = (value, type) => {
   if (value == null) return "Not set";
   if (value === "") return "Empty text";
   if (type === "REFERENCE" && typeof value === "object") {
-    return value.label ? `${value.label}${value.id != null ? ` (ID ${value.id})` : ""}` : value.id != null ? `ID ${value.id}` : "Not set";
+    const label = [value.label, value.capturedName, value.documentName, value.projectName, value.name].find(item => typeof item === "string" && item.trim());
+    return label ? `${label}${value.id != null ? ` (ID ${value.id})` : ""}` : value.id != null ? `ID ${value.id}` : "Not set";
   }
   // Preserve decimal precision and local date/time without timezone conversion.
   if (typeof value === "string") return type === "LOCAL_DATETIME" ? value.replace("T", " ") : value;

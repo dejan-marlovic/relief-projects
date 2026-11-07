@@ -1,3 +1,4 @@
+import RecordReference, { isRecordReference } from "../../components/RecordReference/RecordReference";
 import React from "react";
 import { fields } from "./assessmentApi";
 import styles from "./OrganisationAssessment.module.scss";
@@ -13,7 +14,7 @@ export default function AssessmentSnapshot({ value }) {
   const references = entries.filter(([key]) => /Id$|^id$|Generation$/.test(key));
   const content = entries.filter(([key]) => !references.some(([reference]) => reference === key));
   return <div className={styles.snapshotGroup}>
-    <dl className={styles.snapshotFields}>{content.map(([key, item]) => <div key={key}><dt>{title(key)}</dt><dd><AssessmentSnapshot value={item} /></dd></div>)}</dl>
-    {!!references.length && <details className={styles.references}><summary>Record references</summary><dl className={styles.snapshotFields}>{references.map(([key, item]) => <div key={key}><dt>{title(key)}</dt><dd><AssessmentSnapshot value={item} /></dd></div>)}</dl></details>}
+    <dl className={styles.snapshotFields}>{content.map(([key, item]) => <div key={key}><dt>{title(key)}</dt><dd>{isRecordReference(key) && (item == null || typeof item !== "object") ? <RecordReference field={key} value={item} record={value} /> : <AssessmentSnapshot value={item} />}</dd></div>)}</dl>
+    {!!references.length && <details className={styles.references}><summary>Record references</summary><dl className={styles.snapshotFields}>{references.map(([key, item]) => <div key={key}><dt>{title(key)}</dt><dd>{isRecordReference(key) && (item == null || typeof item !== "object") ? <RecordReference field={key} value={item} record={value} /> : <AssessmentSnapshot value={item} />}</dd></div>)}</dl></details>}
   </div>;
 }

@@ -1,3 +1,4 @@
+import RecordReference, { isRecordReference } from "../../components/RecordReference/RecordReference";
 import { HistoryPagination } from "../../components/ActivityHistory/ActivityHistory";
 import React from "react";
 import { showValue, targetDirection, words } from "./indicatorApi";
@@ -40,5 +41,5 @@ export function HistorySnapshot({ value }) {
   if (value == null) return <span>Not set</span>;
   if (typeof value !== "object") return <span>{String(value)}</span>;
   if (Array.isArray(value)) return value.length ? <ul>{value.map((row, i) => <li key={i}><HistorySnapshot value={row} /></li>)}</ul> : <span>None</span>;
-  return <dl className={styles.snapshot}>{Object.entries(value).filter(([key]) => key !== "version").map(([key, item]) => <React.Fragment key={key}><dt>{key.replace(/([A-Z])/g, " $1")}</dt><dd><HistorySnapshot value={item} /></dd></React.Fragment>)}</dl>;
+  return <dl className={styles.snapshot}>{Object.entries(value).filter(([key]) => key !== "version").map(([key, item]) => <React.Fragment key={key}><dt>{key.replace(/([A-Z])/g, " $1")}</dt><dd>{isRecordReference(key) && (item == null || typeof item !== "object") ? <RecordReference field={key} value={item} record={value} /> : <HistorySnapshot value={item} />}</dd></React.Fragment>)}</dl>;
 }
