@@ -1,3 +1,4 @@
+import { HistoryPagination, HistoryTimeline, HistoryEntry } from "../ActivityHistory/ActivityHistory";
 import RecipientReturnAuditDetails from "../RecipientReturns/RecipientReturnAuditDetails";
 import FundingReturnAuditDetails from "../FundingReturns/FundingReturnAuditDetails";
 import OutgoingPaymentAuditDetails from "../OutgoingPayments/OutgoingPaymentAuditDetails";
@@ -20,10 +21,6 @@ import LineAuditDetails from "../LineAuditDetails/LineAuditDetails";
 
 const labels = { BUDGET: "Budget", TRANSACTION: "Transaction", PAYMENT_ORDER: "Payment order" };
 const readable = (value) => value ? value.charAt(0) + value.slice(1).toLowerCase().replaceAll("_", " ") : "—";
-const timestamp = (value) => {
-  const date = new Date(value);
-  return value && !Number.isNaN(date.getTime()) ? date.toLocaleString() : "—";
-};
 
 function HistoryPage({ entityType, entityId, includeChildren }) {
   const navigate = useNavigate();
@@ -61,30 +58,16 @@ function HistoryPage({ entityType, entityId, includeChildren }) {
   return <div className={styles.panel}>
     <p>Review the recorded changes to this record. Each entry identifies the action, actor and saved changes; before and after values describe that event, not the current record. History records activity, not completion of a workflow.</p>
     <div className={styles.toolbar}>
-      <span>Record activity · newest first</span>
+      <span>Activity history · newest first</span>
       <button type="button" disabled={loading} onClick={() => { setPage(0); setRefresh((value) => value + 1); }}>Refresh history</button>
     </div>
     {loading && <p role="status">Loading record history…</p>}
     {error && <p role="alert">{error}</p>}
     {result && <>
       {result.content.length === 0 ? <p role="status">No record history yet.</p> :
-        <div className={styles.tableWrap}><table>
-          <caption className={styles.caption}>{labels[entityType]} #{entityId} history</caption>
-          <thead><tr><th scope="col">Date and time</th><th scope="col">Action</th><th scope="col">Changes</th><th scope="col">Performed by</th></tr></thead>
-          <tbody>{result.content.map((event) => <tr key={event.id}>
-            <td data-label="Date and time"><time dateTime={event.occurredAt}>{timestamp(event.occurredAt)}</time></td>
-            <td data-label="Action">{auditActionLabel(event)}</td>
-            <td data-label="Changes">{event.entityType === "RECIPIENT_RETURN" ? <RecipientReturnAuditDetails event={event} /> : event.entityType === "FUNDING_RETURN" ? <FundingReturnAuditDetails event={event} /> : event.entityType === "OUTGOING_PAYMENT" ? <OutgoingPaymentAuditDetails event={event} /> : event.entityType === "FUNDING_RECEIPT" ? <FundingReceiptAuditDetails event={event} /> : event.entityType === "RECIPIENT" ? <RecipientAuditDetails event={event} /> : event.entityType === "SIGNATURE" ? <SignatureAuditDetails event={event} /> : event.entityType === "COST_DETAIL" ? <CostDetailAuditDetails event={event} /> : event.entityType === "COST_DETAIL_ALLOCATION" ? <AllocationAuditDetails event={event} /> : event.entityType === "PAYMENT_ORDER_LINE" ? <LineAuditDetails event={event} /> : event.action === "UPDATE" ? <AuditFieldChanges event={event} /> : hasAuditTransition(event) ? <>{readable(event.previousState)} → {readable(event.newState)}</> : "—"}<TransactionCurrencyContext event={event} /><PaymentCurrencyContext event={event} /><ReturnReason event={event} /></td>
-            <td data-label="Performed by">{event.performedByDisplay || (event.performedBy ? `User #${event.performedBy}` : "Unknown user")}</td>
-          </tr>)}</tbody>
-        </table></div>}
-      <div className={styles.toolbar}>
-        <span>Page {result.totalPages ? result.number + 1 : 0} of {result.totalPages || 0} · {result.totalElements || 0} events</span>
-        <div className={styles.buttons}>
-          <button type="button" disabled={page <= 0} onClick={() => setPage((value) => value - 1)}>Previous</button>
-          <button type="button" disabled={page + 1 >= (result.totalPages || 0)} onClick={() => setPage((value) => value + 1)}>Next</button>
-        </div>
-      </div>
+        <HistoryTimeline aria-label={`${labels[entityType]} #${entityId} history`}>{result.content.map(event => <HistoryEntry key={event.id} title={auditActionLabel(event)} at={event.occurredAt} actor={event.performedByDisplay || (event.performedBy ? `User #${event.performedBy}` : "Unknown user")} references={<p>Entry #{event.id} · {event.entityType || entityType} #{event.entityId || entityId}{event.performedBy != null && <> · User #{event.performedBy}</>}</p>}>
+{event.entityType === "RECIPIENT_RETURN" ? <RecipientReturnAuditDetails event={event} /> : event.entityType === "FUNDING_RETURN" ? <FundingReturnAuditDetails event={event} /> : event.entityType === "OUTGOING_PAYMENT" ? <OutgoingPaymentAuditDetails event={event} /> : event.entityType === "FUNDING_RECEIPT" ? <FundingReceiptAuditDetails event={event} /> : event.entityType === "RECIPIENT" ? <RecipientAuditDetails event={event} /> : event.entityType === "SIGNATURE" ? <SignatureAuditDetails event={event} /> : event.entityType === "COST_DETAIL" ? <CostDetailAuditDetails event={event} /> : event.entityType === "COST_DETAIL_ALLOCATION" ? <AllocationAuditDetails event={event} /> : event.entityType === "PAYMENT_ORDER_LINE" ? <LineAuditDetails event={event} /> : event.action === "UPDATE" ? <AuditFieldChanges event={event} /> : hasAuditTransition(event) ? <>{readable(event.previousState)} → {readable(event.newState)}</> : "—"}<TransactionCurrencyContext event={event} /><PaymentCurrencyContext event={event} /><ReturnReason event={event} /></HistoryEntry>)}</HistoryTimeline>}
+      <HistoryPagination page={page} totalPages={result.totalPages} totalElements={result.totalElements} onPage={setPage} disabled={loading} />
     </>}
   </div>;
 }

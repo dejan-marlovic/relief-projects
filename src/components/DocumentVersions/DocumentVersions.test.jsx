@@ -14,7 +14,7 @@ afterEach(() => jest.restoreAllMocks());
 
 test("reader sees history and downloads historical active files without write controls", async () => {
   mount({ canEdit: false, canDelete: false });
-  await screen.findByText("Version 1 · old.pdf");
+  fireEvent.click(await screen.findByText("Version 1 · old.pdf"));
   expect(screen.queryByRole("button", { name: "Upload replacement" })).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: /Delete version/ })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Download version 1" }));
@@ -23,7 +23,8 @@ test("reader sees history and downloads historical active files without write co
 
 test("replacement starts Draft with an empty date and category inheritance, sending only permitted multipart fields", async () => {
   mount();
-  fireEvent.click(await screen.findByRole("button", { name: "Upload replacement" }));
+  fireEvent.click(await screen.findByText("Version 2 · new.pdf"));
+  fireEvent.click(screen.getByRole("button", { name: "Upload replacement" }));
   expect(screen.getByLabelText("Replacement status")).toHaveValue("DRAFT");
   expect(screen.getByLabelText("Replacement document date")).toHaveValue("");
   expect(screen.getByLabelText("Replacement category")).toHaveValue("");
@@ -42,7 +43,8 @@ test.each([409, 404, 500])("replacement failure %s refreshes history and closes 
   const get = api.getMockImplementation();
   api.mockImplementation((url, options) => options?.method === "POST" ? Promise.resolve(response({ message: "Refresh history" }, status)) : get());
   mount();
-  fireEvent.click(await screen.findByRole("button", { name: "Upload replacement" }));
+  fireEvent.click(await screen.findByText("Version 2 · new.pdf"));
+  fireEvent.click(screen.getByRole("button", { name: "Upload replacement" }));
   fireEvent.change(screen.getByLabelText("Replacement file"), { target: { files: [new File(["test"], "next.pdf")] } });
   fireEvent.click(screen.getByRole("button", { name: "Save replacement" }));
   expect(await screen.findByRole("alert")).toHaveTextContent("Refresh history");
@@ -55,7 +57,8 @@ test("uncertain network failure refreshes history without retrying upload", asyn
   const get = api.getMockImplementation();
   api.mockImplementation((url, options) => options?.method === "POST" ? Promise.reject(new Error("Network error")) : get());
   mount();
-  fireEvent.click(await screen.findByRole("button", { name: "Upload replacement" }));
+  fireEvent.click(await screen.findByText("Version 2 · new.pdf"));
+  fireEvent.click(screen.getByRole("button", { name: "Upload replacement" }));
   fireEvent.change(screen.getByLabelText("Replacement file"), { target: { files: [new File(["test"], "next.pdf")] } });
   fireEvent.click(screen.getByRole("button", { name: "Save replacement" }));
   expect(await screen.findByRole("alert")).toHaveTextContent("outcome could not be confirmed");
@@ -85,7 +88,8 @@ test("unknown deletion state cannot download or replace", async () => {
 
 test("drop selects one file without uploading and rejects multiple files", async () => {
   mount();
-  fireEvent.click(await screen.findByRole("button", { name: "Upload replacement" }));
+  fireEvent.click(await screen.findByText("Version 2 · new.pdf"));
+  fireEvent.click(screen.getByRole("button", { name: "Upload replacement" }));
   const picker = screen.getByRole("button", { name: "Choose replacement file" });
   const file = new File(["test"], "dropped.pdf", { type: "application/pdf" });
   fireEvent.drop(picker, { dataTransfer: { files: [file] } });

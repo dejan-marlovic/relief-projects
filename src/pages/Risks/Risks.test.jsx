@@ -100,10 +100,11 @@ test("validation errors allow correction without dropping the draft", async () =
 });
 test("history displays immutable before/after snapshots and attribution", async () => {
   mount(); fireEvent.click(await screen.findByText("View history"));
-  await screen.findByText("CREATE · Revision 0");
+  fireEvent.click(await screen.findByText("Created"));
+  fireEvent.click(screen.getByText("Full recorded details and references"));
   const history = within(screen.getByRole("region", { name: "Risk history" }));
-  expect(history.getByText(/Taylor/)).toBeInTheDocument(); expect(history.getByText("No earlier record.")).toBeInTheDocument();
-  expect(history.getByText("Delivery delay")).toBeInTheDocument();
+  expect(history.getAllByText(/Taylor/)[0]).toBeInTheDocument(); expect(history.getByText("No earlier record.")).toBeInTheDocument();
+  expect(history.getAllByText("Delivery delay")[0]).toBeInTheDocument();
   expect(fetch.mock.calls.some(([url]) => url.includes("/projects/2/risks/9/history?page=0&size=20"))).toBe(true);
 });
 test("filters are project scoped and incompatible overdue filtering is cleared", async () => {

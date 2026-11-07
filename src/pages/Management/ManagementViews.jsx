@@ -1,6 +1,6 @@
+import { HistoryTimeline, SnapshotHistoryEntry } from "../../components/ActivityHistory/ActivityHistory";
 import { workflowLabel } from "../FollowUps/workflow";
 import { HistoryIntro } from "../../components/Workflow/Workflow";
-import workflow from "../../components/Workflow/Workflow.module.scss";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { BASE_URL } from "../../config/api";
@@ -61,5 +61,5 @@ export function Associations({ kind, endpoint, authFetch, refresh, open, locked 
 export function ManagementHistory({ endpoint, authFetch, refresh }) {
   const [page, setPage] = useState(0);
   const state = useManagementRead(authFetch, `${endpoint}/history?page=${page}&size=20`, refresh);
-  return <section className={styles.panel} aria-label="Retained management history"><h3>Retained history</h3><HistoryIntro>Follow the observation, responses, associations and management decisions in the order returned by the register.</HistoryIntro><ReadState state={state} /><ol className={workflow.timeline}>{state.data?.content.map(event => <li key={event.id}><h4>{label(event.action)} · Revision {event.revision}</h4><Attribution at={event.occurredAt} actor={event.actor} />{event.reason && <p>Reason: {event.reason}</p>}<details><summary>Before</summary><HistorySnapshot value={event.before} /></details><details><summary>After</summary><HistorySnapshot value={event.after} /></details></li>)}</ol><Pagination data={state.data} page={page} setPage={setPage} label="management history" disabled={state.loading} /></section>;
+  return <section className={styles.panel} aria-label="Retained management history"><h3>Retained history</h3><HistoryIntro>Follow the observation, responses, associations and management decisions in the order returned by the register.</HistoryIntro><ReadState state={state} /><HistoryTimeline>{state.data?.content.map(event => <SnapshotHistoryEntry key={event.id} event={event} title={label(event.action)} Snapshot={HistorySnapshot} />)}</HistoryTimeline><Pagination history data={state.data} page={page} setPage={setPage} label="management history" disabled={state.loading} /></section>;
 }

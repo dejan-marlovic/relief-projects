@@ -17,7 +17,7 @@ test("payment-order history aggregates lines once and can return to exact header
   fetch.mockResolvedValueOnce(response(page([line, line], 0, 2))).mockResolvedValueOnce(response(page([event])));
   render(<RecordHistory {...props} entityType="PAYMENT_ORDER" />); open();
   expect(await screen.findByText("Line #81 deleted")).toBeInTheDocument();
-  expect(screen.getAllByRole("row")).toHaveLength(2);
+  expect(screen.getAllByRole("listitem")).toHaveLength(1);
   expect(fetch.mock.calls[0][0]).toContain("includeChildren=true");
   fireEvent.click(screen.getByRole("checkbox", { name: "Include line, signature, recipient, outgoing-payment and recipient-return activity" }));
   await screen.findByText("Draft → Submitted");
@@ -36,7 +36,7 @@ test("restored record history includes creation, delete/restore activity and exi
   ])));
   render(<RecordHistory {...props} />); open();
   for (const label of ["Restored", "Deleted", "Created"]) {
-    const row = (await screen.findByText(label)).closest("tr");
+    const row = (await screen.findByText(label)).closest("li");
     expect(row).not.toHaveTextContent("→");
     expect(row).not.toHaveTextContent("Return reason");
     expect(within(row).getByText("Alex")).toBeInTheDocument();
@@ -44,7 +44,7 @@ test("restored record history includes creation, delete/restore activity and exi
   }
   expect(screen.getByText("Correct the amounts.")).toBeInTheDocument();
   expect(screen.getByText("Draft → Submitted")).toBeInTheDocument();
-  expect(screen.getAllByRole("row")).toHaveLength(6);
+  expect(screen.getAllByRole("listitem")).toHaveLength(5);
 });
 
 test.each(["BUDGET", "TRANSACTION", "PAYMENT_ORDER"])("lazily loads scoped %s history with authentication", async (entityType) => {
@@ -81,7 +81,7 @@ test("paginates, clears old rows on failure, and refreshes from page zero", asyn
     .mockResolvedValueOnce(response(null, 404)).mockResolvedValueOnce(response(page()));
   render(<RecordHistory {...props} />); open();
   await screen.findByText("Alex");
-  fireEvent.click(screen.getByText("Next"));
+  fireEvent.click(screen.getByText("Older history"));
   await screen.findByRole("alert");
   expect(screen.queryByText("Alex")).not.toBeInTheDocument();
   expect(fetch.mock.calls[1][0]).toContain("page=1");
@@ -108,7 +108,7 @@ test("switching records aborts old requests and discards late responses", async 
 test("lifecycle changes refresh an open panel and reset pagination", async () => {
   fetch.mockResolvedValueOnce(response(page([event], 0, 2))).mockResolvedValueOnce(response(page([event], 1, 2))).mockResolvedValueOnce(response(page()));
   const view = render(<RecordHistory {...props} />); open();
-  await screen.findByText("Alex"); fireEvent.click(screen.getByText("Next"));
+  await screen.findByText("Alex"); fireEvent.click(screen.getByText("Older history"));
   await screen.findByText(/Page 2 of 2/);
   view.rerender(<RecordHistory {...props} lifecycleStatus="SUBMITTED" />);
   await screen.findByText(/Page 1 of 1/);
@@ -127,13 +127,13 @@ test.each(["BUDGET", "TRANSACTION", "PAYMENT_ORDER"])("successful %s edit refres
   fetch.mockResolvedValueOnce(response(page([event], 0, 2))).mockResolvedValueOnce(response(page([event], 1, 2)))
     .mockResolvedValueOnce(response(page([updatedEvent])));
   const view = render(<RecordHistory {...props} entityType={entityType} refreshKey={0} />); open();
-  await screen.findByText("Alex"); fireEvent.click(screen.getByText("Next"));
+  await screen.findByText("Alex"); fireEvent.click(screen.getByText("Older history"));
   await screen.findByText(/Page 2 of 2/);
   view.rerender(<RecordHistory {...props} entityType={entityType} refreshKey={1} />);
   await screen.findByText("Updated");
   expect(screen.getByText("125.00")).toBeInTheDocument();
   expect(screen.getByText("Budget total")).toBeInTheDocument();
-  expect(screen.getByText("Updated").closest("tr")).not.toHaveTextContent("→");
+  expect(screen.getByText("Updated").closest("li")).not.toHaveTextContent("→");
   expect(fetch.mock.calls[2][0]).toContain("page=0");
 });
 
@@ -142,7 +142,7 @@ test("transaction history aggregates allocations once and can return to exact he
   fetch.mockResolvedValueOnce(response(page([line, line], 0, 2))).mockResolvedValueOnce(response(page([event])));
   render(<RecordHistory {...props} entityType="TRANSACTION" />); open();
   expect(await screen.findByText("Allocation #81 deleted")).toBeInTheDocument();
-  expect(screen.getAllByRole("row")).toHaveLength(2);
+  expect(screen.getAllByRole("listitem")).toHaveLength(1);
   expect(fetch.mock.calls[0][0]).toContain("includeChildren=true");
   fireEvent.click(screen.getByRole("checkbox", { name: "Include allocation, funding-receipt and financier-return activity" }));
   await screen.findByText("Draft → Submitted");
@@ -156,7 +156,7 @@ test("budget history aggregates cost details once and can return to exact header
   fetch.mockResolvedValueOnce(response(page([line, line], 0, 2))).mockResolvedValueOnce(response(page([event])));
   render(<RecordHistory {...props} entityType="BUDGET" />); open();
   expect(await screen.findByText("Cost detail #81 deleted")).toBeInTheDocument();
-  expect(screen.getAllByRole("row")).toHaveLength(2);
+  expect(screen.getAllByRole("listitem")).toHaveLength(1);
   expect(fetch.mock.calls[0][0]).toContain("includeChildren=true");
   fireEvent.click(screen.getByRole("checkbox", { name: "Include cost-detail activity" }));
   await screen.findByText("Draft → Submitted");
@@ -170,7 +170,7 @@ test("payment-order history aggregates signatures once and can return to exact h
   fetch.mockResolvedValueOnce(response(page([line, line], 0, 2))).mockResolvedValueOnce(response(page([event])));
   render(<RecordHistory {...props} entityType="PAYMENT_ORDER" />); open();
   expect(await screen.findByText("Signature #81 deleted")).toBeInTheDocument();
-  expect(screen.getAllByRole("row")).toHaveLength(2);
+  expect(screen.getAllByRole("listitem")).toHaveLength(1);
   expect(fetch.mock.calls[0][0]).toContain("includeChildren=true");
   fireEvent.click(screen.getByRole("checkbox", { name: "Include line, signature, recipient, outgoing-payment and recipient-return activity" }));
   await screen.findByText("Draft → Submitted");
@@ -184,11 +184,25 @@ test("payment-order history aggregates recipients once and can return to exact h
   fetch.mockResolvedValueOnce(response(page([line, line], 0, 2))).mockResolvedValueOnce(response(page([event])));
   render(<RecordHistory {...props} entityType="PAYMENT_ORDER" />); open();
   expect(await screen.findByText("Recipient #81 deleted")).toBeInTheDocument();
-  expect(screen.getAllByRole("row")).toHaveLength(2);
+  expect(screen.getAllByRole("listitem")).toHaveLength(1);
   expect(fetch.mock.calls[0][0]).toContain("includeChildren=true");
   fireEvent.click(screen.getByRole("checkbox", { name: "Include line, signature, recipient, outgoing-payment and recipient-return activity" }));
   await screen.findByText("Draft → Submitted");
   expect(fetch.mock.calls[1][0]).not.toContain("includeChildren");
   expect(fetch.mock.calls[1][0]).toContain("entityType=PAYMENT_ORDER&entityId=7&page=0");
   expect(screen.queryByText("Recipient #81 deleted")).not.toBeInTheDocument();
+});
+
+test("timeline opens an event without refetching and keeps full references separately expandable", async () => {
+  render(<RecordHistory {...props} />); open();
+  const actor = await screen.findByText("Alex");
+  const entry = actor.closest("details");
+  expect(entry).not.toHaveAttribute("open");
+  fireEvent.click(entry.querySelector("summary"));
+  expect(screen.getByText("Draft → Submitted")).toBeVisible();
+  const references = screen.getByText("Full recorded details and references");
+  expect(references.closest("details")).not.toHaveAttribute("open");
+  fireEvent.click(references);
+  expect(screen.getByText(/Entry #1/)).toBeVisible();
+  expect(fetch).toHaveBeenCalledTimes(1);
 });

@@ -1,12 +1,12 @@
+import { HistoryTimeline, HistoryEntry } from "../ActivityHistory/ActivityHistory";
 import ScrollToForm from "../ScrollToForm/ScrollToForm";
 import { FiUploadCloud } from "react-icons/fi";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import { useUnsavedChange, useUnsavedChanges } from "../../context/UnsavedChangesContext";
-import workflow from "../Workflow/Workflow.module.scss";
 import useTransientMessage from "../../hooks/useTransientMessage";
 import React, { useEffect, useRef, useState } from "react";
 import { BASE_URL } from "../../config/api";
-import { readDocumentError, uploaderLabel, uploadTimeLabel } from "../../utils/documentMetadata";
+import { readDocumentError, uploaderLabel } from "../../utils/documentMetadata";
 import DocumentStatus, { statusLabel } from "../DocumentStatus/DocumentStatus";
 import ErrorBanner from "../ErrorBanner/ErrorBanner";
 import styles from "../../pages/Documents/Documents.module.scss";
@@ -107,19 +107,17 @@ export default function DocumentVersions({ document, authFetch, categories, canE
     {message && <p role="status">{message}</p>}
     {loading && !chain && <p>Loading version history…</p>}
     {chain?.currentDocumentDeleted && <p role="status">The current version is deleted. There is no active current version; older versions have not been promoted.</p>}
-    {chain && <ol className={workflow.timeline}>{chain.versions.map((version) => <li key={version.id} className={styles.documentItem}>
+    {chain && <HistoryTimeline>{chain.versions.map((version) => <HistoryEntry key={version.id} title={`Version ${version.versionNumber} · ${version.documentName}`} at={version.uploadedAt} actor={uploaderLabel(version)}>
       <div className={styles.docInfo}>
-        <strong>Version {version.versionNumber} · {version.documentName}</strong>
         <span>{statusLabel(version.status)} · {version.isCurrent ? "Current version" : "Historical version"} · {version.isDeleted === true ? "Deleted" : version.isDeleted === false ? "Active" : "Availability unknown"}</span>
         <span className={styles.uploadedBy}>{categories.find((item) => item.id === version.category)?.label || version.category} · Document date: {version.documentDate || "Unknown"}</span>
-        <span className={styles.uploadedBy}>Uploaded by {uploaderLabel(version)} · Uploaded: {uploadTimeLabel(version.uploadedAt)}</span>
       </div>
       <div className={styles.docActions}>
         {version.isDeleted === false && <button type="button" className={styles.downloadLink} disabled={downloading.includes(version.id)} onClick={() => onDownload(version.id)}>Download version {version.versionNumber}</button>}
         {canEdit && version.isCurrent === true && version.isDeleted === false && <button type="button" className={styles.downloadLink} disabled={busy || !categories.length} onClick={() => { setError(""); setReplacement({ id: version.id, name: version.documentName, category: "", date: "", status: "DRAFT", file: null }); }}>Upload replacement</button>}
         {canDelete && typeof version.isDeleted === "boolean" && <button type="button" className={styles.downloadLink} disabled={busy} onClick={() => changeDeletion(version)}>{version.isDeleted ? "Restore" : "Delete"} version {version.versionNumber}</button>}
       </div>
-    </li>)}</ol>}
+    </HistoryEntry>)}</HistoryTimeline>}
     {replacement && <ScrollToForm onSubmit={replace} className={styles.metadataEditor}>
       <h4>Replace {replacement.name}</h4>
       <p className={styles.infoText}>This creates a new version. Category is inherited unless changed; document date starts empty and status starts as Draft.</p>

@@ -11,7 +11,7 @@ test("Admin can request exact line history and see the line and parent identifie
   render(<ProjectContext.Provider value={{ projects: [] }}><AuditHistory /></ProjectContext.Provider>);
   await screen.findByText("Line #81 created");
   expect(screen.getByText("Payment order #73")).toBeInTheDocument();
-  expect(screen.getAllByRole("row")).toHaveLength(2);
+  expect(screen.getAllByRole("listitem")).toHaveLength(1);
   fireEvent.change(screen.getByRole("combobox", { name: "Record type" }), { target: { value: "PAYMENT_ORDER_LINE" } });
   fireEvent.change(screen.getByRole("spinbutton", { name: "Record ID" }), { target: { value: "81" } });
   fireEvent.click(screen.getByRole("button", { name: "Apply filters" }));
@@ -25,11 +25,11 @@ test.each([["UPDATE", "Updated"], ["CREATE", "Created"], ["DELETE", "Deleted"], 
   const auditEvent = { id: 9, entityType: "BUDGET", entityId: 7, action, previousState: null, newState: null, returnReason: null, performedBy: "42", performedByDisplay: "admin.user", occurredAt: "2026-09-08T12:00:00Z" };
   global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200, text: async () => JSON.stringify({ content: [auditEvent], number: 0, totalPages: 1, totalElements: 1 }) });
   render(<ProjectContext.Provider value={{ projects: [] }}><AuditHistory /></ProjectContext.Provider>);
-  const row = (await screen.findByText("admin.user")).closest("tr");
+  const row = (await screen.findByText("admin.user")).closest("li");
   expect(within(row).getByText(label)).toBeInTheDocument();
   expect(row).not.toHaveTextContent("→");
   expect(row).not.toHaveTextContent("Return reason");
-  expect(row).toHaveTextContent(formatAuditTimestamp(auditEvent.occurredAt));
+  expect(row.querySelector("time")).toHaveAttribute("dateTime", auditEvent.occurredAt);
   fireEvent.change(screen.getByRole("combobox", { name: "Action" }), { target: { value: action } });
   fireEvent.change(screen.getByRole("spinbutton", { name: "Record ID" }), { target: { value: "7" } });
   fireEvent.click(screen.getByRole("button", { name: "Apply filters" }));
@@ -75,7 +75,7 @@ test("Admin can request exact allocation history and see the line and parent ide
   render(<ProjectContext.Provider value={{ projects: [] }}><AuditHistory /></ProjectContext.Provider>);
   await screen.findByText("Allocation #81 added");
   expect(screen.getByText("Transaction #73")).toBeInTheDocument();
-  expect(screen.getAllByRole("row")).toHaveLength(2);
+  expect(screen.getAllByRole("listitem")).toHaveLength(1);
   fireEvent.change(screen.getByRole("combobox", { name: "Record type" }), { target: { value: "COST_DETAIL_ALLOCATION" } });
   fireEvent.change(screen.getByRole("spinbutton", { name: "Record ID" }), { target: { value: "81" } });
   fireEvent.click(screen.getByRole("button", { name: "Apply filters" }));
@@ -91,7 +91,7 @@ test("Admin can request exact cost-detail history and see the line and parent id
   render(<ProjectContext.Provider value={{ projects: [] }}><AuditHistory /></ProjectContext.Provider>);
   await screen.findByText("Cost detail #81 created");
   expect(screen.getByText("Budget #73")).toBeInTheDocument();
-  expect(screen.getAllByRole("row")).toHaveLength(2);
+  expect(screen.getAllByRole("listitem")).toHaveLength(1);
   fireEvent.change(screen.getByRole("combobox", { name: "Record type" }), { target: { value: "COST_DETAIL" } });
   fireEvent.change(screen.getByRole("spinbutton", { name: "Record ID" }), { target: { value: "81" } });
   fireEvent.click(screen.getByRole("button", { name: "Apply filters" }));
@@ -107,7 +107,7 @@ test("Admin can request exact signature history and see the line and parent iden
   render(<ProjectContext.Provider value={{ projects: [] }}><AuditHistory /></ProjectContext.Provider>);
   await screen.findByText("Signature #81 created");
   expect(screen.getByText("Payment order #73")).toBeInTheDocument();
-  expect(screen.getAllByRole("row")).toHaveLength(2);
+  expect(screen.getAllByRole("listitem")).toHaveLength(1);
   fireEvent.change(screen.getByRole("combobox", { name: "Record type" }), { target: { value: "SIGNATURE" } });
   fireEvent.change(screen.getByRole("spinbutton", { name: "Record ID" }), { target: { value: "81" } });
   fireEvent.click(screen.getByRole("button", { name: "Apply filters" }));
@@ -123,7 +123,7 @@ test("Admin can request exact recipient history and see the line and parent iden
   render(<ProjectContext.Provider value={{ projects: [] }}><AuditHistory /></ProjectContext.Provider>);
   await screen.findByText("Recipient #81 created");
   expect(screen.getByText("Payment order #73")).toBeInTheDocument();
-  expect(screen.getAllByRole("row")).toHaveLength(2);
+  expect(screen.getAllByRole("listitem")).toHaveLength(1);
   fireEvent.change(screen.getByRole("combobox", { name: "Record type" }), { target: { value: "RECIPIENT" } });
   fireEvent.change(screen.getByRole("spinbutton", { name: "Record ID" }), { target: { value: "81" } });
   fireEvent.click(screen.getByRole("button", { name: "Apply filters" }));

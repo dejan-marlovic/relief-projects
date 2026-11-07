@@ -1,5 +1,5 @@
+import { HistoryPagination, HistoryTimeline, SnapshotHistoryEntry } from "../ActivityHistory/ActivityHistory";
 import { WorkflowIntro, WorkflowStep, HistoryIntro } from "../Workflow/Workflow";
-import workflow from "../Workflow/Workflow.module.scss";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { BASE_URL } from "../../config/api";
@@ -7,7 +7,7 @@ import { createAuthFetch, safeReadJson } from "../../utils/http";
 import { downloadDocument } from "../../utils/documentDownload";
 import { stockholmToday } from "../../utils/fundingReceipts";
 import { useUnsavedChange } from "../../context/UnsavedChangesContext";
-import { DecisionSnapshot, Observation, FinancialRow, ArchiveReview, readable, stamp } from "./CloseoutViews";
+import { DecisionSnapshot, Observation, FinancialRow, ArchiveReview, readable } from "./CloseoutViews";
 import styles from "./ProjectCloseout.module.scss";
 
 const actions = { confirmReview: ["canConfirmArchiveReview", "Confirm review basis", "/archive-review", "PUT"], unresolvedReview: ["canWithdrawArchiveReview", "Mark basis unresolved", "/archive-review", "PUT"], acceptance: ["canEditAcceptance", "Record / update final-report acceptance", "/final-report-acceptance", "PUT"], close: ["canClose", "Record administrative closeout", "/close", "POST"], reopen: ["canReopen", "Reopen closeout", "/reopen", "POST"], archive: ["canMarkArchived", "Record / reaffirm archive filing", "/archive", "PUT"], revoke: ["canRevokeArchive", "Revoke archive marker", "/archive/revoke", "POST"] };
@@ -133,7 +133,7 @@ export function CloseoutPanel({ projectId, refreshKey }) {
     </form>}
     {!!data?.evidence?.length && <section><h4>Current acceptance evidence</h4><ul>{data.evidence.map(d => <li key={d.documentId}>{d.documentName || `Document #${d.documentId}`} · Version {d.versionNumber ?? "Unknown"}{!d.downloadEligible && " · Unavailable"} <button type="button" disabled={!d.downloadEligible || downloading != null} onClick={() => download(d.documentId)}>Download version #{d.documentId}</button></li>)}</ul></section>}
     <details onToggle={e => { if (e.currentTarget === e.target) setFinanceOpen(e.currentTarget.open); }}><summary>Financial attention details</summary>{financeOpen && <FinancialAttention endpoint={endpoint} authFetch={authFetch} revision={revision} />}</details>
-    <section aria-label="Closeout decision history"><h4>Retained decision history</h4><HistoryIntro>Trace acceptance, closeout, reopening and archive decisions with the observations retained at each decision.</HistoryIntro>{historyError && <p role="alert">{historyError}</p>}{!history && !historyError && <p>Loading decision history…</p>}{history && <>{!history.content.length && <p>No decisions recorded.</p>}{history.content.map(event => <article className={workflow.event} key={event.id}><h4>{readable(event.action)} · Revision {event.revision}</h4><p>{stamp(event.occurredAt)} · {event.actor?.username || "Unknown user"}</p><p>Reason: {event.reason}</p><details><summary>Before decision</summary><DecisionSnapshot value={event.before} /></details><details><summary>After decision</summary><DecisionSnapshot value={event.after} /></details>{event.warningObservation && <details><summary>Warnings observed at decision</summary><Observation value={event.warningObservation} /></details>}</article>)}<div className={styles.actions}><button type="button" disabled={busy || historyPage === 0} onClick={() => setHistoryPage(n => n-1)}>Previous decision page</button><span>Page {history.totalPages ? historyPage+1 : 0} of {history.totalPages} · {history.totalElements} decisions</span><button type="button" disabled={busy || historyPage+1 >= history.totalPages} onClick={() => setHistoryPage(n => n+1)}>Next decision page</button></div></>}</section>
+    <section aria-label="Closeout decision history"><h4>Retained decision history</h4><HistoryIntro>Trace acceptance, closeout, reopening and archive decisions with the observations retained at each decision.</HistoryIntro>{historyError && <p role="alert">{historyError}</p>}{!history && !historyError && <p>Loading decision history…</p>}{history && <>{!history.content.length && <p>No decisions recorded.</p>}<HistoryTimeline>{history.content.map(event => <SnapshotHistoryEntry key={event.id} event={event} title={readable(event.action)} Snapshot={DecisionSnapshot}>{event.warningObservation && <details><summary>Warnings observed at decision</summary><Observation value={event.warningObservation} /></details>}</SnapshotHistoryEntry>)}</HistoryTimeline><HistoryPagination page={historyPage} totalPages={history?.totalPages} totalElements={history?.totalElements} onPage={setHistoryPage} disabled={busy} /></>}</section>
   </div>;
 }
 export default function ProjectCloseout({ projectId }) {

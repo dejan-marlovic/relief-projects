@@ -1,6 +1,6 @@
+import { HistoryPagination, HistoryTimeline, SnapshotHistoryEntry } from "../../components/ActivityHistory/ActivityHistory";
 import ScrollToForm from "../../components/ScrollToForm/ScrollToForm";
 import { WorkflowIntro, WorkflowStep, HistoryIntro } from "../../components/Workflow/Workflow";
-import workflow from "../../components/Workflow/Workflow.module.scss";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ProjectContext } from "../../context/ProjectContext";
@@ -59,14 +59,9 @@ function History({ risk, endpoint, authFetch, onClose }) {
   return <section className={styles.panel} aria-label="Risk history"><h3>History: {risk.title}</h3><HistoryIntro>Review changes to the risk assessment, mitigation and closure decision. A scheduled review date alone does not prove a review occurred.</HistoryIntro>
     <button onClick={onClose}>Close history</button>
     {error ? <p role="alert">{error} <button onClick={() => setAttempt(v => v + 1)}>Retry history</button></p> : !data && <p role="status">Loading history…</p>}
-    {data && <><ol className={workflow.timeline}>{data.content.map(event => <li key={event.id}>
-      <h4>{event.action} · Revision {event.revision}</h4><p>{uploadTimeLabel(event.occurredAt)} · {event.actor?.username}</p>
-      {event.reason && <p className={styles.text}>Reason: {event.reason}</p>}
-      <details><summary>Before this change</summary><Snapshot value={event.before} /></details>
-      <details><summary>After this change</summary><Snapshot value={event.after} /></details>
-    </li>)}</ol>
+    {data && <><HistoryTimeline>{data.content.map(event => <SnapshotHistoryEntry key={event.id} event={event} title={({ CREATE: "Created", UPDATE: "Details changed", CLOSE: "Closed", REOPEN: "Reopened", DELETE: "Deleted", RESTORE: "Restored" })[event.action] || event.action} Snapshot={Snapshot} />)}</HistoryTimeline>
       {!data.content.length && <p>No history on this page.</p>}
-      <div className={styles.actions}><button disabled={!page} onClick={() => setPage(p => p - 1)}>Previous history page</button><span>Page {data.totalPages ? page + 1 : 0} of {data.totalPages}</span><button disabled={page + 1 >= data.totalPages} onClick={() => setPage(p => p + 1)}>Next history page</button></div>
+      <HistoryPagination page={page} totalPages={data?.totalPages} totalElements={data?.totalElements} onPage={setPage} disabled={!data} />
     </>}
   </section>;
 }

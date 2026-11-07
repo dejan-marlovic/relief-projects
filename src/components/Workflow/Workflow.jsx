@@ -20,5 +20,5 @@ export function WorkflowStep({ number, title, description, children, keepOpen = 
 }
 
 export function HistoryIntro({ children }) {
-  return <p className={styles.intro}>{children} Each entry shows a recorded change and its attribution. Expand the saved details to understand what changed; earlier entries remain available through the history pages.</p>;
+  return <p className={styles.intro}>{children} Expand an entry to see what changed and who recorded it. Full recorded details and references remain available inside each entry; use the history controls to browse earlier changes.</p>;
 }

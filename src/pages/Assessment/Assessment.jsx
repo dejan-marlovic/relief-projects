@@ -1,3 +1,4 @@
+import { HistoryTimeline, SnapshotHistoryEntry } from "../../components/ActivityHistory/ActivityHistory";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { BASE_URL } from "../../config/api";
@@ -76,7 +77,7 @@ export function AssessmentPanel({ projectId, authFetch }) {
     <WorkflowStep number={4} title="Review and correct explicitly" description="Withdraw recorded approval before corrections, then resubmit for a new decision. Late evidence remains outside the approval basis. Deletion and restoration retain history and never reinstate withdrawn approval." keepOpen={editorStep === 4}>
       {buttons(["withdraw-approval", "delete", "restore"])}{editorStep === 4 && editor}<div className={styles.actions}>{[["/project", "Project details"], ["/documents", "Document checklist"], ["/risks", "Risks"], ["/results", "Results"], ["/follow-ups", "Follow-ups"]].map(([to, title]) => <Link key={to} to={to} onClick={e => { if (!confirmDiscardUnsavedChanges()) e.preventDefault(); }}>{title}</Link>)}</div>
     </WorkflowStep>
-    <section className={styles.panel} aria-label="Assessment history"><h3>Assessment history</h3><HistoryIntro>Newest first. Submissions, decisions, corrections and evidence changes remain attributed to their recorded actors.</HistoryIntro><ReadState state={history} /><ol className={styles.timeline}>{history.data?.content.map(event => <li key={event.id}><h4>{label(event.action)} · Revision {event.revision}</h4><Attribution at={event.occurredAt} actor={event.actor} />{event.reason && <p>Reason: {event.reason}</p>}<details><summary>Before</summary><HistorySnapshot value={event.before} /></details><details><summary>After</summary><HistorySnapshot value={event.after} /></details></li>)}</ol><Pagination data={history.data} page={historyPage} setPage={setHistoryPage} label="assessment history" disabled={history.loading || busy} /></section>
+    <section className={styles.panel} aria-label="Assessment history"><h3>Assessment history</h3><HistoryIntro>Newest first. Submissions, decisions, corrections and evidence changes remain attributed to their recorded actors.</HistoryIntro><ReadState state={history} /><HistoryTimeline>{history.data?.content.map(event => <SnapshotHistoryEntry key={event.id} event={event} title={label(event.action)} Snapshot={HistorySnapshot} />)}</HistoryTimeline><Pagination history data={history.data} page={historyPage} setPage={setHistoryPage} label="assessment history" disabled={history.loading || busy} /></section>
     <ReadState state={project} />
   </>;
 }

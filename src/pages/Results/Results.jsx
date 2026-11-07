@@ -1,5 +1,5 @@
+import { HistoryTimeline, SnapshotHistoryEntry } from "../../components/ActivityHistory/ActivityHistory";
 import { WorkflowIntro, WorkflowStep, HistoryIntro } from "../../components/Workflow/Workflow";
-import workflow from "../../components/Workflow/Workflow.module.scss";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ProjectContext } from "../../context/ProjectContext";
@@ -51,7 +51,7 @@ function Report({ result, endpoint, authFetch, refresh, open, indicator, locked 
 function History({ endpoint, authFetch, refresh }) {
   const [page, setPage] = useState(0);
   const state = useIndicatorRead(authFetch, `${endpoint}/history?page=${page}&size=20`, refresh);
-  return <section aria-label="Retained indicator history"><h4>Retained decision history</h4><HistoryIntro>Review indicator changes and recorded reports, including corrections and voids. Historical measurement definitions and targets remain part of each report.</HistoryIntro><ReadState state={state} /><ol className={workflow.timeline}>{state.data?.content.map(e => <li key={e.id}><h4>{words(e.action)} · Revision {e.revision}</h4><Attribution at={e.occurredAt} actor={e.actor} />{e.reason && <p>Reason: {e.reason}</p>}<details><summary>Before</summary><HistorySnapshot value={e.before} /></details><details><summary>After</summary><HistorySnapshot value={e.after} /></details></li>)}</ol><Pagination data={state.data} page={page} setPage={setPage} label="history" disabled={state.loading} /></section>;
+  return <section aria-label="Retained indicator history"><h4>Retained decision history</h4><HistoryIntro>Review indicator changes and recorded reports, including corrections and voids. Historical measurement definitions and targets remain part of each report.</HistoryIntro><ReadState state={state} /><HistoryTimeline>{state.data?.content.map(e => <SnapshotHistoryEntry key={e.id} event={e} title={words(e.action)} Snapshot={HistorySnapshot} />)}</HistoryTimeline><Pagination history data={state.data} page={page} setPage={setPage} label="history" disabled={state.loading} /></section>;
 }
 
 function IndicatorDetail({ id, endpoint: base, authFetch, refresh, reload, projectId, onClose }) {

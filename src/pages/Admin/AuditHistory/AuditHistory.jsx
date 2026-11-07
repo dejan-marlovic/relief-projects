@@ -1,3 +1,4 @@
+import { HistoryPagination, HistoryTimeline, HistoryEntry } from "../../../components/ActivityHistory/ActivityHistory";
 import RecipientReturnAuditDetails from "../../../components/RecipientReturns/RecipientReturnAuditDetails";
 import FundingReturnAuditDetails from "../../../components/FundingReturns/FundingReturnAuditDetails";
 import OutgoingPaymentAuditDetails from "../../../components/OutgoingPayments/OutgoingPaymentAuditDetails";
@@ -225,42 +226,13 @@ const AuditHistory = () => {
         {loading ? "Loading audit events…" : `${result.totalElements} audit event${result.totalElements === 1 ? "" : "s"}`}
       </div>
 
-      <div className={styles.tableWrap}>
-        <table role="table" aria-label="Audit events">
-          <thead>
-            <tr role="row">
-              <th scope="col" role="columnheader">Date and time</th>
-              <th scope="col" role="columnheader">Record</th>
-              <th scope="col" role="columnheader">Project</th>
-              <th scope="col" role="columnheader">Action</th>
-              <th scope="col" role="columnheader">Changes</th>
-              <th scope="col" role="columnheader">Performed by</th>
-            </tr>
-          </thead>
-          <tbody>
-            {!loading && result.content.length === 0 ? (
-              <tr role="row"><td role="cell" colSpan="6" className={styles.empty}>No audit events match these filters.</td></tr>
-            ) : result.content.map((event) => (
-              <tr key={event.id} role="row">
-                <td role="cell" data-label="Date and time" className={styles.nowrap}>{formatAuditTimestamp(event.occurredAt)}</td>
-                <td role="cell" data-label="Record"><strong>{ENTITY_LABELS[event.entityType] || event.entityType}</strong><span className={styles.subtle}>#{event.entityId}</span></td>
-                <td role="cell" data-label="Project">{projectLabel(event.projectId)}</td>
-                <td role="cell" data-label="Action"><span className={`${styles.badge} ${styles[`action${event.action}`] || ""}`}>{auditActionLabel(event)}</span></td>
-                <td role="cell" data-label="Changes">{event.entityType === "RECIPIENT_RETURN" ? <RecipientReturnAuditDetails event={event} /> : event.entityType === "FUNDING_RETURN" ? <FundingReturnAuditDetails event={event} /> : event.entityType === "OUTGOING_PAYMENT" ? <OutgoingPaymentAuditDetails event={event} /> : event.entityType === "FUNDING_RECEIPT" ? <FundingReceiptAuditDetails event={event} /> : event.entityType === "RECIPIENT" ? <RecipientAuditDetails event={event} /> : event.entityType === "SIGNATURE" ? <SignatureAuditDetails event={event} /> : event.entityType === "COST_DETAIL" ? <CostDetailAuditDetails event={event} /> : event.entityType === "COST_DETAIL_ALLOCATION" ? <AllocationAuditDetails event={event} /> : event.entityType === "PAYMENT_ORDER_LINE" ? <LineAuditDetails event={event} /> : event.action === "UPDATE" ? <AuditFieldChanges event={event} /> : hasAuditTransition(event) ? <><span className={styles.state}>{event.previousState}</span><span className={styles.arrow}>→</span><span className={styles.state}>{event.newState}</span></> : "—"}<TransactionCurrencyContext event={event} /><PaymentCurrencyContext event={event} /><ReturnReason event={event} /></td>
-                <td role="cell" data-label="Performed by"><strong>{event.performedByDisplay || "Unknown user"}</strong><span className={styles.subtle}>User #{event.performedBy}</span></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <p>Newest changes first. Expand an entry to see what changed.</p>
+      {!loading && !result.content.length && <p className={styles.empty}>No audit events match these filters.</p>}
+      <HistoryTimeline aria-label="Audit events">{result.content.map(event => <HistoryEntry key={event.id} title={auditActionLabel(event)} at={event.occurredAt} actor={event.performedByDisplay || "Unknown user"} context={<>{ENTITY_LABELS[event.entityType] || event.entityType} #{event.entityId} · {projectLabel(event.projectId)}</>} references={<p>Entry #{event.id} · User #{event.performedBy ?? "not recorded"} · Project #{event.projectId ?? "not recorded"}</p>}>
+{event.entityType === "RECIPIENT_RETURN" ? <RecipientReturnAuditDetails event={event} /> : event.entityType === "FUNDING_RETURN" ? <FundingReturnAuditDetails event={event} /> : event.entityType === "OUTGOING_PAYMENT" ? <OutgoingPaymentAuditDetails event={event} /> : event.entityType === "FUNDING_RECEIPT" ? <FundingReceiptAuditDetails event={event} /> : event.entityType === "RECIPIENT" ? <RecipientAuditDetails event={event} /> : event.entityType === "SIGNATURE" ? <SignatureAuditDetails event={event} /> : event.entityType === "COST_DETAIL" ? <CostDetailAuditDetails event={event} /> : event.entityType === "COST_DETAIL_ALLOCATION" ? <AllocationAuditDetails event={event} /> : event.entityType === "PAYMENT_ORDER_LINE" ? <LineAuditDetails event={event} /> : event.action === "UPDATE" ? <AuditFieldChanges event={event} /> : hasAuditTransition(event) ? <><span className={styles.state}>{event.previousState}</span><span className={styles.arrow}>→</span><span className={styles.state}>{event.newState}</span></> : "—"}<TransactionCurrencyContext event={event} /><PaymentCurrencyContext event={event} /><ReturnReason event={event} /></HistoryEntry>)}</HistoryTimeline>
 
-      <div className={styles.pagination}>
-        <span>Page {result.totalPages === 0 ? 0 : result.number + 1} of {result.totalPages}</span>
-        <div>
-          <button type="button" onClick={() => setPage((value) => Math.max(0, value - 1))} disabled={loading || result.number <= 0}>Previous</button>
-          <button type="button" onClick={() => setPage((value) => value + 1)} disabled={loading || result.number + 1 >= result.totalPages}>Next</button>
-        </div>
-      </div>
+      <HistoryPagination page={page} totalPages={result.totalPages} totalElements={result.totalElements} onPage={setPage} disabled={loading} />
+
     </div>
   );
 };

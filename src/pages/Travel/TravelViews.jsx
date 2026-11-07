@@ -1,3 +1,4 @@
+import { HistoryTimeline, SnapshotHistoryEntry } from "../../components/ActivityHistory/ActivityHistory";
 import { workflowLabel } from "../FollowUps/workflow";
 import React, { useState } from "react";
 import { downloadDocument } from "../../utils/documentDownload";
@@ -48,7 +49,7 @@ const historyActions = { CREATE: "created the request", UPDATE: "updated the tri
 export function TravelHistory({ endpoint, authFetch, refresh }) {
   const [page, setPage] = useState(0);
   const state = useTravelRead(authFetch, `${endpoint}/history?page=${page}&size=20`, refresh);
-  return <section className={styles.panel} aria-label="Retained travel history"><h3>Travel history</h3><p className={styles.muted}>Newest first. Earlier plans and decisions remain available when a request is returned, changed or cancelled.</p><ReadState state={state} /><ol className={styles.timeline}>{state.data?.content.map(event => <li key={event.id}><h4>{event.actor?.username || "Recorded actor"} {historyActions[event.action] || label(event.action)}</h4><p className={styles.muted}>Revision {event.revision}</p><Attribution at={event.occurredAt} actor={event.actor} />{event.reason && <p>Reason: {event.reason}</p>}<details><summary>Before</summary><HistorySnapshot value={event.before} /></details><details><summary>After</summary><HistorySnapshot value={event.after} /></details></li>)}</ol><Pagination data={state.data} page={page} setPage={setPage} label="travel history" disabled={state.loading} /></section>;
+  return <section className={styles.panel} aria-label="Retained travel history"><h3>Travel history</h3><p className={styles.muted}>Newest first. Earlier plans and decisions remain available when a request is returned, changed or cancelled.</p><ReadState state={state} /><HistoryTimeline>{state.data?.content.map(event => <SnapshotHistoryEntry key={event.id} event={event} title={historyActions[event.action] || label(event.action)} Snapshot={HistorySnapshot} />)}</HistoryTimeline><Pagination history data={state.data} page={page} setPage={setPage} label="travel history" disabled={state.loading} /></section>;
 }
 
 

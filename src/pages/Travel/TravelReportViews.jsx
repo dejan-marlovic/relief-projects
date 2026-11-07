@@ -1,3 +1,4 @@
+import { HistoryTimeline, SnapshotHistoryEntry } from "../../components/ActivityHistory/ActivityHistory";
 import { uploadTimeLabel } from "../../utils/documentMetadata";
 import React, { useId, useState } from "react";
 import { Attribution, HistorySnapshot, Pagination, ReadState } from "../Results/ResultViews";
@@ -37,8 +38,8 @@ export function ReportHistory({ endpoint, authFetch, refresh }) {
   const state = useTravelRead(authFetch, `${endpoint}/history?page=${page}&size=20`, refresh);
   return <section aria-label="Retained report history" className={styles.panel}><h3>Report history</h3>
     <HistoryIntro>Newest first. Report edits, submissions, acceptance and corrections are retained separately from travel authorization history.</HistoryIntro>
-    <ReadState state={state} /><ol className={styles.timeline}>{state.data?.content?.map(event => <li key={event.id}><h4>{label(event.action)} · Report revision {event.revision}</h4><Attribution at={event.occurredAt} actor={event.actor} />{event.reason && <p>Reason: {event.reason}</p>}<details><summary>Before report change</summary><HistorySnapshot value={event.before} /></details><details><summary>After report change</summary><HistorySnapshot value={event.after} /></details></li>)}</ol>
-    {state.data?.content?.length === 0 && <p>No report history on this page.</p>}<Pagination data={state.data} page={page} setPage={setPage} label="report history" disabled={state.loading} />
+    <ReadState state={state} /><HistoryTimeline>{state.data?.content?.map(event => <SnapshotHistoryEntry key={event.id} event={event} title={label(event.action)} Snapshot={HistorySnapshot} />)}</HistoryTimeline>
+    {state.data?.content?.length === 0 && <p>No report history on this page.</p>}<Pagination history data={state.data} page={page} setPage={setPage} label="report history" disabled={state.loading} />
   </section>;
 }
 

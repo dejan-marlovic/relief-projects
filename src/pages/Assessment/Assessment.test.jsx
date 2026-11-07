@@ -100,7 +100,7 @@ test("lost response after successful creation does not offer a duplicate retry",
   await waitFor(() => expect(screen.getByRole("button", { name: "I reviewed the refreshed state; enable retry" })).toBeDisabled()); expect(writes).toHaveLength(1);
 });
 test("read-only inactive parent retains history without writes", async () => {
-  existing("RETURNED", {}); envelope.projectActive = false; envelope.assessment.deleted = true; mount(); await screen.findByText(/project is inactive/i); await screen.findByText("create · Revision 0");
+  existing("RETURNED", {}); envelope.projectActive = false; envelope.assessment.deleted = true; mount(); await screen.findByText(/project is inactive/i); await screen.findByText("Created");
   expect(screen.queryByRole("button", { name: "Edit assessment" })).not.toBeInTheDocument(); expect(writes).toHaveLength(0);
 });
 test("draft stays visible after a failed refresh", async () => {

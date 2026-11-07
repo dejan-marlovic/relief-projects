@@ -71,7 +71,7 @@ test("lost create response with a recorded assessment cannot be retried as dupli
 test("unavailable scope retains decision and history without controls", async () => {
   existing("REVIEWED", {}); envelope.scopeAvailable = false; envelope.assessment.reviewRequired = true;
   envelope.assessment.currentDecision = { historyId: 20, decision: "SUITABLE_FOR_STATED_ROLE" };
-  mount(); await screen.findByText(/Retained assessment information is read-only/); await screen.findByText("create · Revision 0");
+  mount(); await screen.findByText(/Retained assessment information is read-only/); await screen.findByText("Created");
   expect(screen.queryByText("Edit assessment")).not.toBeInTheDocument(); expect(screen.getByText(/Review required. The retained outcome/)).toBeInTheDocument();
 });
 test("organisation summary is bounded, names each relationship and includes deleted on request", async () => {
@@ -88,7 +88,7 @@ test("success messages distinguish informational review from project approval", 
 
 test("returning to the page refreshes assessment, evidence and history without a refresh button", async () => {
   existing(); mount();
-  await screen.findByText("create · Revision 0");
+  await screen.findByText("Created");
   expect(screen.queryByRole("button", { name: /Refresh assessment/ })).not.toBeInTheDocument();
   fetcher.mockClear();
   fireEvent.focus(window);
