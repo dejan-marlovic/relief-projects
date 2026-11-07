@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -233,7 +234,7 @@ const DeleteOrganization = () => {
 
                 <div className={styles.formGroup}>
                   <label htmlFor="deleteOrganizationSelect">Organization</label>
-                  <select
+                  <SearchableSelect
                     id="deleteOrganizationSelect"
                     className={inputClass}
                     value={selectedOrganizationId}
@@ -247,7 +248,7 @@ const DeleteOrganization = () => {
                         {organization.contactEmail} | Id: {organization.id}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.mutedHint}>

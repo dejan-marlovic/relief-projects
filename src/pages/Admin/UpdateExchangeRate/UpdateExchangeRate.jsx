@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import useExchangeRateDraft from "../../../hooks/useExchangeRateDraft";
@@ -305,7 +306,7 @@ const UpdateExchangeRate = () => {
 
                 <div className={styles.formGroup}>
                   <label htmlFor="update-exchange-selected">Exchange rate</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("selectedId")}
                     id="update-exchange-selected" value={form.selectedId}
                     onChange={handleSelectChange}
@@ -317,7 +318,7 @@ const UpdateExchangeRate = () => {
                         {exchangeRateLabel(item)}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
               </div>
 
@@ -330,7 +331,7 @@ const UpdateExchangeRate = () => {
 
                 <div className={styles.formGroup}>
                   <label htmlFor="update-exchange-baseCurrencyId">Base currency</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("baseCurrencyId")}
                     id="update-exchange-baseCurrencyId" name="baseCurrencyId"
                     value={form.baseCurrencyId}
@@ -343,12 +344,12 @@ const UpdateExchangeRate = () => {
                         {c.name} - {c.description}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.formGroup}>
                   <label htmlFor="update-exchange-quoteCurrencyId">Quote currency</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("quoteCurrencyId")}
                     id="update-exchange-quoteCurrencyId" name="quoteCurrencyId"
                     value={form.quoteCurrencyId}
@@ -361,7 +362,7 @@ const UpdateExchangeRate = () => {
                         {c.name} - {c.description}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.formGroup}>

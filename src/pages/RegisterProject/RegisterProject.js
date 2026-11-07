@@ -1,3 +1,4 @@
+import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import CountryPicker from "../../components/ProjectClassification/CountryPicker";
 import { useCountryCatalogue } from "../../utils/projectGeography";
 import ClassificationFields from "../../components/ProjectClassification/ClassificationFields";
@@ -589,7 +590,7 @@ const RegisterProject = () => {
 
                 <div className={styles.formGroup}>
                   <label>Project Status</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("projectStatusId")}
                     name="projectStatusId"
                     value={projectDetails.projectStatusId}
@@ -601,7 +602,7 @@ const RegisterProject = () => {
                         {s.statusName}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                   {getFieldError("projectStatusId") && (
                     <div className={styles.fieldError}>
                       {getFieldError("projectStatusId")}
@@ -611,7 +612,7 @@ const RegisterProject = () => {
 
                 <div className={styles.formGroup}>
                   <label>Project Type</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("projectTypeId")}
                     name="projectTypeId"
                     value={projectDetails.projectTypeId}
@@ -623,7 +624,7 @@ const RegisterProject = () => {
                         {t.projectTypeName}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                   {getFieldError("projectTypeId") && (
                     <div className={styles.fieldError}>
                       {getFieldError("projectTypeId")}
@@ -633,7 +634,7 @@ const RegisterProject = () => {
 
                 <div className={styles.formGroup}>
                   <label>Address</label>
-                  <select
+                  <SearchableSelect
                     className={styles.textInput}
                     name="addressId"
                     value={projectDetails.addressId}
@@ -645,7 +646,7 @@ const RegisterProject = () => {
                         {a.street || ""}, {a.city || ""} {a.country || ""}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.row2}>
@@ -663,7 +664,7 @@ const RegisterProject = () => {
 
                   <div className={styles.formGroup}>
                     <label>Part Of Project</label>
-                    <select
+                    <SearchableSelect
                       className={styles.textInput}
                       name="partOfId"
                       value={projectDetails.partOfId}
@@ -675,7 +676,7 @@ const RegisterProject = () => {
                           {p.projectName}
                         </option>
                       ))}
-                    </select>
+                    </SearchableSelect>
                   </div>
                 </div>
 

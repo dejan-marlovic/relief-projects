@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -313,7 +314,7 @@ const UpdateUser = () => {
 
                 <div className={styles.formGroup}>
                   <label htmlFor="updateUserSelect">User</label>
-                  <select
+                  <SearchableSelect
                     id="updateUserSelect"
                     className={inputClass("selectedUserId")}
                     value={userDetails.selectedUserId}
@@ -327,7 +328,7 @@ const UpdateUser = () => {
                         {user.employeeId ?? "N/A"}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                   {fieldErrors.selectedUserId && (
                     <div className={styles.fieldError}>
                       {fieldErrors.selectedUserId}

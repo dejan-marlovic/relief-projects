@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import { fundingCurrencyLabel } from "../../../utils/transactionFunding";
 import { budgetOptionLabel } from "../../../utils/budgetDisplay";
@@ -345,7 +346,7 @@ const RestoreTransaction = () => {
                     Deleted transaction
                   </label>
 
-                  <select
+                  <SearchableSelect
                     id="restoreTransactionSelect"
                     className={styles.textInput}
                     value={selectedTransactionId}
@@ -363,7 +364,7 @@ const RestoreTransaction = () => {
                         {getTransactionLabel(transaction)}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.mutedHint}>

@@ -1,3 +1,4 @@
+import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import { HistoryPagination, HistoryTimeline, HistoryEntry } from "../ActivityHistory/ActivityHistory";
 import ScrollToForm from "../ScrollToForm/ScrollToForm";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -116,9 +117,9 @@ export function FinalEvidencePanel({ paymentOrderId, refreshKey, editingLocked }
       {selecting && <>
         <p>All active exact versions from the header transaction’s project are listed, including historical versions. FINANCE classification is suggested, not required.</p>
         {candidateError && <p role="alert">{candidateError}</p>}
-        <label>Exact document version<select required disabled={busy || candidateLoading} value={form.documentId} onChange={e => setForm({ ...form, documentId: e.target.value })}><option value="">{candidateLoading ? "Loading documents…" : "Select a version"}</option>{docs.filter(doc => !data?.entries.some(entry => entry.documentId === doc.id && entry.id !== form.entryId)).map(doc => <option key={doc.id} value={doc.id}>{doc.documentName || "Name unavailable"} · #{doc.id} · Version {doc.versionNumber ?? "Unknown"} · {doc.status || "Status unknown"}{doc.isCurrent ? " · Current" : " · Historical"}</option>)}</select></label>
+        <label>Exact document version<SearchableSelect required disabled={busy || candidateLoading} value={form.documentId} onChange={e => setForm({ ...form, documentId: e.target.value })}><option value="">{candidateLoading ? "Loading documents…" : "Select a version"}</option>{docs.filter(doc => !data?.entries.some(entry => entry.documentId === doc.id && entry.id !== form.entryId)).map(doc => <option key={doc.id} value={doc.id}>{doc.documentName || "Name unavailable"} · #{doc.id} · Version {doc.versionNumber ?? "Unknown"} · {doc.status || "Status unknown"}{doc.isCurrent ? " · Current" : " · Historical"}</option>)}</SearchableSelect></label>
         {selected && <p>Selected exact version #{selected.id}: {selected.status || "Unknown status"}{!selected.isCurrent && " · Historical version"}. This selection will not follow future replacements.</p>}
-        <label>Evidence description<select value={form.role} disabled={busy} onChange={e => setForm({ ...form, role: e.target.value })}>{["SIGNED_PAYMENT_ORDER", "COMBINED_PAYMENT_EVIDENCE"].map(role => <option key={role} value={role}>{evidenceRole(role)}</option>)}</select></label>
+        <label>Evidence description<SearchableSelect value={form.role} disabled={busy} onChange={e => setForm({ ...form, role: e.target.value })}>{["SIGNED_PAYMENT_ORDER", "COMBINED_PAYMENT_EVIDENCE"].map(role => <option key={role} value={role}>{evidenceRole(role)}</option>)}</SearchableSelect></label>
       </>}
       <label>Reason<textarea required maxLength={1000} value={form.reason} disabled={busy} onChange={e => setForm({ ...form, reason: e.target.value })} /></label>
       {form.action === "remove" && <p>The file remains available in Documents. The removed association and its reason remain in history.</p>}

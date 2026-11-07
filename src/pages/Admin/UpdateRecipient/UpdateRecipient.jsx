@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import { exactAmount, summaryAmount, summaryText } from "../../../utils/paymentFunding";
 import React, { useEffect, useMemo, useState } from "react";
@@ -277,7 +278,7 @@ const UpdateRecipient = () => {
 
                 <div className={styles.formGroup}>
                   <label>Recipient</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("selectedId")}
                     value={form.selectedId}
                     onChange={handleSelectChange}
@@ -294,7 +295,7 @@ const UpdateRecipient = () => {
                         - amount: {exactAmount(summaryAmount(item))} · {summaryText(item.amountSummary)} (id: {item.id})
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
               </div>
 
@@ -308,7 +309,7 @@ const UpdateRecipient = () => {
 
                 <div className={styles.formGroup}>
                   <label>Organization</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("organizationId")}
                     name="organizationId"
                     value={form.organizationId}
@@ -321,12 +322,12 @@ const UpdateRecipient = () => {
                         {org.organizationName} (id: {org.id})
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.formGroup}>
                   <label>Payment order</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("paymentOrderId")}
                     name="paymentOrderId"
                     value={form.paymentOrderId}
@@ -340,7 +341,7 @@ const UpdateRecipient = () => {
                         {po.paymentOrderDescription || "No description"}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.mutedHint}>

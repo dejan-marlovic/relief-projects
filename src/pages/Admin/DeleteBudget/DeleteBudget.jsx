@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import { budgetOptionLabel } from "../../../utils/budgetDisplay";
 import React, { useEffect, useMemo, useState } from "react";
@@ -252,7 +253,7 @@ const DeleteBudget = () => {
 
                 <div className={styles.formGroup}>
                   <label htmlFor="deleteBudgetSelect">Budget</label>
-                  <select
+                  <SearchableSelect
                     id="deleteBudgetSelect"
                     className={inputClass}
                     value={selectedBudgetId}
@@ -265,7 +266,7 @@ const DeleteBudget = () => {
                         {budgetOptionLabel(budget)}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.mutedHint}>

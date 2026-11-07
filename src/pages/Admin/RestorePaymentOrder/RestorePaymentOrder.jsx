@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import PaymentAmount from "../../../components/PaymentAmount/PaymentAmount";
 import { fundingCurrencyLabel } from "../../../utils/transactionFunding";
@@ -351,7 +352,7 @@ const RestorePaymentOrder = () => {
                     Deleted payment order
                   </label>
 
-                  <select
+                  <SearchableSelect
                     id="restorePaymentOrderSelect"
                     className={styles.textInput}
                     value={selectedPaymentOrderId}
@@ -369,7 +370,7 @@ const RestorePaymentOrder = () => {
                         {getPaymentOrderLabel(paymentOrder)}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.mutedHint}>

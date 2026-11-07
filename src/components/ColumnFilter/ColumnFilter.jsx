@@ -1,3 +1,4 @@
+import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { FiFilter } from "react-icons/fi";
@@ -91,10 +92,10 @@ const ColumnFilter = ({ label, type, value, options = [], onApply, onClear }) =>
         <input type="text" value={draft} autoFocus onChange={(e) => setDraft(e.target.value)} />
       </label>}
       {type === "select" && <label>Value
-        <select value={draft} onChange={(e) => setDraft(e.target.value)}>
+        <SearchableSelect value={draft} onChange={(e) => setDraft(e.target.value)}>
           <option value="">All</option>
           {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-        </select>
+        </SearchableSelect>
       </label>}
       {type === "number" && <>
         <label>Minimum<input type="number" value={draft.min} onChange={(e) => setDraft((v) => ({ ...v, min: e.target.value }))} /></label>

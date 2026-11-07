@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import { appFetch as fetch } from "../../../utils/appFetch";
 import React, { useEffect, useState } from "react";
 import { FiSave, FiX, FiUser } from "react-icons/fi";
@@ -337,7 +338,7 @@ const CreateEmployee = () => {
 
           <div className={styles.formGroup}>
             <label>Position</label>
-            <select
+            <SearchableSelect
               // ✅ FIX: positionId spelling
               className={inputClass("positionId")}
               value={positionId}
@@ -379,7 +380,7 @@ const CreateEmployee = () => {
                   </option>
                 );
               })}
-            </select>
+            </SearchableSelect>
             <div className={styles.fieldError}>{fieldErrors.positionId}</div>
           </div>
         </div>

@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiSave, FiX } from "react-icons/fi";
@@ -179,7 +180,7 @@ const CreateSignature = () => {
 
             <div className={styles.formGroup}>
               <label>Signature status</label>
-              <select
+              <SearchableSelect
                 className={inputClass("signatureStatusId")}
                 name="signatureStatusId"
                 value={form.signatureStatusId}
@@ -191,12 +192,12 @@ const CreateSignature = () => {
                     {s.name} (id: {s.id})
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
 
             <div className={styles.formGroup}>
               <label>Employee</label>
-              <select
+              <SearchableSelect
                 className={inputClass("employeeId")}
                 name="employeeId"
                 value={form.employeeId}
@@ -208,12 +209,12 @@ const CreateSignature = () => {
                     {e.firstName} {e.lastName} (id: {e.id})
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
 
             <div className={styles.formGroup}>
               <label>Payment order</label>
-              <select
+              <SearchableSelect
                 className={inputClass("paymentOrderId")}
                 name="paymentOrderId"
                 value={form.paymentOrderId}
@@ -225,7 +226,7 @@ const CreateSignature = () => {
                     {po.paymentOrderDescription} (id: {po.id})
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
           </div>
 

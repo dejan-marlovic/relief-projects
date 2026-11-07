@@ -1,3 +1,4 @@
+import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { BASE_URL } from "../../config/api";
@@ -68,8 +69,8 @@ export function Schedule({ authFetch }) {
       <div className={styles.filters}>
         <label>Window from<input type="date" min="1000-01-01" max="9999-12-31" value={draft.from} onChange={e => change("from", e.target.value)} /></label>
         <label>Window through<input type="date" min="1000-01-01" max="9999-12-31" value={draft.to} onChange={e => change("to", e.target.value)} /></label>
-        <label>Schedule project<select value={draft.projectId} onChange={e => change("projectId", e.target.value)}><option value="">All active projects</option>{draft.projectId && !projects.data?.some(p => String(p.id) === draft.projectId) && <option value={draft.projectId}>Project #{draft.projectId} (not in current lookup)</option>}{projects.data?.map(p => <option key={p.id} value={p.id}>{p.projectName || p.name}</option>)}</select></label>
-        <label>Plan state<select value={draft.state} onChange={e => change("state", e.target.value)}>{states.map(state => <option key={state} value={state}>{state === "PLANNED" ? "Submitted and approved" : state === "ALL" ? "All states" : label(state)}</option>)}</select></label>
+        <label>Schedule project<SearchableSelect value={draft.projectId} onChange={e => change("projectId", e.target.value)}><option value="">All active projects</option>{draft.projectId && !projects.data?.some(p => String(p.id) === draft.projectId) && <option value={draft.projectId}>Project #{draft.projectId} (not in current lookup)</option>}{projects.data?.map(p => <option key={p.id} value={p.id}>{p.projectName || p.name}</option>)}</SearchableSelect></label>
+        <label>Plan state<SearchableSelect value={draft.state} onChange={e => change("state", e.target.value)}>{states.map(state => <option key={state} value={state}>{state === "PLANNED" ? "Submitted and approved" : state === "ALL" ? "All states" : label(state)}</option>)}</SearchableSelect></label>
         <label>Traveller employee ID<input type="number" min="1" step="1" value={draft.travellerEmployeeId} onChange={e => change("travellerEmployeeId", e.target.value)} /></label>
       </div>
       <p className={styles.muted}>Leave both dates blank for the default window: 30 days before through 90 days after today in Stockholm. Custom windows can cover up to 366 days.</p>

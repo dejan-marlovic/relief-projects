@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import PaymentAmount from "../../../components/PaymentAmount/PaymentAmount";
 import React, { useEffect, useMemo, useState } from "react";
@@ -267,7 +268,7 @@ const DeletePaymentOrder = () => {
                   <label htmlFor="deletePaymentOrderSelect">
                     Payment order
                   </label>
-                  <select
+                  <SearchableSelect
                     id="deletePaymentOrderSelect"
                     className={inputClass}
                     value={selectedPaymentOrderId}
@@ -282,7 +283,7 @@ const DeletePaymentOrder = () => {
                         | Id: {order.id}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.mutedHint}>

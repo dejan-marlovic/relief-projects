@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -191,7 +192,7 @@ const RestoreTransactionStatus = () => {
                     Deleted transaction status
                   </label>
 
-                  <select
+                  <SearchableSelect
                     id="restoreTransactionStatusSelect"
                     className={styles.textInput}
                     value={selectedTransactionStatusId}
@@ -213,7 +214,7 @@ const RestoreTransactionStatus = () => {
                         {transactionStatus.id}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.mutedHint}>

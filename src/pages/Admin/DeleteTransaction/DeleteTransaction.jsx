@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import { fundingCurrencyLabel } from "../../../utils/transactionFunding";
 import { budgetOptionLabel } from "../../../utils/budgetDisplay";
@@ -338,7 +339,7 @@ const DeleteTransaction = () => {
 
                 <div className={styles.formGroup}>
                   <label htmlFor="deleteTransactionSelect">Transaction</label>
-                  <select
+                  <SearchableSelect
                     id="deleteTransactionSelect"
                     className={inputClass}
                     value={selectedTransactionId}
@@ -355,7 +356,7 @@ const DeleteTransaction = () => {
                         )}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.mutedHint}>

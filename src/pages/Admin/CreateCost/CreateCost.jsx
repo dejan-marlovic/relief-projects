@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 // src/components/Admin/CreateCost/CreateCost.jsx
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -273,7 +274,7 @@ const CreateCost = () => {
 
                 <div className={styles.formGroup}>
                   <label>Cost type</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("costTypeId")}
                     name="costTypeId"
                     value={costDetails.costTypeId}
@@ -286,7 +287,7 @@ const CreateCost = () => {
                         {ct.costTypeName} (id: {ct.id})
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                   {fieldErrors.costTypeId && (
                     <div className={styles.fieldError}>
                       {fieldErrors.costTypeId}

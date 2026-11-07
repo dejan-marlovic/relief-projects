@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useScrollToEditor from "../../../hooks/useScrollToEditor";
 import RecordActivity from "../../../components/RecordActivity/RecordActivity";
 import PaymentOrderFinalEvidence from "../../../components/PaymentOrderFinalEvidence/PaymentOrderFinalEvidence";
@@ -113,7 +114,7 @@ const PaymentOrder = ({
 
   const selectTransaction = (
     <>
-      <select
+      <SearchableSelect
         aria-label="Transaction"
         value={ev.transactionId ?? po.transactionId ?? ""}
         onChange={(e) =>
@@ -130,7 +131,7 @@ const PaymentOrder = ({
         {transactions.map((t) => (
           <option key={t.id} value={t.id}>{`TX#${t.id}`}</option>
         ))}
-      </select>
+      </SearchableSelect>
       <FieldError name="transactionId" />
     </>
   );

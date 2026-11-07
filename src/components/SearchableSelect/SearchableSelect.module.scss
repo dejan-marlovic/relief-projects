@@ -1,0 +1,11 @@
+@use "../../styles/colors" as colors;
+.backdrop { position: fixed; inset: 0; z-index: 10000; background: #0005; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+.picker { box-sizing: border-box; width: min(100%, 520px); max-height: 85dvh; overflow: auto; padding: 1.2rem; border: 1px solid colors.$border; border-radius: 12px; background: colors.$surface; color: colors.$text; box-shadow: 0 8px 32px #0004; }
+.picker h3 { margin: 0 0 .8rem; overflow-wrap: anywhere; }
+.picker input { box-sizing: border-box; width: 100%; padding: .75rem; font: inherit; color: colors.$text; background: colors.$surface; border: 1px solid colors.$border; border-radius: 8px; }
+.picker ul { list-style: none; padding: 0; margin: .6rem 0; max-height: 45dvh; overflow-y: auto; }
+.picker li { padding: .75rem; min-height: 24px; cursor: pointer; overflow-wrap: anywhere; border-radius: 6px; }
+.picker li:hover, .active { background: colors.$primary-a12; }
+.picker li[aria-disabled=true] { opacity: .5; cursor: not-allowed; }
+.picker button { padding: .65rem 1rem; font: inherit; cursor: pointer; color: colors.$primary; background: colors.$surface; border: 1px solid colors.$primary-border; border-radius: 8px; }
+.picker :focus-visible { outline: 2px solid colors.$primary; outline-offset: 2px; }

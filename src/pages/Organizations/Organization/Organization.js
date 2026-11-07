@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useScrollToEditor from "../../../hooks/useScrollToEditor";
 import { Link, useNavigate } from "react-router-dom";
 import { useUnsavedChanges } from "../../../context/UnsavedChangesContext";
@@ -79,7 +80,7 @@ const Organization = ({
 
   const selectOrg = () => (
     <>
-      <select
+      <SearchableSelect
         aria-label="Organization"
         disabled={saving}
         value={ev.organizationId ?? link.organizationId ?? ""}
@@ -92,14 +93,14 @@ const Organization = ({
             {o.name}
           </option>
         ))}
-      </select>
+      </SearchableSelect>
       <FieldError name="organizationId" />
     </>
   );
 
   const selectStatus = () => (
     <>
-      <select
+      <SearchableSelect
         aria-label="Role in this project"
         disabled={saving}
         value={ev.organizationStatusId ?? link.organizationStatusId ?? ""}
@@ -114,7 +115,7 @@ const Organization = ({
             {s.organizationStatusName}
           </option>
         ))}
-      </select>
+      </SearchableSelect>
       <FieldError name="organizationStatusId" />
     </>
   );

@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../../components/SearchableSelect/SearchableSelect";
 import { appFetch as fetch } from "../../../../utils/appFetch";
 /* global BigInt */
 import { decimalUnits, fundingCurrencyLabel, sumAmounts, remainingFunding } from "../../../../utils/transactionFunding";
@@ -391,7 +392,7 @@ const TransactionAllocations = ({
         <div className={styles.addGrid}>
           <div className={styles.field}>
             <label>Cost detail</label>
-            <select
+            <SearchableSelect
               value={draft.costDetailId}
               onChange={(e) => {
                 const costDetailId = e.target.value;
@@ -420,7 +421,7 @@ const TransactionAllocations = ({
                   )
                 </option>
               ))}
-            </select>
+            </SearchableSelect>
             {fieldErrors.costDetailId && (
               <div className={styles.fieldError}>
                 {fieldErrors.costDetailId}

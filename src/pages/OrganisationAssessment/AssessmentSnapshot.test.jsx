@@ -9,7 +9,7 @@ test("captured assessment is grouped with readable labels and retained reference
   expect(screen.getByText("Project and organisation")).toBeInTheDocument();
   expect(screen.getByText("Evidence considered")).toBeInTheDocument();
   expect(screen.getByText("Concept.pdf")).toBeInTheDocument();
-  expect(screen.getByText("42").closest("details")).not.toHaveAttribute("open");
+  expect(screen.getByText("Concept.pdf · Reference 42").closest("details")).not.toHaveAttribute("open");
 });
 
 test("unrecognised historical fields and empty values remain accessible", () => {

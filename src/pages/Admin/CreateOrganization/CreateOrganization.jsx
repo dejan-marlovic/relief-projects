@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 // src/components/Admin/CreateOrganization/CreateOrganization.jsx
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -324,7 +325,7 @@ const CreateOrganization = () => {
 
                 <div className={styles.formGroup}>
                   <label>Address</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("addressId")}
                     name="addressId"
                     value={organizationDetails.addressId}
@@ -337,7 +338,7 @@ const CreateOrganization = () => {
                         {addressLabel(address)} (id: {address.id})
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
 
                   {fieldErrors.addressId && (
                     <div className={styles.fieldError}>

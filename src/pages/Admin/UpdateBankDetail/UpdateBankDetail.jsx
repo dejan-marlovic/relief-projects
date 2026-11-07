@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -279,7 +280,7 @@ const UpdateBankDetail = () => {
 
                 <div className={styles.formGroup}>
                   <label>Bank detail</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("selectedId")}
                     value={form.selectedId}
                     onChange={handleSelectChange}
@@ -293,7 +294,7 @@ const UpdateBankDetail = () => {
                           `Organization #${item.organizationId}`}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
               </div>
 
@@ -307,7 +308,7 @@ const UpdateBankDetail = () => {
 
                 <div className={styles.formGroup}>
                   <label>Organization</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("organizationId")}
                     name="organizationId"
                     value={form.organizationId}
@@ -320,7 +321,7 @@ const UpdateBankDetail = () => {
                         {organizationLabelById[item.id]} (id: {item.id})
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.formGroup}>

@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -177,7 +178,7 @@ const RestoreCurrency = () => {
                     Deleted currency
                   </label>
 
-                  <select
+                  <SearchableSelect
                     id="restoreCurrencySelect"
                     className={styles.textInput}
                     value={selectedCurrencyId}
@@ -195,7 +196,7 @@ const RestoreCurrency = () => {
                         {currency.name} - {currency.description}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.mutedHint}>

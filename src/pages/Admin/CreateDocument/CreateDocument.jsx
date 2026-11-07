@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiSave, FiX } from "react-icons/fi";
@@ -169,7 +170,7 @@ const CreateDocument = () => {
 
             <div className={styles.formGroup}>
               <label>Project</label>
-              <select
+              <SearchableSelect
                 className={inputClass("projectId")}
                 name="projectId"
                 value={form.projectId}
@@ -181,7 +182,7 @@ const CreateDocument = () => {
                     {p.projectName} (id: {p.id})
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
           </div>
 
@@ -193,9 +194,9 @@ const CreateDocument = () => {
 
             <div className={styles.formGroup}>
               <label htmlFor="new-document-category">Category</label>
-              <select id="new-document-category" name="category" className={inputClass("category")} value={form.category} onChange={handleChange} disabled={loading || !categories.length}>
+              <SearchableSelect id="new-document-category" name="category" className={inputClass("category")} value={form.category} onChange={handleChange} disabled={loading || !categories.length}>
                 {categories.map((category) => <option key={category.id} value={category.id}>{category.label}</option>)}
-              </select>
+              </SearchableSelect>
               {fieldErrors.category && <span role="alert">{fieldErrors.category}</span>}
             </div>
             <div className={styles.formGroup}>

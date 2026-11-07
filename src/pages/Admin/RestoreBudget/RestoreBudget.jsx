@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import { budgetOptionLabel } from "../../../utils/budgetDisplay";
 import React, { useEffect, useMemo, useState } from "react";
@@ -296,7 +297,7 @@ const RestoreBudget = () => {
                 <div className={styles.formGroup}>
                   <label htmlFor="restoreBudgetSelect">Deleted budget</label>
 
-                  <select
+                  <SearchableSelect
                     id="restoreBudgetSelect"
                     className={styles.textInput}
                     value={selectedBudgetId}
@@ -314,7 +315,7 @@ const RestoreBudget = () => {
                         {getBudgetLabel(budget)}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.mutedHint}>

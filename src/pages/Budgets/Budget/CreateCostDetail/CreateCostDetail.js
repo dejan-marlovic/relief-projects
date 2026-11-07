@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../../components/SearchableSelect/SearchableSelect";
 import ScrollToForm from "../../../../components/ScrollToForm/ScrollToForm";
 import { appFetch as fetch } from "../../../../utils/appFetch";
 import { calculationErrors, costDetailInputs } from "../../../../utils/budgetCalculations";
@@ -120,7 +121,7 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
       <div className={styles.formRow}>
         <div className={styles.formGroup}>
           <label htmlFor="costTypeId">Cost Type</label>
-          <select
+          <SearchableSelect
             id="costTypeId"
             name="costTypeId"
             value={form.costTypeId}
@@ -133,12 +134,12 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
                 {t.costTypeName}
               </option>
             ))}
-          </select>
+          </SearchableSelect>
         </div>
 
         <div className={styles.formGroup}>
           <label htmlFor="costId">Category</label>
-          <select
+          <SearchableSelect
             id="costId"
             name="costId"
             value={form.costId}
@@ -151,7 +152,7 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
                 {c.costName}
               </option>
             ))}
-          </select>
+          </SearchableSelect>
         </div>
 
         <div className={styles.formGroup}>

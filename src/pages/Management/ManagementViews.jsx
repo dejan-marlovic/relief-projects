@@ -1,3 +1,4 @@
+import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import { HistoryTimeline, SnapshotHistoryEntry } from "../../components/ActivityHistory/ActivityHistory";
 import { workflowLabel } from "../FollowUps/workflow";
 import { HistoryIntro } from "../../components/Workflow/Workflow";
@@ -41,7 +42,7 @@ export function TaskPicker({ projectId, authFetch, refresh, selected, onSelect }
 export function EvidencePicker({ projectId, authFetch, refresh, selected, onSelect }) {
   const state = useManagementRead(authFetch, `${BASE_URL}/api/documents/project/${projectId}`, refresh);
   const docs = Array.isArray(state.data) ? state.data.filter(d => d.isDeleted === false && String(d.projectId) === String(projectId)) : [];
-  return <section><p>Select one exact document version. Historical active versions are included; replacements will not redirect this link.</p><ReadState state={state} /><label>Supporting document<select value={selected || ""} disabled={state.loading} onChange={e => onSelect(e.target.value ? Number(e.target.value) : null)}><option value="">Select a document version</option>{docs.map(d => <option key={d.id} value={d.id}>{d.documentName || `Document #${d.id}`} · Version {d.versionNumber ?? "unknown"} · #{d.id} · {d.status || "Unknown status"}</option>)}</select></label>{state.data && !docs.length && <p>No active document versions available for this project.</p>}{selected && !docs.some(d => d.id === selected) && <p role="alert">The selected version is no longer in the available list. Refresh and select again.</p>}</section>;
+  return <section><p>Select one exact document version. Historical active versions are included; replacements will not redirect this link.</p><ReadState state={state} /><label>Supporting document<SearchableSelect value={selected || ""} disabled={state.loading} onChange={e => onSelect(e.target.value ? Number(e.target.value) : null)}><option value="">Select a document version</option>{docs.map(d => <option key={d.id} value={d.id}>{d.documentName || `Document #${d.id}`} · Version {d.versionNumber ?? "unknown"} · #{d.id} · {d.status || "Unknown status"}</option>)}</SearchableSelect></label>{state.data && !docs.length && <p>No active document versions available for this project.</p>}{selected && !docs.some(d => d.id === selected) && <p role="alert">The selected version is no longer in the available list. Refresh and select again.</p>}</section>;
 }
 
 export function Associations({ kind, endpoint, authFetch, refresh, open, locked }) {

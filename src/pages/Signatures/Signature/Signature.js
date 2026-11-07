@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useScrollToEditor from "../../../hooks/useScrollToEditor";
 import React from "react";
 import styles from "./Signature.module.scss";
@@ -94,7 +95,7 @@ const SignatureRow = ({
 
   const selectPO = (
     <>
-      <select
+      <SearchableSelect
         {...fieldAccessibility("paymentOrderId", "Payment order")}
         value={
           ev.paymentOrderId ??
@@ -110,14 +111,14 @@ const SignatureRow = ({
             {`PO#${po.id}`}
           </option>
         ))}
-      </select>
+      </SearchableSelect>
       <FieldError name="paymentOrderId" />
     </>
   );
 
   const selectStatus = (
     <>
-      <select
+      <SearchableSelect
         {...fieldAccessibility("signatureStatusId", "Status")}
         value={
           ev.signatureStatusId ??
@@ -133,14 +134,14 @@ const SignatureRow = ({
             {s.label}
           </option>
         ))}
-      </select>
+      </SearchableSelect>
       <FieldError name="signatureStatusId" />
     </>
   );
 
   const selectEmployee = (
     <>
-      <select
+      <SearchableSelect
         {...fieldAccessibility("employeeId", "Employee")}
         value={
           ev.employeeId ??
@@ -156,7 +157,7 @@ const SignatureRow = ({
             {e.label}
           </option>
         ))}
-      </select>
+      </SearchableSelect>
       <FieldError name="employeeId" />
     </>
   );

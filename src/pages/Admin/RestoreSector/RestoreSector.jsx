@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -171,7 +172,7 @@ const RestoreSector = () => {
                 <div className={styles.formGroup}>
                   <label htmlFor="restoreSectorSelect">Deleted sector</label>
 
-                  <select
+                  <SearchableSelect
                     id="restoreSectorSelect"
                     className={styles.textInput}
                     value={selectedSectorId}
@@ -189,7 +190,7 @@ const RestoreSector = () => {
                         {sector.sectorCode} - {sector.sectorDescription}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.mutedHint}>

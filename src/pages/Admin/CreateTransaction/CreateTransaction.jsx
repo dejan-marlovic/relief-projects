@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useFinancialRefresh from "../../../hooks/useFinancialRefresh";
 import { financialBudgetEligible } from "../../../utils/budgetRevisions";
 import { fundingErrors } from "../../../utils/transactionFunding";
@@ -236,7 +237,7 @@ const CreateTransaction = () => {
 
             <div className={styles.formGroup}>
               <label>Organization</label>
-              <select
+              <SearchableSelect
                 className={inputClass("organizationId")}
                 name="organizationId"
                 value={form.organizationId}
@@ -248,12 +249,12 @@ const CreateTransaction = () => {
                     {o.organizationName} (id: {o.id})
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
 
             <div className={styles.formGroup}>
               <label>Project</label>
-              <select
+              <SearchableSelect
                 className={inputClass("projectId")}
                 name="projectId"
                 value={form.projectId}
@@ -265,12 +266,12 @@ const CreateTransaction = () => {
                     {p.projectName} (id: {p.id})
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
 
             <div className={styles.formGroup}>
               <label>Budget</label>
-              <select
+              <SearchableSelect
                 className={inputClass("budgetId")}
                 name="budgetId"
                 value={form.budgetId}
@@ -282,12 +283,12 @@ const CreateTransaction = () => {
                     {budgetOptionLabel(b)}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
 
             <div className={styles.formGroup}>
               <label>Financier organization</label>
-              <select
+              <SearchableSelect
                 className={inputClass("financierOrganizationId")}
                 name="financierOrganizationId"
                 value={form.financierOrganizationId}
@@ -299,12 +300,12 @@ const CreateTransaction = () => {
                     {o.organizationName} (id: {o.id})
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
 
             <div className={styles.formGroup}>
               <label>Transaction status</label>
-              <select
+              <SearchableSelect
                 className={inputClass("transactionStatusId")}
                 name="transactionStatusId"
                 value={form.transactionStatusId}
@@ -316,7 +317,7 @@ const CreateTransaction = () => {
                     {s.transactionStatusName} (id: {s.id})
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
           </div>
 

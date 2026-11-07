@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import { appFetch as fetch } from "../../../utils/appFetch";
 // src/components/Admin/CreateUser/CreateUser.jsx
 import React, { useEffect, useMemo, useState } from "react";
@@ -276,7 +277,7 @@ const CreateUser = () => {
 
                 <div className={styles.formGroup}>
                   <label>Employee</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("employeeId")}
                     name="employeeId"
                     value={userDetails.employeeId}
@@ -288,7 +289,7 @@ const CreateUser = () => {
                         {e.firstName || ""} {e.lastName || ""} (id: {e.id})
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                   {fieldErrors.employeeId && (
                     <div className={styles.fieldError}>
                       {fieldErrors.employeeId}

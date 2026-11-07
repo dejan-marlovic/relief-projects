@@ -1,3 +1,4 @@
+import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import AutosaveStatus from "../../components/ProjectClassification/AutosaveStatus";
 import { notifySuccess } from "../../utils/successNotifications";
 import OutlookFollowUps from "./OutlookFollowUps";
@@ -96,7 +97,7 @@ function TaskForm({ task, projectId, employees, busy, onSave, onCancel, blocked 
     <label>Description (optional)<textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} /></label>
     <div className={styles.grid}>
       <label>Deadline<input required type="date" min="1000-01-01" max="9999-12-31" value={date} onChange={(e) => setDate(e.target.value)} /></label>
-      <label>Responsible employee<select required value={assignee} onChange={(e) => setAssignee(e.target.value)}><option value="">Select an employee</option>{task?.assignee && !employees.some((p) => p.id === task.assignee.employeeId) && <option value={task.assignee.employeeId}>{task.assignee.displayName} (retained assignment)</option>}{employees.map((p) => <option key={p.id} value={p.id}>{employeeName(p)}</option>)}</select></label>
+      <label>Responsible employee<SearchableSelect required value={assignee} onChange={(e) => setAssignee(e.target.value)}><option value="">Select an employee</option>{task?.assignee && !employees.some((p) => p.id === task.assignee.employeeId) && <option value={task.assignee.employeeId}>{task.assignee.displayName} (retained assignment)</option>}{employees.map((p) => <option key={p.id} value={p.id}>{employeeName(p)}</option>)}</SearchableSelect></label>
     </div>
     {error && <p role="alert">{error}</p>}
     <div className={styles.actions}><button disabled={busy || blocked || !reviewed} type="submit">{busy ? "Saving follow-up…" : "Save follow-up"}</button><button disabled={busy} type="button" onClick={onCancel}>Close</button><button disabled={busy} type="button" onClick={() => { if (window.confirm("Discard these unfinished follow-up entries?")) { clearDraft(key); onCancel(); } }}>Discard unfinished entries</button></div>
@@ -308,7 +309,7 @@ function Queue({ mode, projectId, authFetch }) {
     {form && <p className={styles.muted}>Close or save your draft to change filters.</p>}
     <div className={styles.filters}>
       {!board && <><label>Status<select value={filters.status} disabled={filtersDisabled || board} onChange={(e) => changeFilter("status", e.target.value)}><option value="OPEN">Open</option><option value="COMPLETED">Completed</option><option value="ALL">All statuses</option></select></label>
-      <label>Deadline group<select value={filters.due} disabled={filtersDisabled || board || filters.status !== "OPEN" || filters.deleted} onChange={(e) => changeFilter("due", e.target.value)}><option value="">All deadlines</option>{Object.entries(buckets).slice(0, 4).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label></>}
+      <label>Deadline group<SearchableSelect value={filters.due} disabled={filtersDisabled || board || filters.status !== "OPEN" || filters.deleted} onChange={(e) => changeFilter("due", e.target.value)}><option value="">All deadlines</option>{Object.entries(buckets).slice(0, 4).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</SearchableSelect></label></>}
       <label>Due from<input type="date" value={filters.dueFrom} disabled={filtersDisabled} onChange={(e) => changeFilter("dueFrom", e.target.value)} /></label>
       <label>Due through<input type="date" value={filters.dueTo} disabled={filtersDisabled} onChange={(e) => changeFilter("dueTo", e.target.value)} /></label>
       {mode === "project" && supported && <EmployeeFilter employees={employees} value={filters.assigneeEmployeeId} disabled={filtersDisabled} onChange={value => changeFilter("assigneeEmployeeId", value)} />}

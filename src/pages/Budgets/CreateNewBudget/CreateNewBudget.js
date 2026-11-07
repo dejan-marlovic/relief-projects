@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import { appFetch as fetch } from "../../../utils/appFetch";
 import { notifySuccess } from "../../../utils/successNotifications";
 import { budgetLimitError } from "../../../utils/budgetLimit";
@@ -500,7 +501,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
               <div className={styles.row2}>
                 <div className={styles.formGroup}>
                   <label>Local Currency:</label>
-                  <select
+                  <SearchableSelect
                     name="localCurrencyId"
                     className={inputClass("localCurrencyId")}
                     value={budget.localCurrencyId || ""}
@@ -512,7 +513,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
                         {c.name}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                   {getFieldError("localCurrencyId") && (
                     <div className={styles.fieldError}>
                       {getFieldError("localCurrencyId")}
@@ -522,7 +523,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
 
                 <div className={styles.formGroup}>
                   <label>Local → GBP Rate:</label>
-                  <select
+                  <SearchableSelect
                     name="localExchangeRateToGbpId"
                     className={inputClass("localExchangeRateToGbpId")}
                     value={budget.localExchangeRateToGbpId || ""}
@@ -534,7 +535,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
                         {formatRateLabel(r)}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                   {getFieldError("localExchangeRateToGbpId") && (
                     <div className={styles.fieldError}>
                       {getFieldError("localExchangeRateToGbpId")}
@@ -556,7 +557,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
 
                 <div className={styles.formGroup}>
                   <label>SEK Exchange Rate (Local → SEK):</label>
-                  <select
+                  <SearchableSelect
                     name="reportingExchangeRateSekId"
                     className={inputClass("reportingExchangeRateSekId")}
                     value={budget.reportingExchangeRateSekId || ""}
@@ -568,7 +569,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
                         {formatRateLabel(r)}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                   {getFieldError("reportingExchangeRateSekId") && (
                     <div className={styles.fieldError}>
                       {getFieldError("reportingExchangeRateSekId")}
@@ -590,7 +591,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
 
                 <div className={styles.formGroup}>
                   <label>EUR Exchange Rate (Local → EUR):</label>
-                  <select
+                  <SearchableSelect
                     name="reportingExchangeRateEurId"
                     className={inputClass("reportingExchangeRateEurId")}
                     value={budget.reportingExchangeRateEurId || ""}
@@ -602,7 +603,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
                         {formatRateLabel(r)}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                   {getFieldError("reportingExchangeRateEurId") && (
                     <div className={styles.fieldError}>
                       {getFieldError("reportingExchangeRateEurId")}

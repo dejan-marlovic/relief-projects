@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -198,7 +199,7 @@ const DeleteSignatureStatus = () => {
                   <label htmlFor="deleteSignatureStatusSelect">
                     Signature status
                   </label>
-                  <select
+                  <SearchableSelect
                     id="deleteSignatureStatusSelect"
                     className={inputClass}
                     value={selectedSignatureStatusId}
@@ -211,7 +212,7 @@ const DeleteSignatureStatus = () => {
                         {status.name} (id: {status.id})
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.mutedHint}>

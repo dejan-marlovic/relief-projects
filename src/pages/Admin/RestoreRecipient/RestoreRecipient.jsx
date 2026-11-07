@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import PaymentAmount from "../../../components/PaymentAmount/PaymentAmount";
 import React, { useEffect, useMemo, useState } from "react";
@@ -290,7 +291,7 @@ const RestoreRecipient = () => {
                     Deleted recipient
                   </label>
 
-                  <select
+                  <SearchableSelect
                     id="restoreRecipientSelect"
                     className={styles.textInput}
                     value={selectedRecipientId}
@@ -308,7 +309,7 @@ const RestoreRecipient = () => {
                         {getRecipientLabel(recipient)}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.mutedHint}>

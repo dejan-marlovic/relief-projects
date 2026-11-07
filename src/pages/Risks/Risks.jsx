@@ -1,3 +1,4 @@
+import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import { HistoryPagination, HistoryTimeline, SnapshotHistoryEntry } from "../../components/ActivityHistory/ActivityHistory";
 import ScrollToForm from "../../components/ScrollToForm/ScrollToForm";
 import { WorkflowIntro, WorkflowStep, HistoryIntro } from "../../components/Workflow/Workflow";
@@ -91,12 +92,12 @@ function Editor({ editor, employees, busy, blocked, onDraft, onSave, onCancel, l
         <label>Title<input required value={draft.title} onChange={e => onDraft("title", e.target.value)} /></label>
         <label>Description (optional)<textarea rows={3} value={draft.description} onChange={e => onDraft("description", e.target.value)} /></label>
         <div className={styles.grid}>
-          <label>Responsible employee<select required value={draft.ownerEmployeeId} onChange={e => onDraft("ownerEmployeeId", e.target.value)}><option value="">Select an employee</option>
+          <label>Responsible employee<SearchableSelect required value={draft.ownerEmployeeId} onChange={e => onDraft("ownerEmployeeId", e.target.value)}><option value="">Select an employee</option>
             {risk && !employees.some(person => String(person.id) === String(risk.ownerEmployeeId)) && <option value={risk.ownerEmployeeId}>{risk.ownerName} (retained owner)</option>}
             {employees.map(person => <option key={person.id} value={person.id}>{employeeName(person)}</option>)}
-          </select></label>
+          </SearchableSelect></label>
           <label>Next review date<input required type="date" min="1000-01-01" max="9999-12-31" value={draft.reviewDate} onChange={e => onDraft("reviewDate", e.target.value)} /></label>
-          {["likelihood", "impact"].map(key => <label key={key}>{key === "likelihood" ? "Likelihood" : "Impact"}<select value={draft[key]} onChange={e => onDraft(key, e.target.value)}><RatingOptions /></select></label>)}
+          {["likelihood", "impact"].map(key => <label key={key}>{key === "likelihood" ? "Likelihood" : "Impact"}<SearchableSelect value={draft[key]} onChange={e => onDraft(key, e.target.value)}><RatingOptions /></SearchableSelect></label>)}
         </div>
         <label>Mitigation plan (optional)<textarea rows={4} value={draft.mitigationPlan} onChange={e => onDraft("mitigationPlan", e.target.value)} /></label>
       </> : ["close", "reopen"].includes(action) ? <label>Reason<textarea required rows={3} value={draft.reason || ""} onChange={e => onDraft("reason", e.target.value)} /></label> : <p>{action === "delete" ? "Delete this risk? Its history is retained. An administrator can restore it." : "Restore this risk with its previous open or closed status?"}</p>}
@@ -244,11 +245,11 @@ function Register({ projectId, authFetch }) {
   return <>
     <div className={styles.filters}>
       <label>Status<select value={filters.status} disabled={locked} onChange={e => changeFilter("status", e.target.value)}><option value="OPEN">Open</option><option value="CLOSED">Closed</option><option value="ALL">All statuses</option></select></label>
-      <label>Owner filter<select value={filters.ownerEmployeeId} disabled={locked} onChange={e => changeFilter("ownerEmployeeId", e.target.value)}><option value="">All owners</option>
+      <label>Owner filter<SearchableSelect value={filters.ownerEmployeeId} disabled={locked} onChange={e => changeFilter("ownerEmployeeId", e.target.value)}><option value="">All owners</option>
         {employees.map(person => <option key={person.id} value={person.id}>{employeeName(person)}</option>)}
         {data?.content.filter((risk, index, rows) => !employees.some(person => String(person.id) === String(risk.ownerEmployeeId)) && rows.findIndex(other => other.ownerEmployeeId === risk.ownerEmployeeId) === index).map(risk => <option key={risk.ownerEmployeeId} value={risk.ownerEmployeeId}>{risk.ownerName} (retained owner)</option>)}
-      </select></label>
-      {["likelihood", "impact"].map(key => <label key={key}>{key === "likelihood" ? "Likelihood filter" : "Impact filter"}<select value={filters[key]} disabled={locked} onChange={e => changeFilter(key, e.target.value)}><RatingOptions filter /></select></label>)}
+      </SearchableSelect></label>
+      {["likelihood", "impact"].map(key => <label key={key}>{key === "likelihood" ? "Likelihood filter" : "Impact filter"}<SearchableSelect value={filters[key]} disabled={locked} onChange={e => changeFilter(key, e.target.value)}><RatingOptions filter /></SearchableSelect></label>)}
       <label>Review from<input type="date" min="1000-01-01" max="9999-12-31" value={filters.reviewFrom} disabled={locked} onChange={e => changeFilter("reviewFrom", e.target.value)} /></label>
       <label>Review through<input type="date" min="1000-01-01" max="9999-12-31" value={filters.reviewTo} disabled={locked} onChange={e => changeFilter("reviewTo", e.target.value)} /></label>
       <label><input type="checkbox" checked={filters.overdue} disabled={locked || filters.status !== "OPEN" || filters.deleted} onChange={e => changeFilter("overdue", e.target.checked)} /> Overdue reviews only</label>

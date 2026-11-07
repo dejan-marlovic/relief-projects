@@ -1,3 +1,4 @@
+import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import ScrollToForm from "../../components/ScrollToForm/ScrollToForm";
 import useRecordAutosave from "../../utils/useRecordAutosave";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
@@ -409,7 +410,7 @@ const Documents = () => {
               <>
                 <div className={styles.metadataControls}>
                   <DocumentStatus label="Upload status" value={uploadStatus} disabled={uploading} onChange={(e) => setUploadStatus(e.target.value)} />
-                  <label>Upload category<select value={uploadCategory} disabled={uploading || !categories.length} onChange={(e) => setUploadCategory(e.target.value)}>{categoryOptions}</select></label>
+                  <label>Upload category<SearchableSelect value={uploadCategory} disabled={uploading || !categories.length} onChange={(e) => setUploadCategory(e.target.value)}>{categoryOptions}</SearchableSelect></label>
                   <label>Document date (optional)<input type="date" min="1000-01-01" max="9999-12-31" value={uploadDate} disabled={uploading} onChange={(e) => setUploadDate(e.target.value)} /></label>
                 </div>
                 <p className={styles.infoText}>Choose details before selecting a file. The document date is the date on the document, not its upload date.</p>
@@ -453,7 +454,7 @@ const Documents = () => {
             <h3 className={styles.sectionTitle}>Files for this project</h3>
             <div className={styles.metadataControls}>
               <label>Versions shown<select value={currentOnly ? "current" : "all"} disabled={!!editing} onChange={(e) => { setCurrentOnly(e.target.value === "current"); setEditing(null); }}><option value="current">Current versions</option><option value="all">All active versions</option></select></label>
-              <label>Filter by category<select value={categoryFilter} disabled={!!editing || !categories.length} onChange={(e) => { setCategoryFilter(e.target.value); setEditing(null); }}><option value="">All categories</option>{categoryOptions}</select></label>
+              <label>Filter by category<SearchableSelect value={categoryFilter} disabled={!!editing || !categories.length} onChange={(e) => { setCategoryFilter(e.target.value); setEditing(null); }}><option value="">All categories</option>{categoryOptions}</SearchableSelect></label>
               {listError && <button type="button" onClick={() => setListRevision(value => value + 1)} disabled={loading}>Retry loading documents</button>}
             </div>
             {editing && <ScrollToForm className={styles.metadataEditor} onSubmit={event => event.preventDefault()} onBlur={metadataSave.flush}>
@@ -462,7 +463,7 @@ const Documents = () => {
               <p>Details save automatically. Final is a descriptive label, not approval.</p>
               <div className={styles.metadataControls}>
                 <DocumentStatus value={editing.status} allowUnknown={!editing.original.status} disabled={saving} onChange={(e) => editMetadata("status", e.target.value)} />
-                <label>Category<select value={editing.category} disabled={saving || !categories.length} onChange={(e) => editMetadata("category", e.target.value)}>{categoryOptions}</select></label>
+                <label>Category<SearchableSelect value={editing.category} disabled={saving || !categories.length} onChange={(e) => editMetadata("category", e.target.value)}>{categoryOptions}</SearchableSelect></label>
                 <label>Document date<input type="date" min="1000-01-01" max="9999-12-31" value={editing.documentDate} disabled={saving} onChange={(e) => editMetadata("documentDate", e.target.value, false)} /></label>
               </div>
               <p className={styles.infoText}>Leave the date empty to clear it. Choose Uncategorized to remove a classification.</p>

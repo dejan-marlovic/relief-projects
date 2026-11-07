@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 // src/components/Admin/CreateExchangeRate/CreateExchangeRate.jsx
 
 //we are importing deafult react exports from "react" module + named exports: useEffect + useMemo + useState
@@ -333,7 +334,7 @@ const CreateExchangeRate = () => {
 
                 <div className={styles.formGroup}>
                   <label htmlFor="create-exchange-baseCurrencyId">Base currency</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("baseCurrencyId")}
                     id="create-exchange-baseCurrencyId" name="baseCurrencyId"
                     value={baseId}
@@ -346,7 +347,7 @@ const CreateExchangeRate = () => {
                         {currencyLabel(c)}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                   {hasError("baseCurrencyId") && (
                     <div className={styles.fieldError}>
                       {fieldErrors.baseCurrencyId}
@@ -356,7 +357,7 @@ const CreateExchangeRate = () => {
 
                 <div className={styles.formGroup}>
                   <label htmlFor="create-exchange-quoteCurrencyId">Quote currency</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("quoteCurrencyId")}
                     id="create-exchange-quoteCurrencyId" name="quoteCurrencyId"
                     value={quoteId}
@@ -372,7 +373,7 @@ const CreateExchangeRate = () => {
                         {currencyLabel(c)}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                   {hasError("quoteCurrencyId") && (
                     <div className={styles.fieldError}>
                       {fieldErrors.quoteCurrencyId}

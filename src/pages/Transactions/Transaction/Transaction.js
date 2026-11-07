@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useScrollToEditor from "../../../hooks/useScrollToEditor";
 import RevisionFundingAssignments from "../../../components/RevisionFundingAssignments/RevisionFundingAssignments";
 import RecordActivity from "../../../components/RecordActivity/RecordActivity";
@@ -121,7 +122,7 @@ const Transaction = ({
 
   const selectYesNo = (field) => (
     <>
-      <select
+      <SearchableSelect
         disabled={saving}
         aria-label={fieldLabels[field]}
         value={ev[field] ?? tx[field] ?? ""}
@@ -135,14 +136,14 @@ const Transaction = ({
             {v}
           </option>
         ))}
-      </select>
+      </SearchableSelect>
       <FieldError name={field} />
     </>
   );
 
   const selectOrg = (field) => (
     <>
-      <select
+      <SearchableSelect
         disabled={saving}
         aria-label={fieldLabels[field]}
         value={ev[field] ?? tx[field] ?? ""}
@@ -156,14 +157,14 @@ const Transaction = ({
             {o.name}
           </option>
         ))}
-      </select>
+      </SearchableSelect>
       <FieldError name={field} />
     </>
   );
 
   const selectStatus = () => (
     <>
-      <select
+      <SearchableSelect
         disabled={saving}
         aria-label={fieldLabels.transactionStatusId}
         value={ev.transactionStatusId ?? tx.transactionStatusId ?? ""}
@@ -177,7 +178,7 @@ const Transaction = ({
             {s.transactionStatusName}
           </option>
         ))}
-      </select>
+      </SearchableSelect>
       <FieldError name="transactionStatusId" />
     </>
   );
@@ -189,7 +190,7 @@ const Transaction = ({
 
   const selectBudget = () => (
     <>
-      <select
+      <SearchableSelect
         disabled={saving}
         aria-label={fieldLabels.budgetId}
         value={ev.budgetId ?? tx.budgetId ?? ""}
@@ -203,7 +204,7 @@ const Transaction = ({
             {budgetLabel(b)}
           </option>
         ))}
-      </select>
+      </SearchableSelect>
       <FieldError name="budgetId" />
     </>
   );

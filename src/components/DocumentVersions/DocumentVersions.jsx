@@ -1,3 +1,4 @@
+import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import { HistoryTimeline, HistoryEntry } from "../ActivityHistory/ActivityHistory";
 import ScrollToForm from "../ScrollToForm/ScrollToForm";
 import { FiUploadCloud } from "react-icons/fi";
@@ -122,7 +123,7 @@ export default function DocumentVersions({ document, authFetch, categories, canE
       <h4>Replace {replacement.name}</h4>
       <p className={styles.infoText}>This creates a new version. Category is inherited unless changed; document date starts empty and status starts as Draft.</p>
       <div className={styles.metadataControls}>
-        <label>Replacement category<select disabled={busy} value={replacement.category} onChange={(e) => setReplacement({ ...replacement, category: e.target.value })}><option value="">Inherit current category</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+        <label>Replacement category<SearchableSelect disabled={busy} value={replacement.category} onChange={(e) => setReplacement({ ...replacement, category: e.target.value })}><option value="">Inherit current category</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</SearchableSelect></label>
         <label>Replacement document date<input type="date" min="1000-01-01" max="9999-12-31" disabled={busy} value={replacement.date} onChange={(e) => setReplacement({ ...replacement, date: e.target.value })} /></label>
         <DocumentStatus label="Replacement status" value={replacement.status} disabled={busy} onChange={(e) => setReplacement({ ...replacement, status: e.target.value })} />
 

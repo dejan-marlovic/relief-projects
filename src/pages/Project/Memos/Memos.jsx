@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import { appFetch as fetch } from "../../../utils/appFetch";
 import React, {
   useCallback,
@@ -279,7 +280,7 @@ export default function Memos({ canEdit = false }) {
 
   // Reusable selects — now styled like Project form
   const PositionSelect = ({ value, onChange }) => (
-    <select
+    <SearchableSelect
       className={`${projectStyles.textInput} ${styles.smallInput}`}
       value={value ?? ""}
       onChange={(e) => onChange(Number(e.target.value) || null)}
@@ -290,11 +291,11 @@ export default function Memos({ canEdit = false }) {
           {posLabel(p)}
         </option>
       ))}
-    </select>
+    </SearchableSelect>
   );
 
   const EmployeeSelect = ({ value, onChange }) => (
-    <select
+    <SearchableSelect
       className={`${projectStyles.textInput} ${styles.smallInput}`}
       value={value ?? ""}
       onChange={(e) => onChange(Number(e.target.value) || null)}
@@ -305,7 +306,7 @@ export default function Memos({ canEdit = false }) {
           {empLabel(e)}
         </option>
       ))}
-    </select>
+    </SearchableSelect>
   );
 
   return (

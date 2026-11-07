@@ -1,3 +1,4 @@
+import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import { notifySuccess } from "../../utils/successNotifications";
 import { supportsGeography, geographyExport } from "../../utils/projectGeography";
 import useProjectAutosave, { validateProjectDates, withProjectSave } from "../../utils/useProjectAutosave";
@@ -2943,7 +2944,7 @@ Approximately:
 
                       <div className={styles.formGroup}>
                         <label>Project Status:</label>
-                        <select
+                        <SearchableSelect
                           name="projectStatusId"
                           value={projectDetails.projectStatusId || ""}
                           onChange={handleProjectInputChange}
@@ -2955,7 +2956,7 @@ Approximately:
                               {status.statusName}
                             </option>
                           ))}
-                        </select>
+                        </SearchableSelect>
                         {getFieldError("projectStatusId") && (
                           <div className={styles.fieldError}>
                             {getFieldError("projectStatusId")}
@@ -2965,7 +2966,7 @@ Approximately:
 
                       <div className={styles.formGroup}>
                         <label>Project Type:</label>
-                        <select
+                        <SearchableSelect
                           name="projectTypeId"
                           value={projectDetails.projectTypeId || ""}
                           onChange={handleProjectInputChange}
@@ -2977,7 +2978,7 @@ Approximately:
                               {type.projectTypeName}
                             </option>
                           ))}
-                        </select>
+                        </SearchableSelect>
                         {getFieldError("projectTypeId") && (
                           <div className={styles.fieldError}>
                             {getFieldError("projectTypeId")}
@@ -2987,7 +2988,7 @@ Approximately:
 
                       <div className={styles.formGroup}>
                         <label>Address:</label>
-                        <select
+                        <SearchableSelect
                           name="addressId"
                           value={projectDetails.addressId || ""}
                           onChange={handleProjectInputChange}
@@ -3000,7 +3001,7 @@ Approximately:
                               {address.country}
                             </option>
                           ))}
-                        </select>
+                        </SearchableSelect>
                       </div>
 
                       <div className={styles.row2}>
@@ -3017,7 +3018,7 @@ Approximately:
 
                         <div className={styles.formGroup}>
                           <label>Part Of Project:</label>
-                          <select
+                          <SearchableSelect
                             name="partOfId"
                             value={projectDetails.partOfId || ""}
                             onChange={handleProjectInputChange}
@@ -3029,7 +3030,7 @@ Approximately:
                                 {proj.projectName}
                               </option>
                             ))}
-                          </select>
+                          </SearchableSelect>
                         </div>
                       </div>
 
@@ -3267,7 +3268,7 @@ Approximately:
                           </div>
 
                           <div className={styles.addRow}>
-                            <select
+                            <SearchableSelect
                               value={selectedOrgId}
                               onChange={(e) => setSelectedOrgId(e.target.value)}
                               className={styles.textInput}
@@ -3283,9 +3284,9 @@ Approximately:
                                     o.organization_name}
                                 </option>
                               ))}
-                            </select>
+                            </SearchableSelect>
 
-                            <select
+                            <SearchableSelect
                               value={selectedOrgStatusId}
                               onChange={(e) =>
                                 setSelectedOrgStatusId(e.target.value)
@@ -3311,7 +3312,7 @@ Approximately:
                                     s.statusName}
                                 </option>
                               ))}
-                            </select>
+                            </SearchableSelect>
 
                             <button
                               type="button"
@@ -3380,7 +3381,7 @@ Approximately:
                           className={styles.addRow}
                           style={{ marginTop: 10 }}
                         >
-                          <select
+                          <SearchableSelect
                             value={selectedEmployeeId}
                             onChange={(e) =>
                               setSelectedEmployeeId(e.target.value)
@@ -3406,7 +3407,7 @@ Approximately:
                                 </option>
                               );
                             })}
-                          </select>
+                          </SearchableSelect>
 
                           <div
                             className={styles.textInput}

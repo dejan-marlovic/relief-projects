@@ -1,3 +1,4 @@
+import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import ScrollToForm from "../../components/ScrollToForm/ScrollToForm";
 import React, { useEffect, useState } from "react";
 import { BASE_URL } from "../../config/api";
@@ -62,8 +63,8 @@ export default function AttachmentDetailsEditor({ item, projectId, authFetch, ca
     {!form && !error && <p role="status">Loading document details…</p>}
     <div className={styles.saveFeedback}><AutosaveStatus save={save} /></div>
     {form && <><div className={styles.grid}>
-      <label>Category<select autoFocus value={form.category} disabled={disabled || save.busy} onChange={e => edit("category", e.target.value)}>{categories.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}</select></label>
-      <label>Status<select value={form.status} disabled={disabled || save.busy} onChange={e => edit("status", e.target.value)}>{!original.status && <option value="">Not recorded</option>}<option value="DRAFT">Draft</option><option value="FINAL">Final</option></select></label>
+      <label>Category<SearchableSelect autoFocus value={form.category} disabled={disabled || save.busy} onChange={e => edit("category", e.target.value)}>{categories.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}</SearchableSelect></label>
+      <label>Status<SearchableSelect value={form.status} disabled={disabled || save.busy} onChange={e => edit("status", e.target.value)}>{!original.status && <option value="">Not recorded</option>}<option value="DRAFT">Draft</option><option value="FINAL">Final</option></SearchableSelect></label>
       <label>Document date<input type="date" min="1000-01-01" max="9999-12-31" value={form.documentDate} disabled={disabled || save.busy} onChange={e => edit("documentDate", e.target.value)} /></label>
     </div><div className={styles.actions}><button type="submit" disabled={disabled || save.busy || !!save.error}>{save.busy ? "Saving details…" : "Save details"}</button></div></>}
     <button type="button" disabled={save.busy} onClick={close}>Close details</button>

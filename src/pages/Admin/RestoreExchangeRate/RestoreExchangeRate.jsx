@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -248,7 +249,7 @@ const RestoreExchangeRate = () => {
                     Deleted exchange rate
                   </label>
 
-                  <select
+                  <SearchableSelect
                     id="restoreExchangeRateSelect"
                     className={styles.textInput}
                     value={selectedExchangeRateId}
@@ -268,7 +269,7 @@ const RestoreExchangeRate = () => {
                         {formatRateDate(exchangeRate.rateDate)}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.mutedHint}>

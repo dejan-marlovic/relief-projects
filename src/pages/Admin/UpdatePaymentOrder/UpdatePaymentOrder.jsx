@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import PaymentAmount from "../../../components/PaymentAmount/PaymentAmount";
 import React, { useEffect, useMemo, useState } from "react";
@@ -316,7 +317,7 @@ const UpdatePaymentOrder = () => {
 
                 <div className={styles.formGroup}>
                   <label>Payment order</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("selectedId")}
                     value={form.selectedId}
                     onChange={handleSelectChange}
@@ -328,7 +329,7 @@ const UpdatePaymentOrder = () => {
                         {item.paymentOrderDescription} (id: {item.id})
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
               </div>
 
@@ -340,7 +341,7 @@ const UpdatePaymentOrder = () => {
 
                 <div className={styles.formGroup}>
                   <label>Transaction</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("transactionId")}
                     name="transactionId"
                     value={form.transactionId}
@@ -353,7 +354,7 @@ const UpdatePaymentOrder = () => {
                         {transactionLabelById[item.id]}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.formGroup}>

@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -266,7 +267,7 @@ const RestoreDocument = () => {
                     Deleted document
                   </label>
 
-                  <select
+                  <SearchableSelect
                     id="restoreDocumentSelect"
                     className={styles.textInput}
                     value={selectedDocumentId}
@@ -284,7 +285,7 @@ const RestoreDocument = () => {
                         {getDocumentLabel(document)}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.mutedHint}>

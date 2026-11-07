@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useRecordAutosave from "../../../utils/useRecordAutosave";
 import AutosaveStatus from "../../../components/ProjectClassification/AutosaveStatus";
 import { appFetch as fetch } from "../../../utils/appFetch";
@@ -340,10 +341,10 @@ const AddressDetails = ({ organizationId, canManage = false }) => {
 
         {canManage && (
           <div className={styles.headerRight}>
-            <select className={styles.select} value={selectedAddressId} onChange={(event) => setSelectedAddressId(event.target.value)} disabled={!availableOptions.length || Boolean(editingId) || Boolean(busyAction)} aria-label="Existing address">
+            <SearchableSelect className={styles.select} value={selectedAddressId} onChange={(event) => setSelectedAddressId(event.target.value)} disabled={!availableOptions.length || Boolean(editingId) || Boolean(busyAction)} aria-label="Existing address">
               <option value="">Add an existing address…</option>
               {availableOptions.map((address) => <option key={address.id} value={address.id}>#{address.id} — {formatAddressLabel(address)}</option>)}
-            </select>
+            </SearchableSelect>
             <button type="button" className={styles.secondaryBtn} onClick={addExisting} disabled={!selectedAddressId || Boolean(editingId) || Boolean(busyAction)}><FiLink /> Add existing</button>
             <button type="button" className={styles.primaryBtn} onClick={startCreate} disabled={Boolean(editingId) || Boolean(busyAction)}><FiPlus /> New Address</button>
           </div>

@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -307,7 +308,7 @@ const UpdateDocument = () => {
 
                 <div className={styles.formGroup}>
                   <label>Document</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("selectedId")}
                     value={form.selectedId}
                     onChange={handleSelectChange}
@@ -322,7 +323,7 @@ const UpdateDocument = () => {
                         (id: {item.id})
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
               </div>
 
@@ -341,7 +342,7 @@ const UpdateDocument = () => {
 
                 <div className={styles.formGroup}>
                   <label>Employee attribution</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("employeeId")}
                     name="employeeId"
                     value={form.employeeId}
@@ -354,12 +355,12 @@ const UpdateDocument = () => {
                         {employeeLabelById[item.id]} (id: {item.id})
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.formGroup}>
                   <label>Project</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("projectId")}
                     name="projectId"
                     value={form.projectId}
@@ -372,7 +373,7 @@ const UpdateDocument = () => {
                         {projectLabelById[item.id]} (id: {item.id})
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -388,9 +389,9 @@ const UpdateDocument = () => {
 
                 <div className={styles.formGroup}>
                   <label htmlFor="document-category">Category</label>
-                  <select id="document-category" name="category" className={inputClass("category")} value={form.category} onChange={handleInputChange} disabled={!form.selectedId || saving || historical || !categories.length}>
+                  <SearchableSelect id="document-category" name="category" className={inputClass("category")} value={form.category} onChange={handleInputChange} disabled={!form.selectedId || saving || historical || !categories.length}>
                     {categories.map((category) => <option key={category.id} value={category.id}>{category.label}</option>)}
-                  </select>
+                  </SearchableSelect>
                   {fieldErrors.category && <span role="alert">{fieldErrors.category}</span>}
                 </div>
                 <div className={styles.formGroup}>

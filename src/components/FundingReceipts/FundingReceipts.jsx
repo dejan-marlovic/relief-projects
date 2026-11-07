@@ -1,3 +1,4 @@
+import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import ScrollToForm from "../ScrollToForm/ScrollToForm";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import FundingReturns from "../FundingReturns/FundingReturns";
@@ -183,10 +184,10 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
         {evidenceForm && <>
           <label><input type="checkbox" checked={historical} onChange={event => { setHistorical(event.target.checked); setForm(current => ({ ...current, documentIds: [], documentId: "" })); }} /> Include active historical document versions</label>
           {documentError && <p role="alert">{documentError}</p>}
-          <label>{form.kind === "add" ? "Exact document version" : "Evidence versions (optional; select one or more)"}<select multiple={form.kind !== "add"} required={form.kind === "add"} value={form.kind === "add" ? form.documentId : form.documentIds} onChange={event => form.kind === "add" ? change("documentId", event.target.value) : change("documentIds", Array.from(event.target.selectedOptions, option => option.value))}>
+          <label>{form.kind === "add" ? "Exact document version" : "Evidence versions (optional; select one or more)"}<SearchableSelect multiple={form.kind !== "add"} required={form.kind === "add"} value={form.kind === "add" ? form.documentId : form.documentIds} onChange={event => form.kind === "add" ? change("documentId", event.target.value) : change("documentIds", Array.from(event.target.selectedOptions, option => option.value))}>
             {form.kind === "add" && <option value="">Select a document version</option>}
             {documents.filter(doc => form.kind !== "add" || !form.receipt.documents?.some(link => link.documentId === doc.id)).map(doc => <option key={doc.id} value={doc.id}>{doc.documentName} · v{doc.versionNumber} · {doc.status || "Unknown status"} · {doc.isCurrent ? "Current" : "Historical"} (#{doc.id})</option>)}
-          </select></label>
+          </SearchableSelect></label>
           <p className={styles.hint}>Links retain the exact selected version. Upload new files in Documents. Draft/Final does not mean evidence has been verified.</p>
         </>}
         <button type="submit">{busy ? "Saving…" : "Confirm"}</button>

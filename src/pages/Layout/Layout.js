@@ -1,3 +1,4 @@
+import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import styles from "./Layout.module.scss";
@@ -209,7 +210,7 @@ const Layout = () => {
           {!hideSelector && (
             <div className={styles.selectorInline}>
               <label htmlFor="layout-project" className={styles.selectorLabel}>Project</label>
-              <select
+              <SearchableSelect
                 id="layout-project"
                 value={selectedProjectId}
                 onChange={handleSelectChange}
@@ -220,7 +221,7 @@ const Layout = () => {
                     {project.projectName}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
           )}
 
@@ -250,7 +251,7 @@ const Layout = () => {
         {isPhone ? (
           <div className={styles.pagePicker}>
             <label htmlFor="layout-page" className={styles.selectorLabel}>Current page</label>
-            <select
+            <SearchableSelect
               id="layout-page"
               className={styles.selectInput}
               value={currentPage}
@@ -264,7 +265,7 @@ const Layout = () => {
               {hasAnyRole("ADMIN", "PROJECT_MANAGER") && <option value="/register-project">New Project</option>}
               {categories.map(group => <optgroup key={group.label} label={group.label}>{group.items.map(([path, label]) => <option key={path} value={path}>{label}</option>)}</optgroup>)}
               {hasRole("ADMIN") && <option value="/admin">Admin</option>}
-            </select>
+            </SearchableSelect>
           </div>
         ) : (
         <ul className={styles.tabList}>

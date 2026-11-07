@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useScrollToEditor from "../../../hooks/useScrollToEditor";
 import PaymentAmount from "../../../components/PaymentAmount/PaymentAmount";
 // src/components/Recipients/Recipient/Recipient.jsx
@@ -75,7 +76,7 @@ const RecipientRow = ({
 
   const selectPO = (
     <>
-      <select
+      <SearchableSelect
         aria-label="Payment order"
         aria-invalid={hasError("paymentOrderId")}
         aria-describedby={hasError("paymentOrderId") ? `recipient-${row.id}-paymentOrderId-error` : undefined}
@@ -94,14 +95,14 @@ const RecipientRow = ({
         {poOptions.map((po) => (
           <option key={po.id} value={po.id}>{`PO#${po.id}`}</option>
         ))}
-      </select>
+      </SearchableSelect>
       <FieldError name="paymentOrderId" />
     </>
   );
 
   const selectOrg = (
     <>
-      <select
+      <SearchableSelect
         aria-label="Organization"
         aria-invalid={hasError("organizationId")}
         aria-describedby={hasError("organizationId") ? `recipient-${row.id}-organizationId-error` : undefined}
@@ -122,7 +123,7 @@ const RecipientRow = ({
             {o.label ?? `Org #${o.id}`}
           </option>
         ))}
-      </select>
+      </SearchableSelect>
       <FieldError name="organizationId" />
     </>
   );

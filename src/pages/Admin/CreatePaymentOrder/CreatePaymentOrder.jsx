@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiSave, FiX } from "react-icons/fi";
@@ -166,7 +167,7 @@ const CreatePaymentOrder = () => {
 
             <div className={styles.formGroup}>
               <label>Transaction</label>
-              <select
+              <SearchableSelect
                 className={inputClass("transactionId")}
                 name="transactionId"
                 value={form.transactionId}
@@ -178,7 +179,7 @@ const CreatePaymentOrder = () => {
                     Transaction #{tx.id}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
           </div>
 

@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import RecordReference from "../../../components/RecordReference/RecordReference";
 import { HistoryPagination, HistoryTimeline, HistoryEntry } from "../../../components/ActivityHistory/ActivityHistory";
 import RecipientReturnAuditDetails from "../../../components/RecipientReturns/RecipientReturnAuditDetails";
@@ -161,7 +162,7 @@ const AuditHistory = () => {
       <form className={styles.filters} onSubmit={applyFilters}>
         <label>
           <span>Record type</span>
-          <select name="entityType" value={draftFilters.entityType} onChange={updateDraft}>
+          <SearchableSelect name="entityType" value={draftFilters.entityType} onChange={updateDraft}>
             <option value="">All types</option>
             <option value="BUDGET">Budget</option>
             <option value="TRANSACTION">Transaction</option>
@@ -173,11 +174,11 @@ const AuditHistory = () => {
             <option value="COST_DETAIL">Budget cost detail</option>
             <option value="COST_DETAIL_ALLOCATION">Transaction allocation</option>
             <option value="PAYMENT_ORDER_LINE">Payment-order line</option>
-          </select>
+          </SearchableSelect>
         </label>
         <label>
           <span>Action</span>
-          <select name="action" value={draftFilters.action} onChange={updateDraft}>
+          <SearchableSelect name="action" value={draftFilters.action} onChange={updateDraft}>
             <option value="">All actions</option>
             <option value="CREATE">Created</option>
             <option value="UPDATE">Updated</option>
@@ -187,17 +188,17 @@ const AuditHistory = () => {
             <option value="DELETE">Deleted</option>
             <option value="RESTORE">Restored</option>
             <option value="VOID">Voided</option>
-          </select>
+          </SearchableSelect>
         </label>
         <label>
           <span>Project</span>
-          <select name="projectId" value={draftFilters.projectId} onChange={updateDraft}>
+          <SearchableSelect name="projectId" value={draftFilters.projectId} onChange={updateDraft}>
             <option value="">All projects</option>
             {projects.map((project) => {
               const id = project.id ?? project.projectId;
               return <option key={id} value={id}>{project.projectName || project.name || `Project #${id}`}</option>;
             })}
-          </select>
+          </SearchableSelect>
         </label>
         <label>
           <span>Record ID</span>

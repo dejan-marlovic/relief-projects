@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import ApprovalDialog from "../../../components/ApprovalDialog/ApprovalDialog";
 import { notifySuccess } from "../../../utils/successNotifications";
 import { budgetFinancialRole, financialReferenceEligible } from "../../../utils/budgetRevisions";
@@ -1611,7 +1612,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
                   <div className={styles.row2}>
                     <div className={styles.formGroup}>
                       <label>Local Currency:</label>
-                      <select
+                      <SearchableSelect
                         name="localCurrencyId"
                         className={inputClass("localCurrencyId")}
                         value={budget.localCurrencyId || ""}
@@ -1623,7 +1624,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
                             {c.name}
                           </option>
                         ))}
-                      </select>
+                      </SearchableSelect>
                       {getFieldError("localCurrencyId") && (
                         <div className={styles.fieldError}>
                           {getFieldError("localCurrencyId")}
@@ -1633,7 +1634,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
 
                     <div className={styles.formGroup}>
                       <label>Local → GBP Rate:</label>
-                      <select
+                      <SearchableSelect
                         name="localExchangeRateToGbpId"
                         className={inputClass("localExchangeRateToGbpId")}
                         value={budget.localExchangeRateToGbpId || ""}
@@ -1645,7 +1646,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
                             {formatRateLabel(r)}
                           </option>
                         ))}
-                      </select>
+                      </SearchableSelect>
                       {getFieldError("localExchangeRateToGbpId") && (
                         <div className={styles.fieldError}>
                           {getFieldError("localExchangeRateToGbpId")}
@@ -1667,7 +1668,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
 
                     <div className={styles.formGroup}>
                       <label>Reporting exchange rate (Local → {sekName}):</label>
-                      <select
+                      <SearchableSelect
                         name="reportingExchangeRateSekId"
                         className={inputClass("reportingExchangeRateSekId")}
                         value={budget.reportingExchangeRateSekId || ""}
@@ -1679,7 +1680,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
                             {formatRateLabel(r)}
                           </option>
                         ))}
-                      </select>
+                      </SearchableSelect>
                       {getFieldError("reportingExchangeRateSekId") && (
                         <div className={styles.fieldError}>
                           {getFieldError("reportingExchangeRateSekId")}
@@ -1701,7 +1702,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
 
                     <div className={styles.formGroup}>
                       <label>EUR Exchange Rate (Local → EUR):</label>
-                      <select
+                      <SearchableSelect
                         name="reportingExchangeRateEurId"
                         className={inputClass("reportingExchangeRateEurId")}
                         value={budget.reportingExchangeRateEurId || ""}
@@ -1713,7 +1714,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
                             {formatRateLabel(r)}
                           </option>
                         ))}
-                      </select>
+                      </SearchableSelect>
                       {getFieldError("reportingExchangeRateEurId") && (
                         <div className={styles.fieldError}>
                           {getFieldError("reportingExchangeRateEurId")}

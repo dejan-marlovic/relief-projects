@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../../components/SearchableSelect/SearchableSelect";
 import { appFetch as fetch } from "../../../../utils/appFetch";
 import useFinancialRefresh from "../../../../hooks/useFinancialRefresh";
 import RecipientConflicts from "./RecipientConflicts";
@@ -603,7 +604,7 @@ const PaymentOrderLines = ({
         <div className={styles.addRow}>
           <div className={styles.field}>
           <label htmlFor={`line-transaction-${paymentOrderId}`}>Transaction *</label>
-          <select id={`line-transaction-${paymentOrderId}`}
+          <SearchableSelect id={`line-transaction-${paymentOrderId}`}
             value={draft.transactionId}
             disabled={loading || isLocked}
             onChange={(e) => {
@@ -620,7 +621,7 @@ const PaymentOrderLines = ({
                 TX#{t.id}
               </option>
             ))}
-          </select>
+          </SearchableSelect>
           {fieldErrors.transactionId && (
             <div className={styles.fieldError}>
               {fieldErrors.transactionId}
@@ -630,7 +631,7 @@ const PaymentOrderLines = ({
 
         <div className={styles.field}>
           <label htmlFor={`line-organization-${paymentOrderId}`}>Organization *</label>
-          <select id={`line-organization-${paymentOrderId}`}
+          <SearchableSelect id={`line-organization-${paymentOrderId}`}
             value={draft.organizationId}
             disabled={loading || isLocked}
             onChange={(e) => updateDraftField("organizationId", e.target.value)}
@@ -644,7 +645,7 @@ const PaymentOrderLines = ({
                 {o.name}
               </option>
             ))}
-          </select>
+          </SearchableSelect>
           {fieldErrors.organizationId && (
             <div className={styles.fieldError}>
               {fieldErrors.organizationId}
@@ -654,7 +655,7 @@ const PaymentOrderLines = ({
 
         <div className={styles.field}>
           <label htmlFor={`line-cost-detail-${paymentOrderId}`}>Cost detail *</label>
-          <select id={`line-cost-detail-${paymentOrderId}`}
+          <SearchableSelect id={`line-cost-detail-${paymentOrderId}`}
             value={draft.costDetailId}
             disabled={loading || isLocked}
             onChange={(e) => updateDraftField("costDetailId", e.target.value)}
@@ -668,7 +669,7 @@ const PaymentOrderLines = ({
                 {cd.costDescription || "No description"} (CD#{cd.costDetailId}){cd.revisionFundingAssignmentId ? ` · Funding assignment #${cd.revisionFundingAssignmentId}` : ""}
               </option>
             ))}
-          </select>
+          </SearchableSelect>
           {fieldErrors.costDetailId && (
             <div className={styles.fieldError}>{fieldErrors.costDetailId}</div>
           )}
@@ -815,7 +816,7 @@ const LineRow = ({
     <div className={styles.trow}>
       <div>
         <span className={styles.fieldLabel}>Transaction</span>
-        <select
+        <SearchableSelect
           aria-label={`Transaction for line ${row.id}`}
           value={transactionId}
           disabled={locked}
@@ -837,7 +838,7 @@ const LineRow = ({
               TX#{t.id}
             </option>
           ))}
-        </select>
+        </SearchableSelect>
         {transactionError ? (
           <div className={styles.fieldError}>{transactionError}</div>
         ) : null}
@@ -845,7 +846,7 @@ const LineRow = ({
 
       <div>
         <span className={styles.fieldLabel}>Organization</span>
-        <select
+        <SearchableSelect
           aria-label={`Organization for line ${row.id}`}
           value={organizationId}
           disabled={locked}
@@ -861,13 +862,13 @@ const LineRow = ({
               {o.name}
             </option>
           ))}
-        </select>
+        </SearchableSelect>
         {orgError ? <div className={styles.fieldError}>{orgError}</div> : null}
       </div>
 
       <div>
         <span className={styles.fieldLabel}>Cost detail</span>
-        <select
+        <SearchableSelect
           aria-label={`Cost detail for line ${row.id}`}
           value={costDetailId}
           disabled={locked}
@@ -885,7 +886,7 @@ const LineRow = ({
               {cd.costDescription || "No description"} (CD#{cd.costDetailId}){cd.revisionFundingAssignmentId ? ` · Funding assignment #${cd.revisionFundingAssignmentId}` : ""}
             </option>
           ))}
-        </select>
+        </SearchableSelect>
         {costDetailError ? (
           <div className={styles.fieldError}>{costDetailError}</div>
         ) : null}

@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import { projectApprovalLabel } from "../../../utils/projectApproval";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useContext, useEffect, useMemo, useState } from "react";
@@ -329,7 +330,7 @@ const RestoreProject = () => {
                 <div className={styles.formGroup}>
                   <label htmlFor="restoreProjectSelect">Deleted project</label>
 
-                  <select
+                  <SearchableSelect
                     id="restoreProjectSelect"
                     className={styles.textInput}
                     value={selectedProjectId}
@@ -347,7 +348,7 @@ const RestoreProject = () => {
                         {getProjectLabel(project)}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.mutedHint}>

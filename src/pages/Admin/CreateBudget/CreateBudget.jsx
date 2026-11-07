@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import { budgetLimitError } from "../../../utils/budgetLimit";
 import { normalizeBudgetName, budgetNameError } from "../../../utils/budgetDisplay";
 import React, { useEffect, useMemo, useState } from "react";
@@ -228,7 +229,7 @@ const CreateBudget = () => {
 
             <div className={styles.formGroup}>
               <label>Project</label>
-              <select
+              <SearchableSelect
                 className={inputClass("projectId")}
                 name="projectId"
                 value={form.projectId}
@@ -240,7 +241,7 @@ const CreateBudget = () => {
                     {p.projectName} (id: {p.id})
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
 
             <div className={styles.formGroup}>
@@ -291,7 +292,7 @@ const CreateBudget = () => {
 
             <div className={styles.formGroup}>
               <label>Local currency</label>
-              <select
+              <SearchableSelect
                 className={inputClass("localCurrencyId")}
                 name="localCurrencyId"
                 value={form.localCurrencyId}
@@ -303,12 +304,12 @@ const CreateBudget = () => {
                     {c.name} - {c.description}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
 
             <div className={styles.formGroup}>
               <label>Local currency to GBP</label>
-              <select
+              <SearchableSelect
                 className={inputClass("localCurrencyToGbpId")}
                 name="localCurrencyToGbpId"
                 value={form.localCurrencyToGbpId}
@@ -320,12 +321,12 @@ const CreateBudget = () => {
                     {c.name} - {c.description}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
 
             <div className={styles.formGroup}>
               <label>Reporting currency</label>
-              <select
+              <SearchableSelect
                 className={inputClass("reportingCurrencySekId")}
                 name="reportingCurrencySekId"
                 value={form.reportingCurrencySekId}
@@ -337,12 +338,12 @@ const CreateBudget = () => {
                     {c.name} - {c.description}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
 
             <div className={styles.formGroup}>
               <label>Reporting currency EUR</label>
-              <select
+              <SearchableSelect
                 className={inputClass("reportingCurrencyEurId")}
                 name="reportingCurrencyEurId"
                 value={form.reportingCurrencyEurId}
@@ -354,7 +355,7 @@ const CreateBudget = () => {
                     {c.name} - {c.description}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
           </div>
 
@@ -366,7 +367,7 @@ const CreateBudget = () => {
 
             <div className={styles.formGroup}>
               <label>Local exchange rate</label>
-              <select
+              <SearchableSelect
                 className={inputClass("localExchangeRateId")}
                 name="localExchangeRateId"
                 value={form.localExchangeRateId}
@@ -378,12 +379,12 @@ const CreateBudget = () => {
                     {exchangeRateLabel(r)}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
 
             <div className={styles.formGroup}>
               <label>Local exchange rate to GBP</label>
-              <select
+              <SearchableSelect
                 className={inputClass("localExchangeRateToGbpId")}
                 name="localExchangeRateToGbpId"
                 value={form.localExchangeRateToGbpId}
@@ -395,12 +396,12 @@ const CreateBudget = () => {
                     {exchangeRateLabel(r)}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
 
             <div className={styles.formGroup}>
               <label>Reporting exchange rate</label>
-              <select
+              <SearchableSelect
                 className={inputClass("reportingExchangeRateSekId")}
                 name="reportingExchangeRateSekId"
                 value={form.reportingExchangeRateSekId}
@@ -412,12 +413,12 @@ const CreateBudget = () => {
                     {exchangeRateLabel(r)}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
 
             <div className={styles.formGroup}>
               <label>Reporting exchange rate EUR</label>
-              <select
+              <SearchableSelect
                 className={inputClass("reportingExchangeRateEurId")}
                 name="reportingExchangeRateEurId"
                 value={form.reportingExchangeRateEurId}
@@ -429,7 +430,7 @@ const CreateBudget = () => {
                     {exchangeRateLabel(r)}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
           </div>
         </div>

@@ -1,3 +1,4 @@
+import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import ScrollToForm from "../../components/ScrollToForm/ScrollToForm";
 import React, { useState } from "react";
 import TravelActionIcon, { approvalStyle } from "./TravelActionIcon";
@@ -18,7 +19,7 @@ export default function TravelEditor({ form, setForm, projectId, authFetch, refr
   const text = (key, name, required = true) => <label>{name}<textarea rows={3} required={required} value={draft[key] || ""} onChange={e => update(key, e.target.value)} /></label>;
   return <ScrollToForm scrollKey={action} className={styles.panel} aria-label={titles[action]} onSubmit={e => { e.preventDefault(); if (busy || blocked || form.reviewRequired) return; setError(""); try { onSave(travelPayload(form)); } catch (err) { setError(err.message); } }}>
     <h3>{titles[action]}</h3><fieldset disabled={busy}>
-      {editing && <><ReadState state={employees} /><label>Traveller<select required value={draft.travellerEmployeeId} onChange={e => update("travellerEmployeeId", e.target.value)}><option value="">Select an employee</option>{record?.traveller && !people.some(p => p.id === record.travellerEmployeeId) && <option value={record.travellerEmployeeId}>{record.traveller.displayName} (retained traveller)</option>}{people.map(p => <option key={p.id} value={p.id}>{employeeName(p)}</option>)}</select></label>
+      {editing && <><ReadState state={employees} /><label>Traveller<SearchableSelect required value={draft.travellerEmployeeId} onChange={e => update("travellerEmployeeId", e.target.value)}><option value="">Select an employee</option>{record?.traveller && !people.some(p => p.id === record.travellerEmployeeId) && <option value={record.travellerEmployeeId}>{record.traveller.displayName} (retained traveller)</option>}{people.map(p => <option key={p.id} value={p.id}>{employeeName(p)}</option>)}</SearchableSelect></label>
         {text("purpose", "Purpose")}<label>Destination<input required value={draft.destination} onChange={e => update("destination", e.target.value)} /></label>
         <div className={styles.grid}>{[["departureDate", "Planned departure"], ["returnDate", "Planned return"]].map(([key, name]) => <label key={key}>{name}<input type="date" required min={key === "returnDate" ? draft.departureDate || "1000-01-01" : "1000-01-01"} max="9999-12-31" value={draft[key]} onChange={e => update(key, e.target.value)} /></label>)}</div>
         {text("notes", "Notes (optional)", false)}<p className={styles.muted}>One employee per request. Past drafts can be saved; submission and approval require departure today or later. Keep notes to general operational information.</p></>}

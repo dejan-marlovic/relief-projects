@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import PaymentAmount from "../../../components/PaymentAmount/PaymentAmount";
 import React, { useEffect, useMemo, useState } from "react";
@@ -265,7 +266,7 @@ const DeleteRecipient = () => {
 
                 <div className={styles.formGroup}>
                   <label htmlFor="deleteRecipientSelect">Recipient</label>
-                  <select
+                  <SearchableSelect
                     id="deleteRecipientSelect"
                     className={inputClass}
                     value={selectedRecipientId}
@@ -280,7 +281,7 @@ const DeleteRecipient = () => {
                         {recipient.id}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.mutedHint}>

@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -314,7 +315,7 @@ const RestoreSignature = () => {
                     Deleted signature
                   </label>
 
-                  <select
+                  <SearchableSelect
                     id="restoreSignatureSelect"
                     className={styles.textInput}
                     value={selectedSignatureId}
@@ -332,7 +333,7 @@ const RestoreSignature = () => {
                         {getSignatureLabel(signature)}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.mutedHint}>

@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiSave, FiX } from "react-icons/fi";
@@ -163,7 +164,7 @@ const CreateBankDetail = () => {
 
             <div className={styles.formGroup}>
               <label>Organization</label>
-              <select
+              <SearchableSelect
                 className={inputClass("organizationId")}
                 name="organizationId"
                 value={form.organizationId}
@@ -175,7 +176,7 @@ const CreateBankDetail = () => {
                     {o.organizationName} (id: {o.id})
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </div>
           </div>
 

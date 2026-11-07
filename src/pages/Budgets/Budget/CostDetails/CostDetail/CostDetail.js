@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../../../components/SearchableSelect/SearchableSelect";
 import React from "react";
 import styles from "./CostDetail.module.scss";
 import { FiEdit, FiTrash2, FiSave, FiX } from "react-icons/fi";
@@ -76,7 +77,7 @@ const CostDetail = ({
           placeholder="Description"
         />)}
 
-        {renderField("costTypeId", <select
+        {renderField("costTypeId", <SearchableSelect
           value={selectedCostTypeId}
           onChange={(e) => {
             onChange("costTypeId", toNum(e.target.value));
@@ -90,9 +91,9 @@ const CostDetail = ({
               {type.costTypeName}
             </option>
           ))}
-        </select>)}
+        </SearchableSelect>)}
 
-        {renderField("costId", <select
+        {renderField("costId", <SearchableSelect
           value={ev.costId ?? cost.costId ?? ""}
           onChange={(e) => onChange("costId", toNum(e.target.value))}
           className={styles.select}
@@ -103,7 +104,7 @@ const CostDetail = ({
               {c.costName}
             </option>
           ))}
-        </select>)}
+        </SearchableSelect>)}
 
         {renderField("noOfUnits", <input
           type="number"

@@ -1,3 +1,4 @@
+import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
@@ -108,10 +109,10 @@ export default function BudgetCurrencyDialog({ budget, currencies, rates, initia
       <p>Conversion uses saved values. Quantities, periods and allocated percentages stay unchanged. Reporting, GBP and EUR target currencies are preserved.</p>
       {dirty && <div className={styles.notice}><p>There are unsaved header edits. Save unrelated edits separately, or discard the header edits before previewing conversion.</p><button disabled={busy} onClick={() => { invalidate(); onDiscard(); }}>Discard header edits for conversion</button></div>}
       <fieldset disabled={busy || mustReload} className={styles.fields}><legend>Explicit currency and rates</legend>
-        <label>New local currency<select value={selection.targetCurrencyId} onChange={(event) => change("targetCurrencyId", event.target.value)}><option value="">Select currency</option>{currencies.filter((item) => String(item.id) !== String(budget.localCurrencyId)).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+        <label>New local currency<SearchableSelect value={selection.targetCurrencyId} onChange={(event) => change("targetCurrencyId", event.target.value)}><option value="">Select currency</option>{currencies.filter((item) => String(item.id) !== String(budget.localCurrencyId)).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</SearchableSelect></label>
         {rateSlots.map(([field, label, base, quote]) => {
           const matching = rates.filter((rate) => base && quote && String(rate.baseCurrencyId) === String(base) && String(rate.quoteCurrencyId) === String(quote));
-          return <label key={field}>{label}: {name(base)} → {name(quote)}<select value={selection[field]} onChange={(event) => change(field, event.target.value)}><option value="">Select rate</option>{matching.map((rate) => <option key={rate.id} value={rate.id}>1 {name(base)} → {rate.rate} {name(quote)} · {rate.rateDate ? String(rate.rateDate).replace("T", " ") : "Date unknown"} (#{rate.id})</option>)}</select>{base && quote && !matching.length && <small>No matching rate is available. Add a rate in this direction before continuing.</small>}</label>;
+          return <label key={field}>{label}: {name(base)} → {name(quote)}<SearchableSelect value={selection[field]} onChange={(event) => change(field, event.target.value)}><option value="">Select rate</option>{matching.map((rate) => <option key={rate.id} value={rate.id}>1 {name(base)} → {rate.rate} {name(quote)} · {rate.rateDate ? String(rate.rateDate).replace("T", " ") : "Date unknown"} (#{rate.id})</option>)}</SearchableSelect>{base && quote && !matching.length && <small>No matching rate is available. Add a rate in this direction before continuing.</small>}</label>;
         })}
       </fieldset>
       <button disabled={busy || !ready} onClick={() => request(false)}>Preview conversion</button>

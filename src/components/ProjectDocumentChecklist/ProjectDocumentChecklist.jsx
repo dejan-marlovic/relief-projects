@@ -1,3 +1,4 @@
+import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import { useUnsavedChange, useUnsavedChanges } from "../../context/UnsavedChangesContext";
 import { WorkflowIntro, WorkflowStep } from "../Workflow/Workflow";
@@ -80,7 +81,7 @@ function Item({ item, generation, editable, documents, categories, busy, mutate:
       </li>)}</ul>
       {editable && !canLink && <p className={styles.muted}>Save Applicable above before adding evidence. Existing links remain available.</p>}
       {editable && <form className={styles.form} onSubmit={(e) => { e.preventDefault(); if (selected && canLink && availableDocuments.some(doc => String(doc.id) === selected)) mutate(item, "evidence", "POST", { documentId: Number(selected) }); }}>
-        <label>Document evidence<select value={selected} disabled={busy || !canLink || !availableDocuments.length} onChange={(e) => { setDirty(true); setSelected(e.target.value); }}><option value="">{availableDocuments.length ? "Select an exact document version" : "No additional document versions available"}</option>{availableDocuments.map((doc) => <option key={doc.id} value={doc.id}>{doc.documentName} · Version {doc.versionNumber} · {statusLabel(doc.status)} · {doc.isCurrent ? "Current" : "Historical"} (#{doc.id})</option>)}</select></label>
+        <label>Document evidence<SearchableSelect value={selected} disabled={busy || !canLink || !availableDocuments.length} onChange={(e) => { setDirty(true); setSelected(e.target.value); }}><option value="">{availableDocuments.length ? "Select an exact document version" : "No additional document versions available"}</option>{availableDocuments.map((doc) => <option key={doc.id} value={doc.id}>{doc.documentName} · Version {doc.versionNumber} · {statusLabel(doc.status)} · {doc.isCurrent ? "Current" : "Historical"} (#{doc.id})</option>)}</SearchableSelect></label>
         {!availableDocuments.length && <p className={styles.muted}>No additional document versions available. Upload another document or adjust the evidence filters.</p>}
         <button type="submit" disabled={busy || !canLink || !selected || !availableDocuments.some(doc => String(doc.id) === selected)}>Link evidence</button>
       </form>}
@@ -187,7 +188,7 @@ function Panel({ projectId, authFetch, categories, refreshKey }) {
       {attentionOnly && data.items.every((item) => settled(item.state)) && <p className={styles.muted}>No items need attention. Turn off the filter to review recorded evidence and not-applicable decisions.</p>}
       <WorkflowStep number={1} title="Review requirements and attach evidence" description="Open a requirement, save its applicability and link supporting document versions in the same card. Upload missing files in Documents below. Replacement uploads do not change existing evidence links.">
       {data.editable && <div className={styles.form}>
-        <label>Evidence category<select value={category} disabled={busy} onChange={(e) => setCategory(e.target.value)}><option value="">All categories</option>{categories.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</select></label>
+        <label>Evidence category<SearchableSelect value={category} disabled={busy} onChange={(e) => setCategory(e.target.value)}><option value="">All categories</option>{categories.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</SearchableSelect></label>
         <label><input type="checkbox" checked={historical} disabled={busy} onChange={(e) => setHistorical(e.target.checked)} /> Include active historical versions</label>
         <p className={styles.muted}>These filters only help find documents. Upload files below, then select evidence explicitly. Uploads remain if linking fails. To switch versions, link the new version before removing the old one; if removal fails, both links remain.</p>
         {documentError && <p role="alert">{documentError}</p>}

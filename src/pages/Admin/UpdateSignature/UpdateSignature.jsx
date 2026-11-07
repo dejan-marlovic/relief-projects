@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -320,7 +321,7 @@ const UpdateSignature = () => {
 
                 <div className={styles.formGroup}>
                   <label>Signature</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("selectedId")}
                     value={form.selectedId}
                     onChange={handleSelectChange}
@@ -340,7 +341,7 @@ const UpdateSignature = () => {
                         - {item.signature} (id: {item.id})
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
               </div>
 
@@ -354,7 +355,7 @@ const UpdateSignature = () => {
 
                 <div className={styles.formGroup}>
                   <label>Signature status</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("signatureStatusId")}
                     name="signatureStatusId"
                     value={form.signatureStatusId}
@@ -367,12 +368,12 @@ const UpdateSignature = () => {
                         {item.name} (id: {item.id})
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.formGroup}>
                   <label>Employee</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("employeeId")}
                     name="employeeId"
                     value={form.employeeId}
@@ -386,12 +387,12 @@ const UpdateSignature = () => {
                         {item.id})
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.formGroup}>
                   <label>Payment order</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("paymentOrderId")}
                     name="paymentOrderId"
                     value={form.paymentOrderId}
@@ -405,7 +406,7 @@ const UpdateSignature = () => {
                         {item.paymentOrderDescription || "No description"}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.formGroup}>

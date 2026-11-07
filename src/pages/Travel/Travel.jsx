@@ -1,3 +1,4 @@
+import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import TravelReport from "./TravelReport";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
@@ -104,7 +105,7 @@ export function TravelRegister({ projectId, authFetch, initialRequestId = null }
     finally { pending.current = false; if (alive.current) { setBusy(false); reload(); } }
   }
   return <><div className={styles.actions}><button disabled={busy} onClick={reload}>Refresh travel requests</button>{list.data?.canCreate && <button disabled={!!form || !!selected || busy} onClick={() => setForm({ action: "create", draft: { ...tripDraft(), departureDate: list.data.today, returnDate: list.data.today } })}>Create travel request</button>}</div>
-    <div className={styles.filters}><label>Travel state<select value={filters.state} onChange={e => change("state", e.target.value)}>{["ALL", "DRAFT", "SUBMITTED", "RETURNED", "APPROVED", "CANCELLED"].map(state => <option value={state} key={state}>{state === "ALL" ? "All states" : state.charAt(0) + state.slice(1).toLowerCase()}</option>)}</select></label>
+    <div className={styles.filters}><label>Travel state<SearchableSelect value={filters.state} onChange={e => change("state", e.target.value)}>{["ALL", "DRAFT", "SUBMITTED", "RETURNED", "APPROVED", "CANCELLED"].map(state => <option value={state} key={state}>{state === "ALL" ? "All states" : state.charAt(0) + state.slice(1).toLowerCase()}</option>)}</SearchableSelect></label>
       <label>Traveller employee ID<input type="number" min="1" step="1" value={filters.travellerEmployeeId} onChange={e => change("travellerEmployeeId", e.target.value)} /></label>
       <label>Departure from<input type="date" value={filters.departureFrom} onChange={e => change("departureFrom", e.target.value)} /></label><label>Departure through<input type="date" value={filters.departureTo} onChange={e => change("departureTo", e.target.value)} /></label>
       <label><input type="checkbox" checked={filters.deleted} onChange={e => change("deleted", e.target.checked)} />Show deleted requests only</label></div>

@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -183,7 +184,7 @@ const RestoreProjectStatus = () => {
                     Deleted project status
                   </label>
 
-                  <select
+                  <SearchableSelect
                     id="restoreProjectStatusSelect"
                     className={styles.textInput}
                     value={selectedProjectStatusId}
@@ -201,7 +202,7 @@ const RestoreProjectStatus = () => {
                         {projectStatus.statusName} - id: {projectStatus.id}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.mutedHint}>

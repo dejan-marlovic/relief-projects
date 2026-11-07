@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import ProjectClassification from "../../../components/ProjectClassification/ProjectClassification";
 import { projectApprovalLabel } from "../../../utils/projectApproval";
 import useTransientMessage from "../../../hooks/useTransientMessage";
@@ -416,7 +417,7 @@ const UpdateProject = () => {
 
                 <div className={styles.formGroup}>
                   <label>Project</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("selectedId")}
                     value={form.selectedId}
                     onChange={handleSelectChange}
@@ -428,7 +429,7 @@ const UpdateProject = () => {
                         {item.projectName} ({item.projectCode}) - id: {item.id}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
               </div>
 
@@ -495,7 +496,7 @@ const UpdateProject = () => {
 
                 <div className={styles.formGroup}>
                   <label>Address</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("addressId")}
                     name="addressId"
                     value={form.addressId}
@@ -509,7 +510,7 @@ const UpdateProject = () => {
                         {item.id})
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -573,7 +574,7 @@ const UpdateProject = () => {
 
                 <div className={styles.formGroup}>
                   <label>Project status</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("projectStatusId")}
                     name="projectStatusId"
                     value={form.projectStatusId}
@@ -586,7 +587,7 @@ const UpdateProject = () => {
                         {item.statusName} (id: {item.id})
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -669,7 +670,7 @@ const UpdateProject = () => {
 
                 <div className={styles.formGroup}>
                   <label>Part of project</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("partOfId")}
                     name="partOfId"
                     value={form.partOfId}
@@ -685,12 +686,12 @@ const UpdateProject = () => {
                           {item.id}
                         </option>
                       ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.formGroup}>
                   <label>Project type</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("projectTypeId")}
                     name="projectTypeId"
                     value={form.projectTypeId}
@@ -703,7 +704,7 @@ const UpdateProject = () => {
                         {item.projectTypeName} (id: {item.id})
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
               </div>
             </div>

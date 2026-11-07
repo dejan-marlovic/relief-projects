@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -260,7 +261,7 @@ const UpdateEmployee = () => {
 
                 <div className={styles.formGroup}>
                   <label>Employee</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("selectedId")}
                     value={form.selectedId}
                     onChange={handleSelectChange}
@@ -275,7 +276,7 @@ const UpdateEmployee = () => {
                         (id: {item.id})
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
               </div>
 
@@ -309,7 +310,7 @@ const UpdateEmployee = () => {
 
                 <div className={styles.formGroup}>
                   <label>Position</label>
-                  <select
+                  <SearchableSelect
                     className={inputClass("positionId")}
                     name="positionId"
                     value={form.positionId}
@@ -322,7 +323,7 @@ const UpdateEmployee = () => {
                         {item.positionName} (id: {item.id})
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
               </div>
             </div>

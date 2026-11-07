@@ -1,3 +1,4 @@
+import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import useRecordAutosave from "../../utils/useRecordAutosave";
 import AutosaveStatus from "../../components/ProjectClassification/AutosaveStatus";
 import { appFetch as fetch } from "../../utils/appFetch";
@@ -433,7 +434,7 @@ const Organizations = () => {
 
         <fieldset className={styles.cardFilters} disabled={editingId !== null || saving}>
           <label>Find organisation<input value={filters.organization} onChange={e => setFilters(v => ({ ...v, organization: e.target.value }))} /></label>
-          <label>Filter by role<select value={filters.status} onChange={e => setFilters(v => ({ ...v, status: e.target.value }))}><option value="">All roles</option>{statusOptions.map(s => <option key={s.id} value={s.id}>{s.organizationStatusName}</option>)}</select></label>
+          <label>Filter by role<SearchableSelect value={filters.status} onChange={e => setFilters(v => ({ ...v, status: e.target.value }))}><option value="">All roles</option>{statusOptions.map(s => <option key={s.id} value={s.id}>{s.organizationStatusName}</option>)}</SearchableSelect></label>
           <label>Sort by<select value={sortConfig?.key || ""} onChange={e => setSortConfig(e.target.value ? { key: e.target.value, direction: "asc" } : null)}><option value="">Original order</option><option value="organization">Organisation name</option><option value="status">Role</option></select></label>
         </fieldset>
         <div className={styles.cardList}>

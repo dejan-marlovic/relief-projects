@@ -1,3 +1,4 @@
+import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -251,7 +252,7 @@ const DeleteExchangeRate = () => {
                   <label htmlFor="deleteExchangeRateSelect">
                     Exchange rate
                   </label>
-                  <select
+                  <SearchableSelect
                     id="deleteExchangeRateSelect"
                     className={inputClass}
                     value={selectedExchangeRateId}
@@ -268,7 +269,7 @@ const DeleteExchangeRate = () => {
                         {exchangeRate.id}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
 
                 <div className={styles.mutedHint}>

@@ -1,3 +1,4 @@
+import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import ScrollToForm from "../ScrollToForm/ScrollToForm";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -77,7 +78,7 @@ export function AssignmentPanel({ transactionId, originBudgetId, disabled = fals
       </article>)}
     </>}
     {form && <ScrollToForm className={styles.form} onSubmit={submit}><h4>{form.id ? `Change assignment #${form.id}` : "Assign unused approved funding"}</h4><fieldset disabled={busy || disabled}>
-      {!form.id ? <label>Revised cost row<select required value={form.targetCostDetailId} onChange={e => change("targetCostDetailId", e.target.value)}><option value="">Select revised cost</option>{(data?.targets || []).filter(row => row.canAssign).map(row => <option key={row.targetCostDetailId} value={row.targetCostDetailId}>Budget #{row.targetBudgetId} · Cost detail #{row.targetCostDetailId} · Additional maximum {exactAmount(row.maximumAdditionalAmount)}</option>)}</select></label> : <p>Target cost #{form.targetCostDetailId} is fixed. Reduce and separately assign elsewhere if permitted; no capacity is reserved between commands.</p>}
+      {!form.id ? <label>Revised cost row<SearchableSelect required value={form.targetCostDetailId} onChange={e => change("targetCostDetailId", e.target.value)}><option value="">Select revised cost</option>{(data?.targets || []).filter(row => row.canAssign).map(row => <option key={row.targetCostDetailId} value={row.targetCostDetailId}>Budget #{row.targetBudgetId} · Cost detail #{row.targetCostDetailId} · Additional maximum {exactAmount(row.maximumAdditionalAmount)}</option>)}</SearchableSelect></label> : <p>Target cost #{form.targetCostDetailId} is fixed. Reduce and separately assign elsewhere if permitted; no capacity is reserved between commands.</p>}
       {target && <p>Additional maximum: {exactAmount(target.maximumAdditionalAmount)} — limited by unused award funding, the concrete row and the shared family ceiling.</p>}
       <label>Assignment amount<input required type="text" inputMode="decimal" value={form.amount} onChange={e => change("amount", e.target.value)} /></label>
       <label>Assignment reason<textarea required maxLength={1000} value={form.reason} onChange={e => change("reason", e.target.value)} /></label>
