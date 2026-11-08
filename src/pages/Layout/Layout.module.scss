@@ -143,6 +143,9 @@ $secondary-color: colors.$danger;
 }
 
 .logoutIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 44px;
   height: 44px;
   border-radius: 12px;
@@ -393,4 +396,124 @@ $secondary-color: colors.$danger;
 
 @media (prefers-reduced-motion: reduce) {
   .tabLink { transition: none; }
+}
+
+// Use the same compact application chrome on every desktop/tablet page.
+@media (min-width: 701px) {
+  // Short windows can scroll the document rather than collapsing the list.
+  .fixedTableViewport {
+    height: max(100vh, 48rem);
+    height: max(100dvh, 48rem);
+  }
+
+  .layoutShell {
+    padding: 0.75rem;
+
+    .headerBar {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(200px, 1fr) auto auto;
+      grid-template-areas: "title context controls logo logout";
+      align-items: center;
+      padding: 1rem 1.15rem;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+    }
+    .headerRight { display: contents; }
+    .headerTitle { font-size: 1.5rem; }
+    .headerSubtitle { font-size: 0.8rem; margin-bottom: 0; }
+    .projectContextNote { padding: 0.65rem 0.8rem; font-size: 0.75rem; line-height: 1.5; }
+    .selectorInline { display: flex; grid-area: controls; min-width: 0; align-self: center; }
+    .selectInput { min-height: 44px; padding: 0.5rem; }
+    .logoWrap { align-self: center; padding: 0.25rem; box-sizing: border-box; height: 64px; margin-top: 1.2rem; }
+    .logo { height: 54px; max-width: 100px; }
+    .logoutIcon { grid-area: logout; justify-self: end; margin-top: 1.2rem; }
+    .nav { padding: 6px; margin-bottom: 0.5rem; }
+    .tabList { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+    .tabLink { min-height: 48px; padding: 6px 10px; font-size: 0.9rem; }
+    .groupTrigger { min-width: 0; }
+    .groupTitle { gap: 0.4rem; }
+  }
+}
+
+// Keep the brand and both utility controls in one aligned row on phones.
+@media (max-width: 700px) {
+  .layoutShell {
+    .headerBar {
+      grid-template-columns: minmax(0, 1fr) 64px 44px;
+      grid-template-areas: "title logo logout" "context context context" "controls controls controls";
+      align-items: center;
+      gap: 12px 8px;
+    }
+    .headerRight { display: contents; }
+    .selectorInline { display: flex; grid-area: controls; }
+    .logoWrap {
+      align-self: center;
+      width: 64px;
+      height: 64px;
+      box-sizing: border-box;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .logo { width: 100%; height: 54px; }
+    .logoutIcon, .logoutIcon:only-child { grid-area: logout; align-self: center; }
+    .brandIcon { flex-shrink: 0; }
+  }
+}
+
+@media (min-width: 701px) and (max-width: 1100px) {
+  .layoutShell {
+    .headerBar {
+      grid-template-columns: minmax(0, 1fr) minmax(200px, 1fr) auto auto;
+      grid-template-areas: "title controls logo logout" "context context context context";
+    }
+    .projectContextNote {
+      max-width: none;
+      width: auto;
+      justify-self: stretch;
+      strong { display: inline; margin-right: 0.5rem; }
+      p { display: inline; }
+    }
+    .tabLink { padding: 6px; font-size: 0.8rem; }
+  }
+}
+
+// A distinct navigation rail, without returning to the tall card layout.
+.navigationLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 6px 4px;
+  color: colors.$text-secondary;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.3;
+}
+
+@media (min-width: 701px) {
+  .layoutShell .nav {
+    background: colors.$primary-soft;
+    border-color: colors.$primary-border-strong;
+    border-top: 3px solid colors.$primary;
+    box-shadow: colors.$shadow-small;
+  }
+
+  .tabLink.active:not(.adminTab) {
+    background: colors.$primary;
+    color: colors.$text-on-primary;
+    border-color: colors.$primary;
+    box-shadow: colors.$shadow-small;
+    .projectTabSubtitle { color: inherit; }
+  }
+
+  .groupTitle > svg {
+    flex-shrink: 0;
+    padding: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    background: colors.$primary-a08;
+  }
 }

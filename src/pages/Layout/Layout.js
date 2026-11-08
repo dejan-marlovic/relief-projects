@@ -248,6 +248,7 @@ const Layout = () => {
       </header>
 
       <nav className={styles.nav} aria-label="Main navigation">
+        {!isPhone && <div className={styles.navigationLabel}><FiLayers aria-hidden="true" /> Navigation</div>}
         {isPhone ? (
           <div className={styles.pagePicker}>
             <label htmlFor="layout-page" className={styles.selectorLabel}>Current page</label>
