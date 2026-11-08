@@ -174,7 +174,6 @@ const sections = [
     notes: [
       ["Make the task useful", "Fictional demo: Confirm accessible collection routes. Describe who should check the routes, what information to obtain and when the outcome is needed. Marking this Done records completion of the task; it does not approve the project or satisfy a document checklist."],
       ["Calendar downloads", "Download calendar entry produces a snapshot you import yourself. Later edits, completion and deletion do not update that imported copy. Reimporting can create duplicates."],
-      ["Outlook test preview", "Where configured, My follow-ups offers connection to your own Microsoft account. Initial publication is supported, but automatic updates and removals remain blocked. Use your Microsoft account’s calendar, which can be separate from a linked Google calendar. Manage outdated copies manually. Disconnect or Forget access does not remove those copies. Full synchronization work is paused."]
     ]
   },
   {

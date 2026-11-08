@@ -37,6 +37,8 @@ test("personal queue exports the loaded task's project, not the project selected
   await screen.findByText("Other project deadline");
   fireEvent.click(screen.getByRole("button", { name: /Download calendar/ }));
   expect(downloadFollowUpCalendar).toHaveBeenCalledWith(other);
+  expect(screen.queryByText(/Outlook follow-up publication/)).not.toBeInTheDocument();
+  expect(fetch.mock.calls.some(([url]) => String(url).includes("outlook-follow-ups"))).toBe(false);
 });
 
 test("keeps the calendar snapshot available during background refresh and excludes completed data afterwards", async () => {

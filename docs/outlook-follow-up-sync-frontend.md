@@ -1,3 +1,5 @@
+> Retired 8 November 2026. The publication panel, connection controls and OAuth landing route have been removed from the frontend. Use individual .ics downloads and manual import instead. The notes below describe historical implementation, not current functionality. Backend retirement is tracked separately. Existing Outlook appointments and Microsoft consent are not removed by the frontend change.
+
 # Outlook follow-up publication frontend
 
 V54 connection/status UI is in Follow-ups → My follow-ups. Fixed OAuth landing URL for local configuration: http://localhost:3000/follow-ups/outlook (no query or fragment). This route selects My follow-ups; application authentication remains required. Microsoft registration and credentials are separate operator work, not performed here.

@@ -1,7 +1,6 @@
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import AutosaveStatus from "../../components/ProjectClassification/AutosaveStatus";
 import { notifySuccess } from "../../utils/successNotifications";
-import OutlookFollowUps from "./OutlookFollowUps";
 import useTransientMessage from "../../hooks/useTransientMessage";
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -343,7 +342,6 @@ export default function FollowUps({ initialMode = "project" }) {
   return <section className={styles.page}><h2>Follow-ups</h2><p className={styles.muted}>Track project actions, deadlines and responsible people. Completing an action does not approve documents or satisfy a checklist.</p>
     <p className={styles.muted}>Download an open follow-up as an all-day calendar entry on its deadline. The file contains its title, description, project and responsible employee. Import it into Outlook or another calendar yourself. This is a snapshot: edits, completion and deletion do not update imported entries. Reimporting may create duplicates. No invitation or automatic notification is sent.</p>
     <div className={styles.actions}><button aria-pressed={mode === "project"} onClick={() => { if (confirmDiscardUnsavedChanges()) setMode("project"); }}>Selected project</button><button aria-pressed={mode === "mine"} onClick={() => { if (confirmDiscardUnsavedChanges()) setMode("mine"); }}>My follow-ups</button></div>
-    {mode === "mine" && <OutlookFollowUps authFetch={authFetch} beforeConnect={confirmDiscardUnsavedChanges} />}
     {mode === "mine" && <p className={styles.muted}>Your employee’s assigned work across all active projects, regardless of the project selected above.</p>}
     {mode === "project" && !selectedProjectId ? <p>Select a project to see its follow-ups.</p> : <Queue key={`${mode}-${mode === "project" ? selectedProjectId : "all"}`} mode={mode} projectId={mode === "project" ? selectedProjectId : null} authFetch={authFetch} />}
   </section>;

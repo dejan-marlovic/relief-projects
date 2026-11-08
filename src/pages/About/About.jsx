@@ -267,12 +267,12 @@ const About = () => {
               </p>
             </div>
             <div className={styles.principle}>
-              <h3 className={styles.principleTitle}>Calendar publication is limited</h3>
+              <h3 className={styles.principleTitle}>Calendar downloads are snapshots</h3>
               <p className={styles.principleText}>
-                Calendar downloads are snapshots. The optional Outlook test
-                preview can publish new follow-ups, but automatic updates and
-                removals remain blocked. Existing copies need manual attention;
-                full synchronization is not available.
+                Download an open follow-up as an ICS file and import it into your
+                calendar yourself. Later edits, completion and deletion do not
+                update the imported entry. No automatic synchronization,
+                invitations or notifications are sent.
               </p>
             </div>
           </div>
