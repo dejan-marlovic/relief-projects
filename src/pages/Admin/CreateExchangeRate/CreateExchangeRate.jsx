@@ -1,3 +1,4 @@
+import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 // src/components/Admin/CreateExchangeRate/CreateExchangeRate.jsx
 
@@ -92,7 +93,7 @@ const CreateExchangeRate = () => {
   const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
 
   //UI state
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading, initialLoading] = useRefreshLoading(false);
   const [loadingCurrencies, setLoadingCurrencies] = useState(false);
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
@@ -452,7 +453,7 @@ const CreateExchangeRate = () => {
                   currencies.length === 0 ? "Create currencies first." : ""
                 }
               >
-                <FiSave /> {loading ? "Creating..." : "Create exchange rate"}
+                <FiSave /> {initialLoading ? "Creating..." : "Create exchange rate"}
               </button>
 
               <button

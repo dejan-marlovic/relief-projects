@@ -14,18 +14,18 @@ export async function readIndicator(response) {
   return data;
 }
 export function useIndicatorRead(authFetch, url, refresh) {
-  const [state, setState] = useState({ data: null, loading: true, error: "" });
+  const [state, setState] = useState({ url: null, data: null, loading: true, error: "" });
   const [retry, setRetry] = useState(0);
   useEffect(() => {
-    if (!url) { setState({ data: null, loading: false, error: "" }); return undefined; }
+    if (!url) { setState({ url, data: null, loading: false, error: "" }); return undefined; }
     const controller = new AbortController();
-    setState(previous => ({ data: previous.data, loading: true, error: "" }));
+    setState(previous => ({ url, data: previous.url === url ? previous.data : null, loading: true, error: "" }));
     authFetch(url, { signal: controller.signal, cache: "no-store" }).then(readIndicator)
-      .then(data => { if (!controller.signal.aborted) setState({ data, loading: false, error: "" }); })
-      .catch(error => { if (!controller.signal.aborted) setState({ data: null, loading: false, error: error.message }); });
+      .then(data => { if (!controller.signal.aborted) setState({ url, data, loading: false, error: "" }); })
+      .catch(error => { if (!controller.signal.aborted) setState({ url, data: null, loading: false, error: error.message }); });
     return () => controller.abort();
   }, [authFetch, url, refresh, retry]);
-  return { ...state, retry: () => setRetry(n => n + 1) };
+  return { ...(state.url === url ? state : { data: null, loading: !!url, error: "" }), retry: () => setRetry(n => n + 1) };
 }
 export function measurementError(value, type) {
   const text = String(value ?? "");

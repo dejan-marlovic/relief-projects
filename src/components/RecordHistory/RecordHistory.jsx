@@ -32,7 +32,8 @@ function HistoryPage({ entityType, entityId, includeChildren }) {
 
   useEffect(() => {
     const controller = new AbortController();
-    setState({ loading: true });
+    const key = JSON.stringify([entityType, entityId, includeChildren, page]);
+    setState(previous => ({ key, loading: true, result: previous.key === key ? previous.result : null }));
     const load = async () => {
       try {
         const query = new URLSearchParams({ entityType, entityId: String(entityId), page: String(page), size: "20" });
@@ -46,7 +47,7 @@ function HistoryPage({ entityType, entityId, includeChildren }) {
           throw new Error(message);
         }
         if (!Array.isArray(body?.content)) throw new Error("Lifecycle history could not be loaded. Please try again.");
-        if (!controller.signal.aborted) setState({ loading: false, result: { ...body, content: uniqueAuditEvents(body.content) } });
+        if (!controller.signal.aborted) setState({ key, loading: false, result: { ...body, content: uniqueAuditEvents(body.content) } });
       } catch (error) {
         if (!controller.signal.aborted) setState({ loading: false, error: error.message });
       }
@@ -63,7 +64,7 @@ function HistoryPage({ entityType, entityId, includeChildren }) {
       <span>Activity history · newest first</span>
       {(error) && <button type="button" disabled={loading} onClick={() => { setPage(0); setRefresh((value) => value + 1); }}>Retry history</button>}
     </div>
-    {loading && <p role="status">Loading record history…</p>}
+    {loading && !result && <p role="status">Loading record history…</p>}
     {error && <p role="alert">{error}</p>}
     {result && <>
       {result.content.length === 0 ? <p role="status">No record history yet.</p> :

@@ -1,3 +1,4 @@
+import useRefreshLoading from "../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import useArchivedProject from "../../hooks/useArchivedProject";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
@@ -32,7 +33,7 @@ export function RevisionPanel({ budget, onChanged, disabled = false }) {
   const { hasAnyRole, hasRole } = useAuth();
   const editor = !archivedProject && hasAnyRole("ADMIN", "FINANCE"), reviewer = !archivedProject && hasAnyRole("ADMIN", "APPROVER"), admin = !archivedProject && hasRole("ADMIN");
   const [data, setData] = useState(null), [history, setHistory] = useState(null), [page, setPage] = useState(0);
-  const [refresh, setRefresh] = useState(0), [loading, setLoading] = useState(true), [error, setError] = useState("");
+  const [refresh, setRefresh] = useState(0), [loading, setLoading, initialLoading] = useRefreshLoading(true, budget.id), [error, setError] = useState("");
   const [form, setForm] = useState(null), [busy, setBusy] = useState(false), [blocked, setBlocked] = useState(false);
   const [documents, setDocuments] = useState([]), [donors, setDonors] = useState([]), [optionsError, setOptionsError] = useState("");
   const pending = useRef(false);
@@ -45,7 +46,7 @@ export function RevisionPanel({ budget, onChanged, disabled = false }) {
     return () => { window.removeEventListener("budget-revisions-changed", listener); };
   }, [form, busy]);
   useEffect(() => {
-    const controller = new AbortController(); setLoading(true); setHistory(null);
+    const controller = new AbortController(); setLoading(true);
     (async () => {
       const next = await read(await authFetch(endpoint, { signal: controller.signal, cache: "no-store" }));
       if (!next.budget || !Array.isArray(next.members)) throw new Error("Invalid revision response.");
@@ -53,9 +54,9 @@ export function RevisionPanel({ budget, onChanged, disabled = false }) {
       const events = next.family ? await read(await authFetch(`${BASE_URL}/api/budget-revision-families/${next.family.id}/decisions?page=${page}&size=20`, { signal: controller.signal, cache: "no-store" })) : { content: [], totalPages: 0, totalElements: 0 };
       if (!Array.isArray(events.content)) throw new Error("Decision history could not be read.");
       if (!controller.signal.aborted) setHistory(events);
-    })().catch(err => { if (!controller.signal.aborted) setError(err.message); }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    })().catch(err => { if (!controller.signal.aborted) { setHistory(null); setError(err.message); } }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [authFetch, endpoint, refresh, page, budget.contentRevision]);
+  }, [authFetch, endpoint, refresh, page, budget.contentRevision, setLoading]);
   const needsOptions = form && ["decision", "correct", "add"].includes(form.action);
   useEffect(() => {
     if (!needsOptions) return undefined;
@@ -112,7 +113,7 @@ export function RevisionPanel({ budget, onChanged, disabled = false }) {
   return <div className={styles.panel}>
     <p className={styles.hint}>Selecting a current plan changes planning displays. Financial execution requires separate activation with shared cost ceilings; existing awards and commitments retain their original references.</p>
     {(error || optionsError || blocked) && <button type="button" disabled={busy || loading} onClick={() => { setError(""); setRefresh(n => n + 1); }}>Retry revisions and history</button>}
-    {loading && <p role="status">Loading revisions…</p>}{error && <p role="alert">{error}</p>}
+    {initialLoading && <p role="status">Loading revisions…</p>}{error && <p role="alert">{error}</p>}
     {data && <><WorkflowIntro>Prepare a revised budget, record donor decisions and choose the current plan. Financial execution is a separate activation: existing awards and commitments retain their original references.</WorkflowIntro><WorkflowStep number={1} title="Prepare the revised plan" description="Create a planning revision from an eligible approved budget. Edit its costs and obtain internal approval using the budget controls before moving on.">
       {family ? <><p>Current plan: <strong>{family.currentPlanBudgetId ? `Budget #${family.currentPlanBudgetId}` : "Not selected — family planning total unavailable"}</strong></p><p>Original financial budget: <strong>Budget #{family.financialBudgetId}</strong> · Latest revision: Budget #{family.latestRevisionBudgetId}</p>
         <ul>{members.map(m => <li key={m.id}>{budgetOptionLabel(m)} · Internal status: {words(m.lifecycleStatus)}{m.isDeleted ? " · Deleted" : ""}{m.id === family.currentPlanBudgetId ? " · Current plan" : ""}</li>)}</ul>

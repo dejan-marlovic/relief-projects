@@ -1,3 +1,4 @@
+import useRefreshLoading from "../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import { HistoryPagination, HistoryTimeline, HistoryEntry } from "../ActivityHistory/ActivityHistory";
@@ -22,14 +23,14 @@ export function FinalEvidencePanel({ paymentOrderId, refreshKey, editingLocked }
   const { hasAnyRole } = useAuth();
   const endpoint = `${BASE_URL}/api/payment-orders/${paymentOrderId}/final-evidence`;
   const [data, setData] = useState(null), [history, setHistory] = useState(null), [page, setPage] = useState(0);
-  const [tick, setTick] = useState(0), [loading, setLoading] = useState(true), [busy, setBusy] = useState(false);
+  const [tick, setTick] = useState(0), [loading, setLoading, initialLoading] = useRefreshLoading(true, paymentOrderId), [busy, setBusy] = useState(false);
   const [error, setError] = useState(""), [actionError, setActionError] = useState(""), [message, setMessage] = useTransientMessage("");
   const [form, setForm] = useState(null), [docs, setDocs] = useState([]), [candidateError, setCandidateError] = useState(""), [candidateLoading, setCandidateLoading] = useState(false);
   const [reviewRequired, setReviewRequired] = useState(false), [downloading, setDownloading] = useState(null);
   const pending = useRef(false), alive = useRef(true);
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   useEffect(() => {
-    const controller = new AbortController(); setLoading(true); setError(""); setData(null); setHistory(null);
+    const controller = new AbortController(); setLoading(true); setError("");
     async function json(url) {
       const response = await authFetch(url, { signal: controller.signal, cache: "no-store" });
       if (!response.ok) throw new Error(await readDocumentError(response, "Unable to load late evidence. Check that the updated backend is running."));
@@ -38,9 +39,9 @@ export function FinalEvidencePanel({ paymentOrderId, refreshKey, editingLocked }
     Promise.all([json(endpoint), json(`${endpoint}/history?page=${page}&size=20`)]).then(([collection, decisions]) => {
       if (!Array.isArray(collection.entries) || !Number.isSafeInteger(collection.revision) || !Array.isArray(decisions.content)) throw new Error("Unsupported evidence response.");
       if (!controller.signal.aborted) { setData(collection); setHistory(decisions); }
-    }).catch(e => { if (!controller.signal.aborted) setError(e.message); }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    }).catch(e => { if (!controller.signal.aborted) { setData(null); setHistory(null); setError(e.message); } }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [authFetch, endpoint, page, tick, refreshKey]);
+  }, [authFetch, endpoint, page, tick, refreshKey, setLoading]);
 
   const selecting = form && form.action !== "remove";
   useEffect(() => {
@@ -96,7 +97,7 @@ export function FinalEvidencePanel({ paymentOrderId, refreshKey, editingLocked }
   return <div className={styles.panel}>
     <p className={styles.hint}><strong>Not part of the approval decision.</strong> Select an externally prepared signed order or combined evidence file. These descriptions do not verify signatures, settlement or completeness. No payment entry is required.</p>
     {(error || actionError || candidateError || reviewRequired) && <button disabled={busy || loading} onClick={() => setTick(n => n + 1)}>Retry late evidence and history</button>}
-    {loading && <p role="status">Loading late evidence…</p>}{error && <p role="alert">{error}</p>}{actionError && <p role="alert">{actionError}</p>}{message && <p role="status">{message}</p>}
+    {initialLoading && <p role="status">Loading late evidence…</p>}{error && <p role="alert">{error}</p>}{actionError && <p role="alert">{actionError}</p>}{message && <p role="status">{message}</p>}
     {editingLocked && <p>Finish editing the order before changing evidence.</p>}
     {data && <>
       <ul>{data.issues?.map(issue => <li key={issue.code}>{issue.message}</li>)}</ul>

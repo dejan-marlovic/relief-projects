@@ -1,3 +1,4 @@
+import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import { projectApprovalLabel } from "../../../utils/projectApproval";
@@ -22,7 +23,7 @@ const RestoreProject = () => {
 
   const { refreshProjects } = useContext(ProjectContext);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading, initialLoading] = useRefreshLoading(false);
   const [restoring, setRestoring] = useState(false);
 
   const [deletedProjects, setDeletedProjects] = useState([]);
@@ -312,7 +313,7 @@ const RestoreProject = () => {
           </div>
         )}
 
-        {loading ? (
+        {initialLoading ? (
           <div className={styles.skeletonWrap}>
             <div className={styles.skeletonLine} />
             <div className={styles.skeletonLine} />

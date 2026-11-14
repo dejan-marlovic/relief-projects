@@ -345,7 +345,7 @@ export default function Memos({ canEdit = false }) {
         )}
       </div>
 
-      {loading && <p className={styles.note}>Loading…</p>}
+      {loading && !items.length && <p className={styles.note}>Loading…</p>}
       {error && (
         <ErrorBanner message={error} onDismiss={() => setError("")} />
       )}

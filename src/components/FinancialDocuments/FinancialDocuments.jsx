@@ -1,3 +1,4 @@
+import useRefreshLoading from "../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import useArchivedProject from "../../hooks/useArchivedProject";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
@@ -30,7 +31,7 @@ function DocumentsPanel({ entityType, entityId, locked, lifecycleStatus, refresh
   const archivedProject = useArchivedProject(projectId);
   const roleCanManage = !archivedProject && hasAnyRole("ADMIN", "FINANCE");
   const [ownershipMessage, setOwnershipMessage] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading, initialLoading] = useRefreshLoading(true, JSON.stringify([entityType, entityId]));
   const [listError, setListError] = useState("");
   const [actionError, setActionError] = useState("");
   const [message, setMessage] = useTransientMessage("");
@@ -61,7 +62,7 @@ function DocumentsPanel({ entityType, entityId, locked, lifecycleStatus, refresh
       if (!res.ok) throw new Error(await readDocumentError(res, "Could not load record documents."));
       return res.json();
     };
-    setLoading(true); setListError(""); setTarget(null); setProjectId(null); setSelectedId(""); setOwnershipMessage("");
+    setLoading(true); setListError(""); setSelectedId(""); setOwnershipMessage("");
     (async () => {
       const results = await Promise.allSettled([json(`${endpoint}/documents`), json(endpoint)]);
       if (controller.signal.aborted) return;
@@ -81,13 +82,13 @@ function DocumentsPanel({ entityType, entityId, locked, lifecycleStatus, refresh
           await json(`${BASE_URL}/api/projects/${owner}`);
           if (!controller.signal.aborted) setProjectId(owner);
         } catch (err) {
-          if (!controller.signal.aborted) setOwnershipMessage(entityType === "PAYMENT_ORDER" ? `An active header transaction and project are required to add links. ${err.message}` : "The owning project is unavailable; new documents cannot be linked.");
+          if (!controller.signal.aborted) { setProjectId(null); setOwnershipMessage(entityType === "PAYMENT_ORDER" ? `An active header transaction and project are required to add links. ${err.message}` : "The owning project is unavailable; new documents cannot be linked."); }
         }
-      } else setOwnershipMessage("This financial record is unavailable for changes. Retained document links are shown where permitted.");
+      } else { setTarget(null); setProjectId(null); setOwnershipMessage("This financial record is unavailable for changes. Retained document links are shown where permitted."); }
       if (!controller.signal.aborted) setLoading(false);
     })();
     return () => controller.abort();
-  }, [authFetch, endpoint, entityType, revision, lifecycleStatus, locked, refreshKey]);
+  }, [authFetch, endpoint, entityType, revision, lifecycleStatus, locked, refreshKey, setLoading]);
 
   const canManage = roleCanManage && !loading && !listError && target && target.isDeleted !== true
     && ["DRAFT", "RETURNED"].includes(target.lifecycleStatus)
@@ -138,12 +139,12 @@ function DocumentsPanel({ entityType, entityId, locked, lifecycleStatus, refresh
     {entityType === "PAYMENT_ORDER" && <p className={styles.hint}>Ordinary supporting documents — approval-time inclusion not recorded. Late payment evidence is managed separately.</p>}
     <p className={styles.hint}>Links keep the exact file version you select. A replacement never changes existing supporting evidence. Draft and Final are descriptive labels.</p>
     {(listError || actionError || candidateError) && <button type="button" onClick={refresh} disabled={loading || busy}>Retry supporting documents</button>}
-    {loading && <p role="status">Loading supporting documents…</p>}
+    {initialLoading && <p role="status">Loading supporting documents…</p>}
     {listError && <p role="alert">{listError}</p>}
     {actionError && <p role="alert">{actionError}</p>}
     {message && <p role="status">{message}</p>}
     {categoryError && <p role="alert">{categoryError} <button type="button" onClick={retryCategories}>Retry categories</button></p>}
-    {!loading && <>
+    {!initialLoading && <>
       {ownershipMessage && <p className={styles.hint}>{ownershipMessage}</p>}
       {!roleCanManage && <p className={styles.hint}>Only Admin and Finance can change supporting-document links.</p>}
       {roleCanManage && !canManage && <p className={styles.hint}>{editingLocked ? "Finish editing this record before changing document links." : "Links can be changed only on active Draft or Returned records. Submitted, Approved and Booked records are read-only."}</p>}

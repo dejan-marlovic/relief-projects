@@ -1,3 +1,4 @@
+import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -46,7 +47,7 @@ const UpdateExchangeRate = () => {
   const formRef = useRef(null);
   const reading = useRef(false);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading, initialLoading] = useRefreshLoading(false);
   const [saving, setSaving] = useState(false);
 
   const [formError, setFormError] = useState("");
@@ -287,7 +288,7 @@ const UpdateExchangeRate = () => {
           </div>
         )}
 
-        {loading ? (
+        {initialLoading ? (
           <div className={styles.skeletonWrap}>
             <div className={styles.skeletonLine} />
             <div className={styles.skeletonLine} />

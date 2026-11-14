@@ -1,3 +1,4 @@
+import useRefreshLoading from "../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import ScrollToForm from "../ScrollToForm/ScrollToForm";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -19,19 +20,19 @@ export function CapacityBasis({ rows = [] }) {
 export default function BudgetExecution({ familyId, budgetId, disabled = false, refreshKey }) {
   const navigate = useNavigate(), authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
   const eventRevision = useFinancialRefresh();
-  const [tick, setTick] = useState(0), [data, setData] = useState(null), [loading, setLoading] = useState(true);
+  const [tick, setTick] = useState(0), [data, setData] = useState(null), [loading, setLoading, initialLoading] = useRefreshLoading(true, familyId);
   const [preview, setPreview] = useState(null), [reason, setReason] = useState(""), [error, setError] = useState(""), [busy, setBusy] = useState(false), [blocked, setBlocked] = useState(false);
   const pending = useRef(false);
   const endpoint = `${BASE_URL}/api/budget-revision-families/${familyId}`;
   useUnsavedChange(`execution-${familyId}-${budgetId}`, Boolean(preview));
   useEffect(() => {
-    const controller = new AbortController(); setLoading(true); setData(null);
+    const controller = new AbortController(); setLoading(true);
     authFetch(`${endpoint}/execution`, { signal: controller.signal, cache: "no-store" }).then(readExecution).then(value => {
       if (!value.executionStatus || !value.eligibility) throw new Error("Execution status unavailable.");
       if (!controller.signal.aborted) setData(value);
-    }).catch(err => { if (!controller.signal.aborted) setError(err.message); }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    }).catch(err => { if (!controller.signal.aborted) { setData(null); setError(err.message); } }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [endpoint, authFetch, tick, eventRevision, refreshKey]);
+  }, [endpoint, authFetch, tick, eventRevision, refreshKey, setLoading]);
   const getPreview = async () => {
     if (pending.current) return;
     pending.current = true; setBusy(true); setError("");
@@ -60,7 +61,7 @@ export default function BudgetExecution({ familyId, budgetId, disabled = false, 
     <h4>Financial execution</h4>
     <p className={styles.hint}>Activation applies one set of shared cost ceilings. Existing funding and commitments keep their original references. Uncommitted planned capacity is not available cash or funding.</p>
     {(error || blocked) && <button disabled={loading || busy} onClick={() => setTick(n => n + 1)}>Retry execution</button>}
-    {loading && <p role="status">Loading execution…</p>}{error && <p role="alert">{error}</p>}
+    {initialLoading && <p role="status">Loading execution…</p>}{error && <p role="alert">{error}</p>}
     {data && <><dl className={styles.fields}><dt>Status</dt><dd>{data.executionStatus.replaceAll("_", " ")}</dd><dt>Origin budget</dt><dd>#{data.originBudgetId}</dd><dt>Current plan</dt><dd>{data.currentPlanBudgetId == null ? "Not selected" : `#${data.currentPlanBudgetId}`}</dd><dt>Executable budget</dt><dd>{data.executableBudgetId == null ? "Not activated; original-budget rules apply" : `#${data.executableBudgetId}`}</dd><dt>Currency</dt><dd>{data.currency?.name || "Unknown"} {data.currency?.id != null && `(#${data.currency.id})`}</dd><dt>Coverage</dt><dd>{data.coverage?.capacity?.replaceAll("_", " ") || "Unavailable"}</dd><dt>Retained obligations</dt><dd>{exactAmount(data.obligations)}</dd><dt>Uncommitted planned capacity</dt><dd>{exactAmount(data.uncommittedPlannedCapacity)}</dd></dl>
       {data.executionStatus === "SUSPENDED" && <p role="alert">Execution suspended. New or increased commitments need explicit reaffirmation with valid donor approval. Retained history and otherwise permitted reductions remain available.</p>}
       {data.executableBudgetId != null && data.executableBudgetId !== data.currentPlanBudgetId && <p>Current planning and financial execution use different revisions.</p>}

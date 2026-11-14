@@ -1,3 +1,4 @@
+import useRefreshLoading from "../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import { HistoryPagination, HistoryTimeline, SnapshotHistoryEntry } from "../ActivityHistory/ActivityHistory";
 import ArchiveAttribution from "./ArchiveAttribution";
@@ -21,9 +22,10 @@ async function read(response) {
 }
 function FinancialAttention({ endpoint, authFetch, revision }) {
   const [page, setPage] = useState(0), [data, setData] = useState(null), [error, setError] = useState("");
+  useEffect(() => { setData(null); }, [endpoint, page]);
   useEffect(() => {
-    const controller = new AbortController(); setData(null); setError("");
-    authFetch(`${endpoint}/financial-attention?page=${page}&size=20`, { signal: controller.signal, cache: "no-store" }).then(read).then(value => { if (!Array.isArray(value.content)) throw new Error("Invalid financial diagnostics response."); if (!controller.signal.aborted) setData(value); }).catch(err => { if (!controller.signal.aborted) setError(err.message); });
+    const controller = new AbortController(); setError("");
+    authFetch(`${endpoint}/financial-attention?page=${page}&size=20`, { signal: controller.signal, cache: "no-store" }).then(read).then(value => { if (!Array.isArray(value.content)) throw new Error("Invalid financial diagnostics response."); if (!controller.signal.aborted) setData(value); }).catch(err => { if (!controller.signal.aborted) { setData(null); setError(err.message); } });
     return () => controller.abort();
   }, [endpoint, authFetch, page, revision]);
   return <section aria-label="Financial attention"><h4>Financial record observations</h4><p className={styles.hint}>All discovered records are included, including normal statuses. No project balance or reconciled result is calculated.</p>{error && <p role="alert">{error}</p>}{!data && !error && <p role="status">Loading financial observations…</p>}
@@ -34,7 +36,7 @@ export function CloseoutPanel({ projectId, refreshKey }) {
   const navigate = useNavigate(), authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
   const endpoint = `${BASE_URL}/api/projects/${projectId}/closeout`;
   const [data, setData] = useState(null), [history, setHistory] = useState(null), [historyPage, setHistoryPage] = useState(0);
-  const [loading, setLoading] = useState(true), [loadError, setLoadError] = useState(""), [historyError, setHistoryError] = useState("");
+  const [loading, setLoading, initialLoading] = useRefreshLoading(true, projectId), [loadError, setLoadError] = useState(""), [historyError, setHistoryError] = useState("");
   const [revision, setRevision] = useState(0), [form, setForm] = useState(null), [busy, setBusy] = useState(false), [error, setError] = useState(""), [blocked, setBlocked] = useState(false);
   const [documents, setDocuments] = useState([]), [documentError, setDocumentError] = useState(""), [financeOpen, setFinanceOpen] = useState(false), [downloading, setDownloading] = useState(null);
   const alive = useRef(true), pending = useRef(false), formRef = useRef(null);
@@ -54,10 +56,11 @@ export function CloseoutPanel({ projectId, refreshKey }) {
     const controller = new AbortController(); setLoading(true); setLoadError("");
     authFetch(endpoint, { signal: controller.signal, cache: "no-store" }).then(read).then(value => { if (!Number.isInteger(value.revision) || !value.permissions || !value.readiness) throw new Error("Invalid closeout response."); if (!controller.signal.aborted) setData(value); }).catch(err => { if (!controller.signal.aborted) { setData(null); setLoadError(err.message); } }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [endpoint, authFetch, revision, refreshKey]);
+  }, [endpoint, authFetch, revision, refreshKey, setLoading]);
+  useEffect(() => { setHistory(null); }, [endpoint, historyPage]);
   useEffect(() => {
-    const controller = new AbortController(); setHistory(null); setHistoryError("");
-    authFetch(`${endpoint}/history?page=${historyPage}&size=20`, { signal: controller.signal, cache: "no-store" }).then(read).then(value => { if (!Array.isArray(value.content)) throw new Error("Invalid decision history response."); if (!controller.signal.aborted) setHistory(value); }).catch(err => { if (!controller.signal.aborted) setHistoryError(err.message); });
+    const controller = new AbortController(); setHistoryError("");
+    authFetch(`${endpoint}/history?page=${historyPage}&size=20`, { signal: controller.signal, cache: "no-store" }).then(read).then(value => { if (!Array.isArray(value.content)) throw new Error("Invalid decision history response."); if (!controller.signal.aborted) setHistory(value); }).catch(err => { if (!controller.signal.aborted) { setHistory(null); setHistoryError(err.message); } });
     return () => controller.abort();
   }, [endpoint, authFetch, revision, refreshKey, historyPage]);
   const choosingEvidence = form?.action === "acceptance";
@@ -103,7 +106,7 @@ export function CloseoutPanel({ projectId, refreshKey }) {
     <ArchiveAttribution value={data} />
     <p className={styles.hint}>Administrative closeout is a recorded decision. It does not certify reconciled accounts, complete evidence or verified filing, and closeout alone does not lock project work. Archiving locks project data until an authorised user explicitly unarchives it. Downloads, history and storage-review decisions remain available.</p>
     <div className={styles.actions}>{(loadError || historyError || documentError || error || blocked) && <button type="button" onClick={refresh} disabled={busy || loading}>Retry closeout and observations</button>}<Link to="/documents">Document checklist</Link><Link to="/risks">Open risks</Link><Link to="/follow-ups">Open follow-ups</Link></div>
-    {loading && <p role="status">Loading closeout…</p>}{loadError && <p role="alert">{loadError}</p>}{error && <p role="alert">{error}</p>}
+    {initialLoading && <p role="status">Loading closeout…</p>}{loadError && <p role="alert">{loadError}</p>}{error && <p role="alert">{error}</p>}
     {data && <>
       {data.closeoutReviewRequired && <p role="alert">Closeout review required: acceptance changed. Reopen and close explicitly to reaffirm the decision.</p>}
       {data.archive?.reviewRequired && <p role="alert">Archive review required. Unarchive before changing project data or reaffirming closeout and filing. Unarchiving does not move files.</p>}

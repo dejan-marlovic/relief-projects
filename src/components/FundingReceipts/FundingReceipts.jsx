@@ -1,3 +1,4 @@
+import useRefreshLoading from "../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import ScrollToForm from "../ScrollToForm/ScrollToForm";
@@ -24,7 +25,7 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
   const [data, setData] = useState(null);
   const [page, setPage] = useState(0);
   const [revision, setRevision] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading, initialLoading] = useRefreshLoading(true, transactionId);
   const [loadError, setLoadError] = useState("");
   const [error, setError] = useState("");
   const [form, setForm] = useState(null);
@@ -51,7 +52,7 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
       finally { if (!controller.signal.aborted) setLoading(false); }
     })();
     return () => controller.abort();
-  }, [authFetch, transactionId, page, revision, refreshKey]);
+  }, [authFetch, transactionId, page, revision, refreshKey, setLoading]);
 
   const formKind = form?.kind;
   useEffect(() => {
@@ -145,7 +146,7 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
   return <div className={styles.panel}>
     <p className={styles.hint}>Record incoming money against approved funding. These entries do not increase spending capacity and are not bank reconciliation. Voiding corrects an entry; it does not record a refund.</p>
     <div className={styles.actions}>{(loadError || error || documentError || !!pending) && <button type="button" disabled={busy || loading} onClick={refresh}>Retry receipts</button>}{can("create") && !form && !pending && <button type="button" onClick={() => open("create")}>Record funding receipt</button>}</div>
-    {loading && <p role="status">Loading receipts…</p>}
+    {initialLoading && <p role="status">Loading receipts…</p>}
     {loadError && <p role="alert">{loadError}</p>}
     {error && <p role="alert">{error}{(form || pending) && " Your input has been retained. Reload and review before making a new attempt."}</p>}
     {pending && <div role="alert"><p>A receipt request needs confirmation. Retry sends the exact same request and cannot create a duplicate for this request key. Do not enter it again as a new receipt.</p><button type="button" disabled={busy} onClick={() => send(pending)}>Retry same request</button></div>}
@@ -197,7 +198,7 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
       <div className={styles.actions}><button type="button" disabled={busy} onClick={() => { setForm(null); setError(""); }}>Cancel</button><button type="button" disabled={busy || loading} onClick={refresh}>Reload for review (keep input)</button></div>
       {form.receipt && data && !data.content.some(row => row.id === form.receipt.id && row.revision === form.receipt.revision) && <p role="status">This draft keeps the original revision. Cancel and reopen the action after reviewing current receipts to use a new revision.</p>}
     </ScrollToForm>}
-    {!loading && data?.content.length === 0 && <p>No receipts on this page.</p>}
+    {!initialLoading && data?.content.length === 0 && <p>No receipts on this page.</p>}
     {data?.content.map(receipt => <article key={receipt.id} className={`${styles.entry} ${receipt.status === "VOIDED" ? styles.voided : ""}`} aria-label={`Receipt ${receipt.id}`}>
       <h4>Receipt #{receipt.id} · {receipt.status === "VOIDED" ? "Voided" : "Recorded"}</h4>
       <p><strong>{receiptMoney(receipt.amount)} {receiptCurrency(receipt.currency)}</strong> · Arrived {receipt.receivedDate}</p>

@@ -1,3 +1,4 @@
+import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
 import useTransientMessage from "../../../hooks/useTransientMessage";
@@ -19,7 +20,7 @@ const RestoreExchangeRate = () => {
   const reading = useRef(false);
   const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading, initialLoading] = useRefreshLoading(false);
   const [restoring, setRestoring] = useState(false);
 
   const [deletedExchangeRates, setDeletedExchangeRates] = useState([]);
@@ -225,7 +226,7 @@ const RestoreExchangeRate = () => {
           </div>
         )}
 
-        {loading ? (
+        {initialLoading ? (
           <div className={styles.skeletonWrap}>
             <div className={styles.skeletonLine} />
             <div className={styles.skeletonLine} />

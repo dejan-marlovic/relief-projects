@@ -1,3 +1,4 @@
+import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
@@ -38,7 +39,7 @@ const UpdateSector = () => {
   const [items, setItems] = useState([]);
   const [form, setForm] = useState(initialForm);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading, initialLoading] = useRefreshLoading(false);
   const [saving, setSaving] = useState(false);
 
   const [formError, setFormError] = useState("");
@@ -213,7 +214,7 @@ const UpdateSector = () => {
           </div>
         )}
 
-        {loading ? (
+        {initialLoading ? (
           <div className={styles.skeletonWrap}>
             <div className={styles.skeletonLine} />
             <div className={styles.skeletonLine} />

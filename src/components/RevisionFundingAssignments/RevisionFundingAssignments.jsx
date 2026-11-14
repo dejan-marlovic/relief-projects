@@ -1,3 +1,4 @@
+import useRefreshLoading from "../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import ScrollToForm from "../ScrollToForm/ScrollToForm";
@@ -14,18 +15,18 @@ import styles from "../ProjectCloseout/ProjectCloseout.module.scss";
 export function AssignmentPanel({ transactionId, originBudgetId, disabled = false, refreshKey, onChanged }) {
   const navigate = useNavigate(), authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
   const eventRevision = useFinancialRefresh(), pending = useRef(false);
-  const [tick, setTick] = useState(0), [loading, setLoading] = useState(true), [data, setData] = useState(null), [error, setError] = useState("");
+  const [tick, setTick] = useState(0), [loading, setLoading, initialLoading] = useRefreshLoading(true, transactionId), [data, setData] = useState(null), [error, setError] = useState("");
   const [form, setForm] = useState(null), [busy, setBusy] = useState(false), [blocked, setBlocked] = useState(false);
   const endpoint = `${BASE_URL}/api/transactions/${transactionId}/revision-funding-assignments`;
   useUnsavedChange(`funding-assignment-${transactionId}`, Boolean(form));
   useEffect(() => {
-    const controller = new AbortController(); setLoading(true); setData(null);
+    const controller = new AbortController(); setLoading(true);
     authFetch(endpoint, { signal: controller.signal, cache: "no-store" }).then(readExecution).then(value => {
       if (!Array.isArray(value.assignments) || !Array.isArray(value.targets) || !value.eligibility) throw new Error("Funding assignments unavailable.");
       if (!controller.signal.aborted) setData(value);
-    }).catch(err => { if (!controller.signal.aborted) setError(err.message); }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    }).catch(err => { if (!controller.signal.aborted) { setData(null); setError(err.message); } }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [endpoint, authFetch, tick, eventRevision, refreshKey]);
+  }, [endpoint, authFetch, tick, eventRevision, refreshKey, setLoading]);
   const open = (assignment = null, release = false) => {
     setError(""); setBlocked(false);
     setForm({ id: assignment?.id, expectedAssignmentRevision: assignment?.revision, expectedFamilyRevision: data.familyRevision, expectedExecutionRevision: data.executionRevision,
@@ -64,7 +65,7 @@ export function AssignmentPanel({ transactionId, originBudgetId, disabled = fals
     <p className={styles.hint}>Use unused approved funding from this existing award on revised costs. Each assignment is one allocation, not a new award or another balance. Receipts and actual payments do not change this capacity.</p>
     <p className={styles.hint}>Original allocations on an APPROVED transaction remain reserved even when uncommitted. This workflow cannot release those allocations. Recorded governing approval does not verify every award's donor conditions.</p>
     {(error || blocked) && <button disabled={busy || loading} onClick={() => { setError(""); setTick(n => n + 1); }}>Retry funding assignments</button>}
-    {loading && <p role="status">Loading assignments…</p>}{error && <p role="alert">{error}</p>}
+    {initialLoading && <p role="status">Loading assignments…</p>}{error && <p role="alert">{error}</p>}
     {data && <><dl className={styles.fields}><dt>Original award budget</dt><dd>#{originBudgetId ?? "unavailable"}</dd><dt>Executable use plan</dt><dd>{data.eligibility.targetBudgetId == null ? "Not activated" : `Budget #${data.eligibility.targetBudgetId}`}</dd><dt>Currency</dt><dd>{data.funding.currency ? `${data.funding.currency.name || "Currency"} (#${data.funding.currency.id})` : "Unavailable"}</dd><dt>Approved funding</dt><dd>{exactAmount(data.funding.approved)}</dd><dt>Obligations counted once</dt><dd>{exactAmount(data.funding.obligations)}</dd><dt>Unused approved funding</dt><dd>{exactAmount(data.funding.unassignedApprovedFunding)}</dd></dl>
       <p className={styles.hint}>Unused approved funding is not cash. Target-row and shared family ceilings also apply. Currency is the current configured denomination, not verified historical meaning.</p>
       {(data.issues || []).map((issue, i) => <p key={i}>{issue.message}</p>)}

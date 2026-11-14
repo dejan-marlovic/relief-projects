@@ -1,3 +1,4 @@
+import useRefreshLoading from "../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import ScrollToForm from "../ScrollToForm/ScrollToForm";
@@ -24,7 +25,7 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
   const [data, setData] = useState(null);
   const [page, setPage] = useState(0);
   const [revision, setRevision] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading, initialLoading] = useRefreshLoading(true, paymentOrderId);
   const [loadError, setLoadError] = useState("");
   const [error, setError] = useState("");
   const [form, setForm] = useState(null);
@@ -51,7 +52,7 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
       finally { if (!controller.signal.aborted) setLoading(false); }
     })();
     return () => controller.abort();
-  }, [authFetch, paymentOrderId, page, revision, refreshKey]);
+  }, [authFetch, paymentOrderId, page, revision, refreshKey, setLoading]);
 
   const projectId = data?.summary?.currentOrderConfiguration?.projectId;
   const formKind = form?.kind;
@@ -144,7 +145,7 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
   return <div className={styles.panel}>
     <p className={styles.hint}>Record money paid to the recipient. This records a user-entered fact; it does not execute a bank payment or change commitments, signatures or Booked status. These entries do not increase spending capacity and are not bank reconciliation. Voiding corrects an entry; it does not record a refund.</p>
     <div className={styles.actions}>{(loadError || error || documentError || !!pending) && <button type="button" disabled={busy || loading} onClick={refresh}>Retry payments</button>}{can("create") && !form && !pending && <button type="button" onClick={() => open("create")}>Record outgoing payment</button>}</div>
-    {loading && <p role="status">Loading payments…</p>}
+    {initialLoading && <p role="status">Loading payments…</p>}
     {loadError && <p role="alert">{loadError}</p>}
     {error && <p role="alert">{error}{(form || pending) && " Your input has been retained. Reload and review before making a new attempt."}</p>}
     {pending && <div role="alert"><p>A payment request needs confirmation. Retry sends the exact same request and cannot create a duplicate for this request key. Do not enter it again as a new payment.</p><button type="button" disabled={busy} onClick={() => send(pending)}>Retry same request</button></div>}
@@ -200,7 +201,7 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
       <div className={styles.actions}><button type="button" disabled={busy} onClick={() => { setForm(null); setError(""); }}>Cancel</button><button type="button" disabled={busy || loading} onClick={refresh}>Reload for review (keep input)</button></div>
       {form.payment && data && !data.content.some(row => row.id === form.payment.id && row.revision === form.payment.revision) && <p role="status">This draft keeps the original revision. Cancel and reopen the action after reviewing current payments to use a new revision.</p>}
     </ScrollToForm>}
-    {!loading && data?.content.length === 0 && <p>No payments on this page.</p>}
+    {!initialLoading && data?.content.length === 0 && <p>No payments on this page.</p>}
     {data?.content.map(payment => <article key={payment.id} className={`${styles.entry} ${payment.status === "VOIDED" ? styles.voided : ""}`} aria-label={`Payment ${payment.id}`}>
       <h4>Payment #{payment.id} · {payment.status === "VOIDED" ? "Voided" : "Recorded"}</h4>
       <p><strong>{paymentMoney(payment.amount)} {paymentCurrency(payment.currency)}</strong> · Paid on {payment.paidDate}</p>

@@ -1,3 +1,4 @@
+import useRefreshLoading from "../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import useArchivedProject from "../../hooks/useArchivedProject";
 import useTransientMessage from "../../hooks/useTransientMessage";
@@ -14,7 +15,7 @@ export default function BudgetPlanning({ budget, refreshKey = 0, disabled = fals
   const { hasAnyRole } = useAuth();
   const [summary, setSummary] = useState(null);
   const [refresh, setRefresh] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading, initialLoading] = useRefreshLoading(true, budget.id);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useTransientMessage("");
@@ -31,7 +32,7 @@ export default function BudgetPlanning({ budget, refreshKey = 0, disabled = fals
       .catch((err) => { if (!controller.signal.aborted) { setSummary(null); setError(err.message); } })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [budget.id, budget.totalAmount, budget.localCurrencyId, budget.budgetLimitCurrencyId, budget.lifecycleStatus, refreshKey, refresh]);
+  }, [budget.id, budget.totalAmount, budget.localCurrencyId, budget.budgetLimitCurrencyId, budget.lifecycleStatus, refreshKey, refresh, setLoading]);
   const editable = !archivedProject && hasAnyRole("ADMIN", "FINANCE") && ["DRAFT", "RETURNED"].includes(budget.lifecycleStatus || "DRAFT");
   const save = async (event) => {
     event.preventDefault();
@@ -51,7 +52,7 @@ export default function BudgetPlanning({ budget, refreshKey = 0, disabled = fals
     <h3>Budget planning</h3>
     <p className={styles.muted}>Remaining to allocate is room for planned costs, not cash or a payment balance.</p>
     {(error) && <button type="button" disabled={busy || loading} onClick={() => setRefresh((v) => v + 1)}>Retry planning summary</button>}
-    {loading && <p role="status">Loading planning summary…</p>}{error && <p role="alert">{error}</p>}{message && <p role="status">{message}</p>}
+    {initialLoading && <p role="status">Loading planning summary…</p>}{error && <p role="alert">{error}</p>}{message && <p role="status">{message}</p>}
     {summary && <>
       <p><strong>{labels[summary.status] || summary.status}</strong></p>
       <dl className={styles.totals}><div><dt>Budget limit ({summary.localCurrency?.name || "currency unavailable"}){!summary.limitCurrencyConfirmed ? " — meaning unconfirmed" : ""}</dt><dd>{summary.budgetLimit ?? "Unavailable"}</dd></div><div><dt>Planned costs</dt><dd>{summary.plannedCosts ?? "Unavailable"}</dd></div><div><dt>Remaining to allocate</dt><dd>{summary.remainingToAllocate ?? "Unavailable"}</dd></div></dl>

@@ -1,3 +1,4 @@
+import useRefreshLoading from "../../../../hooks/useRefreshLoading";
 import SearchableSelect from "../../../../components/SearchableSelect/SearchableSelect";
 import { appFetch as fetch } from "../../../../utils/appFetch";
 /* global BigInt */
@@ -70,7 +71,7 @@ const TransactionAllocations = ({
   );
 
   const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading, initialLoading] = useRefreshLoading(false, txId);
 
   const [draft, setDraft] = useState({
     costDetailId: "",
@@ -154,7 +155,7 @@ const TransactionAllocations = ({
     } finally {
       setLoading(false);
     }
-  }, [txId, authHeaders]);
+  }, [txId, authHeaders, setLoading]);
 
   useEffect(() => {
     fetchTxMeta();
@@ -492,7 +493,7 @@ const TransactionAllocations = ({
           <div />
         </div>
 
-        {loading ? (
+        {initialLoading ? (
           <div className={styles.empty}>Loading…</div>
         ) : rows.length === 0 ? (
           <div className={styles.empty}>

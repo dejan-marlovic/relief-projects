@@ -1,3 +1,4 @@
+import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
@@ -20,7 +21,7 @@ const DeleteCurrency = () => {
 
   const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading, initialLoading] = useRefreshLoading(false);
   const [deleting, setDeleting] = useState(false);
 
   const [currencies, setCurrencies] = useState([]);
@@ -173,7 +174,7 @@ const DeleteCurrency = () => {
           </div>
         )}
 
-        {loading ? (
+        {initialLoading ? (
           <div className={styles.skeletonWrap}>
             <div className={styles.skeletonLine} />
             <div className={styles.skeletonLine} />

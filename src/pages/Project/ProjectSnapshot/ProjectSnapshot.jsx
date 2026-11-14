@@ -1,3 +1,4 @@
+import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import { selectedPlanningBudgets } from "../../../utils/budgetRevisions";
 import { appFetch as fetch } from "../../../utils/appFetch";
 import { sumDecimals, reportingTotals } from "../../../utils/budgetCalculations";
@@ -190,7 +191,7 @@ const ProjectSnapshot = ({
 }) => {
   const isPhone = useMediaQuery("(max-width: 700px)");
   const [snapshot, setSnapshot] = useState(emptySnapshot);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading, loading] = useRefreshLoading(true, projectId);
   const [error, setError] = useState("");
   const [revisionRefresh, setRevisionRefresh] = useState(0);
   useEffect(() => { const refresh = () => setRevisionRefresh(n => n + 1); window.addEventListener("budget-revisions-changed", refresh); window.addEventListener("focus", refresh); return () => { window.removeEventListener("budget-revisions-changed", refresh); window.removeEventListener("focus", refresh); }; }, []);
@@ -263,7 +264,7 @@ const ProjectSnapshot = ({
 
     loadSnapshot();
     return () => controller.abort();
-  }, [projectId, revisionRefresh]);
+  }, [projectId, revisionRefresh, setLoading]);
 
   const cards = [
     { label: "Reporting budget", value: snapshot.planningUnavailable ? "Unavailable / incomplete" : (snapshot.reportingTotals || []).map(({ currency, amount }) => `${amount} ${currency}`).join(" / ") || "0.000", hint: snapshot.planningUnavailable ? `${snapshot.planningUnavailable} planning basis unavailable; select a current plan for each revision family.` : "Selected plans and standalone budgets; not a financial balance", icon: FiTrendingUp },

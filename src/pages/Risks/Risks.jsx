@@ -250,7 +250,7 @@ function Register({ projectId, authFetch }) {
       <label><input type="checkbox" checked={filters.deleted} disabled={locked} onChange={e => changeFilter("deleted", e.target.checked)} /> Deleted risks only</label>
     </div>
     <div className={styles.actions}>{data?.canCreate && <button className={styles.primaryAction} disabled={locked || loading} onClick={() => openEditor(null, "save")}>New risk</button>}{(error || employeeError || blocked) && <button className={styles.secondaryAction} disabled={busy || loading} onClick={() => setAttempt(v => v + 1)}>Retry register</button>}</div>
-    {loading && <p role="status">Loading risks…</p>}{error && <p role="alert">{error}</p>}{employeeError && <p role="alert">{employeeError} Use Retry register to retry.</p>}
+    {loading && !data && <p role="status">Loading risks…</p>}{error && <p role="alert">{error}</p>}{employeeError && <p role="alert">{employeeError} Use Retry register to retry.</p>}
     {notice && <p role={blocked ? "alert" : "status"}>{notice}</p>}
     {editor && <>
       <Editor key={editor.action} editor={editor} employees={employees} busy={busy} blocked={blocked} onDraft={(key, value) => setEditor(old => ({ ...old, autoPaused: false, draft: { ...old.draft, [key]: value } }))} onSave={mutate} onCancel={cancelEditor} localSaved={localSaved} onDiscard={() => { if (window.confirm("Discard unfinished entries? Changes already saved to the project will remain.")) { clearAssessmentDraft(editor.storageKey); setEditor(null); setBlocked(false); setLatest(null); setNotice(""); setAttempt(v => v + 1); } }} />

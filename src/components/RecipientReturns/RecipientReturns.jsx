@@ -1,3 +1,4 @@
+import useRefreshLoading from "../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import ScrollToForm from "../ScrollToForm/ScrollToForm";
@@ -22,7 +23,7 @@ export function RecipientReturnsPanel({ payment, refreshKey, editingLocked, onCh
   const storageKey = `recipient-return-command:${user?.id ?? user?.username ?? "current"}:${payment.id}`;
   const [pending, setPending] = useState(() => { try { return JSON.parse(sessionStorage.getItem(storageKey)) || null; } catch { return null; } });
   const [data, setData] = useState(null), [page, setPage] = useState(0), [tick, setTick] = useState(0);
-  const [loading, setLoading] = useState(true), [loadError, setLoadError] = useState(""), [error, setError] = useState("");
+  const [loading, setLoading, initialLoading] = useRefreshLoading(true, payment.id), [loadError, setLoadError] = useState(""), [error, setError] = useState("");
   const [form, setForm] = useState(null), [busy, setBusy] = useState(false), [reviewRequired, setReviewRequired] = useState(false);
   const [documents, setDocuments] = useState([]), [documentError, setDocumentError] = useState(""), [related, setRelated] = useState(null), [downloading, setDownloading] = useState(null);
   const alive = useRef(true), submitting = useRef(false);
@@ -40,7 +41,7 @@ export function RecipientReturnsPanel({ payment, refreshKey, editingLocked, onCh
       finally { if (!controller.signal.aborted) setLoading(false); }
     })();
     return () => controller.abort();
-  }, [authFetch, payment.id, page, tick, refreshKey]);
+  }, [authFetch, payment.id, page, tick, refreshKey, setLoading]);
   const kind = form?.kind;
   useEffect(() => {
     const controller = new AbortController(); setDocuments([]); setDocumentError("");
@@ -141,7 +142,7 @@ export function RecipientReturnsPanel({ payment, refreshKey, editingLocked, onCh
     <p>Original payment #{payment.id} · Recipient #{payment.recipientId ?? "Unknown"} · {payment.organization?.name || "Organisation unavailable"} · Paid {payment.paidDate} · {paymentCurrency(payment.currency)}</p>
     <p className={styles.hint}>Record principal actually received back from this payment’s recipient. This keeps the original payment recorded and does not execute a transfer or increase spending capacity. Voiding is only for erroneous entries.</p>
     {(loadError || error || documentError || !!pending) && <button disabled={busy || loading} onClick={refresh}>Retry returns</button>}
-    {loading && <p role="status">Loading returns…</p>}{loadError && <p role="alert">{loadError}</p>}{error && <p role="alert">{error} Your input is retained.</p>}
+    {initialLoading && <p role="status">Loading returns…</p>}{loadError && <p role="alert">{loadError}</p>}{error && <p role="alert">{error} Your input is retained.</p>}
     {pending && <div role="alert"><p>A return command needs confirmation. Retry sends the identical request ID and body; do not enter the movement again.</p><button disabled={busy} onClick={() => send(pending)}>Retry same return request</button></div>}
     {data && <><RecipientReturnSummary summary={data.summary} /><p>Original amount not yet recorded as returned: <strong>{paymentMoney(data.remainingReturnable)} {paymentCurrency(payment.currency)}</strong>. This is a recording limit, not available spending.</p>{summaryIssues(data.eligibility).filter(issue => issue.code !== "SELECT_RETURN").map(issue => <p key={issue.code}>{issue.message}</p>)}</>}
     {can("create") && !form && !pending && <button onClick={() => open("create")}>Record money returned by recipient</button>}
@@ -161,7 +162,7 @@ export function RecipientReturnsPanel({ payment, refreshKey, editingLocked, onCh
       <button type="button" disabled={busy} onClick={() => setForm(null)}>Cancel return action</button>
     </ScrollToForm>}
     {related && <aside><h4>Related return detail</h4>{entry(related, true)}<button onClick={() => setRelated(null)}>Close related return</button></aside>}
-    {!loading && data?.content.length === 0 && <p>No returns on this page.</p>}
+    {!initialLoading && data?.content.length === 0 && <p>No returns on this page.</p>}
     {data?.content.map(row => entry(row))}
     {data && <div className={styles.actions}><span>{data.totalElements} returns · Page {page + 1}</span><button disabled={busy || loading || !!form || !!pending || page === 0} onClick={() => setPage(n => n - 1)}>Previous returns</button><button disabled={busy || loading || !!form || !!pending || (page + 1) * 20 >= data.totalElements} onClick={() => setPage(n => n + 1)}>Next returns</button></div>}
     <p className={styles.hint}>Retained return and evidence activity appears in this payment order’s History with child activity included.</p>

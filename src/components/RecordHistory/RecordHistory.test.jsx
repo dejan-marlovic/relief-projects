@@ -206,3 +206,25 @@ test("timeline opens an event without refetching and keeps full references separ
   expect(screen.getByText(/Entry #1/)).toBeVisible();
   expect(fetch).toHaveBeenCalledTimes(1);
 });
+
+// DOM identity and native disclosure state are the behaviour under test.
+/* eslint-disable testing-library/no-node-access */
+test("background refresh keeps the same expanded history entry mounted", async () => {
+  render(<RecordHistory {...props} />); open();
+  const actor = await screen.findByText("Alex");
+  const entry = actor.closest("li");
+  const disclosure = entry.querySelector("details");
+  disclosure.open = true;
+  let complete;
+  fetch.mockImplementationOnce(() => new Promise(resolve => { complete = resolve; }));
+  fireEvent.focus(window);
+  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+  expect(screen.queryByText("Loading record history…")).not.toBeInTheDocument();
+  expect(screen.getByText("Alex").closest("li")).toBe(entry);
+  expect(disclosure.open).toBe(true);
+  await act(async () => complete(response(page())));
+  expect(screen.getByText("Alex").closest("li")).toBe(entry);
+  expect(disclosure.open).toBe(true);
+});
+
+/* eslint-enable testing-library/no-node-access */

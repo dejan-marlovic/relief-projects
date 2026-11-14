@@ -1,3 +1,4 @@
+import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import ProjectClassification from "../../../components/ProjectClassification/ProjectClassification";
@@ -93,7 +94,7 @@ const UpdateProject = () => {
   const [projectTypes, setProjectTypes] = useState([]);
   const [form, setForm] = useState(initialForm);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading, initialLoading] = useRefreshLoading(false);
   const [saving, setSaving] = useState(false);
 
   const [formError, setFormError] = useState("");
@@ -402,7 +403,7 @@ const UpdateProject = () => {
           </div>
         )}
 
-        {loading ? (
+        {initialLoading ? (
           <div className={styles.skeletonWrap}>
             <div className={styles.skeletonLine} />
             <div className={styles.skeletonLine} />
