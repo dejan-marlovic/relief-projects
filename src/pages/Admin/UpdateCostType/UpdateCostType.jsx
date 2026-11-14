@@ -215,7 +215,7 @@ const UpdateCostType = () => {
         ) : (
           <>
             <div className={styles.grid}>
-              <div className={styles.card}>
+              <div data-mobile-tile="Choose cost type" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose cost type</div>
                   <div className={styles.cardMeta}>Active cost types only</div>
@@ -239,7 +239,7 @@ const UpdateCostType = () => {
                 </div>
               </div>
 
-              <div className={styles.card}>
+              <div data-mobile-tile="Edit details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Edit details</div>
                   <div className={styles.cardMeta}>Cost type name</div>

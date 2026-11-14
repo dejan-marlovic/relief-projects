@@ -172,7 +172,7 @@ const CreateSignature = () => {
         )}
 
         <div className={styles.grid}>
-          <div className={styles.card}>
+          <div data-mobile-tile="Relations" className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={styles.cardTitle}>Relations</div>
               <div className={styles.cardMeta}>Required links</div>
@@ -230,7 +230,7 @@ const CreateSignature = () => {
             </div>
           </div>
 
-          <div className={styles.card}>
+          <div data-mobile-tile="Signature details" className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={styles.cardTitle}>Signature details</div>
               <div className={styles.cardMeta}>Text and date</div>

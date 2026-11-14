@@ -252,7 +252,7 @@ const Transaction = ({
   return (
     <>
       <div
-        ref={editorRef}
+        data-mobile-tile={`Transaction ${txIdLabel}`} ref={editorRef}
         className={`${styles.row} ${styles.gridRow} ${
           isEven ? styles.zebraEven : ""
         } ${styles.hoverable}`}

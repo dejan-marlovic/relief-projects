@@ -106,7 +106,7 @@ const CreateSignatureStatus = () => {
         )}
 
         <div className={styles.grid}>
-          <div className={styles.card}>
+          <div data-mobile-tile="Signature status details" className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={styles.cardTitle}>Signature status details</div>
               <div className={styles.cardMeta}>Required field</div>

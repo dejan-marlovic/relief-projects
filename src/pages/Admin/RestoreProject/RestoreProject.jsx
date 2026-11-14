@@ -319,7 +319,7 @@ const RestoreProject = () => {
         ) : (
           <>
             <div className={styles.grid}>
-              <div className={styles.card}>
+              <div data-mobile-tile="Choose deleted project" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose deleted project</div>
                   <div className={styles.cardMeta}>
@@ -363,7 +363,7 @@ const RestoreProject = () => {
                 </div>
               </div>
 
-              <div className={styles.card}>
+              <div data-mobile-tile="" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>
                     Selected project details

@@ -1,3 +1,5 @@
+import useMediaQuery from "../../../hooks/useMediaQuery";
+import useSwipeNavigation from "../../../hooks/useSwipeNavigation";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import { appFetch as fetch } from "../../../utils/appFetch";
 import React, {
@@ -58,6 +60,17 @@ export default function Memos({ canEdit = false }) {
   const [drafts, setDrafts] = useState({}); // { [id|'new']: { text, positionId, employeeId, memoDate } }
   const [editingId, setEditingId] = useState(null);
   useUnsavedChange("memos-editor", editingId !== null);
+  const isPhone = useMediaQuery("(max-width: 700px)");
+  const [memoIndex, setMemoIndex] = useState(0);
+  useEffect(() => { setMemoIndex(0); }, [selectedProjectId]);
+  const activeMemoIndex = Math.min(memoIndex, Math.max(0, items.length - 1));
+  const moveMemo = direction => {
+    if (editingId !== null) return;
+    setMemoIndex(Math.max(0, Math.min(items.length - 1, activeMemoIndex + direction)));
+  };
+  const memoSwipes = useSwipeNavigation({ enabled: isPhone && editingId === null, route: `${selectedProjectId}:${activeMemoIndex}`, onSwipe: moveMemo });
+  const visibleItems = isPhone ? (editingId === "new" ? [] : items.filter((memo, index) => editingId !== null ? memo.id === editingId : index === activeMemoIndex)) : items;
+
 
   // ✅ NEW: ref for new memo textarea
   const newMemoTextareaRef = useRef(null);
@@ -182,6 +195,7 @@ export default function Memos({ canEdit = false }) {
   };
 
   const startEdit = (m) => {
+    setMemoIndex(Math.max(0, items.findIndex(item => item.id === m.id)));
     setEditingId(m.id);
     setDrafts((prev) => ({
       ...prev,
@@ -310,7 +324,7 @@ export default function Memos({ canEdit = false }) {
   );
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} data-mobile-tile="Memos">
       <div className={styles.headerRow}>
         <h4>Memos</h4>
         {canEdit && (
@@ -336,7 +350,13 @@ export default function Memos({ canEdit = false }) {
         <ErrorBanner message={error} onDismiss={() => setError("")} />
       )}
 
-      {(items || []).map((m) => (
+      {isPhone && items.length > 0 && editingId !== "new" && <div className={styles.memoNavigation} aria-label="Memo navigation">
+        <button type="button" aria-label="Previous memo" disabled={editingId !== null || activeMemoIndex === 0} onClick={() => moveMemo(-1)}>←</button>
+        <span>Memo {activeMemoIndex + 1} of {items.length}</span>
+        <button type="button" aria-label="Next memo" disabled={editingId !== null || activeMemoIndex >= items.length - 1} onClick={() => moveMemo(1)}>→</button>
+      </div>}
+      <div data-swipe-scope="memos" {...memoSwipes}>
+      {visibleItems.map((m) => (
         <div key={m.id} className={styles.memoCard}>
           {editingId === m.id ? (
             <>
@@ -474,6 +494,7 @@ export default function Memos({ canEdit = false }) {
         </div>
       )}
 
+      </div>
       {!loading && items.length === 0 && editingId !== "new" && (
         <p className={styles.note}>No memos for this project yet.</p>
       )}

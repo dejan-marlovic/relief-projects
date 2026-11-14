@@ -295,7 +295,7 @@ const DeleteSignature = () => {
         ) : (
           <>
             <div className={styles.grid}>
-              <div className={styles.card}>
+              <div data-mobile-tile="Choose signature" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose signature</div>
                   <div className={styles.cardMeta}>
@@ -328,7 +328,7 @@ const DeleteSignature = () => {
                 </div>
               </div>
 
-              <div className={styles.card}>
+              <div data-mobile-tile="" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>
                     Selected signature details

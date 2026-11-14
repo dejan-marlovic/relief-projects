@@ -156,23 +156,21 @@ describe("phone navigation", () => {
     expect(screen.getByText("Transaction page")).toBeInTheDocument();
   });
 
-  test("swipes respect unsaved changes and stop at the first top-level tab", () => {
+  test("swipes stay on the page; explicit page buttons protect unfinished edits", () => {
     const confirm = jest.spyOn(window, "confirm").mockReturnValue(false);
     renderLayout(["VIEWER"], {}, <DirtyProject />);
-    const swipe = (x, end) => {
-      const surface = screen.getByRole("main");
-      fireEvent.touchStart(surface, { touches: [{ identifier: 1, clientX: x, clientY: 100 }] });
-      fireEvent.touchEnd(surface, { touches: [], changedTouches: [{ identifier: 1, clientX: end, clientY: 100 }] });
-    };
-    swipe(100, 300);
+    const surface = screen.getByRole("main");
+    fireEvent.touchStart(surface, { touches: [{ identifier: 1, clientX: 300, clientY: 100 }] });
+    fireEvent.touchEnd(surface, { touches: [], changedTouches: [{ identifier: 1, clientX: 100, clientY: 100 }] });
     expect(confirm).not.toHaveBeenCalled();
-    swipe(300, 100);
+    expect(screen.getByRole("button", { name: /Previous page/ })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: /Next page/ }));
     expect(confirm).toHaveBeenCalledTimes(1);
     expect(screen.getByText("Project with unsaved changes")).toBeInTheDocument();
     confirm.mockReturnValue(true);
-    swipe(300, 100);
+    fireEvent.click(screen.getByRole("button", { name: /Next page/ }));
     expect(screen.getByText("Budget page")).toBeInTheDocument();
-    swipe(100, 300);
+    fireEvent.click(screen.getByRole("button", { name: /Previous page/ }));
     expect(screen.getByText("Project with unsaved changes")).toBeInTheDocument();
   });
 

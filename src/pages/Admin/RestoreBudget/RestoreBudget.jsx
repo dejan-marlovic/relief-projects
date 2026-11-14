@@ -286,7 +286,7 @@ const RestoreBudget = () => {
         ) : (
           <>
             <div className={styles.grid}>
-              <div className={styles.card}>
+              <div data-mobile-tile="Choose deleted budget" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose deleted budget</div>
                   <div className={styles.cardMeta}>
@@ -329,7 +329,7 @@ const RestoreBudget = () => {
                 </div>
               </div>
 
-              <div className={styles.card}>
+              <div data-mobile-tile="" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>
                     Selected budget details

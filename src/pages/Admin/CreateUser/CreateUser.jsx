@@ -267,7 +267,7 @@ const CreateUser = () => {
         ) : (
           <>
             <div className={styles.grid}>
-              <div className={styles.card}>
+              <div data-mobile-tile="Link employee" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Link employee</div>
                   <div className={styles.cardMeta}>
@@ -298,7 +298,7 @@ const CreateUser = () => {
                 </div>
               </div>
 
-              <div className={styles.card}>
+              <div data-mobile-tile="Credentials" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Credentials</div>
                   <div className={styles.cardMeta}>

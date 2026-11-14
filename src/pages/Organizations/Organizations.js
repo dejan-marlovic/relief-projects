@@ -1,3 +1,4 @@
+import MobileRecordDeck from "../../components/MobileRecordDeck/MobileRecordDeck";
 import useArchivedProject from "../../hooks/useArchivedProject";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import useRecordAutosave from "../../utils/useRecordAutosave";
@@ -451,7 +452,8 @@ const Organizations = () => {
           ) : displayedLinks.length === 0 ? (
             <p className={styles.noData}>No organizations match your filters.</p>
           ) : (
-            displayedLinks.map((link) => (
+            <MobileRecordDeck key={selectedProjectId} label="Organization" locked={editingId !== null || saving} creating={editingId === "new"}>
+            {displayedLinks.map((link) => (
               <OrganizationRow
                 saving={saving || autosave.busy}
                 editingLocked={editingId !== null}
@@ -473,7 +475,8 @@ const Organizations = () => {
                 canViewBankDetails={canViewBankDetails}
                 canManageBankDetails={canManageBankDetails}
               />
-            ))
+            ))}
+            </MobileRecordDeck>
           )}
 
           {editingId === "new" && (

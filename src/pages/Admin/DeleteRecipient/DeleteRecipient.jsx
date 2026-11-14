@@ -256,7 +256,7 @@ const DeleteRecipient = () => {
         ) : (
           <>
             <div className={styles.grid}>
-              <div className={styles.card}>
+              <div data-mobile-tile="Choose recipient" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose recipient</div>
                   <div className={styles.cardMeta}>
@@ -289,7 +289,7 @@ const DeleteRecipient = () => {
                 </div>
               </div>
 
-              <div className={styles.card}>
+              <div data-mobile-tile="" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>
                     Selected recipient details

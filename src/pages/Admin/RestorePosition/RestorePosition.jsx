@@ -4,7 +4,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiRotateCcw,
-  FiRefreshCw,  FiBriefcase,
+  FiRefreshCw,
+  FiBriefcase,
 } from "react-icons/fi";
 
 import styles from "./RestorePosition.module.scss";
@@ -163,7 +164,7 @@ const RestorePosition = () => {
         ) : (
           <>
             <div className={styles.grid}>
-              <div className={styles.card}>
+              <div data-mobile-tile="" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>
                     Choose deleted position
@@ -207,7 +208,7 @@ const RestorePosition = () => {
                 </div>
               </div>
 
-              <div className={styles.card}>
+              <div data-mobile-tile="" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>
                     Selected position details

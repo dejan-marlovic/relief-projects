@@ -177,7 +177,7 @@ const CreateCostType = () => {
           <>
             <div className={styles.grid}>
               {/* Card 1 */}
-              <div className={styles.card}>
+              <div data-mobile-tile="Cost type details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Cost type details</div>
                   <div className={styles.cardMeta}>Required field</div>
@@ -208,7 +208,7 @@ const CreateCostType = () => {
               </div>
 
               {/* Card 2 */}
-              <div className={styles.card}>
+              <div data-mobile-tile="How this is used" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>How this is used</div>
                   <div className={styles.cardMeta}>Budgets + grouping</div>

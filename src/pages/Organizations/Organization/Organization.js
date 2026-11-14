@@ -128,7 +128,7 @@ const Organization = ({
 
   const editorRef = useScrollToEditor(isEditing);
   const open = expanded || isEditing;
-  return <article ref={editorRef} tabIndex={-1} className={styles.relationshipCard}>
+  return <article data-mobile-tile={isCreate ? "New organization" : orgName(link.organizationId)} ref={editorRef} tabIndex={-1} className={styles.relationshipCard}>
     <header className={styles.cardHeader}>
       <div><h3>{isCreate ? "Add organisation to this project" : orgName(link.organizationId)}</h3>
         {!isCreate && <p><strong>Role in this project:</strong> {statusName(link.organizationStatusId)}</p>}

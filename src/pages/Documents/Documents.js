@@ -484,7 +484,7 @@ const Documents = () => {
             {documents.length > 0 && (
               <ul className={styles.documentsList}>
                 {documents.map((doc) => (
-                  <li key={doc.id} className={styles.documentItem}>
+                  <li data-mobile-tile={doc.documentName} key={doc.id} className={styles.documentItem}>
                     <div className={styles.docInfo}>
                       <span className={styles.docName}>{doc.documentName}</span>
                       <span className={styles.uploadedBy}>{statusLabel(doc.status)} · Version {doc.versionNumber || 1} · {doc.isCurrent === true ? "Current" : doc.isCurrent === false ? "Historical · read-only" : "Version state unknown"}</span>

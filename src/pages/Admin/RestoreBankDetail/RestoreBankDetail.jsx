@@ -4,7 +4,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiRotateCcw,
-  FiRefreshCw,  FiCreditCard,
+  FiRefreshCw,
+  FiCreditCard,
 } from "react-icons/fi";
 
 import styles from "./RestoreBankDetail.module.scss";
@@ -237,7 +238,7 @@ const RestoreBankDetail = () => {
         ) : (
           <>
             <div className={styles.grid}>
-              <div className={styles.card}>
+              <div data-mobile-tile="" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>
                     Choose deleted bank detail
@@ -282,7 +283,7 @@ const RestoreBankDetail = () => {
                 </div>
               </div>
 
-              <div className={styles.card}>
+              <div data-mobile-tile="" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>
                     Selected bank detail details

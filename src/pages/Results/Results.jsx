@@ -16,7 +16,7 @@ function Evidence({ result, endpoint, authFetch, refresh, open, locked }) {
   const [page, setPage] = useState(0), [error, setError] = useState("");
   const state = useIndicatorRead(authFetch, `${endpoint}/results/${result.id}/evidence?page=${page}&size=20`, refresh);
   return <section aria-label={`Evidence for report ${result.id}`}><ReadState state={state} />{error && <p role="alert">{error}</p>}
-    {state.data?.content.map(e => <article className={styles.panel} key={e.id}>
+    {state.data?.content.map(e => <article data-mobile-tile="" className={styles.panel} key={e.id}>
       <strong>{e.capturedName || `Document #${e.documentId}`} · Version {e.versionNumber ?? "unknown"}</strong>
       <p>{e.associationActive ? "Linked" : "Association removed"} · {words(e.availability)} · {e.currentStatus || "Unknown document status"}</p>
       <p>Linked <Attribution at={e.linkedAt} actor={e.linkedBy} /></p>
@@ -31,7 +31,7 @@ function Evidence({ result, endpoint, authFetch, refresh, open, locked }) {
 }
 function Report({ result, endpoint, authFetch, refresh, open, indicator, locked }) {
   const [evidenceOpen, setEvidenceOpen] = useState(false);
-  return <article className={styles.panel}>
+  return <article data-mobile-tile="" className={styles.panel}>
     <h4>Report #{result.id} · {words(result.state)} · Through {result.asOfDate}</h4>
     <p><strong>{result.value} {result.basis?.unit}</strong> · User reported</p><p><Attribution at={result.recordedAt} actor={result.recordedBy} /></p>
     {result.notes && <p className={styles.text}>{result.notes}</p>}{result.reason && <p>Reason: {result.reason}</p>}

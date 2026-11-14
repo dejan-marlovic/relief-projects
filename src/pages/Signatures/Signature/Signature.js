@@ -297,7 +297,7 @@ const SignatureRow = ({
   );
 
   if (compact) return (
-    <section ref={editorRef} className={styles.compactCard} aria-label={isCreate ? "New signature" : `Signature ${row.id}`}>
+    <section data-mobile-tile={isCreate ? "New signature" : `Signature #${row.id}`} ref={editorRef} className={styles.compactCard} aria-label={isCreate ? "New signature" : `Signature ${row.id}`}>
       <div className={styles.cardTitle}>{isCreate ? "New signature" : `Signature #${row.id}`}</div>
       <div className={styles.cardSummary}>
         <div><span className={styles.fieldLabel}>Status</span>{isEditing ? selectStatus : statusLabelById(row.signatureStatusId)}</div>
@@ -317,7 +317,7 @@ const SignatureRow = ({
 
   return (
     <div
-      ref={editorRef}
+      data-mobile-tile={isCreate ? "New signature" : `Signature #${row.id}`} ref={editorRef}
       className={`${styles.row} ${styles.gridRow} ${
         isEven ? styles.zebraEven : ""
       } ${styles.hoverable}`}

@@ -216,7 +216,7 @@ const UpdateProjectType = () => {
         ) : (
           <>
             <div className={styles.grid}>
-              <div className={styles.card}>
+              <div data-mobile-tile="Choose project type" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose project type</div>
                   <div className={styles.cardMeta}>
@@ -242,7 +242,7 @@ const UpdateProjectType = () => {
                 </div>
               </div>
 
-              <div className={styles.card}>
+              <div data-mobile-tile="Edit details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Edit details</div>
                   <div className={styles.cardMeta}>Project type name</div>

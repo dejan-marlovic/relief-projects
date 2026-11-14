@@ -409,7 +409,7 @@ const UpdateProject = () => {
         ) : (
           <>
             <div className={styles.grid}>
-              <div className={styles.card}>
+              <div data-mobile-tile="Choose project" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose project</div>
                   <div className={styles.cardMeta}>Active projects only</div>
@@ -433,7 +433,7 @@ const UpdateProject = () => {
                 </div>
               </div>
 
-              <div className={styles.card}>
+              <div data-mobile-tile="Edit details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Edit details</div>
                   <div className={styles.cardMeta}>Main project fields</div>

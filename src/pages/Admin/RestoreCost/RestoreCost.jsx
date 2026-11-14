@@ -4,7 +4,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiRotateCcw,
-  FiRefreshCw,  FiDollarSign,
+  FiRefreshCw,
+  FiDollarSign,
 } from "react-icons/fi";
 
 import styles from "./RestoreCost.module.scss";
@@ -204,7 +205,7 @@ const RestoreCost = () => {
         ) : (
           <>
             <div className={styles.grid}>
-              <div className={styles.card}>
+              <div data-mobile-tile="Choose deleted cost" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose deleted cost</div>
                   <div className={styles.cardMeta}>
@@ -245,7 +246,7 @@ const RestoreCost = () => {
                 </div>
               </div>
 
-              <div className={styles.card}>
+              <div data-mobile-tile="Selected cost details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Selected cost details</div>
                   <div className={styles.cardMeta}>Review before restore</div>

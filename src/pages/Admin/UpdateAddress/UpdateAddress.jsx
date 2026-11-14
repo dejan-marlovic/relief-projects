@@ -256,7 +256,7 @@ const UpdateAddress = () => {
         ) : (
           <>
             <div className={styles.grid}>
-              <div className={styles.card}>
+              <div data-mobile-tile="Choose address" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose address</div>
                   <div className={styles.cardMeta}>Active addresses only</div>
@@ -281,7 +281,7 @@ const UpdateAddress = () => {
                 </div>
               </div>
 
-              <div className={styles.card}>
+              <div data-mobile-tile="Edit details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Edit details</div>
                   <div className={styles.cardMeta}>Street, city and more</div>

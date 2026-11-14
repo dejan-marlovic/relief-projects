@@ -247,7 +247,7 @@ const CreateOrganization = () => {
         ) : (
           <>
             <div className={styles.grid}>
-              <div className={styles.card}>
+              <div data-mobile-tile="Organization details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Organization details</div>
                   <div className={styles.cardMeta}>Required fields</div>
@@ -317,7 +317,7 @@ const CreateOrganization = () => {
                 </div>
               </div>
 
-              <div className={styles.card}>
+              <div data-mobile-tile="Address" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Address</div>
                   <div className={styles.cardMeta}>Organization location</div>

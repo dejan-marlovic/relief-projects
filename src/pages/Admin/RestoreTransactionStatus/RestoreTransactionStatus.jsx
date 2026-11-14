@@ -4,7 +4,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiRotateCcw,
-  FiRefreshCw,  FiCheckCircle,
+  FiRefreshCw,
+  FiCheckCircle,
 } from "react-icons/fi";
 
 import styles from "./RestoreTransactionStatus.module.scss";
@@ -177,7 +178,7 @@ const RestoreTransactionStatus = () => {
         ) : (
           <>
             <div className={styles.grid}>
-              <div className={styles.card}>
+              <div data-mobile-tile="" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>
                     Choose deleted transaction status
@@ -225,7 +226,7 @@ const RestoreTransactionStatus = () => {
                 </div>
               </div>
 
-              <div className={styles.card}>
+              <div data-mobile-tile="" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>
                     Selected transaction status details

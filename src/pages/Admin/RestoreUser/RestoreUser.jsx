@@ -4,7 +4,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiRotateCcw,
-  FiRefreshCw,  FiUser,
+  FiRefreshCw,
+  FiUser,
 } from "react-icons/fi";
 
 import styles from "./RestoreUser.module.scss";
@@ -159,7 +160,7 @@ const RestoreUser = () => {
         ) : (
           <>
             <div className={styles.grid}>
-              <div className={styles.card}>
+              <div data-mobile-tile="Choose deleted user" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose deleted user</div>
                   <div className={styles.cardMeta}>
@@ -198,7 +199,7 @@ const RestoreUser = () => {
                 </div>
               </div>
 
-              <div className={styles.card}>
+              <div data-mobile-tile="Selected user details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Selected user details</div>
                   <div className={styles.cardMeta}>Review before restore</div>

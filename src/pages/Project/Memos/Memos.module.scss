@@ -115,3 +115,5 @@
   .memoText, .note, .error { overflow-wrap: anywhere; }
   .container button { min-height: 44px; }
 }
+
+.memoNavigation { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0; button { min-height: 44px; min-width: 44px; } span { font-size: .8rem; } }

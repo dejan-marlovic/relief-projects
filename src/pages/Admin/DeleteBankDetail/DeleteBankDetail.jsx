@@ -4,7 +4,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiTrash2,
-  FiRefreshCw,  FiCreditCard,
+  FiRefreshCw,
+  FiCreditCard,
 } from "react-icons/fi";
 
 import styles from "./DeleteBankDetail.module.scss";
@@ -220,7 +221,7 @@ const DeleteBankDetail = () => {
         ) : (
           <>
             <div className={styles.grid}>
-              <div className={styles.card}>
+              <div data-mobile-tile="Choose bank detail" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose bank detail</div>
                   <div className={styles.cardMeta}>
@@ -252,7 +253,7 @@ const DeleteBankDetail = () => {
                 </div>
               </div>
 
-              <div className={styles.card}>
+              <div data-mobile-tile="Selected bank detail" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Selected bank detail</div>
                   <div className={styles.cardMeta}>Review before deleting</div>

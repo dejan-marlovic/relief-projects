@@ -221,7 +221,7 @@ const CreateBudget = () => {
         )}
 
         <div className={styles.grid}>
-          <div className={styles.card}>
+          <div data-mobile-tile="Budget basics" className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={styles.cardTitle}>Budget basics</div>
               <div className={styles.cardMeta}>Project and totals</div>
@@ -284,7 +284,7 @@ const CreateBudget = () => {
             </div>
           </div>
 
-          <div className={styles.card}>
+          <div data-mobile-tile="Currencies" className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={styles.cardTitle}>Currencies</div>
               <div className={styles.cardMeta}>Main currency settings</div>
@@ -359,7 +359,7 @@ const CreateBudget = () => {
             </div>
           </div>
 
-          <div className={styles.card}>
+          <div data-mobile-tile="Exchange rates" className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={styles.cardTitle}>Exchange rates</div>
               <div className={styles.cardMeta}>Rate references</div>

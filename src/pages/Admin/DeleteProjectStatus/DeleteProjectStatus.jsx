@@ -187,7 +187,7 @@ const DeleteProjectStatus = () => {
         ) : (
           <>
             <div className={styles.grid}>
-              <div className={styles.card}>
+              <div data-mobile-tile="Choose project status" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose project status</div>
                   <div className={styles.cardMeta}>
@@ -220,7 +220,7 @@ const DeleteProjectStatus = () => {
                 </div>
               </div>
 
-              <div className={styles.card}>
+              <div data-mobile-tile="" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>
                     Selected project status details

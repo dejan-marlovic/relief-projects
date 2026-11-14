@@ -144,7 +144,7 @@ const RecipientRow = ({
     <div
       role="group"
       aria-label={isCreate ? "New recipient" : `Recipient ${row.id}`}
-      ref={editorRef}
+      data-mobile-tile={isCreate ? "New recipient" : `Recipient #${row.id}`} ref={editorRef}
       className={`${styles.row} ${styles.gridRow} ${
         isEven ? styles.zebraEven : ""
       } ${styles.hoverable}`}

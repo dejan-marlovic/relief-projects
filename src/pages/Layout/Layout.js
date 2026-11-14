@@ -1,6 +1,6 @@
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import { isArchivedProject, visibleProjects } from "../../utils/projectArchive";
-import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import styles from "./Layout.module.scss";
 import { ProjectContext } from "../../context/ProjectContext";
@@ -10,7 +10,7 @@ import { useAuth } from "../../context/AuthContext";
 import { UnsavedChangesContext } from "../../context/UnsavedChangesContext";
 
 import useMediaQuery from "../../hooks/useMediaQuery";
-import useSwipeNavigation from "../../hooks/useSwipeNavigation";
+import MobileTileNavigation from "../../components/MobileTileNavigation/MobileTileNavigation";
 import NavigationGroup from "./NavigationGroup";
 
 const Layout = () => {
@@ -159,20 +159,13 @@ const Layout = () => {
     { label: "Help", paths: ["/operational-guide", "/about"] },
   ].map(group => ({ ...group, items: navigationItems.filter(([path]) => group.paths.includes(path)) }));
 
-  const swipeTabs = [
-    { paths: ["/project"], destination: "/project" },
-    ...categories.map(group => ({ paths: group.paths, destination: group.paths[0] })),
-    ...navigationItems.filter(([path]) => ["/register-project", "/admin"].includes(path)).map(([path]) => ({ paths: [path], destination: path })),
-  ];
-  const swipeHandlers = useSwipeNavigation({
-    enabled: isPhone && !openGroup,
-    route: location.pathname,
-    onSwipe: direction => {
-      const current = swipeTabs.findIndex(tab => tab.paths.some(path => isActive(path)));
-      const next = current >= 0 && swipeTabs[current + direction];
-      if (next && confirmDiscardUnsavedChanges()) navigate(next.destination);
-    },
-  });
+  const contentRef = useRef(null);
+  const pageItems = [navigationItems.find(([path]) => path === "/project"), navigationItems.find(([path]) => path === "/register-project"), ...categories.flatMap(group => group.items), navigationItems.find(([path]) => path === "/admin")].filter(Boolean);
+  const pageIndex = pageItems.findIndex(([path]) => path === currentPage);
+  const movePage = direction => {
+    const next = pageIndex >= 0 && pageItems[pageIndex + direction];
+    if (next && confirmDiscardUnsavedChanges()) navigate(next[0]);
+  };
 
   useEffect(() => { setOpenGroup(null); }, [location.pathname, isPhone]);
 
@@ -279,6 +272,10 @@ const Layout = () => {
               {categories.map(group => <optgroup key={group.label} label={group.label}>{group.items.map(([path, label]) => <option key={path} value={path}>{label}</option>)}</optgroup>)}
               {hasRole("ADMIN") && <option value="/admin">Admin</option>}
             </SearchableSelect>
+            <div className={styles.pageActions} aria-label="Page navigation">
+              <button type="button" disabled={pageIndex <= 0} onClick={() => movePage(-1)}>← Previous page</button>
+              <button type="button" disabled={pageIndex < 0 || pageIndex >= pageItems.length - 1} onClick={() => movePage(1)}>Next page →</button>
+            </div>
           </div>
         ) : (
         <ul className={styles.tabList}>
@@ -324,11 +321,12 @@ const Layout = () => {
         )}
       </nav>
 
-      <main className={styles.content} {...swipeHandlers}>
+      <main ref={contentRef} className={styles.content}>
         <UnsavedChangesContext.Provider value={unsavedChangesContextValue}>
           <Outlet />
         </UnsavedChangesContext.Provider>
       </main>
+      {isPhone && <MobileTileNavigation rootRef={contentRef} route={`${location.pathname}:${selectedProjectId}`} />}
     </div>
   );
 };

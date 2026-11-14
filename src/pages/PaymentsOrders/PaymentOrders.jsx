@@ -1,3 +1,4 @@
+import MobileRecordDeck from "../../components/MobileRecordDeck/MobileRecordDeck";
 import useArchivedProject from "../../hooks/useArchivedProject";
 import ApprovalDialog from "../../components/ApprovalDialog/ApprovalDialog";
 import ColumnResize, { useColumnWidths } from "../../components/ColumnResize/ColumnResize";
@@ -1429,7 +1430,8 @@ function PaymentOrders() {
           ) : displayedOrders.length === 0 ? (
             <p className={styles.noData}>No payment orders match your filters.</p>
           ) : (
-            displayedOrders.map((po, idx) => (
+            <MobileRecordDeck key={selectedProjectId} label="Payment order" locked={editingId !== null || saving} creating={editingId === "new"}>
+            {displayedOrders.map((po, idx) => (
               <React.Fragment key={po.id}>
                 <PaymentOrder
                   compact={compact}
@@ -1489,7 +1491,8 @@ function PaymentOrders() {
                   </div>
                 )}
               </React.Fragment>
-            ))
+            ))}
+            </MobileRecordDeck>
           )}
 
           {editingId === "new" && (

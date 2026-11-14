@@ -273,7 +273,7 @@ function Register({ projectId, authFetch }) {
       <p className={styles.muted}>Business date: {data.today} · {data.businessTimezone}. Review dates are the next planned review, not evidence that a review took place.</p>
       {data.projectDeleted && <p>This project is inactive. Its risks and history are read-only.</p>}
       {!loading && !data.content.length && <p>No risks match these filters.</p>}
-      <ul className={styles.list}>{data.content.map(risk => <li key={risk.id}>
+      <ul className={styles.list}>{data.content.map(risk => <li data-mobile-tile={risk.title} key={risk.id}>
         <div className={styles.heading}><h3>{risk.title}</h3><span>{buckets[risk.reviewBucket] || risk.reviewBucket}{risk.isDeleted ? " · Deleted" : ""}</span></div>
         <p>{risk.ownerName}{risk.ownerInactive ? " (inactive employee)" : ""} · Review {risk.reviewDate} · {risk.status === "CLOSED" ? "Closed" : "Open"}</p>
         <WorkflowIntro>Identify the risk, assess its likelihood and impact, and maintain a mitigation plan. Revisit the assessment as circumstances change; close or reopen it with an explicit decision.</WorkflowIntro><WorkflowStep number={1} title="Identify and assess" description="Describe what could go wrong, assign an owner and assess likelihood and impact. Use Edit risk to revise the assessment."><p>Likelihood: {rating(risk.likelihood)} · Impact: {rating(risk.impact)}</p>

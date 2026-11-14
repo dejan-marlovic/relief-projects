@@ -148,7 +148,7 @@ const AuditHistory = () => {
   };
 
   return (
-    <div className={styles.card}>
+    <div data-mobile-tile="" className={styles.card}>
       <div className={styles.header}>
         <div>
           <h3>Record audit history</h3>

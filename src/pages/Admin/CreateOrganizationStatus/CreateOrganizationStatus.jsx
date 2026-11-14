@@ -183,7 +183,7 @@ const CreateOrganizationStatus = () => {
           <>
             <div className={styles.grid}>
               {/* Card 1 */}
-              <div className={styles.card}>
+              <div data-mobile-tile="Status details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Status details</div>
                   <div className={styles.cardMeta}>Required field</div>
@@ -215,7 +215,7 @@ const CreateOrganizationStatus = () => {
               </div>
 
               {/* Card 2 */}
-              <div className={styles.card}>
+              <div data-mobile-tile="How this is used" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>How this is used</div>
                   <div className={styles.cardMeta}>Organizations</div>

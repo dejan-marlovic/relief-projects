@@ -277,7 +277,7 @@ function Queue({ mode, projectId, authFetch }) {
     if (command.action === "reopen" && !window.confirm("Reopen this follow-up? Its current completion attribution will be cleared.")) return;
     mutate(task, command.action, command.values);
   };
-  const renderTask = task => <li key={task.id} className={dragged?.id === task.id ? styles.dragging : undefined}>
+  const renderTask = task => <li data-mobile-tile={task.title} key={task.id} className={dragged?.id === task.id ? styles.dragging : undefined}>
         {board && <span className={styles.dragHandle} draggable={!!canDrag(task)} title={canDrag(task) ? "Drag to an available column, or use the action buttons" : "Use available task actions"} onDragStart={event => {
           if (!canDrag(task)) { event.preventDefault(); return; }
           readController.current?.abort();

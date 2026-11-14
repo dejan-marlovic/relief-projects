@@ -4,7 +4,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiRotateCcw,
-  FiRefreshCw,  FiFolder,
+  FiRefreshCw,
+  FiFolder,
 } from "react-icons/fi";
 
 import styles from "./RestoreProjectType.module.scss";
@@ -165,7 +166,7 @@ const RestoreProjectType = () => {
         ) : (
           <>
             <div className={styles.grid}>
-              <div className={styles.card}>
+              <div data-mobile-tile="" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>
                     Choose deleted project type
@@ -209,7 +210,7 @@ const RestoreProjectType = () => {
                 </div>
               </div>
 
-              <div className={styles.card}>
+              <div data-mobile-tile="" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>
                     Selected project type details

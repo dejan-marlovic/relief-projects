@@ -1,3 +1,4 @@
+import MobileRecordDeck from "../../components/MobileRecordDeck/MobileRecordDeck";
 import useArchivedProject from "../../hooks/useArchivedProject";
 import ColumnResize, { useColumnWidths } from "../../components/ColumnResize/ColumnResize";
 import { appFetch as fetch } from "../../utils/appFetch";
@@ -1223,7 +1224,8 @@ function Recipients() {
           ) : displayedItems.length === 0 ? (
             <p className={styles.noData}>No recipients match your filters.</p>
           ) : (
-            displayedItems.map((r, idx) => (
+            <MobileRecordDeck key={selectedProjectId} label="Recipient" locked={editingId !== null || saving} creating={editingId === "new"}>
+            {displayedItems.map((r, idx) => (
               <RecipientRow
                 compact={compact}
                 saving={saving}
@@ -1257,7 +1259,8 @@ function Recipients() {
                   )
                 }
               />
-            ))
+            ))}
+            </MobileRecordDeck>
           )}
 
           {editingId === "new" && (

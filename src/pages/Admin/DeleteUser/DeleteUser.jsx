@@ -164,7 +164,7 @@ const DeleteUser = () => {
         ) : (
           <>
             <div className={styles.grid}>
-              <div className={styles.card}>
+              <div data-mobile-tile="Choose user" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose user</div>
                   <div className={styles.cardMeta}>
@@ -196,7 +196,7 @@ const DeleteUser = () => {
                 </div>
               </div>
 
-              <div className={styles.card}>
+              <div data-mobile-tile="Selected user details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Selected user details</div>
                   <div className={styles.cardMeta}>Review before deleting</div>

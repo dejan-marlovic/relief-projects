@@ -312,7 +312,7 @@ const ProjectSnapshot = ({
       )}
 
       {!loading && !error && <>
-        <div className={styles.kpiGrid}>
+        <div data-mobile-tile="Project snapshot" className={styles.kpiGrid}>
           {cards.map(({ label, value, hint, icon: Icon }) => (
             <article key={label} className={styles.kpiCard}>
               <div className={styles.iconWrap}><Icon /></div>
@@ -326,7 +326,7 @@ const ProjectSnapshot = ({
         </div>
 
         <div className={styles.chartGrid}>
-          <div className={styles.chartCard}>
+          <div data-mobile-tile="Operational activity" className={styles.chartCard}>
             <div className={styles.chartTitle}>Operational activity</div>
             <div className={styles.chartSubtitle}>Record counts across the selected project</div>
             <div className={styles.chartWrap}>
@@ -347,7 +347,7 @@ const ProjectSnapshot = ({
             {isPhone && <ul aria-label="Operational activity counts">{chartData.map(entry => <li key={entry.name}>{entry.name}: {entry.value}</li>)}</ul>}
           </div>
 
-          <div className={styles.chartCard}>
+          <div data-mobile-tile="Project participants" className={styles.chartCard}>
             <div className={styles.chartTitle}>Project participants</div>
             <div className={styles.chartSubtitle}>Participants grouped by role</div>
             {participantRoles.length > 0 ? (

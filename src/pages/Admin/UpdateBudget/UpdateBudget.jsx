@@ -422,7 +422,7 @@ const UpdateBudget = () => {
         ) : (
           <>
             <div className={styles.grid}>
-              <div className={styles.card}>
+              <div data-mobile-tile="Choose budget" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose budget</div>
                   <div className={styles.cardMeta}>Readable project labels</div>
@@ -454,7 +454,7 @@ const UpdateBudget = () => {
                 )}
               </div>
 
-              <div className={styles.card}>
+              <div data-mobile-tile="Edit details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Edit details</div>
                   <div className={styles.cardMeta}>

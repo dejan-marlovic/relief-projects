@@ -4,7 +4,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiRotateCcw,
-  FiRefreshCw,  FiGrid,
+  FiRefreshCw,
+  FiGrid,
 } from "react-icons/fi";
 
 import styles from "./RestoreSector.module.scss";
@@ -161,7 +162,7 @@ const RestoreSector = () => {
         ) : (
           <>
             <div className={styles.grid}>
-              <div className={styles.card}>
+              <div data-mobile-tile="Choose deleted sector" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose deleted sector</div>
                   <div className={styles.cardMeta}>
@@ -201,7 +202,7 @@ const RestoreSector = () => {
                 </div>
               </div>
 
-              <div className={styles.card}>
+              <div data-mobile-tile="" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>
                     Selected sector details

@@ -158,7 +158,7 @@ const CreateRecipient = () => {
         )}
 
         <div className={styles.grid}>
-          <div className={styles.card}>
+          <div data-mobile-tile="Recipient details" className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={styles.cardTitle}>Recipient details</div>
               <div className={styles.cardMeta}>Required relations</div>

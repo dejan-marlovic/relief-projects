@@ -55,7 +55,7 @@ export default function ProjectClassification({ projectId, authFetch, canEdit, o
     setDraft(previous => ({ ...previous, [name]: value }));
     save.edit({ [name]: name === "operatingCountryCodes" ? value : normalizeClassification(value) }, original, immediate);
   }
-  return <section className={styles.section} onBlur={save.flush}>
+  return <section data-mobile-tile="Language titles, target group & operating countries" className={styles.section} onBlur={save.flush}>
     <h3>Language titles, target group & operating countries</h3>
     {error && <p role="alert">{error} <button onClick={() => setAttempt(n => n + 1)}>Retry loading optional details</button></p>}
     {!original && !error && <p>Loading optional details…</p>}

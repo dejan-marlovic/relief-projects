@@ -183,7 +183,7 @@ const PaymentOrder = ({
   return (
     <>
     <div
-      ref={editorRef}
+      data-mobile-tile={`Payment order ${poIdLabel}`} ref={editorRef}
       className={`${styles.row} ${styles.gridRow} ${
         isEven ? styles.zebraEven : ""
       } ${styles.hoverable}`}

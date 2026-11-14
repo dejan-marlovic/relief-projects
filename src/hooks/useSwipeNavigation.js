@@ -1,7 +1,8 @@
 import { useRef } from "react";
 
-const controls = "input, textarea, select, button, a, [contenteditable]:not([contenteditable=false]), [role=slider], [role=dialog], [data-no-swipe], canvas, video";
+const controls = "input, textarea, select, button, a, [contenteditable]:not([contenteditable=false]), [role=slider], [role=dialog], [data-no-swipe], .recharts-wrapper, canvas, video";
 function excluded(target, root) {
+  if (target instanceof Element && target.closest("[data-swipe-scope]") && target.closest("[data-swipe-scope]") !== root) return true;
   if (!(target instanceof Element) || target.closest(controls)) return true;
   for (let node = target; node && node !== root; node = node.parentElement) {
     if (node.scrollWidth > node.clientWidth + 2 && /auto|scroll/.test(window.getComputedStyle(node).overflowX)) return true;

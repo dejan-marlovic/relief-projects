@@ -324,7 +324,7 @@ const CreateExchangeRate = () => {
           <>
             <div className={styles.grid}>
               {/* LEFT CARD (like CreateUser): base + quote */}
-              <div className={styles.card}>
+              <div data-mobile-tile="Currencies" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Currencies</div>
                   <div className={styles.cardMeta}>
@@ -393,7 +393,7 @@ const CreateExchangeRate = () => {
               </div>
 
               {/* RIGHT CARD (like CreateUser): rate + date */}
-              <div className={styles.card}>
+              <div data-mobile-tile="Rate details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Rate details</div>
                   <div className={styles.cardMeta}>Rate and timestamp</div>

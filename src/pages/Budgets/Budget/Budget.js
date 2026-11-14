@@ -1553,7 +1553,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
               >
               <div className={styles.grid}>
                 {/* Left card */}
-                <div className={styles.card}>
+                <div data-mobile-tile="Summary" className={styles.card}>
                   <div className={styles.cardHeader}>
                     <div className={styles.cardTitle}>Summary</div>
                     <div className={styles.cardMeta}>Description & totals</div>
@@ -1607,7 +1607,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
                 </div>
 
                 {/* Right card */}
-                <div className={styles.card}>
+                <div data-mobile-tile="Currencies & rates" className={styles.card}>
                   <div className={styles.cardHeader}>
                     <div className={styles.cardTitle}>Currencies & rates</div>
                     <div className={styles.cardMeta}>Local + reporting</div>
@@ -1832,7 +1832,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
           setReturnOpen(false); onUpdate?.(updated);
         }} />}
       {budget?.id && (
-        <div className={styles.card}>
+        <div data-mobile-tile="Cost details" className={styles.card}>
           <div className={styles.cardHeader}>
             <div className={styles.cardTitle}>Cost details</div>
             <div className={styles.cardMeta}>Breakdown</div>

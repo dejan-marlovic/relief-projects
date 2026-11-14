@@ -1,3 +1,4 @@
+import MobileRecordDeck from "../../components/MobileRecordDeck/MobileRecordDeck";
 import useArchivedProject from "../../hooks/useArchivedProject";
 import ApprovalDialog from "../../components/ApprovalDialog/ApprovalDialog";
 import ColumnResize, { useColumnWidths } from "../../components/ColumnResize/ColumnResize";
@@ -1571,7 +1572,7 @@ const Transactions = ({ refreshTrigger }) => {
         onRefresh={record => { const updated = record; setTransactions(current => current.map(item => item.id === updated.id ? updated : item)); setHistoryRefreshKeys(keys => ({ ...keys, [updated.id]: (keys[updated.id] || 0) + 1 })); }}
         onSuccess={record => { const updated = record; setTransactions(current => current.map(item => item.id === updated.id ? updated : item)); setHistoryRefreshKeys(keys => ({ ...keys, [updated.id]: (keys[updated.id] || 0) + 1 })); setApprovalTarget(null); }} />}
 
-      <div className={styles.card}>
+      <div data-mobile-tile="Transactions" className={styles.card}>
         <div className={styles.cardHeader}>
           <div className={styles.headerText}>
             <div className={styles.cardTitle}>Transactions</div>
@@ -1751,7 +1752,8 @@ const Transactions = ({ refreshTrigger }) => {
           ) : displayedTransactions.length === 0 ? (
             <p className={styles.noData}>No transactions match your filters.</p>
           ) : (
-            displayedTransactions.map((tx, idx) => (
+            <MobileRecordDeck key={selectedProjectId} label="Transaction" locked={editingId !== null || saving} creating={editingId === "new"}>
+            {displayedTransactions.map((tx, idx) => (
               <Transaction
               compact={compact}
               saving={saving}
@@ -1812,7 +1814,8 @@ const Transactions = ({ refreshTrigger }) => {
                 }}
                 historyRefreshKey={historyRefreshKeys[tx.id] || 0}
               />
-            ))
+            ))}
+            </MobileRecordDeck>
           )}
 
         </div>

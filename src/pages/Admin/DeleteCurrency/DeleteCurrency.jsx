@@ -4,7 +4,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiTrash2,
-  FiRefreshCw,  FiDollarSign,
+  FiRefreshCw,
+  FiDollarSign,
 } from "react-icons/fi";
 
 import styles from "./DeleteCurrency.module.scss";
@@ -179,7 +180,7 @@ const DeleteCurrency = () => {
         ) : (
           <>
             <div className={styles.grid}>
-              <div className={styles.card}>
+              <div data-mobile-tile="Choose currency" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose currency</div>
                   <div className={styles.cardMeta}>
@@ -211,7 +212,7 @@ const DeleteCurrency = () => {
                 </div>
               </div>
 
-              <div className={styles.card}>
+              <div data-mobile-tile="" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>
                     Selected currency details

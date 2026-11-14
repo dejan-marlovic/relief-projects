@@ -159,7 +159,7 @@ const CreatePaymentOrder = () => {
         )}
 
         <div className={styles.grid}>
-          <div className={styles.card}>
+          <div data-mobile-tile="Header link" className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={styles.cardTitle}>Header link</div>
               <div className={styles.cardMeta}>Optional</div>
@@ -183,7 +183,7 @@ const CreatePaymentOrder = () => {
             </div>
           </div>
 
-          <div className={styles.card}>
+          <div data-mobile-tile="Payment order details" className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={styles.cardTitle}>Payment order details</div>
               <div className={styles.cardMeta}>Required fields</div>

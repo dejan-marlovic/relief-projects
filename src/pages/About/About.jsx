@@ -70,7 +70,7 @@ const About = () => {
           <h2 className={styles.sectionTitle}>What you can do</h2>
 
           <div className={styles.grid}>
-            <div className={styles.card}>
+            <div data-mobile-tile="Coordinate teams" className={styles.card}>
               <div className={styles.cardIcon}>
                 <FiUsers />
               </div>
@@ -82,7 +82,7 @@ const About = () => {
               </p>
             </div>
 
-            <div className={styles.card}>
+            <div data-mobile-tile="Plan and track budgets" className={styles.card}>
               <div className={styles.cardIcon}>
                 <FiTrendingUp />
               </div>
@@ -94,7 +94,7 @@ const About = () => {
               </p>
             </div>
 
-            <div className={styles.card}>
+            <div data-mobile-tile="Understand the financial record" className={styles.card}>
               <div className={styles.cardIcon}>
                 <FiShield />
               </div>
@@ -106,7 +106,7 @@ const About = () => {
               </p>
             </div>
 
-            <div className={styles.card}>
+            <div data-mobile-tile="Review decisions independently" className={styles.card}>
               <div className={styles.cardIcon}>
                 <FiCheckCircle />
               </div>
@@ -117,7 +117,7 @@ const About = () => {
                 so people can understand the basis of each decision.
               </p>
             </div>
-            <div className={styles.card}>
+            <div data-mobile-tile="Follow delivery and learning" className={styles.card}>
               <div className={styles.cardIcon}><FiTrendingUp aria-hidden="true" /></div>
               <h3 className={styles.cardTitle}>Follow delivery and learning</h3>
               <p className={styles.cardText}>
@@ -126,7 +126,7 @@ const About = () => {
                 and report what actually happened afterwards.
               </p>
             </div>
-            <div className={styles.card}>
+            <div data-mobile-tile="Keep evidence and closeout clear" className={styles.card}>
               <div className={styles.cardIcon}><FiBookOpen aria-hidden="true" /></div>
               <h3 className={styles.cardTitle}>Keep evidence and closeout clear</h3>
               <p className={styles.cardText}>

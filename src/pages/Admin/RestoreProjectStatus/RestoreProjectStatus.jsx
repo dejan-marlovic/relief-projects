@@ -4,7 +4,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiRotateCcw,
-  FiRefreshCw,  FiFlag,
+  FiRefreshCw,
+  FiFlag,
 } from "react-icons/fi";
 
 import styles from "./RestoreProjectStatus.module.scss";
@@ -169,7 +170,7 @@ const RestoreProjectStatus = () => {
         ) : (
           <>
             <div className={styles.grid}>
-              <div className={styles.card}>
+              <div data-mobile-tile="" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>
                     Choose deleted project status
@@ -213,7 +214,7 @@ const RestoreProjectStatus = () => {
                 </div>
               </div>
 
-              <div className={styles.card}>
+              <div data-mobile-tile="" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>
                     Selected project status details

@@ -2598,7 +2598,7 @@ Approximately:
               style={{ border: 0, padding: 0, margin: "0 0 16px", minWidth: 0 }}
             >
               {/* Description */}
-              <div className={styles.card}>
+              <div data-mobile-tile="Description" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Description</div>
                   <div className={styles.cardMeta}>Overview</div>
@@ -2636,7 +2636,7 @@ Approximately:
           <div className={styles.imageAndFormWrapper}>
             {/* Left: media card */}
             <aside className={styles.mediaColumn}>
-              <div className={styles.card}>
+              <div data-mobile-tile="Cover & Notes" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Cover & Notes</div>
                   <div className={styles.cardMeta}>
@@ -2840,7 +2840,7 @@ Approximately:
                   >
                   <div className={styles.grid}>
                     {/* Left column card */}
-                    <div className={styles.card}>
+                    <div data-mobile-tile="Core details" className={styles.card}>
                       <div className={styles.cardHeader}>
                         <div className={styles.cardTitle}>Core details</div>
                         <div className={styles.cardMeta}>
@@ -2936,7 +2936,7 @@ Approximately:
                     </div>
 
                     {/* Right column card */}
-                    <div className={styles.card}>
+                    <div data-mobile-tile="Schedule & type" className={styles.card}>
                       <div className={styles.cardHeader}>
                         <div className={styles.cardTitle}>Schedule & type</div>
                         <div className={styles.cardMeta}>
@@ -3133,7 +3133,7 @@ Approximately:
 
                     {/* Links card (includes participants UI) */}
                     <div
-                      className={styles.card}
+                      data-mobile-tile="Project links" className={styles.card}
                       style={{ gridColumn: "1 / -1" }}
                     >
                       <div className={styles.cardHeader}>

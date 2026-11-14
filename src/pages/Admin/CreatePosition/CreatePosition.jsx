@@ -239,7 +239,7 @@ const CreatePosition = () => {
 
         {formError && <ErrorBanner message={formError} onDismiss={() => setFormError("")} />}
 
-        <div className={styles.card}>
+        <div data-mobile-tile="Core details" className={styles.card}>
           <div className={styles.cardHeader}>
             <div className={styles.cardTitle}>Core details</div>
             <div className={styles.cardMeta}>Required field</div>

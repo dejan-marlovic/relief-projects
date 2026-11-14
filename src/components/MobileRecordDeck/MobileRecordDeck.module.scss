@@ -1,0 +1,17 @@
+@use "../../styles/colors" as colors;
+.deck, .record { display: contents; }
+.deck[hidden], .record[hidden] { display: none; }
+@media (max-width: 700px) {
+  .deck, .record { display: block; min-width: 0; }
+  .deck { scroll-margin-top: 12px; }
+}
+.navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 0;
+  button { min-height: 44px; border: 1px solid colors.$primary-border; border-radius: 8px; background: colors.$surface; color: colors.$primary; padding: 6px 10px; cursor: pointer; &:disabled { opacity: .45; cursor: default; } }
+  span { text-align: center; font-size: .8rem; }
+  small { display: block; font-size: .7rem; color: colors.$text-muted; }
+}

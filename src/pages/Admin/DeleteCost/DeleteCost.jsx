@@ -199,7 +199,7 @@ const DeleteCost = () => {
         ) : (
           <>
             <div className={styles.grid}>
-              <div className={styles.card}>
+              <div data-mobile-tile="Choose cost" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose cost</div>
                   <div className={styles.cardMeta}>
@@ -231,7 +231,7 @@ const DeleteCost = () => {
                 </div>
               </div>
 
-              <div className={styles.card}>
+              <div data-mobile-tile="Selected cost details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Selected cost details</div>
                   <div className={styles.cardMeta}>Review before deleting</div>

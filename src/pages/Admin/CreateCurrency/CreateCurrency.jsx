@@ -179,7 +179,7 @@ const CreateCurrency = () => {
           <>
             <div className={styles.grid}>
               {/* Card 1 */}
-              <div className={styles.card}>
+              <div data-mobile-tile="Currency details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Currency details</div>
                   <div className={styles.cardMeta}>Required fields</div>
@@ -223,7 +223,7 @@ const CreateCurrency = () => {
               </div>
 
               {/* Card 2 */}
-              <div className={styles.card}>
+              <div data-mobile-tile="Rules & tips" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Rules & tips</div>
                   <div className={styles.cardMeta}>Validation</div>

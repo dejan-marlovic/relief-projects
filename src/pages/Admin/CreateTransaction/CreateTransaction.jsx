@@ -229,7 +229,7 @@ const CreateTransaction = () => {
         )}
 
         <div className={styles.grid}>
-          <div className={styles.card}>
+          <div data-mobile-tile="Relations" className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={styles.cardTitle}>Relations</div>
               <div className={styles.cardMeta}>Required links</div>
@@ -321,7 +321,7 @@ const CreateTransaction = () => {
             </div>
           </div>
 
-          <div className={styles.card}>
+          <div data-mobile-tile="Amounts and statuses" className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={styles.cardTitle}>Amounts and statuses</div>
               <div className={styles.cardMeta}>Main transaction data</div>

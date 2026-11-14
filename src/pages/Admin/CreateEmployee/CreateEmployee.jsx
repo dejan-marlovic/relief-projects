@@ -283,7 +283,7 @@ const CreateEmployee = () => {
           <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
-        <div className={styles.card}>
+        <div data-mobile-tile="Core Details" className={styles.card}>
           <div className={styles.cardHeader}>
             <div className={styles.cardTitle}>Core Details</div>
             <div className={styles.cardMeta}>Required fields</div>

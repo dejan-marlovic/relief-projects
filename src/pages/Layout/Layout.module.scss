@@ -547,3 +547,9 @@ $secondary-color: colors.$danger;
     background: colors.$primary-a08;
   }
 }
+
+.pageActions { display: flex; justify-content: space-between; gap: 8px; margin-top: 8px; button { min-height: 44px; flex: 1; font-size: .8rem; } }
+@media (max-width: 700px) {
+  .content { padding-bottom: calc(90px + env(safe-area-inset-bottom)); }
+  .content [data-mobile-tile] { scroll-margin-top: 16px; }
+}

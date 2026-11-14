@@ -4,7 +4,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiTrash2,
-  FiRefreshCw,  FiBriefcase,
+  FiRefreshCw,
+  FiBriefcase,
 } from "react-icons/fi";
 
 import styles from "./DeletePosition.module.scss";
@@ -178,7 +179,7 @@ const DeletePosition = () => {
         ) : (
           <>
             <div className={styles.grid}>
-              <div className={styles.card}>
+              <div data-mobile-tile="Choose position" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose position</div>
                   <div className={styles.cardMeta}>
@@ -209,7 +210,7 @@ const DeletePosition = () => {
                 </div>
               </div>
 
-              <div className={styles.card}>
+              <div data-mobile-tile="" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>
                     Selected position details

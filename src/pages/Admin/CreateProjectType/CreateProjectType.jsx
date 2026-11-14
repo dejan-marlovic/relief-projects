@@ -173,7 +173,7 @@ const CreateProjectType = () => {
           <>
             <div className={styles.grid}>
               {/* Card 1 */}
-              <div className={styles.card}>
+              <div data-mobile-tile="Project type details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Project type details</div>
                   <div className={styles.cardMeta}>Required field</div>
@@ -202,7 +202,7 @@ const CreateProjectType = () => {
               </div>
 
               {/* Card 2 */}
-              <div className={styles.card}>
+              <div data-mobile-tile="What is this used for?" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>What is this used for?</div>
                   <div className={styles.cardMeta}>Help & examples</div>

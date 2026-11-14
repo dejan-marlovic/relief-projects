@@ -484,13 +484,13 @@ const RegisterProject = () => {
         ) : (
           <>
             <div className={styles.grid}>
-              <div className={styles.card}>
+              <div data-mobile-tile="Language titles & target group" className={styles.card}>
                 <div className={styles.cardTitle}>Language titles & target group</div>
                 {classificationSupported ? <ClassificationFields values={projectDetails} onChange={handleInputChange} errors={fieldErrors} disabled={loading} /> : <p>Optional details can be added from Project details after creation once backend support is confirmed.</p>}
               </div>
-              <div className={styles.card}><CountryPicker codes={projectDetails.operatingCountryCodes} catalogue={countryCatalogue} onChange={codes => setProjectDetails(previous => ({ ...previous, operatingCountryCodes: codes }))} disabled={loading} error={fieldErrors.operatingCountryCodes} /></div>
+              <div data-mobile-tile="Core details" className={styles.card}><CountryPicker codes={projectDetails.operatingCountryCodes} catalogue={countryCatalogue} onChange={codes => setProjectDetails(previous => ({ ...previous, operatingCountryCodes: codes }))} disabled={loading} error={fieldErrors.operatingCountryCodes} /></div>
               {/* Card 1: Core details */}
-              <div className={styles.card}>
+              <div data-mobile-tile="" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Core details</div>
                   <div className={styles.cardMeta}>Name, codes & costs</div>
@@ -582,7 +582,7 @@ const RegisterProject = () => {
               </div>
 
               {/* Card 2: Status/type/address */}
-              <div className={styles.card}>
+              <div data-mobile-tile="Classification" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Classification</div>
                   <div className={styles.cardMeta}>Status, type & address</div>

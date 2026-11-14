@@ -427,7 +427,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
         ) : (
           <fieldset disabled={saving} style={{ border: 0, padding: 0, margin: 0 }}><div className={styles.grid}>
             {/* Left card */}
-            <div className={styles.card}>
+            <div data-mobile-tile="Summary" className={styles.card}>
               <div className={styles.cardHeader}>
                 <div className={styles.cardTitle}>Summary</div>
                 <div className={styles.cardMeta}>Description & totals</div>
@@ -492,7 +492,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
             </div>
 
             {/* Right card */}
-            <div className={styles.card}>
+            <div data-mobile-tile="Currencies & rates" className={styles.card}>
               <div className={styles.cardHeader}>
                 <div className={styles.cardTitle}>Currencies & rates</div>
                 <div className={styles.cardMeta}>Local + reporting</div>

@@ -156,7 +156,7 @@ const CreateBankDetail = () => {
         )}
 
         <div className={styles.grid}>
-          <div className={styles.card}>
+          <div data-mobile-tile="Organization" className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={styles.cardTitle}>Organization</div>
               <div className={styles.cardMeta}>Required relation</div>
@@ -180,7 +180,7 @@ const CreateBankDetail = () => {
             </div>
           </div>
 
-          <div className={styles.card}>
+          <div data-mobile-tile="Bank details" className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={styles.cardTitle}>Bank details</div>
               <div className={styles.cardMeta}>Main fields</div>

@@ -1,3 +1,4 @@
+import MobileRecordDeck from "../../components/MobileRecordDeck/MobileRecordDeck";
 import useArchivedProject from "../../hooks/useArchivedProject";
 import ColumnResize, { useColumnWidths } from "../../components/ColumnResize/ColumnResize";
 import { appFetch as fetch } from "../../utils/appFetch";
@@ -1226,7 +1227,8 @@ function Signatures() {
           ) : displayedItems.length === 0 ? (
             <p className={styles.noData}>No signatures match your filters.</p>
           ) : (
-            displayedItems.map((s, idx) => (
+            <MobileRecordDeck key={selectedProjectId} label="Signature" locked={editingId !== null || saving} creating={editingId === "new"}>
+            {displayedItems.map((s, idx) => (
               <SignatureRow
                 compact={compact}
                 saving={saving}
@@ -1256,7 +1258,8 @@ function Signatures() {
                 }
                 canDelete={canManageSignatures && (!compact || editingId === null)}
               />
-            ))
+            ))}
+            </MobileRecordDeck>
           )}
 
           {editingId === "new" && (

@@ -162,7 +162,7 @@ const CreateDocument = () => {
         {categoryError && <div role="alert">{categoryError} <button type="button" onClick={retryCategories}>Retry categories</button></div>}
 
         <div className={styles.grid}>
-          <div className={styles.card}>
+          <div data-mobile-tile="Relations" className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={styles.cardTitle}>Relations</div>
               <div className={styles.cardMeta}>Required links</div>
@@ -186,7 +186,7 @@ const CreateDocument = () => {
             </div>
           </div>
 
-          <div className={styles.card}>
+          <div data-mobile-tile="Document upload" className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={styles.cardTitle}>Document upload</div>
               <div className={styles.cardMeta}>Required file</div>

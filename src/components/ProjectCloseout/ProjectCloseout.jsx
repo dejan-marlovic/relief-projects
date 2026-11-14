@@ -141,5 +141,5 @@ export function CloseoutPanel({ projectId, refreshKey }) {
 export default function ProjectCloseout({ projectId }) {
   const [opened, setOpened] = useState(false), [entry, setEntry] = useState(0);
   if (!projectId) return null;
-  return <details className={styles.section} onToggle={e => { if (e.currentTarget === e.target && e.currentTarget.open) { setOpened(true); setEntry(n => n+1); } }}><summary>Closeout &amp; archive</summary>{opened && <CloseoutPanel key={projectId} projectId={projectId} refreshKey={entry} />}</details>;
+  return <details data-mobile-tile="Closeout & archive" className={styles.section} onToggle={e => { if (e.currentTarget === e.target && e.currentTarget.open) { setOpened(true); setEntry(n => n+1); } }}><summary>Closeout &amp; archive</summary>{opened && <CloseoutPanel key={projectId} projectId={projectId} refreshKey={entry} />}</details>;
 }
