@@ -30,6 +30,7 @@ export default function ResultsEditor({ form, setForm, indicator, authFetch, pro
   latestSave.current = onSave;
   const signature = indicatorSignature(form);
   const dirty = indicatorDirty(form);
+  const missingReason = needsReason && !reason.trim() && (!isIndicator || dirty);
   useEffect(() => {
     if (!isIndicator || !dirty || busy || blocked || form.reviewRequired) return;
     const timer = setTimeout(() => {
@@ -66,6 +67,8 @@ export default function ResultsEditor({ form, setForm, indicator, authFetch, pro
     onSave(body);
   }}>
     <h3 ref={editor}>{title}{result ? ` · Report #${result.id}` : ""}</h3>
+    {missingReason && <div className={styles.attention} role="status"><strong>Reason required before saving</strong><p>Your changes have not been saved. Enter a reason below so this change can be recorded in history.</p></div>}
+    {needsReason && <label className={missingReason ? styles.reasonRequired : undefined}>Reason<textarea disabled={busy} required maxLength={1000} value={reason} placeholder="Explain why you are making this change" onChange={e => setForm(f => ({ ...f, reason: e.target.value }))} /></label>}
     {isIndicator && <><p>Indicator details save automatically after a short pause once required fields are valid. Changes to an existing indicator require a reason. The editor stays open after saving.</p><p role="status">{busy ? "Saving…" : form.reviewRequired ? "Automatic saving paused. Review the refreshed records below." : !dirty ? "All changes saved." : "Changes not yet saved. Complete the required fields and keep this page open."}</p></>}
     <fieldset disabled={busy}>
       {isIndicator && <>
@@ -97,7 +100,7 @@ export default function ResultsEditor({ form, setForm, indicator, authFetch, pro
       {action === "void" && <p>Voiding marks this report as erroneous. It retains the report and evidence and does not mean an adverse outcome. A superseded report will not become effective again.</p>}
       {action === "delete" && <p>The indicator will be hidden from the active list. Its reports and history remain available; an administrator can restore it.</p>}
       {action === "remove" && <p>This removes the active association, retaining its document version and history.</p>}
-      {needsReason && <label>Reason<textarea required maxLength={1000} value={reason} onChange={e => setForm(f => ({ ...f, reason: e.target.value }))} /></label>}
+
       {error && <p role="alert">{error}</p>}
       {form.error && <p role="alert">{form.error}</p>}
       {form.reviewRequired && <p>Draft retained. Inspect the refreshed records and history before retrying. A failed response may follow a successful save. {action === "create" && "Check every relevant list page before creating again; retrying can create a duplicate indicator."} <button type="button" disabled={blocked} onClick={onReview}>I reviewed the refreshed records; enable retry</button></p>}

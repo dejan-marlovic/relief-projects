@@ -5,7 +5,7 @@ import { showValue, targetDirection, words } from "./indicatorApi";
 import { uploadTimeLabel } from "../../utils/documentMetadata";
 import styles from "./Results.module.scss";
 
-export function Issues({ issues = [] }) { return issues.map((issue, i) => <p className={styles.muted} key={i}>{issue.message}</p>); }
+export function Issues({ issues = [] }) { return issues.map((issue, i) => <div className={styles.attention} key={i} role="note"><strong>Needs attention</strong><p>{issue.message}</p></div>); }
 export function ReadState({ state, onRetry = state.retry, retryLabel = "Retry", retryDisabled = false }) { return <>{state.loading && <p role="status">Loading…</p>}{state.error && <p role="alert">{state.error} {onRetry ? <button type="button" disabled={state.loading || retryDisabled} onClick={onRetry}>{retryLabel}</button> : "Reload the page to try again."}</p>}</>; }
 export function Pagination({ data, page, setPage, label, disabled, history = false }) {
   if (history) return <HistoryPagination page={page} totalPages={data?.totalPages} totalElements={data?.totalElements} onPage={setPage} disabled={disabled} />;
