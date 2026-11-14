@@ -1,0 +1,19 @@
+@use "../../styles/colors" as colors;
+
+.attribution {
+  grid-column: 1 / -1;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.25rem 1rem;
+  padding: 0.35rem 0.65rem;
+  color: colors.$text-muted;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  text-align: right;
+  overflow-wrap: anywhere;
+  strong { font-weight: 500; }
+  span { min-width: 0; }
+}

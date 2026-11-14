@@ -1,3 +1,4 @@
+import { FinancialReviewAttribution } from "../../../components/ReviewAttribution/ReviewAttribution";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useScrollToEditor from "../../../hooks/useScrollToEditor";
 import RevisionFundingAssignments from "../../../components/RevisionFundingAssignments/RevisionFundingAssignments";
@@ -256,7 +257,8 @@ const Transaction = ({
           isEven ? styles.zebraEven : ""
         } ${styles.hoverable}`}
       >
-        {/* 0: Actions */}
+        <FinancialReviewAttribution entityType="TRANSACTION" entityId={tx.id} status={lifecycleStatus} refreshKey={historyRefreshKey} />
+      {/* 0: Actions */}
         <Cell className={`${styles.stickyCol} ${styles.actionsCol} ${hc(0)}`}>
           {isEditing ? (
             <div className={styles.actions}>

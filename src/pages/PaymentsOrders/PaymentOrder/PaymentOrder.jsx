@@ -1,3 +1,4 @@
+import { FinancialReviewAttribution } from "../../../components/ReviewAttribution/ReviewAttribution";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useScrollToEditor from "../../../hooks/useScrollToEditor";
 import RecordActivity from "../../../components/RecordActivity/RecordActivity";
@@ -189,6 +190,7 @@ const PaymentOrder = ({
       title={locked ? lockedTitle : undefined}
       style={locked ? { opacity: 0.92 } : undefined}
     >
+      <FinancialReviewAttribution entityType="PAYMENT_ORDER" entityId={po.id} status={lifecycleStatus} refreshKey={historyRefreshKey} />
       {/* 0: Actions (sticky left) */}
       <Cell className={`${styles.stickyCol} ${styles.actionsCol} ${hc(0)}`}>
         {isEditing ? (

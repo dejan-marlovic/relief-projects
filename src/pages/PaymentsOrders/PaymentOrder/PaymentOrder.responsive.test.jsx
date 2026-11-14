@@ -1,3 +1,4 @@
+jest.mock("../../../components/ReviewAttribution/ReviewAttribution", () => ({ FinancialReviewAttribution: () => null }));
 import { fireEvent, render, screen } from "@testing-library/react";
 import PaymentOrder from "./PaymentOrder";
 jest.mock("../../../components/RecordHistory/RecordHistory", () => () => null);

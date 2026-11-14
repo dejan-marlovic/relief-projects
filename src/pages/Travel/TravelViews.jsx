@@ -1,3 +1,4 @@
+import ReviewAttribution from "../../components/ReviewAttribution/ReviewAttribution";
 import { HistoryTimeline, SnapshotHistoryEntry } from "../../components/ActivityHistory/ActivityHistory";
 import { workflowLabel } from "../FollowUps/workflow";
 import React, { useState } from "react";
@@ -9,7 +10,7 @@ import styles from "./Travel.module.scss";
 
 export function TravelSummary({ record }) {
   const counts = record.linkedActionSummary;
-  return <section className={styles.summary} aria-label="Travel state and linked work">
+  return <section className={styles.summary} aria-label="Travel state and linked work"><ReviewAttribution status={record?.state} submission={record.currentSubmission} approval={record.currentApproval} />
     <h4><span className={`${styles.statusBadge} ${styles[`status${record.state}`] || ""}`} aria-label={`Travel status: ${record.state}`}>{record.state}</span>{record.isDeleted ? " · Deleted request" : ""}</h4>
     <p>{record.traveller?.displayName || `Employee #${record.travellerEmployeeId}`} · {record.destination}</p>
     <p>Planned: {record.departureDate} through {record.returnDate}</p>

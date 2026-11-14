@@ -1,3 +1,4 @@
+import ReviewAttribution from "../../components/ReviewAttribution/ReviewAttribution";
 import React, { useEffect, useRef, useState } from "react";
 import { useUnsavedChange } from "../../context/UnsavedChangesContext";
 import { WorkflowStep } from "../../components/Workflow/Workflow";
@@ -66,7 +67,7 @@ export default function TravelReport({ endpoint: travelEndpoint, projectId, trav
     <WorkflowStep number={3} title="Report the actual outcome" description="Choose a saved approval or an explicit unapproved plan basis. Record actual dates, outcome and any differences. Add exact report documents and existing follow-ups; nothing is inherited automatically from the trip plan." keepOpen={!!form && !reviewForm}>
       {data && !record && <p>No post-trip report recorded. This does not mean the trip failed or that a report is overdue.</p>}
       {data?.canCreate && !record && <button disabled={locked} onClick={() => open("create")}>{reportTitles.create}</button>}
-      {record && <><p><span className={`${styles.statusBadge} ${styles[`status${record.state === "ACCEPTED" ? "APPROVED" : record.state}`] || ""}`}>Report {label(record.state)}</span>{record.isDeleted ? " · Deleted report — restore this retained report instead of creating another" : ""}</p><ReportBasis basis={record.planBasis} /><ReportAccount report={record} />
+      {record && <><ReviewAttribution status={record?.state} submission={record.currentSubmission} approval={record.currentAcceptance} approvalLabel="Accepted by" /><p><span className={`${styles.statusBadge} ${styles[`status${record.state === "ACCEPTED" ? "APPROVED" : record.state}`] || ""}`}>Report {label(record.state)}</span>{record.isDeleted ? " · Deleted report — restore this retained report instead of creating another" : ""}</p><ReportBasis basis={record.planBasis} /><ReportAccount report={record} />
         <p>Report created <Attribution at={record.createdAt} actor={record.createdBy} /></p>
         <details><summary>Current travel authorization observation</summary><HistorySnapshot value={record.authorizationObservation} /></details>
         {record.linkedActionSummary && <p>Report follow-ups across all active links: {record.linkedActionSummary.completed} completed · {record.linkedActionSummary.open} open · {record.linkedActionSummary.unavailable} unavailable.</p>}

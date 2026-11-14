@@ -1,3 +1,4 @@
+import { FinancialReviewAttribution } from "../../../components/ReviewAttribution/ReviewAttribution";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import ApprovalDialog from "../../../components/ApprovalDialog/ApprovalDialog";
 import { notifySuccess } from "../../../utils/successNotifications";
@@ -1514,6 +1515,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
 
       {hasBudget && (
         <div className={styles.formContainer}>
+          <FinancialReviewAttribution entityType="BUDGET" entityId={budget.id} status={lifecycleStatus} refreshKey={historyRefreshKey} />
           <div className={styles.pageHeader}>
             <div className={styles.pageHeaderText}>
               <h3 className={styles.pageTitle}>Budget Details</h3>
