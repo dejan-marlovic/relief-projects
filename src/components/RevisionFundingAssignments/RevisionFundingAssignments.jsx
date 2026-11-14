@@ -1,3 +1,4 @@
+import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import ScrollToForm from "../ScrollToForm/ScrollToForm";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -58,10 +59,11 @@ export function AssignmentPanel({ transactionId, originBudgetId, disabled = fals
       onChanged?.(); executionChanged();
     } finally { pending.current = false; setBusy(false); setTick(n => n + 1); }
   };
+  useAutomaticRefresh(() => setTick(v => v + 1), loading || busy || !!form);
   return <div className={styles.panel}>
     <p className={styles.hint}>Use unused approved funding from this existing award on revised costs. Each assignment is one allocation, not a new award or another balance. Receipts and actual payments do not change this capacity.</p>
     <p className={styles.hint}>Original allocations on an APPROVED transaction remain reserved even when uncommitted. This workflow cannot release those allocations. Recorded governing approval does not verify every award's donor conditions.</p>
-    <button disabled={busy || loading} onClick={() => { setError(""); setTick(n => n + 1); }}>Refresh funding assignments</button>
+    {(error || blocked) && <button disabled={busy || loading} onClick={() => { setError(""); setTick(n => n + 1); }}>Retry funding assignments</button>}
     {loading && <p role="status">Loading assignments…</p>}{error && <p role="alert">{error}</p>}
     {data && <><dl className={styles.fields}><dt>Original award budget</dt><dd>#{originBudgetId ?? "unavailable"}</dd><dt>Executable use plan</dt><dd>{data.eligibility.targetBudgetId == null ? "Not activated" : `Budget #${data.eligibility.targetBudgetId}`}</dd><dt>Currency</dt><dd>{data.funding.currency ? `${data.funding.currency.name || "Currency"} (#${data.funding.currency.id})` : "Unavailable"}</dd><dt>Approved funding</dt><dd>{exactAmount(data.funding.approved)}</dd><dt>Obligations counted once</dt><dd>{exactAmount(data.funding.obligations)}</dd><dt>Unused approved funding</dt><dd>{exactAmount(data.funding.unassignedApprovedFunding)}</dd></dl>
       <p className={styles.hint}>Unused approved funding is not cash. Target-row and shared family ceilings also apply. Currency is the current configured denomination, not verified historical meaning.</p>

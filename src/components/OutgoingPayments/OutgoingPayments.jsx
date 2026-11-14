@@ -1,3 +1,4 @@
+import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import ScrollToForm from "../ScrollToForm/ScrollToForm";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -139,9 +140,10 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
   const binding = data?.denominationConfirmation;
   const financialForm = form && ["create", "correct"].includes(form.kind);
   const evidenceForm = form && ["create", "correct", "add"].includes(form.kind);
+  useAutomaticRefresh(refresh, loading || busy || !!form || !!pending || !!related || !!downloading);
   return <div className={styles.panel}>
     <p className={styles.hint}>Record money paid to the recipient. This records a user-entered fact; it does not execute a bank payment or change commitments, signatures or Booked status. These entries do not increase spending capacity and are not bank reconciliation. Voiding corrects an entry; it does not record a refund.</p>
-    <div className={styles.actions}><button type="button" disabled={busy || loading} onClick={refresh}>Refresh payments</button>{can("create") && !form && !pending && <button type="button" onClick={() => open("create")}>Record outgoing payment</button>}</div>
+    <div className={styles.actions}>{(loadError || error || documentError || !!pending) && <button type="button" disabled={busy || loading} onClick={refresh}>Retry payments</button>}{can("create") && !form && !pending && <button type="button" onClick={() => open("create")}>Record outgoing payment</button>}</div>
     {loading && <p role="status">Loading payments…</p>}
     {loadError && <p role="alert">{loadError}</p>}
     {error && <p role="alert">{error}{(form || pending) && " Your input has been retained. Reload and review before making a new attempt."}</p>}

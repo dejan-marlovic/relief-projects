@@ -1,3 +1,4 @@
+import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import BudgetPlanning from "../../../components/BudgetPlanning/BudgetPlanning";
@@ -377,6 +378,7 @@ const UpdateBudget = () => {
     }
   };
 
+  useAutomaticRefresh(loadData, Boolean(loading) || Boolean(saving) || Boolean(form.selectedId));
   return (
     <div className={styles.updateContainer}>
       <div className={styles.formContainer}>
@@ -669,14 +671,14 @@ const UpdateBudget = () => {
             </div>
 
             <div className={styles.bottomActions}>
-              <button
+              {formError && <button
                 type="button"
                 onClick={loadData}
                 className={styles.secondaryButton}
                 disabled={loading || saving}
               >
-                <FiRefreshCw /> Refresh list
-              </button>
+                <FiRefreshCw /> Retry loading
+              </button>}
 
               <button
                 type="button"

@@ -1,3 +1,4 @@
+import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
@@ -134,6 +135,7 @@ const RestoreProjectType = () => {
     }
   };
 
+  useAutomaticRefresh(loadDeletedProjectTypes, Boolean(loading) || Boolean(restoring) || Boolean(selectedProjectTypeId));
   return (
     <div className={styles.restoreContainer}>
       <div className={styles.formContainer}>
@@ -246,14 +248,14 @@ const RestoreProjectType = () => {
             </div>
 
             <div className={styles.bottomActions}>
-              <button
+              {formError && <button
                 type="button"
                 onClick={loadDeletedProjectTypes}
                 className={styles.secondaryButton}
                 disabled={loading || restoring}
               >
-                <FiRefreshCw /> Refresh list
-              </button>
+                <FiRefreshCw /> Retry loading
+              </button>}
 
               <button
                 type="button"

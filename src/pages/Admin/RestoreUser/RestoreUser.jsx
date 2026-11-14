@@ -1,3 +1,4 @@
+import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
@@ -128,6 +129,7 @@ const RestoreUser = () => {
     }
   };
 
+  useAutomaticRefresh(loadDeletedUsers, Boolean(loading) || Boolean(restoring) || Boolean(selectedUserId));
   return (
     <div className={styles.restoreContainer}>
       <div className={styles.formContainer}>
@@ -244,14 +246,14 @@ const RestoreUser = () => {
             </div>
 
             <div className={styles.bottomActions}>
-              <button
+              {formError && <button
                 type="button"
                 onClick={loadDeletedUsers}
                 className={styles.secondaryButton}
                 disabled={loading || restoring}
               >
-                <FiRefreshCw /> Refresh list
-              </button>
+                <FiRefreshCw /> Retry loading
+              </button>}
 
               <button
                 type="button"

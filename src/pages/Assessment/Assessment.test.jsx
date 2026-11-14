@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { AssessmentPanel } from "./Assessment";
 import { assessmentPayload, draftFrom } from "./assessmentApi";
@@ -27,7 +27,11 @@ function existing(state = "DRAFT", permissions = { canEdit: true, canSubmit: tru
 }
 const mount = () => render(<MemoryRouter><AssessmentPanel projectId={7} authFetch={fetcher} /></MemoryRouter>);
 async function start(button) { fireEvent.click(await screen.findByRole("button", { name: button, exact: true })); return screen.getByRole("form", { name: button }); }
-async function save(title) { const button = screen.getByRole("button", { name: `Save ${title.toLowerCase()}` }); await waitFor(() => expect(button).toBeEnabled()); fireEvent.click(button); }
+async function save(title) {
+  const button = screen.queryByRole("button", { name: `Save ${title.toLowerCase()}` });
+  if (button) { await waitFor(() => expect(button).toBeEnabled()); fireEvent.click(button); }
+  else await act(async () => { await new Promise(resolve => setTimeout(resolve, 1100)); });
+}
 test("legacy Yes is labelled without inventing an assessment or an approval", async () => {
   mount(); await screen.findByText("Legacy Yes — no recorded decision");
   expect(screen.queryByText("Current approval")).not.toBeInTheDocument();
@@ -91,12 +95,12 @@ test("review warnings retain approval while unavailable evidence disables submis
 test("stale errors retain input, refresh history and require explicit review before retry", async () => {
   existing(); writer = () => { envelope.assessment.revision = 4; return response({ message: "Assessment changed." }, 409); };
   mount(); await start("Edit assessment"); fireEvent.change(screen.getByLabelText("Rationale and need"), { target: { value: "Keep my draft" } }); await save("Edit assessment");
-  await screen.findByText("Assessment changed."); expect(screen.getByLabelText("Rationale and need")).toHaveValue("Keep my draft"); expect(screen.getByRole("button", { name: "Save edit assessment" })).toBeDisabled();
+  await screen.findByText("Assessment changed."); expect(screen.getByLabelText("Rationale and need")).toHaveValue("Keep my draft"); expect(screen.queryByRole("button", { name: "Save edit assessment" })).not.toBeInTheDocument();
   const review = screen.getByRole("button", { name: "I reviewed the refreshed state; enable retry" }); await waitFor(() => expect(review).toBeEnabled());
   writer = () => response(envelope); fireEvent.click(review); await save("Edit assessment"); await waitFor(() => expect(writes).toHaveLength(2)); expect(writes[1].body.expectedRevision).toBe(4);
 });
 test("lost response after successful creation does not offer a duplicate retry", async () => {
-  writer = () => { existing(); throw new Error("Connection lost"); }; mount(); await start("Create assessment"); await save("Create assessment"); await screen.findByText("Connection lost");
+  writer = () => { existing(); throw new Error("Connection lost"); }; mount(); await start("Create assessment"); fireEvent.change(screen.getByLabelText("Rationale and need"), { target: { value: "Draft" } }); await save("Create assessment"); await screen.findByText("Connection lost");
   await waitFor(() => expect(screen.getByRole("button", { name: "I reviewed the refreshed state; enable retry" })).toBeDisabled()); expect(writes).toHaveLength(1);
 });
 test("read-only inactive parent retains history without writes", async () => {
@@ -105,9 +109,9 @@ test("read-only inactive parent retains history without writes", async () => {
 });
 test("draft stays visible after a failed refresh", async () => {
   existing(); mount(); await start("Edit assessment");
-  fetcher.mockImplementation(async () => response({ message: "Unavailable" }, 503)); fireEvent.click(screen.getByText("Refresh assessment, evidence and history"));
+  fetcher.mockImplementation(async () => response({ message: "Unavailable" }, 503)); fireEvent.change(screen.getByLabelText("Rationale and need"), { target: { value: "Retained draft" } }); await save("Edit assessment");
   await waitFor(() => expect(screen.getAllByRole("alert").some(e => e.textContent.includes("Unavailable"))).toBe(true));
-  expect(screen.getByLabelText("Rationale and need")).toHaveValue("Safe water"); expect(screen.getByRole("button", { name: "Save edit assessment" })).toBeDisabled();
+  expect(screen.getByLabelText("Rationale and need")).toHaveValue("Retained draft"); expect(screen.queryByRole("button", { name: "Save edit assessment" })).not.toBeInTheDocument();
 });
 test("provenance helper and metadata payload prevent manual/stale approval echoes", () => {
   expect(projectApprovalLabel({ approved: "Yes" })).toBe("Legacy Yes — no recorded decision");

@@ -1,3 +1,4 @@
+import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
@@ -144,6 +145,7 @@ const RestoreSignatureStatus = () => {
     }
   };
 
+  useAutomaticRefresh(loadDeletedSignatureStatuses, Boolean(loading) || Boolean(restoring) || Boolean(selectedSignatureStatusId));
   return (
     <div className={styles.restoreContainer}>
       <div className={styles.formContainer}>
@@ -259,14 +261,14 @@ const RestoreSignatureStatus = () => {
             </div>
 
             <div className={styles.bottomActions}>
-              <button
+              {formError && <button
                 type="button"
                 onClick={loadDeletedSignatureStatuses}
                 className={styles.secondaryButton}
                 disabled={loading || restoring}
               >
-                <FiRefreshCw /> Refresh list
-              </button>
+                <FiRefreshCw /> Retry loading
+              </button>}
 
               <button
                 type="button"

@@ -1,3 +1,4 @@
+import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import { budgetOptionLabel } from "../../../utils/budgetDisplay";
@@ -211,6 +212,7 @@ const DeleteBudget = () => {
 
   const inputClass = `${styles.textInput} ${formError && !selectedBudgetId ? styles.inputError : ""}`;
 
+  useAutomaticRefresh(loadData, Boolean(loading) || Boolean(deleting) || Boolean(selectedBudgetId));
   return (
     <div className={styles.deleteContainer}>
       <div className={styles.formContainer}>
@@ -372,14 +374,14 @@ const DeleteBudget = () => {
             </div>
 
             <div className={styles.bottomActions}>
-              <button
+              {formError && <button
                 type="button"
                 onClick={loadData}
                 className={styles.secondaryButton}
                 disabled={loading || deleting}
               >
-                <FiRefreshCw /> Refresh list
-              </button>
+                <FiRefreshCw /> Retry loading
+              </button>}
 
               <button
                 type="button"

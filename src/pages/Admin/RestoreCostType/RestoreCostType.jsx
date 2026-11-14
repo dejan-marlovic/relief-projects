@@ -1,3 +1,4 @@
+import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
@@ -128,6 +129,7 @@ const RestoreCostType = () => {
     }
   };
 
+  useAutomaticRefresh(loadDeletedCostTypes, Boolean(loading) || Boolean(restoring) || Boolean(selectedCostTypeId));
   return (
     <div className={styles.restoreContainer}>
       <div className={styles.formContainer}>
@@ -238,14 +240,14 @@ const RestoreCostType = () => {
             </div>
 
             <div className={styles.bottomActions}>
-              <button
+              {formError && <button
                 type="button"
                 onClick={loadDeletedCostTypes}
                 className={styles.secondaryButton}
                 disabled={loading || restoring}
               >
-                <FiRefreshCw /> Refresh list
-              </button>
+                <FiRefreshCw /> Retry loading
+              </button>}
 
               <button
                 type="button"

@@ -1,3 +1,4 @@
+import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import { HistoryPagination, HistoryTimeline, SnapshotHistoryEntry } from "../../components/ActivityHistory/ActivityHistory";
 import ScrollToForm from "../../components/ScrollToForm/ScrollToForm";
@@ -130,14 +131,7 @@ function Register({ projectId, authFetch }) {
     if (!blocked && editor.savedDraft === JSON.stringify(editor.draft)) { clearAssessmentDraft(editor.storageKey); setLocalSaved(false); }
     else setLocalSaved(storeAssessmentDraft(editor.storageKey, { ...editor, reviewRequired: blocked }));
   }, [editor, blocked]);
-  useEffect(() => {
-    if (editor || busy) return undefined;
-    const refresh = () => { if (document.visibilityState !== "hidden") setAttempt(v => v + 1); };
-    window.addEventListener("focus", refresh);
-    window.addEventListener("online", refresh);
-    document.addEventListener("visibilitychange", refresh);
-    return () => { window.removeEventListener("focus", refresh); window.removeEventListener("online", refresh); document.removeEventListener("visibilitychange", refresh); };
-  }, [editor, busy]);
+  useAutomaticRefresh(() => setAttempt(v => v + 1), !!editor || busy || loading);
   const alive = useRef(true), pending = useRef(false), readController = useRef(null);
   useEffect(() => { alive.current = true; return () => { alive.current = false; readController.current?.abort(); }; }, []);
   useEffect(() => {
@@ -255,8 +249,8 @@ function Register({ projectId, authFetch }) {
       <label><input type="checkbox" checked={filters.overdue} disabled={locked || filters.status !== "OPEN" || filters.deleted} onChange={e => changeFilter("overdue", e.target.checked)} /> Overdue reviews only</label>
       <label><input type="checkbox" checked={filters.deleted} disabled={locked} onChange={e => changeFilter("deleted", e.target.checked)} /> Deleted risks only</label>
     </div>
-    <div className={styles.actions}>{data?.canCreate && <button className={styles.primaryAction} disabled={locked || loading} onClick={() => openEditor(null, "save")}>New risk</button>}<button className={styles.secondaryAction} disabled={busy || loading} onClick={() => setAttempt(v => v + 1)}>Refresh register</button></div>
-    {loading && <p role="status">Loading risks…</p>}{error && <p role="alert">{error}</p>}{employeeError && <p role="alert">{employeeError} Use Refresh register to retry.</p>}
+    <div className={styles.actions}>{data?.canCreate && <button className={styles.primaryAction} disabled={locked || loading} onClick={() => openEditor(null, "save")}>New risk</button>}{(error || employeeError || blocked) && <button className={styles.secondaryAction} disabled={busy || loading} onClick={() => setAttempt(v => v + 1)}>Retry register</button>}</div>
+    {loading && <p role="status">Loading risks…</p>}{error && <p role="alert">{error}</p>}{employeeError && <p role="alert">{employeeError} Use Retry register to retry.</p>}
     {notice && <p role={blocked ? "alert" : "status"}>{notice}</p>}
     {editor && <>
       <Editor key={editor.action} editor={editor} employees={employees} busy={busy} blocked={blocked} onDraft={(key, value) => setEditor(old => ({ ...old, autoPaused: false, draft: { ...old.draft, [key]: value } }))} onSave={mutate} onCancel={cancelEditor} localSaved={localSaved} onDiscard={() => { if (window.confirm("Discard unfinished entries? Changes already saved to the project will remain.")) { clearAssessmentDraft(editor.storageKey); setEditor(null); setBlocked(false); setLatest(null); setNotice(""); setAttempt(v => v + 1); } }} />

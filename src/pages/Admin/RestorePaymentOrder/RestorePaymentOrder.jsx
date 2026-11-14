@@ -1,3 +1,4 @@
+import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import PaymentAmount from "../../../components/PaymentAmount/PaymentAmount";
@@ -305,6 +306,7 @@ const RestorePaymentOrder = () => {
     }
   };
 
+  useAutomaticRefresh(loadDeletedPaymentOrders, Boolean(loading) || Boolean(restoring) || Boolean(selectedPaymentOrderId));
   return (
     <div className={styles.restoreContainer}>
       <div className={styles.formContainer}>
@@ -469,14 +471,14 @@ const RestorePaymentOrder = () => {
             </div>
 
             <div className={styles.bottomActions}>
-              <button
+              {formError && <button
                 type="button"
                 onClick={loadDeletedPaymentOrders}
                 className={styles.secondaryButton}
                 disabled={loading || restoring}
               >
-                <FiRefreshCw /> Refresh list
-              </button>
+                <FiRefreshCw /> Retry loading
+              </button>}
 
               <button
                 type="button"

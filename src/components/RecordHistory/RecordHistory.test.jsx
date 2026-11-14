@@ -71,7 +71,7 @@ test("empty history and expired authentication", async () => {
   fetch.mockResolvedValueOnce(response(page([], 0, 0))).mockResolvedValueOnce(response(null, 401));
   render(<RecordHistory {...props} />); open();
   expect(await screen.findByText("No record history yet.")).toBeInTheDocument();
-  fireEvent.click(screen.getByText("Refresh history"));
+  fireEvent.focus(window);
   await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith("/login", { replace: true }));
   expect(localStorage.getItem("authToken")).toBeNull();
 });
@@ -85,7 +85,7 @@ test("paginates, clears old rows on failure, and refreshes from page zero", asyn
   await screen.findByRole("alert");
   expect(screen.queryByText("Alex")).not.toBeInTheDocument();
   expect(fetch.mock.calls[1][0]).toContain("page=1");
-  fireEvent.click(screen.getByText("Refresh history"));
+  fireEvent.click(screen.getByText("Retry history"));
   await screen.findByText("Alex");
   expect(fetch.mock.calls[2][0]).toContain("page=0");
 });

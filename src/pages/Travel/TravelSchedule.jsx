@@ -1,3 +1,4 @@
+import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
@@ -44,16 +45,13 @@ export function Schedule({ authFetch }) {
   const [draft, setDraft] = useState(filters), [error, setError] = useState("");
   const [refresh, setRefresh] = useState(0), [lookupPage, setLookupPage] = useState(0), [lookupOpen, setLookupOpen] = useState(false);
   useEffect(() => { setDraft(filters); setError(""); setLookupPage(0); }, [filters]);
-  useEffect(() => {
-    const update = () => { if (document.visibilityState !== "hidden") setRefresh(n => n + 1); };
-    window.addEventListener("focus", update); document.addEventListener("visibilitychange", update);
-    return () => { window.removeEventListener("focus", update); document.removeEventListener("visibilitychange", update); };
-  }, []);
+
   const invalid = windowError(filters);
   const result = useTravelRead(authFetch, invalid ? null : `${BASE_URL}/api/travel-schedule?${scheduleQuery(filters, page)}`, refresh);
   const projects = useTravelRead(authFetch, `${BASE_URL}/api/projects/ids-names`, refresh);
   const people = useTravelRead(authFetch, lookupOpen && !invalid ? `${BASE_URL}/api/travel-schedule/travellers?${scheduleQuery(filters, lookupPage, true)}` : null, refresh);
   const data = result.data;
+  useAutomaticRefresh(() => setRefresh(n => n + 1), result.loading || people.loading || projects.loading || JSON.stringify(draft) !== JSON.stringify(filters));
   const change = (key, value) => setDraft(f => ({ ...f, [key]: value }));
   const apply = event => { event.preventDefault(); const message = windowError(draft); setError(message); if (!message) setParams(scheduleQuery(draft)); };
   const open = row => {
@@ -80,7 +78,7 @@ export function Schedule({ authFetch }) {
     <ReadState state={projects} />
     <button aria-expanded={lookupOpen} onClick={() => setLookupOpen(v => !v)}>Find a traveller by name</button>
     {lookupOpen && <section className={styles.panel} aria-label="Traveller lookup"><p>Travellers represented in the applied date, project and state filters. Selecting one fills the employee ID; apply the filters to use it. Your selected ID is kept even if it is outside this lookup.</p><ReadState state={people} /><ul className={styles.list}>{people.data?.content.map(person => <li key={person.employeeId}>{person.displayName} · Employee #{person.employeeId}{!person.active && " · Inactive traveller"} <button onClick={() => change("travellerEmployeeId", String(person.employeeId))}>Select employee #{person.employeeId}</button></li>)}</ul>{people.data && !people.data.content.length && <p>No travellers on this lookup page.</p>}<Pages data={people.data} loading={people.loading} onPage={setLookupPage} name="travellers" /></section>}
-    <div className={styles.actions}><button onClick={() => setRefresh(n => n + 1)}>Refresh schedule</button></div>
+
     <ReadState state={result} />
     {data && <>
       <p><strong>{data.from} through {data.to}</strong> · {data.businessTimezone}{data.rangeDefaulted && " · Default window"}</p>

@@ -15,6 +15,7 @@ export async function readIndicator(response) {
 }
 export function useIndicatorRead(authFetch, url, refresh) {
   const [state, setState] = useState({ data: null, loading: true, error: "" });
+  const [retry, setRetry] = useState(0);
   useEffect(() => {
     if (!url) { setState({ data: null, loading: false, error: "" }); return undefined; }
     const controller = new AbortController();
@@ -23,8 +24,8 @@ export function useIndicatorRead(authFetch, url, refresh) {
       .then(data => { if (!controller.signal.aborted) setState({ data, loading: false, error: "" }); })
       .catch(error => { if (!controller.signal.aborted) setState({ data: null, loading: false, error: error.message }); });
     return () => controller.abort();
-  }, [authFetch, url, refresh]);
-  return state;
+  }, [authFetch, url, refresh, retry]);
+  return { ...state, retry: () => setRetry(n => n + 1) };
 }
 export function measurementError(value, type) {
   const text = String(value ?? "");

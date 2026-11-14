@@ -1,9 +1,12 @@
 import ScrollToForm from "../../components/ScrollToForm/ScrollToForm";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { BASE_URL } from "../../config/api";
 import { indicatorPayload, measurementError, useIndicatorRead } from "./indicatorApi";
 import { MeasurementBasis, ReadState } from "./ResultViews";
 import styles from "./Results.module.scss";
+
+export const indicatorSignature = form => JSON.stringify(form?.draft);
+export const indicatorDirty = form => !!form && (!['create', 'edit'].includes(form.action) || indicatorSignature(form) !== form.savedSignature);
 
 export function DocumentChoices({ authFetch, projectId, selected, onChange, refresh }) {
   const state = useIndicatorRead(authFetch, `${BASE_URL}/api/documents/project/${projectId}`, refresh);
@@ -21,12 +24,30 @@ export default function ResultsEditor({ form, setForm, indicator, authFetch, pro
   const isIndicator = action === "create" || action === "edit";
   const isReport = ["report", "correct", "reuse"].includes(action);
   const frozen = action === "edit" && indicator?.measurementBasisFrozen;
+  const needsReason = !["create", "report", "evidence"].includes(action);
+  const editor = useRef(null);
+  const latestSave = useRef(onSave);
+  latestSave.current = onSave;
+  const signature = indicatorSignature(form);
+  const dirty = indicatorDirty(form);
+  useEffect(() => {
+    if (!isIndicator || !dirty || busy || blocked || form.reviewRequired) return;
+    const timer = setTimeout(() => {
+      const node = editor.current?.closest('form');
+      if (node?.checkValidity() && draft.name.trim() && (frozen || (draft.definition.trim() && (draft.measurementType === "PERCENTAGE" || draft.unit.trim()))) && !measurementError(draft.targetValue, draft.measurementType) &&
+          (!draft.baselineKnown || !measurementError(draft.baselineValue, draft.measurementType)) &&
+          (!needsReason || (reason.trim() && [...reason.trim()].length <= 1000))) {
+        latestSave.current({ ...indicatorPayload(draft, frozen), ...(needsReason ? { reason: reason.trim() } : {}) });
+      }
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [signature, reason, dirty, busy, blocked, form.reviewRequired, isIndicator, draft, frozen, needsReason]);
   const change = (key, value) => setForm(f => ({ ...f, draft: { ...f.draft, [key]: value } }));
   const input = (key, label, props = {}) => <label>{label}<input value={draft[key] ?? ""} onChange={e => change(key, e.target.value)} {...props} /></label>;
-  const needsReason = !["create", "report", "evidence"].includes(action);
   const title = { create: "Create indicator", edit: "Edit indicator", report: "Record result", correct: "Correct report", reuse: "Report again for voided date", void: "Void report", delete: "Delete indicator", restore: "Restore indicator", evidence: "Add supporting document", remove: "Remove evidence association" }[action];
   return <ScrollToForm scrollKey={action} className={styles.panel} aria-label={title} onSubmit={event => {
     event.preventDefault(); setError("");
+    if (isIndicator && !dirty) return;
     if (isIndicator || isReport) {
       const type = isIndicator ? draft.measurementType : action === "correct" ? result.basis?.measurementType : indicator.measurementType;
       const issue = measurementError(isIndicator ? draft.targetValue : draft.value, type) || (isIndicator && draft.baselineKnown && measurementError(draft.baselineValue, type));
@@ -44,15 +65,16 @@ export default function ResultsEditor({ form, setForm, indicator, authFetch, pro
     if (needsReason || reason.trim()) body.reason = reason.trim();
     onSave(body);
   }}>
-    <h3>{title}{result ? ` · Report #${result.id}` : ""}</h3>
+    <h3 ref={editor}>{title}{result ? ` · Report #${result.id}` : ""}</h3>
+    {isIndicator && <><p>Indicator details save automatically after a short pause once required fields are valid. Changes to an existing indicator require a reason. The editor stays open after saving.</p><p role="status">{busy ? "Saving…" : form.reviewRequired ? "Automatic saving paused. Review the refreshed records below." : !dirty ? "All changes saved." : "Changes not yet saved. Complete the required fields and keep this page open."}</p></>}
     <fieldset disabled={busy}>
       {isIndicator && <>
-        {input("name", "Indicator name", { required: true, maxLength: 400 })}
+        {input("name", "Indicator name", { required: true, maxLength: 200, pattern: ".*\\S.*" })}
         {frozen && <p>Reporting has started. The measurement definition, unit, dates and baseline are frozen, even if reports are voided. Name, notes and target can still change with a reason. Earlier reports retain their recorded targets.</p>}
-        <fieldset disabled={frozen}><label>Definition and population<textarea required value={draft.definition} onChange={e => change("definition", e.target.value)} rows={3} /></label>
+        <fieldset disabled={frozen}><label>Definition and population<textarea required maxLength={4000} value={draft.definition} onChange={e => change("definition", e.target.value)} rows={3} /></label>
           <p className={styles.muted}>Explain who or what is counted, how duplicates are excluded, and—for percentages—the cumulative numerator and denominator.</p>
           <div className={styles.grid}><label>Measurement type<select value={draft.measurementType} onChange={e => change("measurementType", e.target.value)}><option value="COUNT">Count (whole numbers)</option><option value="QUANTITY">Quantity</option><option value="PERCENTAGE">Percentage (0–100)</option></select></label>
-            {draft.measurementType !== "PERCENTAGE" ? input("unit", "Unit", { required: true }) : <p>Unit: %</p>}
+            {draft.measurementType !== "PERCENTAGE" ? input("unit", "Unit", { required: true, maxLength: 80, pattern: ".*\\S.*" }) : <p>Unit: %</p>}
             <label>Target direction<select value={draft.direction} onChange={e => change("direction", e.target.value)}><option value="HIGHER_IS_BETTER">Higher is better (at least)</option><option value="LOWER_IS_BETTER">Lower is better (at most)</option></select></label>
             {input("periodStart", "Reporting starts", { type: "date", required: true, min: "1000-01-01", max: draft.periodEnd || "9999-12-31" })}
             {input("periodEnd", "Reporting ends (inclusive)", { type: "date", required: true, min: draft.periodStart || "1000-01-01", max: "9999-12-31" })}
@@ -70,16 +92,16 @@ export default function ResultsEditor({ form, setForm, indicator, authFetch, pro
         <p className={styles.muted}>Business date: {indicator.today} · {indicator.businessTimezone}</p>
         <DocumentChoices authFetch={authFetch} projectId={projectId} selected={draft.documentIds || []} onChange={ids => change("documentIds", ids)} refresh={refresh} />
       </>}
-      {(isIndicator || isReport) && <label>Notes (optional)<textarea value={draft.notes || ""} onChange={e => change("notes", e.target.value)} rows={3} /></label>}
+      {(isIndicator || isReport) && <label>Notes (optional)<textarea maxLength={4000} value={draft.notes || ""} onChange={e => change("notes", e.target.value)} rows={3} /></label>}
       {action === "evidence" && <><DocumentChoices authFetch={authFetch} projectId={projectId} selected={draft.documentId ? [Number(draft.documentId)] : []} onChange={ids => change("documentId", ids.at(-1) || "")} refresh={refresh} /><input className={styles.srOnly} aria-label="Selected document ID" required value={draft.documentId || ""} readOnly /></>}
       {action === "void" && <p>Voiding marks this report as erroneous. It retains the report and evidence and does not mean an adverse outcome. A superseded report will not become effective again.</p>}
       {action === "delete" && <p>The indicator will be hidden from the active list. Its reports and history remain available; an administrator can restore it.</p>}
       {action === "remove" && <p>This removes the active association, retaining its document version and history.</p>}
-      {needsReason && <label>Reason<textarea required value={reason} onChange={e => setForm(f => ({ ...f, reason: e.target.value }))} /></label>}
+      {needsReason && <label>Reason<textarea required maxLength={1000} value={reason} onChange={e => setForm(f => ({ ...f, reason: e.target.value }))} /></label>}
       {error && <p role="alert">{error}</p>}
       {form.error && <p role="alert">{form.error}</p>}
       {form.reviewRequired && <p>Draft retained. Inspect the refreshed records and history before retrying. A failed response may follow a successful save. {action === "create" && "Check every relevant list page before creating again; retrying can create a duplicate indicator."} <button type="button" disabled={blocked} onClick={onReview}>I reviewed the refreshed records; enable retry</button></p>}
-      <div className={styles.actions}><button type="submit" disabled={blocked || form.reviewRequired || (action === "evidence" && !draft.documentId)}>Save {title.toLowerCase()}</button><button type="button" onClick={onCancel}>Cancel</button></div>
+      <div className={styles.actions}>{!isIndicator && <button type="submit" disabled={blocked || form.reviewRequired || (action === "evidence" && !draft.documentId)}>Save {title.toLowerCase()}</button>}<button type="button" onClick={onCancel}>{isIndicator ? dirty ? "Discard unfinished entries" : "Close editor" : "Cancel"}</button></div>
     </fieldset>
   </ScrollToForm>;
 }

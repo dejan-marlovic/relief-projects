@@ -1,3 +1,4 @@
+import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import useArchivedProject from "../../hooks/useArchivedProject";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import RecordReference, { isRecordReference } from "../RecordReference/RecordReference";
@@ -38,11 +39,11 @@ export function RevisionPanel({ budget, onChanged, disabled = false }) {
   useUnsavedChange(`budget-revisions-${budget.id}`, Boolean(form));
   const endpoint = `${BASE_URL}/api/budgets/${budget.id}/revisions`;
   useEffect(() => {
-    const listener = () => setRefresh(n => n + 1);
-    window.addEventListener("focus", listener);
+    const listener = () => { if (!form && !busy) setRefresh(n => n + 1); };
+
     window.addEventListener("budget-revisions-changed", listener);
-    return () => { window.removeEventListener("focus", listener); window.removeEventListener("budget-revisions-changed", listener); };
-  }, []);
+    return () => { window.removeEventListener("budget-revisions-changed", listener); };
+  }, [form, busy]);
   useEffect(() => {
     const controller = new AbortController(); setLoading(true); setHistory(null);
     (async () => {
@@ -107,9 +108,10 @@ export function RevisionPanel({ budget, onChanged, disabled = false }) {
   };
   const evidenceChoices = form?.action === "remove" ? (form.decision.currentEvidence || []).map(d => ({ id: d.documentId, documentName: d.capturedName })) : documents;
   const decisionFields = form && ["decision", "correct"].includes(form.action);
+  useAutomaticRefresh(() => setRefresh(v => v + 1), loading || busy || !!form);
   return <div className={styles.panel}>
     <p className={styles.hint}>Selecting a current plan changes planning displays. Financial execution requires separate activation with shared cost ceilings; existing awards and commitments retain their original references.</p>
-    <button type="button" disabled={busy || loading} onClick={() => { setError(""); setRefresh(n => n + 1); }}>Refresh revisions and history</button>
+    {(error || optionsError || blocked) && <button type="button" disabled={busy || loading} onClick={() => { setError(""); setRefresh(n => n + 1); }}>Retry revisions and history</button>}
     {loading && <p role="status">Loading revisions…</p>}{error && <p role="alert">{error}</p>}
     {data && <><WorkflowIntro>Prepare a revised budget, record donor decisions and choose the current plan. Financial execution is a separate activation: existing awards and commitments retain their original references.</WorkflowIntro><WorkflowStep number={1} title="Prepare the revised plan" description="Create a planning revision from an eligible approved budget. Edit its costs and obtain internal approval using the budget controls before moving on.">
       {family ? <><p>Current plan: <strong>{family.currentPlanBudgetId ? `Budget #${family.currentPlanBudgetId}` : "Not selected — family planning total unavailable"}</strong></p><p>Original financial budget: <strong>Budget #{family.financialBudgetId}</strong> · Latest revision: Budget #{family.latestRevisionBudgetId}</p>

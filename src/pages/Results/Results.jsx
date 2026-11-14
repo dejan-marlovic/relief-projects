@@ -9,7 +9,8 @@ import { createAuthFetch } from "../../utils/http";
 import { downloadDocument } from "../../utils/documentDownload";
 import { blankIndicator, indicatorDraft, readIndicator, useIndicatorRead, words } from "./indicatorApi";
 import { Attribution, HistorySnapshot, Issues, MeasurementBasis, Pagination, ReadState, ResultSummary } from "./ResultViews";
-import ResultsEditor from "./ResultsEditor";
+import ResultsEditor, { indicatorDirty, indicatorSignature } from "./ResultsEditor";
+import { notifySuccess } from "../../utils/successNotifications";
 import styles from "./Results.module.scss";
 
 function Evidence({ result, endpoint, authFetch, refresh, open, locked }) {
@@ -54,7 +55,7 @@ function History({ endpoint, authFetch, refresh }) {
   return <section aria-label="Retained indicator history"><h4>Retained decision history</h4><HistoryIntro>Review indicator changes and recorded reports, including corrections and voids. Historical measurement definitions and targets remain part of each report.</HistoryIntro><ReadState state={state} /><HistoryTimeline>{state.data?.content.map(e => <SnapshotHistoryEntry key={e.id} event={e} title={words(e.action)} Snapshot={HistorySnapshot} />)}</HistoryTimeline><Pagination history data={state.data} page={page} setPage={setPage} label="history" disabled={state.loading} /></section>;
 }
 
-function IndicatorDetail({ id, endpoint: base, authFetch, refresh, reload, projectId, onClose }) {
+function IndicatorDetail({ id, endpoint: base, authFetch, refresh, reload, projectId, onClose, editingRef }) {
   const endpoint = `${base}/${id}`;
   const state = useIndicatorRead(authFetch, endpoint, refresh);
   const [page, setPage] = useState(0), [filters, setFilters] = useState({ state: "ALL", from: "", to: "" });
@@ -68,11 +69,12 @@ function IndicatorDetail({ id, endpoint: base, authFetch, refresh, reload, proje
   const reviewHistory = useIndicatorRead(authFetch, form?.reviewRequired ? `${endpoint}/history?page=0&size=20` : null, refresh);
   const pending = useRef(false), alive = useRef(true);
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
-  useUnsavedChange(`indicator-${id}`, !!form);
+  useUnsavedChange(`indicator-${id}`, indicatorDirty(form) || busy);
+  useEffect(() => { editingRef.current = !!form || busy; return () => { editingRef.current = false; }; }, [form, busy, editingRef]);
   const indicator = state.data;
   const locked = busy || !!form || state.loading || reports.loading;
   function open(action, result, evidence) {
-    setForm({ action, result, evidence, indicator, expectedRevision: indicator.revision, reason: "", draft: action === "edit" ? indicatorDraft(indicator) : { value: action === "correct" ? result.value : "", notes: action === "correct" ? result.notes || "" : "", asOfDate: action === "reuse" ? result.asOfDate : "", documentIds: [] } });
+    setForm({ action, result, evidence, indicator, savedSignature: action === "edit" ? JSON.stringify(indicatorDraft(indicator)) : null, expectedRevision: indicator.revision, reason: "", draft: action === "edit" ? indicatorDraft(indicator) : { value: action === "correct" ? result.value : "", notes: action === "correct" ? result.notes || "" : "", asOfDate: action === "reuse" ? result.asOfDate : "", documentIds: [] } });
   }
   function allowed() {
     if (!form || !indicator) return false;
@@ -93,13 +95,18 @@ function IndicatorDetail({ id, endpoint: base, authFetch, refresh, reload, proje
     else if (["correct", "void", "evidence"].includes(action)) url += `/results/${result.id}/${action}`;
     else url += `/${action}`;
     try {
-      await authFetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...body, expectedRevision: form.expectedRevision }) }).then(readIndicator);
-      if (alive.current) setForm(null);
+      const saved = await authFetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...body, expectedRevision: form.expectedRevision }) }).then(readIndicator);
+      if (action === "edit" && (!saved.id || !Number.isInteger(saved.revision))) throw new Error("Save response incomplete. Review the refreshed records before retrying.");
+      if (alive.current) {
+        if (action === "edit") setForm(f => ({ ...f, expectedRevision: saved.revision, savedSignature: indicatorSignature(form), reason: "", error: "" }));
+        else setForm(null);
+        notifySuccess(action === "edit" ? "Indicator changes saved." : "Result action saved.");
+      }
     } catch (e) {
       if (alive.current) { setForm(f => ({ ...f, error: e.message, reviewRequired: true })); if (e.existingResultId) setInspectId(e.existingResultId); }
     } finally { pending.current = false; if (alive.current) { setBusy(false); reload(); } }
   }
-  return <section className={styles.panel} aria-label="Indicator details"><div className={styles.actions}><button disabled={busy} onClick={reload}>Refresh indicator, reports and history</button><button disabled={busy || !!form} onClick={onClose}>Close indicator</button></div><ReadState state={state} />
+  return <section className={styles.panel} aria-label="Indicator details"><div className={styles.actions}><button disabled={busy || !!form} onClick={onClose}>Close indicator</button></div><ReadState state={state} />
     {indicator && <><h3>{indicator.name} · #{id}{indicator.isDeleted ? " · Deleted" : ""}</h3><WorkflowIntro>Define what you will measure, then record results for the reporting period. Each report is a full period-to-date snapshot; repeated reports are never added together.</WorkflowIntro><WorkflowStep number={1} title="Define the measurement" description="Set the population, unit, reporting dates, baseline and target. Measurement definitions become fixed after reporting; historical targets are retained."><p className={styles.text}>{indicator.definition}</p><p>{indicator.periodStart} through {indicator.periodEnd} · {words(indicator.measurementType)} · {indicator.unit}</p><p>Baseline: {indicator.baselineKnown ? `${indicator.baselineValue} ${indicator.unit} on ${indicator.baselineDate}` : "Unknown"}</p>{indicator.notes && <p>{indicator.notes}</p>}<Issues issues={indicator.issues} /></WorkflowStep>
       <ResultSummary summary={indicator.summary} unit={indicator.unit} direction={indicator.direction} />
       <div className={styles.actions}>{[["canEdit", "edit", "Edit indicator"], ["canRecordResult", "report", "Record result"], ["canDelete", "delete", "Delete indicator"], ["canRestore", "restore", "Restore indicator"]].map(([p,a,label]) => indicator.permissions?.[p] && <button key={a} disabled={locked} onClick={() => open(a)}>{label}</button>)}</div>
@@ -119,23 +126,37 @@ export function ResultsRegister({ projectId, authFetch }) {
   const [form, setForm] = useState(null), [busy, setBusy] = useState(false);
   const pending = useRef(false), alive = useRef(true);
   const reload = () => setRefresh(n => n + 1);
-  useEffect(() => { alive.current = true; const focus = () => setRefresh(n => n + 1); window.addEventListener("focus", focus); return () => { alive.current = false; window.removeEventListener("focus", focus); }; }, []);
+  const detailEditing = useRef(false);
+  useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
+  useEffect(() => {
+    const refreshIfIdle = () => { if (!form && !busy && !detailEditing.current && document.visibilityState !== "hidden") setRefresh(n => n + 1); };
+    window.addEventListener("focus", refreshIfIdle);
+    const timer = setInterval(refreshIfIdle, 30000);
+    return () => { window.removeEventListener("focus", refreshIfIdle); clearInterval(timer); };
+  }, [form, busy]);
   const state = useIndicatorRead(authFetch, `${endpoint}?deleted=${deleted}&page=${page}&size=20`, refresh);
-  useUnsavedChange(`new-indicator-${projectId}`, !!form);
+  useUnsavedChange(`new-indicator-${projectId}`, indicatorDirty(form) || busy);
+  const current = useIndicatorRead(authFetch, form?.indicator ? `${endpoint}/${form.indicator.id}` : null, refresh);
   async function save(body) {
-    if (pending.current || form.reviewRequired || state.loading || !state.data?.canCreate) return;
+    if (pending.current || form.reviewRequired || state.loading || !(form.action === "edit" ? form.indicator?.permissions?.canEdit : state.data?.canCreate)) return;
     pending.current = true; setBusy(true);
-    try { const data = await authFetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then(readIndicator); if (alive.current) { setForm(null); setSelected(data.id); setDeleted(false); setPage(0); } }
+    try {
+      const editing = form.action === "edit";
+      const data = await authFetch(editing ? `${endpoint}/${form.indicator.id}` : endpoint, { method: editing ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...body, ...(editing ? { expectedRevision: form.expectedRevision } : {}) }) }).then(readIndicator);
+      if (!data.id || !Number.isInteger(data.revision)) throw new Error("Save response incomplete. Review the refreshed list before retrying.");
+      if (alive.current) { setForm(f => ({ ...f, action: "edit", indicator: data, expectedRevision: data.revision, savedSignature: indicatorSignature(form), reason: "", error: "" })); setDeleted(false); setPage(0); notifySuccess("Indicator saved."); }
+    }
     catch (e) { if (alive.current) setForm(f => ({ ...f, error: e.message, reviewRequired: true })); }
     finally { pending.current = false; if (alive.current) { setBusy(false); reload(); } }
   }
-  return <><div className={styles.actions}><button disabled={busy} onClick={reload}>Refresh results</button>{state.data?.canCreate && <button disabled={busy || !!form || !!selected} onClick={() => setForm({ action: "create", draft: blankIndicator() })}>Create indicator</button>}<label><input type="checkbox" checked={deleted} disabled={busy} onChange={e => { setDeleted(e.target.checked); setPage(0); }} />Show deleted indicators only</label></div><ReadState state={state} />
+  return <><div className={styles.actions}>{state.data?.canCreate && <button disabled={busy || !!form || !!selected} onClick={() => setForm({ action: "create", draft: blankIndicator() })}>Create indicator</button>}<label><input type="checkbox" checked={deleted} disabled={busy} onChange={e => { setDeleted(e.target.checked); setPage(0); }} />Show deleted indicators only</label></div><ReadState state={state} />
     {state.data?.projectDeleted && <p>This project is inactive. Retained results are read-only.</p>}
     <ul className={styles.list}>{state.data?.content.map(i => <li key={i.id}><div className={styles.heading}><h3>{i.name}{i.isDeleted ? " · Deleted" : ""}</h3><button disabled={!!form || (selected != null && selected !== i.id)} onClick={() => setSelected(i.id)}>Open indicator #{i.id}</button></div><p>{i.periodStart} through {i.periodEnd} · Target {i.targetValue} {i.unit}</p><ResultSummary summary={i.summary} unit={i.unit} direction={i.direction} /></li>)}</ul>
     {state.data && !state.data.content.length && <p>No {deleted ? "deleted" : "active"} indicators on this page.</p>}
     <Pagination data={state.data} page={page} setPage={setPage} label="indicators" disabled={state.loading || busy} />
-    {form && <ResultsEditor form={form} setForm={setForm} authFetch={authFetch} projectId={projectId} busy={busy} refresh={refresh} blocked={!state.data?.canCreate || state.loading} onSave={save} onCancel={() => setForm(null)} onReview={() => setForm(f => ({ ...f, reviewRequired: false, error: "" }))} />}
-    {selected && <IndicatorDetail key={selected} id={selected} endpoint={endpoint} projectId={projectId} authFetch={authFetch} refresh={refresh} reload={reload} onClose={() => setSelected(null)} />}
+    {form && <ReadState state={current} />}
+    {form && <ResultsEditor form={form} setForm={setForm} indicator={form.indicator} authFetch={authFetch} projectId={projectId} busy={busy} refresh={refresh} blocked={state.loading || current.loading || !(form.action === "edit" ? current.data?.permissions?.canEdit : state.data?.canCreate)} onSave={save} onCancel={() => setForm(null)} onReview={() => setForm(f => ({ ...f, ...(current.data ? { indicator: current.data, expectedRevision: current.data.revision } : {}), reviewRequired: false, error: "" }))} />}
+    {selected && <IndicatorDetail editingRef={detailEditing} key={selected} id={selected} endpoint={endpoint} projectId={projectId} authFetch={authFetch} refresh={refresh} reload={reload} onClose={() => setSelected(null)} />}
   </>;
 }
 export default function Results() {

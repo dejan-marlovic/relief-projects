@@ -1,3 +1,4 @@
+import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import { HistoryPagination, HistoryTimeline, SnapshotHistoryEntry } from "../ActivityHistory/ActivityHistory";
 import ArchiveAttribution from "./ArchiveAttribution";
 import { WorkflowIntro, WorkflowStep, HistoryIntro } from "../Workflow/Workflow";
@@ -97,10 +98,11 @@ export function CloseoutPanel({ projectId, refreshKey }) {
   const stale = form && data && form.expectedRevision !== data.revision;
   const warnings = data?.readiness?.warnings || [];
   const decisionButtons = names => <div className={styles.actions}>{names.map(action => data?.permissions?.[actions[action][0]] && <button type="button" key={action} disabled={loading || busy || !!form} onClick={() => open(action)}>{actions[action][1]}</button>)}</div>;
+  useAutomaticRefresh(refresh, loading || busy || !!form || !!downloading);
   return <div className={styles.panel}>
     <ArchiveAttribution value={data} />
     <p className={styles.hint}>Administrative closeout is a recorded decision. It does not certify reconciled accounts, complete evidence or verified filing, and closeout alone does not lock project work. Archiving locks project data until an authorised user explicitly unarchives it. Downloads, history and storage-review decisions remain available.</p>
-    <div className={styles.actions}><button type="button" onClick={refresh} disabled={busy || loading}>Refresh closeout and observations</button><Link to="/documents">Document checklist</Link><Link to="/risks">Open risks</Link><Link to="/follow-ups">Open follow-ups</Link></div>
+    <div className={styles.actions}>{(loadError || historyError || documentError || error || blocked) && <button type="button" onClick={refresh} disabled={busy || loading}>Retry closeout and observations</button>}<Link to="/documents">Document checklist</Link><Link to="/risks">Open risks</Link><Link to="/follow-ups">Open follow-ups</Link></div>
     {loading && <p role="status">Loading closeout…</p>}{loadError && <p role="alert">{loadError}</p>}{error && <p role="alert">{error}</p>}
     {data && <>
       {data.closeoutReviewRequired && <p role="alert">Closeout review required: acceptance changed. Reopen and close explicitly to reaffirm the decision.</p>}

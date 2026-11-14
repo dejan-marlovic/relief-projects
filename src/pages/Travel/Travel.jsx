@@ -1,3 +1,5 @@
+import { draftIsDirty, savedDraft } from "../../utils/savedDraft";
+import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import TravelReport from "./TravelReport";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
@@ -14,14 +16,14 @@ import TravelSteps from "./TravelSteps";
 import TravelActionIcon, { approvalStyle } from "./TravelActionIcon";
 import styles from "./Travel.module.scss";
 
-function TravelDetail({ id, base, projectId, authFetch, refresh, reload, onClose }) {
+function TravelDetail({ id, base, projectId, authFetch, refresh, reload, onClose, initialForm }) {
   const endpoint = `${base}/${id}`;
   const detail = useTravelRead(authFetch, endpoint, refresh);
-  const [form, setForm] = useState(null), [busy, setBusy] = useState(false);
+  const [form, setForm] = useState(initialForm || null), [busy, setBusy] = useState(false);
   const [reportActive, setReportActive] = useState(false);
   const pending = useRef(false), alive = useRef(true);
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
-  useUnsavedChange(`travel-${projectId}-${id}`, !!form);
+  useUnsavedChange(`travel-${projectId}-${id}`, busy || draftIsDirty(form));
   const reviewHistory = useTravelRead(authFetch, form?.reviewRequired ? `${endpoint}/history?page=0&size=20` : null, refresh);
   const kind = form?.action?.endsWith("-remove") ? form.action.split("-")[0] : null;
   const removalPage = useTravelRead(authFetch, kind ? `${endpoint}/${kind}?includeRemoved=${form.link.includeRemoved}&page=${form.link.page}&size=20` : null, refresh);
@@ -31,6 +33,7 @@ function TravelDetail({ id, base, projectId, authFetch, refresh, reload, onClose
   const permitted = !!record && (kind ? removalPage.data?.content.some(link => link.id === form.link.id && link.permissions?.canRemove) : record.permissions?.[commands[form?.action]?.[1]]);
   const blocked = !record || detail.loading || removalPage.loading || !permitted || (form?.reviewRequired && (reviewHistory.loading || !reviewHistory.data));
   const locked = busy || !!form || detail.loading || reportActive;
+  useAutomaticRefresh(reload, locked);
   function open(action, link) {
     const draft = action === "edit" ? { ...tripDraft(record), reason: "" } : { reason: "", note: "", actionPurpose: "PREPARATION" };
     setForm({ action, link, draft, record, expectedRevision: record.revision });
@@ -40,8 +43,8 @@ function TravelDetail({ id, base, projectId, authFetch, refresh, reload, onClose
     pending.current = true; setBusy(true);
     const path = form.action === "edit" ? "" : kind ? `/${kind}/${form.link.id}/remove` : `/${form.action}`;
     try {
-      await authFetch(`${endpoint}${path}`, { method: form.action === "edit" ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...body, expectedRevision: form.expectedRevision }) }).then(readTravel);
-      if (alive.current) setForm(null);
+      const result = await authFetch(`${endpoint}${path}`, { method: form.action === "edit" ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...body, expectedRevision: form.expectedRevision }) }).then(readTravel);
+      if (alive.current) setForm(form.action === "edit" ? savedDraft(form, result) : null);
     } catch (error) { if (alive.current) setForm(f => ({ ...f, error: error.message, reviewRequired: true })); }
     finally { pending.current = false; if (alive.current) { setBusy(false); reload(); } }
   }
@@ -54,7 +57,7 @@ function TravelDetail({ id, base, projectId, authFetch, refresh, reload, onClose
   })}</div>;
   const editor = form && <><TravelEditor key={form.action} form={form} setForm={setForm} projectId={projectId} authFetch={authFetch} refresh={refresh} busy={busy} blocked={blocked} onSave={save} onCancel={() => setForm(null)} onReview={() => setForm(f => ({ ...f, record, expectedRevision: record.revision, reviewRequired: false, error: "", draft: f.action === "actions" ? { ...f.draft, followUp: null } : f.draft }))} /><ReadState state={reviewHistory} /><ReadState state={removalPage} /></>;
   return <section className={styles.panel} aria-label="Travel request details">
-    <div className={styles.actions}><button disabled={busy} onClick={reload}>Refresh request, links and history</button><button disabled={!!form || busy || reportActive} onClick={onClose}>Close request</button></div><ReadState state={detail} />
+    <div className={styles.actions}><button disabled={!!form || busy || reportActive} onClick={onClose}>Close request</button></div><ReadState state={detail} />
     {record && <><h3>{record.purpose} · Travel request #{record.id}</h3>
       <TravelSummary record={record} />
       <TravelSteps record={record} editingStep={formStep} plan={<>
@@ -85,26 +88,25 @@ export function TravelRegister({ projectId, authFetch, initialRequestId = null }
   const [refresh, setRefresh] = useState(0), [selected, setSelected] = useState(initialRequestId), [form, setForm] = useState(null), [busy, setBusy] = useState(false);
   const pending = useRef(false), alive = useRef(true);
   const reload = () => setRefresh(n => n + 1);
-  useEffect(() => {
-    alive.current = true;
-    const update = () => { if (document.visibilityState !== "hidden") setRefresh(n => n + 1); };
-    window.addEventListener("focus", update); document.addEventListener("visibilitychange", update);
-    return () => { alive.current = false; window.removeEventListener("focus", update); document.removeEventListener("visibilitychange", update); };
-  }, []);
+  useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   const query = new URLSearchParams({ ...Object.fromEntries(Object.entries(filters).filter(([, value]) => value !== "")), page, size: 20 });
   const list = useTravelRead(authFetch, `${base}?${query}`, refresh);
-  useUnsavedChange(`new-travel-${projectId}`, !!form);
+  useAutomaticRefresh(reload, !!form || busy || !!selected || list.loading);
+  const [initialEditor, setInitialEditor] = useState(null);
+  useUnsavedChange(`new-travel-${projectId}`, busy || draftIsDirty(form));
   const change = (key, value) => { setFilters(f => ({ ...f, [key]: value })); setPage(0); };
   async function create(body) {
     if (pending.current || form.reviewRequired || list.loading || !list.data?.canCreate) return;
     pending.current = true; setBusy(true);
     try {
       const record = await authFetch(base, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then(readTravel);
-      if (alive.current) { setForm(null); setSelected(record.id); setFilters(initialFilters); setPage(0); }
+      if (!record.id) throw new Error("The save response was incomplete. Review the refreshed list before retrying.");
+      const editor = savedDraft(form, record);
+      if (alive.current) { setInitialEditor(editor); setForm(null); setSelected(record.id); setFilters(initialFilters); setPage(0); }
     } catch (error) { if (alive.current) setForm(f => ({ ...f, error: error.message, reviewRequired: true })); }
     finally { pending.current = false; if (alive.current) { setBusy(false); reload(); } }
   }
-  return <><div className={styles.actions}><button disabled={busy} onClick={reload}>Refresh travel requests</button>{list.data?.canCreate && <button disabled={!!form || !!selected || busy} onClick={() => setForm({ action: "create", draft: { ...tripDraft(), departureDate: list.data.today, returnDate: list.data.today } })}>Create travel request</button>}</div>
+  return <><div className={styles.actions}>{list.data?.canCreate && <button disabled={!!form || !!selected || busy} onClick={() => setForm({ action: "create", draft: { ...tripDraft(), departureDate: list.data.today, returnDate: list.data.today } })}>Create travel request</button>}</div>
     <div className={styles.filters}><label>Travel state<SearchableSelect value={filters.state} onChange={e => change("state", e.target.value)}>{["ALL", "DRAFT", "SUBMITTED", "RETURNED", "APPROVED", "CANCELLED"].map(state => <option value={state} key={state}>{state === "ALL" ? "All states" : state.charAt(0) + state.slice(1).toLowerCase()}</option>)}</SearchableSelect></label>
       <label>Traveller employee ID<input type="number" min="1" step="1" value={filters.travellerEmployeeId} onChange={e => change("travellerEmployeeId", e.target.value)} /></label>
       <label>Departure from<input type="date" value={filters.departureFrom} onChange={e => change("departureFrom", e.target.value)} /></label><label>Departure through<input type="date" value={filters.departureTo} onChange={e => change("departureTo", e.target.value)} /></label>
@@ -113,7 +115,7 @@ export function TravelRegister({ projectId, authFetch, initialRequestId = null }
     <ul className={styles.list}>{list.data?.content.map(record => <li key={record.id}><div className={styles.heading}><h3>{record.purpose}</h3><button disabled={!!form || busy || (selected != null && selected !== record.id)} onClick={() => setSelected(record.id)}>Open request #{record.id}</button></div><TravelSummary record={record} /></li>)}</ul>
     {list.data && !list.data.content.length && <p>No travel requests match these filters.</p>}<Pagination data={list.data} page={page} setPage={setPage} label="travel requests" disabled={list.loading || busy} />
     {form && <TravelEditor form={form} setForm={setForm} projectId={projectId} authFetch={authFetch} refresh={refresh} busy={busy} blocked={list.loading || !list.data?.canCreate} onSave={create} onCancel={() => setForm(null)} onReview={() => setForm(f => ({ ...f, error: "", reviewRequired: false }))} />}
-    {selected && <TravelDetail key={selected} id={selected} base={base} projectId={projectId} authFetch={authFetch} refresh={refresh} reload={reload} onClose={() => setSelected(null)} />}
+    {selected && <TravelDetail key={selected} id={selected} initialForm={initialEditor} base={base} projectId={projectId} authFetch={authFetch} refresh={refresh} reload={reload} onClose={() => { setSelected(null); setInitialEditor(null); }} />}
   </>;
 }
 export default function Travel() {

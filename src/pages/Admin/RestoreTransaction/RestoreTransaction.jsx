@@ -1,3 +1,4 @@
+import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import { fundingCurrencyLabel } from "../../../utils/transactionFunding";
@@ -298,6 +299,7 @@ const RestoreTransaction = () => {
     }
   };
 
+  useAutomaticRefresh(loadDeletedTransactions, Boolean(loading) || Boolean(restoring) || Boolean(selectedTransactionId));
   return (
     <div className={styles.restoreContainer}>
       <div className={styles.formContainer}>
@@ -492,14 +494,14 @@ const RestoreTransaction = () => {
             </div>
 
             <div className={styles.bottomActions}>
-              <button
+              {formError && <button
                 type="button"
                 onClick={loadDeletedTransactions}
                 className={styles.secondaryButton}
                 disabled={loading || restoring}
               >
-                <FiRefreshCw /> Refresh list
-              </button>
+                <FiRefreshCw /> Retry loading
+              </button>}
 
               <button
                 type="button"

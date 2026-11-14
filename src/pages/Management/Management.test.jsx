@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { ManagementRegister } from "./Management";
 import { DecisionSummary } from "./ManagementViews";
@@ -27,7 +27,11 @@ beforeEach(() => {
 });
 const mount = () => render(<MemoryRouter><ManagementRegister projectId={7} authFetch={fetcher} /></MemoryRouter>);
 async function open() { mount(); fireEvent.click(await screen.findByText("Open record #51")); await screen.findByText("Edit observation"); }
-async function save(label) { const button = screen.getByText(`Save ${label.toLowerCase()}`); await waitFor(() => expect(button).toBeEnabled()); fireEvent.click(button); }
+async function save(label) {
+  const button = screen.queryByRole("button", { name: `Save ${label.toLowerCase()}` });
+  if (button) { await waitFor(() => expect(button).toBeEnabled()); fireEvent.click(button); }
+  else await act(async () => { await new Promise(resolve => setTimeout(resolve, 1100)); });
+}
 test("keeps resolution, outstanding acceptance and live review flags distinct", () => {
   render(<DecisionSummary record={{ ...record, state: "RESOLVED", resolvedWithOutstandingActions: true, resolutionReviewRequired: true, linkedActionSummary: { total: 3, completed: 1, open: 1, unavailable: 1 } }} />);
   expect(screen.getByText("Management resolution: Recorded")).toBeInTheDocument(); expect(screen.getByText("Resolved with outstanding actions.")).toBeInTheDocument(); expect(screen.getByText(/Review required after linked task changes/)).toBeInTheDocument(); expect(screen.getByText(/1 completed · 1 open · 1 unavailable/)).toBeInTheDocument();
@@ -41,6 +45,30 @@ test("creates a lesson without inventing a response or task", async () => {
   await save("Create finding or lesson"); await waitFor(() => expect(writes()).toHaveLength(1));
   expect(JSON.parse(writes()[0][1].body)).toEqual({ type: "LESSON", title: "Translation helped", observation: "Use local languages", sourceType: "OPERATIONAL_EXPERIENCE", sourceReference: null, observedDate: "2026-09-30" });
 });
+test("autosaved creation stays editable and the next save updates the confirmed record", async () => {
+  writeHandler = (url, options) => {
+    const body = JSON.parse(options.body);
+    record = { ...record, ...body, revision: options.method === "POST" ? 0 : record.revision + 1 };
+    return response(record);
+  };
+  mount();
+  fireEvent.click(await screen.findByText("Create finding or lesson"));
+  fireEvent.change(screen.getByLabelText("Title"), { target: { value: "New observation" } });
+  fireEvent.change(screen.getByLabelText("Observation"), { target: { value: "Initial details" } });
+  fireEvent.change(screen.getByLabelText("Source type"), { target: { value: "OPERATIONAL_EXPERIENCE" } });
+  await save("Create finding or lesson");
+  await screen.findByText("Changes saved.");
+  await waitFor(() => expect(screen.getByLabelText("Observation")).toBeEnabled());
+  fireEvent.change(screen.getByLabelText("Observation"), { target: { value: "More complete details" } });
+  fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "Added context" } });
+  await save("Edit observation");
+  await waitFor(() => expect(writes()).toHaveLength(2));
+  expect(writes()[0][1].method).toBe("POST");
+  expect(writes()[1][0]).toMatch(/management-records\/51$/);
+  expect(writes()[1][1].method).toBe("PUT");
+  expect(JSON.parse(writes()[1][1].body)).toMatchObject({ expectedRevision: 0, observation: "More complete details" });
+});
+
 test("lesson resolution uses an empty manifest and no fabricated response", async () => {
   record.type = "LESSON"; record.permissions.canResolve = true; await open(); expect(screen.getByText("Response not recorded (optional for lesson).")).toBeInTheDocument();
   fireEvent.click(screen.getByText("Record management resolution")); fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "Learning documented" } }); await save("Record management resolution"); await waitFor(() => expect(writes()).toHaveLength(1));
@@ -101,7 +129,7 @@ test.each([["delete", "Delete record"], ["restore", "Restore record"], ["reopen"
 });
 test("uncertain creation preserves draft and blocks automatic replay", async () => {
   writeHandler = () => { throw new Error("Connection lost"); }; mount(); fireEvent.click(await screen.findByText("Create finding or lesson")); fireEvent.change(screen.getByLabelText("Title"), { target: { value: "Possibly created" } }); fireEvent.change(screen.getByLabelText("Observation"), { target: { value: "Finding" } }); fireEvent.change(screen.getByLabelText("Source type"), { target: { value: "REVIEW" } }); await save("Create finding or lesson"); await screen.findByText("Connection lost");
-  expect(screen.getByLabelText("Title")).toHaveValue("Possibly created"); expect(screen.getByText("Save create finding or lesson")).toBeDisabled(); expect(screen.getByText(/avoid duplicates/)).toBeInTheDocument(); expect(writes()).toHaveLength(1);
+  expect(screen.getByLabelText("Title")).toHaveValue("Possibly created"); expect(screen.queryByText("Save create finding or lesson")).not.toBeInTheDocument(); expect(screen.getByText(/avoid duplicates/)).toBeInTheDocument(); expect(writes()).toHaveLength(1);
 });
 test("association pagination and removed episodes remain accessible", async () => {
   const normal = fetcher.getMockImplementation(); fetcher.mockImplementation((url, options) => url.includes("/evidence?") ? Promise.resolve(response({ ...page([{ ...evidenceLinks[0], id: url.includes("page=1") ? 30 : 18, capturedName: url.includes("page=1") ? "Retained old version" : "First version", associationActive: false, permissions: {} }]), totalPages: 2, totalElements: 21 })) : normal(url, options));

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { safeReadJson } from "../../utils/http";
 
 export async function readManagement(response) {
@@ -12,6 +12,8 @@ export async function readManagement(response) {
   return data;
 }
 export function useManagementRead(authFetch, url, refresh) {
+  const [attempt, setAttempt] = useState(0);
+  const retry = useCallback(() => setAttempt(n => n + 1), []);
   const [state, setState] = useState({ url: null, data: null, loading: false, error: "" });
   useEffect(() => {
     if (!url) { setState({ url, data: null, loading: false, error: "" }); return undefined; }
@@ -21,8 +23,8 @@ export function useManagementRead(authFetch, url, refresh) {
       .then(data => { if (!controller.signal.aborted) setState({ url, data, loading: false, error: "" }); })
       .catch(error => { if (!controller.signal.aborted) setState({ url, data: null, loading: false, error: error.message }); });
     return () => controller.abort();
-  }, [authFetch, url, refresh]);
-  return state.url === url ? state : { data: null, loading: !!url, error: "" };
+  }, [authFetch, url, refresh, attempt]);
+  return { ...(state.url === url ? state : { data: null, loading: !!url, error: "" }), retry };
 }
 export const label = value => String(value || "").replaceAll("_", " ").toLowerCase();
 export const blankObservation = () => ({ type: "FINDING", title: "", observation: "", sourceType: "", sourceReference: "", observedDate: "" });

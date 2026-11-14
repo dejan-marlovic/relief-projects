@@ -1,5 +1,5 @@
 import ScrollToForm from "../../components/ScrollToForm/ScrollToForm";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { EvidencePicker, TaskPicker } from "../Management/ManagementViews";
 import { ApprovalBasisPicker, ReportDecisions } from "./TravelReportViews";
 import TravelActionIcon, { approvalStyle } from "./TravelActionIcon";
@@ -9,10 +9,16 @@ import styles from "./Travel.module.scss";
 export default function TravelReportEditor({ form, setForm, endpoint, projectId, authFetch, refresh, today, busy, blocked, reviewRequired, reviewBlocked, onReview, onSave, onCancel }) {
   const [error, setError] = useState("");
   const { action, draft, record } = form;
+  const initial = useRef({ action, draft: JSON.stringify(draft) });
+  if (initial.current.action !== action) initial.current = { action, draft: JSON.stringify(draft) };
+  const close = () => {
+    const dirty = JSON.stringify(draft) !== (form.savedDraft ?? initial.current.draft);
+    if (!dirty || window.confirm("Discard unfinished changes? Previously saved changes will remain.")) onCancel();
+  };
   const update = (key, value) => setForm(f => ({ ...f, draft: { ...f.draft, [key]: value } }));
   const text = (key, title, required = false) => <label>{title}<textarea rows={3} required={required} value={draft[key] || ""} onChange={e => update(key, e.target.value)} /></label>;
   const styleAction = action === "accept" ? "approve" : action === "reopen" ? "return" : action;
-  return <ScrollToForm scrollKey={action} aria-label={reportTitles[action]} className={styles.panel} onSubmit={e => {
+  return <ScrollToForm autosave={["create", "edit"].includes(action) ? { value: JSON.stringify(draft), saved: form.savedDraft, blocked: busy || blocked || reviewRequired, busy, paused: reviewRequired } : undefined} scrollKey={action} aria-label={reportTitles[action]} className={styles.panel} onSubmit={e => {
     e.preventDefault(); if (busy || blocked || reviewRequired) return;
     setError(""); try { onSave(reportPayload(form)); } catch (err) { setError(err.message); }
   }}>
@@ -42,7 +48,7 @@ export default function TravelReportEditor({ form, setForm, endpoint, projectId,
       {error && <p role="alert">{error}</p>}{form.error && <p role="alert">{form.error}</p>}
       {reviewRequired && <div role="alert"><p>Draft retained. Review the refreshed report, travel request, links and report history. Check whether the intended change already succeeded before enabling an explicit retry. Nothing is retried automatically.</p><button type="button" disabled={reviewBlocked} onClick={onReview}>I reviewed report and travel state; use current revisions</button></div>}
       <p className={styles.muted}>Selected travel revision: {form.expectedTravelRevision}{form.expectedRevision != null ? ` · Report revision: ${form.expectedRevision}` : " · New report"}. Refreshing retains this draft and its original revisions until you explicitly review.</p>
-      <div className={styles.actions}><button type="submit" disabled={busy || blocked || reviewRequired} className={approvalStyle(styleAction, styles)}><TravelActionIcon action={styleAction} />Save {reportTitles[action].toLowerCase()}</button><button type="button" onClick={onCancel}>Cancel report draft</button></div>
+      <div className={styles.actions}>{!["create", "edit"].includes(action) && <button type="submit" disabled={busy || blocked || reviewRequired} className={approvalStyle(styleAction, styles)}><TravelActionIcon action={styleAction} />Save {reportTitles[action].toLowerCase()}</button>}<button type="button" onClick={close}>Cancel report draft</button></div>
     </fieldset>
   </ScrollToForm>;
 }

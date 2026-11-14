@@ -1,5 +1,5 @@
 import ScrollToForm from "../../components/ScrollToForm/ScrollToForm";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { DecisionSummary, EvidencePicker, TaskPicker } from "./ManagementViews";
 import { observationPayload } from "./managementApi";
 import styles from "./Management.module.scss";
@@ -8,11 +8,17 @@ export const titles = { create: "Create finding or lesson", edit: "Edit observat
 export default function ManagementEditor({ form, setForm, projectId, authFetch, refresh, busy, blocked, onSave, onCancel, onReview, today }) {
   const [error, setError] = useState("");
   const { action, draft, record } = form;
+  const initial = useRef({ action, draft: JSON.stringify(draft) });
+  if (initial.current.action !== action) initial.current = { action, draft: JSON.stringify(draft) };
+  const close = () => {
+    const dirty = JSON.stringify(draft) !== (form.savedDraft ?? initial.current.draft);
+    if (!dirty || window.confirm("Discard unfinished changes? Previously saved changes will remain.")) onCancel();
+  };
   const update = (name, value) => setForm(f => ({ ...f, draft: { ...f.draft, [name]: value } }));
   const requiredReason = ["edit", "resolve", "reopen", "delete", "restore", "actions-remove", "evidence-remove"].includes(action) || (action === "response" && !!record.response);
   const dateInput = (key, name, min = "1000-01-01") => <label>{name}<input type="date" required min={min} max={today || "9999-12-31"} value={draft[key] || ""} onChange={e => update(key, e.target.value)} /></label>;
   const textArea = (key, name, required = true) => <label>{name}<textarea rows={3} required={required} value={draft[key] || ""} onChange={e => update(key, e.target.value)} /></label>;
-  return <ScrollToForm scrollKey={action} className={styles.panel} aria-label={titles[action]} onSubmit={e => {
+  return <ScrollToForm autosave={["create", "edit"].includes(action) ? { value: JSON.stringify(draft), saved: form.savedDraft, blocked: busy || blocked || form.reviewRequired, busy, paused: form.reviewRequired } : undefined} scrollKey={action} className={styles.panel} aria-label={titles[action]} onSubmit={e => {
     e.preventDefault(); if (busy || blocked || form.reviewRequired) return;
     setError("");
     if (requiredReason && (!draft.reason?.trim() || [...draft.reason.trim()].length > 1000)) { setError("Enter a reason of 1–1,000 characters."); return; }
@@ -65,7 +71,7 @@ export default function ManagementEditor({ form, setForm, projectId, authFetch, 
       {requiredReason && textArea("reason", "Reason")}
       {error && <p role="alert">{error}</p>}{form.error && <p role="alert">{form.error}</p>}
       {form.reviewRequired && <div role="alert"><p>Draft retained. Review the refreshed record, links and history before trying again. A failed response may follow a successful save.{action === "create" ? " Check the list before creating again to avoid duplicates." : ""}</p><button type="button" disabled={blocked} onClick={onReview}>I reviewed the refreshed state; enable retry</button></div>}
-      <div className={styles.actions}><button type="submit" disabled={busy || blocked || form.reviewRequired}>Save {titles[action].toLowerCase()}</button><button type="button" onClick={onCancel}>Cancel</button></div>
+      <div className={styles.actions}>{!["create", "edit"].includes(action) && <button type="submit" disabled={busy || blocked || form.reviewRequired}>Save {titles[action].toLowerCase()}</button>}<button type="button" onClick={close}>Close editor</button></div>
     </fieldset>
   </ScrollToForm>;
 }

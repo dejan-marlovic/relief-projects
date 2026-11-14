@@ -1,3 +1,4 @@
+import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import ScrollToForm from "../ScrollToForm/ScrollToForm";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -135,10 +136,11 @@ export function RecipientReturnsPanel({ payment, refreshKey, editingLocked, onCh
     </article>;
   }
   const financial = ["create", "correct"].includes(kind), evidence = ["create", "correct", "add"].includes(kind);
+  useAutomaticRefresh(refresh, loading || busy || !!form || !!pending || !!related || !!downloading);
   return <div className={styles.panel}>
     <p>Original payment #{payment.id} · Recipient #{payment.recipientId ?? "Unknown"} · {payment.organization?.name || "Organisation unavailable"} · Paid {payment.paidDate} · {paymentCurrency(payment.currency)}</p>
     <p className={styles.hint}>Record principal actually received back from this payment’s recipient. This keeps the original payment recorded and does not execute a transfer or increase spending capacity. Voiding is only for erroneous entries.</p>
-    <button disabled={busy || loading} onClick={refresh}>Refresh returns</button>
+    {(loadError || error || documentError || !!pending) && <button disabled={busy || loading} onClick={refresh}>Retry returns</button>}
     {loading && <p role="status">Loading returns…</p>}{loadError && <p role="alert">{loadError}</p>}{error && <p role="alert">{error} Your input is retained.</p>}
     {pending && <div role="alert"><p>A return command needs confirmation. Retry sends the identical request ID and body; do not enter the movement again.</p><button disabled={busy} onClick={() => send(pending)}>Retry same return request</button></div>}
     {data && <><RecipientReturnSummary summary={data.summary} /><p>Original amount not yet recorded as returned: <strong>{paymentMoney(data.remainingReturnable)} {paymentCurrency(payment.currency)}</strong>. This is a recording limit, not available spending.</p>{summaryIssues(data.eligibility).filter(issue => issue.code !== "SELECT_RETURN").map(issue => <p key={issue.code}>{issue.message}</p>)}</>}

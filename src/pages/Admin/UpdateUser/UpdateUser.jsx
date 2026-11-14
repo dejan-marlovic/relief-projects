@@ -1,3 +1,4 @@
+import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
@@ -262,6 +263,7 @@ const UpdateUser = () => {
     [fieldErrors],
   );
 
+  useAutomaticRefresh(loadUsers, Boolean(loading) || Boolean(saving));
   return (
     <div className={styles.updateContainer}>
       <div className={styles.formContainer}>
@@ -405,14 +407,14 @@ const UpdateUser = () => {
             </div>
 
             <div className={styles.bottomActions}>
-              <button
+              {formError && <button
                 type="button"
                 onClick={loadUsers}
                 className={styles.secondaryButton}
                 disabled={loading || saving}
               >
-                <FiRefreshCw /> Refresh list
-              </button>
+                <FiRefreshCw /> Retry loading
+              </button>}
 
               <button
                 type="button"

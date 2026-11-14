@@ -440,7 +440,7 @@ $secondary-color: colors.$danger;
 
     .headerBar {
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(200px, 1fr) auto auto;
-      grid-template-areas: "title context selectorLabel . ." "title context controls logo logout" ". . extras . .";
+      grid-template-areas: "title context controls logo logout";
       align-items: center;
       padding: 1rem 1.15rem;
       gap: 0.25rem 1rem;
@@ -450,7 +450,7 @@ $secondary-color: colors.$danger;
     .headerTitle { font-size: 1.5rem; }
     .headerSubtitle { font-size: 0.8rem; margin-bottom: 0; }
     .projectContextNote { padding: 0.65rem 0.8rem; font-size: 0.75rem; line-height: 1.5; }
-    .selectorInline { display: contents; }
+    .selectorInline { display: flex; grid-area: controls; align-self: center; min-width: 0; }
     .selectorInline .selectorLabel { grid-area: selectorLabel; }
     .selectInput { min-height: 44px; padding: 0.5rem; }
     .logoWrap { align-self: center; padding: 0.25rem; box-sizing: border-box; height: 88px; margin-top: 0; }
@@ -495,7 +495,7 @@ $secondary-color: colors.$danger;
   .layoutShell {
     .headerBar {
       grid-template-columns: minmax(0, 1fr) minmax(200px, 1fr) auto auto;
-      grid-template-areas: "title selectorLabel . ." "title controls logo logout" ". extras . ." "context context context context";
+      grid-template-areas: "title controls logo logout" "context context context context";
     }
     .projectContextNote {
       max-width: none;
@@ -548,7 +548,31 @@ $secondary-color: colors.$danger;
   }
 }
 
-.pageActions { display: flex; justify-content: space-between; gap: 8px; margin-top: 8px; button { min-height: 44px; flex: 1; font-size: .8rem; } }
+.pageActions {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+
+  button {
+    flex: 1;
+    min-width: 0;
+    min-height: 44px;
+    padding: 8px 10px;
+    border: 1px solid colors.$primary-border;
+    border-radius: 8px;
+    background: colors.$surface;
+    color: colors.$primary;
+    font: inherit;
+    font-size: .8rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover:not(:disabled) { background: colors.$primary-soft; border-color: colors.$primary-border-strong; }
+    &:focus-visible { outline: 2px solid colors.$primary; outline-offset: 2px; }
+    &:disabled { opacity: .45; cursor: default; }
+  }
+}
 @media (max-width: 700px) {
   .content { padding-bottom: calc(90px + env(safe-area-inset-bottom)); }
   .content [data-mobile-tile] { scroll-margin-top: 16px; }

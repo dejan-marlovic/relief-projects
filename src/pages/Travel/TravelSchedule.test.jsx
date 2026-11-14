@@ -68,7 +68,7 @@ test("errors are not rendered as empty results and refresh recovers", async () =
   reply = () => response({ message: "Schedule temporarily unavailable" }, 503); mount();
   expect(await screen.findByRole("alert")).toHaveTextContent("Schedule temporarily unavailable");
   expect(screen.queryByText("No matching planned travel in this window")).not.toBeInTheDocument();
-  reply = () => response(envelope([])); fireEvent.click(screen.getByText("Refresh schedule"));
+  reply = () => response(envelope([])); fireEvent.click(screen.getByText("Retry"));
   await screen.findByText("No matching planned travel in this window");
 });
 test("out-of-range pages retain totals and offer return to first page", async () => {

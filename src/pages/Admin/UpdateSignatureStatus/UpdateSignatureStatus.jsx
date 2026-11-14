@@ -1,3 +1,4 @@
+import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
@@ -180,6 +181,7 @@ const UpdateSignatureStatus = () => {
     }
   };
 
+  useAutomaticRefresh(loadItems, Boolean(loading) || Boolean(saving) || Boolean(form.selectedId));
   return (
     <div className={styles.updateContainer}>
       <div className={styles.formContainer}>
@@ -258,14 +260,14 @@ const UpdateSignatureStatus = () => {
             </div>
 
             <div className={styles.bottomActions}>
-              <button
+              {formError && <button
                 type="button"
                 onClick={loadItems}
                 className={styles.secondaryButton}
                 disabled={loading || saving}
               >
-                <FiRefreshCw /> Refresh list
-              </button>
+                <FiRefreshCw /> Retry loading
+              </button>}
               <button
                 type="button"
                 onClick={resetForm}

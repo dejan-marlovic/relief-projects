@@ -1,3 +1,4 @@
+import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useState } from "react";
@@ -155,6 +156,7 @@ const DeleteProjectStatus = () => {
 
   const inputClass = `${styles.textInput} ${formError && !selectedProjectStatusId ? styles.inputError : ""}`;
 
+  useAutomaticRefresh(loadProjectStatuses, Boolean(loading) || Boolean(deleting) || Boolean(selectedProjectStatusId));
   return (
     <div className={styles.deleteContainer}>
       <div className={styles.formContainer}>
@@ -263,14 +265,14 @@ const DeleteProjectStatus = () => {
             </div>
 
             <div className={styles.bottomActions}>
-              <button
+              {formError && <button
                 type="button"
                 onClick={loadProjectStatuses}
                 className={styles.secondaryButton}
                 disabled={loading || deleting}
               >
-                <FiRefreshCw /> Refresh list
-              </button>
+                <FiRefreshCw /> Retry loading
+              </button>}
 
               <button
                 type="button"

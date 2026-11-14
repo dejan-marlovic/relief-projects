@@ -64,10 +64,10 @@ test("stale response preserves draft and requires explicit review before using f
   rejectWrite = true; await open(); fireEvent.click(screen.getByText("Edit indicator"));
   expect(screen.getByLabelText("Definition and population")).toBeDisabled();
   fireEvent.change(screen.getByLabelText("Target value"), { target: { value: "600" } }); fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "New target" } });
-  await waitFor(() => expect(screen.getByText("Save edit indicator")).toBeEnabled()); fireEvent.click(screen.getByText("Save edit indicator"));
-  await screen.findByText("Changed by another user"); expect(screen.getByLabelText("Target value")).toHaveValue("600"); expect(screen.getByText("Save edit indicator")).toBeDisabled(); expect(writes()).toHaveLength(1);
+
+  await screen.findByText("Changed by another user", {}, { timeout: 2500 }); expect(screen.getByLabelText("Target value")).toHaveValue("600"); expect(screen.queryByText("Save edit indicator")).not.toBeInTheDocument(); expect(writes()).toHaveLength(1);
   const review = screen.getByText("I reviewed the refreshed records; enable retry"); await waitFor(() => expect(review).toBeEnabled()); fireEvent.click(review); rejectWrite = false;
-  fireEvent.click(screen.getByText("Save edit indicator")); await waitFor(() => expect(writes()).toHaveLength(2)); expect(JSON.parse(writes()[1][1].body).expectedRevision).toBe(4);
+  await waitFor(() => expect(writes()).toHaveLength(2), { timeout: 2500 }); expect(JSON.parse(writes()[1][1].body).expectedRevision).toBe(4);
 });
 test("voided date reuse sends explicit predecessor and new reporting date", async () => {
   reports[0] = { ...reports[0], state: "VOIDED", permissions: {} }; await open(); fireEvent.click(screen.getByText("Report again for this date"));
@@ -93,7 +93,7 @@ test("new indicator keeps unknown baseline and exact target without server-owned
   fireEvent.change(screen.getByLabelText("Reporting starts"), { target: { value: "2026-01-01" } });
   fireEvent.change(screen.getByLabelText("Reporting ends (inclusive)"), { target: { value: "2026-12-31" } });
   fireEvent.change(screen.getByLabelText("Target value"), { target: { value: "9007199254740993" } });
-  fireEvent.click(screen.getByText("Save create indicator")); await waitFor(() => expect(writes()).toHaveLength(1));
+  await waitFor(() => expect(writes()).toHaveLength(1), { timeout: 2500 });
   expect(JSON.parse(writes()[0][1].body)).toEqual({ name: "New measure", definition: "Distinct people", measurementType: "COUNT", unit: "people", direction: "HIGHER_IS_BETTER", periodStart: "2026-01-01", periodEnd: "2026-12-31", baselineKnown: false, baselineValue: null, baselineDate: null, targetValue: "9007199254740993", notes: null });
 });
 test("occupied date exposes existing entry without automatically correcting it", async () => {
@@ -104,7 +104,49 @@ test("occupied date exposes existing entry without automatically correcting it",
 });
 test("permission loss after conflict blocks explicit retry", async () => {
   const normal = fetcher.getMockImplementation(); fetcher.mockImplementation((url, options) => { if (options?.method === "PUT") { indicator.permissions = {}; return Promise.resolve(response({ message: "Access changed" }, 403)); } return normal(url, options); });
-  await open(); fireEvent.click(screen.getByText("Edit indicator")); fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "Reviewed" } });
-  await waitFor(() => expect(screen.getByText("Save edit indicator")).toBeEnabled()); fireEvent.click(screen.getByText("Save edit indicator")); await screen.findByText("Access changed");
-  expect(screen.getByText("I reviewed the refreshed records; enable retry")).toBeDisabled(); expect(screen.getByText("Save edit indicator")).toBeDisabled(); expect(screen.getByText("Cancel")).toBeEnabled();
+  await open(); fireEvent.click(screen.getByText("Edit indicator")); fireEvent.change(screen.getByLabelText("Target value"), { target: { value: "600" } }); fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "Reviewed" } });
+   await screen.findByText("Access changed", {}, { timeout: 2500 });
+  expect(screen.getByText("I reviewed the refreshed records; enable retry")).toBeDisabled(); expect(screen.queryByText("Save edit indicator")).not.toBeInTheDocument(); expect(screen.getByText("Discard unfinished entries")).toBeEnabled();
+});
+
+test("opening an indicator does not save; edits wait for a reason and remain open after saving", async () => {
+  await open(); fireEvent.click(screen.getByText("Edit indicator"));
+  expect(screen.getByText("All changes saved.")).toBeInTheDocument();
+  expect(screen.queryByText("Refresh results")).not.toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText("Target value"), { target: { value: "600" } });
+  await new Promise(resolve => setTimeout(resolve, 1100)); expect(writes()).toHaveLength(0);
+  fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "Revised plan" } });
+  await waitFor(() => expect(writes()).toHaveLength(1), { timeout: 2500 });
+  await screen.findByText("All changes saved.");
+  expect(screen.getByLabelText("Target value")).toHaveValue("600");
+  expect(screen.getByLabelText("Reason")).toHaveValue("");
+  expect(screen.getByText("Close editor")).toBeEnabled();
+});
+test("new indicator switches to updating the saved ID instead of creating again", async () => {
+  const normal = fetcher.getMockImplementation();
+  fetcher.mockImplementation((url, options) => {
+    if (["POST", "PUT"].includes(options?.method)) {
+      indicator = { ...indicator, ...JSON.parse(options.body), revision: indicator.revision + 1, measurementBasisFrozen: false };
+      return Promise.resolve(response(indicator));
+    }
+    return normal(url, options);
+  });
+  mount(); fireEvent.click(await screen.findByText("Create indicator"));
+  for (const [label, value] of [["Indicator name", "New measure"], ["Definition and population", "Distinct people"], ["Unit", "people"], ["Reporting starts", "2026-01-01"], ["Reporting ends (inclusive)", "2026-12-31"], ["Target value", "100"]]) fireEvent.change(screen.getByLabelText(label), { target: { value } });
+  await screen.findByText("All changes saved.", {}, { timeout: 2500 });
+  fireEvent.change(screen.getByLabelText("Notes (optional)"), { target: { value: "Additional detail" } });
+  fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "Clarification" } });
+  await waitFor(() => expect(writes()).toHaveLength(2), { timeout: 2500 });
+  expect(writes()[0][1].method).toBe("POST");
+  expect(writes()[1][1].method).toBe("PUT");
+  expect(writes()[1][0]).toMatch(/indicators\/41$/);
+  expect(JSON.parse(writes()[1][1].body).expectedRevision).toBe(4);
+});
+
+test("a failed read offers retry without a permanent refresh button", async () => {
+  fetcher.mockResolvedValueOnce(response({ message: "Temporarily unavailable" }, 503));
+  mount(); fireEvent.click(await screen.findByText("Retry"));
+  await screen.findByText("Open indicator #41");
+  expect(screen.queryByText("Refresh results")).not.toBeInTheDocument();
+  expect(writes()).toHaveLength(0);
 });

@@ -1,3 +1,4 @@
+import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import useArchivedProject from "../../hooks/useArchivedProject";
 import useTransientMessage from "../../hooks/useTransientMessage";
 import { appFetch as fetch } from "../../utils/appFetch";
@@ -45,10 +46,11 @@ export default function BudgetPlanning({ budget, refreshKey = 0, disabled = fals
     } catch (err) { if (alive.current) setError(err.message); }
     finally { pending.current = false; if (alive.current) setBusy(false); }
   };
+  useAutomaticRefresh(() => setRefresh(v => v + 1), loading || busy || disabled || confirmed || String(amount) !== String(summary?.budgetLimit ?? ""));
   return <section className={styles.panel} aria-label="Budget planning">
     <h3>Budget planning</h3>
     <p className={styles.muted}>Remaining to allocate is room for planned costs, not cash or a payment balance.</p>
-    <button type="button" disabled={busy || loading} onClick={() => setRefresh((v) => v + 1)}>Refresh planning summary</button>
+    {(error) && <button type="button" disabled={busy || loading} onClick={() => setRefresh((v) => v + 1)}>Retry planning summary</button>}
     {loading && <p role="status">Loading planning summary…</p>}{error && <p role="alert">{error}</p>}{message && <p role="status">{message}</p>}
     {summary && <>
       <p><strong>{labels[summary.status] || summary.status}</strong></p>

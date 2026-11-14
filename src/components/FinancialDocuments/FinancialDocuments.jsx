@@ -1,3 +1,4 @@
+import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import useArchivedProject from "../../hooks/useArchivedProject";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../hooks/useTransientMessage";
@@ -49,9 +50,8 @@ function DocumentsPanel({ entityType, entityId, locked, lifecycleStatus, refresh
   useEffect(() => {
     alive.current = true;
     const requests = downloads.current;
-    const onFocus = () => setRevision((value) => value + 1);
-    window.addEventListener("focus", onFocus);
-    return () => { alive.current = false; window.removeEventListener("focus", onFocus); requests.forEach((request) => request.abort()); };
+
+    return () => { alive.current = false; requests.forEach((request) => request.abort()); };
   }, []);
 
   useEffect(() => {
@@ -133,10 +133,11 @@ function DocumentsPanel({ entityType, entityId, locked, lifecycleStatus, refresh
   };
   const categoryLabel = (value) => categories.find((item) => item.id === value)?.label || value || "Uncategorized";
   const selectable = candidates.filter((doc) => !links.some((link) => link.documentId === doc.id));
+  useAutomaticRefresh(refresh, loading || busy || candidateLoading || !!selectedId || downloading.length > 0);
   return <div className={styles.panel}>
     {entityType === "PAYMENT_ORDER" && <p className={styles.hint}>Ordinary supporting documents — approval-time inclusion not recorded. Late payment evidence is managed separately.</p>}
     <p className={styles.hint}>Links keep the exact file version you select. A replacement never changes existing supporting evidence. Draft and Final are descriptive labels.</p>
-    <button type="button" onClick={refresh} disabled={loading || busy}>Refresh supporting documents</button>
+    {(listError || actionError || candidateError) && <button type="button" onClick={refresh} disabled={loading || busy}>Retry supporting documents</button>}
     {loading && <p role="status">Loading supporting documents…</p>}
     {listError && <p role="alert">{listError}</p>}
     {actionError && <p role="alert">{actionError}</p>}

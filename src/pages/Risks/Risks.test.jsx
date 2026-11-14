@@ -54,7 +54,7 @@ test("conflict keeps the draft and revision through list refresh and explicit co
   expect(screen.getByLabelText("Title")).toHaveValue("My unsaved title");
   expect(screen.getByText("Save risk")).toBeDisabled();
   data = { ...data, content: [{ ...risk, revision: 5, title: "Server title" }] };
-  fireEvent.click(screen.getByText("Refresh register"));
+  fireEvent.click(screen.getByText("Retry register"));
   await screen.findByText("Server title");
   expect(screen.getByLabelText("Title")).toHaveValue("My unsaved title"); expect(screen.getByText("Editing revision 4.")).toBeInTheDocument();
   fireEvent.click(screen.getByText("Load latest risk for comparison"));

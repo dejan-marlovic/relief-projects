@@ -1,3 +1,4 @@
+import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import { HistoryPagination, HistoryTimeline, HistoryEntry } from "../ActivityHistory/ActivityHistory";
 import RecipientReturnAuditDetails from "../RecipientReturns/RecipientReturnAuditDetails";
 import FundingReturnAuditDetails from "../FundingReturns/FundingReturnAuditDetails";
@@ -55,11 +56,12 @@ function HistoryPage({ entityType, entityId, includeChildren }) {
   }, [authFetch, entityType, entityId, includeChildren, page, refresh]);
 
   const { loading, error, result } = state;
+  useAutomaticRefresh(() => setRefresh(v => v + 1), loading);
   return <div className={styles.panel}>
     <p>Review the recorded changes to this record. Each entry identifies the action, actor and saved changes; before and after values describe that event, not the current record. History records activity, not completion of a workflow.</p>
     <div className={styles.toolbar}>
       <span>Activity history · newest first</span>
-      <button type="button" disabled={loading} onClick={() => { setPage(0); setRefresh((value) => value + 1); }}>Refresh history</button>
+      {(error) && <button type="button" disabled={loading} onClick={() => { setPage(0); setRefresh((value) => value + 1); }}>Retry history</button>}
     </div>
     {loading && <p role="status">Loading record history…</p>}
     {error && <p role="alert">{error}</p>}

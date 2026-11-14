@@ -49,7 +49,7 @@ test("conflicts preserve drafts and require review before another command", asyn
   fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "Wrong file" } });
   fireEvent.click(screen.getByText("Save remove"));
   await screen.findByText(/Stale revision/);
-  await waitFor(() => expect(screen.getByText("Refresh late evidence and history")).toBeEnabled());
+  await waitFor(() => expect(screen.getByText("Retry late evidence and history")).toBeEnabled());
   expect(screen.getByLabelText("Reason")).toHaveValue("Wrong file");
   expect(screen.getByText("Save remove")).toBeDisabled();
   expect(appFetch.mock.calls.filter(([, options]) => options.method === "POST")).toHaveLength(1);

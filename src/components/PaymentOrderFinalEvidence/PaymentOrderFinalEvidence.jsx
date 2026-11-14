@@ -1,3 +1,4 @@
+import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import { HistoryPagination, HistoryTimeline, HistoryEntry } from "../ActivityHistory/ActivityHistory";
 import ScrollToForm from "../ScrollToForm/ScrollToForm";
@@ -91,9 +92,10 @@ export function FinalEvidencePanel({ paymentOrderId, refreshKey, editingLocked }
     try { await downloadDocument(id, authFetch); } catch (e) { if (alive.current) setActionError(e.message); } finally { if (alive.current) setDownloading(null); }
   }
   const selected = docs.find(doc => String(doc.id) === form?.documentId);
+  useAutomaticRefresh(() => setTick(n => n + 1), loading || busy || !!form || candidateLoading || !!downloading || editingLocked);
   return <div className={styles.panel}>
     <p className={styles.hint}><strong>Not part of the approval decision.</strong> Select an externally prepared signed order or combined evidence file. These descriptions do not verify signatures, settlement or completeness. No payment entry is required.</p>
-    <button disabled={busy || loading} onClick={() => setTick(n => n + 1)}>Refresh late evidence and history</button>
+    {(error || actionError || candidateError || reviewRequired) && <button disabled={busy || loading} onClick={() => setTick(n => n + 1)}>Retry late evidence and history</button>}
     {loading && <p role="status">Loading late evidence…</p>}{error && <p role="alert">{error}</p>}{actionError && <p role="alert">{actionError}</p>}{message && <p role="status">{message}</p>}
     {editingLocked && <p>Finish editing the order before changing evidence.</p>}
     {data && <>

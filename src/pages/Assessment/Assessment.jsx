@@ -1,3 +1,5 @@
+import { draftIsDirty, savedDraft } from "../../utils/savedDraft";
+import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import ReviewAttribution from "../../components/ReviewAttribution/ReviewAttribution";
 import { HistoryTimeline, SnapshotHistoryEntry } from "../../components/ActivityHistory/ActivityHistory";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
@@ -27,13 +29,8 @@ export function AssessmentPanel({ projectId, authFetch }) {
   const pending = useRef(false), alive = useRef(true);
   const { confirmDiscardUnsavedChanges } = useUnsavedChanges();
   const reload = () => setRefresh(n => n + 1);
-  useEffect(() => {
-    alive.current = true;
-    const update = () => { if (document.visibilityState !== "hidden") setRefresh(n => n + 1); };
-    window.addEventListener("project-metadata-updated", update); window.addEventListener("focus", update); document.addEventListener("visibilitychange", update);
-    return () => { alive.current = false; window.removeEventListener("project-metadata-updated", update); window.removeEventListener("focus", update); document.removeEventListener("visibilitychange", update); };
-  }, []);
-  useUnsavedChange(`assessment-${projectId}`, !!form);
+  useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
+  useUnsavedChange(`assessment-${projectId}`, busy || draftIsDirty(form));
   const detail = useManagementRead(authFetch, base, refresh);
   const data = detail.data, record = data?.assessment;
   const evidence = useManagementRead(authFetch, record ? `${base}/evidence?includeRemoved=${removed}&page=${evidencePage}&size=20` : null, refresh);
@@ -44,6 +41,7 @@ export function AssessmentPanel({ projectId, authFetch }) {
   const blocked = !data || detail.loading || !canAct || (form?.action === "evidence-remove" && evidence.loading);
   const reviewBlocked = blocked || project.loading || !project.data || (record && (history.loading || evidence.loading || history.data?.assessmentRevision !== record.revision || evidence.data?.assessmentRevision !== record.revision));
   const locked = busy || !!form || detail.loading;
+  useAutomaticRefresh(reload, locked || evidence.loading || history.loading || project.loading);
   function open(action, link) { setForm({ action, link, record, expectedRevision: record?.revision, draft: draftFrom(action === "edit" ? record : null) }); }
   async function save(body) {
     if (pending.current || blocked || form.reviewRequired) return;
@@ -51,8 +49,8 @@ export function AssessmentPanel({ projectId, authFetch }) {
     const action = form.action;
     const path = ["create", "edit"].includes(action) ? "" : action === "evidence-remove" ? `/evidence/${form.link.id}/remove` : `/${action}`;
     try {
-      await authFetch(`${base}${path}`, { method: action === "edit" ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...body, ...(action === "create" ? { expectedAbsent: true } : { expectedRevision: form.expectedRevision }) }) }).then(readManagement);
-      if (alive.current) { setForm(null); setHistoryPage(0); }
+      const result = await authFetch(`${base}${path}`, { method: action === "edit" ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...body, ...(action === "create" ? { expectedAbsent: true } : { expectedRevision: form.expectedRevision }) }) }).then(readManagement);
+      if (alive.current) { setForm(["create", "edit"].includes(action) ? savedDraft(form, result.assessment) : null); setHistoryPage(0); }
     } catch (error) { if (alive.current) { setForm(f => ({ ...f, error: error.message, reviewRequired: true })); setHistoryPage(0); } }
     finally { pending.current = false; if (alive.current) { setBusy(false); reload(); } }
   }
@@ -60,7 +58,7 @@ export function AssessmentPanel({ projectId, authFetch }) {
   const editorStep = form ? ["create", "edit"].includes(form.action) ? 1 : ["evidence", "evidence-remove"].includes(form.action) ? 2 : ["submit", "approve", "return", "withdraw-submission"].includes(form.action) ? 3 : 4 : 0;
   const editor = form && <AssessmentEditor key={form.action} form={form} setForm={setForm} projectId={projectId} authFetch={authFetch} refresh={refresh} busy={busy} blocked={blocked} reviewBlocked={reviewBlocked} onSave={save} onCancel={() => setForm(null)} onReview={() => setForm(f => ({ ...f, record, expectedRevision: record?.revision, reviewRequired: false, error: "" }))} />;
   return <>
-    <button disabled={busy} onClick={reload}>Refresh assessment, evidence and history</button><ReadState state={detail} />
+    <ReadState state={detail} />
     {data && <section className={styles.summary} aria-label="Project assessment status"><ReviewAttribution status={record?.state} submission={record?.currentSubmission} approval={record?.currentApproval} /><h3>{projectApprovalLabel({ approved: data.approval?.value, assessmentSummary: { source: data.approval?.source, currentApprovalId: data.approval?.currentDecisionId, state: record?.state, assessmentDeleted: record?.deleted, reviewRequired: record?.reviewRequired } })}</h3>{record && <span className={`${styles.statusBadge} ${styles[`status${record.state}`] || ""}`}>{record.state}{record.deleted && " · Deleted"}</span>}{!data.projectActive && <p>The project is inactive. Retained assessment information is read-only.</p>}<Issues issues={data.issues} /><Issues issues={record?.reviewIssues} />{record?.reviewRequired && <p>Review required. The retained approval has not been revoked automatically; withdraw, revise and resubmit to record a new decision.</p>}</section>}
     <WorkflowIntro>Explain the project proposal, select its assessment evidence and submit it for an independent decision. Recorded approval is informational: it does not grant funding, verify committee signatures or change operational status.</WorkflowIntro>
     <WorkflowStep number={1} title="Prepare the assessment" description="Describe the need, feasibility and risks. Drafts may be incomplete; all three narratives and a recommendation are needed before submission." keepOpen={editorStep === 1}>

@@ -1,3 +1,4 @@
+import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import ScrollToForm from "../ScrollToForm/ScrollToForm";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -54,10 +55,11 @@ export default function BudgetExecution({ familyId, budgetId, disabled = false, 
     } catch (err) { setBlocked(true); setError(`${err.message} Review refreshed execution and retained family history. Your reason is retained; no automatic retry. Request a fresh preview only if you intend to try again.`); executionChanged(); }
     finally { pending.current = false; setBusy(false); setTick(n => n + 1); }
   };
+  useAutomaticRefresh(() => setTick(v => v + 1), loading || busy || !!preview || !!reason);
   return <section className={styles.card} aria-label="Financial execution">
     <h4>Financial execution</h4>
     <p className={styles.hint}>Activation applies one set of shared cost ceilings. Existing funding and commitments keep their original references. Uncommitted planned capacity is not available cash or funding.</p>
-    <button disabled={loading || busy} onClick={() => setTick(n => n + 1)}>Refresh execution</button>
+    {(error || blocked) && <button disabled={loading || busy} onClick={() => setTick(n => n + 1)}>Retry execution</button>}
     {loading && <p role="status">Loading execution…</p>}{error && <p role="alert">{error}</p>}
     {data && <><dl className={styles.fields}><dt>Status</dt><dd>{data.executionStatus.replaceAll("_", " ")}</dd><dt>Origin budget</dt><dd>#{data.originBudgetId}</dd><dt>Current plan</dt><dd>{data.currentPlanBudgetId == null ? "Not selected" : `#${data.currentPlanBudgetId}`}</dd><dt>Executable budget</dt><dd>{data.executableBudgetId == null ? "Not activated; original-budget rules apply" : `#${data.executableBudgetId}`}</dd><dt>Currency</dt><dd>{data.currency?.name || "Unknown"} {data.currency?.id != null && `(#${data.currency.id})`}</dd><dt>Coverage</dt><dd>{data.coverage?.capacity?.replaceAll("_", " ") || "Unavailable"}</dd><dt>Retained obligations</dt><dd>{exactAmount(data.obligations)}</dd><dt>Uncommitted planned capacity</dt><dd>{exactAmount(data.uncommittedPlannedCapacity)}</dd></dl>
       {data.executionStatus === "SUSPENDED" && <p role="alert">Execution suspended. New or increased commitments need explicit reaffirmation with valid donor approval. Retained history and otherwise permitted reductions remain available.</p>}

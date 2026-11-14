@@ -1,3 +1,4 @@
+import { draftIsDirty, savedDraft } from "../../utils/savedDraft";
 import ReviewAttribution from "../../components/ReviewAttribution/ReviewAttribution";
 import React, { useEffect, useRef, useState } from "react";
 import { useUnsavedChange } from "../../context/UnsavedChangesContext";
@@ -19,12 +20,12 @@ export default function TravelReport({ endpoint: travelEndpoint, projectId, trav
   const pending = useRef(false), alive = useRef(true);
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   useEffect(() => { onActivityChange?.(!!form || busy); return () => onActivityChange?.(false); }, [form, busy, onActivityChange]);
-  useUnsavedChange(`travel-report-${projectId}-${travel.id}`, !!form);
+  useUnsavedChange(`travel-report-${projectId}-${travel.id}`, busy || draftIsDirty(form));
   const validEnvelope = state.data && Object.prototype.hasOwnProperty.call(state.data, "report") && Number.isSafeInteger(state.data.travelRevision);
   const data = validEnvelope ? state.data : null, record = data?.report;
   const awaitingSavedReport = savedRevision != null && (record?.revision ?? -1) < savedRevision;
   const mismatchedTravel = !!data && travel.revision !== data.travelRevision;
-  const stale = !!form && !!data && (form.expectedTravelRevision !== data.travelRevision || form.expectedRevision !== record?.revision || mismatchedTravel);
+  const stale = !!form && !!data && !awaitingSavedReport && (form.expectedTravelRevision !== data.travelRevision || form.expectedRevision !== record?.revision || mismatchedTravel);
   const reviewRequired = !!form && (form.reviewRequired || stale);
   const kind = form?.action?.endsWith("-remove") ? form.action.split("-")[0] : null;
   const removal = useTravelRead(authFetch, kind ? `${endpoint}/${kind}?includeRemoved=${form.link.includeRemoved}&page=${form.link.page}&size=20` : null, refresh);
@@ -45,7 +46,7 @@ export default function TravelReport({ endpoint: travelEndpoint, projectId, trav
     try {
       const result = await authFetch(`${endpoint}${path}`, { method: action === "edit" ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).then(readTravel);
       if (!result.report || !Number.isSafeInteger(result.report.revision) || !Number.isSafeInteger(result.travelRevision)) throw new Error("The save response was incomplete. Check the refreshed report before retrying.");
-      if (alive.current) { setSavedRevision(result.report.revision); setForm(null); }
+      if (alive.current) { setSavedRevision(result.report.revision); setForm(["create", "edit"].includes(action) ? savedDraft(form, result.report, { expectedTravelRevision: result.travelRevision }) : null); }
     } catch (err) { if (alive.current) setForm(f => ({ ...f, error: err.message, reviewRequired: true })); }
     finally { pending.current = false; if (alive.current) { setBusy(false); reload(); } }
   }
@@ -58,7 +59,7 @@ export default function TravelReport({ endpoint: travelEndpoint, projectId, trav
   const editor = form && <><TravelReportEditor key={form.action} form={form} setForm={setForm} endpoint={travelEndpoint} projectId={projectId} authFetch={authFetch} refresh={refresh} today={data?.today} busy={busy} blocked={blocked} reviewRequired={reviewRequired} reviewBlocked={reviewBlocked} onSave={save} onCancel={() => setForm(null)} onReview={() => setForm(f => ({ ...f, record, expectedRevision: record?.revision, expectedTravelRevision: data.travelRevision, reviewRequired: false, error: "", draft: f.action === "actions" ? { ...f.draft, followUp: null } : f.draft }))} /><ReadState state={history} /><ReadState state={removal} /></>;
   return <section aria-label="Post-trip reporting">
     <p className={styles.muted}>After travel concludes—or when it was not taken—record what actually happened, then request independent review. Reports and acceptance remain separate from travel authorization, payments and task completion.</p>
-    <button disabled={busy} onClick={reload}>Refresh report, travel and history</button><ReadState state={state} />
+    {(mismatchedTravel || (state.data && !validEnvelope) || state.error) && <button disabled={busy} onClick={reload}>Retry report and travel</button>}<ReadState state={state} />
     {state.data && !validEnvelope && <p role="alert">Report response unavailable. Refresh after checking the backend deployment.</p>}
     {awaitingSavedReport && <p role="status">Refreshing the saved report before enabling another change…</p>}
     {mismatchedTravel && <p role="alert">The travel request changed. Refresh report and travel together before making a report decision.</p>}
