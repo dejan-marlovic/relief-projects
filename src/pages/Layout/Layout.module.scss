@@ -18,7 +18,7 @@ $secondary-color: colors.$danger;
   min-width: 0;
 }
 
-/* List-heavy pages keep scrolling inside their tables, not on the document. */
+/* List-heavy pages give their tables a dedicated scrollable workspace. */
 .fixedTableViewport {
   height: 100vh;
   overflow: hidden;
@@ -429,10 +429,10 @@ $secondary-color: colors.$danger;
 
 // Use the same compact application chrome on every desktop/tablet page.
 @media (min-width: 701px) {
-  // Short windows can scroll the document rather than collapsing the list.
+  // Leave extra room for expanded records; the document can scroll past the header.
   .fixedTableViewport {
-    height: max(100vh, 48rem);
-    height: max(100dvh, 48rem);
+    height: max(calc(100vh + 8rem), 56rem);
+    height: max(calc(100dvh + 8rem), 56rem);
   }
 
   .layoutShell {

@@ -25,6 +25,10 @@
   flex-direction: column;
 }
 
+.sectionDescription[data-tile-description] {
+  max-width: none;
+}
+
 .cardHeader {
   display: flex;
   align-items: flex-start;

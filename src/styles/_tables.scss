@@ -10,6 +10,11 @@
   border-bottom: 1px solid colors.$divider;
   color: colors.$text;
   font-size: 0.92rem;
+
+  // Compact desktop records without shrinking their text or action controls.
+  @media (min-width: 1101px) {
+    padding-block: 4px;
+  }
 }
 
 @mixin table-zebra-even {
