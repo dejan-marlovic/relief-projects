@@ -1,3 +1,4 @@
+import useArchivedProject from "../../hooks/useArchivedProject";
 import ColumnResize, { useColumnWidths } from "../../components/ColumnResize/ColumnResize";
 import { appFetch as fetch } from "../../utils/appFetch";
 import { decimalUnits, matchesDecimalRange, fundingExcel, summaryExcel, summaryText, issueText, groupedPaymentTotals } from "../../utils/paymentFunding";
@@ -112,8 +113,9 @@ export const editableRecipientPaymentOrders = (
 function Recipients() {
   const { selectedProjectId, projects } = useContext(ProjectContext);
   const { hasRole, hasAnyRole } = useAuth();
-  const canManageRecipients = hasAnyRole("ADMIN", "FINANCE");
-  const canBulkDeleteRecipients = hasRole("ADMIN");
+  const archivedProject = useArchivedProject();
+  const canManageRecipients = !archivedProject && hasAnyRole("ADMIN", "FINANCE");
+  const canBulkDeleteRecipients = !archivedProject && hasRole("ADMIN");
 
   const [items, setItems] = useState([]);
   const compact = useMediaQuery("(max-width: 700px)");

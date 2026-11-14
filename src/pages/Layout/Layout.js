@@ -1,4 +1,5 @@
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
+import { isArchivedProject, visibleProjects } from "../../utils/projectArchive";
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import styles from "./Layout.module.scss";
@@ -15,6 +16,7 @@ import NavigationGroup from "./NavigationGroup";
 const Layout = () => {
   const isPhone = useMediaQuery("(max-width: 700px)");
   const [openGroup, setOpenGroup] = useState(null);
+  const [showArchivedProjects, setShowArchivedProjects] = useState(false);
   const closeGroup = useCallback(() => setOpenGroup(null), []);
   const location = useLocation();
   const navigate = useNavigate();
@@ -210,18 +212,28 @@ const Layout = () => {
           {!hideSelector && (
             <div className={styles.selectorInline}>
               <label htmlFor="layout-project" className={styles.selectorLabel}>Project</label>
+              <div className={styles.selectorControl}>
               <SearchableSelect
                 id="layout-project"
                 value={selectedProjectId}
                 onChange={handleSelectChange}
                 className={styles.selectInput}
               >
-                {projects?.map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.projectName}
+                {!selectedProjectId && <option value="" disabled>Choose a project</option>}
+                {visibleProjects(projects, showArchivedProjects, selectedProjectId).map((project) => (
+                  <option key={project.id} value={project.id} data-muted={isArchivedProject(project) ? "true" : undefined} className={isArchivedProject(project) ? styles.archivedProject : undefined}>
+                    {project.projectName}{isArchivedProject(project) ? " — Archived" : ""}
                   </option>
                 ))}
               </SearchableSelect>
+              </div>
+              <div className={styles.selectorExtras}>
+              <label className={styles.archiveToggle}>
+                <input type="checkbox" checked={showArchivedProjects} onChange={event => setShowArchivedProjects(event.target.checked)} />
+                Show archived projects
+              </label>
+              {isArchivedProject(selectedProject) && <small className={styles.archiveNotice}>Archived project — read only. Unarchive in Closeout & archive to edit.{!showArchivedProjects && " It remains selected until you choose another project."}</small>}
+              </div>
             </div>
           )}
 

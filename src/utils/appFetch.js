@@ -123,6 +123,11 @@ export function mutationNotice(input, options = {}, response) {
 export async function appFetch(input, options) {
   const { silentSuccess, ...requestOptions } = options || {};
   const response = await window.fetch(input, requestOptions);
+  const method = String(requestOptions.method || input?.method || "GET").toUpperCase();
+  const url = typeof input === "string" ? input : input?.url;
+  if (response.ok && ["POST", "PUT", "PATCH", "DELETE"].includes(method) && /\/api\/projects\/\d+\/closeout\/(archive|reopen)(\/|$)/.test(url || "")) {
+    window.dispatchEvent(new Event("project-archive-changed"));
+  }
   const message = silentSuccess ? null : mutationNotice(input, options, response);
   if (message) notifySuccess(message);
   return response;

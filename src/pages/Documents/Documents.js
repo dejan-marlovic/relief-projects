@@ -1,3 +1,4 @@
+import useArchivedProject from "../../hooks/useArchivedProject";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import ScrollToForm from "../../components/ScrollToForm/ScrollToForm";
 import useRecordAutosave from "../../utils/useRecordAutosave";
@@ -47,8 +48,9 @@ const Documents = () => {
   const { selectedProjectId, projects } = useContext(ProjectContext);
   currentProject.current = selectedProjectId;
   const { user, hasRole, hasAnyRole } = useAuth();
-  const canUploadDocuments = hasAnyRole("ADMIN", "PROJECT_MANAGER");
-  const canDeleteDocuments = hasRole("ADMIN");
+  const archivedProject = useArchivedProject();
+  const canUploadDocuments = !archivedProject && hasAnyRole("ADMIN", "PROJECT_MANAGER");
+  const canDeleteDocuments = !archivedProject && hasRole("ADMIN");
 
   const [uploadInfo, setUploadInfo] = useTransientMessage("", value => value.startsWith("Upload complete."));
   useEffect(() => {

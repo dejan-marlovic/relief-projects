@@ -1,5 +1,19 @@
 import { appFetch, mutationNotice } from "./appFetch";
 import { subscribeSuccess } from "./successNotifications";
+
+test("archive changes refresh the selector only after a successful mutation", async () => {
+ const listener = jest.fn();
+ window.addEventListener("project-archive-changed", listener);
+ global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200 });
+ await appFetch("/api/projects/1/closeout/archive", { method: "PUT" });
+ await appFetch("/api/projects/1/closeout/archive/revoke", { method: "POST" });
+ expect(listener).toHaveBeenCalledTimes(2);
+ await appFetch("/api/projects/1/closeout/archive", { method: "GET" });
+ global.fetch.mockResolvedValue({ ok: false, status: 409 });
+ await appFetch("/api/projects/1/closeout/archive", { method: "PUT" });
+ expect(listener).toHaveBeenCalledTimes(2);
+ window.removeEventListener("project-archive-changed", listener);
+});
 test("only successful mutations to our API produce notifications",()=>{
  const ok={ok:true,status:200};
  expect(mutationNotice("/api/budgets/2",{method:"PUT"},ok)).toBe("Budget changes saved.");

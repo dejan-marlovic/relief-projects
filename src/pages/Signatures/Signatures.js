@@ -1,3 +1,4 @@
+import useArchivedProject from "../../hooks/useArchivedProject";
 import ColumnResize, { useColumnWidths } from "../../components/ColumnResize/ColumnResize";
 import { appFetch as fetch } from "../../utils/appFetch";
 import useMediaQuery from "../../hooks/useMediaQuery";
@@ -110,7 +111,8 @@ export const approvedSignaturePaymentOrders = (paymentOrders = [], currentId = n
 function Signatures() {
   const { selectedProjectId, projects } = useContext(ProjectContext);
   const { hasAnyRole } = useAuth();
-  const canManageSignatures = hasAnyRole("ADMIN", "APPROVER");
+  const archivedProject = useArchivedProject();
+  const canManageSignatures = !archivedProject && hasAnyRole("ADMIN", "APPROVER");
 
   const [items, setItems] = useState([]);
   const compact = useMediaQuery("(max-width: 1100px)");

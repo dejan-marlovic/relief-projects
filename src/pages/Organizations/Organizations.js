@@ -1,3 +1,4 @@
+import useArchivedProject from "../../hooks/useArchivedProject";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import useRecordAutosave from "../../utils/useRecordAutosave";
 import AutosaveStatus from "../../components/ProjectClassification/AutosaveStatus";
@@ -44,10 +45,11 @@ async function safeParseJsonResponse(res) {
 const Organizations = () => {
   const { selectedProjectId, projects } = useContext(ProjectContext);
   const { hasAnyRole } = useAuth();
-  const canManageOrganizationLinks = hasAnyRole("ADMIN", "PROJECT_MANAGER");
+  const archivedProject = useArchivedProject();
+  const canManageOrganizationLinks = !archivedProject && hasAnyRole("ADMIN", "PROJECT_MANAGER");
   const canManageAddresses = canManageOrganizationLinks;
   const canViewBankDetails = hasAnyRole("ADMIN", "FINANCE", "APPROVER");
-  const canManageBankDetails = hasAnyRole("ADMIN", "FINANCE");
+  const canManageBankDetails = !archivedProject && hasAnyRole("ADMIN", "FINANCE");
 
 
   const [saving, setSaving] = useState(false);

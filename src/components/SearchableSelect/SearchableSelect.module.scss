@@ -7,5 +7,6 @@
 .picker li { padding: .75rem; min-height: 24px; cursor: pointer; overflow-wrap: anywhere; border-radius: 6px; }
 .picker li:hover, .active { background: colors.$primary-a12; }
 .picker li[aria-disabled=true] { opacity: .5; cursor: not-allowed; }
+.picker li.muted { color: colors.$text-muted; font-style: italic; }
 .picker button { padding: .65rem 1rem; font: inherit; cursor: pointer; color: colors.$primary; background: colors.$surface; border: 1px solid colors.$primary-border; border-radius: 8px; }
 .picker :focus-visible { outline: 2px solid colors.$primary; outline-offset: 2px; }

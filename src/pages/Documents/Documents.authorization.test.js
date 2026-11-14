@@ -10,7 +10,7 @@ const { useAuth } = require("../../context/AuthContext");
 const documentFixture = { id: 7, isCurrent: true, isDeleted: false, versionNumber: 1, documentName: "report.pdf", documentPath: "report.pdf", employeeId: 2, projectId: 1 };
 const employees = [{ id: 2, firstName: "Dario", lastName: "Marlovic" }];
 
-const renderDocuments = (roles, employeeRows = employees) => {
+const renderDocuments = (roles, employeeRows = employees, archived = false) => {
   useAuth.mockReturnValue({
     user: makeUser(roles),
     hasRole: (role) => roles.includes(role),
@@ -28,7 +28,7 @@ const renderDocuments = (roles, employeeRows = employees) => {
   });
   return render(
     <MemoryRouter>
-      <ProjectContext.Provider value={{ selectedProjectId: "1" }}><Documents /></ProjectContext.Provider>
+      <ProjectContext.Provider value={{ selectedProjectId: "1", projects: [{ id: 1, archived }] }}><Documents /></ProjectContext.Provider>
     </MemoryRouter>,
   );
 };
@@ -36,6 +36,15 @@ const renderDocuments = (roles, employeeRows = employees) => {
 describe("Documents permissions", () => {
   beforeEach(() => { localStorage.setItem("authToken", "token"); global.fetch = jest.fn(); });
   afterEach(() => { localStorage.clear(); jest.restoreAllMocks(); });
+
+  test("archived project prevents admin document changes but preserves download", async () => {
+    renderDocuments(["ADMIN"], employees, true);
+    expect(await screen.findByText("report.pdf")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Download/ })).toBeEnabled();
+    expect(screen.queryByRole("button", { name: "Upload document" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Delete" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Edit details" })).not.toBeInTheDocument();
+  });
 
   test("ADMIN can upload, download, and delete", async () => {
     renderDocuments(["ADMIN"]);

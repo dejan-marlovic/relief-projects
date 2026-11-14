@@ -1,3 +1,4 @@
+import useArchivedProject from "../../hooks/useArchivedProject";
 import ApprovalDialog from "../../components/ApprovalDialog/ApprovalDialog";
 import ColumnResize, { useColumnWidths } from "../../components/ColumnResize/ColumnResize";
 import useFinancialRefresh from "../../hooks/useFinancialRefresh";
@@ -141,10 +142,11 @@ const toSortableDate = (value) => {
 const Transactions = ({ refreshTrigger }) => {
   const { selectedProjectId, projects } = useContext(ProjectContext);
   const { hasRole, hasAnyRole } = useAuth();
-  const canEditTransactions = hasAnyRole("ADMIN", "FINANCE");
-  const canDeleteTransactions = hasRole("ADMIN");
-  const canManageAllocations = hasAnyRole("ADMIN", "FINANCE");
-  const canReviewTransactions = hasAnyRole("ADMIN", "APPROVER");
+  const archivedProject = useArchivedProject();
+  const canEditTransactions = !archivedProject && hasAnyRole("ADMIN", "FINANCE");
+  const canDeleteTransactions = !archivedProject && hasRole("ADMIN");
+  const canManageAllocations = !archivedProject && hasAnyRole("ADMIN", "FINANCE");
+  const canReviewTransactions = !archivedProject && hasAnyRole("ADMIN", "APPROVER");
 
   const [transactions, setTransactions] = useState([]);
   const [selectedTxIds, setSelectedTxIds] = useState(() => new Set());

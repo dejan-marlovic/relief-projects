@@ -1,3 +1,4 @@
+import useArchivedProject from "../../hooks/useArchivedProject";
 import useTransientMessage from "../../hooks/useTransientMessage";
 import { appFetch as fetch } from "../../utils/appFetch";
 import React, { useEffect, useRef, useState } from "react";
@@ -8,6 +9,7 @@ import { budgetLimitError } from "../../utils/budgetLimit";
 import styles from "./BudgetPlanning.module.scss";
 const labels = { WITHIN_LIMIT: "Within limit", AT_LIMIT: "At limit", OVER_LIMIT: "Over limit — correction needed", UNCONFIRMED: "Local-currency meaning not confirmed", UNAVAILABLE: "Planning total unavailable" };
 export default function BudgetPlanning({ budget, refreshKey = 0, disabled = false, onUpdated }) {
+  const archivedProject = useArchivedProject(budget.projectId);
   const { hasAnyRole } = useAuth();
   const [summary, setSummary] = useState(null);
   const [refresh, setRefresh] = useState(0);
@@ -29,7 +31,7 @@ export default function BudgetPlanning({ budget, refreshKey = 0, disabled = fals
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
   }, [budget.id, budget.totalAmount, budget.localCurrencyId, budget.budgetLimitCurrencyId, budget.lifecycleStatus, refreshKey, refresh]);
-  const editable = hasAnyRole("ADMIN", "FINANCE") && ["DRAFT", "RETURNED"].includes(budget.lifecycleStatus || "DRAFT");
+  const editable = !archivedProject && hasAnyRole("ADMIN", "FINANCE") && ["DRAFT", "RETURNED"].includes(budget.lifecycleStatus || "DRAFT");
   const save = async (event) => {
     event.preventDefault();
     if (pending.current || disabled || !confirmed || !summary?.localCurrency?.id || !editable) return;

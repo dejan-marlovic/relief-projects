@@ -1,3 +1,4 @@
+import useArchivedProject from "../../hooks/useArchivedProject";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import RecordReference, { isRecordReference } from "../RecordReference/RecordReference";
 import { HistoryPagination, HistoryTimeline, HistoryEntry } from "../ActivityHistory/ActivityHistory";
@@ -26,8 +27,9 @@ const words = value => String(value || "").replaceAll("_", " ").toLowerCase();
 export function RevisionPanel({ budget, onChanged, disabled = false }) {
   const navigate = useNavigate();
   const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
+  const archivedProject = useArchivedProject(budget.projectId);
   const { hasAnyRole, hasRole } = useAuth();
-  const editor = hasAnyRole("ADMIN", "FINANCE"), reviewer = hasAnyRole("ADMIN", "APPROVER"), admin = hasRole("ADMIN");
+  const editor = !archivedProject && hasAnyRole("ADMIN", "FINANCE"), reviewer = !archivedProject && hasAnyRole("ADMIN", "APPROVER"), admin = !archivedProject && hasRole("ADMIN");
   const [data, setData] = useState(null), [history, setHistory] = useState(null), [page, setPage] = useState(0);
   const [refresh, setRefresh] = useState(0), [loading, setLoading] = useState(true), [error, setError] = useState("");
   const [form, setForm] = useState(null), [busy, setBusy] = useState(false), [blocked, setBlocked] = useState(false);

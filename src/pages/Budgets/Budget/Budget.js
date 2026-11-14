@@ -1,3 +1,4 @@
+import useArchivedProject from "../../../hooks/useArchivedProject";
 import { FinancialReviewAttribution } from "../../../components/ReviewAttribution/ReviewAttribution";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import ApprovalDialog from "../../../components/ApprovalDialog/ApprovalDialog";
@@ -37,8 +38,9 @@ import { useUnsavedChange } from "../../../context/UnsavedChangesContext";
 
 const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged }) => {
   const { hasRole, hasAnyRole } = useAuth();
-  const hasBudgetEditorRole = hasAnyRole("ADMIN", "FINANCE");
-  const hasBudgetReviewerRole = hasAnyRole("ADMIN", "APPROVER");
+  const archivedProject = useArchivedProject(initialBudget?.projectId);
+  const hasBudgetEditorRole = !archivedProject && hasAnyRole("ADMIN", "FINANCE");
+  const hasBudgetReviewerRole = !archivedProject && hasAnyRole("ADMIN", "APPROVER");
   const formatDate = (dateString) =>
     dateString ? dateString.slice(0, 16) : "";
 
@@ -77,7 +79,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
   const lifecycleStatus = budget.lifecycleStatus || "DRAFT";
   const isBudgetEditable = ["DRAFT", "RETURNED"].includes(lifecycleStatus);
   const canEditBudget = hasBudgetEditorRole && isBudgetEditable;
-  const canDeleteBudget = hasRole("ADMIN") && isBudgetEditable;
+  const canDeleteBudget = !archivedProject && hasRole("ADMIN") && isBudgetEditable;
   const canSubmitBudget =
     canEditBudget;
   const canReviewBudget =

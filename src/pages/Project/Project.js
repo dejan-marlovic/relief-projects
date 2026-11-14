@@ -1,3 +1,4 @@
+import useArchivedProject from "../../hooks/useArchivedProject";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import { notifySuccess } from "../../utils/successNotifications";
 import { supportsGeography, geographyExport } from "../../utils/projectGeography";
@@ -1458,8 +1459,9 @@ Approximately:
   const { selectedProjectId, setSelectedProjectId, projects, setProjects } =
     useContext(ProjectContext);
   const { hasRole, hasAnyRole } = useAuth();
-  const canEditProject = hasAnyRole("ADMIN", "PROJECT_MANAGER");
-  const canDeleteProject = hasRole("ADMIN");
+  const archivedProject = useArchivedProject();
+  const canEditProject = !archivedProject && hasAnyRole("ADMIN", "PROJECT_MANAGER");
+  const canDeleteProject = !archivedProject && hasRole("ADMIN");
 
   const [projectDetails, setProjectDetails] = useState(null);
   const { confirmDiscardUnsavedChanges, hasUnsavedChanges } = useUnsavedChanges();

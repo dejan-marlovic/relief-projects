@@ -20,6 +20,7 @@ const SearchableSelect = forwardRef(function SearchableSelect({ children, onMous
       group: option.parentElement.tagName === "OPTGROUP" ? option.parentElement.label : "",
       disabled: option.disabled || (option.parentElement.tagName === "OPTGROUP" && option.parentElement.disabled),
       selected: option.selected,
+      muted: option.dataset.muted === "true",
     }));
     setOptions(current => JSON.stringify(current) === JSON.stringify(next) ? current : next);
     if (select.disabled) setOpen(false);
@@ -92,7 +93,7 @@ const SearchableSelect = forwardRef(function SearchableSelect({ children, onMous
         {props.multiple && <p>Select or deselect items. Existing selections stay selected while you search.</p>}
         <ul id={`${id}-list`} role="listbox" aria-label={label} aria-multiselectable={props.multiple || undefined}>
           {matches.map(option => <li key={option.index} id={`${id}-${option.index}`} role="option" aria-selected={option.selected} aria-disabled={option.disabled || undefined}
-            className={available[active]?.index === option.index ? styles.active : undefined}
+            className={[available[active]?.index === option.index ? styles.active : "", option.muted ? styles.muted : ""].filter(Boolean).join(" ")}
             ref={element => { if (available[active]?.index === option.index) element?.scrollIntoView?.({ block: "nearest" }); }}
             onMouseDown={event => event.preventDefault()} onClick={() => choose(option)}>
             {option.selected && <span aria-hidden="true">✓ </span>}{option.group && `${option.group} — `}{option.label}

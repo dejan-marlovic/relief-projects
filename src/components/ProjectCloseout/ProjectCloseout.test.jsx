@@ -12,6 +12,23 @@ const mount=()=>render(<BrowserRouter><CloseoutPanel projectId={1}/></BrowserRou
 const reason = () => fireEvent.change(screen.getByLabelText("Decision reason"),{target:{value:"Reviewed the project"}});
 const calls = () => fetch.mock.calls.filter(([,options])=>options?.method);
 
+test("archived project keeps unarchive and storage review actions while ordinary decisions are unavailable", async () => {
+  const data = { ...base(), archive: { status: "MARKED_ARCHIVED" }, capabilities: { archiveReviewVersion: 1 },
+    latestArchive: { actor: { username: "mira" }, occurredAt: "2026-11-01T10:00:00Z" },
+    permissions: { canRevokeArchive: true, canConfirmArchiveReview: true, canWithdrawArchiveReview: true } };
+  setup(data); mount();
+  expect(await screen.findByText("mira")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Confirm review basis" })).toBeEnabled();
+  expect(screen.queryByRole("button", { name: "Reopen closeout" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Record / update final-report acceptance" })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Unarchive project" }));
+  reason(); fireEvent.click(screen.getByRole("button", { name: "Save decision" }));
+  await waitFor(() => expect(calls()).toHaveLength(1));
+  expect(calls()[0][0]).toMatch(/\/archive\/revoke$/);
+  expect(JSON.parse(calls()[0][1].body)).toEqual({ expectedRevision: 0, reason: "Reviewed the project" });
+  await waitFor(() => expect(screen.queryByRole("form", { name: "Closeout decision" })).not.toBeInTheDocument());
+});
+
 test("initial uncertainty and partial coverage are explicit, not completion claims",async()=>{
   setup(base());mount();expect(await screen.findByText("No closeout decision recorded")).toBeInTheDocument();
   expect(screen.getByText(/Financial coverage is partial/)).toBeInTheDocument();expect(screen.getByText("Not assessed by this feature")).toBeInTheDocument();

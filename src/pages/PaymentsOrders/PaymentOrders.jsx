@@ -1,3 +1,4 @@
+import useArchivedProject from "../../hooks/useArchivedProject";
 import ApprovalDialog from "../../components/ApprovalDialog/ApprovalDialog";
 import ColumnResize, { useColumnWidths } from "../../components/ColumnResize/ColumnResize";
 import useFinancialRefresh from "../../hooks/useFinancialRefresh";
@@ -153,10 +154,11 @@ function normalizePO(po) {
 function PaymentOrders() {
   const { selectedProjectId, projects } = useContext(ProjectContext);
   const { hasRole, hasAnyRole } = useAuth();
-  const canEditPaymentOrders = hasAnyRole("ADMIN", "FINANCE");
-  const canDeletePaymentOrders = hasRole("ADMIN");
-  const canManagePaymentOrderLines = hasAnyRole("ADMIN", "FINANCE");
-  const canReviewPaymentOrders = hasAnyRole("ADMIN", "APPROVER");
+  const archivedProject = useArchivedProject();
+  const canEditPaymentOrders = !archivedProject && hasAnyRole("ADMIN", "FINANCE");
+  const canDeletePaymentOrders = !archivedProject && hasRole("ADMIN");
+  const canManagePaymentOrderLines = !archivedProject && hasAnyRole("ADMIN", "FINANCE");
+  const canReviewPaymentOrders = !archivedProject && hasAnyRole("ADMIN", "APPROVER");
 
   const [orders, setOrders] = useState([]);
   const [historyRefreshKeys, setHistoryRefreshKeys] = useState({});

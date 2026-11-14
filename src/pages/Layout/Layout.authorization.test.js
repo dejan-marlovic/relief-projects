@@ -188,3 +188,27 @@ describe("phone navigation", () => {
     expect(screen.getByRole("combobox", { name: "Project" })).toHaveValue("1");
   });
 });
+
+test("archived projects are optional, labelled and still selectable", () => {
+  const choose = jest.fn();
+  renderLayout(["VIEWER"], { projects: [{ id: 1, projectName: "Active project", archived: false }, { id: 2, projectName: "Old project", archived: true }], selectedProjectId: "1", setSelectedProjectId: choose });
+  const selector = screen.getByRole("combobox", { name: "Project", exact: true });
+  expect(within(selector).queryByRole("option", { name: "Old project — Archived" })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByLabelText("Show archived projects"));
+  const option = within(selector).getByRole("option", { name: "Old project — Archived" });
+  expect(option).toHaveAttribute("data-muted", "true");
+  expect(option).not.toBeDisabled();
+  fireEvent.change(selector, { target: { value: "2" } });
+  expect(choose).toHaveBeenCalledWith("2");
+});
+
+test("an archived-only list can be shown and selected without an active project", () => {
+  const choose = jest.fn();
+  renderLayout(["VIEWER"], { projects: [{ id: 2, projectName: "Old project", archived: true }], selectedProjectId: "", setSelectedProjectId: choose });
+  const selector = screen.getByRole("combobox", { name: "Project", exact: true });
+  expect(selector).toHaveValue("");
+  fireEvent.click(screen.getByLabelText("Show archived projects"));
+  expect(selector).toHaveValue("");
+  fireEvent.change(selector, { target: { value: "2" } });
+  expect(choose).toHaveBeenCalledWith("2");
+});

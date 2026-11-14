@@ -1,3 +1,4 @@
+import useArchivedProject from "../../hooks/useArchivedProject";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import useFinancialRefresh from "../../hooks/useFinancialRefresh";
 import { appFetch as fetch } from "../../utils/appFetch";
@@ -19,7 +20,8 @@ const Budgets = () => {
   const financialRefresh = useFinancialRefresh();
   const { selectedProjectId, projects } = useContext(ProjectContext);
   const { hasAnyRole } = useAuth();
-  const canEditBudgets = hasAnyRole("ADMIN", "FINANCE");
+  const archivedProject = useArchivedProject();
+  const canEditBudgets = !archivedProject && hasAnyRole("ADMIN", "FINANCE");
 
   const { hasUnsavedChanges } = useUnsavedChanges();
   const [readError, setReadError] = useState("");

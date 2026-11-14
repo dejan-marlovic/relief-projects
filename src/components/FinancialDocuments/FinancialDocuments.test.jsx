@@ -43,7 +43,7 @@ test.each(["BUDGET", "TRANSACTION", "PAYMENT_ORDER"])("%s links an exact version
   expect(writes).toHaveLength(1);
   expect(JSON.parse(writes[0][1].body)).toEqual({ documentId: 11 });
   expect(fetch.mock.calls.some(([, options]) => options?.method === "DELETE")).toBe(false);
-  expect(screen.getByText(/This link still uses version 1/)).toBeInTheDocument();
+  expect(await screen.findByText(/This link still uses version 1/)).toBeInTheDocument();
 });
 
 test("downloads the pinned ID rather than the newer current ID", async () => {

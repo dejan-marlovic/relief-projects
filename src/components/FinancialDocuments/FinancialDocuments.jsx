@@ -1,3 +1,4 @@
+import useArchivedProject from "../../hooks/useArchivedProject";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../hooks/useTransientMessage";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -19,12 +20,14 @@ function DocumentsPanel({ entityType, entityId, locked, lifecycleStatus, refresh
   const navigate = useNavigate();
   const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
   const { hasAnyRole } = useAuth();
-  const roleCanManage = hasAnyRole("ADMIN", "FINANCE");
+
   const { categories, categoryError, retryCategories } = useDocumentCategories(authFetch);
   const [revision, setRevision] = useState(0);
   const [links, setLinks] = useState([]);
   const [target, setTarget] = useState(null);
   const [projectId, setProjectId] = useState(null);
+  const archivedProject = useArchivedProject(projectId);
+  const roleCanManage = !archivedProject && hasAnyRole("ADMIN", "FINANCE");
   const [ownershipMessage, setOwnershipMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState("");
