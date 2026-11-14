@@ -345,9 +345,7 @@ const RestorePaymentOrder = () => {
                   <div className={styles.cardTitle}>
                     Choose deleted payment order
                   </div>
-                  <div className={styles.cardMeta}>
-                    Requires backend support
-                  </div>
+                  <div className={styles.cardMeta}>Select the deleted payment order to work with. Requires backend support.</div>
                 </div>
 
                 <div className={styles.formGroup}>

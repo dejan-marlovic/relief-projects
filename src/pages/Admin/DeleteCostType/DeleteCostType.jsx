@@ -184,9 +184,7 @@ const DeleteCostType = () => {
               <div data-mobile-tile="Choose cost type" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose cost type</div>
-                  <div className={styles.cardMeta}>
-                    Loaded from /api/cost-types/active
-                  </div>
+                  <div className={styles.cardMeta}>Select the cost type to work with. Only active records are listed.</div>
                 </div>
 
                 <div className={styles.formGroup}>

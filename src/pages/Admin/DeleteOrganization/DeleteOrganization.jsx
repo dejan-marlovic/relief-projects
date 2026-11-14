@@ -230,9 +230,7 @@ const DeleteOrganization = () => {
               <div data-mobile-tile="Choose organization" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose organization</div>
-                  <div className={styles.cardMeta}>
-                    Loaded from /api/organizations/active
-                  </div>
+                  <div className={styles.cardMeta}>Select the organization to work with. Only active records are listed.</div>
                 </div>
 
                 <div className={styles.formGroup}>

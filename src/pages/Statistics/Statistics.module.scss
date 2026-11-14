@@ -315,3 +315,5 @@
   .meta { justify-content: flex-start; gap: 8px 16px; }
   .loadingSkeleton { height: 300px; }
 }
+
+.purposeTile { margin: 1.5rem 0; padding: 1rem; min-width: 0; border: 1px solid var(--color-primary-border); border-radius: 14px; background: var(--color-surface); }

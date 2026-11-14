@@ -852,3 +852,26 @@ h3 {
   .row2, .sectionRow { grid-template-columns: minmax(0, 1fr); }
   .scrollBox { max-height: 280px; }
 }
+
+.linksCard {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.linksCard > .cardHeader { display: none; }
+.linkTile {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid colors.$primary-border;
+  border-radius: 14px;
+  background: colors.$surface;
+  box-shadow: colors.$shadow-card;
+}
+@media (max-width: 700px) {
+  .linkTile { padding: 12px; }
+}
+
+.grid, .split, .imageAndFormWrapper { gap: 1.5rem; }
+.mediaColumn > .card + .card { margin-top: 1.5rem; }
+.cardMeta { max-width: 55ch; line-height: 1.6; }

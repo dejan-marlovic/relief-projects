@@ -284,9 +284,7 @@ const RestoreRecipient = () => {
                   <div className={styles.cardTitle}>
                     Choose deleted recipient
                   </div>
-                  <div className={styles.cardMeta}>
-                    Requires backend support
-                  </div>
+                  <div className={styles.cardMeta}>Select the deleted recipient to work with. Requires backend support.</div>
                 </div>
 
                 <div className={styles.formGroup}>

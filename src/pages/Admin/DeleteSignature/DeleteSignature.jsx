@@ -301,9 +301,7 @@ const DeleteSignature = () => {
               <div data-mobile-tile="Choose signature" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose signature</div>
-                  <div className={styles.cardMeta}>
-                    Loaded from /api/signatures/active
-                  </div>
+                  <div className={styles.cardMeta}>Select the signature to work with. Only active records are listed.</div>
                 </div>
 
                 <div className={styles.formGroup}>

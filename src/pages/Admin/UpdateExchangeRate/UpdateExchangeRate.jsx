@@ -300,9 +300,7 @@ const UpdateExchangeRate = () => {
               <div data-mobile-tile="Choose exchange rate" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose exchange rate</div>
-                  <div className={styles.cardMeta}>
-                    Readable currency labels
-                  </div>
+                  <div className={styles.cardMeta}>Select the exchange rate to work with. Readable currency labels.</div>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -326,7 +324,7 @@ const UpdateExchangeRate = () => {
               <div data-mobile-tile="Edit details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Edit details</div>
-                  <div className={styles.cardMeta}>Currencies and rate</div>
+                  <div className={styles.cardMeta}>Update the selected record’s details. Currencies and rate.</div>
                 </div>
                 {selectedItem && <p>Rate date: {String(form.baseline?.rateDate || selectedItem.rateDate || "Not recorded").replace("T", " ")}. The original date is preserved when saving.</p>}
 

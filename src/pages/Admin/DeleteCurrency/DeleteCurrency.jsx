@@ -186,9 +186,7 @@ const DeleteCurrency = () => {
               <div data-mobile-tile="Choose currency" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose currency</div>
-                  <div className={styles.cardMeta}>
-                    Loaded from /api/currencies/active
-                  </div>
+                  <div className={styles.cardMeta}>Select the currency to work with. Only active records are listed.</div>
                 </div>
 
                 <div className={styles.formGroup}>

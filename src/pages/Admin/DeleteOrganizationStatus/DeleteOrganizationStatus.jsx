@@ -203,9 +203,7 @@ const DeleteOrganizationStatus = () => {
                   <div className={styles.cardTitle}>
                     Choose organization status
                   </div>
-                  <div className={styles.cardMeta}>
-                    Loaded from /api/organization-statuses/active
-                  </div>
+                  <div className={styles.cardMeta}>Select the organization status to work with. Only active records are listed.</div>
                 </div>
 
                 <div className={styles.formGroup}>

@@ -184,9 +184,7 @@ const RestoreSignatureStatus = () => {
                   <div className={styles.cardTitle}>
                     Choose deleted signature status
                   </div>
-                  <div className={styles.cardMeta}>
-                    Requires backend support
-                  </div>
+                  <div className={styles.cardMeta}>Select the deleted signature status to work with. Requires backend support.</div>
                 </div>
 
                 <div className={styles.formGroup}>

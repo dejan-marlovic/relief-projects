@@ -168,9 +168,7 @@ const RestoreSector = () => {
               <div data-mobile-tile="Choose deleted sector" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose deleted sector</div>
-                  <div className={styles.cardMeta}>
-                    Requires backend support
-                  </div>
+                  <div className={styles.cardMeta}>Select the deleted sector to work with. Requires backend support.</div>
                 </div>
 
                 <div className={styles.formGroup}>

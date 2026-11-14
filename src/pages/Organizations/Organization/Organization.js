@@ -140,7 +140,7 @@ const Organization = ({
       </div>
     </header>
     {open && <div className={styles.cardBody}>
-      <section><h4>Project relationship</h4><p>This role belongs to the selected project. An organisation can have other roles in other projects.</p>
+      <section data-mobile-tile="Project relationship" data-purpose-tile="section"><h4>Project relationship</h4><p>This role belongs to the selected project. An organisation can have other roles in other projects.</p>
         {isEditing ? <>
           <label>Organisation{selectOrg()}</label><label>Role in this project{selectStatus()}</label>
           <div className={styles.cardActions}>
@@ -154,11 +154,11 @@ const Organization = ({
         </div>
         {!isCreate && showReviews && <div className={styles.reviewsPanel}><OrganisationReviews organizationId={link.organizationId} authFetch={authFetch} /></div>}
       </section>
-      {!isCreate && link.organizationId && <section><h4>Addresses</h4><p>Addresses belong to the organisation and are shared across its projects.</p>
+      {!isCreate && link.organizationId && <section data-mobile-tile="Addresses" data-purpose-tile="section"><h4>Addresses</h4><p>Addresses belong to the organisation and are shared across its projects.</p>
         <button type="button" aria-expanded={showAddressDetails} onClick={() => { if (showAddressDetails && !confirmDiscardUnsavedChanges()) return; setShowAddressDetails(v => !v); }}>{showAddressDetails ? "Hide address details" : "Show address details"}</button>
         {showAddressDetails && <AddressDetails organizationId={link.organizationId} canManage={canManageAddresses} />}
       </section>}
-      {!isCreate && link.organizationId && canViewBankDetails && <section><h4>Bank details</h4><p>Bank details belong to the organisation and are shared across its projects. Recording them does not authorise a payment.</p>
+      {!isCreate && link.organizationId && canViewBankDetails && <section data-mobile-tile="Bank details" data-purpose-tile="section"><h4>Bank details</h4><p>Bank details belong to the organisation and are shared across its projects. Recording them does not authorise a payment.</p>
         <button type="button" aria-expanded={showBankDetails} onClick={() => { if (showBankDetails && !confirmDiscardUnsavedChanges()) return; setShowBankDetails(v => !v); }}>{showBankDetails ? "Hide bank details" : "Show bank details"}</button>
         {showBankDetails && <BankDetails organizationId={link.organizationId} canManage={canManageBankDetails} />}
       </section>}

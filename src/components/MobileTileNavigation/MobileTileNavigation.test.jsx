@@ -33,3 +33,15 @@ test('memo scope and form inputs do not trigger outer card navigation', () => {
  swipe(screen.getByLabelText('Draft'));
  expect(scroll).not.toHaveBeenCalled();
 });
+
+test('nested purpose tiles are visited without an extra stop on their container', () => {
+ function Nested() {
+  const rootRef = useRef(null);
+  return <><main ref={rootRef}><section data-mobile-tile="Container"><section data-mobile-tile="First"><p>First section</p></section><section data-mobile-tile="Second"><p>Second section</p></section></section></main><MobileTileNavigation rootRef={rootRef} route="nested" /></>;
+ }
+ render(<Nested />);
+ expect(screen.getByText('Card 1 of 2 · Swipe to browse')).toBeInTheDocument();
+ swipe(screen.getByText('First section'));
+ expect(screen.getByText('Card 2 of 2 · Swipe to browse')).toBeInTheDocument();
+ expect(screen.getByRole('button', {name:'Next card'})).toBeDisabled();
+});

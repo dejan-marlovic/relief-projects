@@ -172,9 +172,7 @@ const RestorePosition = () => {
                   <div className={styles.cardTitle}>
                     Choose deleted position
                   </div>
-                  <div className={styles.cardMeta}>
-                    Requires backend support
-                  </div>
+                  <div className={styles.cardMeta}>Select the deleted position to work with. Requires backend support.</div>
                 </div>
 
                 <div className={styles.formGroup}>

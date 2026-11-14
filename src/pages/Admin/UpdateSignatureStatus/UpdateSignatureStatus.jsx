@@ -220,7 +220,7 @@ const UpdateSignatureStatus = () => {
                   <div className={styles.cardTitle}>
                     Choose signature status
                   </div>
-                  <div className={styles.cardMeta}>Active statuses only</div>
+                  <div className={styles.cardMeta}>Select the signature status to work with. Active statuses only.</div>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -244,7 +244,7 @@ const UpdateSignatureStatus = () => {
               <div data-mobile-tile="Edit details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Edit details</div>
-                  <div className={styles.cardMeta}>Signature status name</div>
+                  <div className={styles.cardMeta}>Update the selected record’s details. Signature status name.</div>
                 </div>
 
                 <div className={styles.formGroup}>

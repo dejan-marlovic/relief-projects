@@ -278,7 +278,7 @@ const UpdateBankDetail = () => {
               <div data-mobile-tile="Choose bank detail" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose bank detail</div>
-                  <div className={styles.cardMeta}>Active only</div>
+                  <div className={styles.cardMeta}>Select the bank detail to work with. Active only.</div>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -304,9 +304,7 @@ const UpdateBankDetail = () => {
               <div data-mobile-tile="Edit details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Edit details</div>
-                  <div className={styles.cardMeta}>
-                    Bank and organization info
-                  </div>
+                  <div className={styles.cardMeta}>Update the selected record’s details. Bank and organization info.</div>
                 </div>
 
                 <div className={styles.formGroup}>

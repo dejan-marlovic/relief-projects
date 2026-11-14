@@ -536,6 +536,7 @@ const Statistics = () => {
             {/* ========================= */}
             {/* Sector PIE */}
             {/* ========================= */}
+            <section data-mobile-tile="Projects by sector" className={styles.purposeTile}>
             <div className={styles.sectionHeader}>
               <div className={styles.sectionTitle}>Projects by sector</div>
               <div className={styles.sectionSubtitle}>
@@ -587,7 +588,8 @@ const Statistics = () => {
             {/* ========================= */}
             {/* Status DONUT */}
             {/* ========================= */}
-            <div className={styles.sectionSpacer} />
+            </section>
+            <section data-mobile-tile="Projects by status" className={styles.purposeTile}>
 
             <div className={styles.sectionHeader}>
               <div className={styles.sectionTitle}>
@@ -673,7 +675,8 @@ const Statistics = () => {
             {/* ========================= */}
             {/* Project TYPE BAR */}
             {/* ========================= */}
-            <div className={styles.sectionSpacer} />
+            </section>
+            <section data-mobile-tile="Projects by type" className={styles.purposeTile}>
 
             <div className={styles.sectionHeader}>
               <div className={styles.sectionTitle}>
@@ -744,6 +747,7 @@ const Statistics = () => {
                 {isPhone && <LegendBlock items={barData.map((d, i) => ({ key: d.typeId ?? "unassigned", color: COLORS[i % COLORS.length], label: `${d.name} — ${d.value}` }))} />}
               </div>
             )}
+            </section>
           </>
         )}
 

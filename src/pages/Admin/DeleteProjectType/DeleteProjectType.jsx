@@ -186,9 +186,7 @@ const DeleteProjectType = () => {
               <div data-mobile-tile="Choose project type" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose project type</div>
-                  <div className={styles.cardMeta}>
-                    Loaded from /api/project-types/active
-                  </div>
+                  <div className={styles.cardMeta}>Select the project type to work with. Only active records are listed.</div>
                 </div>
 
                 <div className={styles.formGroup}>

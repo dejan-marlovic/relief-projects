@@ -194,9 +194,7 @@ const DeleteAddress = () => {
               <div data-mobile-tile="Choose address" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose address</div>
-                  <div className={styles.cardMeta}>
-                    Loaded from /api/addresses/active
-                  </div>
+                  <div className={styles.cardMeta}>Select the address to work with. Only active records are listed.</div>
                 </div>
 
                 <div className={styles.formGroup}>

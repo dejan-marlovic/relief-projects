@@ -309,9 +309,7 @@ const RestoreSignature = () => {
                   <div className={styles.cardTitle}>
                     Choose deleted signature
                   </div>
-                  <div className={styles.cardMeta}>
-                    Requires backend support
-                  </div>
+                  <div className={styles.cardMeta}>Select the deleted signature to work with. Requires backend support.</div>
                 </div>
 
                 <div className={styles.formGroup}>

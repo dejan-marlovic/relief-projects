@@ -249,9 +249,7 @@ const DeleteBudget = () => {
               <div data-mobile-tile="Choose budget" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose budget</div>
-                  <div className={styles.cardMeta}>
-                    Loaded from /api/budgets/active
-                  </div>
+                  <div className={styles.cardMeta}>Select the budget to work with. Only active records are listed.</div>
                 </div>
 
                 <div className={styles.formGroup}>

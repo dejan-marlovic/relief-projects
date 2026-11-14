@@ -292,9 +292,7 @@ const RestoreBudget = () => {
               <div data-mobile-tile="Choose deleted budget" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose deleted budget</div>
-                  <div className={styles.cardMeta}>
-                    Requires backend support
-                  </div>
+                  <div className={styles.cardMeta}>Select the deleted budget to work with. Requires backend support.</div>
                 </div>
 
                 <div className={styles.formGroup}>

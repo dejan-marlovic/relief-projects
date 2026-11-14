@@ -227,9 +227,7 @@ const DeleteBankDetail = () => {
               <div data-mobile-tile="Choose bank detail" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose bank detail</div>
-                  <div className={styles.cardMeta}>
-                    Loaded from /api/bank-details/active
-                  </div>
+                  <div className={styles.cardMeta}>Select the bank detail to work with. Only active records are listed.</div>
                 </div>
 
                 <div className={styles.formGroup}>

@@ -432,6 +432,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
                 <div className={styles.cardTitle}>Summary</div>
                 <div className={styles.cardMeta}>Description & totals</div>
               </div>
+<p data-tile-description="">Review the budget’s description, dates and planning details before working on its costs.</p>
 
               <div className={styles.formGroup}>
                 <label htmlFor={`budget-name-${budget.id || budget.selectedId || "new"}`}>Budget name</label>
@@ -497,6 +498,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
                 <div className={styles.cardTitle}>Currencies & rates</div>
                 <div className={styles.cardMeta}>Local + reporting</div>
               </div>
+<p data-tile-description="">Choose the currencies and exchange-rate basis used for this budget’s amounts.</p>
 
               <div className={styles.row2}>
                 <div className={styles.formGroup}>

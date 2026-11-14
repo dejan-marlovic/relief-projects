@@ -428,7 +428,7 @@ const UpdateBudget = () => {
               <div data-mobile-tile="Choose budget" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose budget</div>
-                  <div className={styles.cardMeta}>Readable project labels</div>
+                  <div className={styles.cardMeta}>Select the budget to work with. Readable project labels.</div>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -460,9 +460,7 @@ const UpdateBudget = () => {
               <div data-mobile-tile="Edit details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Edit details</div>
-                  <div className={styles.cardMeta}>
-                    Project, amounts, currencies and rates
-                  </div>
+                  <div className={styles.cardMeta}>Update the selected record’s details. Project, amounts, currencies and rates.</div>
                 </div>
 
                 <div className={styles.formGroup}>

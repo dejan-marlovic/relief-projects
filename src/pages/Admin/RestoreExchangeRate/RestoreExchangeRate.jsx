@@ -240,9 +240,7 @@ const RestoreExchangeRate = () => {
                   <div className={styles.cardTitle}>
                     Choose deleted exchange rate
                   </div>
-                  <div className={styles.cardMeta}>
-                    Requires backend support
-                  </div>
+                  <div className={styles.cardMeta}>Select the deleted exchange rate to work with. Requires backend support.</div>
                 </div>
 
                 <div className={styles.formGroup}>

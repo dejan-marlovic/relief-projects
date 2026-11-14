@@ -315,7 +315,7 @@ const UpdatePaymentOrder = () => {
               <div data-mobile-tile="Choose payment order" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose payment order</div>
-                  <div className={styles.cardMeta}>Active only</div>
+                  <div className={styles.cardMeta}>Select the payment order to work with. Active only.</div>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -339,7 +339,7 @@ const UpdatePaymentOrder = () => {
               <div data-mobile-tile="Edit details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Edit details</div>
-                  <div className={styles.cardMeta}>Header fields only</div>
+                  <div className={styles.cardMeta}>Update the selected record’s details. Header fields only.</div>
                 </div>
 
                 <div className={styles.formGroup}>

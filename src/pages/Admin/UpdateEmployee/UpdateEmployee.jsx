@@ -259,7 +259,7 @@ const UpdateEmployee = () => {
               <div data-mobile-tile="Choose employee" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose employee</div>
-                  <div className={styles.cardMeta}>Active employees only</div>
+                  <div className={styles.cardMeta}>Select the employee to work with. Active employees only.</div>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -286,7 +286,7 @@ const UpdateEmployee = () => {
               <div data-mobile-tile="Edit details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Edit details</div>
-                  <div className={styles.cardMeta}>Name and position</div>
+                  <div className={styles.cardMeta}>Update the selected record’s details. Name and position.</div>
                 </div>
 
                 <div className={styles.formGroup}>

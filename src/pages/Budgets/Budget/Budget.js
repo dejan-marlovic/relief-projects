@@ -1517,7 +1517,6 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
 
       {hasBudget && (
         <div className={styles.formContainer}>
-          <FinancialReviewAttribution entityType="BUDGET" entityId={budget.id} status={lifecycleStatus} refreshKey={historyRefreshKey} />
           <div className={styles.pageHeader}>
             <div className={styles.pageHeaderText}>
               <h3 className={styles.pageTitle}>Budget Details</h3>
@@ -1525,11 +1524,14 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
                 Draft details save after a short pause. Submission, approval and currency conversion remain manual actions.
               </p>
             </div>
-            <div
-              className={`${styles.statusBadge} ${styles[`status${lifecycleStatus}`] || ""}`}
-              aria-label={`Budget status: ${lifecycleLabel}`}
-            >
-              {lifecycleLabel}
+            <div className={styles.reviewSummary}>
+              <FinancialReviewAttribution entityType="BUDGET" entityId={budget.id} status={lifecycleStatus} refreshKey={historyRefreshKey} />
+              <div
+                className={`${styles.statusBadge} ${styles[`status${lifecycleStatus}`] || ""}`}
+                aria-label={`Budget status: ${lifecycleLabel}`}
+              >
+                {lifecycleLabel}
+              </div>
             </div>
           </div>
 
@@ -1558,6 +1560,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
                     <div className={styles.cardTitle}>Summary</div>
                     <div className={styles.cardMeta}>Description & totals</div>
                   </div>
+<p data-tile-description="">Review the budget’s description, dates and planning details before working on its costs.</p>
 
                   <div className={styles.formGroup}>
                 <label htmlFor={`budget-name-${budget.id || budget.selectedId || "new"}`}>Budget name</label>
@@ -1612,6 +1615,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
                     <div className={styles.cardTitle}>Currencies & rates</div>
                     <div className={styles.cardMeta}>Local + reporting</div>
                   </div>
+<p data-tile-description="">Choose the currencies and exchange-rate basis used for this budget’s amounts.</p>
 
                   <div className={styles.row2}>
                     <div className={styles.formGroup}>
@@ -1837,6 +1841,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
             <div className={styles.cardTitle}>Cost details</div>
             <div className={styles.cardMeta}>Breakdown</div>
           </div>
+<p data-tile-description="">Break the budget into cost items and inspect their amounts and allocations.</p>
 
           <CostDetails
             onMutationSuccess={refreshChildHistory}

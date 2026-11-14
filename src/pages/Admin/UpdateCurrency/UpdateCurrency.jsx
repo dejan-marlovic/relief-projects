@@ -223,7 +223,7 @@ const UpdateCurrency = () => {
               <div data-mobile-tile="Choose currency" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose currency</div>
-                  <div className={styles.cardMeta}>Active currencies only</div>
+                  <div className={styles.cardMeta}>Select the currency to work with. Active currencies only.</div>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -247,7 +247,7 @@ const UpdateCurrency = () => {
               <div data-mobile-tile="Edit details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Edit details</div>
-                  <div className={styles.cardMeta}>Name and description</div>
+                  <div className={styles.cardMeta}>Update the selected record’s details. Name and description.</div>
                 </div>
 
                 <div className={styles.formGroup}>

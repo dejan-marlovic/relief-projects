@@ -587,6 +587,7 @@ const RegisterProject = () => {
                   <div className={styles.cardTitle}>Classification</div>
                   <div className={styles.cardMeta}>Status, type & address</div>
                 </div>
+<p data-tile-description="">Classify the project so it can be grouped and found in project views.</p>
 
                 <div className={styles.formGroup}>
                   <label>Project Status</label>

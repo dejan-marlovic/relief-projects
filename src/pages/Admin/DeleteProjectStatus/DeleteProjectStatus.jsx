@@ -193,9 +193,7 @@ const DeleteProjectStatus = () => {
               <div data-mobile-tile="Choose project status" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose project status</div>
-                  <div className={styles.cardMeta}>
-                    Loaded from /api/project-statuses/active
-                  </div>
+                  <div className={styles.cardMeta}>Select the project status to work with. Only active records are listed.</div>
                 </div>
 
                 <div className={styles.formGroup}>

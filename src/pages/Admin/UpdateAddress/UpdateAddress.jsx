@@ -262,7 +262,7 @@ const UpdateAddress = () => {
               <div data-mobile-tile="Choose address" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose address</div>
-                  <div className={styles.cardMeta}>Active addresses only</div>
+                  <div className={styles.cardMeta}>Select the address to work with. Active addresses only.</div>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -287,7 +287,7 @@ const UpdateAddress = () => {
               <div data-mobile-tile="Edit details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Edit details</div>
-                  <div className={styles.cardMeta}>Street, city and more</div>
+                  <div className={styles.cardMeta}>Update the selected record’s details. Street, city and more.</div>
                 </div>
 
                 <div className={styles.formGroup}>

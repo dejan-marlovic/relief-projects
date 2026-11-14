@@ -178,9 +178,7 @@ const RestoreProjectStatus = () => {
                   <div className={styles.cardTitle}>
                     Choose deleted project status
                   </div>
-                  <div className={styles.cardMeta}>
-                    Requires backend support
-                  </div>
+                  <div className={styles.cardMeta}>Select the deleted project status to work with. Requires backend support.</div>
                 </div>
 
                 <div className={styles.formGroup}>

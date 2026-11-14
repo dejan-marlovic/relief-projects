@@ -261,9 +261,7 @@ const RestoreDocument = () => {
                   <div className={styles.cardTitle}>
                     Choose deleted document
                   </div>
-                  <div className={styles.cardMeta}>
-                    Requires backend support
-                  </div>
+                  <div className={styles.cardMeta}>Select the deleted document to work with. Requires backend support.</div>
                 </div>
 
                 <div className={styles.formGroup}>

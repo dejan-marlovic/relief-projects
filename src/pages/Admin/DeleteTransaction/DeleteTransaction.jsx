@@ -335,9 +335,7 @@ const DeleteTransaction = () => {
               <div data-mobile-tile="Choose transaction" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose transaction</div>
-                  <div className={styles.cardMeta}>
-                    Loaded from /api/transactions/active
-                  </div>
+                  <div className={styles.cardMeta}>Select the transaction to work with. Only active records are listed.</div>
                 </div>
 
                 <div className={styles.formGroup}>

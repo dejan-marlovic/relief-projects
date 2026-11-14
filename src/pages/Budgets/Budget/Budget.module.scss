@@ -57,6 +57,15 @@ label {
   gap: 0.25rem;
 }
 
+.reviewSummary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
 .pageTitle {
   margin: 0;
   font-size: 1.2rem;

@@ -345,6 +345,8 @@ export default function Memos({ canEdit = false }) {
         )}
       </div>
 
+      <p data-tile-description="">Read and maintain project notes, including their author and date. Notes provide context; they do not record approval or complete a follow-up.</p>
+
       {loading && !items.length && <p className={styles.note}>Loading…</p>}
       {error && (
         <ErrorBanner message={error} onDismiss={() => setError("")} />

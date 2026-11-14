@@ -246,9 +246,7 @@ const RestoreBankDetail = () => {
                   <div className={styles.cardTitle}>
                     Choose deleted bank detail
                   </div>
-                  <div className={styles.cardMeta}>
-                    Requires backend support
-                  </div>
+                  <div className={styles.cardMeta}>Select the deleted bank detail to work with. Requires backend support.</div>
                 </div>
 
                 <div className={styles.formGroup}>

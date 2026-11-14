@@ -10,7 +10,7 @@ export function WorkflowStep({ number, title, description, children, keepOpen = 
   const id = useId();
   const [expanded, setExpanded] = useState(true);
   const open = expanded || keepOpen;
-  return <section className={styles.step} aria-label={title}>
+  return <section data-mobile-tile={title} data-purpose-tile="" className={styles.step} aria-label={title}>
     <span className={styles.marker} aria-hidden="true">{number}</span>
     <button type="button" className={styles.toggle} aria-expanded={open} aria-controls={id} disabled={keepOpen} onClick={() => setExpanded(!expanded)}>
       <span><strong>{title}</strong><span className={styles.description}>{description}</span></span><FiChevronDown aria-hidden="true" className={open ? styles.expanded : undefined} />

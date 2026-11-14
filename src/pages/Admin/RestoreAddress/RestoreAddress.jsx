@@ -188,9 +188,7 @@ const RestoreAddress = () => {
               <div data-mobile-tile="Choose deleted address" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose deleted address</div>
-                  <div className={styles.cardMeta}>
-                    Requires backend support
-                  </div>
+                  <div className={styles.cardMeta}>Select the deleted address to work with. Requires backend support.</div>
                 </div>
 
                 <div className={styles.formGroup}>

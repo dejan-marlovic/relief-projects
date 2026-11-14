@@ -186,9 +186,7 @@ const RestoreTransactionStatus = () => {
                   <div className={styles.cardTitle}>
                     Choose deleted transaction status
                   </div>
-                  <div className={styles.cardMeta}>
-                    Requires backend support
-                  </div>
+                  <div className={styles.cardMeta}>Select the deleted transaction status to work with. Requires backend support.</div>
                 </div>
 
                 <div className={styles.formGroup}>

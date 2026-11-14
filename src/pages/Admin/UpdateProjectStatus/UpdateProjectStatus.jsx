@@ -221,7 +221,7 @@ const UpdateProjectStatus = () => {
               <div data-mobile-tile="Choose project status" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose project status</div>
-                  <div className={styles.cardMeta}>Active statuses only</div>
+                  <div className={styles.cardMeta}>Select the project status to work with. Active statuses only.</div>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -245,7 +245,7 @@ const UpdateProjectStatus = () => {
               <div data-mobile-tile="Edit details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Edit details</div>
-                  <div className={styles.cardMeta}>Project status name</div>
+                  <div className={styles.cardMeta}>Update the selected record’s details. Project status name.</div>
                 </div>
 
                 <div className={styles.formGroup}>

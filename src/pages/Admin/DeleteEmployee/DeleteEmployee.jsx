@@ -181,9 +181,7 @@ const DeleteEmployee = () => {
               <div data-mobile-tile="Choose employee" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose employee</div>
-                  <div className={styles.cardMeta}>
-                    Loaded from /api/employees/active
-                  </div>
+                  <div className={styles.cardMeta}>Select the employee to work with. Only active records are listed.</div>
                 </div>
 
                 <div className={styles.formGroup}>

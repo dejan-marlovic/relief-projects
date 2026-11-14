@@ -166,9 +166,7 @@ const RestoreUser = () => {
               <div data-mobile-tile="Choose deleted user" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose deleted user</div>
-                  <div className={styles.cardMeta}>
-                    Requires backend support
-                  </div>
+                  <div className={styles.cardMeta}>Select the deleted user to work with. Requires backend support.</div>
                 </div>
 
                 <div className={styles.formGroup}>

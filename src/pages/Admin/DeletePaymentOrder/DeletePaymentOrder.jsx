@@ -262,9 +262,7 @@ const DeletePaymentOrder = () => {
               <div data-mobile-tile="Choose payment order" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose payment order</div>
-                  <div className={styles.cardMeta}>
-                    Loaded from /api/payment-orders/active
-                  </div>
+                  <div className={styles.cardMeta}>Select the payment order to work with. Only active records are listed.</div>
                 </div>
 
                 <div className={styles.formGroup}>

@@ -35,7 +35,7 @@
 @media(max-width: 600px) { .taskDetails { grid-template-columns: 1fr; } }
 @media(max-width: 600px) { .page { margin: 0.5rem; padding: 0.8rem; } .filters, .grid { grid-template-columns: 1fr; } .actions button { flex: 1 1 auto; min-height: 44px; } }
 
-.board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; align-items: start; }
+.board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; align-items: start; }
 .column { min-width: 0; border-radius: 12px; padding: .8rem; background: colors.$primary-a04; border: 1px solid colors.$primary-border; }
 .column > h3 { display: flex; justify-content: space-between; align-items: center; margin: 0; }
 .column .list > li { background: colors.$surface; padding: .8rem; }

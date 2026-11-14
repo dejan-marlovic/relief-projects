@@ -193,9 +193,7 @@ const DeleteSignatureStatus = () => {
                   <div className={styles.cardTitle}>
                     Choose signature status
                   </div>
-                  <div className={styles.cardMeta}>
-                    Loaded from /api/signature-statuses/active
-                  </div>
+                  <div className={styles.cardMeta}>Select the signature status to work with. Only active records are listed.</div>
                 </div>
 
                 <div className={styles.formGroup}>

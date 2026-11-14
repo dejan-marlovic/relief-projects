@@ -325,9 +325,7 @@ const RestoreProject = () => {
               <div data-mobile-tile="Choose deleted project" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose deleted project</div>
-                  <div className={styles.cardMeta}>
-                    Requires backend support
-                  </div>
+                  <div className={styles.cardMeta}>Select the deleted project to work with. Requires backend support.</div>
                 </div>
 
                 <div className={styles.formGroup}>

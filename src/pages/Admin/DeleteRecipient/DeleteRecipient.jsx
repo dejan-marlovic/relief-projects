@@ -262,9 +262,7 @@ const DeleteRecipient = () => {
               <div data-mobile-tile="Choose recipient" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose recipient</div>
-                  <div className={styles.cardMeta}>
-                    Loaded from /api/recipients/active
-                  </div>
+                  <div className={styles.cardMeta}>Select the recipient to work with. Only active records are listed.</div>
                 </div>
 
                 <div className={styles.formGroup}>

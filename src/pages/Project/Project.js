@@ -2601,7 +2601,7 @@ Approximately:
               <div data-mobile-tile="Description" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Description</div>
-                  <div className={styles.cardMeta}>Overview</div>
+                  <div className={styles.cardMeta}>Explain the project’s purpose, needs and intended work.</div>
                 </div>
 
                 <div className={styles.fullWidthField}>
@@ -2636,15 +2636,16 @@ Approximately:
           <div className={styles.imageAndFormWrapper}>
             {/* Left: media card */}
             <aside className={styles.mediaColumn}>
-              <div data-mobile-tile="Cover & Notes" className={styles.card}>
+              <div data-mobile-tile="Cover images" className={styles.card}>
                 <div className={styles.cardHeader}>
-                  <div className={styles.cardTitle}>Cover & Notes</div>
+                  <div className={styles.cardTitle}>Cover images</div>
                   <div className={styles.cardMeta}>
                     {imageNames.length > 0
                       ? `${imageNames.length} image(s)`
                       : "No images"}
                   </div>
                 </div>
+<p data-tile-description="">Upload and browse project images. Captions provide context for each image; images do not verify project results.</p>
 
                 {/* ✅ MOVED HERE: Upload block above the cover image */}
                 {canEditProject && <div className={styles.sectionRowStack}>
@@ -2814,11 +2815,10 @@ Approximately:
                   </div>
                 )}
 
-                <div className={styles.divider} />
+              </div>
 
-                <div className={styles.memosWrap}>
+              <div className={`${styles.card} ${styles.memosWrap}`}>
                   <Memos canEdit={canEditProject} />
-                </div>
               </div>
             </aside>
 
@@ -2844,9 +2844,10 @@ Approximately:
                       <div className={styles.cardHeader}>
                         <div className={styles.cardTitle}>Core details</div>
                         <div className={styles.cardMeta}>
-                          Name, codes & costs
+                          Identify the project and record its codes and estimated costs.
                         </div>
                       </div>
+<p data-tile-description="">Review the project’s identifying information and administrative details.</p>
 
                       <div className={styles.formGroup}>
                         <label>Project Name:</label>
@@ -2943,6 +2944,7 @@ Approximately:
                           Status, dates, address
                         </div>
                       </div>
+<p data-tile-description="">Record the planned project dates, any revised start date, and the project’s type and status.</p>
 
                       <div className={styles.formGroup}>
                         <label>Project Status:</label>
@@ -3133,7 +3135,7 @@ Approximately:
 
                     {/* Links card (includes participants UI) */}
                     <div
-                      data-mobile-tile="Project links" className={styles.card}
+                      className={`${styles.card} ${styles.linksCard}`}
                       style={{ gridColumn: "1 / -1" }}
                     >
                       <div className={styles.cardHeader}>
@@ -3145,11 +3147,11 @@ Approximately:
 
                       <div className={styles.split}>
                         {/* Sectors */}
-                        <div>
+                        <div data-mobile-tile="Sectors" className={styles.linkTile}>
                           <div className={styles.sectionTitle}>
                             <span style={{ fontWeight: 700 }}>Sectors</span>
                             <span className={styles.sectionHint}>
-                              Selections save immediately; click “x” to remove
+                              Classify the project by area of work. Selections save immediately; use “x” to remove one.
                             </span>
                           </div>
 
@@ -3222,13 +3224,13 @@ Approximately:
                         </div>
 
                         {/* Organizations */}
-                        <div>
+                        <div data-mobile-tile="Related Organizations" className={styles.linkTile}>
                           <div className={styles.sectionTitle}>
                             <span style={{ fontWeight: 700 }}>
                               Related Organizations
                             </span>
                             <span className={styles.sectionHint}>
-                              Add an organization with a status
+                              Link partners and funders to this project, record their role and open their assessments.
                             </span>
                           </div>
 
@@ -3334,14 +3336,13 @@ Approximately:
                       </div>
 
                       {/* Participants */}
-                      <div style={{ marginTop: "1rem" }}>
+                      <div data-mobile-tile="Project Participants" className={styles.linkTile} style={{ marginTop: "1.5rem" }}>
                         <div className={styles.sectionTitle}>
                           <span style={{ fontWeight: 700 }}>
                             Project Participants
                           </span>
                           <span className={styles.sectionHint}>
-                            Select employee; role is fetched from employee
-                            record
+                            Choose who participates in this project. Each person’s role comes from their employee record.
                           </span>
                         </div>
 

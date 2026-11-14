@@ -196,9 +196,7 @@ const DeleteTransactionStatus = () => {
                   <div className={styles.cardTitle}>
                     Choose transaction status
                   </div>
-                  <div className={styles.cardMeta}>
-                    Loaded from /api/transaction-statuses/active
-                  </div>
+                  <div className={styles.cardMeta}>Select the transaction status to work with. Only active records are listed.</div>
                 </div>
 
                 <div className={styles.formGroup}>

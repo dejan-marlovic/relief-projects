@@ -226,7 +226,7 @@ const UpdateSector = () => {
               <div data-mobile-tile="Choose sector" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose sector</div>
-                  <div className={styles.cardMeta}>Active sectors only</div>
+                  <div className={styles.cardMeta}>Select the sector to work with. Active sectors only.</div>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -251,7 +251,7 @@ const UpdateSector = () => {
               <div data-mobile-tile="Edit details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Edit details</div>
-                  <div className={styles.cardMeta}>Code and description</div>
+                  <div className={styles.cardMeta}>Update the selected record’s details. Code and description.</div>
                 </div>
 
                 <div className={styles.formGroup}>

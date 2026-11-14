@@ -176,9 +176,7 @@ const DeleteSector = () => {
               <div data-mobile-tile="Choose sector" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose sector</div>
-                  <div className={styles.cardMeta}>
-                    Loaded from /api/sectors/active
-                  </div>
+                  <div className={styles.cardMeta}>Select the sector to work with. Only active records are listed.</div>
                 </div>
 
                 <div className={styles.formGroup}>

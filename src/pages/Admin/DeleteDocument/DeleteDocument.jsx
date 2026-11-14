@@ -252,9 +252,7 @@ const DeleteDocument = () => {
               <div data-mobile-tile="Choose document" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose document</div>
-                  <div className={styles.cardMeta}>
-                    Loaded from /api/documents/active
-                  </div>
+                  <div className={styles.cardMeta}>Select the document to work with. Only active records are listed.</div>
                 </div>
 
                 <div className={styles.formGroup}>

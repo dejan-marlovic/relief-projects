@@ -417,9 +417,7 @@ const UpdateTransaction = () => {
               <div data-mobile-tile="Choose transaction" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose transaction</div>
-                  <div className={styles.cardMeta}>
-                    Active transactions only
-                  </div>
+                  <div className={styles.cardMeta}>Select the transaction to work with. Active transactions only.</div>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -448,7 +446,7 @@ const UpdateTransaction = () => {
               <div data-mobile-tile="Edit details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Edit details</div>
-                  <div className={styles.cardMeta}>Relations and amounts</div>
+                  <div className={styles.cardMeta}>Update the selected record’s details. Relations and amounts.</div>
                 </div>
 
                 <div className={styles.formGroup}>

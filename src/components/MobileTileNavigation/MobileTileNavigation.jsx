@@ -12,7 +12,9 @@ export default function MobileTileNavigation({ rootRef, route }) {
     if (!root) return undefined;
     let frame;
     const update = () => {
-      const visible = [...root.querySelectorAll("[data-mobile-tile]")].filter(el => !el.closest("[data-mobile-record-deck]") && !el.querySelector("[data-mobile-record-deck]") && el.getClientRects().length && !el.closest('[hidden], [aria-hidden="true"]'));
+      const candidates = [...root.querySelectorAll("[data-mobile-tile]")].filter(el => !el.closest("[data-mobile-record-deck]") && !el.querySelector("[data-mobile-record-deck]") && el.getClientRects().length && !el.closest('[hidden], [aria-hidden="true"]'));
+      // Navigate the independently visible sections, not their containing card as well.
+      const visible = candidates.filter(el => !candidates.some(child => child !== el && el.contains(child)));
       tiles.current = visible;
       let index = 0, distance = Infinity;
       visible.forEach((el, i) => {

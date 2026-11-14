@@ -577,3 +577,12 @@ $secondary-color: colors.$danger;
   .content { padding-bottom: calc(90px + env(safe-area-inset-bottom)); }
   .content [data-mobile-tile] { scroll-margin-top: 16px; }
 }
+
+// Shared separation for purpose-based cards, without changing table-row layout.
+.content { --tile-gap: 1.5rem; }
+.content [data-mobile-tile] { scroll-margin-top: 20px; }
+.content :where(div, section, fieldset):has(> [data-mobile-tile]) { gap: var(--tile-gap); }
+.content [data-purpose-tile] { min-width: 0; }
+.content [data-tile-description] { color: var(--color-text-muted); font-size: .875rem; line-height: 1.6; margin: .5rem 0 1rem; max-width: 85ch; overflow-wrap: anywhere; }
+
+.content [data-purpose-tile="section"] { margin-block: var(--tile-gap); padding: 1rem; border: 1px solid var(--color-primary-border); border-radius: 12px; background: var(--color-surface); }

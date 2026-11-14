@@ -226,9 +226,7 @@ const RestoreEmployee = () => {
                   <div className={styles.cardTitle}>
                     Choose deleted employee
                   </div>
-                  <div className={styles.cardMeta}>
-                    Requires backend support
-                  </div>
+                  <div className={styles.cardMeta}>Select the deleted employee to work with. Requires backend support.</div>
                 </div>
 
                 <div className={styles.formGroup}>

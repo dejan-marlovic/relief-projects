@@ -230,7 +230,7 @@ const UpdateTransactionStatus = () => {
                   <div className={styles.cardTitle}>
                     Choose transaction status
                   </div>
-                  <div className={styles.cardMeta}>Active statuses only</div>
+                  <div className={styles.cardMeta}>Select the transaction status to work with. Active statuses only.</div>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -254,7 +254,7 @@ const UpdateTransactionStatus = () => {
               <div data-mobile-tile="Edit details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Edit details</div>
-                  <div className={styles.cardMeta}>Transaction status name</div>
+                  <div className={styles.cardMeta}>Update the selected record’s details. Transaction status name.</div>
                 </div>
 
                 <div className={styles.formGroup}>

@@ -415,7 +415,7 @@ const UpdateProject = () => {
               <div data-mobile-tile="Choose project" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose project</div>
-                  <div className={styles.cardMeta}>Active projects only</div>
+                  <div className={styles.cardMeta}>Select the project to work with. Active projects only.</div>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -439,7 +439,7 @@ const UpdateProject = () => {
               <div data-mobile-tile="Edit details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Edit details</div>
-                  <div className={styles.cardMeta}>Main project fields</div>
+                  <div className={styles.cardMeta}>Update the selected record’s details. Main project fields.</div>
                 </div>
 
                 <div className={styles.formGroup}>

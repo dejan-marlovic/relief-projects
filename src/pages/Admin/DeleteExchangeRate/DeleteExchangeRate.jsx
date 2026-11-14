@@ -244,9 +244,7 @@ const DeleteExchangeRate = () => {
               <div data-mobile-tile="Choose exchange rate" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose exchange rate</div>
-                  <div className={styles.cardMeta}>
-                    Loaded from /api/exchange-rates/active
-                  </div>
+                  <div className={styles.cardMeta}>Select the exchange rate to work with. Only active records are listed.</div>
                 </div>
 
                 <div className={styles.formGroup}>

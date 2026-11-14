@@ -221,7 +221,7 @@ const UpdateCostType = () => {
               <div data-mobile-tile="Choose cost type" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose cost type</div>
-                  <div className={styles.cardMeta}>Active cost types only</div>
+                  <div className={styles.cardMeta}>Select the cost type to work with. Active cost types only.</div>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -245,7 +245,7 @@ const UpdateCostType = () => {
               <div data-mobile-tile="Edit details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Edit details</div>
-                  <div className={styles.cardMeta}>Cost type name</div>
+                  <div className={styles.cardMeta}>Update the selected record’s details. Cost type name.</div>
                 </div>
 
                 <div className={styles.formGroup}>

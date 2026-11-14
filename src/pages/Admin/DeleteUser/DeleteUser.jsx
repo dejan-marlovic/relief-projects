@@ -170,9 +170,7 @@ const DeleteUser = () => {
               <div data-mobile-tile="Choose user" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose user</div>
-                  <div className={styles.cardMeta}>
-                    Loaded from /api/users/active
-                  </div>
+                  <div className={styles.cardMeta}>Select the user to work with. Only active records are listed.</div>
                 </div>
 
                 <div className={styles.formGroup}>

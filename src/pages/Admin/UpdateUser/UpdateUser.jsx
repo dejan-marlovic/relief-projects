@@ -312,7 +312,7 @@ const UpdateUser = () => {
               <div data-mobile-tile="Choose user" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose user</div>
-                  <div className={styles.cardMeta}>Active users only</div>
+                  <div className={styles.cardMeta}>Select the user to work with. Active users only.</div>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -343,9 +343,7 @@ const UpdateUser = () => {
               <div data-mobile-tile="Edit details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Edit details</div>
-                  <div className={styles.cardMeta}>
-                    Username, email and password
-                  </div>
+                  <div className={styles.cardMeta}>Update the selected record’s details. Username, email and password.</div>
                 </div>
 
                 <div className={styles.formGroup}>

@@ -241,9 +241,7 @@ const RestoreOrganization = () => {
                   <div className={styles.cardTitle}>
                     Choose deleted organization
                   </div>
-                  <div className={styles.cardMeta}>
-                    Requires backend support
-                  </div>
+                  <div className={styles.cardMeta}>Select the deleted organization to work with. Requires backend support.</div>
                 </div>
 
                 <div className={styles.formGroup}>

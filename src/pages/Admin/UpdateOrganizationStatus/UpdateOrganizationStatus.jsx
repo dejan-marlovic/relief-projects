@@ -230,7 +230,7 @@ const UpdateOrganizationStatus = () => {
                   <div className={styles.cardTitle}>
                     Choose organization status
                   </div>
-                  <div className={styles.cardMeta}>Active statuses only</div>
+                  <div className={styles.cardMeta}>Select the organization status to work with. Active statuses only.</div>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -254,9 +254,7 @@ const UpdateOrganizationStatus = () => {
               <div data-mobile-tile="Edit details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Edit details</div>
-                  <div className={styles.cardMeta}>
-                    Organization status name
-                  </div>
+                  <div className={styles.cardMeta}>Update the selected record’s details. Organization status name.</div>
                 </div>
 
                 <div className={styles.formGroup}>

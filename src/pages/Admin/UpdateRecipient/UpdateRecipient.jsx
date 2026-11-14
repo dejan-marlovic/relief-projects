@@ -274,9 +274,7 @@ const UpdateRecipient = () => {
               <div data-mobile-tile="Choose recipient" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose recipient</div>
-                  <div className={styles.cardMeta}>
-                    Readable organization and PO labels
-                  </div>
+                  <div className={styles.cardMeta}>Select the recipient to work with. Readable organization and PO labels.</div>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -305,9 +303,7 @@ const UpdateRecipient = () => {
               <div data-mobile-tile="Edit details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Edit details</div>
-                  <div className={styles.cardMeta}>
-                    Organization and payment order
-                  </div>
+                  <div className={styles.cardMeta}>Update the selected record’s details. Organization and payment order.</div>
                 </div>
 
                 <div className={styles.formGroup}>

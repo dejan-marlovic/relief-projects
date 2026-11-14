@@ -31,7 +31,7 @@
   white-space: nowrap;
 }
 
-.kpiGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.85rem; }
+.kpiGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; }
 
 .kpiCard {
   display: flex;
@@ -64,7 +64,7 @@
 .chartGrid {
   display: grid;
   grid-template-columns: minmax(0, 3fr) minmax(430px, 2fr);
-  gap: 0.9rem;
+  gap: 1.5rem;
   margin-top: 0.9rem;
 }
 

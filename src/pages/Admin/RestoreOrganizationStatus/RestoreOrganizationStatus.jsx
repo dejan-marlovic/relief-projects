@@ -185,9 +185,7 @@ const RestoreOrganizationStatus = () => {
                   <div className={styles.cardTitle}>
                     Choose deleted organization status
                   </div>
-                  <div className={styles.cardMeta}>
-                    Requires backend support
-                  </div>
+                  <div className={styles.cardMeta}>Select the deleted organization status to work with. Requires backend support.</div>
                 </div>
 
                 <div className={styles.formGroup}>

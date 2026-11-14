@@ -205,9 +205,7 @@ const DeleteCost = () => {
               <div data-mobile-tile="Choose cost" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose cost</div>
-                  <div className={styles.cardMeta}>
-                    Loaded from /api/costs/active
-                  </div>
+                  <div className={styles.cardMeta}>Select the cost to work with. Only active records are listed.</div>
                 </div>
 
                 <div className={styles.formGroup}>

@@ -168,9 +168,7 @@ const RestoreCostType = () => {
                   <div className={styles.cardTitle}>
                     Choose deleted cost type
                   </div>
-                  <div className={styles.cardMeta}>
-                    Requires backend support
-                  </div>
+                  <div className={styles.cardMeta}>Select the deleted cost type to work with. Requires backend support.</div>
                 </div>
 
                 <div className={styles.formGroup}>

@@ -185,9 +185,7 @@ const DeletePosition = () => {
               <div data-mobile-tile="Choose position" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose position</div>
-                  <div className={styles.cardMeta}>
-                    Loaded from /api/positions/active
-                  </div>
+                  <div className={styles.cardMeta}>Select the position to work with. Only active records are listed.</div>
                 </div>
 
                 <div className={styles.formGroup}>

@@ -306,7 +306,7 @@ const UpdateDocument = () => {
               <div data-mobile-tile="Choose document" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose document</div>
-                  <div className={styles.cardMeta}>Active documents only</div>
+                  <div className={styles.cardMeta}>Select the document to work with. Active documents only.</div>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -333,7 +333,7 @@ const UpdateDocument = () => {
               <div data-mobile-tile="Edit details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Edit details</div>
-                  <div className={styles.cardMeta}>Document metadata only</div>
+                  <div className={styles.cardMeta}>Update the selected record’s details. Document metadata only.</div>
                 </div>
                 {historical && <p>Historical version · metadata is read-only.</p>}
                 {linked && <p>Linked versions stay in the same project.</p>}

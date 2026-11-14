@@ -317,9 +317,7 @@ const UpdateSignature = () => {
               <div data-mobile-tile="Choose signature" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Choose signature</div>
-                  <div className={styles.cardMeta}>
-                    Readable status, employee and PO labels
-                  </div>
+                  <div className={styles.cardMeta}>Select the signature to work with. Readable status, employee and PO labels.</div>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -351,9 +349,7 @@ const UpdateSignature = () => {
               <div data-mobile-tile="Edit details" className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitle}>Edit details</div>
-                  <div className={styles.cardMeta}>
-                    Status, employee, PO, text and date
-                  </div>
+                  <div className={styles.cardMeta}>Update the selected record’s details. Status, employee, PO, text and date.</div>
                 </div>
 
                 <div className={styles.formGroup}>
