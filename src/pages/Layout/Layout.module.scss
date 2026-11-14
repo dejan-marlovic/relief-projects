@@ -453,12 +453,12 @@ $secondary-color: colors.$danger;
     .selectorInline { display: flex; grid-area: controls; align-self: center; min-width: 0; }
     .selectorInline .selectorLabel { grid-area: selectorLabel; }
     .selectInput { min-height: 44px; padding: 0.5rem; }
-    .logoWrap { align-self: center; padding: 0.25rem; box-sizing: border-box; height: 88px; margin-top: 0; }
-    .logo { height: 78px; max-width: 130px; }
+    .logoWrap { align-self: center; padding: 0.25rem; box-sizing: border-box; height: 96px; margin-top: 0; }
+    .logo { height: 86px; max-width: 130px; }
     .logoutIcon { grid-area: logout; justify-self: end; margin-top: 0; }
-    .nav { padding: 6px; margin-bottom: 0.5rem; }
+    .nav { padding: 10px; margin-bottom: 0.75rem; }
     .tabList { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
-    .tabLink { min-height: 48px; padding: 6px 10px; font-size: 0.9rem; }
+    .tabLink { min-height: 56px; padding: 10px 12px; font-size: 0.9rem; }
     .groupTrigger { min-width: 0; }
     .groupTitle { gap: 0.4rem; }
   }
@@ -468,7 +468,7 @@ $secondary-color: colors.$danger;
 @media (max-width: 700px) {
   .layoutShell {
     .headerBar {
-      grid-template-columns: minmax(0, 1fr) 88px 44px;
+      grid-template-columns: minmax(0, 1fr) 96px 44px;
       grid-template-areas: "title logo logout" "context context context" "controls controls controls";
       align-items: center;
       gap: 12px 8px;
@@ -477,15 +477,15 @@ $secondary-color: colors.$danger;
     .selectorInline { display: flex; grid-area: controls; }
     .logoWrap {
       align-self: center;
-      width: 88px;
-      height: 88px;
+      width: 96px;
+      height: 96px;
       box-sizing: border-box;
       padding: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
     }
-    .logo { width: 100%; height: 78px; }
+    .logo { width: 100%; height: 86px; }
     .logoutIcon, .logoutIcon:only-child { grid-area: logout; align-self: center; }
     .brandIcon { flex-shrink: 0; }
   }
@@ -504,7 +504,7 @@ $secondary-color: colors.$danger;
       strong { display: inline; margin-right: 0.5rem; }
       p { display: inline; }
     }
-    .tabLink { padding: 6px; font-size: 0.8rem; }
+    .tabLink { padding: 10px 8px; font-size: 0.8rem; }
   }
 }
 
