@@ -1,3 +1,4 @@
+import { budgetOptionLabel } from "../../utils/budgetDisplay";
 import useRefreshLoading from "../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import ScrollToForm from "../ScrollToForm/ScrollToForm";
@@ -17,7 +18,8 @@ export function CapacityBasis({ rows = [] }) {
   </div>)}</div>;
 }
 
-export default function BudgetExecution({ familyId, budgetId, disabled = false, refreshKey }) {
+export default function BudgetExecution({ familyId, budgetId, budgets = [], disabled = false, refreshKey }) {
+  const budgetReference = id => { const budget = budgets.find(item => String(item.id) === String(id)); return budget ? budgetOptionLabel(budget) : `Budget #${id} · Name unavailable`; };
   const navigate = useNavigate(), authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
   const eventRevision = useFinancialRefresh();
   const [tick, setTick] = useState(0), [data, setData] = useState(null), [loading, setLoading, initialLoading] = useRefreshLoading(true, familyId);
@@ -62,7 +64,7 @@ export default function BudgetExecution({ familyId, budgetId, disabled = false, 
     <p className={styles.hint}>Activation applies one set of shared cost ceilings. Existing funding and commitments keep their original references. Uncommitted planned capacity is not available cash or funding.</p>
     {(error || blocked) && <button disabled={loading || busy} onClick={() => setTick(n => n + 1)}>Retry execution</button>}
     {initialLoading && <p role="status">Loading execution…</p>}{error && <p role="alert">{error}</p>}
-    {data && <><dl className={styles.fields}><dt>Status</dt><dd>{data.executionStatus.replaceAll("_", " ")}</dd><dt>Origin budget</dt><dd>#{data.originBudgetId}</dd><dt>Current plan</dt><dd>{data.currentPlanBudgetId == null ? "Not selected" : `#${data.currentPlanBudgetId}`}</dd><dt>Executable budget</dt><dd>{data.executableBudgetId == null ? "Not activated; original-budget rules apply" : `#${data.executableBudgetId}`}</dd><dt>Currency</dt><dd>{data.currency?.name || "Unknown"} {data.currency?.id != null && `(#${data.currency.id})`}</dd><dt>Coverage</dt><dd>{data.coverage?.capacity?.replaceAll("_", " ") || "Unavailable"}</dd><dt>Retained obligations</dt><dd>{exactAmount(data.obligations)}</dd><dt>Uncommitted planned capacity</dt><dd>{exactAmount(data.uncommittedPlannedCapacity)}</dd></dl>
+    {data && <><dl className={styles.fields}><dt>Status</dt><dd>{data.executionStatus.replaceAll("_", " ")}</dd><dt>Origin budget</dt><dd>{budgetReference(data.originBudgetId)}</dd><dt>Current plan</dt><dd>{data.currentPlanBudgetId == null ? "Not selected" : budgetReference(data.currentPlanBudgetId)}</dd><dt>Executable budget</dt><dd>{data.executableBudgetId == null ? "Not activated; original-budget rules apply" : budgetReference(data.executableBudgetId)}</dd><dt>Currency</dt><dd>{data.currency?.name || "Unknown"} {data.currency?.id != null && `(#${data.currency.id})`}</dd><dt>Coverage</dt><dd>{data.coverage?.capacity?.replaceAll("_", " ") || "Unavailable"}</dd><dt>Retained obligations</dt><dd>{exactAmount(data.obligations)}</dd><dt>Uncommitted planned capacity</dt><dd>{exactAmount(data.uncommittedPlannedCapacity)}</dd></dl>
       {data.executionStatus === "SUSPENDED" && <p role="alert">Execution suspended. New or increased commitments need explicit reaffirmation with valid donor approval. Retained history and otherwise permitted reductions remain available.</p>}
       {data.executableBudgetId != null && data.executableBudgetId !== data.currentPlanBudgetId && <p>Current planning and financial execution use different revisions.</p>}
       {(data.issues || []).map((issue, i) => <p key={i}>{issue.message}</p>)}
@@ -70,7 +72,7 @@ export default function BudgetExecution({ familyId, budgetId, disabled = false, 
       {data.eligibility.mayManageActivation && <button disabled={disabled || busy || loading || !data.eligibility.canRequestActivation} onClick={getPreview}>{preview ? "Request fresh activation preview" : "Preview activation of this budget"}</button>}
     </>}
     {preview && <ScrollToForm className={styles.form} onSubmit={confirm}>
-      <h4>Activation preview · Budget #{budgetId}</h4><p>This observation is not a reservation. Saving revalidates all obligations.</p>
+      <h4>Activation preview · {budgetReference(budgetId)}</h4><p>This observation is not a reservation. Saving revalidates all obligations.</p>
       <p>Budget limit: {exactAmount(preview.limit)} · Planned costs: {exactAmount(preview.plannedCosts)} · Governing donor decision #{preview.donorDecisionId ?? "unavailable"}</p>
       {preview.blockingIssues.map((issue, i) => <p role="alert" key={i}>{issue.message}</p>)}
       <CapacityBasis rows={preview.basis} />

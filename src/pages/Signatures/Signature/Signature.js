@@ -1,3 +1,4 @@
+import { namedReference } from "../../../utils/recordLabels";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useScrollToEditor from "../../../hooks/useScrollToEditor";
 import React from "react";
@@ -108,7 +109,7 @@ const SignatureRow = ({
         <option value="">(none)</option>
         {poOptions.map((po) => (
           <option key={po.id} value={String(po.id)}>
-            {`PO#${po.id}`}
+            {namedReference("Payment order", po.id, po.paymentOrderDescription)}
           </option>
         ))}
       </SearchableSelect>
@@ -302,7 +303,7 @@ const SignatureRow = ({
       <div className={styles.cardSummary}>
         <div><span className={styles.fieldLabel}>Status</span>{isEditing ? selectStatus : statusLabelById(row.signatureStatusId)}</div>
         <div><span className={styles.fieldLabel}>Employee</span>{isEditing ? selectEmployee : employeeLabelById(row.employeeId)}</div>
-        <div><span className={styles.fieldLabel}>Payment order</span>{isEditing ? selectPO : (row.paymentOrderId != null ? `PO#${row.paymentOrderId}` : "-")}</div>
+        <div><span className={styles.fieldLabel}>Payment order</span>{isEditing ? selectPO : (row.paymentOrderId != null ? namedReference("Payment order", row.paymentOrderId, poOptions.find(po => String(po.id) === String(row.paymentOrderId))?.paymentOrderDescription) : "-")}</div>
       </div>
       <details className={styles.cardDetails} open={isEditing ? true : undefined}>
         <summary>Signature details</summary>
@@ -336,7 +337,7 @@ const SignatureRow = ({
 
       {/* 3: Payment Order */}
       <Cell className={hc(3)}>
-        {isEditing ? selectPO : (row.paymentOrderId ?? "-")}
+        {isEditing ? selectPO : (row.paymentOrderId == null ? "-" : namedReference("Payment order", row.paymentOrderId, poOptions.find(po => String(po.id) === String(row.paymentOrderId))?.paymentOrderDescription))}
       </Cell>
 
       {/* 4: Signature */}

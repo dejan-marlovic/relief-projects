@@ -1,3 +1,4 @@
+import { namedReference } from "../../../utils/recordLabels";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useScrollToEditor from "../../../hooks/useScrollToEditor";
 import PaymentAmount from "../../../components/PaymentAmount/PaymentAmount";
@@ -93,7 +94,7 @@ const RecipientRow = ({
       >
         <option value="">(none)</option>
         {poOptions.map((po) => (
-          <option key={po.id} value={po.id}>{`PO#${po.id}`}</option>
+          <option key={po.id} value={po.id}>{namedReference("Payment order", po.id, po.paymentOrderDescription)}</option>
         ))}
       </SearchableSelect>
       <FieldError name="paymentOrderId" />
@@ -251,7 +252,7 @@ const RecipientRow = ({
 
       {/* 2: Payment Order */}
       <Cell label="Payment order" className={hc(2)}>
-        {isEditing ? selectPO : (row.paymentOrderId ?? "-")}
+        {isEditing ? selectPO : (row.paymentOrderId == null ? "-" : namedReference("Payment order", row.paymentOrderId, poOptions.find(po => String(po.id) === String(row.paymentOrderId))?.paymentOrderDescription))}
       </Cell>
 
       {/* 3: Amount (computed, read-only) */}

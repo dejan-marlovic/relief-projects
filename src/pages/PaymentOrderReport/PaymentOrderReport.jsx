@@ -1,3 +1,4 @@
+import { namedReference } from "../../utils/recordLabels";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { BASE_URL } from "../../config/api";
@@ -39,7 +40,7 @@ export function validReport(data, id) {
 export function ReportContent({ data, onDownload, downloading, downloadError }) {
   const summary = data.payments.summary, binding = data.payments.denominationConfirmation;
   return <article className={styles.report}>
-    <header><h1>Payment order #{data.paymentOrderId}</h1><p><strong>Current-state report · Metadata only</strong></p><p>Observed: {stamp(data.observedAt)}</p><p>This is a database observation, not a retained approval snapshot. File contents were not checked. It does not certify signatures, settlement or complete payment evidence.</p></header>
+    <header><h1>{namedReference("Payment order", data.paymentOrderId, data.order?.description)}</h1><p><strong>Current-state report · Metadata only</strong></p><p>Observed: {stamp(data.observedAt)}</p><p>This is a database observation, not a retained approval snapshot. File contents were not checked. It does not certify signatures, settlement or complete payment evidence.</p></header>
     <section><h2>Order details</h2><dl>
       <dt>Project</dt><dd>{identity(data.project)}{data.project?.code && ` · ${data.project.code}`}</dd>
       <dt>Header transaction</dt><dd>{data.order.transactionId == null ? "No header transaction" : `#${data.order.transactionId}`}</dd>

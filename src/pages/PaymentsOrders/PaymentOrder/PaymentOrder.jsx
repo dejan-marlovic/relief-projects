@@ -1,3 +1,4 @@
+import { namedReference, transactionReference } from "../../../utils/recordLabels";
 import { FinancialReviewAttribution } from "../../../components/ReviewAttribution/ReviewAttribution";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useScrollToEditor from "../../../hooks/useScrollToEditor";
@@ -130,7 +131,7 @@ const PaymentOrder = ({
       >
         <option value="">(none)</option>
         {transactions.map((t) => (
-          <option key={t.id} value={t.id}>{`TX#${t.id}`}</option>
+          <option key={t.id} value={t.id}>{transactionReference(t)}</option>
         ))}
       </SearchableSelect>
       <FieldError name="transactionId" />
@@ -365,7 +366,7 @@ const PaymentOrder = ({
       {/* 2: Transaction */}
       <Cell className={hc(2)}>
         {compact && <span className={styles.fieldLabel}>Transaction</span>}
-        {isEditing ? selectTransaction : (po.transactionId ?? "-")}
+        {isEditing ? selectTransaction : (po.transactionId == null ? "-" : transactionReference(transactions.find(t => String(t.id) === String(po.transactionId)), po.transactionId))}
       </Cell>
 
       {/* 3: Date */}
@@ -402,7 +403,7 @@ const PaymentOrder = ({
         {isEditing ? inputText("pinCode") : (po.pinCode ?? "-")}
       </Cell>
     </div>
-      {Boolean(po.id) && <RecordActivity recordLabel={`Payment order #${po.id}`}>
+      {Boolean(po.id) && <RecordActivity recordLabel={namedReference("Payment order", po.id, po.paymentOrderDescription)}>
         <p><a href={`/payment-orders/${po.id}/report`} target="_blank" rel="noopener noreferrer">View / print payment-order report</a></p>
         <RecordHistory entityType="PAYMENT_ORDER" entityId={po.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} />
         <OutgoingPayments paymentOrderId={po.id} refreshKey={`${historyRefreshKey}:${lifecycleStatus}`} editingLocked={isEditing || saving || editingLocked} onChanged={onPaymentChanged} />

@@ -33,8 +33,9 @@ function Evidence({ result, endpoint, authFetch, refresh, open, locked }) {
 }
 function Report({ result, endpoint, authFetch, refresh, open, indicator, locked }) {
   const [evidenceOpen, setEvidenceOpen] = useState(false);
+  const indicatorName = result.basis?.name || indicator?.name;
   return <article data-mobile-tile="" className={styles.panel}>
-    <h4>Report #{result.id} · {words(result.state)} · Through {result.asOfDate}</h4>
+    <h4>{indicatorName && `${indicatorName} · `}Report #{result.id} · {words(result.state)} · Through {result.asOfDate}</h4>
     <p><strong>{result.value} {result.basis?.unit}</strong> · User reported</p><p><Attribution at={result.recordedAt} actor={result.recordedBy} /></p>
     {result.notes && <p className={styles.text}>{result.notes}</p>}{result.reason && <p>Reason: {result.reason}</p>}
     {result.supersedesResultId && <p>Corrects report #{result.supersedesResultId}.</p>}{result.successorResultId && <p>Replaced by report #{result.successorResultId}.</p>}{result.replacesVoidedResultId && <p>Reuses the date of voided report #{result.replacesVoidedResultId}.</p>}

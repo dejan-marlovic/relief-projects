@@ -9,6 +9,12 @@ test("uses recorded names ahead of current project names", () => {
   expect(screen.getByText("Original project · Reference 7")).toBeInTheDocument();
   expect(screen.queryByText(/Renamed/)).not.toBeInTheDocument();
 });
+
+test("report references use the retained measurement name", () => {
+  render(<HistorySnapshot value={{ id: 8, indicatorId: 5, basis: { name: "Original water-point indicator" } }} />);
+  expect(screen.getByText("Original water-point indicator · Reference 8")).toBeInTheDocument();
+  expect(screen.getByText("Original water-point indicator · Reference 5")).toBeInTheDocument();
+});
 test("labels current project names and never borrows a different project's name", () => {
   render(<ProjectContext.Provider value={{ projects: [{ id: 7, projectName: "Riverbend" }] }}><p><RecordReference field="projectId" value={7} /></p><p><RecordReference field="projectId" value={9} currentProject={{ id: 8, projectName: "Wrong project" }} /></p></ProjectContext.Provider>);
   expect(screen.getByText("Riverbend (current name) · Reference 7")).toBeInTheDocument();
