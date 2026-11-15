@@ -11,6 +11,7 @@ import { blankIndicator, indicatorDraft, readIndicator, useIndicatorRead, words 
 import { Attribution, HistorySnapshot, Issues, MeasurementBasis, Pagination, ReadState, ResultSummary } from "./ResultViews";
 import ResultsEditor, { indicatorDirty, indicatorSignature } from "./ResultsEditor";
 import { notifySuccess } from "../../utils/successNotifications";
+import useScrollToEditor from "../../hooks/useScrollToEditor";
 import styles from "./Results.module.scss";
 
 function Evidence({ result, endpoint, authFetch, refresh, open, locked }) {
@@ -58,6 +59,7 @@ function History({ endpoint, authFetch, refresh }) {
 function IndicatorDetail({ id, endpoint: base, authFetch, refresh, reload, projectId, onClose, editingRef }) {
   const endpoint = `${base}/${id}`;
   const state = useIndicatorRead(authFetch, endpoint, refresh);
+  const detailRef = useScrollToEditor(!!state.data);
   const [page, setPage] = useState(0), [filters, setFilters] = useState({ state: "ALL", from: "", to: "" });
   const query = new URLSearchParams({ state: filters.state, page, size: 20 });
   if (filters.from) query.set("asOfFrom", filters.from); if (filters.to) query.set("asOfTo", filters.to);
@@ -106,7 +108,7 @@ function IndicatorDetail({ id, endpoint: base, authFetch, refresh, reload, proje
       if (alive.current) { setForm(f => ({ ...f, error: e.message, reviewRequired: true })); if (e.existingResultId) setInspectId(e.existingResultId); }
     } finally { pending.current = false; if (alive.current) { setBusy(false); reload(); } }
   }
-  return <section className={styles.panel} aria-label="Indicator details"><div className={styles.actions}><button disabled={busy || !!form} onClick={onClose}>Close indicator</button></div><ReadState state={state} />
+  return <section ref={detailRef} className={styles.panel} style={{ scrollMarginTop: 16 }} aria-label="Indicator details"><div className={styles.actions}><button disabled={busy || !!form} onClick={onClose}>Close indicator</button></div><ReadState state={state} />
     {indicator && <><h3>{indicator.name} · #{id}{indicator.isDeleted ? " · Deleted" : ""}</h3><WorkflowIntro>Define what you will measure, then record results for the reporting period. Each report is a full period-to-date snapshot; repeated reports are never added together.</WorkflowIntro><WorkflowStep number={1} title="Define the measurement" description="Set the population, unit, reporting dates, baseline and target. Measurement definitions become fixed after reporting; historical targets are retained."><p className={styles.text}>{indicator.definition}</p><p>{indicator.periodStart} through {indicator.periodEnd} · {words(indicator.measurementType)} · {indicator.unit}</p><p>Baseline: {indicator.baselineKnown ? `${indicator.baselineValue} ${indicator.unit} on ${indicator.baselineDate}` : "Unknown"}</p>{indicator.notes && <p>{indicator.notes}</p>}<Issues issues={indicator.issues} /></WorkflowStep>
       <ResultSummary summary={indicator.summary} unit={indicator.unit} direction={indicator.direction} />
       <div className={styles.actions}>{[["canEdit", "edit", "Edit indicator"], ["canRecordResult", "report", "Record result"], ["canDelete", "delete", "Delete indicator"], ["canRestore", "restore", "Restore indicator"]].map(([p,a,label]) => indicator.permissions?.[p] && <button key={a} disabled={locked} onClick={() => open(a)}>{label}</button>)}</div>
