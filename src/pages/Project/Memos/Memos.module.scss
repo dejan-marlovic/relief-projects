@@ -116,4 +116,30 @@
   .container button { min-height: 44px; }
 }
 
-.memoNavigation { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0; button { min-height: 44px; min-width: 44px; } span { font-size: .8rem; } }
+.memoNavigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 8px 0;
+
+  button {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 8px 10px;
+    border: 1px solid colors.$primary-border;
+    border-radius: 8px;
+    background: colors.$surface;
+    color: colors.$primary;
+    font: inherit;
+    font-size: 1.25rem;
+    font-weight: 800;
+    cursor: pointer;
+
+    &:hover:not(:disabled) { background: colors.$primary-soft; border-color: colors.$primary-border-strong; }
+    &:focus-visible { outline: 2px solid colors.$primary; outline-offset: 2px; }
+    &:disabled { opacity: .45; cursor: default; }
+  }
+
+  span { flex: 1; text-align: center; font-size: .8rem; color: colors.$text-muted; }
+}
