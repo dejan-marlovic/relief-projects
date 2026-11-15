@@ -1,3 +1,4 @@
+import DocumentLabel from "../../components/DocumentLabel/DocumentLabel";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import React, { useEffect, useRef, useState } from "react";
 import { FiUploadCloud, FiDownload, FiLink } from "react-icons/fi";
@@ -177,7 +178,7 @@ export default function FollowUpAttachments({ task, authFetch, disabled = false,
     {data && <>
       {!data.content.length && <p>No attachments on this page.</p>}
       <ul className={styles.attachmentList}>{data.content.map(item => <li key={item.documentId}>
-        <strong>{item.documentName}</strong>
+        <strong><DocumentLabel>{item.documentName}</DocumentLabel></strong>
         <p className={styles.muted}>Version {item.versionNumber} · {item.isCurrent ? "Current version" : "Historical version"} · {statusLabel(item.status)} · {categories.find(c => c.id === item.category)?.label || item.category}<br />Document date: {item.documentDate || "Not recorded"}</p>
         <p className={styles.muted}>Uploaded: {uploadTimeLabel(item.uploadedAt)} · {actor(item.uploadedBy)}<br />Linked: {uploadTimeLabel(item.linkedAt)} · {actor(item.linkedBy)}</p>
         {item.hasNewerVersion && <p className={styles.muted}>A newer version exists. This card still links to version {item.versionNumber}.</p>}
@@ -197,7 +198,7 @@ export default function FollowUpAttachments({ task, authFetch, disabled = false,
         {showExisting && <div className={styles.attachmentEditor}>
           {documentsError && <p role="alert">{documentsError} <button type="button" onClick={() => setDocumentAttempt(value => value + 1)}>Retry project documents</button></p>}
           {!documents && !documentsError && <p role="status">Loading project documents…</p>}
-          {documents && <><label>Exact document version<SearchableSelect value={selected} disabled={blocked} onChange={event => setSelected(event.target.value)}><option value="">Select a document version</option>{documents.map(doc => <option key={doc.id} value={doc.id}>{doc.documentName} · Version {doc.versionNumber} · {doc.isCurrent ? "Current" : "Historical"} · #{doc.id}</option>)}</SearchableSelect></label>{!documents.length && <p>No active project documents available.</p>}<p className={styles.muted}>Includes active historical versions. Linking an already attached version does not create a duplicate.</p><button type="button" disabled={!!editingId || blocked || !selected} onClick={() => run(() => command(Number(selected)))}>Link selected version</button></>}
+          {documents && <><label>Exact document version<SearchableSelect documentOptions value={selected} disabled={blocked} onChange={event => setSelected(event.target.value)}><option value="">Select a document version</option>{documents.map(doc => <option key={doc.id} value={doc.id}>{doc.documentName} · Version {doc.versionNumber} · {doc.isCurrent ? "Current" : "Historical"} · #{doc.id}</option>)}</SearchableSelect></label>{!documents.length && <p>No active project documents available.</p>}<p className={styles.muted}>Includes active historical versions. Linking an already attached version does not create a duplicate.</p><button type="button" disabled={!!editingId || blocked || !selected} onClick={() => run(() => command(Number(selected)))}>Link selected version</button></>}
         </div>}
       </>}
       {data.permissions?.canUpload && <div className={styles.attachmentEditor}>

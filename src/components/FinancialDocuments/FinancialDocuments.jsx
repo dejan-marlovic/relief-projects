@@ -1,3 +1,4 @@
+import DocumentLabel from "../DocumentLabel/DocumentLabel";
 import useRefreshLoading from "../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import useArchivedProject from "../../hooks/useArchivedProject";
@@ -151,7 +152,7 @@ function DocumentsPanel({ entityType, entityId, locked, lifecycleStatus, refresh
       {!listError && links.length === 0 && <p>No supporting documents linked.</p>}
       <ul className={styles.list}>{links.map((link) => <li key={link.documentId}>
         <div className={styles.info}>
-          <strong>{link.documentName}</strong>
+          <strong><DocumentLabel>{link.documentName}</DocumentLabel></strong>
           <span>Version {link.versionNumber} · {statusLabel(link.status)} · {categoryLabel(link.category)} · Document date: {link.documentDate || "Unknown"}</span>
           {link.hasNewerVersion && <span className={styles.notice}>Newer version exists: #{link.currentDocumentId} · {statusLabel(link.currentDocumentStatus)}{link.currentDocumentDeleted === true ? " · Deleted" : ""}. This link still uses version {link.versionNumber}.</span>}
           {!link.downloadEligible && <span>Unavailable for download{link.documentDeleted === true ? " · Document deleted" : link.projectDeleted === true ? " · Project deleted" : " · Availability unknown"}.</span>}
@@ -166,7 +167,7 @@ function DocumentsPanel({ entityType, entityId, locked, lifecycleStatus, refresh
       {canLink && <form className={styles.picker} onSubmit={(event) => { event.preventDefault(); if (selectedId) mutate(selectedId); }}>
         <label><input type="checkbox" checked={includeHistorical} disabled={busy} onChange={(event) => setIncludeHistorical(event.target.checked)} /> Include active historical versions</label>
         {candidateError && <p role="alert">{candidateError}</p>}
-        <label>Project document<SearchableSelect value={selectedId} disabled={busy || candidateLoading} onChange={(event) => setSelectedId(event.target.value)}><option value="">{candidateLoading ? "Loading documents…" : "Select an exact document version"}</option>{selectable.map((doc) => <option key={doc.id} value={doc.id}>{doc.documentName} · Version {doc.versionNumber} · {statusLabel(doc.status)}{doc.isCurrent ? " · Current" : " · Historical"} (#{doc.id})</option>)}</SearchableSelect></label>
+        <label>Project document<SearchableSelect documentOptions value={selectedId} disabled={busy || candidateLoading} onChange={(event) => setSelectedId(event.target.value)}><option value="">{candidateLoading ? "Loading documents…" : "Select an exact document version"}</option>{selectable.map((doc) => <option key={doc.id} value={doc.id}>{doc.documentName} · Version {doc.versionNumber} · {statusLabel(doc.status)}{doc.isCurrent ? " · Current" : " · Historical"} (#{doc.id})</option>)}</SearchableSelect></label>
         <div className={styles.actions}><button type="submit" disabled={!selectedId || busy || candidateLoading}>Link selected version</button>{selectedId && <button type="button" onClick={() => { const doc = selectable.find((item) => String(item.id) === selectedId); if (doc) setHistory(doc); }}>Preview version history</button>}</div>
         {!candidateLoading && !candidateError && !selectable.length && <p>No unlinked documents in this view. Try including historical versions or upload a project document first.</p>}
         <p className={styles.hint}>To change evidence, link the new version first, then remove the old link. Removing a link does not delete the document. Uploads remain available in the project's Documents tab for users with upload permission.</p>

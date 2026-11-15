@@ -1,3 +1,4 @@
+import DocumentLabel from "../../components/DocumentLabel/DocumentLabel";
 import ScrollToForm from "../../components/ScrollToForm/ScrollToForm";
 import React, { useEffect, useRef, useState } from "react";
 import { BASE_URL } from "../../config/api";
@@ -12,7 +13,7 @@ export function DocumentChoices({ authFetch, projectId, selected, onChange, refr
   const state = useIndicatorRead(authFetch, `${BASE_URL}/api/documents/project/${projectId}`, refresh);
   const docs = Array.isArray(state.data) ? state.data.filter(d => d.isDeleted === false && String(d.projectId) === String(projectId)) : [];
   return <fieldset><legend>Supporting documents · exact versions</legend><p className={styles.muted}>Choose up to 20 versions explicitly. Historical versions are included. Evidence supports a report; it does not verify it.</p><ReadState state={state} />
-    <div className={styles.documents}>{docs.map(d => <label key={d.id}><input type="checkbox" checked={selected.includes(d.id)} onChange={e => onChange(e.target.checked ? [...selected, d.id] : selected.filter(id => id !== d.id))} disabled={!selected.includes(d.id) && selected.length >= 20} />{d.documentName || `Document #${d.id}`} · Version {d.versionNumber ?? "unknown"} · #{d.id} · {d.status || "Unknown status"}</label>)}</div>
+    <div className={styles.documents}>{docs.map(d => <label key={d.id}><input type="checkbox" checked={selected.includes(d.id)} onChange={e => onChange(e.target.checked ? [...selected, d.id] : selected.filter(id => id !== d.id))} disabled={!selected.includes(d.id) && selected.length >= 20} /><DocumentLabel>{d.documentName || `Document #${d.id}`}</DocumentLabel> · Version {d.versionNumber ?? "unknown"} · #{d.id} · {d.status || "Unknown status"}</label>)}</div>
     {state.data && !docs.length && <p>No active document versions available for this project.</p>}
     {selected.some(id => !docs.some(d => d.id === id)) && <p>Some selected versions are not in the current list. Review their availability before saving. <button type="button" onClick={() => onChange([])}>Clear selection</button></p>}
   </fieldset>;

@@ -1,3 +1,4 @@
+import DocumentLabel from "../../components/DocumentLabel/DocumentLabel";
 import { namedReference } from "../../utils/recordLabels";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -77,7 +78,7 @@ export function ReportContent({ data, onDownload, downloading, downloadError }) 
       {downloadError && <p role="alert" className={styles.noPrint}>{downloadError}</p>}
       {!data.documents.length && <p>No current supporting-document associations.</p>}
       {data.documents.map(({ document: doc, associations }) => <div className={styles.document} key={doc.documentId}>
-        <h3>{doc.documentName || "Name unavailable"} · Document #{doc.documentId}</h3>
+        <h3><DocumentLabel>{doc.documentName || "Name unavailable"} · Document #{doc.documentId}</DocumentLabel></h3>
         <p>Root #{value(doc.rootDocumentId)} · Version {value(doc.versionNumber)} · {value(doc.status)} · {value(doc.category)} · Date: {value(doc.documentDate)}</p>
         <p>Current chain head: {flag(doc.isCurrent)} · Newer version: {flag(doc.hasNewerVersion)} · Document deleted: {flag(doc.documentDeleted)} · Project deleted: {flag(doc.projectDeleted)} · Target deleted: {flag(doc.targetDeleted)}</p>
         <ul>{associations.map((link, i) => <li key={i}>{link.entityType === "PAYMENT_ORDER_FINAL_EVIDENCE" ? <>Late payment evidence · Attachment #{link.entityId} · {evidenceLabel(link.role)}. Not part of the approval decision. Attached {stamp(link.attachedAt)} by {actor(link.attachedBy)}.</> : link.entityType === "RECIPIENT_RETURN" ? <>Recipient return #{link.entityId} · Original payment #{link.originalPaymentId} · {link.status}{link.status === "VOIDED" && " · Evidence retained for a voided return"}. Not approval-time evidence.</> : <>{link.entityType} #{link.entityId} · {link.status}{link.status === "VOIDED" && " — historical payment evidence"}{(link.entityType === "PAYMENT_ORDER" || link.meaning === "ORDINARY_SUPPORT_APPROVAL_TIME_NOT_RECORDED") && " · Ordinary supporting documents — approval-time inclusion not recorded"}</>}</li>)}</ul>

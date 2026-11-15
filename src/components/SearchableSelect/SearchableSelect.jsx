@@ -1,10 +1,11 @@
+import DocumentLabel from "../DocumentLabel/DocumentLabel";
 import React, { forwardRef, useId, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import styles from "./SearchableSelect.module.scss";
 
 // Keep the real select for native validation, form data and existing change handlers.
 // Only long lists use the searchable picker; short lists retain native behavior.
-const SearchableSelect = forwardRef(function SearchableSelect({ children, onMouseDown, onClick, onKeyDown, ...props }, forwardedRef) {
+const SearchableSelect = forwardRef(function SearchableSelect({ children, onMouseDown, onClick, onKeyDown, documentOptions = false, ...props }, forwardedRef) {
   const selectRef = useRef(null);
   const searchRef = useRef(null);
   const id = useId();
@@ -96,7 +97,7 @@ const SearchableSelect = forwardRef(function SearchableSelect({ children, onMous
             className={[available[active]?.index === option.index ? styles.active : "", option.muted ? styles.muted : ""].filter(Boolean).join(" ")}
             ref={element => { if (available[active]?.index === option.index) element?.scrollIntoView?.({ block: "nearest" }); }}
             onMouseDown={event => event.preventDefault()} onClick={() => choose(option)}>
-            {option.selected && <span aria-hidden="true">✓ </span>}{option.group && `${option.group} — `}{option.label}
+            {option.selected && <span aria-hidden="true">✓ </span>}{option.group && `${option.group} — `}{documentOptions && option.value ? <DocumentLabel>{option.label}</DocumentLabel> : option.label}
           </li>)}
         </ul>
         {!matches.length && <p role="status">No matching options</p>}

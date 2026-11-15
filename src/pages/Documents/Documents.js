@@ -1,3 +1,4 @@
+import DocumentLabel from "../../components/DocumentLabel/DocumentLabel";
 import useArchivedProject from "../../hooks/useArchivedProject";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import ScrollToForm from "../../components/ScrollToForm/ScrollToForm";
@@ -486,7 +487,7 @@ const Documents = () => {
                 {documents.map((doc) => (
                   <li data-mobile-tile={doc.documentName} key={doc.id} className={styles.documentItem}>
                     <div className={styles.docInfo}>
-                      <span className={styles.docName}>{doc.documentName}</span>
+                      <span className={styles.docName}><DocumentLabel>{doc.documentName}</DocumentLabel></span>
                       <span className={styles.uploadedBy}>{statusLabel(doc.status)} · Version {doc.versionNumber || 1} · {doc.isCurrent === true ? "Current" : doc.isCurrent === false ? "Historical · read-only" : "Version state unknown"}</span>
                       <span className={styles.uploadedBy}>
                         {categories.find((item) => item.id === doc.category)?.label || doc.category || "Uncategorized"} · Document date: {doc.documentDate || "Unknown"}

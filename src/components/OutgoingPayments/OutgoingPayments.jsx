@@ -1,3 +1,4 @@
+import DocumentLabel from "../DocumentLabel/DocumentLabel";
 import useRefreshLoading from "../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
@@ -155,7 +156,7 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
       <p>Entered {stamp(related.createdAt)} by {actor(related.createdBy)}</p>
       {related.voidReason && <p>Void reason: {related.voidReason}</p>}
       {related.note && <p>{related.note}</p>}
-      <ul>{related.documents?.map(doc => <li key={doc.documentId}>{doc.documentName} · Version {doc.versionNumber} <button type="button" disabled={!doc.downloadEligible || downloading != null} onClick={() => download(doc.documentId)}>Download related evidence #{doc.documentId}</button></li>)}</ul>
+      <ul>{related.documents?.map(doc => <li key={doc.documentId}><DocumentLabel>{doc.documentName}</DocumentLabel> · Version {doc.versionNumber} <button type="button" disabled={!doc.downloadEligible || downloading != null} onClick={() => download(doc.documentId)}>Download related evidence #{doc.documentId}</button></li>)}</ul>
       <button type="button" onClick={() => setRelated(null)}>Close related payment</button>
     </aside>}
     {summary && <>
@@ -190,7 +191,7 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
         {evidenceForm && <>
           <label><input type="checkbox" checked={historical} onChange={event => { setHistorical(event.target.checked); setForm(current => ({ ...current, documentIds: [], documentId: "" })); }} /> Include active historical document versions</label>
           {documentError && <p role="alert">{documentError}</p>}
-          <label>{form.kind === "add" ? "Exact document version" : "Evidence versions (optional; select one or more)"}<SearchableSelect multiple={form.kind !== "add"} required={form.kind === "add"} value={form.kind === "add" ? form.documentId : form.documentIds} onChange={event => form.kind === "add" ? change("documentId", event.target.value) : change("documentIds", Array.from(event.target.selectedOptions, option => option.value))}>
+          <label>{form.kind === "add" ? "Exact document version" : "Evidence versions (optional; select one or more)"}<SearchableSelect documentOptions multiple={form.kind !== "add"} required={form.kind === "add"} value={form.kind === "add" ? form.documentId : form.documentIds} onChange={event => form.kind === "add" ? change("documentId", event.target.value) : change("documentIds", Array.from(event.target.selectedOptions, option => option.value))}>
             {form.kind === "add" && <option value="">Select a document version</option>}
             {documents.filter(doc => form.kind !== "add" || !form.payment.documents?.some(link => link.documentId === doc.id)).map(doc => <option key={doc.id} value={doc.id}>{doc.documentName} · v{doc.versionNumber} · {doc.status || "Unknown status"} · {doc.isCurrent ? "Current" : "Historical"} (#{doc.id})</option>)}
           </SearchableSelect></label>
@@ -211,7 +212,7 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
       {payment.status === "VOIDED" && <p>Voided {stamp(payment.voidedAt)} by {actor(payment.voidedBy)} · {payment.voidReason}</p>}
       {payment.replacesPaymentId && <p>Corrects <button type="button" onClick={() => showRelated(payment.replacesPaymentId)}>payment #{payment.replacesPaymentId}</button>.</p>}
       {payment.replacementPaymentId && <p>Replaced by <button type="button" onClick={() => showRelated(payment.replacementPaymentId)}>payment #{payment.replacementPaymentId}</button>.</p>}
-      <ul className={styles.evidence}>{payment.documents?.map(doc => <li key={doc.documentId}>{doc.documentName} · v{doc.versionNumber} · {doc.status || "Unknown status"}{doc.hasNewerVersion && " · Newer version exists; this evidence retains its version"}{!doc.downloadEligible && " · Unavailable for download"}<div className={styles.actions}><button type="button" disabled={!doc.downloadEligible || downloading != null} onClick={() => download(doc.documentId)}>Download evidence #{doc.documentId}</button>{payment.status === "RECORDED" && can("remove", payment) && <button type="button" disabled={busy || !!form || !!pending} onClick={() => open("remove", payment, doc)}>Remove evidence #{doc.documentId}</button>}</div></li>)}</ul>
+      <ul className={styles.evidence}>{payment.documents?.map(doc => <li key={doc.documentId}><DocumentLabel>{doc.documentName}</DocumentLabel> · v{doc.versionNumber} · {doc.status || "Unknown status"}{doc.hasNewerVersion && " · Newer version exists; this evidence retains its version"}{!doc.downloadEligible && " · Unavailable for download"}<div className={styles.actions}><button type="button" disabled={!doc.downloadEligible || downloading != null} onClick={() => download(doc.documentId)}>Download evidence #{doc.documentId}</button>{payment.status === "RECORDED" && can("remove", payment) && <button type="button" disabled={busy || !!form || !!pending} onClick={() => open("remove", payment, doc)}>Remove evidence #{doc.documentId}</button>}</div></li>)}</ul>
       <details><summary>Payment action availability</summary>{[...(payment.eligibility?.voidIssues || []), ...(payment.eligibility?.correctionIssues || []), ...(payment.eligibility?.evidenceIssues || [])].filter((issue, index, all) => all.findIndex(item => item.code === issue.code && item.message === issue.message) === index).map((issue, index) => <p key={index}>{issue.message}</p>)}</details>
       {!payment.documents?.length && <p className={styles.hint}>No evidence linked.</p>}
       {payment.status === "RECORDED" && <div className={styles.actions}>{[["add", "Add evidence"], ["correct", "Correct payment"], ["void", "Void payment"]].map(([kind, label]) => can(kind, payment) && <button key={kind} type="button" disabled={busy || !!form || !!pending} onClick={() => open(kind, payment)}>{label} #{payment.id}</button>)}</div>}

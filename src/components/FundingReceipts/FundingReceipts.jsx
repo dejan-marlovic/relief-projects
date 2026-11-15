@@ -1,3 +1,4 @@
+import DocumentLabel from "../DocumentLabel/DocumentLabel";
 import useRefreshLoading from "../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
@@ -156,7 +157,7 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
       <p>Entered {stamp(related.createdAt)} by {actor(related.createdBy)}</p>
       {related.voidReason && <p>Void reason: {related.voidReason}</p>}
       {related.note && <p>{related.note}</p>}
-      <ul>{related.documents?.map(doc => <li key={doc.documentId}>{doc.documentName} · Version {doc.versionNumber} <button type="button" disabled={!doc.downloadEligible || downloading != null} onClick={() => download(doc.documentId)}>Download related evidence #{doc.documentId}</button></li>)}</ul>
+      <ul>{related.documents?.map(doc => <li key={doc.documentId}><DocumentLabel>{doc.documentName}</DocumentLabel> · Version {doc.versionNumber} <button type="button" disabled={!doc.downloadEligible || downloading != null} onClick={() => download(doc.documentId)}>Download related evidence #{doc.documentId}</button></li>)}</ul>
       <button type="button" onClick={() => setRelated(null)}>Close related receipt</button>
     </aside>}
     {summary && <>
@@ -187,7 +188,7 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
         {evidenceForm && <>
           <label><input type="checkbox" checked={historical} onChange={event => { setHistorical(event.target.checked); setForm(current => ({ ...current, documentIds: [], documentId: "" })); }} /> Include active historical document versions</label>
           {documentError && <p role="alert">{documentError}</p>}
-          <label>{form.kind === "add" ? "Exact document version" : "Evidence versions (optional; select one or more)"}<SearchableSelect multiple={form.kind !== "add"} required={form.kind === "add"} value={form.kind === "add" ? form.documentId : form.documentIds} onChange={event => form.kind === "add" ? change("documentId", event.target.value) : change("documentIds", Array.from(event.target.selectedOptions, option => option.value))}>
+          <label>{form.kind === "add" ? "Exact document version" : "Evidence versions (optional; select one or more)"}<SearchableSelect documentOptions multiple={form.kind !== "add"} required={form.kind === "add"} value={form.kind === "add" ? form.documentId : form.documentIds} onChange={event => form.kind === "add" ? change("documentId", event.target.value) : change("documentIds", Array.from(event.target.selectedOptions, option => option.value))}>
             {form.kind === "add" && <option value="">Select a document version</option>}
             {documents.filter(doc => form.kind !== "add" || !form.receipt.documents?.some(link => link.documentId === doc.id)).map(doc => <option key={doc.id} value={doc.id}>{doc.documentName} · v{doc.versionNumber} · {doc.status || "Unknown status"} · {doc.isCurrent ? "Current" : "Historical"} (#{doc.id})</option>)}
           </SearchableSelect></label>
@@ -208,7 +209,7 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
       {receipt.status === "VOIDED" && <p>Voided {stamp(receipt.voidedAt)} by {actor(receipt.voidedBy)} · {receipt.voidReason}</p>}
       {receipt.replacesReceiptId && <p>Corrects <button type="button" onClick={() => showRelated(receipt.replacesReceiptId)}>receipt #{receipt.replacesReceiptId}</button>.</p>}
       {receipt.replacementReceiptId && <p>Replaced by <button type="button" onClick={() => showRelated(receipt.replacementReceiptId)}>receipt #{receipt.replacementReceiptId}</button>.</p>}
-      <ul className={styles.evidence}>{receipt.documents?.map(doc => <li key={doc.documentId}>{doc.documentName} · v{doc.versionNumber} · {doc.status || "Unknown status"}{doc.hasNewerVersion && " · Newer version exists; this evidence retains its version"}{!doc.downloadEligible && " · Unavailable for download"}<div className={styles.actions}><button type="button" disabled={!doc.downloadEligible || downloading != null} onClick={() => download(doc.documentId)}>Download evidence #{doc.documentId}</button>{receipt.status === "RECORDED" && can("remove") && <button type="button" disabled={busy || !!form || !!pending} onClick={() => open("remove", receipt, doc)}>Remove evidence #{doc.documentId}</button>}</div></li>)}</ul>
+      <ul className={styles.evidence}>{receipt.documents?.map(doc => <li key={doc.documentId}><DocumentLabel>{doc.documentName}</DocumentLabel> · v{doc.versionNumber} · {doc.status || "Unknown status"}{doc.hasNewerVersion && " · Newer version exists; this evidence retains its version"}{!doc.downloadEligible && " · Unavailable for download"}<div className={styles.actions}><button type="button" disabled={!doc.downloadEligible || downloading != null} onClick={() => download(doc.documentId)}>Download evidence #{doc.documentId}</button>{receipt.status === "RECORDED" && can("remove") && <button type="button" disabled={busy || !!form || !!pending} onClick={() => open("remove", receipt, doc)}>Remove evidence #{doc.documentId}</button>}</div></li>)}</ul>
       {!receipt.documents?.length && <p className={styles.hint}>No evidence linked.</p>}
       {receipt.returns?.blocksSourceChanges && <p>Recorded returns prevent correcting or voiding this receipt. Do not void genuine returned money to bypass this guard.</p>}
       {receipt.returns?.sourceChangeIssues?.map(issue => <p key={issue.code}>{issue.message}</p>)}

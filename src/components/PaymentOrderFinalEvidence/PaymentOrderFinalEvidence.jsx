@@ -1,3 +1,4 @@
+import DocumentLabel from "../DocumentLabel/DocumentLabel";
 import useRefreshLoading from "../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
@@ -103,7 +104,7 @@ export function FinalEvidencePanel({ paymentOrderId, refreshKey, editingLocked }
       <ul>{data.issues?.map(issue => <li key={issue.code}>{issue.message}</li>)}</ul>
       {!data.entries.length && <p>No late payment evidence attached.</p>}
       <ul className={styles.list}>{data.entries.map(entry => <li key={entry.id}><div className={styles.info}>
-        <strong>{entry.capturedDocumentName || "Name unavailable"} · Attachment #{entry.id}</strong>
+        <strong><DocumentLabel>{entry.capturedDocumentName || "Name unavailable"} · Attachment #{entry.id}</DocumentLabel></strong>
         <span>{evidenceRole(entry.role)} · Document #{entry.documentId} · Version {entry.versionNumber ?? "Unknown"} · {entry.document?.status || "Status unknown"}</span>
         <span>Attached {uploadTimeLabel(entry.attachedAt)} by {actor(entry.attachedBy)}</span><span>Reason: {entry.reason}</span>
         {entry.replacesEntryId && <span>Replaces attachment #{entry.replacesEntryId}</span>}
@@ -120,7 +121,7 @@ export function FinalEvidencePanel({ paymentOrderId, refreshKey, editingLocked }
       {selecting && <>
         <p>All active exact versions from the header transaction’s project are listed, including historical versions. FINANCE classification is suggested, not required.</p>
         {candidateError && <p role="alert">{candidateError}</p>}
-        <label>Exact document version<SearchableSelect required disabled={busy || candidateLoading} value={form.documentId} onChange={e => setForm({ ...form, documentId: e.target.value })}><option value="">{candidateLoading ? "Loading documents…" : "Select a version"}</option>{docs.filter(doc => !data?.entries.some(entry => entry.documentId === doc.id && entry.id !== form.entryId)).map(doc => <option key={doc.id} value={doc.id}>{doc.documentName || "Name unavailable"} · #{doc.id} · Version {doc.versionNumber ?? "Unknown"} · {doc.status || "Status unknown"}{doc.isCurrent ? " · Current" : " · Historical"}</option>)}</SearchableSelect></label>
+        <label>Exact document version<SearchableSelect documentOptions required disabled={busy || candidateLoading} value={form.documentId} onChange={e => setForm({ ...form, documentId: e.target.value })}><option value="">{candidateLoading ? "Loading documents…" : "Select a version"}</option>{docs.filter(doc => !data?.entries.some(entry => entry.documentId === doc.id && entry.id !== form.entryId)).map(doc => <option key={doc.id} value={doc.id}>{doc.documentName || "Name unavailable"} · #{doc.id} · Version {doc.versionNumber ?? "Unknown"} · {doc.status || "Status unknown"}{doc.isCurrent ? " · Current" : " · Historical"}</option>)}</SearchableSelect></label>
         {selected && <p>Selected exact version #{selected.id}: {selected.status || "Unknown status"}{!selected.isCurrent && " · Historical version"}. This selection will not follow future replacements.</p>}
         <label>Evidence description<SearchableSelect value={form.role} disabled={busy} onChange={e => setForm({ ...form, role: e.target.value })}>{["SIGNED_PAYMENT_ORDER", "COMBINED_PAYMENT_EVIDENCE"].map(role => <option key={role} value={role}>{evidenceRole(role)}</option>)}</SearchableSelect></label>
       </>}

@@ -1,3 +1,4 @@
+import DocumentLabel from "../DocumentLabel/DocumentLabel";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import { HistoryTimeline, HistoryEntry } from "../ActivityHistory/ActivityHistory";
 import ScrollToForm from "../ScrollToForm/ScrollToForm";
@@ -108,7 +109,7 @@ export default function DocumentVersions({ document, authFetch, categories, canE
     {message && <p role="status">{message}</p>}
     {loading && !chain && <p>Loading version history…</p>}
     {chain?.currentDocumentDeleted && <p role="status">The current version is deleted. There is no active current version; older versions have not been promoted.</p>}
-    {chain && <HistoryTimeline>{chain.versions.map((version) => <HistoryEntry key={version.id} title={`Version ${version.versionNumber} · ${version.documentName}`} at={version.uploadedAt} actor={uploaderLabel(version)}>
+    {chain && <HistoryTimeline>{chain.versions.map((version) => <HistoryEntry key={version.id} title={<DocumentLabel>{`Version ${version.versionNumber} · ${version.documentName}`}</DocumentLabel>} at={version.uploadedAt} actor={uploaderLabel(version)}>
       <div className={styles.docInfo}>
         <span>{statusLabel(version.status)} · {version.isCurrent ? "Current version" : "Historical version"} · {version.isDeleted === true ? "Deleted" : version.isDeleted === false ? "Active" : "Availability unknown"}</span>
         <span className={styles.uploadedBy}>{categories.find((item) => item.id === version.category)?.label || version.category} · Document date: {version.documentDate || "Unknown"}</span>

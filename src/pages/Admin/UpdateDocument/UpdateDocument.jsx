@@ -311,7 +311,7 @@ const UpdateDocument = () => {
 
                 <div className={styles.formGroup}>
                   <label>Document</label>
-                  <SearchableSelect
+                  <SearchableSelect documentOptions
                     className={inputClass("selectedId")}
                     value={form.selectedId}
                     onChange={handleSelectChange}

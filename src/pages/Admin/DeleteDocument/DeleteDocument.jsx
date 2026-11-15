@@ -257,7 +257,7 @@ const DeleteDocument = () => {
 
                 <div className={styles.formGroup}>
                   <label htmlFor="deleteDocumentSelect">Document</label>
-                  <SearchableSelect
+                  <SearchableSelect documentOptions
                     id="deleteDocumentSelect"
                     className={inputClass}
                     value={selectedDocumentId}

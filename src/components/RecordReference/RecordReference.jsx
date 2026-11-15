@@ -1,3 +1,4 @@
+import DocumentLabel from "../DocumentLabel/DocumentLabel";
 import React, { useContext } from "react";
 import { ProjectContext } from "../../context/ProjectContext";
 
@@ -17,7 +18,10 @@ export default function RecordReference({ field, value, record = {}, currentProj
   const captured = (names[field] || []).map(key => text(record[key])).find(Boolean)
     || (["id", "indicatorId"].includes(field) && text(record.basis?.name))
     || (field === "projectId" && String(record.context?.projectId) === String(value) && text(record.context?.projectName));
-  if (captured) return <>{captured} · Reference {String(value)}</>;
+  if (captured) {
+    const label = <>{captured} · Reference {String(value)}</>;
+    return field === "documentId" ? <DocumentLabel>{label}</DocumentLabel> : label;
+  }
   if (field === "projectId") {
     const matches = item => item && String(item.id ?? item.projectId) === String(value);
     const project = matches(currentProject) ? currentProject : context?.projects?.find(matches);

@@ -1,3 +1,4 @@
+import DocumentLabel from "../DocumentLabel/DocumentLabel";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import { useUnsavedChange, useUnsavedChanges } from "../../context/UnsavedChangesContext";
@@ -68,7 +69,7 @@ function Item({ item, generation, editable, documents, categories, busy, mutate:
       {item.applicability === "NOT_APPLICABLE" && <p className={styles.muted}>Existing links are retained. Change applicability before adding evidence.</p>}
       {!evidence.length && <p className={styles.muted}>No evidence linked.</p>}
       <ul className={styles.evidence}>{evidence.map((doc) => <li key={doc.documentId}>
-        <strong>{doc.documentName}</strong>
+        <strong><DocumentLabel>{doc.documentName}</DocumentLabel></strong>
         <span>Version {doc.versionNumber} · {statusLabel(doc.status)} · {categories.find((c) => c.id === doc.category)?.label || doc.category || "Uncategorized"} · Document date: {doc.documentDate || "Unknown"}</span>
         <span className={styles.muted}>Linked by {doc.linkedByUsername || `User #${doc.linkedByUserId}`} · {uploadTimeLabel(doc.linkedAt)}</span>
         {doc.hasNewerVersion && <span>Newer version exists (#{doc.currentDocumentId}{doc.currentDocumentDeleted ? ", deleted" : ""}). This link keeps version {doc.versionNumber}.</span>}
@@ -81,7 +82,7 @@ function Item({ item, generation, editable, documents, categories, busy, mutate:
       </li>)}</ul>
       {editable && !canLink && <p className={styles.muted}>Save Applicable above before adding evidence. Existing links remain available.</p>}
       {editable && <form className={styles.form} onSubmit={(e) => { e.preventDefault(); if (selected && canLink && availableDocuments.some(doc => String(doc.id) === selected)) mutate(item, "evidence", "POST", { documentId: Number(selected) }); }}>
-        <label>Document evidence<SearchableSelect value={selected} disabled={busy || !canLink || !availableDocuments.length} onChange={(e) => { setDirty(true); setSelected(e.target.value); }}><option value="">{availableDocuments.length ? "Select an exact document version" : "No additional document versions available"}</option>{availableDocuments.map((doc) => <option key={doc.id} value={doc.id}>{doc.documentName} · Version {doc.versionNumber} · {statusLabel(doc.status)} · {doc.isCurrent ? "Current" : "Historical"} (#{doc.id})</option>)}</SearchableSelect></label>
+        <label>Document evidence<SearchableSelect documentOptions value={selected} disabled={busy || !canLink || !availableDocuments.length} onChange={(e) => { setDirty(true); setSelected(e.target.value); }}><option value="">{availableDocuments.length ? "Select an exact document version" : "No additional document versions available"}</option>{availableDocuments.map((doc) => <option key={doc.id} value={doc.id}>{doc.documentName} · Version {doc.versionNumber} · {statusLabel(doc.status)} · {doc.isCurrent ? "Current" : "Historical"} (#{doc.id})</option>)}</SearchableSelect></label>
         {!availableDocuments.length && <p className={styles.muted}>No additional document versions available. Upload another document or adjust the evidence filters.</p>}
         <button type="submit" disabled={busy || !canLink || !selected || !availableDocuments.some(doc => String(doc.id) === selected)}>Link evidence</button>
       </form>}
