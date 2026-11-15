@@ -75,7 +75,8 @@ function IndicatorDetail({ id, endpoint: base, authFetch, refresh, reload, proje
   useUnsavedChange(`indicator-${id}`, indicatorDirty(form) || busy);
   useEffect(() => { editingRef.current = !!form || busy; return () => { editingRef.current = false; }; }, [form, busy, editingRef]);
   const indicator = state.data;
-  const locked = busy || !!form || state.loading || reports.loading;
+  // Opening a draft is safe while retained data refreshes; save still requires fresh reads.
+  const locked = busy || !!form || !state.data || !reports.data;
   function open(action, result, evidence) {
     setForm({ action, result, evidence, indicator, savedSignature: action === "edit" ? JSON.stringify(indicatorDraft(indicator)) : null, expectedRevision: indicator.revision, reason: "", draft: action === "edit" ? indicatorDraft(indicator) : { value: action === "correct" ? result.value : "", notes: action === "correct" ? result.notes || "" : "", asOfDate: action === "reuse" ? result.asOfDate : "", documentIds: [] } });
   }

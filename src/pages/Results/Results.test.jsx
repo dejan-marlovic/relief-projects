@@ -150,3 +150,30 @@ test("a failed read offers retry without a permanent refresh button", async () =
   expect(screen.queryByText("Refresh results")).not.toBeInTheDocument();
   expect(writes()).toHaveLength(0);
 });
+
+
+test("first correction click opens and scrolls during focus refresh, but cannot save until reads settle", async () => {
+  await open();
+  await waitFor(() => expect(screen.getByText("Correct report #91")).toBeEnabled());
+  const normal = fetcher.getMockImplementation();
+  const pendingReads = [];
+  fetcher.mockImplementation((url, options) => new Promise(resolve => pendingReads.push(() => resolve(normal(url, options)))));
+  const originalScroll = HTMLElement.prototype.scrollIntoView;
+  const scroll = jest.fn();
+  HTMLElement.prototype.scrollIntoView = scroll;
+  try {
+    fireEvent(window, new Event("focus"));
+    expect(screen.getByText("Correct report #91")).toBeEnabled();
+    fireEvent.click(screen.getByText("Correct report #91"));
+    const form = screen.getByRole("form", { name: "Correct report" });
+    expect(form).toBeInTheDocument();
+    expect(scroll.mock.instances).toContain(form);
+    expect(screen.getByLabelText("Reason")).toHaveFocus();
+    expect(screen.getByText("Save correct report")).toBeDisabled();
+    expect(writes()).toHaveLength(0);
+    pendingReads.forEach(resolve => resolve());
+    await waitFor(() => expect(screen.getByText("Save correct report")).toBeEnabled());
+  } finally {
+    HTMLElement.prototype.scrollIntoView = originalScroll;
+  }
+});
