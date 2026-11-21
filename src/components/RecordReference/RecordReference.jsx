@@ -37,5 +37,6 @@ export default function RecordReference({ field, value, record = {}, currentProj
     const name = text(project?.projectName) || text(project?.name);
     if (name) return decorate(field, <>{name} (current name) · Reference {String(value)}</>);
   }
+  if (/^(transactionId|paymentOrderId|originalReceiptId|originalPaymentId|replacesReceiptId|replacementReceiptId|replacesPaymentId|replacementPaymentId|recipientId)$/.test(field)) return decorate(field, <>Reference {String(value)}</>);
   return decorate(field, <>Reference {String(value)} · Name not recorded</>);
 }

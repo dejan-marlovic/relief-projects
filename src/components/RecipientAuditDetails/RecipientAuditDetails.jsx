@@ -7,8 +7,8 @@ export default function RecipientAuditDetails({ event }) {
   const moved = event.previousParentPaymentOrderId != null && event.parentPaymentOrderId != null &&
     String(event.previousParentPaymentOrderId) !== String(event.parentPaymentOrderId);
   return <div className={styles.details}>
-    <p>{moved ? `Moved from payment order #${event.previousParentPaymentOrderId} (name not recorded) to #${event.parentPaymentOrderId} (name not recorded)`
-      : event.parentPaymentOrderId != null ? `Payment order #${event.parentPaymentOrderId} (name not recorded)` : "Payment order not recorded"}</p>
+    <p>{moved ? `Moved from payment order #${event.previousParentPaymentOrderId} to #${event.parentPaymentOrderId}`
+      : event.parentPaymentOrderId != null ? `Payment order #${event.parentPaymentOrderId}` : "Payment order not recorded"}</p>
     {!context ? <p>No recipient context recorded.</p> : context.version !== 1 ? <p>Recipient context uses an unsupported format.</p> :
       <dl className={styles.context} aria-label="Recipient context">
         {[["Organization", context.organization, "REFERENCE"]].map(([label, value, type]) =>

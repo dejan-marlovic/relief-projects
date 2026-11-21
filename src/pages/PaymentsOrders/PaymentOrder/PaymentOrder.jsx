@@ -165,7 +165,7 @@ const PaymentOrder = ({
   // amount is computed by backend, display only
 
   // PO ID label (read-only)
-  const poIdLabel = isCreate ? "(new)" : po?.id != null ? `PO#${po.id} · Name unavailable` : "-";
+  const poIdLabel = isCreate ? "(new)" : po?.id != null ? `PO#${po.id}` : "-";
   const poIdWithLock =
     !isCreate && locked ? `${poIdLabel} (Booked)` : poIdLabel;
   const lifecycleStatus = po?.lifecycleStatus || "DRAFT";

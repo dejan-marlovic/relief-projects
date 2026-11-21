@@ -699,13 +699,13 @@ function Signatures() {
       (item) => String(item.id) === String(id),
     );
 
-    if (!paymentOrder) return `PO#${id} · Name unavailable`;
+    if (!paymentOrder) return `PO#${id}`;
 
     const description = sanitizeExcelText(paymentOrder.paymentOrderDescription);
 
     return description
       ? `PO#${paymentOrder.id} — ${description}`
-      : `PO#${paymentOrder.id} · Name unavailable`;
+      : `PO#${paymentOrder.id}`;
   };
 
   const getPaymentOrderLockLabel = (id) => {

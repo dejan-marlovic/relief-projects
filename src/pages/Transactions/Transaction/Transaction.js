@@ -243,7 +243,7 @@ const Transaction = ({
 
   const hc = (i) => (!compact && !visibleCols[i] ? styles.hiddenCol : "");
 
-  const txIdLabel = isCreate ? "(new)" : tx?.id != null ? `TX#${tx.id} · Name unavailable` : "-";
+  const txIdLabel = isCreate ? "(new)" : tx?.id != null ? `TX#${tx.id}` : "-";
   const lifecycleStatus = tx?.lifecycleStatus || "DRAFT";
   const showSubmitLifecycle =
     !isCreate &&
