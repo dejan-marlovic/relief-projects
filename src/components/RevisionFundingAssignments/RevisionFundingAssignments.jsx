@@ -95,5 +95,5 @@ export function AssignmentPanel({ transactionId, originBudgetId, disabled = fals
 
 export default function RevisionFundingAssignments(props) {
   const [opened, setOpened] = useState(false);
-  return <details className={styles.section} onToggle={e => { if (e.currentTarget.open) setOpened(true); }}><summary>Revision funding assignments · Transaction #{props.transactionId} · {props.recordName || "Name unavailable"}</summary>{opened && <AssignmentPanel {...props} />}</details>;
+  return <details className={styles.section} data-record-disclosure="true" onToggle={e => { if (e.currentTarget.open) setOpened(true); }}><summary>Revision funding assignments · Transaction #{props.transactionId} · {props.recordName || "Name unavailable"}<span className="expanded-record-label">Expanded</span></summary>{opened && <AssignmentPanel {...props} />}</details>;
 }

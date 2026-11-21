@@ -32,6 +32,18 @@ async function save(label) {
   if (button) { await waitFor(() => expect(button).toBeEnabled()); fireEvent.click(button); }
   else await act(async () => { await new Promise(resolve => setTimeout(resolve, 1100)); });
 }
+test("create explains the open-record lock even without an editor", async () => {
+  await open();
+  const create = screen.getByRole("button", { name: "Create finding or lesson" });
+  expect(create).toBeDisabled();
+  expect(create).toHaveAccessibleDescription("Close the open record before using this action.");
+  expect(create).toHaveAttribute("title", "Close the open record before using this action.");
+  expect(screen.getByText("Close the open record before using this action.")).toBeVisible();
+  fireEvent.click(screen.getByRole("button", { name: "Close record" }));
+  expect(screen.getByRole("button", { name: "Create finding or lesson" })).toBeEnabled();
+  expect(screen.getByRole("button", { name: "Create finding or lesson" })).not.toHaveAttribute("title");
+  expect(writes()).toHaveLength(0);
+});
 test("keeps resolution, outstanding acceptance and live review flags distinct", () => {
   render(<DecisionSummary record={{ ...record, state: "RESOLVED", resolvedWithOutstandingActions: true, resolutionReviewRequired: true, linkedActionSummary: { total: 3, completed: 1, open: 1, unavailable: 1 } }} />);
   expect(screen.getByText("Management resolution: Recorded")).toBeInTheDocument(); expect(screen.getByText("Resolved with outstanding actions.")).toBeInTheDocument(); expect(screen.getByText(/Review required after linked task changes/)).toBeInTheDocument(); expect(screen.getByText(/1 completed · 1 open · 1 unavailable/)).toBeInTheDocument();

@@ -1587,7 +1587,7 @@ const Transactions = ({ refreshTrigger }) => {
 
           <div className={styles.headerActions}>
             {hasActiveFilters && <ClearFiltersButton onClick={() => setFilters(emptyFilters())} />}
-            <ActionButton
+            <ActionButton editorBlocked={Boolean(editingId)}
               type="button"
               className={styles.exportInlineBtn}
               onClick={handleExportSelected}
@@ -1600,7 +1600,7 @@ const Transactions = ({ refreshTrigger }) => {
                 : `Export selected${selectedCount > 0 ? ` (${selectedCount})` : ""}`}
             </ActionButton>
 
-            {canDeleteTransactions && <ActionButton
+            {canDeleteTransactions && <ActionButton editorBlocked={Boolean(editingId)}
               type="button"
               className={styles.dangerInlineBtn}
               onClick={removeSelected}
@@ -1649,7 +1649,7 @@ const Transactions = ({ refreshTrigger }) => {
                 </div>
               )}
             </div>
-            {canEditTransactions && <ActionButton
+            {canEditTransactions && <ActionButton editorBlocked={Boolean(editingId)}
               type="button"
               className={styles.primaryInlineBtn}
               onClick={startCreate}

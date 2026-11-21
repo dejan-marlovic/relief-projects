@@ -141,7 +141,7 @@ const Organization = ({
         {!isEditing && <ActionButton type="button" aria-expanded={open} onClick={() => { if (open && !confirmDiscardUnsavedChanges()) return; setExpanded(!open); }}>{open ? "Hide details" : "Show details"}</ActionButton>}
       </div>
     </header>
-    {open && <div className={styles.cardBody}>
+    {open && <div className={styles.cardBody} data-open-record="true"><span className="open-record-label">Viewing record</span>
       <section data-mobile-tile="Project relationship" data-purpose-tile="section"><h4>Project relationship</h4><p>This role belongs to the selected project. An organisation can have other roles in other projects.</p>
         {isEditing ? <>
           <label>Organisation{selectOrg()}</label><label>Role in this project{selectStatus()}</label>
@@ -151,7 +151,7 @@ const Organization = ({
           </div>
         </> : null}
         <div className={styles.relationshipActions}>
-          {!isEditing && canManage && <ActionButton type="button" disabled={saving || editingLocked} onClick={onEdit} aria-label="Edit"><FiEdit /> Edit relationship</ActionButton>}
+          {!isEditing && canManage && <ActionButton editorBlocked={Boolean(editingLocked)} type="button" disabled={saving || editingLocked} onClick={onEdit} aria-label="Edit"><FiEdit /> Edit relationship</ActionButton>}
           {!isCreate && <ActionButton type="button" onClick={() => setShowReviews(v => !v)} aria-expanded={showReviews}>Assessments across projects and roles</ActionButton>}
         </div>
         {!isCreate && showReviews && <div className={styles.reviewsPanel}><OrganisationReviews organizationId={link.organizationId} authFetch={authFetch} /></div>}
@@ -164,7 +164,7 @@ const Organization = ({
         <ActionButton type="button" aria-expanded={showBankDetails} onClick={() => { if (showBankDetails && !confirmDiscardUnsavedChanges()) return; setShowBankDetails(v => !v); }}>{showBankDetails ? "Hide bank details" : "Show bank details"}</ActionButton>
         {showBankDetails && <BankDetails organizationId={link.organizationId} canManage={canManageBankDetails} />}
       </section>}
-      {!isCreate && canManage && <footer className={styles.removal}><ActionButton type="button" disabled={saving || editingLocked} onClick={() => onDelete(link.id)} aria-label="Delete organization relation"><FiTrash2 /> Remove from this project</ActionButton><small>Removes this project relationship, not the organisation itself.</small></footer>}
+      {!isCreate && canManage && <footer className={styles.removal}><ActionButton editorBlocked={Boolean(editingLocked)} type="button" disabled={saving || editingLocked} onClick={() => onDelete(link.id)} aria-label="Delete organization relation"><FiTrash2 /> Remove from this project</ActionButton><small>Removes this project relationship, not the organisation itself.</small></footer>}
     </div>}
   </article>;
 };

@@ -413,7 +413,7 @@ const Organizations = () => {
 
           <div className={styles.headerActions}>
             {hasActiveFilters && <ClearFiltersButton onClick={() => setFilters(emptyFilters())} />}
-            {canManageOrganizationLinks && <ActionButton
+            {canManageOrganizationLinks && <ActionButton editorBlocked={Boolean(editingId)}
               className={styles.primaryBtn}
               onClick={startCreate}
               disabled={!selectedProjectId || saving || editingId !== null}

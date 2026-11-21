@@ -332,7 +332,7 @@ export default function Memos({ canEdit = false }) {
       <div className={styles.headerRow}>
         <h4>Memos</h4>
         {canEdit && (
-          <ActionButton
+          <ActionButton editorBlocked={Boolean(editingId)}
             className={styles.addBtn}
             onClick={startCreate}
             disabled={!selectedProjectId || editingId === "new"}
@@ -357,9 +357,9 @@ export default function Memos({ canEdit = false }) {
       )}
 
       {isPhone && items.length > 0 && editingId !== "new" && <div className={styles.memoNavigation} aria-label="Memo navigation">
-        <ActionButton type="button" aria-label="Previous memo" disabled={editingId !== null || activeMemoIndex === 0} onClick={() => moveMemo(-1)}>←</ActionButton>
+        <ActionButton editorBlocked={Boolean(editingId)} type="button" aria-label="Previous memo" disabled={editingId !== null || activeMemoIndex === 0} onClick={() => moveMemo(-1)}>←</ActionButton>
         <span>Memo {activeMemoIndex + 1} of {items.length}</span>
-        <ActionButton type="button" aria-label="Next memo" disabled={editingId !== null || activeMemoIndex >= items.length - 1} onClick={() => moveMemo(1)}>→</ActionButton>
+        <ActionButton editorBlocked={Boolean(editingId)} type="button" aria-label="Next memo" disabled={editingId !== null || activeMemoIndex >= items.length - 1} onClick={() => moveMemo(1)}>→</ActionButton>
       </div>}
       <div data-swipe-scope="memos" {...memoSwipes}>
       {visibleItems.map((m) => (

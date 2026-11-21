@@ -1,4 +1,5 @@
-import React, { forwardRef } from "react";
+import React, { forwardRef, useContext, useId } from "react";
+import { OpenEditorState } from "../../context/OpenEditorState";
 import { FiPlus, FiEdit3, FiTrash2, FiMinusCircle, FiSave, FiX, FiSend, FiCheckCircle, FiRotateCcw, FiRefreshCw, FiDownload, FiUpload, FiLink, FiClipboard, FiEye, FiSearch, FiLogOut, FiLogIn, FiSlash, FiPrinter, FiArrowLeft } from "react-icons/fi";
 import RecordIcon from "../RecordIcon/RecordIcon";
 import styles from "./ActionButton.module.scss";
@@ -43,15 +44,22 @@ const actions = [
 
 // Keep native button semantics, refs, handlers and labels. Existing explicit icons win.
 // Plain navigation choices and state labels deliberately receive no inferred action icon.
-const ActionButton = forwardRef(function ActionButton({ children, className, ...props }, ref) {
+const ActionButton = forwardRef(function ActionButton({ children, className, editorBlocked = false, recordBlocked = false, ...props }, ref) {
+  const { editors } = useContext(OpenEditorState);
+  const hintId = useId();
+  const blockedByEditor = editorBlocked === "registered" ? editors.length > 0 : !!editorBlocked;
+  const hint = !props.disabled ? null : recordBlocked
+    ? (editors.length ? "Close the open editor, then close the record before using this action. Save or discard unfinished changes first." : "Close the open record before using this action.")
+    : blockedByEditor ? "Close the related form before using this action. Save or discard unfinished changes first." : null;
   const label = textOf(children) || props["aria-label"] || props.title || "";
   const selectionControl = ["tab", "option"].includes(props.role) || ["listbox", "dialog"].includes(props["aria-haspopup"]);
   const match = !selectionControl && actions.find(([pattern]) => pattern.test(label));
   const Icon = match?.[1];
   const danger = match?.[2] === "danger";
   const close = !selectionControl && (/^close\b/i.test(label) && !/^close (risk|project)\b/i.test(label) || /^done editing\b/i.test(label));
-  return <button {...props} ref={ref} className={[className, danger && styles.danger, close && styles.close].filter(Boolean).join(" ") || undefined}>
+  const button = <button {...props} ref={ref} title={hint ? [props.title, hint].filter(Boolean).join(" — ") : props.title} aria-describedby={[props["aria-describedby"], hint && hintId].filter(Boolean).join(" ") || undefined} className={[className, danger && styles.danger, close && styles.close].filter(Boolean).join(" ") || undefined}>
     {Icon && !hasIcon(children) && <span className={styles.icon} aria-hidden="true"><Icon focusable="false" /></span>}{children}
   </button>;
+  return hint ? <span className={styles.hintedAction}>{button}<span id={hintId} className={styles.hint}>{hint}</span></span> : button;
 });
 export default ActionButton;

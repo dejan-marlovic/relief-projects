@@ -79,8 +79,8 @@ function HistoryPage({ entityType, entityId, includeChildren }) {
 function HistoryDisclosure({ entityType, entityId, recordName, lifecycleStatus, refreshKey = 0 }) {
   const [open, setOpen] = useState(false);
   const [includeChildren, setIncludeChildren] = useState(true);
-  return <details data-entity-type={entityType} className={styles.history} onToggle={(event) => { if (event.target === event.currentTarget) setOpen(event.currentTarget.open); }}>
-    <summary>History · {labels[entityType]} #{entityId} · {recordName || "Name unavailable"}</summary>
+  return <details data-entity-type={entityType} data-record-disclosure="true" className={styles.history} onToggle={(event) => { if (event.target === event.currentTarget) setOpen(event.currentTarget.open); }}>
+    <summary>History · {labels[entityType]} #{entityId} · {recordName || "Name unavailable"}<span className="expanded-record-label">Expanded</span></summary>
     {open && ["BUDGET", "PAYMENT_ORDER", "TRANSACTION"].includes(entityType) && <label style={{ display: "block", padding: "0 1rem 0.5rem" }}>
       <input type="checkbox" checked={includeChildren} onChange={(event) => setIncludeChildren(event.target.checked)} /> {entityType === "BUDGET" ? "Include cost-detail activity" : entityType === "TRANSACTION" ? "Include allocation, funding-receipt and financier-return activity" : "Include line, signature, recipient, outgoing-payment and recipient-return activity"}
     </label>}

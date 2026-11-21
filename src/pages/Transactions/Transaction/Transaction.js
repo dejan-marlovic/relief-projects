@@ -305,7 +305,7 @@ const Transaction = ({
                 />
               )}
 
-              {canEdit && <ActionButton
+              {canEdit && <ActionButton editorBlocked={Boolean(editingLocked)}
                 type="button"
                 className={styles.iconCircleBtn}
                 onClick={(e) => {
@@ -321,7 +321,7 @@ const Transaction = ({
               </ActionButton>}
 
               {showSubmitLifecycle && (
-                <ActionButton
+                <ActionButton editorBlocked={Boolean(editingLocked)}
                   type="button"
                   className={`${styles.iconCircleBtn} ${styles.submitBtn}`}
                   onClick={(e) => {
@@ -339,7 +339,7 @@ const Transaction = ({
 
               {showReviewLifecycle && (
                 <>
-                  <ActionButton
+                  <ActionButton editorBlocked={Boolean(editingLocked)}
                     type="button"
                     className={`${styles.iconCircleBtn} ${styles.approveBtn}`}
                     onClick={(e) => {
@@ -353,7 +353,7 @@ const Transaction = ({
                   >
                     <FiCheck />{compact && <span>Review approval</span>}
                   </ActionButton>
-                  <ActionButton
+                  <ActionButton editorBlocked={Boolean(editingLocked)}
                     type="button"
                     className={`${styles.iconCircleBtn} ${styles.returnBtn}`}
                     onClick={(e) => {
@@ -371,7 +371,7 @@ const Transaction = ({
               )}
 
               {!isCreate && (
-                <ActionButton
+                <ActionButton editorBlocked={Boolean(editingLocked)}
                   type="button"
                   className={styles.iconCircleBtn}
                   onClick={(e) => {
@@ -390,7 +390,7 @@ const Transaction = ({
               )}
 
               {canDelete && !isCreate && (
-                <ActionButton
+                <ActionButton editorBlocked={Boolean(editingLocked)}
                   type="button"
                   className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.iconOnlyBtn}`}
                   onClick={(e) => {
@@ -499,7 +499,7 @@ const Transaction = ({
       <RevisionFundingAssignments recordName={tx.transactionDescription} transactionId={tx.id} originBudgetId={tx.budgetId} disabled={isEditing || editingLocked} refreshKey={historyRefreshKey} onChanged={onAllocationMutationSuccess} />
       </RecordActivity>}
       {expanded && !isCreate && (
-        <div className={styles.expandedPanel}>
+        <div className={styles.expandedPanel} data-open-record="true"><span className="open-record-label">Viewing record</span>
           <TransactionAllocations
             onMutationSuccess={onAllocationMutationSuccess}
             txId={tx.id}

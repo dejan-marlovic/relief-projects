@@ -1290,7 +1290,7 @@ function PaymentOrders() {
 
           <div className={styles.headerActions}>
             {hasActiveFilters && <ClearFiltersButton onClick={() => setFilters(emptyFilters())} />}
-            <ActionButton
+            <ActionButton editorBlocked={Boolean(editingId)}
               type="button"
               className={styles.exportInlineBtn}
               onClick={handleExportSelected}
@@ -1304,7 +1304,7 @@ function PaymentOrders() {
             </ActionButton>
 
             {canDeletePaymentOrders && (
-              <ActionButton
+              <ActionButton editorBlocked={Boolean(editingId)}
                 type="button"
                 className={styles.dangerInlineBtn}
                 onClick={removeSelected}
@@ -1357,7 +1357,7 @@ function PaymentOrders() {
             </div>
 
             {canEditPaymentOrders && (
-              <ActionButton
+              <ActionButton editorBlocked={Boolean(editingId)}
                 className={styles.primaryBtn}
                 onClick={startCreate}
                 disabled={!selectedProjectId || saving || (compact ? editingId !== null : editingId === "new")}
@@ -1476,7 +1476,7 @@ function PaymentOrders() {
                 />
 
                 {expandedPoId === po.id && (
-                  <div className={styles.linesPanel}>
+                  <div className={styles.linesPanel} data-open-record="true"><span className="open-record-label">Viewing record</span>
                     <PaymentOrderLines
                       paymentOrderId={po.id}
                       order={po}

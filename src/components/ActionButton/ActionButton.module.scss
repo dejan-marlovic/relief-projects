@@ -24,3 +24,22 @@ button.close:not(:disabled):hover {
   background: color-mix(in srgb, var(--color-surface-secondary) 82%, var(--color-primary));
 }
 button.close [aria-hidden="true"] { color: inherit; }
+.hintedAction {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: .25rem;
+  min-width: 0;
+  max-width: 100%;
+  vertical-align: top;
+  > button { max-width: 100%; }
+}
+.hint {
+  display: block;
+  max-width: 24rem;
+  color: var(--color-text-muted);
+  font-size: .75rem;
+  font-weight: normal;
+  line-height: 1.4;
+  white-space: normal;
+}

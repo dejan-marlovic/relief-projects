@@ -157,5 +157,5 @@ function HistoryDetails({ details }) {
 }
 export default function BudgetRevisions(props) {
   const [opened, setOpened] = useState(false);
-  return <details className={styles.section} onToggle={e => { if (e.currentTarget.open) setOpened(true); }}><summary>Revisions & donor decisions · {budgetOptionLabel(props.budget)}</summary>{opened && <RevisionPanel {...props} />}</details>;
+  return <details className={styles.section} data-record-disclosure="true" onToggle={e => { if (e.currentTarget.open) setOpened(true); }}><summary>Revisions & donor decisions · {budgetOptionLabel(props.budget)}<span className="expanded-record-label">Expanded</span></summary>{opened && <RevisionPanel {...props} />}</details>;
 }

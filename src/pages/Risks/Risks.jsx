@@ -251,7 +251,7 @@ function Register({ projectId, authFetch }) {
       <label><input type="checkbox" checked={filters.overdue} disabled={locked || filters.status !== "OPEN" || filters.deleted} onChange={e => changeFilter("overdue", e.target.checked)} /> Overdue reviews only</label>
       <label><input type="checkbox" checked={filters.deleted} disabled={locked} onChange={e => changeFilter("deleted", e.target.checked)} /> Deleted risks only</label>
     </div>
-    <div className={styles.actions}>{data?.canCreate && <ActionButton className={styles.primaryAction} disabled={locked || loading} onClick={() => openEditor(null, "save")}>New risk</ActionButton>}{(error || employeeError || blocked) && <ActionButton className={styles.secondaryAction} disabled={busy || loading} onClick={() => setAttempt(v => v + 1)}>Retry register</ActionButton>}</div>
+    <div className={styles.actions}>{data?.canCreate && <ActionButton editorBlocked={Boolean(editor)} className={styles.primaryAction} disabled={locked || loading} onClick={() => openEditor(null, "save")}>New risk</ActionButton>}{(error || employeeError || blocked) && <ActionButton className={styles.secondaryAction} disabled={busy || loading} onClick={() => setAttempt(v => v + 1)}>Retry register</ActionButton>}</div>
     {loading && !data && <p role="status">Loading risks…</p>}{error && <p role="alert">{error}</p>}{employeeError && <p role="alert">{employeeError} Use Retry register to retry.</p>}
     {notice && <p role={blocked ? "alert" : "status"}>{notice}</p>}
     {editor && <>
@@ -278,11 +278,11 @@ function Register({ projectId, authFetch }) {
         </WorkflowStep><WorkflowStep number={3} title="Close or reopen the risk" description="Close with a reason when further monitoring is no longer required. Reopen if circumstances change; the decision history remains available.">{risk.closureReason && <p className={styles.text}><strong>Closure reason: </strong>{risk.closureReason}</p>}
         </WorkflowStep><details><summary>Attribution</summary><p>Created by {risk.createdBy?.username} · {uploadTimeLabel(risk.createdAt)}</p><p>Last changed by {risk.updatedBy?.username} · {uploadTimeLabel(risk.updatedAt)}</p></details>
         <div className={styles.actions}>
-          {[["canEdit", "save", "Edit risk"], ["canClose", "close", "Close risk"], ["canReopen", "reopen", "Reopen risk"], ["canDelete", "delete", "Delete risk"], ["canRestore", "restore", "Restore risk"]].map(([permission, action, label]) => risk.permissions?.[permission] && <ActionButton key={action} disabled={locked || loading} onClick={() => openEditor(risk, action)}>{label}</ActionButton>)}
+          {[["canEdit", "save", "Edit risk"], ["canClose", "close", "Close risk"], ["canReopen", "reopen", "Reopen risk"], ["canDelete", "delete", "Delete risk"], ["canRestore", "restore", "Restore risk"]].map(([permission, action, label]) => risk.permissions?.[permission] && <ActionButton editorBlocked={Boolean(editor)} key={action} disabled={locked || loading} onClick={() => openEditor(risk, action)}>{label}</ActionButton>)}
           <ActionButton disabled={busy} onClick={() => setHistory(risk)}>View history</ActionButton>
         </div>
       </li>)}</ul>
-      <div className={styles.actions}><ActionButton disabled={locked || loading || !page} onClick={() => setPage(p => p - 1)}>Previous page</ActionButton><span>{data.totalElements} risks · Page {data.totalPages ? page + 1 : 0} of {data.totalPages}</span><ActionButton disabled={locked || loading || page + 1 >= data.totalPages} onClick={() => setPage(p => p + 1)}>Next page</ActionButton></div>
+      <div className={styles.actions}><ActionButton editorBlocked={Boolean(editor)} disabled={locked || loading || !page} onClick={() => setPage(p => p - 1)}>Previous page</ActionButton><span>{data.totalElements} risks · Page {data.totalPages ? page + 1 : 0} of {data.totalPages}</span><ActionButton editorBlocked={Boolean(editor)} disabled={locked || loading || page + 1 >= data.totalPages} onClick={() => setPage(p => p + 1)}>Next page</ActionButton></div>
     </>}
     {history && <History key={history.id} risk={history} endpoint={endpoint} authFetch={authFetch} onClose={() => setHistory(null)} />}
   </>;

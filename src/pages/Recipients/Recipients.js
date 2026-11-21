@@ -1083,7 +1083,7 @@ function Recipients() {
             </ActionButton>
 
             {canBulkDeleteRecipients && (
-              <ActionButton
+              <ActionButton editorBlocked={Boolean(editingId)}
                 type="button"
                 className={styles.dangerInlineBtn}
                 onClick={removeSelected}
@@ -1140,7 +1140,7 @@ function Recipients() {
             </div>}
 
             {canManageRecipients && (
-              <ActionButton
+              <ActionButton editorBlocked={Boolean(editingId)}
                 className={styles.primaryBtn}
                 onClick={startCreate}
                 disabled={

@@ -281,3 +281,34 @@ a {
     opacity: 0.65;
   }
 }
+
+/* Shared visual state for opened records; independent of workflow status. */
+[data-open-record="true"], details[data-record-disclosure="true"][open] {
+  border-inline-start: 3px solid var(--color-primary);
+  outline: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+  outline-offset: -1px;
+}
+.open-record-label, .expanded-record-label {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .2rem .55rem;
+  border-radius: .4rem;
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface));
+  font-size: .75rem;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: normal;
+}
+.open-record-label { margin-block-end: .65rem; }
+.open-record-label::before, .expanded-record-label::before {
+  content: "";
+  width: .4rem;
+  height: .4rem;
+  border-radius: 50%;
+  background: var(--color-primary);
+  flex-shrink: 0;
+}
+.expanded-record-label { display: none; margin-inline-start: .6rem; }
+details[data-record-disclosure="true"][open] > summary > .expanded-record-label { display: inline-flex; }

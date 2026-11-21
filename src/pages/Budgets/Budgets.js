@@ -160,7 +160,7 @@ const Budgets = () => {
               type="button"
               className={styles.primaryBtn}
               onClick={handleOpenCreateForm}
-              disabled={!selectedProjectId || showCreateForm}
+              editorBlocked={showCreateForm} disabled={!selectedProjectId || showCreateForm}
               title={
                 !selectedProjectId
                   ? "Select a project first"

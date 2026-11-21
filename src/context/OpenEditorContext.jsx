@@ -1,10 +1,10 @@
 import ActionButton from "../components/ActionButton/ActionButton";
 import RecordIcon from "../components/RecordIcon/RecordIcon";
-import React, { createContext, useCallback, useContext, useEffect, useId, useMemo, useState } from "react";
+import React, { useCallback, useContext, useEffect, useId, useMemo, useState } from "react";
+import { OpenEditorState as OpenEditorContext } from "./OpenEditorState";
 import { revealEditor } from "../utils/revealEditor";
 import styles from "./OpenEditorContext.module.scss";
 
-const OpenEditorContext = createContext({ register: () => () => {} });
 
 export function useOpenEditor(ref, open = true, label) {
   const { register } = useContext(OpenEditorContext);
@@ -25,7 +25,7 @@ export function OpenEditorProvider({ children }) {
       const next = { ...current }; delete next[id]; return next;
     });
   }, []);
-  const value = useMemo(() => ({ register }), [register]);
+  const value = useMemo(() => ({ register, editors: Object.values(editors) }), [register, editors]);
   const entries = Object.entries(editors);
   return <OpenEditorContext.Provider value={value}>
     {!!entries.length && <aside data-open-editor-notice="" className={styles.notice} aria-label="Open editor notice">

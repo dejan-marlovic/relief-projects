@@ -306,8 +306,8 @@ const SignatureRow = ({
         <div><span className={styles.fieldLabel}>Employee</span>{isEditing ? selectEmployee : employeeLabelById(row.employeeId)}</div>
         <div><span className={styles.fieldLabel}>Payment order</span>{isEditing ? selectPO : (row.paymentOrderId != null ? namedReference("Payment order", row.paymentOrderId, poOptions.find(po => String(po.id) === String(row.paymentOrderId))?.paymentOrderDescription) : "-")}</div>
       </div>
-      <details className={styles.cardDetails} open={isEditing ? true : undefined}>
-        <summary>Signature details</summary>
+      <details data-record-disclosure="true" className={styles.cardDetails} open={isEditing ? true : undefined}>
+        <summary>Signature details<span className="expanded-record-label">Expanded</span></summary>
         <div className={styles.detailFields}>
           <div><span className={styles.fieldLabel}>Signature</span>{isEditing ? inputText("signature") : (row.signature || "-")}</div>
           <div><span className={styles.fieldLabel}>Date</span>{isEditing ? inputDate : row.signatureDate ? new Date(row.signatureDate).toLocaleString() : "-"}</div>

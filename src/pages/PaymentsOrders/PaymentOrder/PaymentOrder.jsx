@@ -246,7 +246,7 @@ const PaymentOrder = ({
               />
             )}
             {canEdit && (
-              <ActionButton
+              <ActionButton editorBlocked={Boolean(editingLocked)}
                 type="button"
                 className={styles.iconCircleBtn}
                 onClick={(e) => {
@@ -263,7 +263,7 @@ const PaymentOrder = ({
             )}
 
             {showSubmitLifecycle && (
-              <ActionButton
+              <ActionButton editorBlocked={Boolean(editingLocked)}
                 type="button"
                 className={`${styles.iconCircleBtn} ${styles.submitBtn}`}
                 onClick={(e) => {
@@ -281,7 +281,7 @@ const PaymentOrder = ({
 
             {showReviewLifecycle && (
               <>
-                <ActionButton
+                <ActionButton editorBlocked={Boolean(editingLocked)}
                   type="button"
                   className={`${styles.iconCircleBtn} ${styles.approveBtn}`}
                   onClick={(e) => {
@@ -295,7 +295,7 @@ const PaymentOrder = ({
                 >
                   <FiCheck />{compact && <span>Review approval</span>}
                 </ActionButton>
-                <ActionButton
+                <ActionButton editorBlocked={Boolean(editingLocked)}
                   type="button"
                   className={`${styles.iconCircleBtn} ${styles.returnBtn}`}
                   onClick={(e) => {
@@ -313,7 +313,7 @@ const PaymentOrder = ({
             )}
 
             {!isCreate && (
-              <ActionButton
+              <ActionButton editorBlocked={Boolean(editingLocked)}
                 type="button"
                 className={styles.iconCircleBtn}
                 onClick={(e) => {
@@ -330,7 +330,7 @@ const PaymentOrder = ({
             )}
 
             {!isCreate && canDelete && (
-              <ActionButton
+              <ActionButton editorBlocked={Boolean(editingLocked)}
                 type="button"
                 className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.iconOnlyBtn}`}
                 onClick={(e) => {

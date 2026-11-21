@@ -500,7 +500,7 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates, onMutati
 
       {/* Add New button stays visible below; disabled while create row is open */}
       {canEditCostDetails && <div className={styles.createBar}>
-        <ActionButton
+        <ActionButton editorBlocked={Boolean(editingId)}
           className={styles.addBtn}
           onClick={handleCreate}
           disabled={saving || disabled || !budgetId || editingId !== null}

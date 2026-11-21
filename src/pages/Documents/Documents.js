@@ -499,7 +499,7 @@ const Documents = () => {
 
                     <div className={styles.docActions}>
                       <ActionButton type="button" className={styles.downloadLink} disabled={saving} onClick={() => { if (!confirmDiscardUnsavedChanges()) return; setEditing(null); setHistoryDocument(doc); }}>Version history</ActionButton>
-                      {canUploadDocuments && doc.isCurrent === true && <ActionButton type="button" className={styles.downloadLink} disabled={saving || !categories.length || !!editing} onClick={() => { setEditing({ original: doc, category: doc.category || "UNCATEGORIZED", documentDate: doc.documentDate || "", status: doc.status || "" }); }}>Edit details</ActionButton>}
+                      {canUploadDocuments && doc.isCurrent === true && <ActionButton editorBlocked={Boolean(editing)} type="button" className={styles.downloadLink} disabled={saving || !categories.length || !!editing} onClick={() => { setEditing({ original: doc, category: doc.category || "UNCATEGORIZED", documentDate: doc.documentDate || "", status: doc.status || "" }); }}>Edit details</ActionButton>}
                       <ActionButton
                         type="button"
                         onClick={() => handleDownload(doc.id)}
@@ -512,7 +512,7 @@ const Documents = () => {
                         <span>{downloading.includes(doc.id) ? "Downloading…" : "Download"}</span>
                       </ActionButton>
 
-                      {canDeleteDocuments && <ActionButton
+                      {canDeleteDocuments && <ActionButton editorBlocked={Boolean(editing)}
                         type="button"
                         onClick={() => handleDeleteDocument(doc.id)}
                         disabled={deletingId === doc.id || !!editing}

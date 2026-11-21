@@ -1084,7 +1084,7 @@ function Signatures() {
 
           <div className={styles.headerActions}>
             {hasActiveFilters && <ClearFiltersButton onClick={() => setFilters(emptyFilters())} />}
-            <ActionButton
+            <ActionButton editorBlocked={Boolean(editingId)}
               type="button"
               className={styles.exportInlineBtn}
               onClick={handleExportSelected}
@@ -1102,7 +1102,7 @@ function Signatures() {
             </ActionButton>
 
             {canManageSignatures && (
-              <ActionButton
+              <ActionButton editorBlocked={Boolean(editingId)}
                 type="button"
                 className={styles.dangerInlineBtn}
                 onClick={removeSelected}
@@ -1148,7 +1148,7 @@ function Signatures() {
             </div>}
 
             {canManageSignatures && (
-              <ActionButton
+              <ActionButton editorBlocked={Boolean(editingId)}
                 className={styles.primaryBtn}
                 onClick={startCreate}
                 disabled={

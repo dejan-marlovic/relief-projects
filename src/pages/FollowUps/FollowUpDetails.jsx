@@ -11,11 +11,12 @@ export default function FollowUpDetails({ task, authFetch, disabled, onAttachmen
   const [expanded, setExpanded] = useState(false);
   return <>
     {authFetch && Number.isInteger(task.attachmentCount) && <FollowUpAttachments task={task} authFetch={authFetch} disabled={disabled} onOperation={onAttachmentOperation} observation={observation} />}
-    <div className={styles.details}>
+    <div className={styles.details} data-open-record={expanded ? "true" : undefined}>
     <ActionButton type="button" className={styles.detailsToggle} aria-expanded={expanded} aria-controls={id} onClick={() => setExpanded(value => !value)}>
       <span>Details &amp; activity</span><FiChevronDown aria-hidden="true" className={expanded ? styles.chevronOpen : undefined} />
     </ActionButton>
     <div id={id} className={styles.detailsBody} hidden={!expanded}>
+      <span className="open-record-label">Viewing record</span>
       <dl className={styles.taskDetails}>
         <dt>Responsible employee</dt><dd>{task.assignee?.displayName || "Unavailable"}</dd>
         <dt>Deadline</dt><dd>{task.dueDate}</dd>

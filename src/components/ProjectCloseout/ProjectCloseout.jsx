@@ -105,7 +105,7 @@ export function CloseoutPanel({ projectId, refreshKey }) {
   const download = async id => { setDownloading(id); try { await downloadDocument(id,authFetch); } catch (err) { if (alive.current) setError(err.message); } finally { if (alive.current) setDownloading(null); } };
   const stale = form && data && form.expectedRevision !== data.revision;
   const warnings = data?.readiness?.warnings || [];
-  const decisionButtons = names => <div className={styles.actions}>{names.map(action => data?.permissions?.[actions[action][0]] && <ActionButton type="button" key={action} disabled={loading || busy || !!form} onClick={() => open(action)}>{actions[action][1]}</ActionButton>)}</div>;
+  const decisionButtons = names => <div className={styles.actions}>{names.map(action => data?.permissions?.[actions[action][0]] && <ActionButton editorBlocked={Boolean(form)} type="button" key={action} disabled={loading || busy || !!form} onClick={() => open(action)}>{actions[action][1]}</ActionButton>)}</div>;
   useAutomaticRefresh(refresh, loading || busy || !!form || !!downloading);
   return <div className={styles.panel}>
     <ArchiveAttribution value={data} />
