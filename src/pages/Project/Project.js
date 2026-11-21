@@ -2547,7 +2547,7 @@ Approximately:
               </p>
             </div>
 
-            <div data-action-group="header" className={styles.headerActions}>
+            <div data-action-group="header" data-financial-toolbar="true" className={styles.headerActions}>
               <ActionButton
                 type="button"
                 onClick={handleExportProject}

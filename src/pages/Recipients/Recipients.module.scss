@@ -311,3 +311,7 @@
 .pageTitle { @include presentation.page-title; }
 .pageSubtitle { @include presentation.description; }
 .shell { @include presentation.surface; }
+
+// Reuse the Project action variants instead of separate financial colours.
+.exportInlineBtn { @include forms.export-button; }
+.dangerInlineBtn { @include forms.danger-button; }

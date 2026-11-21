@@ -213,3 +213,51 @@ $radius: 10px;
     box-shadow: colors.$shadow-focus;
   }
 }
+
+// Shared Project-style export action.
+@mixin export-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+
+  padding: 8px 14px;
+
+  border: 1px solid colors.$success-border;
+  border-radius: 8px;
+  background: colors.$surface;
+  color: colors.$success-dark;
+
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+
+  &:hover:not(:disabled) {
+    border-color: colors.$success;
+    background: colors.$success-soft;
+    box-shadow: colors.$shadow-card;
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px colors.$success-border;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    box-shadow: none;
+    opacity: 0.6;
+    transform: none;
+  }
+}

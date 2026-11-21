@@ -8,7 +8,7 @@
   pointer-events: none;
   svg { width: 1em; height: 1em; stroke-width: 1.8; }
 }
-button.danger:not(:disabled) {
+button.danger {
   color: var(--color-danger-text);
   background: var(--color-danger-soft);
   border-color: var(--color-danger-border);

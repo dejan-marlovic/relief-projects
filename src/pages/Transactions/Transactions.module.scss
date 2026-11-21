@@ -375,3 +375,7 @@ fieldset.headerRow { margin: 0; border: 0; min-inline-size: 0; }
 // Shared Project-page visual language.
 .cardTitle { @include presentation.page-title; }
 .cardMeta { @include presentation.description; }
+
+// Reuse the Project action variants instead of separate financial colours.
+.exportInlineBtn { @include forms.export-button; }
+.dangerInlineBtn { @include forms.danger-button; }
