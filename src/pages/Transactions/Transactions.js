@@ -1577,7 +1577,7 @@ const Transactions = ({ refreshTrigger }) => {
       <div data-mobile-tile="Transactions" className={styles.card}>
         <div className={styles.cardHeader}>
           <div className={styles.headerText}>
-            <div className={styles.cardTitle}>Transactions</div>
+            <h2 className={styles.cardTitle}>Transactions</h2>
             <div className={styles.cardMeta}>
               {selectedProjectId
                 ? `${getSelectedProjectName(projects, selectedProjectId)} • ${transactions.length} transaction${transactions.length === 1 ? "" : "s"}`
@@ -1585,7 +1585,7 @@ const Transactions = ({ refreshTrigger }) => {
             </div>
           </div>
 
-          <div data-action-group="header" className={styles.headerActions}>
+          <div data-action-group="header" data-financial-toolbar="true" className={styles.headerActions}>
             {hasActiveFilters && <ClearFiltersButton onClick={() => setFilters(emptyFilters())} />}
             <ActionButton editorBlocked={Boolean(editingId)}
               type="button"
@@ -1703,7 +1703,7 @@ const Transactions = ({ refreshTrigger }) => {
                 ) : (
                   h
                 )}
-                {!compact && i > 0 && visibleCols[i] && <ColumnResize label={h} width={columnWidths[i]} defaultWidth={BASE_COL_WIDTHS[i]} onResize={width => resizeColumn(i, width)} />}
+                {!compact && visibleCols[i] && <ColumnResize label={h} width={columnWidths[i]} defaultWidth={BASE_COL_WIDTHS[i]} onResize={width => resizeColumn(i, width)} />}
               </div>
             ))}
           </fieldset>

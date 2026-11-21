@@ -373,5 +373,5 @@ fieldset.headerRow { margin: 0; border: 0; min-inline-size: 0; }
 .fundingHelp { margin: 0 0 0.8rem; color: colors.$text-muted; font-size: 0.85rem; line-height: 1.5; }
 
 // Shared Project-page visual language.
-.cardTitle { @include presentation.tile-title; }
+.cardTitle { @include presentation.page-title; }
 .cardMeta { @include presentation.description; }

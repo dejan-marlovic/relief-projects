@@ -210,7 +210,7 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
     </ScrollToForm>}
     {!initialLoading && data?.content.length === 0 && <p>No payments on this page.</p>}
     {data?.content.map(payment => <article data-record-item="card" key={payment.id} className={`${styles.entry} ${payment.status === "VOIDED" ? styles.voided : ""}`} aria-label={`Payment ${payment.id}`}><RecordListLabel type="payment">Payment</RecordListLabel>
-      <h4><RecordIcon type="payment" />Payment #{payment.id} · {payment.organization?.name || "Name unavailable"} · {payment.status === "VOIDED" ? "Voided" : "Recorded"}</h4>
+      <h4>Payment #{payment.id} · {payment.organization?.name || "Name unavailable"} · {payment.status === "VOIDED" ? "Voided" : "Recorded"}</h4>
       <p><strong>{paymentMoney(payment.amount)} {paymentCurrency(payment.currency)}</strong> · Paid on {payment.paidDate}</p>
       {payment.currency?.labelChanged && <p className={styles.hint}>Current currency label: {payment.currency.currentName}. The recorded label above is retained.</p>}
       <p>Recipient organization: {payment.organization?.name || "Unknown"} · Entered {stamp(payment.createdAt)} by {actor(payment.createdBy)}</p>

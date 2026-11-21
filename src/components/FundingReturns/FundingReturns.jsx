@@ -126,7 +126,7 @@ export function FundingReturnsPanel({ receipt, refreshKey, editingLocked, onChan
   }
   function entry(row, relatedView = false) {
     return <article data-record-item="card" key={row.id} className={styles.entry} aria-label={`Financier return ${row.id}`}><RecordListLabel type="payment">Financier return</RecordListLabel>
-      <h4><RecordIcon type="transaction" />Return to financier #{row.id} · {row.financier?.name || "Name unavailable"} · {row.status === "VOIDED" ? "Voided erroneous entry" : "Recorded"}</h4>
+      <h4>Return to financier #{row.id} · {row.financier?.name || "Name unavailable"} · {row.status === "VOIDED" ? "Voided erroneous entry" : "Recorded"}</h4>
       <p><strong>{receiptMoney(row.amount)} {receiptCurrency(row.currency)}</strong> · Returned {row.returnedDate}</p>
       <p>Financier: {row.financier?.name || "Unknown"} · Original receipt #{row.originalReceiptId}</p>
       {row.currency?.labelChanged && <p>Current currency label: {row.currency.currentName}; the recorded label is retained above.</p>}

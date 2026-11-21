@@ -207,7 +207,7 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
     </ScrollToForm>}
     {!initialLoading && data?.content.length === 0 && <p>No receipts on this page.</p>}
     {data?.content.map(receipt => <article data-record-item="card" key={receipt.id} className={`${styles.entry} ${receipt.status === "VOIDED" ? styles.voided : ""}`} aria-label={`Receipt ${receipt.id}`}><RecordListLabel type="transaction">Receipt</RecordListLabel>
-      <h4><RecordIcon type="transaction" />Receipt #{receipt.id} · {receipt.financier?.name || "Name unavailable"} · {receipt.status === "VOIDED" ? "Voided" : "Recorded"}</h4>
+      <h4>Receipt #{receipt.id} · {receipt.financier?.name || "Name unavailable"} · {receipt.status === "VOIDED" ? "Voided" : "Recorded"}</h4>
       <p><strong>{receiptMoney(receipt.amount)} {receiptCurrency(receipt.currency)}</strong> · Arrived {receipt.receivedDate}</p>
       {receipt.currency?.labelChanged && <p className={styles.hint}>Current currency label: {receipt.currency.currentName}. The recorded label above is retained.</p>}
       <p>Financier: {receipt.financier?.name || "Unknown"} · Entered {stamp(receipt.createdAt)} by {actor(receipt.createdBy)}</p>

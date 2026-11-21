@@ -198,7 +198,7 @@ const SignatureRow = ({
   const actionCell = (
       <Cell className={compact ? styles.cardActions : `${styles.stickyCol} ${hc(0)}`}>
         {isEditing ? (
-          <div data-action-group="inline" className={styles.actions}>
+          <div data-action-group="inline" data-financial-row-actions="true" className={styles.actions}>
             <ActionButton
               type="button"
               className={styles.iconCircleBtn}
@@ -222,7 +222,7 @@ const SignatureRow = ({
             </ActionButton>
           </div>
         ) : (
-          <div data-action-group="inline" className={styles.actions}>
+          <div data-action-group="inline" data-financial-row-actions="true" className={styles.actions}>
             {!isCreate && (
               <input
                 type="checkbox"

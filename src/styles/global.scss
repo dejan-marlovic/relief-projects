@@ -361,3 +361,45 @@ details[data-record-disclosure="true"][open] > summary > .expanded-record-label 
   border-radius: 14px;
   box-shadow: 0 2px 6px var(--color-primary-a04);
 }
+
+// Financial row actions wrap into aligned slots in their resizable column.
+@media (min-width: 1101px) {
+  :root [data-action-group][data-action-group][data-financial-row-actions] {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 34px);
+    justify-content: end;
+    align-items: center;
+    justify-items: center;
+    gap: .5rem;
+    width: 100%;
+    white-space: normal;
+  }
+  :root [data-financial-row-actions] > input[type="checkbox"] { margin: 0; }
+  :root [data-financial-row-actions] > button { margin: 0; flex-shrink: 0; }
+  :root [data-financial-row-actions] > span:has(> button) { grid-column: 1 / -1; width: 100%; }
+}
+
+// Equal control geometry, including Columns inside its popover anchor.
+:root [data-financial-toolbar] > button,
+:root [data-financial-toolbar] > span > button,
+:root [data-financial-toolbar] > div > button {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  min-height: 44px;
+  height: auto;
+  padding: .625rem .875rem;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: .9rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+  margin: 0;
+  flex: 0 1 auto;
+}
+:root [data-financial-toolbar] button > svg { width: 1rem; height: 1rem; flex-shrink: 0; }
+:root [data-financial-toolbar] > div { min-width: 0; max-width: 100%; }

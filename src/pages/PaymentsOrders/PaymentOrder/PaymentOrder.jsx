@@ -197,7 +197,7 @@ const PaymentOrder = ({
       {/* 0: Actions (sticky left) */}
       <Cell className={`${styles.stickyCol} ${styles.actionsCol} ${hc(0)}`}>
         {isEditing ? (
-          <div data-action-group="inline" className={styles.actions}>
+          <div data-action-group="inline" data-financial-row-actions="true" className={styles.actions}>
             <ActionButton
               type="button"
               className={styles.iconCircleBtn}
@@ -221,7 +221,7 @@ const PaymentOrder = ({
             </ActionButton>
           </div>
         ) : (
-          <div data-action-group="inline" className={styles.actions}>
+          <div data-action-group="inline" data-financial-row-actions="true" className={styles.actions}>
             {!isCreate && (
               <input
                 type="checkbox"

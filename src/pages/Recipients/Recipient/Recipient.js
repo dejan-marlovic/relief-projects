@@ -157,7 +157,7 @@ const RecipientRow = ({
       {/* 0: Actions */}
       <Cell className={`${styles.stickyCol} ${styles.actionsCol} ${hc(0)}`}>
         {isEditing ? (
-          <div data-action-group="inline" className={styles.actions}>
+          <div data-action-group="inline" data-financial-row-actions="true" className={styles.actions}>
             <ActionButton
               type="button"
               className={styles.iconCircleBtn}
@@ -181,7 +181,7 @@ const RecipientRow = ({
             </ActionButton>
           </div>
         ) : (
-          <div data-action-group="inline" className={styles.actions}>
+          <div data-action-group="inline" data-financial-row-actions="true" className={styles.actions}>
             {!isCreate && (
               <input
                 type="checkbox"
