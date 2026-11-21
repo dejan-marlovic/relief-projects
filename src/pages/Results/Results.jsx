@@ -1,3 +1,4 @@
+import RecordListLabel from "../../components/RecordListLabel/RecordListLabel";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import DocumentLabel from "../../components/DocumentLabel/DocumentLabel";
@@ -160,7 +161,7 @@ export function ResultsRegister({ projectId, authFetch }) {
   return <><div data-action-group="section" className={styles.actions}><label><input type="checkbox" checked={deleted} disabled={busy} onChange={e => { setDeleted(e.target.checked); setPage(0); }} />Show deleted indicators only</label>
 {state.data?.canCreate && <ActionButton recordBlocked={Boolean(selected)} editorBlocked={Boolean(form)} disabled={busy || !!form || !!selected} onClick={() => setForm({ action: "create", draft: blankIndicator() })}>Create indicator</ActionButton>}</div><ReadState state={state} />
     {state.data?.projectDeleted && <p>This project is inactive. Retained results are read-only.</p>}
-    <ul className={styles.list}>{state.data?.content.map(i => <li key={i.id}><div className={styles.heading}><h3><RecordIcon type="indicator" />{i.name}{i.isDeleted ? " · Deleted" : ""}</h3><ActionButton recordBlocked={selected != null && selected !== i.id} editorBlocked={Boolean(form)} disabled={!!form || (selected != null && selected !== i.id)} onClick={() => { setSelected(i.id); setOpenSequence(n => n + 1); }}><RecordIcon type="open" />Open indicator #{i.id} · {i.name || "Name unavailable"}</ActionButton></div><p>{i.periodStart} through {i.periodEnd} · Target {i.targetValue} {i.unit}</p><ResultSummary summary={i.summary} unit={i.unit} direction={i.direction} /></li>)}</ul>
+    <ul className={styles.list}>{state.data?.content.map(i => <li data-record-item="card" key={i.id}><RecordListLabel type="indicator">Indicator</RecordListLabel><div className={styles.heading}><h3><RecordIcon type="indicator" />{i.name}{i.isDeleted ? " · Deleted" : ""}</h3><ActionButton recordBlocked={selected != null && selected !== i.id} editorBlocked={Boolean(form)} disabled={!!form || (selected != null && selected !== i.id)} onClick={() => { setSelected(i.id); setOpenSequence(n => n + 1); }}><RecordIcon type="open" />Open indicator #{i.id} · {i.name || "Name unavailable"}</ActionButton></div><p>{i.periodStart} through {i.periodEnd} · Target {i.targetValue} {i.unit}</p><ResultSummary summary={i.summary} unit={i.unit} direction={i.direction} /></li>)}</ul>
     {state.data && !state.data.content.length && <p>No {deleted ? "deleted" : "active"} indicators on this page.</p>}
     <Pagination data={state.data} page={page} setPage={setPage} label="indicators" disabled={state.loading || busy} />
     {form && <ReadState state={current} />}

@@ -1,3 +1,4 @@
+import RecordListLabel from "../../../components/RecordListLabel/RecordListLabel";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import RecordIcon from "../../../components/RecordIcon/RecordIcon";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
@@ -130,9 +131,9 @@ const Organization = ({
 
   const editorRef = useScrollToEditor(expanded || isEditing, undefined, isEditing, "Organisation relationship editor");
   const open = expanded || isEditing;
-  return <article data-mobile-tile={isCreate ? "New organization" : orgName(link.organizationId)} ref={editorRef} tabIndex={-1} className={styles.relationshipCard}>
+  return <article data-record-item={isCreate ? undefined : "card"} data-mobile-tile={isCreate ? "New organization" : orgName(link.organizationId)} ref={editorRef} tabIndex={-1} className={styles.relationshipCard}>
     <header className={styles.cardHeader}>
-      <div><h3>{isCreate ? "Add organisation to this project" : orgName(link.organizationId)}</h3>
+      <div>{!isCreate && <RecordListLabel type="organization">Organisation</RecordListLabel>}<h3>{isCreate ? "Add organisation to this project" : orgName(link.organizationId)}</h3>
         {!isCreate && <p><strong>Role in this project:</strong> {statusName(link.organizationStatusId)}</p>}
         {!isCreate && <p>Assessment: {assessment}</p>}
       </div>

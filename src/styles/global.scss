@@ -353,3 +353,11 @@ details[data-record-disclosure="true"][open] > summary > .expanded-record-label 
 
 /* A wrapped hint must not pull its disabled button away from the action edge. */
 :root [data-action-group] > span:has(> button) { align-items: flex-end; }
+
+// Saved list entries share an edge without introducing another nested outline.
+:root [data-record-item="card"] {
+  min-width: 0;
+  border-color: var(--color-primary-border);
+  border-radius: 14px;
+  box-shadow: 0 2px 6px var(--color-primary-a04);
+}

@@ -1,3 +1,4 @@
+import RecordListLabel from "../RecordListLabel/RecordListLabel";
 import ActionButton from "../ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import useScrollToEditor from "../../hooks/useScrollToEditor";
@@ -208,7 +209,7 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
       {form.payment && data && !data.content.some(row => row.id === form.payment.id && row.revision === form.payment.revision) && <p role="status">This draft keeps the original revision. Cancel and reopen the action after reviewing current payments to use a new revision.</p>}
     </ScrollToForm>}
     {!initialLoading && data?.content.length === 0 && <p>No payments on this page.</p>}
-    {data?.content.map(payment => <article key={payment.id} className={`${styles.entry} ${payment.status === "VOIDED" ? styles.voided : ""}`} aria-label={`Payment ${payment.id}`}>
+    {data?.content.map(payment => <article data-record-item="card" key={payment.id} className={`${styles.entry} ${payment.status === "VOIDED" ? styles.voided : ""}`} aria-label={`Payment ${payment.id}`}><RecordListLabel type="payment">Payment</RecordListLabel>
       <h4><RecordIcon type="payment" />Payment #{payment.id} · {payment.organization?.name || "Name unavailable"} · {payment.status === "VOIDED" ? "Voided" : "Recorded"}</h4>
       <p><strong>{paymentMoney(payment.amount)} {paymentCurrency(payment.currency)}</strong> · Paid on {payment.paidDate}</p>
       {payment.currency?.labelChanged && <p className={styles.hint}>Current currency label: {payment.currency.currentName}. The recorded label above is retained.</p>}

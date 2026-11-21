@@ -1,3 +1,4 @@
+import RecordListLabel from "../RecordListLabel/RecordListLabel";
 import ActionButton from "../ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import useScrollToEditor from "../../hooks/useScrollToEditor";
@@ -124,7 +125,7 @@ export function FundingReturnsPanel({ receipt, refreshKey, editingLocked, onChan
     try { await downloadDocument(id, authFetch); } catch (e) { if (alive.current) setError(e.message); } finally { if (alive.current) setDownloading(null); }
   }
   function entry(row, relatedView = false) {
-    return <article key={row.id} className={styles.entry} aria-label={`Financier return ${row.id}`}>
+    return <article data-record-item="card" key={row.id} className={styles.entry} aria-label={`Financier return ${row.id}`}><RecordListLabel type="payment">Financier return</RecordListLabel>
       <h4><RecordIcon type="transaction" />Return to financier #{row.id} · {row.financier?.name || "Name unavailable"} · {row.status === "VOIDED" ? "Voided erroneous entry" : "Recorded"}</h4>
       <p><strong>{receiptMoney(row.amount)} {receiptCurrency(row.currency)}</strong> · Returned {row.returnedDate}</p>
       <p>Financier: {row.financier?.name || "Unknown"} · Original receipt #{row.originalReceiptId}</p>

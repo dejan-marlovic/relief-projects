@@ -1,3 +1,4 @@
+import RecordListLabel from "../RecordListLabel/RecordListLabel";
 import ActionButton from "../ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import useScrollToEditor from "../../hooks/useScrollToEditor";
@@ -126,7 +127,7 @@ export function RecipientReturnsPanel({ payment, refreshKey, editingLocked, onCh
     try { await downloadDocument(id, authFetch); } catch (e) { if (alive.current) setError(e.message); } finally { if (alive.current) setDownloading(null); }
   }
   function entry(row, relatedView = false) {
-    return <article key={row.id} className={styles.entry} aria-label={`Recipient return ${row.id}`}>
+    return <article data-record-item="card" key={row.id} className={styles.entry} aria-label={`Recipient return ${row.id}`}><RecordListLabel type="payment">Recipient return</RecordListLabel>
       <h4><RecordIcon type="payment" />Return from recipient #{row.id} · {row.organization?.name || "Name unavailable"} · {row.status === "VOIDED" ? "Voided erroneous entry" : "Recorded"}</h4>
       <p><strong>{paymentMoney(row.amount)} {paymentCurrency(row.currency)}</strong> · Returned {row.returnedDate}</p>
       <p>Recipient organisation: {row.organization?.name || "Unknown"} · Original payment #{row.originalPaymentId}</p>

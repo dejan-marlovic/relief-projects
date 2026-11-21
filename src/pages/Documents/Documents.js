@@ -1,3 +1,4 @@
+import RecordListLabel from "../../components/RecordListLabel/RecordListLabel";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import DocumentLabel from "../../components/DocumentLabel/DocumentLabel";
 import useArchivedProject from "../../hooks/useArchivedProject";
@@ -486,9 +487,9 @@ const Documents = () => {
             {documents.length > 0 && (
               <ul className={styles.documentsList}>
                 {documents.map((doc) => (
-                  <li data-mobile-tile={doc.documentName} key={doc.id} className={styles.documentItem}>
-                    <div className={styles.docInfo}>
-                      <span className={styles.docName}><DocumentLabel>{doc.documentName}</DocumentLabel></span>
+                  <li data-record-item="card" data-mobile-tile={doc.documentName} key={doc.id} className={styles.documentItem}>
+                    <div className={styles.docInfo}><RecordListLabel type="document">Document</RecordListLabel>
+                      <span className={styles.docName}>{doc.documentName}</span>
                       <span className={styles.uploadedBy}>{statusLabel(doc.status)} · Version {doc.versionNumber || 1} · {doc.isCurrent === true ? "Current" : doc.isCurrent === false ? "Historical · read-only" : "Version state unknown"}</span>
                       <span className={styles.uploadedBy}>
                         {categories.find((item) => item.id === doc.category)?.label || doc.category || "Uncategorized"} · Document date: {doc.documentDate || "Unknown"}

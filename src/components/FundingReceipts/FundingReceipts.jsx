@@ -1,3 +1,4 @@
+import RecordListLabel from "../RecordListLabel/RecordListLabel";
 import ActionButton from "../ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import useScrollToEditor from "../../hooks/useScrollToEditor";
@@ -205,7 +206,7 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
       {form.receipt && data && !data.content.some(row => row.id === form.receipt.id && row.revision === form.receipt.revision) && <p role="status">This draft keeps the original revision. Cancel and reopen the action after reviewing current receipts to use a new revision.</p>}
     </ScrollToForm>}
     {!initialLoading && data?.content.length === 0 && <p>No receipts on this page.</p>}
-    {data?.content.map(receipt => <article key={receipt.id} className={`${styles.entry} ${receipt.status === "VOIDED" ? styles.voided : ""}`} aria-label={`Receipt ${receipt.id}`}>
+    {data?.content.map(receipt => <article data-record-item="card" key={receipt.id} className={`${styles.entry} ${receipt.status === "VOIDED" ? styles.voided : ""}`} aria-label={`Receipt ${receipt.id}`}><RecordListLabel type="transaction">Receipt</RecordListLabel>
       <h4><RecordIcon type="transaction" />Receipt #{receipt.id} · {receipt.financier?.name || "Name unavailable"} · {receipt.status === "VOIDED" ? "Voided" : "Recorded"}</h4>
       <p><strong>{receiptMoney(receipt.amount)} {receiptCurrency(receipt.currency)}</strong> · Arrived {receipt.receivedDate}</p>
       {receipt.currency?.labelChanged && <p className={styles.hint}>Current currency label: {receipt.currency.currentName}. The recorded label above is retained.</p>}
