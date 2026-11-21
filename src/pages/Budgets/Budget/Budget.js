@@ -1,3 +1,4 @@
+import RecordListLabel from "../../../components/RecordListLabel/RecordListLabel";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import RecordIcon from "../../../components/RecordIcon/RecordIcon";
 import { namedReference } from "../../../utils/recordLabels";
@@ -1519,7 +1520,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
       )}
 
       {hasBudget && (
-        <div className={styles.formContainer} data-open-record="true"><span className="open-record-label">Viewing record</span>
+        <div className={styles.formContainer} data-open-record="true"><div style={{ display: "flex", flexWrap: "wrap", gap: ".5rem" }}><RecordListLabel type="budget">Budget</RecordListLabel><span className="open-record-label">Viewing record</span></div>
           <div className={styles.pageHeader}>
             <div className={styles.pageHeaderText}>
               <h3 className={styles.pageTitle}><RecordIcon type="budget" />Budget Details</h3>
