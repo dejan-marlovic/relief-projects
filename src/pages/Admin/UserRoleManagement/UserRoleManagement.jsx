@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import useTransientMessage from "../../../hooks/useTransientMessage";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -211,9 +212,9 @@ const UserRoleManagement = () => {
           <h3><FiUsers /> Users & role access</h3>
           <p>Role changes save automatically when selected. Wait for confirmation before leaving. To replace a user’s only role, add the new role first.</p>
         </div>
-        <button type="button" onClick={loadData} disabled={loading || savingUserId !== null}>
+        <ActionButton type="button" onClick={loadData} disabled={loading || savingUserId !== null}>
           <FiRefreshCw /> Refresh
-        </button>
+        </ActionButton>
       </div>
 
       {error && <div className={styles.errorNotification}><ErrorBanner message={error} onDismiss={() => setError("")} /></div>}

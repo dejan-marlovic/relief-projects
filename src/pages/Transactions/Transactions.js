@@ -1,3 +1,4 @@
+import ActionButton from "../../components/ActionButton/ActionButton";
 import { namedReference } from "../../utils/recordLabels";
 import MobileRecordDeck from "../../components/MobileRecordDeck/MobileRecordDeck";
 import useArchivedProject from "../../hooks/useArchivedProject";
@@ -795,7 +796,7 @@ const Transactions = ({ refreshTrigger }) => {
 
   const renderSortHeader = (label, key) => (
     <div className={styles.sortAndFilterHeader}>
-      <button
+      <ActionButton
         type="button"
         className={styles.sortHeaderButton}
         onClick={() => toggleSort(key)}
@@ -808,7 +809,7 @@ const Transactions = ({ refreshTrigger }) => {
         <span>{label}</span>
         {sortConfig?.key === key &&
           (sortConfig.direction === "asc" ? <FiChevronUp /> : <FiChevronDown />)}
-      </button>
+      </ActionButton>
       <ColumnFilter
         label={label}
         type={(["id","appliedForAmount","approvedAmount"].includes(key) ? "number" : key === "datePlanned" ? "date" : ["status","ownContribution","okStatus"].includes(key) ? "select" : "text")}
@@ -1586,7 +1587,7 @@ const Transactions = ({ refreshTrigger }) => {
 
           <div className={styles.headerActions}>
             {hasActiveFilters && <ClearFiltersButton onClick={() => setFilters(emptyFilters())} />}
-            <button
+            <ActionButton
               type="button"
               className={styles.exportInlineBtn}
               onClick={handleExportSelected}
@@ -1597,9 +1598,9 @@ const Transactions = ({ refreshTrigger }) => {
               {exportingSelected
                 ? "Exporting..."
                 : `Export selected${selectedCount > 0 ? ` (${selectedCount})` : ""}`}
-            </button>
+            </ActionButton>
 
-            {canDeleteTransactions && <button
+            {canDeleteTransactions && <ActionButton
               type="button"
               className={styles.dangerInlineBtn}
               onClick={removeSelected}
@@ -1616,9 +1617,9 @@ const Transactions = ({ refreshTrigger }) => {
             >
               <FiTrash2></FiTrash2>
               Delete selected {selectedCount > 0 ? `(${selectedCount})` : ""}
-            </button>}
+            </ActionButton>}
             <div className={styles.columnsBox} hidden={compact}>
-              <button
+              <ActionButton
                 type="button"
                 className={styles.iconPillBtn}
                 onClick={() => setColumnsOpen((v) => !v)}
@@ -1627,7 +1628,7 @@ const Transactions = ({ refreshTrigger }) => {
               >
                 <FiColumns />
                 Columns
-              </button>
+              </ActionButton>
 
               {columnsOpen && (
                 <div className={styles.columnsPanel}>
@@ -1648,7 +1649,7 @@ const Transactions = ({ refreshTrigger }) => {
                 </div>
               )}
             </div>
-            {canEditTransactions && <button
+            {canEditTransactions && <ActionButton
               type="button"
               className={styles.primaryInlineBtn}
               onClick={startCreate}
@@ -1657,7 +1658,7 @@ const Transactions = ({ refreshTrigger }) => {
             >
               <FiPlus />
               New
-            </button>}
+            </ActionButton>}
           </div>
         </div>
 <p className={styles.sectionDescription} data-tile-description="">Review funding transactions for the selected project. Expand a record to inspect allocations, receipts and activity.</p>

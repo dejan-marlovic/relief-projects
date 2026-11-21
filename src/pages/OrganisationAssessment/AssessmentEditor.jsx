@@ -1,3 +1,4 @@
+import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import ScrollToForm from "../../components/ScrollToForm/ScrollToForm";
 import React, { useState } from "react";
@@ -27,8 +28,8 @@ export default function AssessmentEditor({ form, setForm, projectId, authFetch, 
       {!["create", "edit", "submit", "review", "evidence"].includes(action) && <>{action === "withdraw-review" && <p>Withdrawal clears the current review outcome. The decision stays in history. Corrections need resubmission and a new independent review.</p>}{action === "restore" && <p>Restoration restores the retained draft or returned assessment, never a review outcome.</p>}{action === "delete" && <p>History and evidence links remain retained. An administrator can restore this assessment.</p>}{textarea("reason", "Reason", true)}</>}
       {draftValidation && <p role="alert">Automatic saving is waiting: {draftValidation}</p>}
       {error && <p role="alert">{error}</p>}{form.error && <p role="alert">{form.error}</p>}
-      {form.reviewRequired && <div role="alert"><p>Your draft is retained. Review the refreshed assessment, evidence and history before retrying. The earlier request may have succeeded; do not repeat it if the intended result is already recorded.</p><button type="button" disabled={reviewBlocked} onClick={onReview}>I reviewed the refreshed state; enable retry</button></div>}
-      <div className={styles.actions}><button type="submit" className={approvalStyle(action, styles)} disabled={busy || blocked || form.reviewRequired}><TravelActionIcon action={action} />{["create", "edit"].includes(action) ? "Save draft now" : commands[action][0]}</button><button type="button" onClick={onCancel}><RecordIcon type="close" />Close</button><button type="button" onClick={() => { if (window.confirm("Discard the unfinished entries in this tab? Any draft already saved to the project will remain.")) onDiscard(); }}>Discard unfinished entries</button></div>
+      {form.reviewRequired && <div role="alert"><p>Your draft is retained. Review the refreshed assessment, evidence and history before retrying. The earlier request may have succeeded; do not repeat it if the intended result is already recorded.</p><ActionButton type="button" disabled={reviewBlocked} onClick={onReview}>I reviewed the refreshed state; enable retry</ActionButton></div>}
+      <div className={styles.actions}><ActionButton type="submit" className={approvalStyle(action, styles)} disabled={busy || blocked || form.reviewRequired}><TravelActionIcon action={action} />{["create", "edit"].includes(action) ? "Save draft now" : commands[action][0]}</ActionButton><ActionButton type="button" onClick={onCancel}><RecordIcon type="close" />Close</ActionButton><ActionButton type="button" onClick={() => { if (window.confirm("Discard the unfinished entries in this tab? Any draft already saved to the project will remain.")) onDiscard(); }}>Discard unfinished entries</ActionButton></div>
     </fieldset>
   </ScrollToForm>;
 }

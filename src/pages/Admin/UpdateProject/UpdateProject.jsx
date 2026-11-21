@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
@@ -713,32 +714,32 @@ const UpdateProject = () => {
             </div>
 
             <div className={styles.bottomActions}>
-              {formError && <button
+              {formError && <ActionButton
                 type="button"
                 onClick={loadData}
                 className={styles.secondaryButton}
                 disabled={loading || saving}
               >
                 <FiRefreshCw /> Retry loading
-              </button>}
+              </ActionButton>}
 
-              <button
+              <ActionButton
                 type="button"
                 onClick={resetForm}
                 className={styles.secondaryButton}
                 disabled={saving}
               >
                 <FiRefreshCw /> Reset form
-              </button>
+              </ActionButton>
 
-              <button
+              <ActionButton
                 type="button"
                 onClick={handleUpdate}
                 className={styles.saveButton}
                 disabled={saving}
               >
                 <FiSave /> {saving ? "Saving..." : "Update project"}
-              </button>
+              </ActionButton>
             </div>
           </>
         )}

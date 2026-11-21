@@ -1,3 +1,4 @@
+import ActionButton from "../ActionButton/ActionButton";
 import React, { useEffect, useRef } from "react";
 import { FiAlertCircle, FiX } from "react-icons/fi";
 
@@ -33,7 +34,7 @@ const ErrorBanner = ({ message, onDismiss, className = "" }) => {
       <FiAlertCircle className={styles.icon} aria-hidden="true" />
       <span className={styles.message}>{message}</span>
       {onDismiss && (
-        <button
+        <ActionButton
           type="button"
           className={styles.closeButton}
           onClick={onDismiss}
@@ -41,7 +42,7 @@ const ErrorBanner = ({ message, onDismiss, className = "" }) => {
           title="Dismiss"
         >
           <FiX aria-hidden="true" />
-        </button>
+        </ActionButton>
       )}
     </div>
   );

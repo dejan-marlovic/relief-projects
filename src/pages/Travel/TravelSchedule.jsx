@@ -1,3 +1,4 @@
+import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
@@ -29,10 +30,10 @@ function Pages({ data, loading, onPage, name }) {
   if (!data) return null;
   const start = data.content.length ? data.page * data.size + 1 : 0;
   return <div className={styles.actions}>
-    <button disabled={loading || data.page === 0} onClick={() => onPage(data.page - 1)}>Previous {name}</button>
+    <ActionButton disabled={loading || data.page === 0} onClick={() => onPage(data.page - 1)}>Previous {name}</ActionButton>
     <span>{start ? `Showing ${start}–${start + data.content.length - 1} of ${data.totalElements} matching ${name}` : `${data.totalElements} matching ${name}`} · Page {data.totalPages ? data.page + 1 : 0} of {data.totalPages}</span>
-    <button disabled={loading || !data.hasNext} onClick={() => onPage(data.page + 1)}>Next {name}</button>
-    {!data.content.length && data.page > 0 && <button onClick={() => onPage(0)}>Return to first {name} page</button>}
+    <ActionButton disabled={loading || !data.hasNext} onClick={() => onPage(data.page + 1)}>Next {name}</ActionButton>
+    {!data.content.length && data.page > 0 && <ActionButton onClick={() => onPage(0)}>Return to first {name} page</ActionButton>}
   </div>;
 }
 export function Schedule({ authFetch }) {
@@ -74,18 +75,18 @@ export function Schedule({ authFetch }) {
       </div>
       <p className={styles.muted}>Leave both dates blank for the default window: 30 days before through 90 days after today in Stockholm. Custom windows can cover up to 366 days.</p>
       {(error || invalid) && <p role="alert">{error || invalid}</p>}
-      <div className={styles.actions}><button type="submit">Apply schedule filters</button><button type="button" onClick={() => { setParams({}); setDraft(filtersFrom(new URLSearchParams())); setError(""); }}>Reset schedule filters</button></div>
+      <div className={styles.actions}><ActionButton type="submit">Apply schedule filters</ActionButton><ActionButton type="button" onClick={() => { setParams({}); setDraft(filtersFrom(new URLSearchParams())); setError(""); }}>Reset schedule filters</ActionButton></div>
     </form>
     <ReadState state={projects} />
-    <button aria-expanded={lookupOpen} onClick={() => setLookupOpen(v => !v)}>Find a traveller by name</button>
-    {lookupOpen && <section className={styles.panel} aria-label="Traveller lookup"><p>Travellers represented in the applied date, project and state filters. Selecting one fills the employee ID; apply the filters to use it. Your selected ID is kept even if it is outside this lookup.</p><ReadState state={people} /><ul className={styles.list}>{people.data?.content.map(person => <li key={person.employeeId}>{person.displayName} · Employee #{person.employeeId}{!person.active && " · Inactive traveller"} <button onClick={() => change("travellerEmployeeId", String(person.employeeId))}>Select employee #{person.employeeId} · {person.displayName || "Name unavailable"}</button></li>)}</ul>{people.data && !people.data.content.length && <p>No travellers on this lookup page.</p>}<Pages data={people.data} loading={people.loading} onPage={setLookupPage} name="travellers" /></section>}
+    <ActionButton aria-expanded={lookupOpen} onClick={() => setLookupOpen(v => !v)}>Find a traveller by name</ActionButton>
+    {lookupOpen && <section className={styles.panel} aria-label="Traveller lookup"><p>Travellers represented in the applied date, project and state filters. Selecting one fills the employee ID; apply the filters to use it. Your selected ID is kept even if it is outside this lookup.</p><ReadState state={people} /><ul className={styles.list}>{people.data?.content.map(person => <li key={person.employeeId}>{person.displayName} · Employee #{person.employeeId}{!person.active && " · Inactive traveller"} <ActionButton onClick={() => change("travellerEmployeeId", String(person.employeeId))}>Select employee #{person.employeeId} · {person.displayName || "Name unavailable"}</ActionButton></li>)}</ul>{people.data && !people.data.content.length && <p>No travellers on this lookup page.</p>}<Pages data={people.data} loading={people.loading} onPage={setLookupPage} name="travellers" /></section>}
 
     <ReadState state={result} />
     {data && <>
       <p><strong>{data.from} through {data.to}</strong> · {data.businessTimezone}{data.rangeDefaulted && " · Default window"}</p>
       <p className={styles.muted}>Observed {data.observedAt}. Other plans may change between pages. Overlaps count other submitted or approved plans, including outside these filters; they are warnings, not reservations. Zero overlaps does not guarantee availability.</p>
       <ul className={styles.list}>{data.content.map(row => <li key={row.id}>
-        <div className={styles.heading}><h3>{row.purpose}</h3><button disabled={result.loading} onClick={() => open(row)}><RecordIcon type="open" />Open travel request #{row.id} · {row.purpose || "Name unavailable"}</button></div>
+        <div className={styles.heading}><h3>{row.purpose}</h3><ActionButton disabled={result.loading} onClick={() => open(row)}><RecordIcon type="open" />Open travel request #{row.id} · {row.purpose || "Name unavailable"}</ActionButton></div>
         <p>{row.project.name} · Project #{row.project.id}</p>
         <span className={`${styles.statusBadge} ${styles[`status${row.state}`] || ""}`}>{row.state}</span>
         <p>{row.traveller.displayName} · {row.destination}{!row.traveller.active && " · Inactive traveller"}</p>

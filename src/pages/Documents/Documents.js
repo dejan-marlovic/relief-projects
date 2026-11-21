@@ -1,3 +1,4 @@
+import ActionButton from "../../components/ActionButton/ActionButton";
 import DocumentLabel from "../../components/DocumentLabel/DocumentLabel";
 import useArchivedProject from "../../hooks/useArchivedProject";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
@@ -389,7 +390,7 @@ const Documents = () => {
 
         {selectedProjectId && (
           <>
-            {categoryError && <div role="alert" className={styles.errorBanner}>{categoryError} <button type="button" onClick={retryCategories}>Retry categories</button></div>}
+            {categoryError && <div role="alert" className={styles.errorBanner}>{categoryError} <ActionButton type="button" onClick={retryCategories}>Retry categories</ActionButton></div>}
             <ProjectDocumentChecklist key={selectedProjectId} projectId={selectedProjectId} authFetch={authFetch} categories={categories} refreshKey={listRevision} />
             {/* Error banner */}
             {anyError && (
@@ -458,7 +459,7 @@ const Documents = () => {
             <div className={styles.metadataControls}>
               <label>Versions shown<select value={currentOnly ? "current" : "all"} disabled={!!editing} onChange={(e) => { setCurrentOnly(e.target.value === "current"); setEditing(null); }}><option value="current">Current versions</option><option value="all">All active versions</option></select></label>
               <label>Filter by category<SearchableSelect value={categoryFilter} disabled={!!editing || !categories.length} onChange={(e) => { setCategoryFilter(e.target.value); setEditing(null); }}><option value="">All categories</option>{categoryOptions}</SearchableSelect></label>
-              {listError && <button type="button" onClick={() => setListRevision(value => value + 1)} disabled={loading}>Retry loading documents</button>}
+              {listError && <ActionButton type="button" onClick={() => setListRevision(value => value + 1)} disabled={loading}>Retry loading documents</ActionButton>}
             </div>
             {editing && <ScrollToForm className={styles.metadataEditor} onSubmit={event => event.preventDefault()} onBlur={metadataSave.flush}>
               <h4>Edit details · {editing.original.documentName}</h4>
@@ -470,7 +471,7 @@ const Documents = () => {
                 <label>Document date<input type="date" min="1000-01-01" max="9999-12-31" value={editing.documentDate} disabled={saving} onChange={(e) => editMetadata("documentDate", e.target.value, false)} /></label>
               </div>
               <p className={styles.infoText}>Leave the date empty to clear it. Choose Uncategorized to remove a classification.</p>
-              <button className={styles.downloadLink} type="button" disabled={saving} onClick={closeEditor}>Done editing</button>
+              <ActionButton className={styles.downloadLink} type="button" disabled={saving} onClick={closeEditor}>Done editing</ActionButton>
             </ScrollToForm>}
             {historyDocument && <DocumentVersions key={`${selectedProjectId}-${historyDocument.id}`} document={historyDocument} authFetch={authFetch} categories={categories} canEdit={canUploadDocuments} canDelete={canDeleteDocuments} onDownload={handleDownload} downloading={downloading} revision={listRevision} onChanged={() => { setListRevision((value) => value + 1); }} onClose={() => setHistoryDocument(null)} validateFile={validateDocumentFile} />}
 
@@ -497,9 +498,9 @@ const Documents = () => {
                     </div>
 
                     <div className={styles.docActions}>
-                      <button type="button" className={styles.downloadLink} disabled={saving} onClick={() => { if (!confirmDiscardUnsavedChanges()) return; setEditing(null); setHistoryDocument(doc); }}>Version history</button>
-                      {canUploadDocuments && doc.isCurrent === true && <button type="button" className={styles.downloadLink} disabled={saving || !categories.length || !!editing} onClick={() => { setEditing({ original: doc, category: doc.category || "UNCATEGORIZED", documentDate: doc.documentDate || "", status: doc.status || "" }); }}>Edit details</button>}
-                      <button
+                      <ActionButton type="button" className={styles.downloadLink} disabled={saving} onClick={() => { if (!confirmDiscardUnsavedChanges()) return; setEditing(null); setHistoryDocument(doc); }}>Version history</ActionButton>
+                      {canUploadDocuments && doc.isCurrent === true && <ActionButton type="button" className={styles.downloadLink} disabled={saving || !categories.length || !!editing} onClick={() => { setEditing({ original: doc, category: doc.category || "UNCATEGORIZED", documentDate: doc.documentDate || "", status: doc.status || "" }); }}>Edit details</ActionButton>}
+                      <ActionButton
                         type="button"
                         onClick={() => handleDownload(doc.id)}
                         disabled={downloading.includes(doc.id)}
@@ -509,9 +510,9 @@ const Documents = () => {
                       >
                         <FiDownload />
                         <span>{downloading.includes(doc.id) ? "Downloading…" : "Download"}</span>
-                      </button>
+                      </ActionButton>
 
-                      {canDeleteDocuments && <button
+                      {canDeleteDocuments && <ActionButton
                         type="button"
                         onClick={() => handleDeleteDocument(doc.id)}
                         disabled={deletingId === doc.id || !!editing}
@@ -521,7 +522,7 @@ const Documents = () => {
                       >
                         <FiTrash2 />
                         <span className={styles.mobileActionLabel}>Delete</span>
-                      </button>}
+                      </ActionButton>}
                     </div>
                   </li>
                 ))}

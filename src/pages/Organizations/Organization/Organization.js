@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import RecordIcon from "../../../components/RecordIcon/RecordIcon";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useScrollToEditor from "../../../hooks/useScrollToEditor";
@@ -137,7 +138,7 @@ const Organization = ({
       </div>
       <div className={styles.cardActions}>
         {!isCreate && <Link to={`/organisation-assessments/${link.id}`} onClick={e => { if (!confirmDiscardUnsavedChanges()) e.preventDefault(); }}><RecordIcon type="open" />Open assessment</Link>}
-        {!isEditing && <button type="button" aria-expanded={open} onClick={() => { if (open && !confirmDiscardUnsavedChanges()) return; setExpanded(!open); }}>{open ? "Hide details" : "Show details"}</button>}
+        {!isEditing && <ActionButton type="button" aria-expanded={open} onClick={() => { if (open && !confirmDiscardUnsavedChanges()) return; setExpanded(!open); }}>{open ? "Hide details" : "Show details"}</ActionButton>}
       </div>
     </header>
     {open && <div className={styles.cardBody}>
@@ -145,25 +146,25 @@ const Organization = ({
         {isEditing ? <>
           <label>Organisation{selectOrg()}</label><label>Role in this project{selectStatus()}</label>
           <div className={styles.cardActions}>
-            {canManage && isCreate && <button type="button" disabled={saving} onClick={submit} aria-label="Save"><FiSave /> Add relationship</button>}
-            <button type="button" disabled={saving} onClick={onCancel}><FiX />{isCreate ? "Cancel" : "Done editing"}</button>
+            {canManage && isCreate && <ActionButton type="button" disabled={saving} onClick={submit} aria-label="Save"><FiSave /> Add relationship</ActionButton>}
+            <ActionButton type="button" disabled={saving} onClick={onCancel}><FiX />{isCreate ? "Cancel" : "Done editing"}</ActionButton>
           </div>
         </> : null}
         <div className={styles.relationshipActions}>
-          {!isEditing && canManage && <button type="button" disabled={saving || editingLocked} onClick={onEdit} aria-label="Edit"><FiEdit /> Edit relationship</button>}
-          {!isCreate && <button type="button" onClick={() => setShowReviews(v => !v)} aria-expanded={showReviews}>Assessments across projects and roles</button>}
+          {!isEditing && canManage && <ActionButton type="button" disabled={saving || editingLocked} onClick={onEdit} aria-label="Edit"><FiEdit /> Edit relationship</ActionButton>}
+          {!isCreate && <ActionButton type="button" onClick={() => setShowReviews(v => !v)} aria-expanded={showReviews}>Assessments across projects and roles</ActionButton>}
         </div>
         {!isCreate && showReviews && <div className={styles.reviewsPanel}><OrganisationReviews organizationId={link.organizationId} authFetch={authFetch} /></div>}
       </section>
       {!isCreate && link.organizationId && <section data-mobile-tile="Addresses" data-purpose-tile="section"><h4>Addresses</h4><p>Addresses belong to the organisation and are shared across its projects.</p>
-        <button type="button" aria-expanded={showAddressDetails} onClick={() => { if (showAddressDetails && !confirmDiscardUnsavedChanges()) return; setShowAddressDetails(v => !v); }}>{showAddressDetails ? "Hide address details" : "Show address details"}</button>
+        <ActionButton type="button" aria-expanded={showAddressDetails} onClick={() => { if (showAddressDetails && !confirmDiscardUnsavedChanges()) return; setShowAddressDetails(v => !v); }}>{showAddressDetails ? "Hide address details" : "Show address details"}</ActionButton>
         {showAddressDetails && <AddressDetails organizationId={link.organizationId} canManage={canManageAddresses} />}
       </section>}
       {!isCreate && link.organizationId && canViewBankDetails && <section data-mobile-tile="Bank details" data-purpose-tile="section"><h4>Bank details</h4><p>Bank details belong to the organisation and are shared across its projects. Recording them does not authorise a payment.</p>
-        <button type="button" aria-expanded={showBankDetails} onClick={() => { if (showBankDetails && !confirmDiscardUnsavedChanges()) return; setShowBankDetails(v => !v); }}>{showBankDetails ? "Hide bank details" : "Show bank details"}</button>
+        <ActionButton type="button" aria-expanded={showBankDetails} onClick={() => { if (showBankDetails && !confirmDiscardUnsavedChanges()) return; setShowBankDetails(v => !v); }}>{showBankDetails ? "Hide bank details" : "Show bank details"}</ActionButton>
         {showBankDetails && <BankDetails organizationId={link.organizationId} canManage={canManageBankDetails} />}
       </section>}
-      {!isCreate && canManage && <footer className={styles.removal}><button type="button" disabled={saving || editingLocked} onClick={() => onDelete(link.id)} aria-label="Delete organization relation"><FiTrash2 /> Remove from this project</button><small>Removes this project relationship, not the organisation itself.</small></footer>}
+      {!isCreate && canManage && <footer className={styles.removal}><ActionButton type="button" disabled={saving || editingLocked} onClick={() => onDelete(link.id)} aria-label="Delete organization relation"><FiTrash2 /> Remove from this project</ActionButton><small>Removes this project relationship, not the organisation itself.</small></footer>}
     </div>}
   </article>;
 };

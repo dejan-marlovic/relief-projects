@@ -1,3 +1,4 @@
+import ActionButton from "../ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import useScrollToEditor from "../../hooks/useScrollToEditor";
 import DocumentLabel from "../DocumentLabel/DocumentLabel";
@@ -133,12 +134,12 @@ export function RecipientReturnsPanel({ payment, refreshKey, editingLocked, onCh
       <p>Entered {stamp(row.createdAt)} by {actor(row.createdBy)} · Reason: {row.reason}</p>
       {row.externalReference && <p>Reference: {row.externalReference}</p>}{row.note && <p>Note: {row.note}</p>}
       {row.voidedAt && <p>Voided {stamp(row.voidedAt)} by {actor(row.voidedBy)} · {row.voidReason}</p>}
-      {row.replacesReturnId && <button type="button" onClick={() => showRelated(row.replacesReturnId)}>View original return #{row.replacesReturnId} · Name unavailable</button>}
-      {row.replacementReturnId && <button type="button" onClick={() => showRelated(row.replacementReturnId)}>View replacement return #{row.replacementReturnId} · Name unavailable</button>}
-      <ul className={styles.evidence}>{row.documents?.map(doc => <li key={doc.documentId}><DocumentLabel>{doc.documentName || "Name unavailable"}</DocumentLabel> · Version {doc.versionNumber ?? "Unknown"} · {doc.status || "Status unknown"}{doc.hasNewerVersion && " · Newer version exists; this link retains the selected version"}{!doc.downloadEligible && " · Download unavailable"}<div className={styles.actions}><button disabled={!doc.downloadEligible || downloading !== null} onClick={() => download(doc.documentId)}>Download return evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</button>{!relatedView && can("remove", row) && <button disabled={busy || !!form || !!pending} onClick={() => open("remove", row, doc)}>Remove return evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</button>}</div></li>)}</ul>
+      {row.replacesReturnId && <ActionButton type="button" onClick={() => showRelated(row.replacesReturnId)}>View original return #{row.replacesReturnId} · Name unavailable</ActionButton>}
+      {row.replacementReturnId && <ActionButton type="button" onClick={() => showRelated(row.replacementReturnId)}>View replacement return #{row.replacementReturnId} · Name unavailable</ActionButton>}
+      <ul className={styles.evidence}>{row.documents?.map(doc => <li key={doc.documentId}><DocumentLabel>{doc.documentName || "Name unavailable"}</DocumentLabel> · Version {doc.versionNumber ?? "Unknown"} · {doc.status || "Status unknown"}{doc.hasNewerVersion && " · Newer version exists; this link retains the selected version"}{!doc.downloadEligible && " · Download unavailable"}<div className={styles.actions}><ActionButton disabled={!doc.downloadEligible || downloading !== null} onClick={() => download(doc.documentId)}>Download return evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</ActionButton>{!relatedView && can("remove", row) && <ActionButton disabled={busy || !!form || !!pending} onClick={() => open("remove", row, doc)}>Remove return evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</ActionButton>}</div></li>)}</ul>
       {!row.documents?.length && <p>No evidence linked.</p>}
       {summaryIssues(row.eligibility).map(issue => <p key={issue.code}>{issue.message}</p>)}
-      {!relatedView && <div className={styles.actions}>{[["add", "Add evidence"], ["correct", "Correct erroneous return"], ["void", "Void erroneous return"]].map(([action, label]) => can(action, row) && <button key={action} disabled={busy || !!form || !!pending} onClick={() => open(action, row)}>{label} #{row.id} · {row.organization?.name || "Name unavailable"}</button>)}</div>}
+      {!relatedView && <div className={styles.actions}>{[["add", "Add evidence"], ["correct", "Correct erroneous return"], ["void", "Void erroneous return"]].map(([action, label]) => can(action, row) && <ActionButton key={action} disabled={busy || !!form || !!pending} onClick={() => open(action, row)}>{label} #{row.id} · {row.organization?.name || "Name unavailable"}</ActionButton>)}</div>}
     </article>;
   }
   const financial = ["create", "correct"].includes(kind), evidence = ["create", "correct", "add"].includes(kind);
@@ -146,11 +147,11 @@ export function RecipientReturnsPanel({ payment, refreshKey, editingLocked, onCh
   return <div className={styles.panel}>
     <p>Original payment #{payment.id} · Recipient #{payment.recipientId ?? "Unknown"} · {payment.organization?.name || "Organisation unavailable"} · Paid {payment.paidDate} · {paymentCurrency(payment.currency)}</p>
     <p className={styles.hint}>Record principal actually received back from this payment’s recipient. This keeps the original payment recorded and does not execute a transfer or increase spending capacity. Voiding is only for erroneous entries.</p>
-    {(loadError || error || documentError || !!pending) && <button disabled={busy || loading} onClick={refresh}>Retry returns</button>}
+    {(loadError || error || documentError || !!pending) && <ActionButton disabled={busy || loading} onClick={refresh}>Retry returns</ActionButton>}
     {initialLoading && <p role="status">Loading returns…</p>}{loadError && <p role="alert">{loadError}</p>}{error && <p role="alert">{error} Your input is retained.</p>}
-    {pending && <div role="alert"><p>A return command needs confirmation. Retry sends the identical request ID and body; do not enter the movement again.</p><button disabled={busy} onClick={() => send(pending)}>Retry same return request</button></div>}
+    {pending && <div role="alert"><p>A return command needs confirmation. Retry sends the identical request ID and body; do not enter the movement again.</p><ActionButton disabled={busy} onClick={() => send(pending)}>Retry same return request</ActionButton></div>}
     {data && <><RecipientReturnSummary summary={data.summary} /><p>Original amount not yet recorded as returned: <strong>{paymentMoney(data.remainingReturnable)} {paymentCurrency(payment.currency)}</strong>. This is a recording limit, not available spending.</p>{summaryIssues(data.eligibility).filter(issue => issue.code !== "SELECT_RETURN").map(issue => <p key={issue.code}>{issue.message}</p>)}</>}
-    {can("create") && !form && !pending && <button onClick={() => open("create")}>Record money returned by recipient</button>}
+    {can("create") && !form && !pending && <ActionButton onClick={() => open("create")}>Record money returned by recipient</ActionButton>}
     {form && !pending && <ScrollToForm scrollKey={form.kind} className={styles.form} onSubmit={submit}>
       <h4>{{ create: "Record money returned by recipient", correct: "Correct erroneous return", void: "Void erroneous return", add: "Add exact return evidence", remove: "Remove return evidence" }[kind]}</h4>
       <fieldset disabled={busy || editingLocked}>
@@ -160,16 +161,16 @@ export function RecipientReturnsPanel({ payment, refreshKey, editingLocked, onCh
         {kind === "void" && <p>Only invalidate an entry that was wrong. Do not void genuine returned money to unlock a payment correction.</p>}
         {kind === "remove" && <p>Remove the association to {form.document.documentName || `document #${form.document.documentId} · Name unavailable`}? The file and audit history remain.</p>}
         {evidence && <>{documentError && <p role="alert">{documentError}</p>}<label>{kind === "add" ? "Exact document version" : "Evidence versions (optional)"}<SearchableSelect documentOptions required={kind === "add"} multiple={kind !== "add"} value={kind === "add" ? form.documentId : form.documentIds} onChange={e => kind === "add" ? change("documentId", e.target.value) : change("documentIds", Array.from(e.target.selectedOptions, option => option.value))}>{kind === "add" && <option value="">Select a version</option>}{documents.filter(doc => kind !== "add" || !form.row.documents?.some(link => link.documentId === doc.id)).map(doc => <option key={doc.id} value={doc.id}>{doc.documentName || "Name unavailable"} · #{doc.id} · v{doc.versionNumber} · {doc.status || "Unknown status"} · {doc.isCurrent ? "Current" : "Historical"}</option>)}</SearchableSelect></label><p className={styles.hint}>Optional evidence links retain exact versions; they do not certify bank movement, signatures or completeness. Upload files through Documents separately.</p></>}
-        <button disabled={reviewRequired || !can(kind, currentRow) || (kind === "add" && !!documentError)} type="submit">Confirm return action</button>
+        <ActionButton disabled={reviewRequired || !can(kind, currentRow) || (kind === "add" && !!documentError)} type="submit">Confirm return action</ActionButton>
       </fieldset>
       {reviewRequired && <p>Review refreshed entries before preparing another command. No retry has been sent.</p>}
-      {data && (reviewRequired || form.expectedReturnsRevision !== data.returnsRevision || form.expectedSourceRevision !== data.sourceRevision) && <button type="button" disabled={busy || loading || !!loadError} onClick={() => { setForm(current => ({ ...current, expectedReturnsRevision: data.returnsRevision, expectedSourceRevision: data.sourceRevision })); setReviewRequired(false); }}>Use refreshed revisions after review (keep input)</button>}
-      <button type="button" disabled={busy} onClick={() => setForm(null)}>Cancel return action</button>
+      {data && (reviewRequired || form.expectedReturnsRevision !== data.returnsRevision || form.expectedSourceRevision !== data.sourceRevision) && <ActionButton type="button" disabled={busy || loading || !!loadError} onClick={() => { setForm(current => ({ ...current, expectedReturnsRevision: data.returnsRevision, expectedSourceRevision: data.sourceRevision })); setReviewRequired(false); }}>Use refreshed revisions after review (keep input)</ActionButton>}
+      <ActionButton type="button" disabled={busy} onClick={() => setForm(null)}>Cancel return action</ActionButton>
     </ScrollToForm>}
-    {related && <aside ref={relatedRef} style={{ scrollMarginTop: 16 }}><h4>Related return detail</h4>{entry(related, true)}<button onClick={() => setRelated(null)}><RecordIcon type="close" />Close related return</button></aside>}
+    {related && <aside ref={relatedRef} style={{ scrollMarginTop: 16 }}><h4>Related return detail</h4>{entry(related, true)}<ActionButton onClick={() => setRelated(null)}><RecordIcon type="close" />Close related return</ActionButton></aside>}
     {!initialLoading && data?.content.length === 0 && <p>No returns on this page.</p>}
     {data?.content.map(row => entry(row))}
-    {data && <div className={styles.actions}><span>{data.totalElements} returns · Page {page + 1}</span><button disabled={busy || loading || !!form || !!pending || page === 0} onClick={() => setPage(n => n - 1)}>Previous returns</button><button disabled={busy || loading || !!form || !!pending || (page + 1) * 20 >= data.totalElements} onClick={() => setPage(n => n + 1)}>Next returns</button></div>}
+    {data && <div className={styles.actions}><span>{data.totalElements} returns · Page {page + 1}</span><ActionButton disabled={busy || loading || !!form || !!pending || page === 0} onClick={() => setPage(n => n - 1)}>Previous returns</ActionButton><ActionButton disabled={busy || loading || !!form || !!pending || (page + 1) * 20 >= data.totalElements} onClick={() => setPage(n => n + 1)}>Next returns</ActionButton></div>}
     <p className={styles.hint}>Retained return and evidence activity appears in this payment order’s History with child activity included.</p>
   </div>;
 }

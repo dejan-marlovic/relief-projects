@@ -1,3 +1,4 @@
+import ActionButton from "../ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -97,9 +98,9 @@ export default function ApprovalDialog({ endpoint, recordLabel, onRefresh, onSuc
       {error && <p role="alert" className={styles.error}>{error}</p>}
       {allowed && <label><input type="checkbox" checked={reviewed} disabled={busy} onChange={event => setReviewed(event.target.checked)} /> I have reviewed this submission and its supporting details.</label>}
       <div className={styles.actions}>
-        <button type="button" disabled={busy} onClick={onCancel}><RecordIcon type="close" />Close</button>
-        <button type="button" disabled={busy} onClick={load}>Refresh for review</button>
-        {allowed && <button type="submit" disabled={busy || !reviewed}>Confirm approval</button>}
+        <ActionButton type="button" disabled={busy} onClick={onCancel}><RecordIcon type="close" />Close</ActionButton>
+        <ActionButton type="button" disabled={busy} onClick={load}>Refresh for review</ActionButton>
+        {allowed && <ActionButton type="submit" disabled={busy || !reviewed}>Confirm approval</ActionButton>}
       </div>
     </form>
   </dialog>, document.body);

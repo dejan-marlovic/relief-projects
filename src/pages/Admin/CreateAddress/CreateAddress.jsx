@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 // src/components/Admin/CreateAddress/CreateAddress.jsx
 
 import React, { useMemo, useState } from "react";
@@ -317,23 +318,23 @@ const CreateAddress = () => {
             </div>
 
             <div className={styles.bottomActions}>
-              <button
+              <ActionButton
                 type="button"
                 onClick={handleCreate}
                 className={styles.saveButton}
                 disabled={loading}
               >
                 <FiSave /> Create address
-              </button>
+              </ActionButton>
 
-              <button
+              <ActionButton
                 type="button"
                 onClick={resetForm}
                 className={styles.deleteButton}
                 disabled={loading}
               >
                 <FiX /> Reset form
-              </button>
+              </ActionButton>
             </div>
           </>
         )}

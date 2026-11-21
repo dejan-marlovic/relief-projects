@@ -1,3 +1,4 @@
+import ActionButton from "../ActionButton/ActionButton";
 import React, { useEffect, useRef, useState } from "react";
 import useSwipeNavigation from "../../hooks/useSwipeNavigation";
 import styles from "./MobileTileNavigation.module.scss";
@@ -52,8 +53,8 @@ export default function MobileTileNavigation({ rootRef, route }) {
   });
   if (position.count < 2) return null;
   return <nav className={styles.controls} aria-label="Card navigation">
-    <button type="button" aria-label="Previous card" disabled={position.index === 0} onClick={() => move(-1)}>←</button>
+    <ActionButton type="button" aria-label="Previous card" disabled={position.index === 0} onClick={() => move(-1)}>←</ActionButton>
     <span><strong>{position.title}</strong><small>Card {position.index + 1} of {position.count} · Swipe to browse</small></span>
-    <button type="button" aria-label="Next card" disabled={position.index >= position.count - 1} onClick={() => move(1)}>→</button>
+    <ActionButton type="button" aria-label="Next card" disabled={position.index >= position.count - 1} onClick={() => move(1)}>→</ActionButton>
   </nav>;
 }

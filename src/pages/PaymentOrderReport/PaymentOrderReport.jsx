@@ -1,3 +1,4 @@
+import ActionButton from "../../components/ActionButton/ActionButton";
 import DocumentLabel from "../../components/DocumentLabel/DocumentLabel";
 import { namedReference } from "../../utils/recordLabels";
 import React, { useEffect, useMemo, useState } from "react";
@@ -83,7 +84,7 @@ export function ReportContent({ data, onDownload, downloading, downloadError }) 
         <p>Current chain head: {flag(doc.isCurrent)} · Newer version: {flag(doc.hasNewerVersion)} · Document deleted: {flag(doc.documentDeleted)} · Project deleted: {flag(doc.projectDeleted)} · Target deleted: {flag(doc.targetDeleted)}</p>
         <ul>{associations.map((link, i) => <li key={i}>{link.entityType === "PAYMENT_ORDER_FINAL_EVIDENCE" ? <>Late payment evidence · Attachment #{link.entityId} · {evidenceLabel(link.role)}. Not part of the approval decision. Attached {stamp(link.attachedAt)} by {actor(link.attachedBy)}.</> : link.entityType === "RECIPIENT_RETURN" ? <>Recipient return #{link.entityId} · Original payment #{link.originalPaymentId} · {link.status}{link.status === "VOIDED" && " · Evidence retained for a voided return"}. Not approval-time evidence.</> : <>{link.entityType} #{link.entityId} · {link.status}{link.status === "VOIDED" && " — historical payment evidence"}{(link.entityType === "PAYMENT_ORDER" || link.meaning === "ORDINARY_SUPPORT_APPROVAL_TIME_NOT_RECORDED") && " · Ordinary supporting documents — approval-time inclusion not recorded"}</>}</li>)}</ul>
         <p>{doc.downloadEligible ? "Eligible for a protected download at observation time; file contents not checked." : "Download unavailable at observation time."}</p>
-        <button type="button" className={styles.noPrint} disabled={!doc.downloadEligible || downloading != null} onClick={() => onDownload(doc.documentId)}>Download exact version #{doc.documentId}</button>
+        <ActionButton type="button" className={styles.noPrint} disabled={!doc.downloadEligible || downloading != null} onClick={() => onDownload(doc.documentId)}>Download exact version #{doc.documentId}</ActionButton>
       </div>)}
     </section>
   </article>;
@@ -117,7 +118,7 @@ export default function PaymentOrderReport() {
   useEffect(() => { const previous = document.title; document.title = `payment-order-${/^\d+$/.test(id) ? id : "report"}`; return () => { document.title = previous; }; }, [id]);
   async function download(documentId) { setDownloading(documentId); setDownloadError(""); try { await downloadDocument(documentId, authFetch); } catch (e) { setDownloadError(e.message); } finally { setDownloading(null); } }
   return <main className={styles.page}>
-    <nav className={styles.noPrint} aria-label="Report actions"><a href="/payments">Payments</a><button disabled={loading} onClick={() => setRefresh(n => n + 1)}>Refresh whole report</button><button disabled={loading || !data || !!error} onClick={() => window.print()}>Print / Save as PDF</button></nav>
+    <nav className={styles.noPrint} aria-label="Report actions"><a href="/payments">Payments</a><ActionButton disabled={loading} onClick={() => setRefresh(n => n + 1)}>Refresh whole report</ActionButton><ActionButton disabled={loading || !data || !!error} onClick={() => window.print()}>Print / Save as PDF</ActionButton></nav>
     {loading && <p>Loading payment-order report…</p>}{error && <p role="alert">{error}</p>}
     {data && !error && <ReportContent data={data} onDownload={download} downloading={downloading} downloadError={downloadError} />}
   </main>;

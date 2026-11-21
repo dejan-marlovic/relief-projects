@@ -1,3 +1,4 @@
+import ActionButton from "../../components/ActionButton/ActionButton";
 import MobileRecordDeck from "../../components/MobileRecordDeck/MobileRecordDeck";
 import useArchivedProject from "../../hooks/useArchivedProject";
 import ColumnResize, { useColumnWidths } from "../../components/ColumnResize/ColumnResize";
@@ -1064,7 +1065,7 @@ function Recipients() {
 
           <div className={styles.headerActions}>
             {hasActiveFilters && <ClearFiltersButton onClick={() => setFilters(emptyFilters())} />}
-            <button
+            <ActionButton
               type="button"
               className={styles.exportInlineBtn}
               onClick={handleExportSelected}
@@ -1079,10 +1080,10 @@ function Recipients() {
                       ? ` (${selectedRecipientCount})`
                       : ""
                   }`}
-            </button>
+            </ActionButton>
 
             {canBulkDeleteRecipients && (
-              <button
+              <ActionButton
                 type="button"
                 className={styles.dangerInlineBtn}
                 onClick={removeSelected}
@@ -1104,11 +1105,11 @@ function Recipients() {
                 {selectedRecipientCount > 0
                   ? `(${selectedRecipientCount})`
                   : ""}
-              </button>
+              </ActionButton>
             )}
 
             {!compact && <div className={styles.columnsBox}>
-              <button
+              <ActionButton
                 className={styles.columnsBtn}
                 onClick={() => setColumnsOpen((v) => !v)}
                 title="Choose visible columns"
@@ -1116,7 +1117,7 @@ function Recipients() {
               >
                 <FiColumns />
                 Columns
-              </button>
+              </ActionButton>
 
               {columnsOpen && (
                 <div className={styles.columnsPanel}>
@@ -1139,7 +1140,7 @@ function Recipients() {
             </div>}
 
             {canManageRecipients && (
-              <button
+              <ActionButton
                 className={styles.primaryBtn}
                 onClick={startCreate}
                 disabled={
@@ -1159,7 +1160,7 @@ function Recipients() {
               >
                 <FiPlus />
                 New
-              </button>
+              </ActionButton>
             )}
           </div>
         </div>

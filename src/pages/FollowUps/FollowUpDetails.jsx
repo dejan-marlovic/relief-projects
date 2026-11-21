@@ -1,3 +1,4 @@
+import ActionButton from "../../components/ActionButton/ActionButton";
 import FollowUpAttachments from "./FollowUpAttachments";
 import FollowUpHistory from "./FollowUpHistory";
 import React, { useId, useState } from "react";
@@ -11,9 +12,9 @@ export default function FollowUpDetails({ task, authFetch, disabled, onAttachmen
   return <>
     {authFetch && Number.isInteger(task.attachmentCount) && <FollowUpAttachments task={task} authFetch={authFetch} disabled={disabled} onOperation={onAttachmentOperation} observation={observation} />}
     <div className={styles.details}>
-    <button type="button" className={styles.detailsToggle} aria-expanded={expanded} aria-controls={id} onClick={() => setExpanded(value => !value)}>
+    <ActionButton type="button" className={styles.detailsToggle} aria-expanded={expanded} aria-controls={id} onClick={() => setExpanded(value => !value)}>
       <span>Details &amp; activity</span><FiChevronDown aria-hidden="true" className={expanded ? styles.chevronOpen : undefined} />
-    </button>
+    </ActionButton>
     <div id={id} className={styles.detailsBody} hidden={!expanded}>
       <dl className={styles.taskDetails}>
         <dt>Responsible employee</dt><dd>{task.assignee?.displayName || "Unavailable"}</dd>

@@ -1,3 +1,4 @@
+import ActionButton from "../../components/ActionButton/ActionButton";
 import React, { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { FiChevronDown } from "react-icons/fi";
@@ -30,10 +31,10 @@ export default function NavigationGroup({ label, items, isActive, open, onToggle
   }} onKeyDown={event => {
     if (event.key === "Escape" && open) { event.preventDefault(); onClose(); trigger.current?.focus(); }
   }}>
-    <button ref={trigger} type="button" className={`${styles.tabLink} ${styles.groupTrigger} ${current ? styles.active : ""}`} aria-expanded={open} aria-controls={id} onClick={onToggle}>
+    <ActionButton ref={trigger} type="button" className={`${styles.tabLink} ${styles.groupTrigger} ${current ? styles.active : ""}`} aria-expanded={open} aria-controls={id} onClick={onToggle}>
       <span className={styles.groupTitle}>{label}<FiChevronDown aria-hidden="true" /></span>
       {current && <span className={styles.projectTabSubtitle}>{current[1]}</span>}
-    </button>
+    </ActionButton>
     {open && <ul id={id} className={styles.dropdown} aria-label={label}>{items.map(([path, name]) => <li key={path}><Link to={path} aria-current={isActive(path) ? "page" : undefined} onClick={event => {
       if (!isActive(path) && !confirmNavigation()) { event.preventDefault(); return; }
       onClose();

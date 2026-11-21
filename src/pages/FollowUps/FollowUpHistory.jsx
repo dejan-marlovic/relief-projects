@@ -1,3 +1,4 @@
+import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordReference from "../../components/RecordReference/RecordReference";
 import { HistoryPagination, HistoryTimeline, HistoryEntry } from "../../components/ActivityHistory/ActivityHistory";
 import React, { useEffect, useState } from "react";
@@ -58,7 +59,7 @@ export default function FollowUpHistory({ task, authFetch }) {
     <h4>Activity history</h4>
     <p className={styles.muted}>Newest changes first. Expand an entry to see what changed.</p>
     {loading && !data && <p role="status">Loading history…</p>}
-    {error && <div role="alert"><p>{error} {data ? "Showing the previously loaded history." : "History is unavailable; this does not mean there were no changes."}</p><button type="button" onClick={() => setAttempt(v => v + 1)}>Retry history</button></div>}
+    {error && <div role="alert"><p>{error} {data ? "Showing the previously loaded history." : "History is unavailable; this does not mean there were no changes."}</p><ActionButton type="button" onClick={() => setAttempt(v => v + 1)}>Retry history</ActionButton></div>}
     {data && <>
       {data.coverage === "PARTIAL_LEGACY" && <p className={styles.historyNotice}>Detailed history is available from the introduction of this feature. Earlier changes are not available.</p>}
       {data.coverage === "FROM_CREATION" && <p className={styles.muted}>History recorded from creation.</p>}

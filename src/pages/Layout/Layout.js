@@ -1,3 +1,4 @@
+import ActionButton from "../../components/ActionButton/ActionButton";
 import { OpenEditorProvider } from "../../context/OpenEditorContext";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import { isArchivedProject, visibleProjects } from "../../utils/projectArchive";
@@ -231,14 +232,14 @@ const Layout = () => {
             </div>
           )}
 
-          <button
+          <ActionButton
             type="button"
             className={styles.logoutIcon}
             onClick={handleLogout}
             aria-label="Logout"
           >
             <FiLogOut />
-          </button>
+          </ActionButton>
         </div>
         <div className={styles.logoWrap}>
           <img
@@ -274,8 +275,8 @@ const Layout = () => {
               {hasRole("ADMIN") && <option value="/admin">Admin</option>}
             </SearchableSelect>
             <div className={styles.pageActions} aria-label="Page navigation">
-              <button type="button" disabled={pageIndex <= 0} onClick={() => movePage(-1)}>← Previous page</button>
-              <button type="button" disabled={pageIndex < 0 || pageIndex >= pageItems.length - 1} onClick={() => movePage(1)}>Next page →</button>
+              <ActionButton type="button" disabled={pageIndex <= 0} onClick={() => movePage(-1)}>← Previous page</ActionButton>
+              <ActionButton type="button" disabled={pageIndex < 0 || pageIndex >= pageItems.length - 1} onClick={() => movePage(1)}>Next page →</ActionButton>
             </div>
           </div>
         ) : (

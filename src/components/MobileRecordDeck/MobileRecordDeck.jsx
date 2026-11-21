@@ -1,3 +1,4 @@
+import ActionButton from "../ActionButton/ActionButton";
 import React, { Children, useEffect, useRef, useState } from "react";
 import useMediaQuery from "../../hooks/useMediaQuery";
 import useSwipeNavigation from "../../hooks/useSwipeNavigation";
@@ -27,9 +28,9 @@ export default function MobileRecordDeck({ children, label = "Record", locked = 
   const disabled = locked || creating || editingIndex >= 0;
   return <div ref={root} className={styles.deck} data-mobile-record-deck="" data-swipe-scope="records" hidden={mobile && creating} {...handlers}>
     {mobile && records.length > 0 && <nav className={styles.navigation} aria-label={`${label} navigation`}>
-      <button type="button" aria-label={`Previous ${label.toLowerCase()}`} disabled={disabled || index === 0} onClick={() => move(-1)}>← Previous</button>
+      <ActionButton type="button" aria-label={`Previous ${label.toLowerCase()}`} disabled={disabled || index === 0} onClick={() => move(-1)}>← Previous</ActionButton>
       <span aria-live="polite">{label} {index + 1} of {records.length}<small>{disabled ? "Finish editing to browse" : "Swipe to browse"}</small></span>
-      <button type="button" aria-label={`Next ${label.toLowerCase()}`} disabled={disabled || index === records.length - 1} onClick={() => move(1)}>Next →</button>
+      <ActionButton type="button" aria-label={`Next ${label.toLowerCase()}`} disabled={disabled || index === records.length - 1} onClick={() => move(1)}>Next →</ActionButton>
     </nav>}
     {records.map((child, i) => <div key={child.key} className={styles.record} hidden={mobile && i !== index}>{child}</div>)}
   </div>;

@@ -1,0 +1,26 @@
+.icon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-inline-end: .4em;
+  vertical-align: -.12em;
+  color: inherit;
+  pointer-events: none;
+  svg { width: 1em; height: 1em; stroke-width: 1.8; }
+}
+button.danger:not(:disabled) {
+  color: var(--color-danger-text);
+  background: var(--color-danger-soft);
+  border-color: var(--color-danger-border);
+}
+button.danger:not(:disabled):hover { background: var(--color-danger-soft-strong); }
+
+button.close:not(:disabled) {
+  color: color-mix(in srgb, var(--color-text) 75%, var(--color-primary));
+  background: color-mix(in srgb, var(--color-surface-secondary) 90%, var(--color-primary));
+  border-color: color-mix(in srgb, var(--color-border-muted) 65%, var(--color-primary));
+}
+button.close:not(:disabled):hover {
+  background: color-mix(in srgb, var(--color-surface-secondary) 82%, var(--color-primary));
+}
+button.close [aria-hidden="true"] { color: inherit; }

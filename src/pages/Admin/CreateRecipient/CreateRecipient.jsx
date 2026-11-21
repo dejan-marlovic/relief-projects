@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -201,23 +202,23 @@ const CreateRecipient = () => {
         </div>
 
         <div className={styles.bottomActions}>
-          <button
+          <ActionButton
             type="button"
             onClick={handleCreate}
             className={styles.saveButton}
             disabled={loading}
           >
             <FiSave /> Create recipient
-          </button>
+          </ActionButton>
 
-          <button
+          <ActionButton
             type="button"
             onClick={resetForm}
             className={styles.deleteButton}
             disabled={loading}
           >
             <FiX /> Reset form
-          </button>
+          </ActionButton>
         </div>
       </div>
     </div>

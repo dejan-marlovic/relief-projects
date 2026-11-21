@@ -1,3 +1,4 @@
+import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import ScrollToForm from "../../components/ScrollToForm/ScrollToForm";
@@ -59,14 +60,14 @@ export default function AttachmentDetailsEditor({ item, projectId, authFetch, ca
   }} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) save.flush(); }}>
     <h5>Edit details · {item.documentName}</h5>
     <p className={styles.muted}>These document details are shared everywhere this version is linked. Changes save after a short pause or when you leave the form. Final is a label, not approval or proof of signing.</p>
-    {error && <p role="alert">{error} <button type="button" onClick={() => setAttempt(n => n + 1)}>Retry document details</button></p>}
+    {error && <p role="alert">{error} <ActionButton type="button" onClick={() => setAttempt(n => n + 1)}>Retry document details</ActionButton></p>}
     {!form && !error && <p role="status">Loading document details…</p>}
     <div className={styles.saveFeedback}><AutosaveStatus save={save} /></div>
     {form && <><div className={styles.grid}>
       <label>Category<SearchableSelect autoFocus value={form.category} disabled={disabled || save.busy} onChange={e => edit("category", e.target.value)}>{categories.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}</SearchableSelect></label>
       <label>Status<SearchableSelect value={form.status} disabled={disabled || save.busy} onChange={e => edit("status", e.target.value)}>{!original.status && <option value="">Not recorded</option>}<option value="DRAFT">Draft</option><option value="FINAL">Final</option></SearchableSelect></label>
       <label>Document date<input type="date" min="1000-01-01" max="9999-12-31" value={form.documentDate} disabled={disabled || save.busy} onChange={e => edit("documentDate", e.target.value)} /></label>
-    </div><div className={styles.actions}><button type="submit" disabled={disabled || save.busy || !!save.error}>{save.busy ? "Saving details…" : "Save details"}</button></div></>}
-    <button type="button" disabled={save.busy} onClick={close}><RecordIcon type="close" />Close details</button>
+    </div><div className={styles.actions}><ActionButton type="submit" disabled={disabled || save.busy || !!save.error}>{save.busy ? "Saving details…" : "Save details"}</ActionButton></div></>}
+    <ActionButton type="button" disabled={save.busy} onClick={close}><RecordIcon type="close" />Close details</ActionButton>
   </ScrollToForm>;
 }

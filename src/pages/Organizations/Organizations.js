@@ -1,3 +1,4 @@
+import ActionButton from "../../components/ActionButton/ActionButton";
 import MobileRecordDeck from "../../components/MobileRecordDeck/MobileRecordDeck";
 import useArchivedProject from "../../hooks/useArchivedProject";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
@@ -412,7 +413,7 @@ const Organizations = () => {
 
           <div className={styles.headerActions}>
             {hasActiveFilters && <ClearFiltersButton onClick={() => setFilters(emptyFilters())} />}
-            {canManageOrganizationLinks && <button
+            {canManageOrganizationLinks && <ActionButton
               className={styles.primaryBtn}
               onClick={startCreate}
               disabled={!selectedProjectId || saving || editingId !== null}
@@ -427,7 +428,7 @@ const Organizations = () => {
             >
               <FiPlus />
               Add organisation
-            </button>}
+            </ActionButton>}
           </div>
         </div>
 

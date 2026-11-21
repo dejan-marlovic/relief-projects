@@ -1,3 +1,4 @@
+import ActionButton from "../ActionButton/ActionButton";
 import React, { useEffect, useState } from "react";
 import { FiCheckCircle, FiX } from "react-icons/fi";
 import { subscribeSuccess } from "../../utils/successNotifications";
@@ -12,7 +13,7 @@ function Notice({ notice, dismiss }) {
   }, [notice.id, hovered, focused, dismiss]);
   return <div className={styles.notice} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onFocus={() => setFocused(true)} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}>
     <FiCheckCircle aria-hidden="true" /><span>{notice.message}</span>
-    <button type="button" aria-label="Dismiss notification" onClick={() => dismiss(notice.id)}><FiX aria-hidden="true" /></button>
+    <ActionButton type="button" aria-label="Dismiss notification" onClick={() => dismiss(notice.id)}><FiX aria-hidden="true" /></ActionButton>
   </div>;
 }
 let nextId = 0;

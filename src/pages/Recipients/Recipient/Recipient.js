@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import { namedReference } from "../../../utils/recordLabels";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useScrollToEditor from "../../../hooks/useScrollToEditor";
@@ -157,7 +158,7 @@ const RecipientRow = ({
       <Cell className={`${styles.stickyCol} ${styles.actionsCol} ${hc(0)}`}>
         {isEditing ? (
           <div className={styles.actions}>
-            <button
+            <ActionButton
               type="button"
               className={styles.iconCircleBtn}
               onClick={submit}
@@ -166,9 +167,9 @@ const RecipientRow = ({
               disabled={locked || saving}
             >
               <FiSave /><span className={styles.mobileActionText}>{saving ? "Saving…" : "Save"}</span>
-            </button>
+            </ActionButton>
 
-            <button
+            <ActionButton
               type="button"
               className={styles.dangerIconBtn}
               disabled={saving}
@@ -177,7 +178,7 @@ const RecipientRow = ({
               aria-label="Cancel"
             >
               <FiX /><span className={styles.mobileActionText}>Cancel</span>
-            </button>
+            </ActionButton>
           </div>
         ) : (
           <div className={styles.actions}>
@@ -203,7 +204,7 @@ const RecipientRow = ({
             )}
 
             {canManage && (
-              <button
+              <ActionButton
                 type="button"
                 className={styles.iconCircleBtn}
                 onClick={(e) => {
@@ -216,11 +217,11 @@ const RecipientRow = ({
                 disabled={locked || saving}
               >
                 <FiEdit /><span className={styles.mobileActionText}>Edit</span>
-              </button>
+              </ActionButton>
             )}
 
             {!isCreate && canManage && (
-              <button
+              <ActionButton
                 type="button"
                 className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.iconOnlyBtn}`}
                 onClick={(e) => {
@@ -233,7 +234,7 @@ const RecipientRow = ({
                 disabled={locked || saving}
               >
                 <FiTrash2 /><span className={styles.mobileActionText}>Delete</span>
-              </button>
+              </ActionButton>
             )}
           </div>
         )}

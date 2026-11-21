@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 // src/components/Admin/CreateCurrency/CreateCurrency.jsx
 
 import React, { useMemo, useState } from "react";
@@ -248,23 +249,23 @@ const CreateCurrency = () => {
             </div>
 
             <div className={styles.bottomActions}>
-              <button
+              <ActionButton
                 type="button"
                 onClick={handleCreate}
                 className={styles.saveButton}
                 disabled={loading}
               >
                 <FiSave /> Create currency
-              </button>
+              </ActionButton>
 
-              <button
+              <ActionButton
                 type="button"
                 onClick={resetForm}
                 className={styles.deleteButton}
                 disabled={loading}
               >
                 <FiX /> Reset form
-              </button>
+              </ActionButton>
             </div>
           </>
         )}

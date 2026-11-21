@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import RecordIcon from "../../../components/RecordIcon/RecordIcon";
 import { namedReference, transactionReference } from "../../../utils/recordLabels";
 import { FinancialReviewAttribution } from "../../../components/ReviewAttribution/ReviewAttribution";
@@ -197,7 +198,7 @@ const PaymentOrder = ({
       <Cell className={`${styles.stickyCol} ${styles.actionsCol} ${hc(0)}`}>
         {isEditing ? (
           <div className={styles.actions}>
-            <button
+            <ActionButton
               type="button"
               className={styles.iconCircleBtn}
               onClick={submit}
@@ -206,9 +207,9 @@ const PaymentOrder = ({
               disabled={locked || saving}
             >
               <FiSave />{compact && <span>Save</span>}
-            </button>
+            </ActionButton>
 
-            <button
+            <ActionButton
               type="button"
               className={styles.dangerIconBtn}
               onClick={onCancel}
@@ -217,7 +218,7 @@ const PaymentOrder = ({
               aria-label="Cancel"
             >
               <FiX />{compact && <span>Cancel</span>}
-            </button>
+            </ActionButton>
           </div>
         ) : (
           <div className={styles.actions}>
@@ -245,7 +246,7 @@ const PaymentOrder = ({
               />
             )}
             {canEdit && (
-              <button
+              <ActionButton
                 type="button"
                 className={styles.iconCircleBtn}
                 onClick={(e) => {
@@ -258,11 +259,11 @@ const PaymentOrder = ({
                 disabled={locked || saving || editingLocked}
               >
                 <FiEdit />{compact && <span>Edit</span>}
-              </button>
+              </ActionButton>
             )}
 
             {showSubmitLifecycle && (
-              <button
+              <ActionButton
                 type="button"
                 className={`${styles.iconCircleBtn} ${styles.submitBtn}`}
                 onClick={(e) => {
@@ -275,12 +276,12 @@ const PaymentOrder = ({
                 aria-label={`Submit payment order ${po.id} for approval`}
               >
                 <FiSend />{compact && <span>Submit</span>}
-              </button>
+              </ActionButton>
             )}
 
             {showReviewLifecycle && (
               <>
-                <button
+                <ActionButton
                   type="button"
                   className={`${styles.iconCircleBtn} ${styles.approveBtn}`}
                   onClick={(e) => {
@@ -293,8 +294,8 @@ const PaymentOrder = ({
                   aria-label={`Review payment order ${po.id} approval`}
                 >
                   <FiCheck />{compact && <span>Review approval</span>}
-                </button>
-                <button
+                </ActionButton>
+                <ActionButton
                   type="button"
                   className={`${styles.iconCircleBtn} ${styles.returnBtn}`}
                   onClick={(e) => {
@@ -307,12 +308,12 @@ const PaymentOrder = ({
                   aria-label={`Return payment order ${po.id}`}
                 >
                   <FiCornerUpLeft />{compact && <span>Return</span>}
-                </button>
+                </ActionButton>
               </>
             )}
 
             {!isCreate && (
-              <button
+              <ActionButton
                 type="button"
                 className={styles.iconCircleBtn}
                 onClick={(e) => {
@@ -325,11 +326,11 @@ const PaymentOrder = ({
                 aria-label={expanded ? "Hide lines" : "Show lines"}
               >
                 {expanded ? <FiChevronUp /> : <FiChevronDown />}{compact && <span>Lines</span>}
-              </button>
+              </ActionButton>
             )}
 
             {!isCreate && canDelete && (
-              <button
+              <ActionButton
                 type="button"
                 className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.iconOnlyBtn}`}
                 onClick={(e) => {
@@ -342,7 +343,7 @@ const PaymentOrder = ({
                 disabled={locked || saving || editingLocked}
               >
                 <FiTrash2 />{compact && <span>Delete</span>}
-              </button>
+              </ActionButton>
             )}
           </div>
         )}

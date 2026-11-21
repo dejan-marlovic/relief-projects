@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import { appFetch as fetch } from "../../../utils/appFetch";
 // src/components/Admin/CreateUser/CreateUser.jsx
@@ -365,23 +366,23 @@ const CreateUser = () => {
             </div>
 
             <div className={styles.bottomActions}>
-              <button
+              <ActionButton
                 type="button"
                 onClick={handleCreate}
                 className={styles.saveButton}
                 disabled={loading}
               >
                 <FiSave /> Create user
-              </button>
+              </ActionButton>
 
-              <button
+              <ActionButton
                 type="button"
                 onClick={resetForm}
                 className={styles.deleteButton}
                 disabled={loading}
               >
                 <FiX /> Reset form
-              </button>
+              </ActionButton>
             </div>
           </>
         )}

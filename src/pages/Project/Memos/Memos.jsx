@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import useMediaQuery from "../../../hooks/useMediaQuery";
 import useSwipeNavigation from "../../../hooks/useSwipeNavigation";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
@@ -331,7 +332,7 @@ export default function Memos({ canEdit = false }) {
       <div className={styles.headerRow}>
         <h4>Memos</h4>
         {canEdit && (
-          <button
+          <ActionButton
             className={styles.addBtn}
             onClick={startCreate}
             disabled={!selectedProjectId || editingId === "new"}
@@ -344,7 +345,7 @@ export default function Memos({ canEdit = false }) {
             }
           >
             + New Memo
-          </button>
+          </ActionButton>
         )}
       </div>
 
@@ -356,9 +357,9 @@ export default function Memos({ canEdit = false }) {
       )}
 
       {isPhone && items.length > 0 && editingId !== "new" && <div className={styles.memoNavigation} aria-label="Memo navigation">
-        <button type="button" aria-label="Previous memo" disabled={editingId !== null || activeMemoIndex === 0} onClick={() => moveMemo(-1)}>←</button>
+        <ActionButton type="button" aria-label="Previous memo" disabled={editingId !== null || activeMemoIndex === 0} onClick={() => moveMemo(-1)}>←</ActionButton>
         <span>Memo {activeMemoIndex + 1} of {items.length}</span>
-        <button type="button" aria-label="Next memo" disabled={editingId !== null || activeMemoIndex >= items.length - 1} onClick={() => moveMemo(1)}>→</button>
+        <ActionButton type="button" aria-label="Next memo" disabled={editingId !== null || activeMemoIndex >= items.length - 1} onClick={() => moveMemo(1)}>→</ActionButton>
       </div>}
       <div data-swipe-scope="memos" {...memoSwipes}>
       {visibleItems.map((m) => (
@@ -399,20 +400,20 @@ export default function Memos({ canEdit = false }) {
               </div>
 
               {canEdit && <div className={styles.actions}>
-                <button
+                <ActionButton
                   className={styles.actionBtn}
                   onClick={save}
                   title="Save"
                 >
                   <FiSave />
-                </button>
-                <button
+                </ActionButton>
+                <ActionButton
                   className={`${styles.actionBtn} ${styles.danger}`}
                   onClick={cancel}
                   title="Cancel"
                 >
                   <FiX />
-                </button>
+                </ActionButton>
               </div>}
             </>
           ) : (
@@ -428,20 +429,20 @@ export default function Memos({ canEdit = false }) {
                 )}
               </div>
               {canEdit && <div className={styles.actions}>
-                <button
+                <ActionButton
                   className={styles.actionBtn}
                   onClick={() => startEdit(m)}
                   title="Edit"
                 >
                   <FiEdit />
-                </button>
-                <button
+                </ActionButton>
+                <ActionButton
                   className={`${styles.actionBtn} ${styles.danger}`}
                   onClick={() => remove(m.id)}
                   title="Delete"
                 >
                   <FiTrash2 />
-                </button>
+                </ActionButton>
               </div>}
             </>
           )}
@@ -485,16 +486,16 @@ export default function Memos({ canEdit = false }) {
           </div>
 
           <div className={styles.actions}>
-            <button className={styles.actionBtn} onClick={save} title="Create">
+            <ActionButton className={styles.actionBtn} onClick={save} title="Create">
               <FiSave />
-            </button>
-            <button
+            </ActionButton>
+            <ActionButton
               className={`${styles.actionBtn} ${styles.danger}`}
               onClick={cancel}
               title="Cancel"
             >
               <FiX />
-            </button>
+            </ActionButton>
           </div>
         </div>
       )}

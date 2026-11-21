@@ -1,3 +1,4 @@
+import ActionButton from "../components/ActionButton/ActionButton";
 import RecordIcon from "../components/RecordIcon/RecordIcon";
 import React, { createContext, useCallback, useContext, useEffect, useId, useMemo, useState } from "react";
 import { revealEditor } from "../utils/revealEditor";
@@ -31,7 +32,7 @@ export function OpenEditorProvider({ children }) {
       <div><strong role="status">Editor open{entries.length > 1 ? ` (${entries.length})` : ""}</strong>
         <p>Actions that depend on finishing this editor are paused. Complete required fields, save or wait for autosave, then close the editor to continue. Previously saved changes remain saved.</p>
       </div>
-      <div className={styles.actions}>{entries.map(([id, editor]) => <button type="button" key={id} onClick={() => revealEditor(editor.element)}><RecordIcon type="open" />Return to editor: {editor.name}</button>)}</div>
+      <div className={styles.actions}>{entries.map(([id, editor]) => <ActionButton type="button" key={id} onClick={() => revealEditor(editor.element)}><RecordIcon type="open" />Return to editor: {editor.name}</ActionButton>)}</div>
     </aside>}
     {children}
   </OpenEditorContext.Provider>;

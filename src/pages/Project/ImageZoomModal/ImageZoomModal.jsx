@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import React, { useEffect, useId, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { FiX, FiChevronLeft, FiChevronRight } from "react-icons/fi";
@@ -93,7 +94,7 @@ const ImageZoomModal = ({
           <div className={styles.actions}>
             {canNav && (
               <>
-                <button
+                <ActionButton
                   type="button"
                   className={styles.iconBtn}
                   onClick={goPrev}
@@ -101,9 +102,9 @@ const ImageZoomModal = ({
                   aria-label="Previous image"
                 >
                   <FiChevronLeft />
-                </button>
+                </ActionButton>
 
-                <button
+                <ActionButton
                   type="button"
                   className={styles.iconBtn}
                   onClick={goNext}
@@ -111,11 +112,11 @@ const ImageZoomModal = ({
                   aria-label="Next image"
                 >
                   <FiChevronRight />
-                </button>
+                </ActionButton>
               </>
             )}
 
-            <button
+            <ActionButton
               ref={closeButton}
               type="button"
               className={styles.closeBtn}
@@ -124,7 +125,7 @@ const ImageZoomModal = ({
               aria-label="Close zoom"
             >
               <FiX />
-            </button>
+            </ActionButton>
           </div>
         </div>
 
@@ -136,7 +137,7 @@ const ImageZoomModal = ({
               const active = i === safeIndex;
 
               return (
-                <button
+                <ActionButton
                   key={`${img}-${i}`}
                   type="button"
                   className={`${styles.thumbBtn} ${
@@ -154,7 +155,7 @@ const ImageZoomModal = ({
                     draggable={false}
                     loading="lazy"
                   />
-                </button>
+                </ActionButton>
               );
             })}
           </div>

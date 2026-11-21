@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import RecordIcon from "../../../components/RecordIcon/RecordIcon";
 import { useOpenEditor } from "../../../context/OpenEditorContext";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
@@ -314,14 +315,14 @@ const AddressDetails = ({ organizationId, canManage = false }) => {
         <div className={`${styles.cell} ${styles.stickyCol}`}>
           {editing ? (
             <div className={styles.actions}>
-              {isNew && <button type="button" className={styles.iconCircleBtn} onClick={save} disabled={disabled} title="Save" aria-label={`Save address ${rowKey}`}><FiSave /> Save</button>}
-              <button type="button" className={styles.dangerIconBtn} onClick={cancel} disabled={disabled} title={isNew ? "Cancel" : "Done editing"} aria-label={`${isNew ? "Cancel" : "Done editing"} address ${rowKey}`}><FiX /> {isNew ? "Cancel" : "Done editing"}</button>
+              {isNew && <ActionButton type="button" className={styles.iconCircleBtn} onClick={save} disabled={disabled} title="Save" aria-label={`Save address ${rowKey}`}><FiSave /> Save</ActionButton>}
+              <ActionButton type="button" className={styles.dangerIconBtn} onClick={cancel} disabled={disabled} title={isNew ? "Cancel" : "Done editing"} aria-label={`${isNew ? "Cancel" : "Done editing"} address ${rowKey}`}><FiX /> {isNew ? "Cancel" : "Done editing"}</ActionButton>
             </div>
           ) : (
             <div className={styles.actions}>
-              {canManage && <button type="button" className={styles.iconCircleBtn} onClick={() => startEdit(address)} disabled={Boolean(editingId) || disabled} title="Edit address" aria-label={`Edit address ${address.id}`}><FiEdit /> Edit</button>}
-              {canManage && !primary && <button type="button" className={styles.iconCircleBtn} onClick={() => makePrimary(address.id)} disabled={Boolean(editingId) || disabled} title="Make primary" aria-label={`Make address ${address.id} primary`}><FiStar /> Make primary</button>}
-              {canManage && <button type="button" className={styles.unlinkBtn} onClick={() => unlink(address.id)} disabled={associations.length <= 1 || Boolean(editingId) || disabled} title={associations.length <= 1 ? "An organization must keep one address" : "Remove from organization"} aria-label={`Remove address ${address.id} from organization`}><RecordIcon type="link" /> Unlink</button>}
+              {canManage && <ActionButton type="button" className={styles.iconCircleBtn} onClick={() => startEdit(address)} disabled={Boolean(editingId) || disabled} title="Edit address" aria-label={`Edit address ${address.id}`}><FiEdit /> Edit</ActionButton>}
+              {canManage && !primary && <ActionButton type="button" className={styles.iconCircleBtn} onClick={() => makePrimary(address.id)} disabled={Boolean(editingId) || disabled} title="Make primary" aria-label={`Make address ${address.id} primary`}><FiStar /> Make primary</ActionButton>}
+              {canManage && <ActionButton type="button" className={styles.unlinkBtn} onClick={() => unlink(address.id)} disabled={associations.length <= 1 || Boolean(editingId) || disabled} title={associations.length <= 1 ? "An organization must keep one address" : "Remove from organization"} aria-label={`Remove address ${address.id} from organization`}><RecordIcon type="link" /> Unlink</ActionButton>}
             </div>
           )}
         </div>
@@ -349,8 +350,8 @@ const AddressDetails = ({ organizationId, canManage = false }) => {
               <option value="">Add an existing address…</option>
               {availableOptions.map((address) => <option key={address.id} value={address.id}>#{address.id} — {formatAddressLabel(address)}</option>)}
             </SearchableSelect>
-            <button type="button" className={styles.secondaryBtn} onClick={addExisting} disabled={!selectedAddressId || Boolean(editingId) || Boolean(busyAction)}><RecordIcon type="link" /> Add existing</button>
-            <button type="button" className={styles.primaryBtn} onClick={startCreate} disabled={Boolean(editingId) || Boolean(busyAction)}><FiPlus /> New Address</button>
+            <ActionButton type="button" className={styles.secondaryBtn} onClick={addExisting} disabled={!selectedAddressId || Boolean(editingId) || Boolean(busyAction)}><RecordIcon type="link" /> Add existing</ActionButton>
+            <ActionButton type="button" className={styles.primaryBtn} onClick={startCreate} disabled={Boolean(editingId) || Boolean(busyAction)}><FiPlus /> New Address</ActionButton>
           </div>
         )}
       </div>

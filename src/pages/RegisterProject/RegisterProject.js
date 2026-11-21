@@ -1,3 +1,4 @@
+import ActionButton from "../../components/ActionButton/ActionButton";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import CountryPicker from "../../components/ProjectClassification/CountryPicker";
 import { useCountryCatalogue } from "../../utils/projectGeography";
@@ -434,7 +435,7 @@ const RegisterProject = () => {
           </div>
 
           <div className={styles.headerActions}>
-            <button
+            <ActionButton
               type="button"
               onClick={handleRegister}
               className={styles.saveButton}
@@ -442,9 +443,9 @@ const RegisterProject = () => {
             >
               <FiSave />
               Register
-            </button>
+            </ActionButton>
 
-            <button
+            <ActionButton
               type="button"
               onClick={resetForm}
               className={styles.deleteButton}
@@ -453,7 +454,7 @@ const RegisterProject = () => {
             >
               <FiX />
               Reset
-            </button>
+            </ActionButton>
           </div>
         </div>
 

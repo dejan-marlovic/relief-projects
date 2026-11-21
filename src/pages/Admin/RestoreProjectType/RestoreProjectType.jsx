@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
@@ -247,16 +248,16 @@ const RestoreProjectType = () => {
             </div>
 
             <div className={styles.bottomActions}>
-              {formError && <button
+              {formError && <ActionButton
                 type="button"
                 onClick={loadDeletedProjectTypes}
                 className={styles.secondaryButton}
                 disabled={loading || restoring}
               >
                 <FiRefreshCw /> Retry loading
-              </button>}
+              </ActionButton>}
 
-              <button
+              <ActionButton
                 type="button"
                 onClick={handleRestore}
                 className={styles.restoreButton}
@@ -264,7 +265,7 @@ const RestoreProjectType = () => {
               >
                 <FiRotateCcw />{" "}
                 {restoring ? "Restoring..." : "Restore project type"}
-              </button>
+              </ActionButton>
             </div>
           </>
         )}

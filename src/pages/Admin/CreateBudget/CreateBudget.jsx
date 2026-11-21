@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import { budgetLimitError } from "../../../utils/budgetLimit";
 import { normalizeBudgetName, budgetNameError } from "../../../utils/budgetDisplay";
@@ -436,23 +437,23 @@ const CreateBudget = () => {
         </div>
 
         <div className={styles.bottomActions}>
-          <button
+          <ActionButton
             type="button"
             onClick={handleCreate}
             className={styles.saveButton}
             disabled={loading}
           >
             <FiSave /> Create budget
-          </button>
+          </ActionButton>
 
-          <button
+          <ActionButton
             type="button"
             onClick={resetForm}
             className={styles.deleteButton}
             disabled={loading}
           >
             <FiX /> Reset form
-          </button>
+          </ActionButton>
         </div>
       </div>
     </div>

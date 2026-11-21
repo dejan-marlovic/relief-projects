@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
@@ -269,16 +270,16 @@ const DeleteTransactionStatus = () => {
             </div>
 
             <div className={styles.bottomActions}>
-              {formError && <button
+              {formError && <ActionButton
                 type="button"
                 onClick={loadTransactionStatuses}
                 className={styles.secondaryButton}
                 disabled={loading || deleting}
               >
                 <FiRefreshCw /> Retry loading
-              </button>}
+              </ActionButton>}
 
-              <button
+              <ActionButton
                 type="button"
                 onClick={handleDelete}
                 className={styles.deleteButton}
@@ -286,7 +287,7 @@ const DeleteTransactionStatus = () => {
               >
                 <FiTrash2 />{" "}
                 {deleting ? "Deleting..." : "Delete transaction status"}
-              </button>
+              </ActionButton>
             </div>
           </>
         )}

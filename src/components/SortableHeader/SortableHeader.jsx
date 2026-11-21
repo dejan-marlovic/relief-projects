@@ -1,10 +1,11 @@
+import ActionButton from "../ActionButton/ActionButton";
 import { FiChevronDown, FiChevronUp } from "react-icons/fi";
 import styles from "./SortableHeader.module.scss";
 
 const SortableHeader = ({ label, sortKey, sortConfig, onSort }) => {
   const active = sortConfig?.key === sortKey;
   return (
-    <button
+    <ActionButton
       type="button"
       className={styles.button}
       onClick={() => onSort(sortKey)}
@@ -17,7 +18,7 @@ const SortableHeader = ({ label, sortKey, sortConfig, onSort }) => {
       <span>{label}</span>
       {active &&
         (sortConfig.direction === "asc" ? <FiChevronUp /> : <FiChevronDown />)}
-    </button>
+    </ActionButton>
   );
 };
 

@@ -1,3 +1,4 @@
+import ActionButton from "../ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import { useOpenEditor } from "../../context/OpenEditorContext";
 import DocumentLabel from "../DocumentLabel/DocumentLabel";
@@ -32,7 +33,7 @@ function FinancialAttention({ endpoint, authFetch, revision }) {
     return () => controller.abort();
   }, [endpoint, authFetch, page, revision]);
   return <section aria-label="Financial attention"><h4>Financial record observations</h4><p className={styles.hint}>All discovered records are included, including normal statuses. No project balance or reconciled result is calculated.</p>{error && <p role="alert">{error}</p>}{!data && !error && <p role="status">Loading financial observations…</p>}
-    {data && <>{data.content.map((row,index) => <FinancialRow key={`${row.recordType}-${row.recordId ?? index}`} row={row} />)}{!data.content.length && <p>No financial records in this view.</p>}<div className={styles.actions}><button disabled={!page} onClick={() => setPage(p => p - 1)}>Previous financial page</button><span>Page {data.totalPages ? page + 1 : 0} of {data.totalPages} · {data.totalElements} records</span><button disabled={page + 1 >= data.totalPages} onClick={() => setPage(p => p + 1)}>Next financial page</button></div></>}
+    {data && <>{data.content.map((row,index) => <FinancialRow key={`${row.recordType}-${row.recordId ?? index}`} row={row} />)}{!data.content.length && <p>No financial records in this view.</p>}<div className={styles.actions}><ActionButton disabled={!page} onClick={() => setPage(p => p - 1)}>Previous financial page</ActionButton><span>Page {data.totalPages ? page + 1 : 0} of {data.totalPages} · {data.totalElements} records</span><ActionButton disabled={page + 1 >= data.totalPages} onClick={() => setPage(p => p + 1)}>Next financial page</ActionButton></div></>}
   </section>;
 }
 export function CloseoutPanel({ projectId, refreshKey }) {
@@ -104,12 +105,12 @@ export function CloseoutPanel({ projectId, refreshKey }) {
   const download = async id => { setDownloading(id); try { await downloadDocument(id,authFetch); } catch (err) { if (alive.current) setError(err.message); } finally { if (alive.current) setDownloading(null); } };
   const stale = form && data && form.expectedRevision !== data.revision;
   const warnings = data?.readiness?.warnings || [];
-  const decisionButtons = names => <div className={styles.actions}>{names.map(action => data?.permissions?.[actions[action][0]] && <button type="button" key={action} disabled={loading || busy || !!form} onClick={() => open(action)}>{actions[action][1]}</button>)}</div>;
+  const decisionButtons = names => <div className={styles.actions}>{names.map(action => data?.permissions?.[actions[action][0]] && <ActionButton type="button" key={action} disabled={loading || busy || !!form} onClick={() => open(action)}>{actions[action][1]}</ActionButton>)}</div>;
   useAutomaticRefresh(refresh, loading || busy || !!form || !!downloading);
   return <div className={styles.panel}>
     <ArchiveAttribution value={data} />
     <p className={styles.hint}>Administrative closeout is a recorded decision. It does not certify reconciled accounts, complete evidence or verified filing, and closeout alone does not lock project work. Archiving locks project data until an authorised user explicitly unarchives it. Downloads, history and storage-review decisions remain available.</p>
-    <div className={styles.actions}>{(loadError || historyError || documentError || error || blocked) && <button type="button" onClick={refresh} disabled={busy || loading}>Retry closeout and observations</button>}<Link to="/documents">Document checklist</Link><Link to="/risks"><RecordIcon type="open" />Open risks</Link><Link to="/follow-ups"><RecordIcon type="open" />Open follow-ups</Link></div>
+    <div className={styles.actions}>{(loadError || historyError || documentError || error || blocked) && <ActionButton type="button" onClick={refresh} disabled={busy || loading}>Retry closeout and observations</ActionButton>}<Link to="/documents">Document checklist</Link><Link to="/risks"><RecordIcon type="open" />Open risks</Link><Link to="/follow-ups"><RecordIcon type="open" />Open follow-ups</Link></div>
     {initialLoading && <p role="status">Loading closeout…</p>}{loadError && <p role="alert">{loadError}</p>}{error && <p role="alert">{error}</p>}
     {data && <>
       {data.closeoutReviewRequired && <p role="alert">Closeout review required: acceptance changed. Reopen and close explicitly to reaffirm the decision.</p>}
@@ -124,7 +125,7 @@ export function CloseoutPanel({ projectId, refreshKey }) {
     </>}
     {form && <form ref={formRef} tabIndex={-1} className={styles.form} aria-label="Closeout decision" onSubmit={submit}>
       <h4>{actions[form.action][1]}</h4><p>Draft revision {form.expectedRevision}. Current revision: {data?.revision ?? "Unavailable"}.</p>
-      {(blocked || stale) && <div role="alert"><p>Review current decisions and history below before continuing. If the intended decision already succeeded, cancel this draft.</p><button type="button" disabled={busy || loading || !data || !history || !!historyError} onClick={() => { setForm(current => ({ ...current, expectedRevision: data.revision })); setBlocked(false); setError(""); }}>I reviewed state and history; use current revision</button></div>}
+      {(blocked || stale) && <div role="alert"><p>Review current decisions and history below before continuing. If the intended decision already succeeded, cancel this draft.</p><ActionButton type="button" disabled={busy || loading || !data || !history || !!historyError} onClick={() => { setForm(current => ({ ...current, expectedRevision: data.revision })); setBlocked(false); setError(""); }}>I reviewed state and history; use current revision</ActionButton></div>}
       <fieldset disabled={busy}>
         {form.action === "acceptance" && <>
           <label>Final-report decision<select value={form.status} onChange={e => change("status",e.target.value)}><option value="ACCEPTED">Acceptance obtained</option><option value="NOT_APPLICABLE">Not applicable</option></select></label>
@@ -139,10 +140,10 @@ export function CloseoutPanel({ projectId, refreshKey }) {
         {form.action === "confirmReview" && <p>I confirm that the current acceptance date ({data?.acceptance?.acceptedDate || "Unavailable"}) represents the applicable donor final-report approval event. Candidate storage review: {data?.archiveReviewObservation?.candidateDate || "Unavailable"}. If the event is ambiguous, cancel and mark the basis unresolved.</p>}
         {form.action === "unresolvedReview" && <p>Explain why the donor approval basis is unresolved. This withdraws the effective review schedule; earlier decisions remain in history.</p>}
         <label>Decision reason<textarea required maxLength={1000} value={form.reason} onChange={e => change("reason",e.target.value)} /></label>
-        <button type="submit" disabled={blocked || stale || loading || !data?.permissions?.[actions[form.action][0]]}>Save decision</button>
-      </fieldset><div className={styles.actions}><button type="button" disabled={busy} onClick={() => { setForm(null); setBlocked(false); setError(""); }}>Cancel draft</button></div>
+        <ActionButton type="submit" disabled={blocked || stale || loading || !data?.permissions?.[actions[form.action][0]]}>Save decision</ActionButton>
+      </fieldset><div className={styles.actions}><ActionButton type="button" disabled={busy} onClick={() => { setForm(null); setBlocked(false); setError(""); }}>Cancel draft</ActionButton></div>
     </form>}
-    {!!data?.evidence?.length && <section><h4>Current acceptance evidence</h4><ul>{data.evidence.map(d => <li key={d.documentId}><DocumentLabel>{d.documentName || `Document #${d.documentId} · Name unavailable`}</DocumentLabel> · Version {d.versionNumber ?? "Unknown"}{!d.downloadEligible && " · Unavailable"} <button type="button" disabled={!d.downloadEligible || downloading != null} onClick={() => download(d.documentId)}>Download version #{d.documentId} · {d.documentName || "Name unavailable"}</button></li>)}</ul></section>}
+    {!!data?.evidence?.length && <section><h4>Current acceptance evidence</h4><ul>{data.evidence.map(d => <li key={d.documentId}><DocumentLabel>{d.documentName || `Document #${d.documentId} · Name unavailable`}</DocumentLabel> · Version {d.versionNumber ?? "Unknown"}{!d.downloadEligible && " · Unavailable"} <ActionButton type="button" disabled={!d.downloadEligible || downloading != null} onClick={() => download(d.documentId)}>Download version #{d.documentId} · {d.documentName || "Name unavailable"}</ActionButton></li>)}</ul></section>}
     <details onToggle={e => { if (e.currentTarget === e.target) setFinanceOpen(e.currentTarget.open); }}><summary>Financial attention details</summary>{financeOpen && <FinancialAttention endpoint={endpoint} authFetch={authFetch} revision={revision} />}</details>
     <section aria-label="Closeout decision history"><h4>Retained decision history</h4><HistoryIntro>Trace acceptance, closeout, reopening and archive decisions with the observations retained at each decision.</HistoryIntro>{historyError && <p role="alert">{historyError}</p>}{!history && !historyError && <p>Loading decision history…</p>}{history && <>{!history.content.length && <p>No decisions recorded.</p>}<HistoryTimeline>{history.content.map(event => <SnapshotHistoryEntry key={event.id} event={event} title={event.action === "ARCHIVE" ? "Project archived" : event.action === "REVOKE_ARCHIVE" ? "Project unarchived" : readable(event.action)} Snapshot={DecisionSnapshot}>{event.warningObservation && <details><summary>Warnings observed at decision</summary><Observation value={event.warningObservation} /></details>}</SnapshotHistoryEntry>)}</HistoryTimeline><HistoryPagination page={historyPage} totalPages={history?.totalPages} totalElements={history?.totalElements} onPage={setHistoryPage} disabled={busy} /></>}</section>
   </div>;

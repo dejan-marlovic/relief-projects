@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 // src/components/Admin/CreateSector/CreateSector.jsx
 
 import React, { useMemo, useState } from "react";
@@ -324,23 +325,23 @@ const CreateSector = () => {
             </div>
 
             <div className={styles.bottomActions}>
-              <button
+              <ActionButton
                 type="button"
                 onClick={handleCreate}
                 className={styles.saveButton}
                 disabled={loading}
               >
                 <FiSave /> Create sector
-              </button>
+              </ActionButton>
 
-              <button
+              <ActionButton
                 type="button"
                 onClick={resetForm}
                 className={styles.deleteButton}
                 disabled={loading}
               >
                 <FiX /> Reset form
-              </button>
+              </ActionButton>
             </div>
           </>
         )}

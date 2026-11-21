@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
@@ -393,7 +394,7 @@ const UpdateBudget = () => {
         </div>
 
         {selectedBudget && <BudgetPlanning key={selectedBudget.id} budget={selectedBudget} refreshKey={planningRefresh} disabled={saving} onUpdated={(updated) => { setBudgets((rows) => rows.map((row) => row.id === updated.id ? updated : row)); setForm((old) => ({ ...old, totalAmount: updated.totalAmount })); }} />}
-        {selectedBudget && ["DRAFT", "RETURNED"].includes(selectedBudget.lifecycleStatus || "DRAFT") && <button type="button" className={styles.secondaryButton} disabled={saving || loading || Boolean(selectedBudget.revisionFamilyId)} onClick={() => setCurrencyOpen(true)}>Change budget currency</button>}
+        {selectedBudget && ["DRAFT", "RETURNED"].includes(selectedBudget.lifecycleStatus || "DRAFT") && <ActionButton type="button" className={styles.secondaryButton} disabled={saving || loading || Boolean(selectedBudget.revisionFamilyId)} onClick={() => setCurrencyOpen(true)}>Change budget currency</ActionButton>}
         {currencyOpen && selectedBudget && <BudgetCurrencyDialog key={`currency-${selectedBudget.id}`} budget={selectedBudget} currencies={currencies} rates={exchangeRates}
           initialTargetId={form.localCurrencyId}
           dirty={Object.keys(initialForm).some((key) => key !== "selectedId" && String(form[key] ?? "") !== String(key === "budgetPreparationDate" ? toInputDateTime(selectedBudget[key]) : selectedBudget[key] ?? ""))}
@@ -670,32 +671,32 @@ const UpdateBudget = () => {
             </div>
 
             <div className={styles.bottomActions}>
-              {formError && <button
+              {formError && <ActionButton
                 type="button"
                 onClick={loadData}
                 className={styles.secondaryButton}
                 disabled={loading || saving}
               >
                 <FiRefreshCw /> Retry loading
-              </button>}
+              </ActionButton>}
 
-              <button
+              <ActionButton
                 type="button"
                 onClick={resetForm}
                 className={styles.secondaryButton}
                 disabled={saving}
               >
                 <FiRefreshCw /> Reset form
-              </button>
+              </ActionButton>
 
-              <button
+              <ActionButton
                 type="button"
                 onClick={handleUpdate}
                 className={styles.saveButton}
                 disabled={saving}
               >
                 <FiSave /> {saving ? "Saving..." : "Update budget"}
-              </button>
+              </ActionButton>
             </div>
           </>
         )}

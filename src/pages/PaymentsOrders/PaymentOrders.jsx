@@ -1,3 +1,4 @@
+import ActionButton from "../../components/ActionButton/ActionButton";
 import { namedReference, transactionReference } from "../../utils/recordLabels";
 import MobileRecordDeck from "../../components/MobileRecordDeck/MobileRecordDeck";
 import useArchivedProject from "../../hooks/useArchivedProject";
@@ -1289,7 +1290,7 @@ function PaymentOrders() {
 
           <div className={styles.headerActions}>
             {hasActiveFilters && <ClearFiltersButton onClick={() => setFilters(emptyFilters())} />}
-            <button
+            <ActionButton
               type="button"
               className={styles.exportInlineBtn}
               onClick={handleExportSelected}
@@ -1300,10 +1301,10 @@ function PaymentOrders() {
               {exportingSelected
                 ? "Exporting..."
                 : `Export selected${selectedPoCount > 0 ? ` (${selectedPoCount})` : ""}`}
-            </button>
+            </ActionButton>
 
             {canDeletePaymentOrders && (
-              <button
+              <ActionButton
                 type="button"
                 className={styles.dangerInlineBtn}
                 onClick={removeSelected}
@@ -1321,10 +1322,10 @@ function PaymentOrders() {
                 <FiTrash2 />
                 Delete selected{" "}
                 {selectedPoCount > 0 ? `(${selectedPoCount})` : ""}
-              </button>
+              </ActionButton>
             )}
             <div className={styles.columnsBox} hidden={compact}>
-              <button
+              <ActionButton
                 type="button"
                 className={styles.iconPillBtn}
                 onClick={() => setColumnsOpen((v) => !v)}
@@ -1333,7 +1334,7 @@ function PaymentOrders() {
               >
                 <FiColumns />
                 Columns
-              </button>
+              </ActionButton>
 
               {columnsOpen && (
                 <div className={styles.columnsPanel}>
@@ -1356,7 +1357,7 @@ function PaymentOrders() {
             </div>
 
             {canEditPaymentOrders && (
-              <button
+              <ActionButton
                 className={styles.primaryBtn}
                 onClick={startCreate}
                 disabled={!selectedProjectId || saving || (compact ? editingId !== null : editingId === "new")}
@@ -1370,7 +1371,7 @@ function PaymentOrders() {
               >
                 <FiPlus />
                 New
-              </button>
+              </ActionButton>
             )}
           </div>
         </div>

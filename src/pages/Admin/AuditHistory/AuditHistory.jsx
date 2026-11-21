@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import RecordReference from "../../../components/RecordReference/RecordReference";
 import { HistoryPagination, HistoryTimeline, HistoryEntry } from "../../../components/ActivityHistory/ActivityHistory";
@@ -154,9 +155,9 @@ const AuditHistory = () => {
           <h3>Record audit history</h3>
           <p>Record activity for budgets, transactions, payment orders, payment-order lines, transaction allocations, budget cost details, signatures, and recipients.</p>
         </div>
-        <button type="button" className={styles.refreshButton} onClick={() => setRefreshKey((value) => value + 1)} disabled={loading}>
+        <ActionButton type="button" className={styles.refreshButton} onClick={() => setRefreshKey((value) => value + 1)} disabled={loading}>
           <FiRefreshCw aria-hidden="true" /> Refresh
-        </button>
+        </ActionButton>
       </div>
 
       <form className={styles.filters} onSubmit={applyFilters}>
@@ -217,8 +218,8 @@ const AuditHistory = () => {
           <input type="datetime-local" name="occurredTo" value={draftFilters.occurredTo} onChange={updateDraft} />
         </label>
         <div className={styles.filterActions}>
-          <button type="submit" className={styles.primaryButton}><FiSearch aria-hidden="true" /> Apply filters</button>
-          <button type="button" className={styles.secondaryButton} onClick={clearFilters}><FiX aria-hidden="true" /> Clear</button>
+          <ActionButton type="submit" className={styles.primaryButton}><FiSearch aria-hidden="true" /> Apply filters</ActionButton>
+          <ActionButton type="button" className={styles.secondaryButton} onClick={clearFilters}><FiX aria-hidden="true" /> Clear</ActionButton>
         </div>
       </form>
 

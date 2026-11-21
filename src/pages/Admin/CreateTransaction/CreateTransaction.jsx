@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useFinancialRefresh from "../../../hooks/useFinancialRefresh";
 import { financialBudgetEligible } from "../../../utils/budgetRevisions";
@@ -393,23 +394,23 @@ const CreateTransaction = () => {
         </div>
 
         <div className={styles.bottomActions}>
-          <button
+          <ActionButton
             type="button"
             onClick={handleCreate}
             className={styles.saveButton}
             disabled={loading}
           >
             <FiSave /> Create transaction
-          </button>
+          </ActionButton>
 
-          <button
+          <ActionButton
             type="button"
             onClick={resetForm}
             className={styles.deleteButton}
             disabled={loading}
           >
             <FiX /> Reset form
-          </button>
+          </ActionButton>
         </div>
       </div>
     </div>

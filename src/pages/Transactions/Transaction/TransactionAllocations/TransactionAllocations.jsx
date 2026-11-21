@@ -1,3 +1,4 @@
+import ActionButton from "../../../../components/ActionButton/ActionButton";
 import useRefreshLoading from "../../../../hooks/useRefreshLoading";
 import SearchableSelect from "../../../../components/SearchableSelect/SearchableSelect";
 import { appFetch as fetch } from "../../../../utils/appFetch";
@@ -371,7 +372,7 @@ const TransactionAllocations = ({
           ) : null}
         </div>
 
-        <button
+        <ActionButton
           type="button"
           className={styles.iconPillBtn}
           onClick={async () => {
@@ -382,7 +383,7 @@ const TransactionAllocations = ({
         >
           <FiRefreshCw />
           Refresh
-        </button>
+        </ActionButton>
       </div>
 
       {formError && (
@@ -471,7 +472,7 @@ const TransactionAllocations = ({
           </div>
 
           <div className={styles.fieldActions}>
-            <button
+            <ActionButton
               type="button"
               className={styles.primaryInlineBtn}
               onClick={onAdd}
@@ -480,7 +481,7 @@ const TransactionAllocations = ({
             >
               <FiPlus />
               Add
-            </button>
+            </ActionButton>
           </div>
         </div>
       </div>}
@@ -610,7 +611,7 @@ const AllocationRow = ({
       </div>
 
       {canManage && <div className={styles.rowActions}>
-        <button
+        <ActionButton
           type="button"
           className={styles.iconCircleBtn}
           onClick={() => onSave({ plannedAmount, note })}
@@ -618,9 +619,9 @@ const AllocationRow = ({
           aria-label="Save allocation"
         >
           <FiSave />
-        </button>
+        </ActionButton>
 
-        <button
+        <ActionButton
           type="button"
           className={styles.dangerIconBtn}
           onClick={onDelete}
@@ -628,7 +629,7 @@ const AllocationRow = ({
           aria-label="Delete allocation"
         >
           <FiTrash2 />
-        </button>
+        </ActionButton>
       </div>}
     </div>
   );

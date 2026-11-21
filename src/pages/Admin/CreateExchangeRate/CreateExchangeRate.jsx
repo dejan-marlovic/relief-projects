@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 // src/components/Admin/CreateExchangeRate/CreateExchangeRate.jsx
@@ -444,7 +445,7 @@ const CreateExchangeRate = () => {
             </div>
 
             <div className={styles.bottomActions}>
-              <button
+              <ActionButton
                 type="button"
                 onClick={handleCreate}
                 className={styles.saveButton}
@@ -454,16 +455,16 @@ const CreateExchangeRate = () => {
                 }
               >
                 <FiSave /> {initialLoading ? "Creating..." : "Create exchange rate"}
-              </button>
+              </ActionButton>
 
-              <button
+              <ActionButton
                 type="button"
                 onClick={resetForm}
                 className={styles.deleteButton}
                 disabled={loading}
               >
                 <FiX /> Reset form
-              </button>
+              </ActionButton>
             </div>
           </>
         )}

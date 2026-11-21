@@ -1,3 +1,4 @@
+import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import useArchivedProject from "../../hooks/useArchivedProject";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
@@ -2547,7 +2548,7 @@ Approximately:
             </div>
 
             <div className={styles.headerActions}>
-              <button
+              <ActionButton
                 type="button"
                 onClick={handleExportProject}
                 className={styles.exportButton}
@@ -2555,9 +2556,9 @@ Approximately:
               >
                 <FiDownload />
                 {exportingProject ? "Exporting..." : "Export to Excel"}
-              </button>
+              </ActionButton>
               {canDeleteProject && (
-                <button
+                <ActionButton
                   type="button"
                   onClick={handleDelete}
                   className={styles.deleteButton}
@@ -2565,7 +2566,7 @@ Approximately:
                 >
                   <FiTrash2 />
                   Delete
-                </button>
+                </ActionButton>
               )}
             </div>
           </div>
@@ -2705,7 +2706,7 @@ Approximately:
 
                       {imageNames.length > 1 && (
                         <div className={styles.galleryControls}>
-                          <button
+                          <ActionButton
                             type="button"
                             onClick={() =>
                               setCurrentImageIndex((prev) =>
@@ -2717,13 +2718,13 @@ Approximately:
                             title="Previous image"
                           >
                             <FiChevronLeft />
-                          </button>
+                          </ActionButton>
 
                           <span className={styles.galleryCount}>
                             {currentImageIndex + 1} / {imageNames.length}
                           </span>
 
-                          <button
+                          <ActionButton
                             type="button"
                             onClick={() =>
                               setCurrentImageIndex((prev) =>
@@ -2735,7 +2736,7 @@ Approximately:
                             title="Next image"
                           >
                             <FiChevronRight />
-                          </button>
+                          </ActionButton>
                         </div>
                       )}
                     </div>
@@ -2786,7 +2787,7 @@ Approximately:
                             >
                               {name}
                             </span>
-                            {canEditProject && <button
+                            {canEditProject && <ActionButton
                               type="button"
                               onClick={() => handleDeleteImage(name)}
                               className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.iconOnlyBtn}`}
@@ -2794,7 +2795,7 @@ Approximately:
                               title={`Delete image ${name}`}
                             >
                               <FiTrash2 />
-                            </button>}
+                            </ActionButton>}
                           </li>
                         ))}
                       </ul>
@@ -3199,7 +3200,7 @@ Approximately:
                               selectedSectorIds.map((sid) => (
                                 <span key={sid} className={styles.pill}>
                                   <span>{getSectorLabel(sid)}</span>
-                                  <button
+                                  <ActionButton
                                     type="button"
                                     onClick={() => handleRemoveSectorClick(sid)}
                                     aria-label={`Remove sector ${getSectorLabel(
@@ -3209,7 +3210,7 @@ Approximately:
                                     className={styles.pillRemoveBtn}
                                   >
                                     <FiX />
-                                  </button>
+                                  </ActionButton>
                                 </span>
                               ))
                             ) : (
@@ -3251,7 +3252,7 @@ Approximately:
                                       </div>
                                     </div>
                                     <Link to={`/organisation-assessments/${po.id}`} onClick={e => { if (!confirmDiscardUnsavedChanges()) e.preventDefault(); }}>Assessment</Link>
-                                    <button
+                                    <ActionButton
                                       type="button"
                                       onClick={() =>
                                         handleDeleteProjectOrganization(po.id)
@@ -3261,7 +3262,7 @@ Approximately:
                                       title="Remove organization"
                                     >
                                       <FiTrash2 />
-                                    </button>
+                                    </ActionButton>
                                   </li>
                                 ))}
                               </ul>
@@ -3315,14 +3316,14 @@ Approximately:
                               ))}
                             </SearchableSelect>
 
-                            <button
+                            <ActionButton
                               type="button"
                               onClick={handleAddProjectOrganization}
                               className={styles.primaryInlineBtn}
                             >
                               <FiPlus />
                               Add
-                            </button>
+                            </ActionButton>
                           </div>
 
                           <div className={styles.mutedNote}>
@@ -3360,7 +3361,7 @@ Approximately:
                                       {getPositionLabel(p.positionId)}
                                     </div>
                                   </div>
-                                  <button
+                                  <ActionButton
                                     type="button"
                                     onClick={() =>
                                       handleDeleteParticipant(p.id)
@@ -3370,7 +3371,7 @@ Approximately:
                                     title="Remove participant"
                                   >
                                     <FiTrash2 />
-                                  </button>
+                                  </ActionButton>
                                 </li>
                               ))}
                             </ul>
@@ -3418,14 +3419,14 @@ Approximately:
                               : "Role: (select employee)"}
                           </div>
 
-                          <button
+                          <ActionButton
                             type="button"
                             onClick={handleAddParticipant}
                             className={styles.primaryInlineBtn}
                           >
                             <FiPlus />
                             Add
-                          </button>
+                          </ActionButton>
                         </div>
 
                         {participantError && (

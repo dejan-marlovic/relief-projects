@@ -1,3 +1,4 @@
+import ActionButton from "../../components/ActionButton/ActionButton";
 import React, { useEffect, useMemo, useState } from "react";
 import styles from "./Admin.module.scss";
 
@@ -746,7 +747,7 @@ const Admin = () => {
                     <div className={styles.entityLookupMenu}>
                       {filteredEntityOptions.length > 0 ? (
                         filteredEntityOptions.map((option) => (
-                          <button
+                          <ActionButton
                             key={`${action}-${option.value}`}
                             type="button"
                             className={`${styles.entityLookupOption} ${
@@ -760,7 +761,7 @@ const Admin = () => {
                             }}
                           >
                             {option.label}
-                          </button>
+                          </ActionButton>
                         ))
                       ) : (
                         <div className={styles.entityLookupEmpty}>

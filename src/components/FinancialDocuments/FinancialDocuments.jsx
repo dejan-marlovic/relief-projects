@@ -1,3 +1,4 @@
+import ActionButton from "../ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import DocumentLabel from "../DocumentLabel/DocumentLabel";
 import useRefreshLoading from "../../hooks/useRefreshLoading";
@@ -140,12 +141,12 @@ function DocumentsPanel({ entityType, entityId, locked, lifecycleStatus, refresh
   return <div className={styles.panel}>
     {entityType === "PAYMENT_ORDER" && <p className={styles.hint}>Ordinary supporting documents — approval-time inclusion not recorded. Late payment evidence is managed separately.</p>}
     <p className={styles.hint}>Links keep the exact file version you select. A replacement never changes existing supporting evidence. Draft and Final are descriptive labels.</p>
-    {(listError || actionError || candidateError) && <button type="button" onClick={refresh} disabled={loading || busy}>Retry supporting documents</button>}
+    {(listError || actionError || candidateError) && <ActionButton type="button" onClick={refresh} disabled={loading || busy}>Retry supporting documents</ActionButton>}
     {initialLoading && <p role="status">Loading supporting documents…</p>}
     {listError && <p role="alert">{listError}</p>}
     {actionError && <p role="alert">{actionError}</p>}
     {message && <p role="status">{message}</p>}
-    {categoryError && <p role="alert">{categoryError} <button type="button" onClick={retryCategories}>Retry categories</button></p>}
+    {categoryError && <p role="alert">{categoryError} <ActionButton type="button" onClick={retryCategories}>Retry categories</ActionButton></p>}
     {!initialLoading && <>
       {ownershipMessage && <p className={styles.hint}>{ownershipMessage}</p>}
       {!roleCanManage && <p className={styles.hint}>Only Admin and Finance can change supporting-document links.</p>}
@@ -160,16 +161,16 @@ function DocumentsPanel({ entityType, entityId, locked, lifecycleStatus, refresh
           {link.targetDeleted === true && <span>Financial record deleted · link retained.</span>}
         </div>
         <div className={styles.actions}>
-          <button type="button" disabled={link.downloadEligible !== true || downloading.includes(link.documentId)} onClick={() => download(link.documentId)}>Download linked version</button>
-          <button type="button" onClick={() => setHistory({ id: link.documentId, documentName: link.documentName })}>Version history</button>
-          {canManage && <button type="button" disabled={busy} onClick={() => mutate(link.documentId, true)}>Remove link</button>}
+          <ActionButton type="button" disabled={link.downloadEligible !== true || downloading.includes(link.documentId)} onClick={() => download(link.documentId)}>Download linked version</ActionButton>
+          <ActionButton type="button" onClick={() => setHistory({ id: link.documentId, documentName: link.documentName })}>Version history</ActionButton>
+          {canManage && <ActionButton type="button" disabled={busy} onClick={() => mutate(link.documentId, true)}>Remove link</ActionButton>}
         </div>
       </li>)}</ul>
       {canLink && <form className={styles.picker} onSubmit={(event) => { event.preventDefault(); if (selectedId) mutate(selectedId); }}>
         <label><input type="checkbox" checked={includeHistorical} disabled={busy} onChange={(event) => setIncludeHistorical(event.target.checked)} /> Include active historical versions</label>
         {candidateError && <p role="alert">{candidateError}</p>}
         <label>Project document<SearchableSelect documentOptions value={selectedId} disabled={busy || candidateLoading} onChange={(event) => setSelectedId(event.target.value)}><option value="">{candidateLoading ? "Loading documents…" : "Select an exact document version"}</option>{selectable.map((doc) => <option key={doc.id} value={doc.id}>{doc.documentName} · Version {doc.versionNumber} · {statusLabel(doc.status)}{doc.isCurrent ? " · Current" : " · Historical"} (#{doc.id})</option>)}</SearchableSelect></label>
-        <div className={styles.actions}><button type="submit" disabled={!selectedId || busy || candidateLoading}><RecordIcon type="link" />Link selected version</button>{selectedId && <button type="button" onClick={() => { const doc = selectable.find((item) => String(item.id) === selectedId); if (doc) setHistory(doc); }}>Preview version history</button>}</div>
+        <div className={styles.actions}><ActionButton type="submit" disabled={!selectedId || busy || candidateLoading}><RecordIcon type="link" />Link selected version</ActionButton>{selectedId && <ActionButton type="button" onClick={() => { const doc = selectable.find((item) => String(item.id) === selectedId); if (doc) setHistory(doc); }}>Preview version history</ActionButton>}</div>
         {!candidateLoading && !candidateError && !selectable.length && <p>No unlinked documents in this view. Try including historical versions or upload a project document first.</p>}
         <p className={styles.hint}>To change evidence, link the new version first, then remove the old link. Removing a link does not delete the document. Uploads remain available in the project's Documents tab for users with upload permission.</p>
       </form>}

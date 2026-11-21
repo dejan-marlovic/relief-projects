@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import { namedReference } from "../../../utils/recordLabels";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useScrollToEditor from "../../../hooks/useScrollToEditor";
@@ -198,7 +199,7 @@ const SignatureRow = ({
       <Cell className={compact ? styles.cardActions : `${styles.stickyCol} ${hc(0)}`}>
         {isEditing ? (
           <div className={styles.actions}>
-            <button
+            <ActionButton
               type="button"
               className={styles.iconCircleBtn}
               disabled={saving}
@@ -207,9 +208,9 @@ const SignatureRow = ({
               aria-label="Save"
             >
               <FiSave />{compact && <span>{saving ? "Saving…" : "Save"}</span>}
-            </button>
+            </ActionButton>
 
-            <button
+            <ActionButton
               type="button"
               className={styles.dangerIconBtn}
               disabled={saving}
@@ -218,7 +219,7 @@ const SignatureRow = ({
               aria-label="Cancel"
             >
               <FiX />{compact && <span>Cancel</span>}
-            </button>
+            </ActionButton>
           </div>
         ) : (
           <div className={styles.actions}>
@@ -259,7 +260,7 @@ const SignatureRow = ({
               ></input>
             )}
             {canEdit && (
-              <button
+              <ActionButton
                 type="button"
                 className={styles.iconCircleBtn}
                 disabled={saving}
@@ -272,11 +273,11 @@ const SignatureRow = ({
                 aria-label="Edit"
               >
                 <FiEdit />{compact && <span>Edit</span>}
-              </button>
+              </ActionButton>
             )}
 
             {!isCreate && canDelete && (
-              <button
+              <ActionButton
                 type="button"
                 className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.iconOnlyBtn}`}
                 onClick={(e) => {
@@ -289,7 +290,7 @@ const SignatureRow = ({
                 aria-label="Delete signature"
               >
                 <FiTrash2 />{compact && <span>Delete</span>}
-              </button>
+              </ActionButton>
             )}
           </div>
         )}

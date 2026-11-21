@@ -1,3 +1,4 @@
+import ActionButton from "../ActionButton/ActionButton";
 import useRefreshLoading from "../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
@@ -64,12 +65,12 @@ export function AssignmentPanel({ transactionId, originBudgetId, disabled = fals
   return <div className={styles.panel}>
     <p className={styles.hint}>Use unused approved funding from this existing award on revised costs. Each assignment is one allocation, not a new award or another balance. Receipts and actual payments do not change this capacity.</p>
     <p className={styles.hint}>Original allocations on an APPROVED transaction remain reserved even when uncommitted. This workflow cannot release those allocations. Recorded governing approval does not verify every award's donor conditions.</p>
-    {(error || blocked) && <button disabled={busy || loading} onClick={() => { setError(""); setTick(n => n + 1); }}>Retry funding assignments</button>}
+    {(error || blocked) && <ActionButton disabled={busy || loading} onClick={() => { setError(""); setTick(n => n + 1); }}>Retry funding assignments</ActionButton>}
     {initialLoading && <p role="status">Loading assignments…</p>}{error && <p role="alert">{error}</p>}
     {data && <><dl className={styles.fields}><dt>Original award budget</dt><dd>#{originBudgetId ?? "unavailable"} · Name unavailable</dd><dt>Executable use plan</dt><dd>{data.eligibility.targetBudgetId == null ? "Not activated" : `Budget #${data.eligibility.targetBudgetId} · Name unavailable`}</dd><dt>Currency</dt><dd>{data.funding.currency ? `${data.funding.currency.name || "Currency"} (#${data.funding.currency.id})` : "Unavailable"}</dd><dt>Approved funding</dt><dd>{exactAmount(data.funding.approved)}</dd><dt>Obligations counted once</dt><dd>{exactAmount(data.funding.obligations)}</dd><dt>Unused approved funding</dt><dd>{exactAmount(data.funding.unassignedApprovedFunding)}</dd></dl>
       <p className={styles.hint}>Unused approved funding is not cash. Target-row and shared family ceilings also apply. Currency is the current configured denomination, not verified historical meaning.</p>
       {(data.issues || []).map((issue, i) => <p key={i}>{issue.message}</p>)}
-      {!form && data.eligibility.canCreateAssignment && <button disabled={disabled || busy || loading} onClick={() => open()}>Assign unused funding to revised costs</button>}
+      {!form && data.eligibility.canCreateAssignment && <ActionButton disabled={disabled || busy || loading} onClick={() => open()}>Assign unused funding to revised costs</ActionButton>}
       {!data.assignments.length && <p>No revision funding assignments.</p>}
       {data.assignments.map(row => <article className={styles.card} key={row.id}>
         <h4>Assignment #{row.id} · {row.targetCostDescription || "Name unavailable"} · {row.state === "RELEASED" ? "Released" : "Assigned"}</h4>
@@ -77,7 +78,7 @@ export function AssignmentPanel({ transactionId, originBudgetId, disabled = fals
         <dl className={styles.fields}><dt>Assigned amount</dt><dd>{exactAmount(row.amount)}</dd><dt>Minimum to cover commitments</dt><dd>{exactAmount(row.minimumAmount)}</dd><dt>Maximum additional assignment now</dt><dd>{exactAmount(row.maximumAdditionalAmount)}</dd></dl>
         <p className={styles.hint}>Creation authorized by execution decision #{row.executionDecisionId}. This historical reference does not change when another plan is activated.</p>
         {!row.eligibility.canIncrease && <p className={styles.hint}>Increase unavailable; current target, execution and capacity restrictions apply.</p>}
-        {!form && <div className={styles.actions}>{(row.eligibility.canIncrease || row.eligibility.canReduce) && <button disabled={disabled || busy || loading} onClick={() => open(row)}>Change amount #{row.id} · {row.targetCostDescription || "Name unavailable"}</button>}{row.eligibility.canRelease && <button disabled={disabled || busy || loading} onClick={() => open(row, true)}>Release assignment #{row.id} · {row.targetCostDescription || "Name unavailable"}</button>}</div>}
+        {!form && <div className={styles.actions}>{(row.eligibility.canIncrease || row.eligibility.canReduce) && <ActionButton disabled={disabled || busy || loading} onClick={() => open(row)}>Change amount #{row.id} · {row.targetCostDescription || "Name unavailable"}</ActionButton>}{row.eligibility.canRelease && <ActionButton disabled={disabled || busy || loading} onClick={() => open(row, true)}>Release assignment #{row.id} · {row.targetCostDescription || "Name unavailable"}</ActionButton>}</div>}
       </article>)}
     </>}
     {form && <ScrollToForm className={styles.form} onSubmit={submit}><h4>{form.id ? `Change assignment #${form.id} · ${assignment?.targetCostDescription || "Name unavailable"}` : "Assign unused approved funding"}</h4><fieldset disabled={busy || disabled}>
@@ -86,8 +87,8 @@ export function AssignmentPanel({ transactionId, originBudgetId, disabled = fals
       <label>Assignment amount<input required type="text" inputMode="decimal" value={form.amount} onChange={e => change("amount", e.target.value)} /></label>
       <label>Assignment reason<textarea required maxLength={1000} value={form.reason} onChange={e => change("reason", e.target.value)} /></label>
       <label><input type="checkbox" required checked={form.acknowledged} onChange={e => change("acknowledged", e.target.checked)} /> I understand this uses unused approved funding, not cash, and cannot release original approved allocations. Zero releases only this managed assignment subject to commitment coverage.</label>
-      {(blocked || stale) && <><p role="alert">Review refreshed assignments and transaction history. If creation already succeeded, cancel this draft and use the existing assignment's amount control.</p><button type="button" disabled={loading || !data || Boolean(form.id && !assignment)} onClick={() => { setForm(old => ({ ...old, expectedFamilyRevision: data.familyRevision, expectedExecutionRevision: data.executionRevision, expectedAssignmentRevision: assignment?.revision })); setBlocked(false); setError(""); }}>I reviewed state and history; use current revisions</button></>}
-      <div className={styles.actions}><button disabled={busy || blocked || stale || loading || !data}>Save assignment</button><button type="button" onClick={() => { setForm(null); setBlocked(false); setError(""); }}>Cancel assignment</button></div>
+      {(blocked || stale) && <><p role="alert">Review refreshed assignments and transaction history. If creation already succeeded, cancel this draft and use the existing assignment's amount control.</p><ActionButton type="button" disabled={loading || !data || Boolean(form.id && !assignment)} onClick={() => { setForm(old => ({ ...old, expectedFamilyRevision: data.familyRevision, expectedExecutionRevision: data.executionRevision, expectedAssignmentRevision: assignment?.revision })); setBlocked(false); setError(""); }}>I reviewed state and history; use current revisions</ActionButton></>}
+      <div className={styles.actions}><ActionButton disabled={busy || blocked || stale || loading || !data}>Save assignment</ActionButton><ActionButton type="button" onClick={() => { setForm(null); setBlocked(false); setError(""); }}>Cancel assignment</ActionButton></div>
     </fieldset></ScrollToForm>}
   </div>;
 }

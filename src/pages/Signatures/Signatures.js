@@ -1,3 +1,4 @@
+import ActionButton from "../../components/ActionButton/ActionButton";
 import MobileRecordDeck from "../../components/MobileRecordDeck/MobileRecordDeck";
 import useArchivedProject from "../../hooks/useArchivedProject";
 import ColumnResize, { useColumnWidths } from "../../components/ColumnResize/ColumnResize";
@@ -1083,7 +1084,7 @@ function Signatures() {
 
           <div className={styles.headerActions}>
             {hasActiveFilters && <ClearFiltersButton onClick={() => setFilters(emptyFilters())} />}
-            <button
+            <ActionButton
               type="button"
               className={styles.exportInlineBtn}
               onClick={handleExportSelected}
@@ -1098,10 +1099,10 @@ function Signatures() {
                       ? ` (${selectedSignatureCount})`
                       : ""
                   }`}
-            </button>
+            </ActionButton>
 
             {canManageSignatures && (
-              <button
+              <ActionButton
                 type="button"
                 className={styles.dangerInlineBtn}
                 onClick={removeSelected}
@@ -1113,10 +1114,10 @@ function Signatures() {
                 {selectedSignatureCount > 0
                   ? `(${selectedSignatureCount})`
                   : ""}
-              </button>
+              </ActionButton>
             )}
             {!compact && <div className={styles.columnsBox}>
-              <button
+              <ActionButton
                 className={styles.columnsBtn}
                 onClick={() => setColumnsOpen((v) => !v)}
                 title="Choose visible columns"
@@ -1124,7 +1125,7 @@ function Signatures() {
               >
                 <FiColumns />
                 Columns
-              </button>
+              </ActionButton>
 
               {columnsOpen && (
                 <div className={styles.columnsPanel}>
@@ -1147,7 +1148,7 @@ function Signatures() {
             </div>}
 
             {canManageSignatures && (
-              <button
+              <ActionButton
                 className={styles.primaryBtn}
                 onClick={startCreate}
                 disabled={
@@ -1166,7 +1167,7 @@ function Signatures() {
               >
                 <FiPlus />
                 New
-              </button>
+              </ActionButton>
             )}
           </div>
         </div>

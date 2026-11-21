@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useTransientMessage from "../../../hooks/useTransientMessage";
@@ -381,22 +382,22 @@ const UpdateExchangeRate = () => {
 
             <div className={styles.bottomActions}>
 
-              <button
+              <ActionButton
                 type="button"
                 onClick={resetForm}
                 className={styles.secondaryButton}
                 disabled={saving}
               >
                 <FiRefreshCw /> Reset form
-              </button>
-              <button
+              </ActionButton>
+              <ActionButton
                 type="button"
                 onClick={handleUpdate}
                 className={styles.saveButton}
                 disabled={saving}
               >
                 <FiSave /> {saving ? "Saving..." : "Save changes"}
-              </button>
+              </ActionButton>
             </div>
           </>
         )}

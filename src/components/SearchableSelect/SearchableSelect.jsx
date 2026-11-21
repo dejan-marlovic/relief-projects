@@ -1,3 +1,4 @@
+import ActionButton from "../ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import DocumentLabel from "../DocumentLabel/DocumentLabel";
 import React, { forwardRef, useId, useEffect, useRef, useState } from "react";
@@ -102,7 +103,7 @@ const SearchableSelect = forwardRef(function SearchableSelect({ children, onMous
           </li>)}
         </ul>
         {!matches.length && <p role="status">No matching options</p>}
-        <button type="button" onClick={close}><RecordIcon type="close" />Close</button>
+        <ActionButton type="button" onClick={close}><RecordIcon type="close" />Close</ActionButton>
       </div>
     </div>, document.body)}
   </>;

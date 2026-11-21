@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiSave, FiX } from "react-icons/fi";
@@ -129,23 +130,23 @@ const CreateSignatureStatus = () => {
         </div>
 
         <div className={styles.bottomActions}>
-          <button
+          <ActionButton
             type="button"
             onClick={handleCreate}
             className={styles.saveButton}
             disabled={loading}
           >
             <FiSave /> Create signature status
-          </button>
+          </ActionButton>
 
-          <button
+          <ActionButton
             type="button"
             onClick={resetForm}
             className={styles.deleteButton}
             disabled={loading}
           >
             <FiX /> Reset form
-          </button>
+          </ActionButton>
         </div>
       </div>
     </div>

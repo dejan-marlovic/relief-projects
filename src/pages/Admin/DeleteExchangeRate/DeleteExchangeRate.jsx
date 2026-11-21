@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
@@ -343,14 +344,14 @@ const DeleteExchangeRate = () => {
             <div className={styles.bottomActions}>
 
 
-              <button
+              <ActionButton
                 type="button"
                 onClick={handleDelete}
                 className={styles.deleteButton}
                 disabled={deleting || !selectedExchangeRate}
               >
                 <FiTrash2 /> {deleting ? "Deleting..." : "Delete exchange rate"}
-              </button>
+              </ActionButton>
             </div>
           </>
         )}

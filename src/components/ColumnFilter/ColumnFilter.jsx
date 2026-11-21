@@ -1,3 +1,4 @@
+import ActionButton from "../ActionButton/ActionButton";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -72,13 +73,13 @@ const ColumnFilter = ({ label, type, value, options = [], onApply, onClear }) =>
   };
 
   return <div className={styles.container} ref={containerRef}>
-    <button
+    <ActionButton
       type="button"
       className={`${styles.trigger} ${active ? styles.active : ""}`}
       onClick={() => setOpen((current) => !current)}
       aria-label={`Filter ${label}${active ? ", active" : ""}`}
       aria-expanded={open}
-    ><FiFilter /></button>
+    ><FiFilter /></ActionButton>
 
     {open && createPortal(<div
       ref={popoverRef}
@@ -106,8 +107,8 @@ const ColumnFilter = ({ label, type, value, options = [], onApply, onClear }) =>
         <label>To<input type="date" value={draft.to} onChange={(e) => setDraft((v) => ({ ...v, to: e.target.value }))} /></label>
       </>}
       <div className={styles.actions}>
-        <button type="button" onClick={clear}>Clear</button>
-        <button type="button" className={styles.apply} onClick={() => { onApply(draft); setOpen(false); }}>Apply</button>
+        <ActionButton type="button" onClick={clear}>Clear</ActionButton>
+        <ActionButton type="button" className={styles.apply} onClick={() => { onApply(draft); setOpen(false); }}>Apply</ActionButton>
       </div>
     </div>, document.body)}
   </div>;

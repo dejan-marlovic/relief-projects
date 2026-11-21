@@ -1,3 +1,4 @@
+import ActionButton from "../ActionButton/ActionButton";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import { HistoryPagination, HistoryTimeline, HistoryEntry } from "../ActivityHistory/ActivityHistory";
 import RecipientReturnAuditDetails from "../RecipientReturns/RecipientReturnAuditDetails";
@@ -62,7 +63,7 @@ function HistoryPage({ entityType, entityId, includeChildren }) {
     <p>Review the recorded changes to this record. Each entry identifies the action, actor and saved changes; before and after values describe that event, not the current record. History records activity, not completion of a workflow.</p>
     <div className={styles.toolbar}>
       <span>Activity history · newest first</span>
-      {(error) && <button type="button" disabled={loading} onClick={() => { setPage(0); setRefresh((value) => value + 1); }}>Retry history</button>}
+      {(error) && <ActionButton type="button" disabled={loading} onClick={() => { setPage(0); setRefresh((value) => value + 1); }}>Retry history</ActionButton>}
     </div>
     {loading && !result && <p role="status">Loading record history…</p>}
     {error && <p role="alert">{error}</p>}

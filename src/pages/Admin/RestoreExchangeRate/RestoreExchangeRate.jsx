@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
@@ -337,7 +338,7 @@ const RestoreExchangeRate = () => {
             <div className={styles.bottomActions}>
 
 
-              <button
+              <ActionButton
                 type="button"
                 onClick={handleRestore}
                 className={styles.restoreButton}
@@ -345,7 +346,7 @@ const RestoreExchangeRate = () => {
               >
                 <FiRotateCcw />{" "}
                 {restoring ? "Restoring..." : "Restore exchange rate"}
-              </button>
+              </ActionButton>
             </div>
           </>
         )}

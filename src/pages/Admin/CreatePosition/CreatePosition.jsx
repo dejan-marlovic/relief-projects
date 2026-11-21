@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import { appFetch as fetch } from "../../../utils/appFetch";
 import React, { useState, useMemo } from "react";
 import { FiSave, FiX, FiBriefcase } from "react-icons/fi";
@@ -284,23 +285,23 @@ const CreatePosition = () => {
         </div>
 
         <div className={styles.bottomActions}>
-          <button
+          <ActionButton
             type="button"
             className={styles.saveButton}
             onClick={handleCreate}
             disabled={loading}
           >
             <FiSave /> {loading ? "Creating..." : "Create position"}
-          </button>
+          </ActionButton>
 
-          <button
+          <ActionButton
             type="button"
             className={styles.deleteButton}
             onClick={onResetClick}
             disabled={loading}
           >
             <FiX /> Reset
-          </button>
+          </ActionButton>
         </div>
       </div>
     </div>

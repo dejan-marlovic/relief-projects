@@ -1,3 +1,4 @@
+import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import ScrollToForm from "../../components/ScrollToForm/ScrollToForm";
 import React, { useRef, useState } from "react";
@@ -24,8 +25,8 @@ export default function AssessmentEditor({ form, setForm, projectId, authFetch, 
       {action === "evidence" && <><EvidencePicker projectId={projectId} authFetch={authFetch} refresh={refresh} selected={draft.documentId} onSelect={id => update("documentId", id)} /><label>Evidence purpose<select value={draft.purpose} onChange={e => update("purpose", e.target.value)}><option value="ASSESSMENT">Assessment</option><option value="COMMITTEE_MINUTES">Committee minutes</option><option value="SUPPORTING">Supporting material</option></select></label>{record?.state === "APPROVED" && <p>Added after approval — outside the recorded decision basis.</p>}</>}
       {!["create", "edit", "submit", "approve", "evidence"].includes(action) && <>{action === "withdraw-approval" && <p>Withdrawal removes current approval and sets the project approval value to No. The decision stays in history. Corrections need resubmission and a new independent approval.</p>}{action === "restore" && <p>Restoration restores the retained draft or returned assessment, never approval.</p>}{action === "delete" && <p>History and evidence links remain retained. An administrator can restore this assessment.</p>}{textarea("reason", "Reason", true)}</>}
       {error && <p role="alert">{error}</p>}{form.error && <p role="alert">{form.error}</p>}
-      {form.reviewRequired && <div role="alert"><p>Your draft is retained. Review the refreshed assessment, evidence and history before retrying. The earlier request may have succeeded; do not repeat it if the intended result is already recorded.</p><button type="button" disabled={reviewBlocked} onClick={onReview}>I reviewed the refreshed state; enable retry</button></div>}
-      <div className={styles.actions}>{!["create", "edit"].includes(action) && <button type="submit" className={approvalStyle(action, styles)} disabled={busy || blocked || form.reviewRequired}><TravelActionIcon action={action} />Save {commands[action][0].toLowerCase()}</button>}<button type="button" onClick={close}><RecordIcon type="close" />Close editor</button></div>
+      {form.reviewRequired && <div role="alert"><p>Your draft is retained. Review the refreshed assessment, evidence and history before retrying. The earlier request may have succeeded; do not repeat it if the intended result is already recorded.</p><ActionButton type="button" disabled={reviewBlocked} onClick={onReview}>I reviewed the refreshed state; enable retry</ActionButton></div>}
+      <div className={styles.actions}>{!["create", "edit"].includes(action) && <ActionButton type="submit" className={approvalStyle(action, styles)} disabled={busy || blocked || form.reviewRequired}><TravelActionIcon action={action} />Save {commands[action][0].toLowerCase()}</ActionButton>}<ActionButton type="button" onClick={close}><RecordIcon type="close" />Close editor</ActionButton></div>
     </fieldset>
   </ScrollToForm>;
 }

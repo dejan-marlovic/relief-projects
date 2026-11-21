@@ -1,3 +1,4 @@
+import ActionButton from "../../../../components/ActionButton/ActionButton";
 import SearchableSelect from "../../../../components/SearchableSelect/SearchableSelect";
 import ScrollToForm from "../../../../components/ScrollToForm/ScrollToForm";
 import { appFetch as fetch } from "../../../../utils/appFetch";
@@ -217,9 +218,9 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
 
         <div className={styles.formGroup}>
           <label style={{ visibility: "hidden" }}>Submit</label>
-          <button type="submit" className={styles.button}>
+          <ActionButton type="submit" className={styles.button}>
             Add Cost Detail
-          </button>
+          </ActionButton>
         </div>
       </div>
     </ScrollToForm>

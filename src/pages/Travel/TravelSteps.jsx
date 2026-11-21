@@ -1,3 +1,4 @@
+import ActionButton from "../../components/ActionButton/ActionButton";
 import React, { useEffect, useId, useState } from "react";
 import { FiChevronDown, FiCheck } from "react-icons/fi";
 import styles from "./Travel.module.scss";
@@ -16,9 +17,9 @@ export default function TravelSteps({ record, plan, approval, editingStep }) {
   return <><p className={styles.muted}>Prepare the trip, then request independent approval. Expand each step to review its details and available actions. The recorded status determines what you can do next.</p><ol className={styles.steps} aria-label="Travel workflow">
     {steps.map((step, index) => <li key={step.key} className={styles.step}>
       <span className={`${styles.stepMarker} ${step.key === "approval" && record.hasCurrentAuthorization ? styles.stepApproved : ""}`} aria-hidden="true">{step.key === "approval" && record.hasCurrentAuthorization ? <FiCheck /> : index + 1}</span>
-      <button type="button" className={styles.stepToggle} aria-expanded={expanded[step.key] || editingStep === step.key} aria-controls={`${id}-${step.key}`} disabled={editingStep === step.key} onClick={() => setExpanded(previous => ({ ...previous, [step.key]: !previous[step.key] }))}>
+      <ActionButton type="button" className={styles.stepToggle} aria-expanded={expanded[step.key] || editingStep === step.key} aria-controls={`${id}-${step.key}`} disabled={editingStep === step.key} onClick={() => setExpanded(previous => ({ ...previous, [step.key]: !previous[step.key] }))}>
         <span><strong>{step.title}</strong><span className={styles.stepStatus}>{step.status}</span><span className={styles.stepDescription}>{step.summary}</span></span><FiChevronDown aria-hidden="true" className={expanded[step.key] ? styles.chevronOpen : undefined} />
-      </button>
+      </ActionButton>
       <div id={`${id}-${step.key}`} hidden={!expanded[step.key] && editingStep !== step.key} className={styles.stepBody}><p className={styles.muted}>{step.description}</p>{step.body}</div>
     </li>)}
   </ol></>;

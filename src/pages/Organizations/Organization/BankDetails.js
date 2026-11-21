@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import RecordIcon from "../../../components/RecordIcon/RecordIcon";
 import { useOpenEditor } from "../../../context/OpenEditorContext";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
@@ -207,7 +208,7 @@ const BankDetails = ({ organizationId, canManage = false }) => {
   const [revealedAccounts, setRevealedAccounts] = useState({});
   const renderField = (id, row, field, placeholder) => {
     if (String(editingId) !== String(id)) {
-      if (field === "accountNumber" && row?.[field]) return <span>{revealedAccounts[id] ? row[field] : `•••• ${String(row[field]).slice(-4)}`} <button type="button" onClick={() => setRevealedAccounts(current => ({ ...current, [id]: !current[id] }))}>{revealedAccounts[id] ? "Hide account number" : "Show account number"}</button></span>;
+      if (field === "accountNumber" && row?.[field]) return <span>{revealedAccounts[id] ? row[field] : `•••• ${String(row[field]).slice(-4)}`} <ActionButton type="button" onClick={() => setRevealedAccounts(current => ({ ...current, [id]: !current[id] }))}>{revealedAccounts[id] ? "Hide account number" : "Show account number"}</ActionButton></span>;
       return row?.[field] || "-";
     }
     return <>
@@ -224,11 +225,11 @@ const BankDetails = ({ organizationId, canManage = false }) => {
     return <div key={id} ref={node => { if (isNew) newRowRef.current = node; if (editing) activeEditorRef.current = node; }} className={`${styles.gridRow} ${styles.dataRow} ${index % 2 === 0 ? styles.zebraEven : ""} ${styles.hoverable}`}>
       <div className={`${styles.cell} ${styles.stickyCol}`}>
         {editing ? <div className={styles.actions}>
-          {isNew && <button type="button" className={styles.iconCircleBtn} onClick={save} disabled={disabled} aria-label={`Save bank detail ${id}`}><FiSave /> Save</button>}
-          <button type="button" className={styles.dangerIconBtn} onClick={cancel} disabled={disabled} aria-label={`${isNew ? "Cancel" : "Done editing"} bank detail ${id}`}><FiX /> {isNew ? "Cancel" : "Done editing"}</button>
+          {isNew && <ActionButton type="button" className={styles.iconCircleBtn} onClick={save} disabled={disabled} aria-label={`Save bank detail ${id}`}><FiSave /> Save</ActionButton>}
+          <ActionButton type="button" className={styles.dangerIconBtn} onClick={cancel} disabled={disabled} aria-label={`${isNew ? "Cancel" : "Done editing"} bank detail ${id}`}><FiX /> {isNew ? "Cancel" : "Done editing"}</ActionButton>
         </div> : <div className={styles.actions}>
-          {canManage && <button type="button" className={styles.iconCircleBtn} onClick={() => startEdit(row)} disabled={Boolean(editingId) || disabled} aria-label={`Edit bank detail ${id}`}><FiEdit /> Edit</button>}
-          {canManage && <button type="button" className={styles.unlinkBtn} onClick={() => unlink(id)} disabled={Boolean(editingId) || disabled} title="Remove from organization" aria-label={`Remove bank detail ${id} from organization`}><RecordIcon type="link" /> Unlink</button>}
+          {canManage && <ActionButton type="button" className={styles.iconCircleBtn} onClick={() => startEdit(row)} disabled={Boolean(editingId) || disabled} aria-label={`Edit bank detail ${id}`}><FiEdit /> Edit</ActionButton>}
+          {canManage && <ActionButton type="button" className={styles.unlinkBtn} onClick={() => unlink(id)} disabled={Boolean(editingId) || disabled} title="Remove from organization" aria-label={`Remove bank detail ${id} from organization`}><RecordIcon type="link" /> Unlink</ActionButton>}
         </div>}
       </div>
       <div className={styles.cell}><span className={styles.fieldLabel}>Bank name</span>{!editing && <RecordIcon type="bank" />}{renderField(id, row, "bankName", "Bank name")}</div>
@@ -248,8 +249,8 @@ const BankDetails = ({ organizationId, canManage = false }) => {
           <option value="">Add an existing bank detail…</option>
           {unlinkedOptions.map((value) => <option key={value.bankId} value={value.bankId}>#{value.bankId} — {formatBankDetailLabel(value)}</option>)}
         </SearchableSelect>
-        <button type="button" className={styles.secondaryBtn} onClick={addExisting} disabled={!selectedId || Boolean(editingId) || Boolean(busyAction)}><RecordIcon type="link" /> Add existing</button>
-        <button type="button" className={styles.primaryBtn} onClick={startCreate} disabled={Boolean(editingId) || Boolean(busyAction)}><FiPlus /> New Bank Detail</button>
+        <ActionButton type="button" className={styles.secondaryBtn} onClick={addExisting} disabled={!selectedId || Boolean(editingId) || Boolean(busyAction)}><RecordIcon type="link" /> Add existing</ActionButton>
+        <ActionButton type="button" className={styles.primaryBtn} onClick={startCreate} disabled={Boolean(editingId) || Boolean(busyAction)}><FiPlus /> New Bank Detail</ActionButton>
       </div>}
     </div>
     {canManage && <p>Existing details save automatically after a short typing pause or when you leave a field. Wait for the corner save notification before leaving. New records still require Save.</p>}

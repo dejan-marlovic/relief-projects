@@ -1,3 +1,4 @@
+import ActionButton from "../../../../../components/ActionButton/ActionButton";
 import SearchableSelect from "../../../../../components/SearchableSelect/SearchableSelect";
 import React, { useRef } from "react";
 import { useOpenEditor } from "../../../../../context/OpenEditorContext";
@@ -180,7 +181,7 @@ const CostDetail = ({
         />)}
 
         <div className={`${styles.actions} ${styles.cellActions}`}>
-          <button
+          <ActionButton
             type="button"
             disabled={busy}
             onClick={handleSaveClick}
@@ -188,8 +189,8 @@ const CostDetail = ({
             title="Save"
           >
             <FiSave /><span className={styles.actionLabel}>Save</span>
-          </button>
-          <button
+          </ActionButton>
+          <ActionButton
             type="button"
             disabled={busy}
             onClick={onCancel}
@@ -197,7 +198,7 @@ const CostDetail = ({
             title="Cancel"
           >
             <FiX /><span className={styles.actionLabel}>Cancel</span>
-          </button>
+          </ActionButton>
         </div>
       </div>
     );
@@ -238,7 +239,7 @@ const CostDetail = ({
       <div className={styles.vcell}><span className={styles.fieldLabel}>EUR</span>{displayCost.amountEuro ?? "-"}</div>
 
       <div className={styles.vcell}>
-        {canEdit && <button
+        {canEdit && <ActionButton
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -248,8 +249,8 @@ const CostDetail = ({
           title="Edit"
         >
           <FiEdit /><span className={styles.actionLabel}>Edit</span>
-        </button>}
-        {canDelete && <button
+        </ActionButton>}
+        {canDelete && <ActionButton
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -259,7 +260,7 @@ const CostDetail = ({
           title="Delete"
         >
           <FiTrash2 /><span className={styles.actionLabel}>Delete</span>
-        </button>}
+        </ActionButton>}
       </div>
     </div>
   );

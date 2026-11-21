@@ -1,3 +1,4 @@
+import ActionButton from "../../components/ActionButton/ActionButton";
 import { notifySuccess } from "../../utils/successNotifications";
 import { appFetch as fetch } from "../../utils/appFetch";
 import React, { useState, useContext } from "react";
@@ -96,9 +97,9 @@ function Login() {
           />
         </div>
 
-        <button type="submit" className={styles.button}>
+        <ActionButton type="submit" className={styles.button}>
           Login
-        </button>
+        </ActionButton>
       </form>
 
       {message && <p className={styles.message}>{message}</p>}

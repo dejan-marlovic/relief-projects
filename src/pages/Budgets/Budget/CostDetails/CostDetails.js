@@ -1,3 +1,4 @@
+import ActionButton from "../../../../components/ActionButton/ActionButton";
 import { appFetch as fetch } from "../../../../utils/appFetch";
 import { calculationErrors, costDetailInputs, previewAmounts, sumDecimals } from "../../../../utils/budgetCalculations";
 import React, { useEffect, useState, useCallback } from "react";
@@ -499,13 +500,13 @@ const CostDetails = ({ budgetId, refreshTrigger, budget, exchangeRates, onMutati
 
       {/* Add New button stays visible below; disabled while create row is open */}
       {canEditCostDetails && <div className={styles.createBar}>
-        <button
+        <ActionButton
           className={styles.addBtn}
           onClick={handleCreate}
           disabled={saving || disabled || !budgetId || editingId !== null}
         >
           + New Cost Detail
-        </button>
+        </ActionButton>
       </div>}
     </div>
   );

@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
@@ -245,23 +246,23 @@ const RestoreUser = () => {
             </div>
 
             <div className={styles.bottomActions}>
-              {formError && <button
+              {formError && <ActionButton
                 type="button"
                 onClick={loadDeletedUsers}
                 className={styles.secondaryButton}
                 disabled={loading || restoring}
               >
                 <FiRefreshCw /> Retry loading
-              </button>}
+              </ActionButton>}
 
-              <button
+              <ActionButton
                 type="button"
                 onClick={handleRestore}
                 className={styles.restoreButton}
                 disabled={restoring || !selectedUser}
               >
                 <FiRotateCcw /> {restoring ? "Restoring..." : "Restore user"}
-              </button>
+              </ActionButton>
             </div>
           </>
         )}

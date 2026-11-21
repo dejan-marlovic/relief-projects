@@ -1,3 +1,4 @@
+import ActionButton from "../ActionButton/ActionButton";
 import React from "react";
 import { uploadTimeLabel } from "../../utils/documentMetadata";
 import styles from "./ActivityHistory.module.scss";
@@ -54,9 +55,9 @@ export function SnapshotHistoryEntry({ event, title, Snapshot, children }) {
 
 export function HistoryPagination({ page, totalPages, totalElements, onPage, disabled = false, displayedPage = page }) {
   return <div className={styles.pagination}>
-    <button type="button" disabled={disabled || page <= 0} onClick={() => onPage(page - 1)}>Newer history</button>
+    <ActionButton type="button" disabled={disabled || page <= 0} onClick={() => onPage(page - 1)}>Newer history</ActionButton>
     <span>{totalElements ?? "…"} recorded changes · Page {totalPages ? displayedPage + 1 : 0} of {totalPages ?? "…"}</span>
-    <button type="button" disabled={disabled || totalPages == null || page + 1 >= totalPages} onClick={() => onPage(page + 1)}>Older history</button>
-    {page > 0 && <button type="button" disabled={disabled} onClick={() => onPage(0)}>Latest history</button>}
+    <ActionButton type="button" disabled={disabled || totalPages == null || page + 1 >= totalPages} onClick={() => onPage(page + 1)}>Older history</ActionButton>
+    {page > 0 && <ActionButton type="button" disabled={disabled} onClick={() => onPage(0)}>Latest history</ActionButton>}
   </div>;
 }

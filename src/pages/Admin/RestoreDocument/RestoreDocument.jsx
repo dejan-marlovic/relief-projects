@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
@@ -355,16 +356,16 @@ const RestoreDocument = () => {
             </div>
 
             <div className={styles.bottomActions}>
-              {formError && <button
+              {formError && <ActionButton
                 type="button"
                 onClick={loadDeletedDocuments}
                 className={styles.secondaryButton}
                 disabled={loading || restoring}
               >
                 <FiRefreshCw /> Retry loading
-              </button>}
+              </ActionButton>}
 
-              <button
+              <ActionButton
                 type="button"
                 onClick={handleRestore}
                 className={styles.restoreButton}
@@ -372,7 +373,7 @@ const RestoreDocument = () => {
               >
                 <FiRotateCcw />{" "}
                 {restoring ? "Restoring..." : "Restore document"}
-              </button>
+              </ActionButton>
             </div>
           </>
         )}

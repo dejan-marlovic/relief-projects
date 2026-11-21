@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 // src/components/Admin/CreateOrganizationStatus/CreateOrganizationStatus.jsx
 
 import React, { useMemo, useState } from "react";
@@ -241,23 +242,23 @@ const CreateOrganizationStatus = () => {
             </div>
 
             <div className={styles.bottomActions}>
-              <button
+              <ActionButton
                 type="button"
                 onClick={handleCreate}
                 className={styles.saveButton}
                 disabled={loading}
               >
                 <FiSave /> Create organization status
-              </button>
+              </ActionButton>
 
-              <button
+              <ActionButton
                 type="button"
                 onClick={resetForm}
                 className={styles.deleteButton}
                 disabled={loading}
               >
                 <FiX /> Reset form
-              </button>
+              </ActionButton>
             </div>
           </>
         )}

@@ -1,3 +1,4 @@
+import ActionButton from "../ActionButton/ActionButton";
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { FiCornerUpLeft } from "react-icons/fi";
@@ -86,8 +87,8 @@ export default function ReturnReasonDialog({ endpoint, recordLabel, onSuccess, o
       <div id={`${id}-field`} className={styles.error}>{fieldError}</div>
       {error && <p role="alert" className={styles.error}>{error}</p>}
       <div className={styles.actions}>
-        <button type="button" disabled={busy} onClick={onCancel}>Cancel</button>
-        <button type="submit" className={styles.confirmReturn} disabled={busy}><FiCornerUpLeft aria-hidden="true" />{busy ? "Returning…" : "Confirm return"}</button>
+        <ActionButton type="button" disabled={busy} onClick={onCancel}>Cancel</ActionButton>
+        <ActionButton type="submit" className={styles.confirmReturn} disabled={busy}><FiCornerUpLeft aria-hidden="true" />{busy ? "Returning…" : "Confirm return"}</ActionButton>
       </div>
     </form>
   </dialog>, document.body);

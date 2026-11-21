@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
@@ -285,7 +286,7 @@ const UpdateDocument = () => {
         {formError && (
           <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
-        {categoryError && <div role="alert">{categoryError} <button type="button" onClick={retryCategories}>Retry categories</button></div>}
+        {categoryError && <div role="alert">{categoryError} <ActionButton type="button" onClick={retryCategories}>Retry categories</ActionButton></div>}
 
         {successMessage && (
           <div className={styles.successBanner}>
@@ -423,32 +424,32 @@ const UpdateDocument = () => {
             </div>
 
             <div className={styles.bottomActions}>
-              {formError && <button
+              {formError && <ActionButton
                 type="button"
                 onClick={loadData}
                 className={styles.secondaryButton}
                 disabled={loading || saving}
               >
                 <FiRefreshCw /> Retry loading
-              </button>}
+              </ActionButton>}
 
-              <button
+              <ActionButton
                 type="button"
                 onClick={resetForm}
                 className={styles.secondaryButton}
                 disabled={saving}
               >
                 <FiRefreshCw /> Reset form
-              </button>
+              </ActionButton>
 
-              <button
+              <ActionButton
                 type="button"
                 onClick={handleUpdate}
                 className={styles.saveButton}
                 disabled={saving || historical || !form.selectedId}
               >
                 <FiSave /> {saving ? "Saving..." : "Update document"}
-              </button>
+              </ActionButton>
             </div>
           </>
         )}

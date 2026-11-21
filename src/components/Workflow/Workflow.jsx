@@ -1,3 +1,4 @@
+import ActionButton from "../ActionButton/ActionButton";
 import React, { useId, useState } from "react";
 import { FiChevronDown } from "react-icons/fi";
 import styles from "./Workflow.module.scss";
@@ -12,9 +13,9 @@ export function WorkflowStep({ number, title, description, children, keepOpen = 
   const open = expanded || keepOpen;
   return <section data-mobile-tile={title} data-purpose-tile="" className={styles.step} aria-label={title}>
     <span className={styles.marker} aria-hidden="true">{number}</span>
-    <button type="button" className={styles.toggle} aria-expanded={open} aria-controls={id} disabled={keepOpen} onClick={() => setExpanded(!expanded)}>
+    <ActionButton type="button" className={styles.toggle} aria-expanded={open} aria-controls={id} disabled={keepOpen} onClick={() => setExpanded(!expanded)}>
       <span><strong>{title}</strong><span className={styles.description}>{description}</span></span><FiChevronDown aria-hidden="true" className={open ? styles.expanded : undefined} />
-    </button>
+    </ActionButton>
     <div id={id} hidden={!open} className={styles.body}>{children}</div>
   </section>;
 }

@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -159,7 +160,7 @@ const CreateDocument = () => {
         {formError && (
           <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
-        {categoryError && <div role="alert">{categoryError} <button type="button" onClick={retryCategories}>Retry categories</button></div>}
+        {categoryError && <div role="alert">{categoryError} <ActionButton type="button" onClick={retryCategories}>Retry categories</ActionButton></div>}
 
         <div className={styles.grid}>
           <div data-mobile-tile="Relations" className={styles.card}>
@@ -227,23 +228,23 @@ const CreateDocument = () => {
         </div>
 
         <div className={styles.bottomActions}>
-          <button
+          <ActionButton
             type="button"
             onClick={handleCreate}
             className={styles.saveButton}
             disabled={loading || !categories.length}
           >
             <FiSave /> Upload document
-          </button>
+          </ActionButton>
 
-          <button
+          <ActionButton
             type="button"
             onClick={resetForm}
             className={styles.deleteButton}
             disabled={loading}
           >
             <FiX /> Reset form
-          </button>
+          </ActionButton>
         </div>
       </div>
     </div>

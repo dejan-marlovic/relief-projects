@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import RecordIcon from "../../../components/RecordIcon/RecordIcon";
 import { namedReference } from "../../../utils/recordLabels";
 import { FinancialReviewAttribution } from "../../../components/ReviewAttribution/ReviewAttribution";
@@ -264,7 +265,7 @@ const Transaction = ({
         <Cell className={`${styles.stickyCol} ${styles.actionsCol} ${hc(0)}`}>
           {isEditing ? (
             <div className={styles.actions}>
-              {canEdit && <button
+              {canEdit && <ActionButton
                 type="button"
                 className={styles.iconCircleBtn}
                 disabled={saving}
@@ -273,9 +274,9 @@ const Transaction = ({
                 aria-label="Save"
               >
                 <FiSave />{compact && <span>Save</span>}
-              </button>}
+              </ActionButton>}
 
-              <button
+              <ActionButton
                 type="button"
                 className={styles.iconCircleBtn}
                 disabled={saving}
@@ -284,7 +285,7 @@ const Transaction = ({
                 aria-label="Cancel"
               >
                 <FiX />{compact && <span>Cancel</span>}
-              </button>
+              </ActionButton>
             </div>
           ) : (
             <div className={styles.actions}>
@@ -304,7 +305,7 @@ const Transaction = ({
                 />
               )}
 
-              {canEdit && <button
+              {canEdit && <ActionButton
                 type="button"
                 className={styles.iconCircleBtn}
                 onClick={(e) => {
@@ -317,10 +318,10 @@ const Transaction = ({
                 aria-label="Edit"
               >
                 <FiEdit />{compact && <span>Edit</span>}
-              </button>}
+              </ActionButton>}
 
               {showSubmitLifecycle && (
-                <button
+                <ActionButton
                   type="button"
                   className={`${styles.iconCircleBtn} ${styles.submitBtn}`}
                   onClick={(e) => {
@@ -333,12 +334,12 @@ const Transaction = ({
                   aria-label={`Submit transaction ${tx.id} for approval`}
                 >
                   <FiSend />{compact && <span>Submit</span>}
-                </button>
+                </ActionButton>
               )}
 
               {showReviewLifecycle && (
                 <>
-                  <button
+                  <ActionButton
                     type="button"
                     className={`${styles.iconCircleBtn} ${styles.approveBtn}`}
                     onClick={(e) => {
@@ -351,8 +352,8 @@ const Transaction = ({
                     aria-label={`Review transaction ${tx.id} approval`}
                   >
                     <FiCheck />{compact && <span>Review approval</span>}
-                  </button>
-                  <button
+                  </ActionButton>
+                  <ActionButton
                     type="button"
                     className={`${styles.iconCircleBtn} ${styles.returnBtn}`}
                     onClick={(e) => {
@@ -365,12 +366,12 @@ const Transaction = ({
                     aria-label={`Return transaction ${tx.id}`}
                   >
                     <FiCornerUpLeft />{compact && <span>Return</span>}
-                  </button>
+                  </ActionButton>
                 </>
               )}
 
               {!isCreate && (
-                <button
+                <ActionButton
                   type="button"
                   className={styles.iconCircleBtn}
                   onClick={(e) => {
@@ -385,11 +386,11 @@ const Transaction = ({
                   }
                 >
                   {expanded ? <FiChevronUp /> : <FiChevronDown />}{compact && <span>Allocations</span>}
-                </button>
+                </ActionButton>
               )}
 
               {canDelete && !isCreate && (
-                <button
+                <ActionButton
                   type="button"
                   className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.iconOnlyBtn}`}
                   onClick={(e) => {
@@ -402,7 +403,7 @@ const Transaction = ({
                   aria-label="Delete"
                 >
                   <FiTrash2 />{compact && <span>Delete</span>}
-                </button>
+                </ActionButton>
               )}
             </div>
           )}

@@ -1,3 +1,4 @@
+import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
@@ -60,8 +61,8 @@ function History({ risk, endpoint, authFetch, onClose }) {
     return () => controller.abort();
   }, [endpoint, authFetch, risk.id, page, attempt]);
   return <section className={styles.panel} aria-label="Risk history"><h3>History: {risk.title}</h3><HistoryIntro>Review changes to the risk assessment, mitigation and closure decision. A scheduled review date alone does not prove a review occurred.</HistoryIntro>
-    <button onClick={onClose}><RecordIcon type="close" />Close history</button>
-    {error ? <p role="alert">{error} <button onClick={() => setAttempt(v => v + 1)}>Retry history</button></p> : !data && <p role="status">Loading history…</p>}
+    <ActionButton onClick={onClose}><RecordIcon type="close" />Close history</ActionButton>
+    {error ? <p role="alert">{error} <ActionButton onClick={() => setAttempt(v => v + 1)}>Retry history</ActionButton></p> : !data && <p role="status">Loading history…</p>}
     {data && <><HistoryTimeline>{data.content.map(event => <SnapshotHistoryEntry key={event.id} event={event} title={({ CREATE: "Created", UPDATE: "Details changed", CLOSE: "Closed", REOPEN: "Reopened", DELETE: "Deleted", RESTORE: "Restored" })[event.action] || event.action} Snapshot={Snapshot} />)}</HistoryTimeline>
       {!data.content.length && <p>No history on this page.</p>}
       <HistoryPagination page={page} totalPages={data?.totalPages} totalElements={data?.totalElements} onPage={setPage} disabled={!data} />
@@ -104,7 +105,7 @@ function Editor({ editor, employees, busy, blocked, onDraft, onSave, onCancel, l
         <label>Mitigation plan (optional)<textarea rows={4} value={draft.mitigationPlan} onChange={e => onDraft("mitigationPlan", e.target.value)} /></label>
       </> : ["close", "reopen"].includes(action) ? <label>Reason<textarea required rows={3} value={draft.reason || ""} onChange={e => onDraft("reason", e.target.value)} /></label> : <p>{action === "delete" ? "Delete this risk? Its history is retained. An administrator can restore it." : "Restore this risk with its previous open or closed status?"}</p>}
       {error && <p role="alert">{error}</p>}
-      <div className={styles.actions}><button type="submit" disabled={blocked}>{editing ? "Save risk" : "Confirm " + action}</button><button type="button" onClick={onCancel}><RecordIcon type="close" />Close editor</button><button type="button" onClick={onDiscard}>Discard unfinished entries</button></div>
+      <div className={styles.actions}><ActionButton type="submit" disabled={blocked}>{editing ? "Save risk" : "Confirm " + action}</ActionButton><ActionButton type="button" onClick={onCancel}><RecordIcon type="close" />Close editor</ActionButton><ActionButton type="button" onClick={onDiscard}>Discard unfinished entries</ActionButton></div>
     </fieldset>
   </ScrollToForm>;
 }
@@ -250,18 +251,18 @@ function Register({ projectId, authFetch }) {
       <label><input type="checkbox" checked={filters.overdue} disabled={locked || filters.status !== "OPEN" || filters.deleted} onChange={e => changeFilter("overdue", e.target.checked)} /> Overdue reviews only</label>
       <label><input type="checkbox" checked={filters.deleted} disabled={locked} onChange={e => changeFilter("deleted", e.target.checked)} /> Deleted risks only</label>
     </div>
-    <div className={styles.actions}>{data?.canCreate && <button className={styles.primaryAction} disabled={locked || loading} onClick={() => openEditor(null, "save")}>New risk</button>}{(error || employeeError || blocked) && <button className={styles.secondaryAction} disabled={busy || loading} onClick={() => setAttempt(v => v + 1)}>Retry register</button>}</div>
+    <div className={styles.actions}>{data?.canCreate && <ActionButton className={styles.primaryAction} disabled={locked || loading} onClick={() => openEditor(null, "save")}>New risk</ActionButton>}{(error || employeeError || blocked) && <ActionButton className={styles.secondaryAction} disabled={busy || loading} onClick={() => setAttempt(v => v + 1)}>Retry register</ActionButton>}</div>
     {loading && !data && <p role="status">Loading risks…</p>}{error && <p role="alert">{error}</p>}{employeeError && <p role="alert">{employeeError} Use Retry register to retry.</p>}
     {notice && <p role={blocked ? "alert" : "status"}>{notice}</p>}
     {editor && <>
       <Editor key={editor.action} editor={editor} employees={employees} busy={busy} blocked={blocked} onDraft={(key, value) => setEditor(old => ({ ...old, autoPaused: false, draft: { ...old.draft, [key]: value } }))} onSave={mutate} onCancel={cancelEditor} localSaved={localSaved} onDiscard={() => { if (window.confirm("Discard unfinished entries? Changes already saved to the project will remain.")) { clearAssessmentDraft(editor.storageKey); setEditor(null); setBlocked(false); setLatest(null); setNotice(""); setAttempt(v => v + 1); } }} />
-      {blocked && editor.risk && <button disabled={busy} onClick={loadLatest}>Load latest risk for comparison</button>}
+      {blocked && editor.risk && <ActionButton disabled={busy} onClick={loadLatest}>Load latest risk for comparison</ActionButton>}
       {blocked && !editor.risk && <p>Refresh the register and check all statuses and filters for an existing record before creating again. Close the editor to change filters; your unfinished entries stay in this tab.</p>}
-      {blocked && !editor.risk && <button disabled={busy || loading} onClick={() => { if (window.confirm("Have you checked the register and confirmed this risk was not already created?")) { setBlocked(false); setEditor(old => ({ ...old, autoPaused: true })); setNotice("Draft retained. Choose Save risk to create it after checking for duplicates."); } }}>I checked the register; enable manual save</button>}
+      {blocked && !editor.risk && <ActionButton disabled={busy || loading} onClick={() => { if (window.confirm("Have you checked the register and confirmed this risk was not already created?")) { setBlocked(false); setEditor(old => ({ ...old, autoPaused: true })); setNotice("Draft retained. Choose Save risk to create it after checking for duplicates."); } }}>I checked the register; enable manual save</ActionButton>}
       {latest && <section className={styles.panel} aria-label="Latest risk"><h3>Latest record · Revision {latest.revision}</h3><Snapshot value={latest} />
         <p>Your draft above is unchanged. Replacing it discards your unsaved fields and reason.</p>
-        <button disabled={busy || !latest.permissions?.[({ save: "canEdit", close: "canClose", reopen: "canReopen", delete: "canDelete", restore: "canRestore" })[editor.action]]} onClick={() => { clearAssessmentDraft(editor.storageKey); openEditor(latest, editor.action, false); }}>Replace draft with latest record</button>
-        {editor.action === "save" && <button disabled={busy || !latest.permissions?.canEdit} onClick={() => { setEditor(old => ({ ...old, risk: latest, autoPaused: true })); setBlocked(false); setLatest(null); setNotice("Draft retained against the latest revision. Review your fields, then choose Save risk."); }}>Keep my draft after comparison</button>}
+        <ActionButton disabled={busy || !latest.permissions?.[({ save: "canEdit", close: "canClose", reopen: "canReopen", delete: "canDelete", restore: "canRestore" })[editor.action]]} onClick={() => { clearAssessmentDraft(editor.storageKey); openEditor(latest, editor.action, false); }}>Replace draft with latest record</ActionButton>
+        {editor.action === "save" && <ActionButton disabled={busy || !latest.permissions?.canEdit} onClick={() => { setEditor(old => ({ ...old, risk: latest, autoPaused: true })); setBlocked(false); setLatest(null); setNotice("Draft retained against the latest revision. Review your fields, then choose Save risk."); }}>Keep my draft after comparison</ActionButton>}
       </section>}
     </>}
     {data && <>
@@ -277,11 +278,11 @@ function Register({ projectId, authFetch }) {
         </WorkflowStep><WorkflowStep number={3} title="Close or reopen the risk" description="Close with a reason when further monitoring is no longer required. Reopen if circumstances change; the decision history remains available.">{risk.closureReason && <p className={styles.text}><strong>Closure reason: </strong>{risk.closureReason}</p>}
         </WorkflowStep><details><summary>Attribution</summary><p>Created by {risk.createdBy?.username} · {uploadTimeLabel(risk.createdAt)}</p><p>Last changed by {risk.updatedBy?.username} · {uploadTimeLabel(risk.updatedAt)}</p></details>
         <div className={styles.actions}>
-          {[["canEdit", "save", "Edit risk"], ["canClose", "close", "Close risk"], ["canReopen", "reopen", "Reopen risk"], ["canDelete", "delete", "Delete risk"], ["canRestore", "restore", "Restore risk"]].map(([permission, action, label]) => risk.permissions?.[permission] && <button key={action} disabled={locked || loading} onClick={() => openEditor(risk, action)}>{label}</button>)}
-          <button disabled={busy} onClick={() => setHistory(risk)}>View history</button>
+          {[["canEdit", "save", "Edit risk"], ["canClose", "close", "Close risk"], ["canReopen", "reopen", "Reopen risk"], ["canDelete", "delete", "Delete risk"], ["canRestore", "restore", "Restore risk"]].map(([permission, action, label]) => risk.permissions?.[permission] && <ActionButton key={action} disabled={locked || loading} onClick={() => openEditor(risk, action)}>{label}</ActionButton>)}
+          <ActionButton disabled={busy} onClick={() => setHistory(risk)}>View history</ActionButton>
         </div>
       </li>)}</ul>
-      <div className={styles.actions}><button disabled={locked || loading || !page} onClick={() => setPage(p => p - 1)}>Previous page</button><span>{data.totalElements} risks · Page {data.totalPages ? page + 1 : 0} of {data.totalPages}</span><button disabled={locked || loading || page + 1 >= data.totalPages} onClick={() => setPage(p => p + 1)}>Next page</button></div>
+      <div className={styles.actions}><ActionButton disabled={locked || loading || !page} onClick={() => setPage(p => p - 1)}>Previous page</ActionButton><span>{data.totalElements} risks · Page {data.totalPages ? page + 1 : 0} of {data.totalPages}</span><ActionButton disabled={locked || loading || page + 1 >= data.totalPages} onClick={() => setPage(p => p + 1)}>Next page</ActionButton></div>
     </>}
     {history && <History key={history.id} risk={history} endpoint={endpoint} authFetch={authFetch} onClose={() => setHistory(null)} />}
   </>;

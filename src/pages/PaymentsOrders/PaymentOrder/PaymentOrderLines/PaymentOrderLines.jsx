@@ -1,3 +1,4 @@
+import ActionButton from "../../../../components/ActionButton/ActionButton";
 import SearchableSelect from "../../../../components/SearchableSelect/SearchableSelect";
 import { appFetch as fetch } from "../../../../utils/appFetch";
 import useFinancialRefresh from "../../../../hooks/useFinancialRefresh";
@@ -576,7 +577,7 @@ const PaymentOrderLines = ({
           </div>
         </div>
 
-        <button
+        <ActionButton
           className={styles.iconPillBtn}
           onClick={async () => { await onMutationSuccess?.(); await fetchRows(); }}
           disabled={loading}
@@ -584,7 +585,7 @@ const PaymentOrderLines = ({
         >
           <FiRefreshCw />
           Refresh
-        </button>
+        </ActionButton>
       </div>
 
       {lockedBanner && !lockBannerDismissed && (
@@ -705,7 +706,7 @@ const PaymentOrderLines = ({
         </div>
 
         <div className={styles.fieldActions}>
-          <button
+          <ActionButton
             className={styles.primaryInlineBtn}
             onClick={onAdd}
             disabled={loading || isLocked}
@@ -715,7 +716,7 @@ const PaymentOrderLines = ({
           >
             <FiPlus />
             Add
-          </button>
+          </ActionButton>
           </div>
         </div>
       )}
@@ -931,7 +932,7 @@ const LineRow = ({
 
       {canManage && (
         <div className={styles.rowActions}>
-          <button
+          <ActionButton
           className={styles.iconCircleBtn}
           disabled={locked}
           title={
@@ -948,9 +949,9 @@ const LineRow = ({
           }
         >
           <FiSave />
-          </button>
+          </ActionButton>
 
-          <button
+          <ActionButton
           className={styles.dangerIconBtn}
           disabled={locked}
           title={
@@ -959,7 +960,7 @@ const LineRow = ({
           onClick={onDelete}
         >
           <FiTrash2 />
-          </button>
+          </ActionButton>
         </div>
       )}
       {(row.unavailable || rowError?.message || rowError?.recipientConflicts?.length > 0) && <div className={styles.conflictPanel}>

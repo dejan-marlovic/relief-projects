@@ -1,3 +1,4 @@
+import ActionButton from "../ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import useScrollToEditor from "../../hooks/useScrollToEditor";
 import DocumentLabel from "../DocumentLabel/DocumentLabel";
@@ -149,19 +150,19 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
   useAutomaticRefresh(refresh, loading || busy || !!form || !!pending || !!related || !!downloading);
   return <div className={styles.panel}>
     <p className={styles.hint}>Record money paid to the recipient. This records a user-entered fact; it does not execute a bank payment or change commitments, signatures or Booked status. These entries do not increase spending capacity and are not bank reconciliation. Voiding corrects an entry; it does not record a refund.</p>
-    <div className={styles.actions}>{(loadError || error || documentError || !!pending) && <button type="button" disabled={busy || loading} onClick={refresh}>Retry payments</button>}{can("create") && !form && !pending && <button type="button" onClick={() => open("create")}>Record outgoing payment</button>}</div>
+    <div className={styles.actions}>{(loadError || error || documentError || !!pending) && <ActionButton type="button" disabled={busy || loading} onClick={refresh}>Retry payments</ActionButton>}{can("create") && !form && !pending && <ActionButton type="button" onClick={() => open("create")}>Record outgoing payment</ActionButton>}</div>
     {initialLoading && <p role="status">Loading payments…</p>}
     {loadError && <p role="alert">{loadError}</p>}
     {error && <p role="alert">{error}{(form || pending) && " Your input has been retained. Reload and review before making a new attempt."}</p>}
-    {pending && <div role="alert"><p>A payment request needs confirmation. Retry sends the exact same request and cannot create a duplicate for this request key. Do not enter it again as a new payment.</p><button type="button" disabled={busy} onClick={() => send(pending)}>Retry same request</button></div>}
+    {pending && <div role="alert"><p>A payment request needs confirmation. Retry sends the exact same request and cannot create a duplicate for this request key. Do not enter it again as a new payment.</p><ActionButton type="button" disabled={busy} onClick={() => send(pending)}>Retry same request</ActionButton></div>}
     {related && <aside ref={relatedRef} style={{ scrollMarginTop: 16 }} className={styles.entry} aria-label="Related payment">
       <h4><RecordIcon type="payment" />Related payment #{related.id} · {related.organization?.name || "Name unavailable"} · {related.status}</h4>
       <p>{paymentMoney(related.amount)} {paymentCurrency(related.currency)} · Paid on {related.paidDate}</p>
       <p>Entered {stamp(related.createdAt)} by {actor(related.createdBy)}</p>
       {related.voidReason && <p>Void reason: {related.voidReason}</p>}
       {related.note && <p>{related.note}</p>}
-      <ul>{related.documents?.map(doc => <li key={doc.documentId}><DocumentLabel>{doc.documentName}</DocumentLabel> · Version {doc.versionNumber} <button type="button" disabled={!doc.downloadEligible || downloading != null} onClick={() => download(doc.documentId)}>Download related evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</button></li>)}</ul>
-      <button type="button" onClick={() => setRelated(null)}><RecordIcon type="close" />Close related payment</button>
+      <ul>{related.documents?.map(doc => <li key={doc.documentId}><DocumentLabel>{doc.documentName}</DocumentLabel> · Version {doc.versionNumber} <ActionButton type="button" disabled={!doc.downloadEligible || downloading != null} onClick={() => download(doc.documentId)}>Download related evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</ActionButton></li>)}</ul>
+      <ActionButton type="button" onClick={() => setRelated(null)}><RecordIcon type="close" />Close related payment</ActionButton>
     </aside>}
     {summary && <>
       <h4>{paymentStatus(summary.status)}</h4>
@@ -201,9 +202,9 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
           </SearchableSelect></label>
           <p className={styles.hint}>Links retain the exact selected version. Upload new files in Documents. Draft/Final does not mean evidence has been verified.</p>
         </>}
-        <button type="submit">{busy ? "Saving…" : "Confirm"}</button>
+        <ActionButton type="submit">{busy ? "Saving…" : "Confirm"}</ActionButton>
       </fieldset>
-      <div className={styles.actions}><button type="button" disabled={busy} onClick={() => { setForm(null); setError(""); }}>Cancel</button><button type="button" disabled={busy || loading} onClick={refresh}>Reload for review (keep input)</button></div>
+      <div className={styles.actions}><ActionButton type="button" disabled={busy} onClick={() => { setForm(null); setError(""); }}>Cancel</ActionButton><ActionButton type="button" disabled={busy || loading} onClick={refresh}>Reload for review (keep input)</ActionButton></div>
       {form.payment && data && !data.content.some(row => row.id === form.payment.id && row.revision === form.payment.revision) && <p role="status">This draft keeps the original revision. Cancel and reopen the action after reviewing current payments to use a new revision.</p>}
     </ScrollToForm>}
     {!initialLoading && data?.content.length === 0 && <p>No payments on this page.</p>}
@@ -214,15 +215,15 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
       <p>Recipient organization: {payment.organization?.name || "Unknown"} · Entered {stamp(payment.createdAt)} by {actor(payment.createdBy)}</p>
       {payment.externalReference && <p>Reference: {payment.externalReference}</p>}{payment.note && <p>Note: {payment.note}</p>}
       {payment.status === "VOIDED" && <p>Voided {stamp(payment.voidedAt)} by {actor(payment.voidedBy)} · {payment.voidReason}</p>}
-      {payment.replacesPaymentId && <p>Corrects <button type="button" onClick={() => showRelated(payment.replacesPaymentId)}>payment #{payment.replacesPaymentId} · Name unavailable</button>.</p>}
-      {payment.replacementPaymentId && <p>Replaced by <button type="button" onClick={() => showRelated(payment.replacementPaymentId)}>payment #{payment.replacementPaymentId} · Name unavailable</button>.</p>}
-      <ul className={styles.evidence}>{payment.documents?.map(doc => <li key={doc.documentId}><DocumentLabel>{doc.documentName}</DocumentLabel> · v{doc.versionNumber} · {doc.status || "Unknown status"}{doc.hasNewerVersion && " · Newer version exists; this evidence retains its version"}{!doc.downloadEligible && " · Unavailable for download"}<div className={styles.actions}><button type="button" disabled={!doc.downloadEligible || downloading != null} onClick={() => download(doc.documentId)}>Download evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</button>{payment.status === "RECORDED" && can("remove", payment) && <button type="button" disabled={busy || !!form || !!pending} onClick={() => open("remove", payment, doc)}>Remove evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</button>}</div></li>)}</ul>
+      {payment.replacesPaymentId && <p>Corrects <ActionButton type="button" onClick={() => showRelated(payment.replacesPaymentId)}>payment #{payment.replacesPaymentId} · Name unavailable</ActionButton>.</p>}
+      {payment.replacementPaymentId && <p>Replaced by <ActionButton type="button" onClick={() => showRelated(payment.replacementPaymentId)}>payment #{payment.replacementPaymentId} · Name unavailable</ActionButton>.</p>}
+      <ul className={styles.evidence}>{payment.documents?.map(doc => <li key={doc.documentId}><DocumentLabel>{doc.documentName}</DocumentLabel> · v{doc.versionNumber} · {doc.status || "Unknown status"}{doc.hasNewerVersion && " · Newer version exists; this evidence retains its version"}{!doc.downloadEligible && " · Unavailable for download"}<div className={styles.actions}><ActionButton type="button" disabled={!doc.downloadEligible || downloading != null} onClick={() => download(doc.documentId)}>Download evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</ActionButton>{payment.status === "RECORDED" && can("remove", payment) && <ActionButton type="button" disabled={busy || !!form || !!pending} onClick={() => open("remove", payment, doc)}>Remove evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</ActionButton>}</div></li>)}</ul>
       <details><summary>Payment action availability</summary>{[...(payment.eligibility?.voidIssues || []), ...(payment.eligibility?.correctionIssues || []), ...(payment.eligibility?.evidenceIssues || [])].filter((issue, index, all) => all.findIndex(item => item.code === issue.code && item.message === issue.message) === index).map((issue, index) => <p key={index}>{issue.message}</p>)}</details>
       {!payment.documents?.length && <p className={styles.hint}>No evidence linked.</p>}
-      {payment.status === "RECORDED" && <div className={styles.actions}>{[["add", "Add evidence"], ["correct", "Correct payment"], ["void", "Void payment"]].map(([kind, label]) => can(kind, payment) && <button key={kind} type="button" disabled={busy || !!form || !!pending} onClick={() => open(kind, payment)}>{label} #{payment.id} · {payment.organization?.name || "Name unavailable"}</button>)}</div>}
+      {payment.status === "RECORDED" && <div className={styles.actions}>{[["add", "Add evidence"], ["correct", "Correct payment"], ["void", "Void payment"]].map(([kind, label]) => can(kind, payment) && <ActionButton key={kind} type="button" disabled={busy || !!form || !!pending} onClick={() => open(kind, payment)}>{label} #{payment.id} · {payment.organization?.name || "Name unavailable"}</ActionButton>)}</div>}
       {payment.returns ? <RecipientReturns payment={{ ...payment, paymentOrderId }} refreshKey={`${revision}:${refreshKey}`} editingLocked={editingLocked || busy || !!form || !!pending} onChanged={() => { refresh(); onChanged?.(); }} /> : <p className={styles.hint}>Recipient-return information unavailable. Refresh after backend deployment; missing information does not mean zero returns.</p>}
     </article>)}
-    {data && <div className={styles.actions}><span>{data.totalElements} payments · Page {page + 1} of {Math.max(1, Math.ceil(data.totalElements / 20))}</span><button type="button" disabled={busy || loading || !!form || !!pending || page === 0} onClick={() => setPage(value => value - 1)}>Previous payments</button><button type="button" disabled={busy || loading || !!form || !!pending || (page + 1) * 20 >= data.totalElements} onClick={() => setPage(value => value + 1)}>Next payments</button></div>}
+    {data && <div className={styles.actions}><span>{data.totalElements} payments · Page {page + 1} of {Math.max(1, Math.ceil(data.totalElements / 20))}</span><ActionButton type="button" disabled={busy || loading || !!form || !!pending || page === 0} onClick={() => setPage(value => value - 1)}>Previous payments</ActionButton><ActionButton type="button" disabled={busy || loading || !!form || !!pending || (page + 1) * 20 >= data.totalElements} onClick={() => setPage(value => value + 1)}>Next payments</ActionButton></div>}
   </div>;
 }
 

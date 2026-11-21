@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import RecordIcon from "../../../components/RecordIcon/RecordIcon";
 import React, { useMemo, useState } from "react";
 import {
@@ -201,7 +202,7 @@ function ThemeSettings() {
           <p className={styles.customThemeCount}>
             {customThemeCount} custom {customThemeCount === 1 ? "theme" : "themes"}
           </p>
-          <button
+          <ActionButton
             type="button"
             className={styles.createButton}
             onClick={() => {
@@ -220,7 +221,7 @@ function ThemeSettings() {
           >
             <FiPlus aria-hidden="true" />
             {showCreator && <RecordIcon type="close" />}{showCreator ? "Close editor" : "Create custom theme"}
-          </button>
+          </ActionButton>
         </div>
 
         {actionError && <div className={styles.formError}>{actionError}</div>}
@@ -283,14 +284,14 @@ function ThemeSettings() {
             {formError && <div className={styles.formError}>{formError}</div>}
 
             <div className={styles.creatorActions}>
-              <button
+              <ActionButton
                 type="submit"
                 className={styles.saveThemeButton}
                 disabled={isBusy}
               >
                 <FiCheck aria-hidden="true" />
                 {editingThemeId ? "Save theme changes" : "Save custom theme"}
-              </button>
+              </ActionButton>
             </div>
           </form>
         )}
@@ -305,7 +306,7 @@ function ThemeSettings() {
 
             return (
               <div key={theme.id} className={styles.themeCardWrap}>
-                <button
+                <ActionButton
                   type="button"
                   className={`${styles.themeCard} ${
                     isSelected ? styles.themeCardSelected : ""
@@ -341,11 +342,11 @@ function ThemeSettings() {
                   <span className={styles.selectionStatus}>
                     {isSelected ? "Currently selected" : "Select theme"}
                   </span>
-                </button>
+                </ActionButton>
 
                 {theme.custom && (
                   <>
-                    <button
+                    <ActionButton
                       type="button"
                       className={styles.editThemeButton}
                       onClick={() => handleEditTheme(theme)}
@@ -354,8 +355,8 @@ function ThemeSettings() {
                       disabled={isBusy}
                     >
                       <FiEdit2 aria-hidden="true" />
-                    </button>
-                    <button
+                    </ActionButton>
+                    <ActionButton
                       type="button"
                       className={styles.deleteThemeButton}
                       onClick={() => handleDeleteTheme(theme)}
@@ -364,7 +365,7 @@ function ThemeSettings() {
                       disabled={isBusy}
                     >
                       <FiTrash2 aria-hidden="true" />
-                    </button>
+                    </ActionButton>
                   </>
                 )}
               </div>
@@ -380,7 +381,7 @@ function ThemeSettings() {
           </div>
 
           {selectedTheme !== "default" && (
-            <button
+            <ActionButton
               type="button"
               className={styles.restoreButton}
               onClick={() => handleThemeChange("default")}
@@ -388,7 +389,7 @@ function ThemeSettings() {
             >
               <FiRefreshCw aria-hidden="true" />
               Restore default theme
-            </button>
+            </ActionButton>
           )}
         </div>
       </div>

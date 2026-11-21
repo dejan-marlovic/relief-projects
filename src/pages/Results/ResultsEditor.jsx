@@ -1,3 +1,4 @@
+import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import DocumentLabel from "../../components/DocumentLabel/DocumentLabel";
 import ScrollToForm from "../../components/ScrollToForm/ScrollToForm";
@@ -16,7 +17,7 @@ export function DocumentChoices({ authFetch, projectId, selected, onChange, refr
   return <fieldset><legend>Supporting documents · exact versions</legend><p className={styles.muted}>Choose up to 20 versions explicitly. Historical versions are included. Evidence supports a report; it does not verify it.</p><ReadState state={state} />
     <div className={styles.documents}>{docs.map(d => <label key={d.id}><input type="checkbox" checked={selected.includes(d.id)} onChange={e => onChange(e.target.checked ? [...selected, d.id] : selected.filter(id => id !== d.id))} disabled={!selected.includes(d.id) && selected.length >= 20} /><DocumentLabel>{d.documentName || `Document #${d.id} · Name unavailable`}</DocumentLabel> · Version {d.versionNumber ?? "unknown"} · #{d.id} · {d.status || "Unknown status"}</label>)}</div>
     {state.data && !docs.length && <p>No active document versions available for this project.</p>}
-    {selected.some(id => !docs.some(d => d.id === id)) && <p>Some selected versions are not in the current list. Review their availability before saving. <button type="button" onClick={() => onChange([])}>Clear selection</button></p>}
+    {selected.some(id => !docs.some(d => d.id === id)) && <p>Some selected versions are not in the current list. Review their availability before saving. <ActionButton type="button" onClick={() => onChange([])}>Clear selection</ActionButton></p>}
   </fieldset>;
 }
 
@@ -105,8 +106,8 @@ export default function ResultsEditor({ form, setForm, indicator, authFetch, pro
 
       {error && <p role="alert">{error}</p>}
       {form.error && <p role="alert">{form.error}</p>}
-      {form.reviewRequired && <p>Draft retained. Inspect the refreshed records and history before retrying. A failed response may follow a successful save. {action === "create" && "Check every relevant list page before creating again; retrying can create a duplicate indicator."} <button type="button" disabled={blocked} onClick={onReview}>I reviewed the refreshed records; enable retry</button></p>}
-      <div className={styles.actions}>{!isIndicator && <button type="submit" disabled={blocked || form.reviewRequired || (action === "evidence" && !draft.documentId)}>Save {title.toLowerCase()}</button>}<button type="button" onClick={onCancel}><RecordIcon type="close" />{isIndicator ? dirty ? "Discard unfinished entries" : "Close editor" : "Cancel"}</button></div>
+      {form.reviewRequired && <p>Draft retained. Inspect the refreshed records and history before retrying. A failed response may follow a successful save. {action === "create" && "Check every relevant list page before creating again; retrying can create a duplicate indicator."} <ActionButton type="button" disabled={blocked} onClick={onReview}>I reviewed the refreshed records; enable retry</ActionButton></p>}
+      <div className={styles.actions}>{!isIndicator && <ActionButton type="submit" disabled={blocked || form.reviewRequired || (action === "evidence" && !draft.documentId)}>Save {title.toLowerCase()}</ActionButton>}<ActionButton type="button" onClick={onCancel}><RecordIcon type="close" />{isIndicator ? dirty ? "Discard unfinished entries" : "Close editor" : "Cancel"}</ActionButton></div>
     </fieldset>
   </ScrollToForm>;
 }

@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import { appFetch as fetch } from "../../../utils/appFetch";
 import React, { useEffect, useState } from "react";
@@ -386,7 +387,7 @@ const CreateEmployee = () => {
         </div>
 
         <div className={styles.bottomActions}>
-          <button
+          <ActionButton
             type="button"
             className={styles.saveButton}
             disabled={loading}
@@ -394,16 +395,16 @@ const CreateEmployee = () => {
           >
             {/* ✅ add content so button is visible */}
             <FiSave /> {loading ? "Creating..." : "Create employee"}
-          </button>
+          </ActionButton>
 
-          <button
+          <ActionButton
             type="button"
             className={styles.deleteButton}
             onClick={onResetClick}
             disabled={loading}
           >
             <FiX /> Reset
-          </button>
+          </ActionButton>
         </div>
       </div>
     </div>

@@ -1,3 +1,4 @@
+import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import useScrollToEditor from "../../hooks/useScrollToEditor";
 import { draftIsDirty, savedDraft } from "../../utils/savedDraft";
@@ -56,11 +57,11 @@ function TravelDetail({ openSequence = 0, id, base, projectId, authFetch, refres
   const formStep = form ? (planActions.includes(form.action) || kind ? "plan" : approvalActions.includes(form.action) ? "approval" : null) : null;
   const buttons = actions => <div className={styles.actions}>{actions.map(action => {
     const [title, permission] = commands[action];
-    return record.permissions?.[permission] && <button key={action} className={approvalStyle(action, styles)} disabled={locked} onClick={() => open(action)}><TravelActionIcon action={action} />{title}</button>;
+    return record.permissions?.[permission] && <ActionButton key={action} className={approvalStyle(action, styles)} disabled={locked} onClick={() => open(action)}><TravelActionIcon action={action} />{title}</ActionButton>;
   })}</div>;
   const editor = form && <><TravelEditor key={form.action} form={form} setForm={setForm} projectId={projectId} authFetch={authFetch} refresh={refresh} busy={busy} blocked={blocked} onSave={save} onCancel={() => setForm(null)} onReview={() => setForm(f => ({ ...f, record, expectedRevision: record.revision, reviewRequired: false, error: "", draft: f.action === "actions" ? { ...f.draft, followUp: null } : f.draft }))} /><ReadState state={reviewHistory} /><ReadState state={removalPage} /></>;
   return <section ref={detailRef} className={styles.panel} style={{ scrollMarginTop: 16 }} aria-label="Travel request details">
-    <div className={styles.actions}><button disabled={!!form || busy || reportActive} onClick={onClose}><RecordIcon type="close" />Close request</button></div><ReadState state={detail} />
+    <div className={styles.actions}><ActionButton disabled={!!form || busy || reportActive} onClick={onClose}><RecordIcon type="close" />Close request</ActionButton></div><ReadState state={detail} />
     {record && <><h3><RecordIcon type="travel" />{record.purpose} · Travel request #{record.id}</h3>
       <TravelSummary record={record} />
       <TravelSteps record={record} editingStep={formStep} plan={<>
@@ -110,13 +111,13 @@ export function TravelRegister({ projectId, authFetch, initialRequestId = null }
     } catch (error) { if (alive.current) setForm(f => ({ ...f, error: error.message, reviewRequired: true })); }
     finally { pending.current = false; if (alive.current) { setBusy(false); reload(); } }
   }
-  return <><div className={styles.actions}>{list.data?.canCreate && <button disabled={!!form || !!selected || busy} onClick={() => setForm({ action: "create", draft: { ...tripDraft(), departureDate: list.data.today, returnDate: list.data.today } })}>Create travel request</button>}</div>
+  return <><div className={styles.actions}>{list.data?.canCreate && <ActionButton disabled={!!form || !!selected || busy} onClick={() => setForm({ action: "create", draft: { ...tripDraft(), departureDate: list.data.today, returnDate: list.data.today } })}>Create travel request</ActionButton>}</div>
     <div className={styles.filters}><label>Travel state<SearchableSelect value={filters.state} onChange={e => change("state", e.target.value)}>{["ALL", "DRAFT", "SUBMITTED", "RETURNED", "APPROVED", "CANCELLED"].map(state => <option value={state} key={state}>{state === "ALL" ? "All states" : state.charAt(0) + state.slice(1).toLowerCase()}</option>)}</SearchableSelect></label>
       <label>Traveller employee ID<input type="number" min="1" step="1" value={filters.travellerEmployeeId} onChange={e => change("travellerEmployeeId", e.target.value)} /></label>
       <label>Departure from<input type="date" value={filters.departureFrom} onChange={e => change("departureFrom", e.target.value)} /></label><label>Departure through<input type="date" value={filters.departureTo} onChange={e => change("departureTo", e.target.value)} /></label>
       <label><input type="checkbox" checked={filters.deleted} onChange={e => change("deleted", e.target.checked)} />Show deleted requests only</label></div>
     <ReadState state={list} />{list.data?.projectDeleted && <p>This project is inactive. Retained travel requests are read-only.</p>}
-    <ul className={styles.list}>{list.data?.content.map(record => <li key={record.id}><div className={styles.heading}><h3><RecordIcon type="travel" />{record.purpose}</h3><button disabled={!!form || busy || (selected != null && selected !== record.id)} onClick={() => { setSelected(record.id); setOpenSequence(n => n + 1); }}><RecordIcon type="open" />Open request #{record.id} · {record.purpose || "Name unavailable"}</button></div><TravelSummary record={record} /></li>)}</ul>
+    <ul className={styles.list}>{list.data?.content.map(record => <li key={record.id}><div className={styles.heading}><h3><RecordIcon type="travel" />{record.purpose}</h3><ActionButton disabled={!!form || busy || (selected != null && selected !== record.id)} onClick={() => { setSelected(record.id); setOpenSequence(n => n + 1); }}><RecordIcon type="open" />Open request #{record.id} · {record.purpose || "Name unavailable"}</ActionButton></div><TravelSummary record={record} /></li>)}</ul>
     {list.data && !list.data.content.length && <p>No travel requests match these filters.</p>}<Pagination data={list.data} page={page} setPage={setPage} label="travel requests" disabled={list.loading || busy} />
     {form && <TravelEditor form={form} setForm={setForm} projectId={projectId} authFetch={authFetch} refresh={refresh} busy={busy} blocked={list.loading || !list.data?.canCreate} onSave={create} onCancel={() => setForm(null)} onReview={() => setForm(f => ({ ...f, error: "", reviewRequired: false }))} />}
     {selected && <TravelDetail openSequence={openSequence} key={selected} id={selected} initialForm={initialEditor} base={base} projectId={projectId} authFetch={authFetch} refresh={refresh} reload={reload} onClose={() => { setSelected(null); setInitialEditor(null); }} />}
@@ -138,8 +139,8 @@ export default function Travel() {
   const scheduleUrl = location.state?.scheduleUrl;
   const back = typeof scheduleUrl === "string" && /^\/travel-schedule(?:\?|$)/.test(scheduleUrl) ? scheduleUrl : "/travel-schedule";
   return <section className={styles.page}><h2>Travel</h2>
-    {linked && <button onClick={() => { if (confirmDiscardUnsavedChanges()) navigate(back); }}>Back to travel schedule</button>}
+    {linked && <ActionButton onClick={() => { if (confirmDiscardUnsavedChanges()) navigate(back); }}>Back to travel schedule</ActionButton>}
     <p>Plan a project trip and request independent approval. After travel concludes, record the actual outcome and request independent report review. Travel approval and report acceptance are separate decisions; neither verifies outcomes or approves expenses. Link preparation and reporting work from Follow-ups.</p>
-    {linked ? <><ReadState state={projects} />{!valid && <p role="alert">This travel link needs a valid project and request ID.</p>}{valid && projects.data && !available && <p role="alert">This project's travel is no longer available in the active project list. Refresh the schedule.</p>}{available && !matching && <><p>This request belongs to project #{projectId}, which differs from your current selection.</p><button onClick={() => { if (confirmDiscardUnsavedChanges()) setSelectedProjectId(projectId); }}>Select request's project</button><button onClick={() => { if (confirmDiscardUnsavedChanges()) navigate("/travel"); }}>View selected project's travel</button></>}{available && matching && <TravelRegister key={`${projectId}-${requestId}`} projectId={projectId} authFetch={authFetch} initialRequestId={requestId} />}</> : selectedProjectId ? <TravelRegister key={selectedProjectId} projectId={selectedProjectId} authFetch={authFetch} /> : <p>Select a project to view its travel requests.</p>}
+    {linked ? <><ReadState state={projects} />{!valid && <p role="alert">This travel link needs a valid project and request ID.</p>}{valid && projects.data && !available && <p role="alert">This project's travel is no longer available in the active project list. Refresh the schedule.</p>}{available && !matching && <><p>This request belongs to project #{projectId}, which differs from your current selection.</p><ActionButton onClick={() => { if (confirmDiscardUnsavedChanges()) setSelectedProjectId(projectId); }}>Select request's project</ActionButton><ActionButton onClick={() => { if (confirmDiscardUnsavedChanges()) navigate("/travel"); }}>View selected project's travel</ActionButton></>}{available && matching && <TravelRegister key={`${projectId}-${requestId}`} projectId={projectId} authFetch={authFetch} initialRequestId={requestId} />}</> : selectedProjectId ? <TravelRegister key={selectedProjectId} projectId={selectedProjectId} authFetch={authFetch} /> : <p>Select a project to view its travel requests.</p>}
   </section>;
 }

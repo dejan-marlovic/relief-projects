@@ -1,3 +1,4 @@
+import ActionButton from "../../components/ActionButton/ActionButton";
 import useArchivedProject from "../../hooks/useArchivedProject";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import useFinancialRefresh from "../../hooks/useFinancialRefresh";
@@ -155,7 +156,7 @@ const Budgets = () => {
           </div>
 
           {canEditBudgets && <div className={styles.headerActions}>
-            <button
+            <ActionButton
               type="button"
               className={styles.primaryBtn}
               onClick={handleOpenCreateForm}
@@ -170,7 +171,7 @@ const Budgets = () => {
             >
               <FiPlus />
               New Budget
-            </button>
+            </ActionButton>
           </div>}
         </div>
 

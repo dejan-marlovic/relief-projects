@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import RecordIcon from "../../../components/RecordIcon/RecordIcon";
 import { namedReference } from "../../../utils/recordLabels";
 import useArchivedProject from "../../../hooks/useArchivedProject";
@@ -1737,7 +1738,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
               </fieldset>
 
               <div className={styles.bottomActions}>
-                <button
+                <ActionButton
                   type="button"
                   onClick={handleExportBudget}
                   className={styles.exportButton}
@@ -1745,9 +1746,9 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
                 >
                   <FiDownload />
                   {exportingBudget ? "Exporting..." : "Export to Excel"}
-                </button>
+                </ActionButton>
 
-                {canEditBudget && <button
+                {canEditBudget && <ActionButton
                   type="button"
                   onClick={handleSave}
                   className={styles.saveButton}
@@ -1755,8 +1756,8 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
                 >
                   <FiSave />
                   {loading ? "Saving changes…" : "Save changes"}
-                </button>}
-                {canSubmitBudget && <button
+                </ActionButton>}
+                {canSubmitBudget && <ActionButton
                   type="button"
                   onClick={handleSubmitBudget}
                   className={styles.submitButton}
@@ -1774,8 +1775,8 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
                 >
                   <FiSend />
                   {submitting ? "Submitting..." : "Submit for approval"}
-                </button>}
-                {canReviewBudget && <button
+                </ActionButton>}
+                {canReviewBudget && <ActionButton
                   type="button"
                   onClick={() => handleReviewTransition("approve")}
                   className={styles.approveButton}
@@ -1783,8 +1784,8 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
                 >
                   <FiCheck />
                   {reviewAction === "approve" ? "Approving..." : "Review budget approval"}
-                </button>}
-                {canReviewBudget && <button
+                </ActionButton>}
+                {canReviewBudget && <ActionButton
                   type="button"
                   onClick={() => setReturnOpen(true)}
                   className={styles.returnButton}
@@ -1792,8 +1793,8 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
                 >
                   <FiCornerUpLeft />
                   {reviewAction === "return" ? "Returning..." : "Return budget"}
-                </button>}
-                {canDeleteBudget && <button
+                </ActionButton>}
+                {canDeleteBudget && <ActionButton
                   type="button"
                   onClick={handleDelete}
                   className={styles.deleteButton}
@@ -1801,7 +1802,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
                 >
                   <FiTrash2 />
                   Delete budget
-                </button>}
+                </ActionButton>}
               </div>
             </>
           )}
@@ -1810,11 +1811,11 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
 
       {canEditBudget && <div className={styles.bottomActions}>
         {hasRole("ADMIN") && <label><input type="checkbox" checked={normalizeMissingInputs} disabled={loading} onChange={(event) => setNormalizeMissingInputs(event.target.checked)} /> Fill missing calculation inputs (units 1, periods 1, price 0, allocation 100%)</label>}
-        <button type="button" className={styles.saveButton} disabled={Boolean(savedBudget.revisionFamilyId) || loading || childEditing || submitting || Boolean(reviewAction)} title={savedBudget.revisionFamilyId ? "Revision families retain their local currency" : undefined} onClick={() => setCurrencyOpen(true)}>Change budget currency</button>
-        <button type="button" className={styles.saveButton} onClick={handleRecalculate} disabled={loading || childEditing || hasUnsavedChanges} title="Save or cancel edits first. Uses persisted inputs and current selected rates.">Recalculate saved costs</button>
+        <ActionButton type="button" className={styles.saveButton} disabled={Boolean(savedBudget.revisionFamilyId) || loading || childEditing || submitting || Boolean(reviewAction)} title={savedBudget.revisionFamilyId ? "Revision families retain their local currency" : undefined} onClick={() => setCurrencyOpen(true)}>Change budget currency</ActionButton>
+        <ActionButton type="button" className={styles.saveButton} onClick={handleRecalculate} disabled={loading || childEditing || hasUnsavedChanges} title="Save or cancel edits first. Uses persisted inputs and current selected rates.">Recalculate saved costs</ActionButton>
         {recalculationMessage && <p role="status">{recalculationMessage}</p>}
       </div>}
-      {hasUnsavedChanges && <button type="button" className={styles.saveButton} disabled={loading || submitting || Boolean(reviewAction)} onClick={() => { setBudget(conflictBudget.current || savedBudget); setSavedBudget(conflictBudget.current || savedBudget); conflictBudget.current = null; setHasUnsavedChanges(false); setFieldErrors({}); setFormError(""); }}>Discard header edits</button>}
+      {hasUnsavedChanges && <ActionButton type="button" className={styles.saveButton} disabled={loading || submitting || Boolean(reviewAction)} onClick={() => { setBudget(conflictBudget.current || savedBudget); setSavedBudget(conflictBudget.current || savedBudget); conflictBudget.current = null; setHasUnsavedChanges(false); setFieldErrors({}); setFormError(""); }}>Discard header edits</ActionButton>}
       {currencyOpen && canEditBudget && <BudgetCurrencyDialog key={`currency-${savedBudget.id}`} budget={savedBudget} currencies={currencies} rates={exchangeRates}
         initialTargetId={budget.localCurrencyId} dirty={hasUnsavedChanges}
         keepReady={String(savedBudget.localCurrencyId) !== String(budget.localCurrencyId)}

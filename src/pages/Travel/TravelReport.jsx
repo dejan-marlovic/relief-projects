@@ -1,3 +1,4 @@
+import ActionButton from "../../components/ActionButton/ActionButton";
 import { draftIsDirty, savedDraft } from "../../utils/savedDraft";
 import ReviewAttribution from "../../components/ReviewAttribution/ReviewAttribution";
 import React, { useEffect, useRef, useState } from "react";
@@ -53,13 +54,13 @@ export default function TravelReport({ endpoint: travelEndpoint, projectId, trav
   const buttons = actions => <div className={styles.actions}>{actions.map(action => {
     const [title, flag] = reportCommands[action];
     const styleAction = action === "accept" ? "approve" : action === "reopen" ? "return" : action;
-    return record?.permissions?.[flag] && <button key={action} disabled={locked} className={approvalStyle(styleAction, styles)} onClick={() => open(action)}><TravelActionIcon action={styleAction} />{title}</button>;
+    return record?.permissions?.[flag] && <ActionButton key={action} disabled={locked} className={approvalStyle(styleAction, styles)} onClick={() => open(action)}><TravelActionIcon action={styleAction} />{title}</ActionButton>;
   })}</div>;
   const reviewForm = form && ["submit", "accept", "return", "reopen"].includes(form.action);
   const editor = form && <><TravelReportEditor key={form.action} form={form} setForm={setForm} endpoint={travelEndpoint} projectId={projectId} authFetch={authFetch} refresh={refresh} today={data?.today} busy={busy} blocked={blocked} reviewRequired={reviewRequired} reviewBlocked={reviewBlocked} onSave={save} onCancel={() => setForm(null)} onReview={() => setForm(f => ({ ...f, record, expectedRevision: record?.revision, expectedTravelRevision: data.travelRevision, reviewRequired: false, error: "", draft: f.action === "actions" ? { ...f.draft, followUp: null } : f.draft }))} /><ReadState state={history} /><ReadState state={removal} /></>;
   return <section aria-label="Post-trip reporting">
     <p className={styles.muted}>After travel concludes—or when it was not taken—record what actually happened, then request independent review. Reports and acceptance remain separate from travel authorization, payments and task completion.</p>
-    {(mismatchedTravel || (state.data && !validEnvelope) || state.error) && <button disabled={busy} onClick={reload}>Retry report and travel</button>}<ReadState state={state} />
+    {(mismatchedTravel || (state.data && !validEnvelope) || state.error) && <ActionButton disabled={busy} onClick={reload}>Retry report and travel</ActionButton>}<ReadState state={state} />
     {state.data && !validEnvelope && <p role="alert">Report response unavailable. Refresh after checking the backend deployment.</p>}
     {awaitingSavedReport && <p role="status">Refreshing the saved report before enabling another change…</p>}
     {mismatchedTravel && <p role="alert">The travel request changed. Refresh report and travel together before making a report decision.</p>}
@@ -67,7 +68,7 @@ export default function TravelReport({ endpoint: travelEndpoint, projectId, trav
     <details><summary>Current live travel plan and authorization</summary><dl className={styles.snapshot}><dt>Traveller</dt><dd>{travel.traveller?.displayName}</dd><dt>Purpose</dt><dd>{travel.purpose}</dd><dt>Destination</dt><dd>{travel.destination}</dd><dt>Planned dates</dt><dd>{travel.departureDate} through {travel.returnDate}</dd><dt>Authorization state</dt><dd>{label(travel.state)}</dd></dl><p>This is the current request, separate from the report’s captured plan and actual dates.</p></details>
     <WorkflowStep number={3} title="Report the actual outcome" description="Choose a saved approval or an explicit unapproved plan basis. Record actual dates, outcome and any differences. Add exact report documents and existing follow-ups; nothing is inherited automatically from the trip plan." keepOpen={!!form && !reviewForm}>
       {data && !record && <p>No post-trip report recorded. This does not mean the trip failed or that a report is overdue.</p>}
-      {data?.canCreate && !record && <button disabled={locked} onClick={() => open("create")}>{reportTitles.create}</button>}
+      {data?.canCreate && !record && <ActionButton disabled={locked} onClick={() => open("create")}>{reportTitles.create}</ActionButton>}
       {record && <><ReviewAttribution status={record?.state} submission={record.currentSubmission} approval={record.currentAcceptance} approvalLabel="Accepted by" /><p><span className={`${styles.statusBadge} ${styles[`status${record.state === "ACCEPTED" ? "APPROVED" : record.state}`] || ""}`}>Report {label(record.state)}</span>{record.isDeleted ? " · Deleted report — restore this retained report instead of creating another" : ""}</p><ReportBasis basis={record.planBasis} /><ReportAccount report={record} />
         <p>Report created <Attribution at={record.createdAt} actor={record.createdBy} /></p>
         <details><summary>Current travel authorization observation</summary><HistorySnapshot value={record.authorizationObservation} /></details>

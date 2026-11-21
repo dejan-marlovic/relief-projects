@@ -1,3 +1,4 @@
+import ActionButton from "../ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
@@ -103,12 +104,12 @@ export default function BudgetCurrencyDialog({ budget, currencies, rates, initia
     {mode === "KEEP_VALUES" && <section>
       <p>The entered budget limit and every retained cost-detail unit price are already in the selected local currency. Their numbers stay unchanged; calculated amounts are recalculated using the selected output rates.</p>
       {keepReady ? <><p>You are confirming the entered limit and retained unit prices are in <strong>{name(initialTargetId)}</strong>. No currency conversion will be performed.</p>
-        <button disabled={busy || mustReload} onClick={onKeep}>Confirm and save entered values</button></>
-        : <><p>Select the new local currency, enter its budget limit and choose its output rates in the budget form, then use Save changes to confirm.</p><button disabled={busy || mustReload} onClick={onClose}>Return to budget form</button></>}
+        <ActionButton disabled={busy || mustReload} onClick={onKeep}>Confirm and save entered values</ActionButton></>
+        : <><p>Select the new local currency, enter its budget limit and choose its output rates in the budget form, then use Save changes to confirm.</p><ActionButton disabled={busy || mustReload} onClick={onClose}>Return to budget form</ActionButton></>}
     </section>}
     {mode === "CONVERT" && <section>
       <p>Conversion uses saved values. Quantities, periods and allocated percentages stay unchanged. Reporting, GBP and EUR target currencies are preserved.</p>
-      {dirty && <div className={styles.notice}><p>There are unsaved header edits. Save unrelated edits separately, or discard the header edits before previewing conversion.</p><button disabled={busy} onClick={() => { invalidate(); onDiscard(); }}>Discard header edits for conversion</button></div>}
+      {dirty && <div className={styles.notice}><p>There are unsaved header edits. Save unrelated edits separately, or discard the header edits before previewing conversion.</p><ActionButton disabled={busy} onClick={() => { invalidate(); onDiscard(); }}>Discard header edits for conversion</ActionButton></div>}
       <fieldset disabled={busy || mustReload} className={styles.fields}><legend>Explicit currency and rates</legend>
         <label>New local currency<SearchableSelect value={selection.targetCurrencyId} onChange={(event) => change("targetCurrencyId", event.target.value)}><option value="">Select currency</option>{currencies.filter((item) => String(item.id) !== String(budget.localCurrencyId)).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</SearchableSelect></label>
         {rateSlots.map(([field, label, base, quote]) => {
@@ -116,7 +117,7 @@ export default function BudgetCurrencyDialog({ budget, currencies, rates, initia
           return <label key={field}>{label}: {name(base)} → {name(quote)}<SearchableSelect value={selection[field]} onChange={(event) => change(field, event.target.value)}><option value="">Select rate</option>{matching.map((rate) => <option key={rate.id} value={rate.id}>1 {name(base)} → {rate.rate} {name(quote)} · {rate.rateDate ? String(rate.rateDate).replace("T", " ") : "Date unknown"} (#{rate.id})</option>)}</SearchableSelect>{base && quote && !matching.length && <small>No matching rate is available. Add a rate in this direction before continuing.</small>}</label>;
         })}
       </fieldset>
-      <button disabled={busy || !ready} onClick={() => request(false)}>Preview conversion</button>
+      <ActionButton disabled={busy || !ready} onClick={() => request(false)}>Preview conversion</ActionButton>
       {preview && <section className={styles.preview} aria-label="Conversion preview">
         <h3>{currencyLabel(preview.sourceCurrency)} → {currencyLabel(preview.targetCurrency)}</h3>
         <p><RateSnapshot rate={preview.conversionRate} /></p>
@@ -127,12 +128,12 @@ export default function BudgetCurrencyDialog({ budget, currencies, rates, initia
         {(preview.costDetails || []).map((row) => <details key={row.costDetailId} className={styles.row}><summary>Cost detail #{row.costDetailId} · {row.costDescription || budget.costDetails?.find(cost => String(cost.costDetailId) === String(row.costDetailId))?.costDescription || "Name unavailable"} · Local: <Pair pair={row.amountLocalCurrency} /></summary><dl>{Object.entries(columns).map(([key, label]) => <div key={key}><dt>{label}</dt><dd><Pair pair={row[key]} /></dd></div>)}</dl><p>Unit-price rounding adjustment: {value(row.unitPriceRoundingDelta)}</p></details>)}
         {(preview.blockingIssues || []).map((issue, index) => <p role="alert" key={index}>{issue.message}{issue.costDetailIds?.length > 0 && ` (Cost details: ${issue.costDetailIds.join(", ")})`}</p>)}
         {(preview.warnings || []).map((issue, index) => <p key={index}>Warning: {issue.message}{issue.costDetailIds?.length > 0 && ` (Cost details: ${issue.costDetailIds.join(", ")})`}</p>)}
-        {preview.eligible && preview.previewToken && <><p>Preview expires: {preview.expiresAt ? new Date(preview.expiresAt).toLocaleString() : "Unknown"}.</p><label className={styles.acknowledge}><input type="checkbox" checked={acknowledged} disabled={busy} onChange={(event) => setAcknowledged(event.target.checked)} /> I have reviewed the rates, converted values and rounding, and want to convert the saved budget and cost details.</label><button disabled={busy || dirty || !acknowledged || mustReload} onClick={() => request(true)}>Confirm conversion</button></>}
+        {preview.eligible && preview.previewToken && <><p>Preview expires: {preview.expiresAt ? new Date(preview.expiresAt).toLocaleString() : "Unknown"}.</p><label className={styles.acknowledge}><input type="checkbox" checked={acknowledged} disabled={busy} onChange={(event) => setAcknowledged(event.target.checked)} /> I have reviewed the rates, converted values and rounding, and want to convert the saved budget and cost details.</label><ActionButton disabled={busy || dirty || !acknowledged || mustReload} onClick={() => request(true)}>Confirm conversion</ActionButton></>}
       </section>}
     </section>}
     {error && <p role="alert" className={styles.notice}>{error}</p>}
-    {mustReload && <button disabled={busy} onClick={reload}>Reload saved budget</button>}
+    {mustReload && <ActionButton disabled={busy} onClick={reload}>Reload saved budget</ActionButton>}
     {busy && <p role="status">Loading…</p>}
-    <div className={styles.actions}><button disabled={busy || mustReload} onClick={onClose}><RecordIcon type="close" />Close</button></div>
+    <div className={styles.actions}><ActionButton disabled={busy || mustReload} onClick={onClose}><RecordIcon type="close" />Close</ActionButton></div>
   </dialog>, document.body);
 }

@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -339,7 +340,7 @@ function LogoSettings() {
             </div>
 
             {customLogo && (
-              <button
+              <ActionButton
                 type="button"
                 className={styles.restoreButton}
                 disabled={Boolean(busyAsset)}
@@ -347,7 +348,7 @@ function LogoSettings() {
               >
                 <FiRefreshCw aria-hidden="true" />
                 Restore default logo
-              </button>
+              </ActionButton>
             )}
           </article>
 
@@ -404,7 +405,7 @@ function LogoSettings() {
             </div>
 
             {customFavicon && (
-              <button
+              <ActionButton
                 type="button"
                 className={styles.restoreButton}
                 disabled={Boolean(busyAsset)}
@@ -412,7 +413,7 @@ function LogoSettings() {
               >
                 <FiRefreshCw aria-hidden="true" />
                 Restore default favicon
-              </button>
+              </ActionButton>
             )}
           </article>
 

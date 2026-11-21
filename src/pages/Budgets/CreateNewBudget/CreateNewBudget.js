@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import { appFetch as fetch } from "../../../utils/appFetch";
 import { notifySuccess } from "../../../utils/successNotifications";
@@ -391,7 +392,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
           </div>
 
           <div className={styles.headerActions}>
-            <button
+            <ActionButton
               type="button"
               onClick={handleSave}
               className={styles.saveButton}
@@ -399,8 +400,8 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
             >
               <FiSave />
               {saving ? "Creating budget…" : "Create budget"}
-            </button>
-            <button
+            </ActionButton>
+            <ActionButton
               type="button"
               onClick={onClose}
               className={styles.deleteButton}
@@ -409,7 +410,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
             >
               <FiX />
               Cancel
-            </button>
+            </ActionButton>
           </div>
         </div>
 
@@ -619,7 +620,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
 
         {/* Bottom actions (same as Budget/Project) */}
         <div className={styles.bottomActions}>
-          <button
+          <ActionButton
             type="button"
             onClick={handleSave}
             className={styles.saveButton}
@@ -627,8 +628,8 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
           >
             <FiSave />
             {saving ? "Creating budget…" : "Create budget"}
-          </button>
-          <button
+          </ActionButton>
+          <ActionButton
             type="button"
             onClick={onClose}
             className={styles.deleteButton}
@@ -636,7 +637,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
           >
             <FiX />
             Cancel
-          </button>
+          </ActionButton>
         </div>
       </div>
     </div>

@@ -1,3 +1,4 @@
+import ActionButton from "../../../components/ActionButton/ActionButton";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 // src/components/Admin/CreateOrganization/CreateOrganization.jsx
 
@@ -363,7 +364,7 @@ const CreateOrganization = () => {
             </div>
 
             <div className={styles.bottomActions}>
-              <button
+              <ActionButton
                 type="button"
                 onClick={handleCreate}
                 className={styles.saveButton}
@@ -371,16 +372,16 @@ const CreateOrganization = () => {
                 title={addresses.length === 0 ? "Create addresses first." : ""}
               >
                 <FiSave /> {loading ? "Creating..." : "Create organization"}
-              </button>
+              </ActionButton>
 
-              <button
+              <ActionButton
                 type="button"
                 onClick={resetForm}
                 className={styles.deleteButton}
                 disabled={loading}
               >
                 <FiX /> Reset form
-              </button>
+              </ActionButton>
             </div>
           </>
         )}

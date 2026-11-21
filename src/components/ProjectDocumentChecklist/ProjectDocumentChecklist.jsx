@@ -1,3 +1,4 @@
+import ActionButton from "../ActionButton/ActionButton";
 import DocumentLabel from "../DocumentLabel/DocumentLabel";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
@@ -53,7 +54,7 @@ function Item({ item, generation, editable, documents, categories, busy, mutate:
       <span className={styles.badge}>{states[item.state] || item.state}{evidence.length > 0 ? ` · ${evidence.length} linked` : ""}</span>
     </summary>
     <div className={styles.body}>
-      {dirty && item.revision !== draftRevision && <p role="alert">This item changed while you were editing. Your draft is retained; saving will check for a conflict. <button type="button" disabled={busy} onClick={() => { if (window.confirm("Discard this draft and use the latest saved checklist values?")) setDirty(false); }}>Use latest saved values</button></p>}
+      {dirty && item.revision !== draftRevision && <p role="alert">This item changed while you were editing. Your draft is retained; saving will check for a conflict. <ActionButton type="button" disabled={busy} onClick={() => { if (window.confirm("Discard this draft and use the latest saved checklist values?")) setDirty(false); }}>Use latest saved values</ActionButton></p>}
       <p>{item.guidance}</p>
       <p className={styles.muted}>{item.applicabilitySource === "DEFAULT" ? "Default applicability — no user decision recorded." : `Explicit decision by ${actor(item.applicabilityChangedBy)} · ${uploadTimeLabel(item.applicabilityChangedAt)}`}</p>
       {item.notApplicableReason && <p><strong>Not applicable because:</strong> {item.notApplicableReason}</p>}
@@ -63,7 +64,7 @@ function Item({ item, generation, editable, documents, categories, busy, mutate:
         {applicability === "NOT_APPLICABLE" && <label>Explanation<textarea value={reason} disabled={busy} onChange={(e) => { setDirty(true); setReason(e.target.value); }} rows={3} /><small>Required, up to 1,000 characters. This replaces the current explanation.</small></label>}
         {validation && <p role="alert">{validation}</p>}
         <small>Save this decision explicitly. Document details autosave, but checklist decisions and evidence links use their own buttons.</small>
-        <button disabled={busy} type="submit">Save applicability</button>
+        <ActionButton disabled={busy} type="submit">Save applicability</ActionButton>
       </form>}
       <h4>Evidence</h4>
       {item.applicability === "NOT_APPLICABLE" && <p className={styles.muted}>Existing links are retained. Change applicability before adding evidence.</p>}
@@ -75,16 +76,16 @@ function Item({ item, generation, editable, documents, categories, busy, mutate:
         {doc.hasNewerVersion && <span>Newer version exists (#{doc.currentDocumentId}{doc.currentDocumentDeleted ? ", deleted" : ""}). This link keeps version {doc.versionNumber}.</span>}
         {doc.downloadEligible !== true && <span>Evidence unavailable for download.</span>}
         <div className={styles.actions}>
-          <button type="button" disabled={doc.downloadEligible !== true || downloading.includes(doc.documentId)} onClick={() => download(doc.documentId)}>Download linked version</button>
-          <button type="button" onClick={() => showHistory({ id: doc.documentId, documentName: doc.documentName })}>Version history</button>
-          {editable && <button type="button" disabled={busy || decisionChanged} onClick={() => { if (window.confirm("Remove this evidence link? The document and file will be kept.")) mutate(item, `evidence/${doc.documentId}`, "DELETE"); }}>Remove evidence link</button>}
+          <ActionButton type="button" disabled={doc.downloadEligible !== true || downloading.includes(doc.documentId)} onClick={() => download(doc.documentId)}>Download linked version</ActionButton>
+          <ActionButton type="button" onClick={() => showHistory({ id: doc.documentId, documentName: doc.documentName })}>Version history</ActionButton>
+          {editable && <ActionButton type="button" disabled={busy || decisionChanged} onClick={() => { if (window.confirm("Remove this evidence link? The document and file will be kept.")) mutate(item, `evidence/${doc.documentId}`, "DELETE"); }}>Remove evidence link</ActionButton>}
         </div>
       </li>)}</ul>
       {editable && !canLink && <p className={styles.muted}>Save Applicable above before adding evidence. Existing links remain available.</p>}
       {editable && <form className={styles.form} onSubmit={(e) => { e.preventDefault(); if (selected && canLink && availableDocuments.some(doc => String(doc.id) === selected)) mutate(item, "evidence", "POST", { documentId: Number(selected) }); }}>
         <label>Document evidence<SearchableSelect documentOptions value={selected} disabled={busy || !canLink || !availableDocuments.length} onChange={(e) => { setDirty(true); setSelected(e.target.value); }}><option value="">{availableDocuments.length ? "Select an exact document version" : "No additional document versions available"}</option>{availableDocuments.map((doc) => <option key={doc.id} value={doc.id}>{doc.documentName} · Version {doc.versionNumber} · {statusLabel(doc.status)} · {doc.isCurrent ? "Current" : "Historical"} (#{doc.id})</option>)}</SearchableSelect></label>
         {!availableDocuments.length && <p className={styles.muted}>No additional document versions available. Upload another document or adjust the evidence filters.</p>}
-        <button type="submit" disabled={busy || !canLink || !selected || !availableDocuments.some(doc => String(doc.id) === selected)}>Link evidence</button>
+        <ActionButton type="submit" disabled={busy || !canLink || !selected || !availableDocuments.some(doc => String(doc.id) === selected)}>Link evidence</ActionButton>
       </form>}
     </div>
   </details>;
@@ -179,7 +180,7 @@ function Panel({ projectId, authFetch, categories, refreshKey }) {
   };
   return <div className={styles.panel}>
     <WorkflowIntro>Work through each requirement in one card: save whether it applies, then attach supporting document versions when it is Applicable. A checkmark means evidence is recorded, not reviewed or approved.</WorkflowIntro>
-    {error && <button type="button" disabled={loading || busy} onClick={() => setRevision((v) => v + 1)}>Retry loading checklist</button>}
+    {error && <ActionButton type="button" disabled={loading || busy} onClick={() => setRevision((v) => v + 1)}>Retry loading checklist</ActionButton>}
     {loading && !data && <p role="status">Loading checklist…</p>}
     {error && <p role="alert">{error}</p>}
     {notice && <p role="status">{notice}</p>}
