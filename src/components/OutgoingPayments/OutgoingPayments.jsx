@@ -1,3 +1,4 @@
+import useScrollToEditor from "../../hooks/useScrollToEditor";
 import DocumentLabel from "../DocumentLabel/DocumentLabel";
 import useRefreshLoading from "../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
@@ -36,6 +37,8 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
   const [historical, setHistorical] = useState(false);
   const [downloading, setDownloading] = useState(null);
   const [related, setRelated] = useState(null);
+  const [relatedOpenSequence, setRelatedOpenSequence] = useState(0);
+  const relatedRef = useScrollToEditor(related ? relatedOpenSequence + 1 : false);
   const alive = useRef(true);
   const submitting = useRef(false);
   const refresh = () => setRevision(value => value + 1);
@@ -135,7 +138,7 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
       const response = await authFetch(`${BASE_URL}/api/outgoing-payments/${id}`, { cache: "no-store" });
       const result = await safeReadJson(response);
       if (!response.ok || !result?.id) throw new Error(result?.message || "Could not load the related payment.");
-      if (alive.current) setRelated(result);
+      if (alive.current) { setRelated(result); setRelatedOpenSequence(n => n + 1); }
     } catch (err) { if (alive.current) setError(err.message); }
   };
   const summary = data?.summary;
@@ -150,7 +153,7 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
     {loadError && <p role="alert">{loadError}</p>}
     {error && <p role="alert">{error}{(form || pending) && " Your input has been retained. Reload and review before making a new attempt."}</p>}
     {pending && <div role="alert"><p>A payment request needs confirmation. Retry sends the exact same request and cannot create a duplicate for this request key. Do not enter it again as a new payment.</p><button type="button" disabled={busy} onClick={() => send(pending)}>Retry same request</button></div>}
-    {related && <aside className={styles.entry} aria-label="Related payment">
+    {related && <aside ref={relatedRef} style={{ scrollMarginTop: 16 }} className={styles.entry} aria-label="Related payment">
       <h4>Related payment #{related.id} · {related.organization?.name || "Name unavailable"} · {related.status}</h4>
       <p>{paymentMoney(related.amount)} {paymentCurrency(related.currency)} · Paid on {related.paidDate}</p>
       <p>Entered {stamp(related.createdAt)} by {actor(related.createdBy)}</p>

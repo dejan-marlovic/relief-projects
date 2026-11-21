@@ -135,3 +135,22 @@ test("association pagination and removed episodes remain accessible", async () =
   const normal = fetcher.getMockImplementation(); fetcher.mockImplementation((url, options) => url.includes("/evidence?") ? Promise.resolve(response({ ...page([{ ...evidenceLinks[0], id: url.includes("page=1") ? 30 : 18, capturedName: url.includes("page=1") ? "Retained old version" : "First version", associationActive: false, permissions: {} }]), totalPages: 2, totalElements: 21 })) : normal(url, options));
   await open(); const evidence = within(screen.getByRole("region", { name: "Supporting documents" })); fireEvent.click(evidence.getByLabelText("Include removed associations")); await waitFor(() => expect(fetcher.mock.calls.some(([url]) => url.includes("evidence?includeRemoved=true"))).toBe(true)); await waitFor(() => expect(evidence.getByText("Next evidence")).toBeEnabled()); fireEvent.click(evidence.getByText("Next evidence")); await screen.findByRole("heading", { name: /Retained old version/ }); expect(evidence.getByText(/Removed association/)).toBeInTheDocument();
 });
+
+
+test("opening a finding reveals its loaded details and focuses the close control", async () => {
+  const originalScroll = HTMLElement.prototype.scrollIntoView;
+  const scroll = jest.fn();
+  HTMLElement.prototype.scrollIntoView = scroll;
+  try {
+    await open();
+    const details = screen.getByRole("region", { name: "Finding or lesson details" });
+    await waitFor(() => expect(scroll.mock.instances).toContain(details));
+    expect(screen.getByRole("button", { name: "Close record" })).toHaveFocus();
+    const count = scroll.mock.calls.length;
+    fireEvent.click(screen.getByText("Open record #51 · Missing distribution checks"));
+    await waitFor(() => expect(scroll.mock.calls.length).toBe(count + 1));
+    expect(writes()).toHaveLength(0);
+  } finally {
+    HTMLElement.prototype.scrollIntoView = originalScroll;
+  }
+});

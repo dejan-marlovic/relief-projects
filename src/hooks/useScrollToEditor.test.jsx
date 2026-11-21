@@ -25,3 +25,23 @@ test("reveals only when editing opens, preserving the parent row ref", () => {
     expect(scroll).toHaveBeenCalledTimes(2);
   } finally { Element.prototype.scrollIntoView = original; }
 });
+
+
+test("record opening keys reveal a new selection without scrolling on ordinary rerenders", () => {
+  const originalScroll = Element.prototype.scrollIntoView;
+  const originalMedia = window.matchMedia;
+  const scroll = jest.fn();
+  Element.prototype.scrollIntoView = scroll;
+  window.matchMedia = jest.fn(() => ({ matches: true }));
+  try {
+    const { rerender } = render(<Editor open={1} />);
+    expect(scroll).toHaveBeenLastCalledWith({ behavior: "auto", block: "start" });
+    rerender(<Editor open={1} />);
+    expect(scroll).toHaveBeenCalledTimes(1);
+    rerender(<Editor open={2} />);
+    expect(scroll).toHaveBeenCalledTimes(2);
+  } finally {
+    Element.prototype.scrollIntoView = originalScroll;
+    window.matchMedia = originalMedia;
+  }
+});

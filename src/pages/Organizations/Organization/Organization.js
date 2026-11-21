@@ -126,7 +126,7 @@ const Organization = ({
   const statusName = (id) =>
     statuses.find((s) => s.id === id)?.organizationStatusName || (id == null ? "-" : `Name unavailable · Reference ${id}`);
 
-  const editorRef = useScrollToEditor(isEditing);
+  const editorRef = useScrollToEditor(expanded || isEditing);
   const open = expanded || isEditing;
   return <article data-mobile-tile={isCreate ? "New organization" : orgName(link.organizationId)} ref={editorRef} tabIndex={-1} className={styles.relationshipCard}>
     <header className={styles.cardHeader}>

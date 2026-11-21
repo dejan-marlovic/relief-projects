@@ -1,3 +1,4 @@
+import useScrollToEditor from "../../hooks/useScrollToEditor";
 import DocumentLabel from "../DocumentLabel/DocumentLabel";
 import useRefreshLoading from "../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
@@ -27,6 +28,8 @@ export function FundingReturnsPanel({ receipt, refreshKey, editingLocked, onChan
   const [loading, setLoading, initialLoading] = useRefreshLoading(true, receipt.id), [loadError, setLoadError] = useState(""), [error, setError] = useState("");
   const [form, setForm] = useState(null), [busy, setBusy] = useState(false), [reviewRequired, setReviewRequired] = useState(false);
   const [documents, setDocuments] = useState([]), [documentError, setDocumentError] = useState(""), [related, setRelated] = useState(null), [downloading, setDownloading] = useState(null);
+  const [relatedOpenSequence, setRelatedOpenSequence] = useState(0);
+  const relatedRef = useScrollToEditor(related ? relatedOpenSequence + 1 : false);
   const alive = useRef(true), submitting = useRef(false);
   const refresh = () => setTick(n => n + 1);
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
@@ -111,7 +114,7 @@ export function FundingReturnsPanel({ receipt, refreshKey, editingLocked, onChan
       const response = await authFetch(`${BASE_URL}/api/funding-returns/${id}`, { cache: "no-store" });
       const body = await safeReadJson(response);
       if (!response.ok || !body?.id) throw new Error(body?.message || "Related return unavailable.");
-      if (alive.current) setRelated(body);
+      if (alive.current) { setRelated(body); setRelatedOpenSequence(n => n + 1); }
     } catch (e) { if (alive.current) setError(e.message); }
   }
   async function download(id) {
@@ -159,7 +162,7 @@ export function FundingReturnsPanel({ receipt, refreshKey, editingLocked, onChan
       {data && (reviewRequired || form.expectedReturnsRevision !== data.returnsRevision || form.expectedSourceRevision !== data.sourceRevision) && <button type="button" disabled={busy || loading || !!loadError} onClick={() => { setForm(current => ({ ...current, expectedReturnsRevision: data.returnsRevision, expectedSourceRevision: data.sourceRevision })); setReviewRequired(false); }}>Use refreshed revisions after review (keep input)</button>}
       <button type="button" disabled={busy} onClick={() => setForm(null)}>Cancel return action</button>
     </ScrollToForm>}
-    {related && <aside><h4>Related return detail</h4>{entry(related, true)}<button onClick={() => setRelated(null)}>Close related return</button></aside>}
+    {related && <aside ref={relatedRef} style={{ scrollMarginTop: 16 }}><h4>Related return detail</h4>{entry(related, true)}<button onClick={() => setRelated(null)}>Close related return</button></aside>}
     {!initialLoading && data?.content.length === 0 && <p>No returns on this page.</p>}
     {data?.content.map(row => entry(row))}
     {data && <div className={styles.actions}><span>{data.totalElements} returns · Page {page + 1}</span><button disabled={busy || loading || !!form || !!pending || page === 0} onClick={() => setPage(n => n - 1)}>Previous returns</button><button disabled={busy || loading || !!form || !!pending || (page + 1) * 20 >= data.totalElements} onClick={() => setPage(n => n + 1)}>Next returns</button></div>}

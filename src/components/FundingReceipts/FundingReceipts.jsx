@@ -1,3 +1,4 @@
+import useScrollToEditor from "../../hooks/useScrollToEditor";
 import DocumentLabel from "../DocumentLabel/DocumentLabel";
 import useRefreshLoading from "../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
@@ -36,6 +37,8 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
   const [historical, setHistorical] = useState(false);
   const [downloading, setDownloading] = useState(null);
   const [related, setRelated] = useState(null);
+  const [relatedOpenSequence, setRelatedOpenSequence] = useState(0);
+  const relatedRef = useScrollToEditor(related ? relatedOpenSequence + 1 : false);
   const alive = useRef(true);
   const submitting = useRef(false);
   const refresh = () => setRevision(value => value + 1);
@@ -136,7 +139,7 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
       const response = await authFetch(`${BASE_URL}/api/funding-receipts/${id}`, { cache: "no-store" });
       const result = await safeReadJson(response);
       if (!response.ok || !result?.id) throw new Error(result?.message || "Could not load the related receipt.");
-      if (alive.current) setRelated(result);
+      if (alive.current) { setRelated(result); setRelatedOpenSequence(n => n + 1); }
     } catch (err) { if (alive.current) setError(err.message); }
   };
   const summary = data?.summary;
@@ -151,7 +154,7 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
     {loadError && <p role="alert">{loadError}</p>}
     {error && <p role="alert">{error}{(form || pending) && " Your input has been retained. Reload and review before making a new attempt."}</p>}
     {pending && <div role="alert"><p>A receipt request needs confirmation. Retry sends the exact same request and cannot create a duplicate for this request key. Do not enter it again as a new receipt.</p><button type="button" disabled={busy} onClick={() => send(pending)}>Retry same request</button></div>}
-    {related && <aside className={styles.entry} aria-label="Related receipt">
+    {related && <aside ref={relatedRef} style={{ scrollMarginTop: 16 }} className={styles.entry} aria-label="Related receipt">
       <h4>Related receipt #{related.id} · {related.financier?.name || "Name unavailable"} · {related.status}</h4>
       <p>{receiptMoney(related.amount)} {receiptCurrency(related.currency)} · Arrived {related.receivedDate}</p>
       <p>Entered {stamp(related.createdAt)} by {actor(related.createdBy)}</p>

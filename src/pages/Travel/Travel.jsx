@@ -1,3 +1,4 @@
+import useScrollToEditor from "../../hooks/useScrollToEditor";
 import { draftIsDirty, savedDraft } from "../../utils/savedDraft";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
@@ -16,9 +17,10 @@ import TravelSteps from "./TravelSteps";
 import TravelActionIcon, { approvalStyle } from "./TravelActionIcon";
 import styles from "./Travel.module.scss";
 
-function TravelDetail({ id, base, projectId, authFetch, refresh, reload, onClose, initialForm }) {
+function TravelDetail({ openSequence = 0, id, base, projectId, authFetch, refresh, reload, onClose, initialForm }) {
   const endpoint = `${base}/${id}`;
   const detail = useTravelRead(authFetch, endpoint, refresh);
+  const detailRef = useScrollToEditor((!!detail.data && (!initialForm || openSequence > 0)) ? openSequence + 1 : false);
   const [form, setForm] = useState(initialForm || null), [busy, setBusy] = useState(false);
   const [reportActive, setReportActive] = useState(false);
   const pending = useRef(false), alive = useRef(true);
@@ -56,7 +58,7 @@ function TravelDetail({ id, base, projectId, authFetch, refresh, reload, onClose
     return record.permissions?.[permission] && <button key={action} className={approvalStyle(action, styles)} disabled={locked} onClick={() => open(action)}><TravelActionIcon action={action} />{title}</button>;
   })}</div>;
   const editor = form && <><TravelEditor key={form.action} form={form} setForm={setForm} projectId={projectId} authFetch={authFetch} refresh={refresh} busy={busy} blocked={blocked} onSave={save} onCancel={() => setForm(null)} onReview={() => setForm(f => ({ ...f, record, expectedRevision: record.revision, reviewRequired: false, error: "", draft: f.action === "actions" ? { ...f.draft, followUp: null } : f.draft }))} /><ReadState state={reviewHistory} /><ReadState state={removalPage} /></>;
-  return <section className={styles.panel} aria-label="Travel request details">
+  return <section ref={detailRef} className={styles.panel} style={{ scrollMarginTop: 16 }} aria-label="Travel request details">
     <div className={styles.actions}><button disabled={!!form || busy || reportActive} onClick={onClose}>Close request</button></div><ReadState state={detail} />
     {record && <><h3>{record.purpose} · Travel request #{record.id}</h3>
       <TravelSummary record={record} />
@@ -85,6 +87,7 @@ const initialFilters = { state: "ALL", deleted: false, travellerEmployeeId: "", 
 export function TravelRegister({ projectId, authFetch, initialRequestId = null }) {
   const base = `${BASE_URL}/api/projects/${projectId}/travel-requests`;
   const [filters, setFilters] = useState(initialFilters), [page, setPage] = useState(0);
+  const [openSequence, setOpenSequence] = useState(0);
   const [refresh, setRefresh] = useState(0), [selected, setSelected] = useState(initialRequestId), [form, setForm] = useState(null), [busy, setBusy] = useState(false);
   const pending = useRef(false), alive = useRef(true);
   const reload = () => setRefresh(n => n + 1);
@@ -112,10 +115,10 @@ export function TravelRegister({ projectId, authFetch, initialRequestId = null }
       <label>Departure from<input type="date" value={filters.departureFrom} onChange={e => change("departureFrom", e.target.value)} /></label><label>Departure through<input type="date" value={filters.departureTo} onChange={e => change("departureTo", e.target.value)} /></label>
       <label><input type="checkbox" checked={filters.deleted} onChange={e => change("deleted", e.target.checked)} />Show deleted requests only</label></div>
     <ReadState state={list} />{list.data?.projectDeleted && <p>This project is inactive. Retained travel requests are read-only.</p>}
-    <ul className={styles.list}>{list.data?.content.map(record => <li key={record.id}><div className={styles.heading}><h3>{record.purpose}</h3><button disabled={!!form || busy || (selected != null && selected !== record.id)} onClick={() => setSelected(record.id)}>Open request #{record.id} · {record.purpose || "Name unavailable"}</button></div><TravelSummary record={record} /></li>)}</ul>
+    <ul className={styles.list}>{list.data?.content.map(record => <li key={record.id}><div className={styles.heading}><h3>{record.purpose}</h3><button disabled={!!form || busy || (selected != null && selected !== record.id)} onClick={() => { setSelected(record.id); setOpenSequence(n => n + 1); }}>Open request #{record.id} · {record.purpose || "Name unavailable"}</button></div><TravelSummary record={record} /></li>)}</ul>
     {list.data && !list.data.content.length && <p>No travel requests match these filters.</p>}<Pagination data={list.data} page={page} setPage={setPage} label="travel requests" disabled={list.loading || busy} />
     {form && <TravelEditor form={form} setForm={setForm} projectId={projectId} authFetch={authFetch} refresh={refresh} busy={busy} blocked={list.loading || !list.data?.canCreate} onSave={create} onCancel={() => setForm(null)} onReview={() => setForm(f => ({ ...f, error: "", reviewRequired: false }))} />}
-    {selected && <TravelDetail key={selected} id={selected} initialForm={initialEditor} base={base} projectId={projectId} authFetch={authFetch} refresh={refresh} reload={reload} onClose={() => { setSelected(null); setInitialEditor(null); }} />}
+    {selected && <TravelDetail openSequence={openSequence} key={selected} id={selected} initialForm={initialEditor} base={base} projectId={projectId} authFetch={authFetch} refresh={refresh} reload={reload} onClose={() => { setSelected(null); setInitialEditor(null); }} />}
   </>;
 }
 export default function Travel() {

@@ -90,3 +90,25 @@ test("precision rejects zero, overflow and rounding; receipt audit renders retai
   render(<FundingReceiptAuditDetails event={{ parentTransactionId: 31, fundingReceiptContext: { version: 1, amount: "4000.125", currency: { id: 3, label: "USD" }, reason: "Duplicate", documentsBefore: [{ id: 81, label: "Old advice" }], documentsAfter: [] } }} />);
   expect(screen.getByText("4000.125")).toBeInTheDocument(); expect(screen.getByText("Duplicate")).toBeInTheDocument(); expect(screen.getByText(/Old advice \(#81\)/)).toBeInTheDocument();
 });
+
+
+test("opening the same related receipt again scrolls back to its details", async () => {
+  const original = HTMLElement.prototype.scrollIntoView;
+  const scroll = jest.fn();
+  HTMLElement.prototype.scrollIntoView = scroll;
+  const data = envelope();
+  data.content = [{ ...receipt, replacesReceiptId: 50 }];
+  global.fetch = jest.fn(async url => reply(String(url).endsWith("/funding-receipts/50") ? { ...receipt, id: 50 } : data));
+  try {
+    mount();
+    const button = await screen.findByRole("button", { name: /receipt #50/ });
+    fireEvent.click(button);
+    await waitFor(() => expect(scroll.mock.instances).toContain(screen.getByRole("complementary", { name: "Related receipt" })));
+    const previous = scroll.mock.calls.length;
+    fireEvent.click(button);
+    await waitFor(() => expect(scroll.mock.calls.length).toBeGreaterThan(previous));
+    expect(scroll.mock.instances.at(-1)).toBe(screen.getByRole("complementary", { name: "Related receipt" }));
+  } finally {
+    HTMLElement.prototype.scrollIntoView = original;
+  }
+});

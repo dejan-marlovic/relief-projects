@@ -1,3 +1,4 @@
+import useScrollToEditor from "../../hooks/useScrollToEditor";
 import DocumentLabel from "../../components/DocumentLabel/DocumentLabel";
 import ReviewAttribution from "../../components/ReviewAttribution/ReviewAttribution";
 import { HistoryTimeline, SnapshotHistoryEntry } from "../../components/ActivityHistory/ActivityHistory";
@@ -45,6 +46,7 @@ export function OrganisationAssessmentPanel({ relationshipId, authFetch }) {
   useUnsavedChange(`organisation-assessment-${relationshipId}`, !!form);
   const detail = useManagementRead(authFetch, base, refresh);
   const data = detail.data, record = data?.assessment;
+  const detailRef = useScrollToEditor(!!data);
   const projectId = data?.scope?.projectId;
   const evidence = useManagementRead(authFetch, record ? `${base}/evidence?includeRemoved=${removed}&page=${evidencePage}&size=20` : null, refresh);
   const history = useManagementRead(authFetch, record ? `${base}/history?page=${historyPage}&size=20` : null, refresh);
@@ -123,7 +125,7 @@ export function OrganisationAssessmentPanel({ relationshipId, authFetch }) {
   const buttons = actions => <div className={styles.actions}>{actions.map(action => data?.permissions?.[commands[action][1]] && <button key={action} disabled={locked} className={approvalStyle(action, styles)} onClick={() => open(action)}><TravelActionIcon action={action} />{commands[action][0]}</button>)}</div>;
   const editorStep = form ? ["create", "edit"].includes(form.action) ? 1 : ["evidence", "evidence-remove"].includes(form.action) ? 2 : ["submit", "review", "return", "withdraw-submission"].includes(form.action) ? 3 : 4 : 0;
   const editor = form && <AssessmentEditor key={["create", "edit"].includes(form.action) ? "narrative" : form.action} form={form} setForm={setForm} projectId={projectId} authFetch={authFetch} refresh={refresh} localSaved={localSaved} busy={busy} blocked={blocked} reviewBlocked={reviewBlocked} onSave={body => save(body, ["create", "edit"].includes(form.action))} onDiscard={() => { clearAssessmentDraft(form.storageKey); setForm(null); reload(); }} onCancel={() => { if (!localSaved && JSON.stringify(form.draft) !== form.savedDraft && !confirmDiscardUnsavedChanges()) return; setForm(null); reload(); }} onReview={() => setForm(f => ({ ...f, record, expectedRevision: record?.revision, reviewRequired: false, error: "" }))} />;
-  return <div className={layout.assessment}>
+  return <div ref={detailRef} tabIndex={-1} style={{ scrollMarginTop: 16 }} className={layout.assessment}>
     <ReadState state={detail} onRetry={reload} retryLabel="Retry assessment" retryDisabled={busy} />
     {data && <section className={layout.overview} aria-label="Organisation assessment scope"><ReviewAttribution status={record?.state} submission={record?.currentSubmission} approval={record?.currentDecision} approvalLabel="Reviewed by" /><h3>{data.scope.organizationName} · {data.scope.organizationStatusLabel}</h3><p>Project: {data.scope.projectName} (#{data.scope.projectId}) · Relationship #{relationshipId}</p><p className={layout.outcome}>{decisionLabel(record?.currentDecision?.decision)}</p>{record && <span className={`${styles.statusBadge} ${styles[`status${record.state}`] || ""}`}>{record.state}{record.deleted && " · Deleted"}</span>}{!data.scopeAvailable && <p>This relationship or one of its owners is unavailable. Retained assessment information is read-only.</p>}<Issues issues={data.issues} /><Issues issues={record?.reviewIssues} />{record?.reviewRequired && <p>Review required. The retained outcome remains recorded; withdraw, revise and resubmit to reaffirm the decision.</p>}{record && <p>This relationship’s project, organisation and role are fixed by assessment history, including after deletion. Create another relationship for a different scope.</p>}</section>}
     <WorkflowIntro>Assess an organisation for its specific role in this project, select evidence and request independent review. Outcomes are informational; they do not certify due diligence, change the assigned role or grant funding.</WorkflowIntro>
