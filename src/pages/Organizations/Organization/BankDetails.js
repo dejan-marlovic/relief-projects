@@ -248,7 +248,7 @@ const BankDetails = ({ organizationId, canManage = false }) => {
         <button type="button" className={styles.primaryBtn} onClick={startCreate} disabled={Boolean(editingId) || Boolean(busyAction)}><FiPlus /> New Bank Detail</button>
       </div>}
     </div>
-    {canManage && <p>Existing details save automatically after a short typing pause or when you leave a field. Wait for Saved before leaving. New records still require Save.</p>}
+    {canManage && <p>Existing details save automatically after a short typing pause or when you leave a field. Wait for the corner save notification before leaving. New records still require Save.</p>}
     <AutosaveStatus save={autosave} />
     {formError && <ErrorBanner message={formError} onDismiss={() => setFormError("")} />}
     {!rows.length && editingId !== "new" && <p className={styles.noData}>No bank details linked to this organization.</p>}

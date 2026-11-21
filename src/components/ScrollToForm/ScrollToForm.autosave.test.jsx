@@ -13,7 +13,7 @@ test("does not save opening an editor; debounces edits and stops after acknowled
   view.rerender(editor("first edit", save)); act(() => jest.advanceTimersByTime(600));
   view.rerender(editor("latest edit", save)); tick(); expect(save).toHaveBeenCalledTimes(1);
   view.rerender(editor("latest edit", save, { saved: "latest edit" })); tick(); expect(save).toHaveBeenCalledTimes(1);
-  expect(screen.getByRole("status")).toHaveTextContent("Changes saved");
+  expect(screen.queryByRole("status")).not.toBeInTheDocument();
 });
 test("blocks invalid, busy and unreviewed drafts, then resumes after explicit recovery", () => {
   const save = jest.fn(); const view = render(editor("original", save));

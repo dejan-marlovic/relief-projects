@@ -1,5 +1,8 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import useRecordAutosave from "./useRecordAutosave";
+import { notifySuccess } from "./successNotifications";
+jest.mock("./successNotifications", () => ({ notifySuccess: jest.fn() }));
+beforeEach(() => notifySuccess.mockClear());
 
 function setup(overrides = {}) {
   let stored = { name: "Original", city: "Original city" };
@@ -19,6 +22,8 @@ test("merges only edited fields over fresh values and confirms persistence", asy
   expect(h.write).toHaveBeenCalledWith({ name: "Original", city: "Changed elsewhere" }, { name: "New" });
   expect(h.result.current.message).toBe("Saved");
   expect(h.result.current.dirty).toBe(false);
+  expect(notifySuccess).toHaveBeenCalledTimes(1);
+  expect(notifySuccess).toHaveBeenCalledWith("Changes saved.");
 });
 
 test("conflicting saved values require explicit review", async () => {
@@ -38,6 +43,7 @@ test("uncertain writes can be retried without writing twice", async () => {
   act(() => h.result.current.edit({ name: "Mine" }, { name: "Original" }));
   await act(async () => h.result.current.flush());
   expect(h.result.current.dirty).toBe(true);
+  expect(notifySuccess).not.toHaveBeenCalled();
   await act(async () => h.result.current.retry());
   await waitFor(() => expect(h.result.current.message).toBe("Saved"));
   expect(h.write).toHaveBeenCalledTimes(1);

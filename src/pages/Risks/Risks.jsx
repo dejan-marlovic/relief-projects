@@ -84,7 +84,7 @@ function Editor({ editor, employees, busy, blocked, onDraft, onSave, onCancel, l
     }
   }}>
     <h3>{editing ? risk ? "Edit risk" : "New risk" : `${action[0].toUpperCase() + action.slice(1)} risk: ${risk.title}`}</h3>
-    <p role="status">{busy ? "Saving…" : editing && editor.savedDraft === JSON.stringify(draft) && risk ? "Risk saved to the project." : localSaved ? "Unfinished work saved in this browser tab." : "Changes are not yet saved. Keep this page open."}</p>
+    {(busy || !(editing && editor.savedDraft === JSON.stringify(draft) && risk)) && <p role="status">{busy ? "Saving…" : localSaved ? "Unfinished work saved in this browser tab." : "Changes are not yet saved. Keep this page open."}</p>}
     <p>{editing ? "Valid risk details save automatically after a short pause. A title, owner and review date are required. Saving does not close the risk." : "Use the confirmation button to record this action; it is never automatic."} Unfinished entries are kept only in this tab, not on other devices, and are lost when the tab closes.</p>
     {editing && !riskPayload(draft) && <p>Automatic saving is waiting for a valid title, owner and review date, with description and mitigation no longer than 4,000 characters each.</p>}
     {risk && <p>Editing revision {risk.revision}.</p>}

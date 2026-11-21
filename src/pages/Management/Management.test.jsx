@@ -57,7 +57,7 @@ test("autosaved creation stays editable and the next save updates the confirmed 
   fireEvent.change(screen.getByLabelText("Observation"), { target: { value: "Initial details" } });
   fireEvent.change(screen.getByLabelText("Source type"), { target: { value: "OPERATIONAL_EXPERIENCE" } });
   await save("Create finding or lesson");
-  await screen.findByText("Changes saved.");
+  await screen.findByRole("heading", { name: "Edit observation" });
   await waitFor(() => expect(screen.getByLabelText("Observation")).toBeEnabled());
   fireEvent.change(screen.getByLabelText("Observation"), { target: { value: "More complete details" } });
   fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "Added context" } });

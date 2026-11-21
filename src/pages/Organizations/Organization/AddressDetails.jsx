@@ -351,7 +351,7 @@ const AddressDetails = ({ organizationId, canManage = false }) => {
         )}
       </div>
 
-      {canManage && <p>Existing details save automatically after a short typing pause or when you leave a field. Wait for Saved before leaving. New records still require Save.</p>}
+      {canManage && <p>Existing details save automatically after a short typing pause or when you leave a field. Wait for the corner save notification before leaving. New records still require Save.</p>}
     <AutosaveStatus save={autosave} />
     {formError && <ErrorBanner message={formError} onDismiss={() => setFormError("")} />}
       {!associations.length && editingId !== "new" && <p className={styles.noData}>No active addresses linked to this organization.</p>}

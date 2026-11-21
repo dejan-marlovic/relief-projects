@@ -1,3 +1,4 @@
+import { notifySuccess } from "./successNotifications";
 import { useEffect, useRef, useState } from "react";
 import { withProjectSave } from "./useProjectAutosave";
 
@@ -47,6 +48,7 @@ export default function useRecordAutosave({ recordKey, read, write, enabled, onS
           if (current.edits[key] === sent[key]) delete current.edits[key];
           else if (current.edits[key]) current.edits[key].before = saved[key];
         }
+        notifySuccess("Changes saved.");
         options.current.onSaved(saved, changes, Object.fromEntries(Object.entries(current.edits).map(([key, edit]) => [key, edit.value])));
       });
       completed = true;

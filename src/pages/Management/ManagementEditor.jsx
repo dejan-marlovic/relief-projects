@@ -10,12 +10,13 @@ export default function ManagementEditor({ form, setForm, projectId, authFetch, 
   const { action, draft, record } = form;
   const initial = useRef({ action, draft: JSON.stringify(draft) });
   if (initial.current.action !== action) initial.current = { action, draft: JSON.stringify(draft) };
+  const dirty = JSON.stringify(draft) !== (form.savedDraft ?? initial.current.draft);
   const close = () => {
-    const dirty = JSON.stringify(draft) !== (form.savedDraft ?? initial.current.draft);
     if (!dirty || window.confirm("Discard unfinished changes? Previously saved changes will remain.")) onCancel();
   };
   const update = (name, value) => setForm(f => ({ ...f, draft: { ...f.draft, [name]: value } }));
   const requiredReason = ["edit", "resolve", "reopen", "delete", "restore", "actions-remove", "evidence-remove"].includes(action) || (action === "response" && !!record.response);
+  const missingReason = requiredReason && !draft.reason?.trim() && (action !== "edit" || dirty);
   const dateInput = (key, name, min = "1000-01-01") => <label>{name}<input type="date" required min={min} max={today || "9999-12-31"} value={draft[key] || ""} onChange={e => update(key, e.target.value)} /></label>;
   const textArea = (key, name, required = true) => <label>{name}<textarea rows={3} required={required} value={draft[key] || ""} onChange={e => update(key, e.target.value)} /></label>;
   return <ScrollToForm autosave={["create", "edit"].includes(action) ? { value: JSON.stringify(draft), saved: form.savedDraft, blocked: busy || blocked || form.reviewRequired, busy, paused: form.reviewRequired } : undefined} scrollKey={action} className={styles.panel} aria-label={titles[action]} onSubmit={e => {
@@ -52,7 +53,9 @@ export default function ManagementEditor({ form, setForm, projectId, authFetch, 
     onSave(body);
   }}>
     <h3>{titles[action]}</h3>
+    {missingReason && <div className={styles.attention} role="status"><strong>Reason required before saving</strong><p>Your changes have not been saved. Enter a reason below so this change can be recorded in history.</p></div>}
     <fieldset disabled={busy}>
+      {requiredReason && <label className={missingReason ? styles.reasonRequired : undefined}>Reason<textarea aria-label="Reason" rows={3} required maxLength={1000} value={draft.reason || ""} placeholder="Explain why you are making this change" onChange={e => update("reason", e.target.value)} /><span className={styles.muted}>Required to save changes. The reason is retained in history.</span></label>}
       {["create", "edit"].includes(action) && <>
         {action === "create" ? <label>Record type<select value={draft.type} onChange={e => update("type", e.target.value)}><option value="FINDING">Finding</option><option value="LESSON">Lesson learned</option></select></label> : <p>Record type is retained: {record.type.toLowerCase()}.</p>}
         <label>Title<input required value={draft.title} onChange={e => update("title", e.target.value)} /></label>
@@ -68,7 +71,6 @@ export default function ManagementEditor({ form, setForm, projectId, authFetch, 
       {action === "reopen" && <p>Reopening allows changes and later reaffirmation. The previous decision stays in history; linked tasks and evidence remain.</p>}
       {action === "delete" && <p>This hides the record from the active register and retains its state, responses and links. An administrator can restore it.</p>}
       {action.endsWith("-remove") && <p>Remove association #{form.link.id}. Its history is retained; the linked task or document is not deleted.</p>}
-      {requiredReason && textArea("reason", "Reason")}
       {error && <p role="alert">{error}</p>}{form.error && <p role="alert">{form.error}</p>}
       {form.reviewRequired && <div role="alert"><p>Draft retained. Review the refreshed record, links and history before trying again. A failed response may follow a successful save.{action === "create" ? " Check the list before creating again to avoid duplicates." : ""}</p><button type="button" disabled={blocked} onClick={onReview}>I reviewed the refreshed state; enable retry</button></div>}
       <div className={styles.actions}>{!["create", "edit"].includes(action) && <button type="submit" disabled={busy || blocked || form.reviewRequired}>Save {titles[action].toLowerCase()}</button>}<button type="button" onClick={close}>Close editor</button></div>

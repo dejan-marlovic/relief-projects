@@ -18,5 +18,5 @@ export default function ScrollToForm({ scrollKey, children, autosave, ...props }
     return () => clearTimeout(timer);
   }, [dirty, autosave?.value, autosave?.blocked, saved]);
   useEffect(() => { revealEditor(ref.current); }, [scrollKey]);
-  return <form ref={ref} tabIndex={-1} {...props}>{autosave && <p role="status">{autosave.busy ? "Saving changes…" : autosave.paused ? "Automatic saving paused. Review the message below." : dirty ? "Valid details save automatically after a short pause. Complete any required fields. Keep this page open until saved." : autosave.saved ? "Changes saved." : "Changes save automatically after a short pause. Saving does not submit or approve this record."}</p>}{children}</form>;
+  return <form ref={ref} tabIndex={-1} {...props}>{autosave && (autosave.busy || autosave.paused || dirty || !autosave.saved) && <p role="status">{autosave.busy ? "Saving changes…" : autosave.paused ? "Automatic saving paused. Review the message below." : dirty ? "Valid details save automatically after a short pause. Complete any required fields. Keep this page open until saved." : "Changes save automatically after a short pause. Saving does not submit or approve this record."}</p>}{children}</form>;
 }

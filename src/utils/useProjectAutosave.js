@@ -1,3 +1,4 @@
+import { notifySuccess } from "./successNotifications";
 import { useEffect, useRef, useState } from "react";
 import { BASE_URL } from "../config/api";
 import { projectMetadataPayload } from "./projectApproval";
@@ -81,6 +82,7 @@ export default function useProjectAutosave({ projectId, authFetch, enabled, onSa
           else if (current.edits[key]) current.edits[key].before = saved[key];
         }
         options.current.onSaved(saved, changes);
+        notifySuccess("Project changes saved.");
         window.dispatchEvent(new Event("project-metadata-updated"));
       });
       completed = true;

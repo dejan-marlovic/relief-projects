@@ -144,7 +144,7 @@ test("typing creates one draft and later autosaves use the returned revision", a
   mount(); await start("Create assessment");
   fireEvent.change(screen.getByLabelText("Capacity"), { target: { value: "First automatic draft" } });
   await waitFor(() => expect(writes).toHaveLength(1), { timeout: 2500 });
-  await screen.findByText("Draft saved to the project.");
+  await waitFor(() => expect(screen.queryByText("Saving…")).not.toBeInTheDocument());
   fireEvent.change(screen.getByLabelText("Notes"), { target: { value: "Second automatic draft" } });
   await waitFor(() => expect(writes).toHaveLength(2), { timeout: 2500 });
   expect(writes[0].method).toBe("POST");

@@ -111,13 +111,13 @@ test("permission loss after conflict blocks explicit retry", async () => {
 
 test("opening an indicator does not save; edits wait for a reason and remain open after saving", async () => {
   await open(); fireEvent.click(screen.getByText("Edit indicator"));
-  expect(screen.getByText("All changes saved.")).toBeInTheDocument();
+  expect(screen.queryByText("All changes saved.")).not.toBeInTheDocument();
   expect(screen.queryByText("Refresh results")).not.toBeInTheDocument();
   fireEvent.change(screen.getByLabelText("Target value"), { target: { value: "600" } });
   await new Promise(resolve => setTimeout(resolve, 1100)); expect(writes()).toHaveLength(0);
   fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "Revised plan" } });
   await waitFor(() => expect(writes()).toHaveLength(1), { timeout: 2500 });
-  await screen.findByText("All changes saved.");
+  await waitFor(() => expect(screen.getByLabelText("Reason")).toHaveValue(""));
   expect(screen.getByLabelText("Target value")).toHaveValue("600");
   expect(screen.getByLabelText("Reason")).toHaveValue("");
   expect(screen.getByText("Close editor")).toBeEnabled();
@@ -133,7 +133,7 @@ test("new indicator switches to updating the saved ID instead of creating again"
   });
   mount(); fireEvent.click(await screen.findByText("Create indicator"));
   for (const [label, value] of [["Indicator name", "New measure"], ["Definition and population", "Distinct people"], ["Unit", "people"], ["Reporting starts", "2026-01-01"], ["Reporting ends (inclusive)", "2026-12-31"], ["Target value", "100"]]) fireEvent.change(screen.getByLabelText(label), { target: { value } });
-  await screen.findByText("All changes saved.", {}, { timeout: 2500 });
+  await screen.findByRole("heading", { name: "Edit indicator" }, { timeout: 2500 });
   fireEvent.change(screen.getByLabelText("Notes (optional)"), { target: { value: "Additional detail" } });
   fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "Clarification" } });
   await waitFor(() => expect(writes()).toHaveLength(2), { timeout: 2500 });

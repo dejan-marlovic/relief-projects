@@ -44,7 +44,6 @@ export default function AttachmentDetailsEditor({ item, projectId, authFetch, ca
     validate: value => !categories.some(c => c.id === value.category) ? "Choose an available category." : !["DRAFT", "FINAL", ""].includes(value.status) ? "Choose Draft or Final." : value.documentDate && !/^[1-9]\d{3}-\d{2}-\d{2}$/.test(value.documentDate) ? "Enter a complete document date." : "",
     onSaved: (doc, changes, pending) => {
       setOriginal(doc); setForm({ ...doc, ...pending }); onSaved(doc);
-      notifySuccess("Document details saved.");
     },
   });
   useUnsavedChange(`attachment-details-${projectId}-${item.documentId}`, save.dirty || save.busy);

@@ -21,7 +21,7 @@ test("autosaves metadata only, verifies it and acknowledges an unchanged manual 
   const writes = authFetch.mock.calls.filter(([,o]) => o?.method === "PUT");
   expect(writes).toHaveLength(1);
   expect(JSON.parse(writes[0][1].body)).toEqual({id:71,projectId:2,employeeId:4,documentName:"Report.pdf",category:"FINANCE",status:"FINAL",documentDate:null});
-  expect(notifySuccess).toHaveBeenCalledWith("Document details saved.");
+  expect(notifySuccess).toHaveBeenCalledWith("Changes saved.");
   fireEvent.click(screen.getByText("Save details"));
   expect(notifySuccess).toHaveBeenCalledWith("All document details are already saved.");
   expect(authFetch.mock.calls.filter(([,o]) => o?.method === "PUT")).toHaveLength(1);

@@ -1,6 +1,5 @@
 import useArchivedProject from "../../hooks/useArchivedProject";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
-import { notifySuccess } from "../../utils/successNotifications";
 import { supportsGeography, geographyExport } from "../../utils/projectGeography";
 import useProjectAutosave, { validateProjectDates, withProjectSave } from "../../utils/useProjectAutosave";
 import AutosaveStatus from "../../components/ProjectClassification/AutosaveStatus";
@@ -1482,9 +1481,6 @@ Approximately:
       setProjects(previous => previous.map(project => project.id === saved.id ? { ...project, projectName: saved.projectName } : project));
     }
   });
-  useEffect(() => {
-    if (coreSave.message === "Saved") notifySuccess("Project changes saved.");
-  }, [coreSave.message]);
   const hasUnsavedProjectChanges = coreSave.dirty;
   const [sectorBusy, setSectorBusy] = useState(false);
   useUnsavedChange(
@@ -2574,7 +2570,7 @@ Approximately:
           </div>
 
           {canEditProject && <AutosaveStatus save={{ ...coreSave, message: coreSave.message === "Saved" ? "" : coreSave.message }} />}
-          {canEditProject && <p>Project details save automatically after a short pause. Changes to assessed information may require a new review. Wait for “Saved” before leaving.</p>}
+          {canEditProject && <p>Project details save automatically after a short pause. Changes to assessed information may require a new review. Wait for the corner save notification before leaving.</p>}
           {formError && (
             <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
           )}

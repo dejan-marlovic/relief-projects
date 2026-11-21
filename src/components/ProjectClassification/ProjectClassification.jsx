@@ -65,7 +65,7 @@ export default function ProjectClassification({ projectId, authFetch, canEdit, o
       {canEdit ? <ClassificationFields values={draft} onChange={e => change(e.target.name, e.target.value)} errors={errors} /> : <dl>{classificationFields.map(f => <React.Fragment key={f.name}><dt>{f.label}</dt><dd>{original[f.name] || "Not recorded"}</dd></React.Fragment>)}</dl>}
       {supportsGeography(original) && (canEdit ? <CountryPicker codes={draft.operatingCountryCodes} savedCountries={original.operatingCountries} catalogue={catalogue} onChange={codes => change("operatingCountryCodes", codes, true)} /> : <dl><dt>Operating countries/territories</dt><dd>{geographyExport(original)}</dd></dl>)}
       <p className={styles.hint}>{projectApprovalLabel(original)}</p>
-      {canEdit && <><p className={styles.hint}>These details save automatically. Wait for “Saved” before leaving.</p><AutosaveStatus save={save} /></>}
+      {canEdit && <><p className={styles.hint}>These details save automatically. Wait for the corner save notification before leaving.</p><AutosaveStatus save={save} /></>}
     </>}
   </section>;
 }
