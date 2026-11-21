@@ -5,7 +5,7 @@ import styles from "./RecordIcon.module.scss";
 const icons = { link: FiLink, followUp: FiCheckSquare, project: FiBriefcase, organization: FiUsers,
   person: FiUser, bank: FiCreditCard, address: FiMapPin, indicator: FiBarChart2,
   budget: FiDollarSign, transaction: FiDollarSign, payment: FiCreditCard, document: FiFileText,
-  finding: FiClipboard, lesson: FiBookOpen, travel: FiMapPin, report: FiClipboard,
+  assessment: FiClipboard, finding: FiClipboard, lesson: FiBookOpen, travel: FiMapPin, report: FiClipboard,
   memo: FiEdit3, record: FiLayers, open: FiArrowDownRight, external: FiExternalLink, close: FiX };
 
 // Decorative identity: the adjacent text remains the accessible name and source of meaning.

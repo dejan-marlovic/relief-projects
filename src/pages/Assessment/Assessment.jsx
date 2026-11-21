@@ -1,3 +1,4 @@
+import RecordListLabel from "../../components/RecordListLabel/RecordListLabel";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import DocumentLabel from "../../components/DocumentLabel/DocumentLabel";
 import { draftIsDirty, savedDraft } from "../../utils/savedDraft";
@@ -60,6 +61,8 @@ export function AssessmentPanel({ projectId, authFetch }) {
   const editorStep = form ? ["create", "edit"].includes(form.action) ? 1 : ["evidence", "evidence-remove"].includes(form.action) ? 2 : ["submit", "approve", "return", "withdraw-submission"].includes(form.action) ? 3 : 4 : 0;
   const editor = form && <AssessmentEditor key={form.action} form={form} setForm={setForm} projectId={projectId} authFetch={authFetch} refresh={refresh} busy={busy} blocked={blocked} reviewBlocked={reviewBlocked} onSave={save} onCancel={() => setForm(null)} onReview={() => setForm(f => ({ ...f, record, expectedRevision: record?.revision, reviewRequired: false, error: "" }))} />;
   return <>
+    {record && <span className="open-record-label">Viewing record</span>}
+    <RecordListLabel type="assessment">Project assessment</RecordListLabel>
     <ReadState state={detail} />
     {data && <section className={styles.summary} aria-label="Project assessment status"><ReviewAttribution status={record?.state} submission={record?.currentSubmission} approval={record?.currentApproval} /><h3>{projectApprovalLabel({ approved: data.approval?.value, assessmentSummary: { source: data.approval?.source, currentApprovalId: data.approval?.currentDecisionId, state: record?.state, assessmentDeleted: record?.deleted, reviewRequired: record?.reviewRequired } })}</h3>{record && <span className={`${styles.statusBadge} ${styles[`status${record.state}`] || ""}`}>{record.state}{record.deleted && " · Deleted"}</span>}{!data.projectActive && <p>The project is inactive. Retained assessment information is read-only.</p>}<Issues issues={data.issues} /><Issues issues={record?.reviewIssues} />{record?.reviewRequired && <p>Review required. The retained approval has not been revoked automatically; withdraw, revise and resubmit to record a new decision.</p>}</section>}
     <WorkflowIntro>Explain the project proposal, select its assessment evidence and submit it for an independent decision. Recorded approval is informational: it does not grant funding, verify committee signatures or change operational status.</WorkflowIntro>
