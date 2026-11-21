@@ -131,7 +131,7 @@ const RecipientRow = ({
 
   const orgLabelById = (id) => {
     const hit = orgOptions.find((o) => String(o.id) === String(id));
-    return hit ? (hit.label ?? `Org #${hit.id}`) : (id ?? "-");
+    return hit ? (hit.label ?? `Name unavailable · Organization #${hit.id}`) : (id == null ? "-" : `Name unavailable · Reference ${id}`);
   };
 
   const hc = (i) => (!compact && !visibleCols[i] ? styles.hiddenCol : "");

@@ -15,7 +15,7 @@ import { assessmentDraftKey, readAssessmentDraft, storeAssessmentDraft, clearAss
 import styles from "./Risks.module.scss";
 
 const rating = value => ({ LOW: "Low", MEDIUM: "Medium", HIGH: "High" }[value] || "Not assessed");
-const employeeName = person => person.displayName || [person.firstName, person.lastName].filter(Boolean).join(" ") || `Employee #${person.id}`;
+const employeeName = person => person.displayName || [person.firstName, person.lastName].filter(Boolean).join(" ") || `Employee #${person.id} · Name unavailable`;
 const buckets = { OVERDUE: "Overdue review", DUE_TODAY: "Review today", UPCOMING: "Upcoming review", CLOSED: "Closed", INACTIVE: "Inactive" };
 const fields = ["title", "description", "ownerEmployeeId", "likelihood", "impact", "mitigationPlan", "reviewDate"];
 const draftFrom = risk => Object.fromEntries(fields.map(key => [key, risk?.[key] ?? ""]));

@@ -63,7 +63,7 @@ const UpdateBankDetail = () => {
 
   const organizationLabelById = useMemo(() => {
     return organizations.reduce((acc, item) => {
-      acc[item.id] = item.organizationName || `Organization #${item.id}`;
+      acc[item.id] = item.organizationName || `Organization #${item.id} · Name unavailable`;
       return acc;
     }, {});
   }, [organizations]);
@@ -294,7 +294,7 @@ const UpdateBankDetail = () => {
                       <option key={item.bankId} value={item.bankId}>
                         {item.bankName} - {item.accountNumber} -{" "}
                         {organizationLabelById[item.organizationId] ||
-                          `Organization #${item.organizationId}`}
+                          `Organization #${item.organizationId} · Name unavailable`}
                       </option>
                     ))}
                   </SearchableSelect>

@@ -17,7 +17,7 @@ import { createAuthFetch, safeReadJson } from "../../../utils/http";
 import styles from "./AuditHistory.module.scss";
 import ReturnReason from "../../../components/ReturnReason/ReturnReason";
 import AuditFieldChanges from "../../../components/AuditFieldChanges/AuditFieldChanges";
-import { auditActionLabel, hasAuditTransition, uniqueAuditEvents } from "../../../utils/auditEvents";
+import { auditRecordName, auditActionLabel, hasAuditTransition, uniqueAuditEvents } from "../../../utils/auditEvents";
 import RecipientAuditDetails from "../../../components/RecipientAuditDetails/RecipientAuditDetails";
 import SignatureAuditDetails from "../../../components/SignatureAuditDetails/SignatureAuditDetails";
 import CostDetailAuditDetails from "../../../components/CostDetailAuditDetails/CostDetailAuditDetails";
@@ -83,7 +83,7 @@ const AuditHistory = () => {
   const projectNames = useMemo(
     () => new Map(projects.map((project) => [
       String(project.id ?? project.projectId),
-      project.projectName || project.name || `Project #${project.id ?? project.projectId}`,
+      project.projectName || project.name || `Project #${project.id ?? project.projectId} · Name unavailable`,
     ])),
     [projects]
   );
@@ -144,7 +144,7 @@ const AuditHistory = () => {
 
   const projectLabel = (projectId) => {
     if (projectId == null) return "Not recorded";
-    return projectNames.get(String(projectId)) || `Project #${projectId}`;
+    return projectNames.get(String(projectId)) || `Project #${projectId} · Name unavailable`;
   };
 
   return (
@@ -196,7 +196,7 @@ const AuditHistory = () => {
             <option value="">All projects</option>
             {projects.map((project) => {
               const id = project.id ?? project.projectId;
-              return <option key={id} value={id}>{project.projectName || project.name || `Project #${id}`}</option>;
+              return <option key={id} value={id}>{project.projectName || project.name || `Project #${id} · Name unavailable`}</option>;
             })}
           </SearchableSelect>
         </label>
@@ -230,7 +230,7 @@ const AuditHistory = () => {
 
       <p>Newest changes first. Expand an entry to see what changed.</p>
       {!loading && !result.content.length && <p className={styles.empty}>No audit events match these filters.</p>}
-      <HistoryTimeline aria-label="Audit events">{result.content.map(event => <HistoryEntry key={event.id} title={auditActionLabel(event)} at={event.occurredAt} actor={event.performedByDisplay || "Unknown user"} context={<>{ENTITY_LABELS[event.entityType] || event.entityType} #{event.entityId} · {projectLabel(event.projectId)}</>} references={<p>Entry #{event.id} · User #{event.performedBy ?? "not recorded"} · Project: <RecordReference field="projectId" value={event.projectId} record={event} currentProject={projects.find(p => String(p.id ?? p.projectId) === String(event.projectId))} /></p>}>
+      <HistoryTimeline aria-label="Audit events">{result.content.map(event => <HistoryEntry key={event.id} title={<>{auditActionLabel(event)}<span> · {auditRecordName(event)}</span></>} at={event.occurredAt} actor={event.performedByDisplay || "Unknown user"} context={<>{ENTITY_LABELS[event.entityType] || event.entityType} #{event.entityId} · {projectLabel(event.projectId)}</>} references={<p>Entry #{event.id} · User #{event.performedBy ?? "not recorded"} · Project: <RecordReference field="projectId" value={event.projectId} record={event} currentProject={projects.find(p => String(p.id ?? p.projectId) === String(event.projectId))} /></p>}>
 {event.entityType === "RECIPIENT_RETURN" ? <RecipientReturnAuditDetails event={event} /> : event.entityType === "FUNDING_RETURN" ? <FundingReturnAuditDetails event={event} /> : event.entityType === "OUTGOING_PAYMENT" ? <OutgoingPaymentAuditDetails event={event} /> : event.entityType === "FUNDING_RECEIPT" ? <FundingReceiptAuditDetails event={event} /> : event.entityType === "RECIPIENT" ? <RecipientAuditDetails event={event} /> : event.entityType === "SIGNATURE" ? <SignatureAuditDetails event={event} /> : event.entityType === "COST_DETAIL" ? <CostDetailAuditDetails event={event} /> : event.entityType === "COST_DETAIL_ALLOCATION" ? <AllocationAuditDetails event={event} /> : event.entityType === "PAYMENT_ORDER_LINE" ? <LineAuditDetails event={event} /> : event.action === "UPDATE" ? <AuditFieldChanges event={event} /> : hasAuditTransition(event) ? <><span className={styles.state}>{event.previousState}</span><span className={styles.arrow}>→</span><span className={styles.state}>{event.newState}</span></> : "—"}<TransactionCurrencyContext event={event} /><PaymentCurrencyContext event={event} /><ReturnReason event={event} /></HistoryEntry>)}</HistoryTimeline>
 
       <HistoryPagination page={page} totalPages={result.totalPages} totalElements={result.totalElements} onPage={setPage} disabled={loading} />

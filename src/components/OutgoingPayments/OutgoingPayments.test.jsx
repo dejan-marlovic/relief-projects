@@ -14,9 +14,9 @@ test("server return guards hide original-payment correction and void actions", a
   data.content[0].returns = { status: "AVAILABLE" };
   setup(data); mount();
   await screen.findByText("Recorded recipient returns prevent correcting this payment.");
-  expect(screen.queryByRole("button", { name: "Correct payment #41" })).not.toBeInTheDocument();
-  expect(screen.queryByRole("button", { name: "Void payment #41" })).not.toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Add evidence #41" })).toBeEnabled();
+  expect(screen.queryByRole("button", { name: /Correct payment #41/ })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /Void payment #41/ })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /Add evidence #41/ })).toBeEnabled();
 });
 const setup = (data, post = () => reply(row(), 201)) => { global.fetch = jest.fn(async (url, options) => options?.method === "POST" ? post(url, options) : String(url).includes("/documents/project/") ? reply([{ id: 81, projectId: 7, isDeleted: false, documentName: "Advice", versionNumber: 1, isCurrent: false }]) : reply(data)); };
 beforeEach(() => { sessionStorage.clear(); Object.defineProperty(window, "crypto", { configurable: true, value: { randomUUID: jest.fn(() => "b52b9b5f-c099-457a-ab34-db595df7a1f1") } }); });
@@ -28,9 +28,9 @@ test("recipient excess stays primary when the whole order still has remaining co
   expect(screen.getByText("Order remaining").parentElement).toHaveTextContent("2999.999999");
   expect(screen.getByText(/Order remaining is not authorization/)).toBeInTheDocument();
   expect(screen.getByText(/41 payments/)).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Add evidence #41" })).toBeEnabled();
-  expect(screen.queryByRole("button", { name: "Void payment #41" })).not.toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Download evidence #81" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: /Add evidence #41/ })).toBeEnabled();
+  expect(screen.queryByRole("button", { name: /Void payment #41/ })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /Download evidence #81/ })).toBeDisabled();
 });
 
 test("headerless orders use envelope project/currency and send exact six-decimal amounts", async () => {
@@ -50,7 +50,7 @@ test("headerless orders use envelope project/currency and send exact six-decimal
 test("per-record permissions allow correction even though envelope actions are false", async () => {
   const data = envelope(); data.content[0].eligibility.canCorrect = true;
   setup(data, () => reply({ code: "STALE_REVISION", message: "Review current revision" }, 409)); mount();
-  fireEvent.click(await screen.findByRole("button", { name: "Correct payment #41" }));
+  fireEvent.click(await screen.findByRole("button", { name: /Correct payment #41/ }));
   fireEvent.change(screen.getByLabelText("Amount paid"), { target: { value: "200.000001" } });
   fireEvent.change(screen.getByLabelText("Reason (required)"), { target: { value: "Incorrect entry" } });
   fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
@@ -65,7 +65,7 @@ test("per-record permissions allow correction even though envelope actions are f
 test("uncertain correction reuses exact persisted command and accepts payment replay envelope", async () => {
   const data = envelope(); data.content[0].eligibility.canCorrect = true; let attempt = 0;
   setup(data, () => { if (++attempt === 1) throw new Error("Connection lost"); return reply({ voidedPayment: row(), payment: { ...row(), id: 42 } }, 201); });
-  const view = mount(); fireEvent.click(await screen.findByRole("button", { name: "Correct payment #41" }));
+  const view = mount(); fireEvent.click(await screen.findByRole("button", { name: /Correct payment #41/ }));
   fireEvent.change(screen.getByLabelText("Reason (required)"), { target: { value: "Correction" } });
   fireEvent.click(screen.getByRole("button", { name: "Confirm" })); await screen.findByText(/Connection lost/);
   const original = fetch.mock.calls.find(([, options]) => options?.method === "POST")[1].body;
@@ -76,7 +76,7 @@ test("uncertain correction reuses exact persisted command and accepts payment re
 
 test.each(["void", "remove"])("reasoned %s uses the displayed revision", async kind => {
   const data = envelope(); data.content[0].eligibility.canVoid = true; setup(data); mount();
-  fireEvent.click(await screen.findByRole("button", { name: kind === "void" ? "Void payment #41" : "Remove evidence #81" }));
+  fireEvent.click(await screen.findByRole("button", { name: kind === "void" ? /Void payment #41/ : /Remove evidence #81/ }));
   fireEvent.change(screen.getByLabelText("Reason (required)"), { target: { value: "Wrong entry" } });
   fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
   await waitFor(() => expect(fetch.mock.calls.some(([, options]) => options?.method === "POST")).toBe(true));
@@ -95,7 +95,7 @@ test("missing recipient is actionable and unavailable comparisons do not become 
 
 test("voided rows remain visible but cannot change evidence", async () => {
   const data = envelope(); data.content[0].status = "VOIDED"; data.content[0].voidReason = "Duplicate"; setup(data); mount();
-  expect(await screen.findByText("Payment #41 · Voided")).toBeInTheDocument();
+  expect(await screen.findByText(/Payment #41 · Recipient organization · Voided/)).toBeInTheDocument();
   expect(within(screen.getByRole("article", { name: "Payment 41" })).queryByRole("button", { name: /Remove evidence/ })).not.toBeInTheDocument();
 });
 
@@ -103,5 +103,5 @@ test("exact precision and retained audit context", () => {
   for (const value of ["0", "-1", "0.0000001", "10000000000000000000"]) expect(paymentAmountError(value)).not.toBe("");
   expect(paymentAmountError("0.000001")).toBe(""); expect(paymentAmountError("1.23000000")).toBe("");
   render(<OutgoingPaymentAuditDetails event={{ parentPaymentOrderId: 12, outgoingPaymentContext: { version: 1, amount: "4000.000001", paidDate: "2026-09-25", recipientId: 17, currency: { id: 3, label: "USD" }, reason: "Duplicate", documentsBefore: [{ id: 81, label: "Original advice" }] } }} />);
-  expect(screen.getByText("4000.000001")).toBeInTheDocument(); expect(screen.getByText("Original advice (#81)")).toBeInTheDocument();
+  expect(screen.getByText("4000.000001")).toBeInTheDocument(); expect(screen.getByText(/Original advice \(#81\)/)).toBeInTheDocument();
 });

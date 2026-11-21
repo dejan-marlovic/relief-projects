@@ -17,8 +17,8 @@ export default function CostDetailAuditDetails({ event }) {
   const moved = event.previousParentBudgetId != null && event.parentBudgetId != null &&
     String(event.previousParentBudgetId) !== String(event.parentBudgetId);
   return <div className={styles.details}>
-    <p>{moved ? `Moved from budget #${event.previousParentBudgetId} to #${event.parentBudgetId}`
-      : event.parentBudgetId != null ? `Budget #${event.parentBudgetId}` : "Budget not recorded"}</p>
+    <p>{moved ? `Moved from budget #${event.previousParentBudgetId} (name not recorded) to #${event.parentBudgetId} (name not recorded)`
+      : event.parentBudgetId != null ? `Budget #${event.parentBudgetId} (name not recorded)` : "Budget not recorded"}</p>
     {!context ? <p>No cost-detail context recorded.</p> : context.version !== 1 ? <p>Cost-detail context uses an unsupported format.</p> : <>
       <dl className={styles.context} aria-label="Cost-detail context">
         {[["Type", context.costType, "REFERENCE"], ["Category", context.cost, "REFERENCE"],

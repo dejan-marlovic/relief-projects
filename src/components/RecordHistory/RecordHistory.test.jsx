@@ -16,14 +16,14 @@ test("payment-order history aggregates lines once and can return to exact header
   const line = { ...event, id: 99, entityType: "PAYMENT_ORDER_LINE", entityId: 81, action: "DELETE", parentPaymentOrderId: 7, previousState: null, newState: null };
   fetch.mockResolvedValueOnce(response(page([line, line], 0, 2))).mockResolvedValueOnce(response(page([event])));
   render(<RecordHistory {...props} entityType="PAYMENT_ORDER" />); open();
-  expect(await screen.findByText("Line #81 deleted")).toBeInTheDocument();
+  expect(await screen.findByText(/Line #81 deleted/)).toBeInTheDocument();
   expect(screen.getAllByRole("listitem")).toHaveLength(1);
   expect(fetch.mock.calls[0][0]).toContain("includeChildren=true");
   fireEvent.click(screen.getByRole("checkbox", { name: "Include line, signature, recipient, outgoing-payment and recipient-return activity" }));
   await screen.findByText("Draft → Submitted");
   expect(fetch.mock.calls[1][0]).not.toContain("includeChildren");
   expect(fetch.mock.calls[1][0]).toContain("entityType=PAYMENT_ORDER&entityId=7&page=0");
-  expect(screen.queryByText("Line #81 deleted")).not.toBeInTheDocument();
+  expect(screen.queryByText(/Line #81 deleted/)).not.toBeInTheDocument();
 });
 
 test("restored record history includes creation, delete/restore activity and existing return reasons", async () => {
@@ -141,56 +141,56 @@ test("transaction history aggregates allocations once and can return to exact he
   const line = { ...event, id: 99, entityType: "COST_DETAIL_ALLOCATION", entityId: 81, action: "DELETE", parentTransactionId: 7, previousState: null, newState: null };
   fetch.mockResolvedValueOnce(response(page([line, line], 0, 2))).mockResolvedValueOnce(response(page([event])));
   render(<RecordHistory {...props} entityType="TRANSACTION" />); open();
-  expect(await screen.findByText("Allocation #81 deleted")).toBeInTheDocument();
+  expect(await screen.findByText(/Allocation #81 deleted/)).toBeInTheDocument();
   expect(screen.getAllByRole("listitem")).toHaveLength(1);
   expect(fetch.mock.calls[0][0]).toContain("includeChildren=true");
   fireEvent.click(screen.getByRole("checkbox", { name: "Include allocation, funding-receipt and financier-return activity" }));
   await screen.findByText("Draft → Submitted");
   expect(fetch.mock.calls[1][0]).not.toContain("includeChildren");
   expect(fetch.mock.calls[1][0]).toContain("entityType=TRANSACTION&entityId=7&page=0");
-  expect(screen.queryByText("Allocation #81 deleted")).not.toBeInTheDocument();
+  expect(screen.queryByText(/Allocation #81 deleted/)).not.toBeInTheDocument();
 });
 
 test("budget history aggregates cost details once and can return to exact header history", async () => {
   const line = { ...event, id: 99, entityType: "COST_DETAIL", entityId: 81, action: "DELETE", parentBudgetId: 7, previousState: null, newState: null };
   fetch.mockResolvedValueOnce(response(page([line, line], 0, 2))).mockResolvedValueOnce(response(page([event])));
   render(<RecordHistory {...props} entityType="BUDGET" />); open();
-  expect(await screen.findByText("Cost detail #81 deleted")).toBeInTheDocument();
+  expect(await screen.findByText(/Cost detail #81 deleted/)).toBeInTheDocument();
   expect(screen.getAllByRole("listitem")).toHaveLength(1);
   expect(fetch.mock.calls[0][0]).toContain("includeChildren=true");
   fireEvent.click(screen.getByRole("checkbox", { name: "Include cost-detail activity" }));
   await screen.findByText("Draft → Submitted");
   expect(fetch.mock.calls[1][0]).not.toContain("includeChildren");
   expect(fetch.mock.calls[1][0]).toContain("entityType=BUDGET&entityId=7&page=0");
-  expect(screen.queryByText("Cost detail #81 deleted")).not.toBeInTheDocument();
+  expect(screen.queryByText(/Cost detail #81 deleted/)).not.toBeInTheDocument();
 });
 
 test("payment-order history aggregates signatures once and can return to exact header history", async () => {
   const line = { ...event, id: 99, entityType: "SIGNATURE", entityId: 81, action: "DELETE", parentPaymentOrderId: 7, previousState: null, newState: null };
   fetch.mockResolvedValueOnce(response(page([line, line], 0, 2))).mockResolvedValueOnce(response(page([event])));
   render(<RecordHistory {...props} entityType="PAYMENT_ORDER" />); open();
-  expect(await screen.findByText("Signature #81 deleted")).toBeInTheDocument();
+  expect(await screen.findByText(/Signature #81 deleted/)).toBeInTheDocument();
   expect(screen.getAllByRole("listitem")).toHaveLength(1);
   expect(fetch.mock.calls[0][0]).toContain("includeChildren=true");
   fireEvent.click(screen.getByRole("checkbox", { name: "Include line, signature, recipient, outgoing-payment and recipient-return activity" }));
   await screen.findByText("Draft → Submitted");
   expect(fetch.mock.calls[1][0]).not.toContain("includeChildren");
   expect(fetch.mock.calls[1][0]).toContain("entityType=PAYMENT_ORDER&entityId=7&page=0");
-  expect(screen.queryByText("Signature #81 deleted")).not.toBeInTheDocument();
+  expect(screen.queryByText(/Signature #81 deleted/)).not.toBeInTheDocument();
 });
 
 test("payment-order history aggregates recipients once and can return to exact header history", async () => {
   const line = { ...event, id: 99, entityType: "RECIPIENT", entityId: 81, action: "DELETE", parentPaymentOrderId: 7, previousState: null, newState: null };
   fetch.mockResolvedValueOnce(response(page([line, line], 0, 2))).mockResolvedValueOnce(response(page([event])));
   render(<RecordHistory {...props} entityType="PAYMENT_ORDER" />); open();
-  expect(await screen.findByText("Recipient #81 deleted")).toBeInTheDocument();
+  expect(await screen.findByText(/Recipient #81 deleted/)).toBeInTheDocument();
   expect(screen.getAllByRole("listitem")).toHaveLength(1);
   expect(fetch.mock.calls[0][0]).toContain("includeChildren=true");
   fireEvent.click(screen.getByRole("checkbox", { name: "Include line, signature, recipient, outgoing-payment and recipient-return activity" }));
   await screen.findByText("Draft → Submitted");
   expect(fetch.mock.calls[1][0]).not.toContain("includeChildren");
   expect(fetch.mock.calls[1][0]).toContain("entityType=PAYMENT_ORDER&entityId=7&page=0");
-  expect(screen.queryByText("Recipient #81 deleted")).not.toBeInTheDocument();
+  expect(screen.queryByText(/Recipient #81 deleted/)).not.toBeInTheDocument();
 });
 
 test("timeline opens an event without refetching and keeps full references separately expandable", async () => {

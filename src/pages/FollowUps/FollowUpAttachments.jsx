@@ -21,7 +21,7 @@ const issues = {
   REOPEN_FOLLOW_UP_REQUIRED: "Reopen this follow-up before changing attachments.",
   UPLOAD_ACTIVE_EMPLOYEE_REQUIRED: "An active employee identity is required to upload. You may still link existing documents.",
 };
-const actor = value => value?.employeeName || value?.username || (value?.userId ? `User #${value.userId}` : "Not recorded");
+const actor = value => value?.employeeName || value?.username || (value?.userId ? `User #${value.userId} · Name unavailable` : "Not recorded");
 function recoveryKey(task) {
   try {
     const subject = JSON.parse(atob(localStorage.getItem("authToken").split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).sub;

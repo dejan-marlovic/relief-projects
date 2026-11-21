@@ -41,9 +41,9 @@ export function followUpCalendar(task, origin, now = new Date()) {
   const site = new URL(origin);
   if (!["http:", "https:"].includes(site.protocol)) throw new Error("Calendar export needs an application address.");
   const description = [
-    `Project: ${task.projectName || `Project #${task.projectId}`}`,
+    `Project: ${task.projectName || `Project #${task.projectId} · Name unavailable`}`,
     `Responsible employee: ${task.assignee?.displayName || "Unknown"}`,
-    `Follow-up #${task.id} · Project #${task.projectId}`,
+    `Follow-up #${task.id}: ${task.title || "Name unavailable"} · Project #${task.projectId}: ${task.projectName || "Name unavailable"}`,
     task.description,
     "Snapshot of an open follow-up. Changes and completion in Relief Projects do not update this calendar entry. Remove or replace it manually when needed.",
   ].filter(Boolean).join("\n\n");

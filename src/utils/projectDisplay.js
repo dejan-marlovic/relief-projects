@@ -8,6 +8,6 @@ export const getSelectedProjectName = (projects, selectedProjectId) => {
   return (
     selectedProject?.projectName ||
     selectedProject?.name ||
-    `Project #${selectedProjectId}`
+    `Project #${selectedProjectId} · Name unavailable`
   );
 };

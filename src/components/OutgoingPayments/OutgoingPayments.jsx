@@ -15,7 +15,7 @@ import { paymentAmountError, paymentCommandStore, paymentCurrency, paymentMoney,
 import styles from "../FundingReceipts/FundingReceipts.module.scss";
 
 const stamp = value => value ? new Date(value).toLocaleString() : "Unknown";
-const actor = value => value?.username || (value?.userId ? `User #${value.userId}` : "Unknown");
+const actor = value => value?.username || (value?.userId ? `User #${value.userId} · Name unavailable` : "Unknown");
 
 export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onChanged }) {
   const navigate = useNavigate();
@@ -151,12 +151,12 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
     {error && <p role="alert">{error}{(form || pending) && " Your input has been retained. Reload and review before making a new attempt."}</p>}
     {pending && <div role="alert"><p>A payment request needs confirmation. Retry sends the exact same request and cannot create a duplicate for this request key. Do not enter it again as a new payment.</p><button type="button" disabled={busy} onClick={() => send(pending)}>Retry same request</button></div>}
     {related && <aside className={styles.entry} aria-label="Related payment">
-      <h4>Related payment #{related.id} · {related.status}</h4>
+      <h4>Related payment #{related.id} · {related.organization?.name || "Name unavailable"} · {related.status}</h4>
       <p>{paymentMoney(related.amount)} {paymentCurrency(related.currency)} · Paid on {related.paidDate}</p>
       <p>Entered {stamp(related.createdAt)} by {actor(related.createdBy)}</p>
       {related.voidReason && <p>Void reason: {related.voidReason}</p>}
       {related.note && <p>{related.note}</p>}
-      <ul>{related.documents?.map(doc => <li key={doc.documentId}><DocumentLabel>{doc.documentName}</DocumentLabel> · Version {doc.versionNumber} <button type="button" disabled={!doc.downloadEligible || downloading != null} onClick={() => download(doc.documentId)}>Download related evidence #{doc.documentId}</button></li>)}</ul>
+      <ul>{related.documents?.map(doc => <li key={doc.documentId}><DocumentLabel>{doc.documentName}</DocumentLabel> · Version {doc.versionNumber} <button type="button" disabled={!doc.downloadEligible || downloading != null} onClick={() => download(doc.documentId)}>Download related evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</button></li>)}</ul>
       <button type="button" onClick={() => setRelated(null)}>Close related payment</button>
     </aside>}
     {summary && <>
@@ -175,7 +175,7 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
       {binding && <p className={styles.hint}>Currency interpretation adopted: {binding.capturedName} (#{binding.currencyId}), recipient commitments {paymentMoney(binding.recipientCommitment)}; order commitments {paymentMoney(binding.orderCommitment)}, by {actor(binding.confirmedBy)} on {stamp(binding.confirmedAt)}. This is not historical verification.{binding.labelChanged && ` Current label: ${binding.currentName}.`}</p>}
     </>}
     {form && !pending && <ScrollToForm scrollKey={form.kind} className={styles.form} onSubmit={submit}>
-      <h4>{{ create: "Record outgoing payment", correct: `Correct payment #${form.payment?.id}`, void: `Void payment #${form.payment?.id}`, add: `Add evidence to payment #${form.payment?.id}`, remove: `Remove evidence from payment #${form.payment?.id}` }[form.kind]}</h4>
+      <h4>{{ create: "Record outgoing payment", correct: `Correct payment #${form.payment?.id} · ${form.payment?.organization?.name || "Name unavailable"}`, void: `Void payment #${form.payment?.id} · ${form.payment?.organization?.name || "Name unavailable"}`, add: `Add evidence to payment #${form.payment?.id} · ${form.payment?.organization?.name || "Name unavailable"}`, remove: `Remove evidence from payment #${form.payment?.id} · ${form.payment?.organization?.name || "Name unavailable"}` }[form.kind]}</h4>
       <fieldset disabled={busy || !can(form.kind, data?.content.find(row => row.id === form.payment?.id))}>
         {financialForm && <>
           <p>Recipient: <strong>{form.recipient?.organizationName || "Unavailable"} (#{form.recipient?.id})</strong></p>
@@ -204,18 +204,18 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
     </ScrollToForm>}
     {!initialLoading && data?.content.length === 0 && <p>No payments on this page.</p>}
     {data?.content.map(payment => <article key={payment.id} className={`${styles.entry} ${payment.status === "VOIDED" ? styles.voided : ""}`} aria-label={`Payment ${payment.id}`}>
-      <h4>Payment #{payment.id} · {payment.status === "VOIDED" ? "Voided" : "Recorded"}</h4>
+      <h4>Payment #{payment.id} · {payment.organization?.name || "Name unavailable"} · {payment.status === "VOIDED" ? "Voided" : "Recorded"}</h4>
       <p><strong>{paymentMoney(payment.amount)} {paymentCurrency(payment.currency)}</strong> · Paid on {payment.paidDate}</p>
       {payment.currency?.labelChanged && <p className={styles.hint}>Current currency label: {payment.currency.currentName}. The recorded label above is retained.</p>}
       <p>Recipient organization: {payment.organization?.name || "Unknown"} · Entered {stamp(payment.createdAt)} by {actor(payment.createdBy)}</p>
       {payment.externalReference && <p>Reference: {payment.externalReference}</p>}{payment.note && <p>Note: {payment.note}</p>}
       {payment.status === "VOIDED" && <p>Voided {stamp(payment.voidedAt)} by {actor(payment.voidedBy)} · {payment.voidReason}</p>}
-      {payment.replacesPaymentId && <p>Corrects <button type="button" onClick={() => showRelated(payment.replacesPaymentId)}>payment #{payment.replacesPaymentId}</button>.</p>}
-      {payment.replacementPaymentId && <p>Replaced by <button type="button" onClick={() => showRelated(payment.replacementPaymentId)}>payment #{payment.replacementPaymentId}</button>.</p>}
-      <ul className={styles.evidence}>{payment.documents?.map(doc => <li key={doc.documentId}><DocumentLabel>{doc.documentName}</DocumentLabel> · v{doc.versionNumber} · {doc.status || "Unknown status"}{doc.hasNewerVersion && " · Newer version exists; this evidence retains its version"}{!doc.downloadEligible && " · Unavailable for download"}<div className={styles.actions}><button type="button" disabled={!doc.downloadEligible || downloading != null} onClick={() => download(doc.documentId)}>Download evidence #{doc.documentId}</button>{payment.status === "RECORDED" && can("remove", payment) && <button type="button" disabled={busy || !!form || !!pending} onClick={() => open("remove", payment, doc)}>Remove evidence #{doc.documentId}</button>}</div></li>)}</ul>
+      {payment.replacesPaymentId && <p>Corrects <button type="button" onClick={() => showRelated(payment.replacesPaymentId)}>payment #{payment.replacesPaymentId} · Name unavailable</button>.</p>}
+      {payment.replacementPaymentId && <p>Replaced by <button type="button" onClick={() => showRelated(payment.replacementPaymentId)}>payment #{payment.replacementPaymentId} · Name unavailable</button>.</p>}
+      <ul className={styles.evidence}>{payment.documents?.map(doc => <li key={doc.documentId}><DocumentLabel>{doc.documentName}</DocumentLabel> · v{doc.versionNumber} · {doc.status || "Unknown status"}{doc.hasNewerVersion && " · Newer version exists; this evidence retains its version"}{!doc.downloadEligible && " · Unavailable for download"}<div className={styles.actions}><button type="button" disabled={!doc.downloadEligible || downloading != null} onClick={() => download(doc.documentId)}>Download evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</button>{payment.status === "RECORDED" && can("remove", payment) && <button type="button" disabled={busy || !!form || !!pending} onClick={() => open("remove", payment, doc)}>Remove evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</button>}</div></li>)}</ul>
       <details><summary>Payment action availability</summary>{[...(payment.eligibility?.voidIssues || []), ...(payment.eligibility?.correctionIssues || []), ...(payment.eligibility?.evidenceIssues || [])].filter((issue, index, all) => all.findIndex(item => item.code === issue.code && item.message === issue.message) === index).map((issue, index) => <p key={index}>{issue.message}</p>)}</details>
       {!payment.documents?.length && <p className={styles.hint}>No evidence linked.</p>}
-      {payment.status === "RECORDED" && <div className={styles.actions}>{[["add", "Add evidence"], ["correct", "Correct payment"], ["void", "Void payment"]].map(([kind, label]) => can(kind, payment) && <button key={kind} type="button" disabled={busy || !!form || !!pending} onClick={() => open(kind, payment)}>{label} #{payment.id}</button>)}</div>}
+      {payment.status === "RECORDED" && <div className={styles.actions}>{[["add", "Add evidence"], ["correct", "Correct payment"], ["void", "Void payment"]].map(([kind, label]) => can(kind, payment) && <button key={kind} type="button" disabled={busy || !!form || !!pending} onClick={() => open(kind, payment)}>{label} #{payment.id} · {payment.organization?.name || "Name unavailable"}</button>)}</div>}
       {payment.returns ? <RecipientReturns payment={{ ...payment, paymentOrderId }} refreshKey={`${revision}:${refreshKey}`} editingLocked={editingLocked || busy || !!form || !!pending} onChanged={() => { refresh(); onChanged?.(); }} /> : <p className={styles.hint}>Recipient-return information unavailable. Refresh after backend deployment; missing information does not mean zero returns.</p>}
     </article>)}
     {data && <div className={styles.actions}><span>{data.totalElements} payments · Page {page + 1} of {Math.max(1, Math.ceil(data.totalElements / 20))}</span><button type="button" disabled={busy || loading || !!form || !!pending || page === 0} onClick={() => setPage(value => value - 1)}>Previous payments</button><button type="button" disabled={busy || loading || !!form || !!pending || (page + 1) * 20 >= data.totalElements} onClick={() => setPage(value => value + 1)}>Next payments</button></div>}
@@ -225,5 +225,5 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
 export default function OutgoingPayments(props) {
   const [opened, setOpened] = useState(false);
   if (!Number.isSafeInteger(Number(props.paymentOrderId)) || Number(props.paymentOrderId) <= 0) return null;
-  return <details className={styles.section} onToggle={event => { if (event.currentTarget === event.target && event.currentTarget.open) setOpened(true); }}><summary>Outgoing payments · Payment order #{props.paymentOrderId}</summary>{opened && <PaymentsPanel key={props.paymentOrderId} {...props} />}</details>;
+  return <details className={styles.section} onToggle={event => { if (event.currentTarget === event.target && event.currentTarget.open) setOpened(true); }}><summary>Outgoing payments · Payment order #{props.paymentOrderId} · {props.recordName || "Name unavailable"}</summary>{opened && <PaymentsPanel key={props.paymentOrderId} {...props} />}</details>;
 }

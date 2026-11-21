@@ -20,7 +20,7 @@ function Evidence({ result, endpoint, authFetch, refresh, open, locked }) {
   const state = useIndicatorRead(authFetch, `${endpoint}/results/${result.id}/evidence?page=${page}&size=20`, refresh);
   return <section aria-label={`Evidence for report ${result.id}`}><ReadState state={state} />{error && <p role="alert">{error}</p>}
     {state.data?.content.map(e => <article data-mobile-tile="" className={styles.panel} key={e.id}>
-      <strong><DocumentLabel>{e.capturedName || `Document #${e.documentId}`} · Version {e.versionNumber ?? "unknown"}</DocumentLabel></strong>
+      <strong><DocumentLabel>{e.capturedName || `Document #${e.documentId} · Name unavailable`} · Version {e.versionNumber ?? "unknown"}</DocumentLabel></strong>
       <p>{e.associationActive ? "Linked" : "Association removed"} · {words(e.availability)} · {e.currentStatus || "Unknown document status"}</p>
       <p>Linked <Attribution at={e.linkedAt} actor={e.linkedBy} /></p>
       {e.removedAt && <p>Removed <Attribution at={e.removedAt} actor={e.removedBy} /> · {e.removalReason}</p>}

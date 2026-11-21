@@ -122,19 +122,19 @@ export function RecipientReturnsPanel({ payment, refreshKey, editingLocked, onCh
   }
   function entry(row, relatedView = false) {
     return <article key={row.id} className={styles.entry} aria-label={`Recipient return ${row.id}`}>
-      <h4>Return from recipient #{row.id} · {row.status === "VOIDED" ? "Voided erroneous entry" : "Recorded"}</h4>
+      <h4>Return from recipient #{row.id} · {row.organization?.name || "Name unavailable"} · {row.status === "VOIDED" ? "Voided erroneous entry" : "Recorded"}</h4>
       <p><strong>{paymentMoney(row.amount)} {paymentCurrency(row.currency)}</strong> · Returned {row.returnedDate}</p>
       <p>Recipient organisation: {row.organization?.name || "Unknown"} · Original payment #{row.originalPaymentId}</p>
       {row.currency?.labelChanged && <p>Current currency label: {row.currency.currentName}; the recorded label is retained above.</p>}
       <p>Entered {stamp(row.createdAt)} by {actor(row.createdBy)} · Reason: {row.reason}</p>
       {row.externalReference && <p>Reference: {row.externalReference}</p>}{row.note && <p>Note: {row.note}</p>}
       {row.voidedAt && <p>Voided {stamp(row.voidedAt)} by {actor(row.voidedBy)} · {row.voidReason}</p>}
-      {row.replacesReturnId && <button type="button" onClick={() => showRelated(row.replacesReturnId)}>View original return #{row.replacesReturnId}</button>}
-      {row.replacementReturnId && <button type="button" onClick={() => showRelated(row.replacementReturnId)}>View replacement return #{row.replacementReturnId}</button>}
-      <ul className={styles.evidence}>{row.documents?.map(doc => <li key={doc.documentId}><DocumentLabel>{doc.documentName || "Name unavailable"}</DocumentLabel> · Version {doc.versionNumber ?? "Unknown"} · {doc.status || "Status unknown"}{doc.hasNewerVersion && " · Newer version exists; this link retains the selected version"}{!doc.downloadEligible && " · Download unavailable"}<div className={styles.actions}><button disabled={!doc.downloadEligible || downloading !== null} onClick={() => download(doc.documentId)}>Download return evidence #{doc.documentId}</button>{!relatedView && can("remove", row) && <button disabled={busy || !!form || !!pending} onClick={() => open("remove", row, doc)}>Remove return evidence #{doc.documentId}</button>}</div></li>)}</ul>
+      {row.replacesReturnId && <button type="button" onClick={() => showRelated(row.replacesReturnId)}>View original return #{row.replacesReturnId} · Name unavailable</button>}
+      {row.replacementReturnId && <button type="button" onClick={() => showRelated(row.replacementReturnId)}>View replacement return #{row.replacementReturnId} · Name unavailable</button>}
+      <ul className={styles.evidence}>{row.documents?.map(doc => <li key={doc.documentId}><DocumentLabel>{doc.documentName || "Name unavailable"}</DocumentLabel> · Version {doc.versionNumber ?? "Unknown"} · {doc.status || "Status unknown"}{doc.hasNewerVersion && " · Newer version exists; this link retains the selected version"}{!doc.downloadEligible && " · Download unavailable"}<div className={styles.actions}><button disabled={!doc.downloadEligible || downloading !== null} onClick={() => download(doc.documentId)}>Download return evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</button>{!relatedView && can("remove", row) && <button disabled={busy || !!form || !!pending} onClick={() => open("remove", row, doc)}>Remove return evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</button>}</div></li>)}</ul>
       {!row.documents?.length && <p>No evidence linked.</p>}
       {summaryIssues(row.eligibility).map(issue => <p key={issue.code}>{issue.message}</p>)}
-      {!relatedView && <div className={styles.actions}>{[["add", "Add evidence"], ["correct", "Correct erroneous return"], ["void", "Void erroneous return"]].map(([action, label]) => can(action, row) && <button key={action} disabled={busy || !!form || !!pending} onClick={() => open(action, row)}>{label} #{row.id}</button>)}</div>}
+      {!relatedView && <div className={styles.actions}>{[["add", "Add evidence"], ["correct", "Correct erroneous return"], ["void", "Void erroneous return"]].map(([action, label]) => can(action, row) && <button key={action} disabled={busy || !!form || !!pending} onClick={() => open(action, row)}>{label} #{row.id} · {row.organization?.name || "Name unavailable"}</button>)}</div>}
     </article>;
   }
   const financial = ["create", "correct"].includes(kind), evidence = ["create", "correct", "add"].includes(kind);
@@ -154,7 +154,7 @@ export function RecipientReturnsPanel({ payment, refreshKey, editingLocked, onCh
         {kind !== "add" && <label>{financial ? "Reason for actual return" : "Reason for correction of records"}<textarea required maxLength={1000} value={form.reason} onChange={e => change("reason", e.target.value)} /></label>}
         {kind === "correct" && <><label>Correction explanation<textarea required maxLength={1000} value={form.correctionReason} onChange={e => change("correctionReason", e.target.value)} /></label><p>The erroneous return is voided and replaced atomically against the same payment. Select replacement evidence explicitly; nothing is inherited.</p></>}
         {kind === "void" && <p>Only invalidate an entry that was wrong. Do not void genuine returned money to unlock a payment correction.</p>}
-        {kind === "remove" && <p>Remove the association to {form.document.documentName || `document #${form.document.documentId}`}? The file and audit history remain.</p>}
+        {kind === "remove" && <p>Remove the association to {form.document.documentName || `document #${form.document.documentId} · Name unavailable`}? The file and audit history remain.</p>}
         {evidence && <>{documentError && <p role="alert">{documentError}</p>}<label>{kind === "add" ? "Exact document version" : "Evidence versions (optional)"}<SearchableSelect documentOptions required={kind === "add"} multiple={kind !== "add"} value={kind === "add" ? form.documentId : form.documentIds} onChange={e => kind === "add" ? change("documentId", e.target.value) : change("documentIds", Array.from(e.target.selectedOptions, option => option.value))}>{kind === "add" && <option value="">Select a version</option>}{documents.filter(doc => kind !== "add" || !form.row.documents?.some(link => link.documentId === doc.id)).map(doc => <option key={doc.id} value={doc.id}>{doc.documentName || "Name unavailable"} · #{doc.id} · v{doc.versionNumber} · {doc.status || "Unknown status"} · {doc.isCurrent ? "Current" : "Historical"}</option>)}</SearchableSelect></label><p className={styles.hint}>Optional evidence links retain exact versions; they do not certify bank movement, signatures or completeness. Upload files through Documents separately.</p></>}
         <button disabled={reviewRequired || !can(kind, currentRow) || (kind === "add" && !!documentError)} type="submit">Confirm return action</button>
       </fieldset>
@@ -172,5 +172,5 @@ export function RecipientReturnsPanel({ payment, refreshKey, editingLocked, onCh
 
 export default function RecipientReturns(props) {
   const [opened, setOpened] = useState(false);
-  return <details className={styles.section} onToggle={e => { if (e.currentTarget === e.target && e.currentTarget.open) setOpened(true); }}><summary>Returned by recipient · Payment #{props.payment.id}</summary>{opened && <RecipientReturnsPanel key={props.payment.id} {...props} />}</details>;
+  return <details className={styles.section} onToggle={e => { if (e.currentTarget === e.target && e.currentTarget.open) setOpened(true); }}><summary>Returned by recipient · Payment #{props.payment.id} · {props.payment.organization?.name || "Name unavailable"}</summary>{opened && <RecipientReturnsPanel key={props.payment.id} {...props} />}</details>;
 }

@@ -48,7 +48,7 @@ test("preserves precision, local dates, nulls, empty text and historical referen
   expect(formatFieldValue(null, "TEXT")).toBe("Not set");
   expect(formatFieldValue("", "TEXT")).toBe("Empty text");
   expect(formatFieldValue({ id: "7", label: "Old project" }, "REFERENCE")).toBe("Old project (ID 7)");
-  expect(formatFieldValue({ id: "8" }, "REFERENCE")).toBe("ID 8");
+  expect(formatFieldValue({ id: "8" }, "REFERENCE")).toBe("ID 8 · Name not recorded");
 });
 test("renders grouped field changes as escaped text with stable-name fallbacks", () => {
   const text = "<script>bad()</script>\nSecond line";

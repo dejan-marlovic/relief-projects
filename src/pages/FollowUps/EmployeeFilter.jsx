@@ -8,7 +8,7 @@ export default function EmployeeFilter({ employees, value, onChange, disabled })
   const [active, setActive] = useState(0);
   const options = [{ value: "", label: "All employees" }, ...employees.map(person => ({
     value: String(person.id),
-    label: person.displayName || [person.firstName, person.lastName].filter(Boolean).join(" ") || `Employee #${person.id}`,
+    label: person.displayName || [person.firstName, person.lastName].filter(Boolean).join(" ") || `Employee #${person.id} · Name unavailable`,
   }))];
   const selected = options.find(option => option.value === String(value));
   const matches = options.filter(option => option.label.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));

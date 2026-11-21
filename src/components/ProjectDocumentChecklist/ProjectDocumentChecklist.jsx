@@ -22,7 +22,7 @@ const nextSteps = {
 };
 const settled = (state) => ["EVIDENCE_RECORDED", "NOT_APPLICABLE"].includes(state);
 const counts = { needsAssessment: "Needs assessment", missingEvidence: "Missing evidence", evidenceRecorded: "Evidence recorded", evidenceUnavailable: "Evidence unavailable", notApplicable: "Not applicable" };
-const actor = (value) => value?.username || (value?.userId ? `User #${value.userId}` : "Unknown");
+const actor = (value) => value?.username || (value?.userId ? `User #${value.userId} · Name unavailable` : "Unknown");
 
 function Item({ item, generation, editable, documents, categories, busy, mutate: performMutation, download, downloading, showHistory }) {
   const [applicability, setApplicability] = useState(item.applicability);
@@ -71,7 +71,7 @@ function Item({ item, generation, editable, documents, categories, busy, mutate:
       <ul className={styles.evidence}>{evidence.map((doc) => <li key={doc.documentId}>
         <strong><DocumentLabel>{doc.documentName}</DocumentLabel></strong>
         <span>Version {doc.versionNumber} · {statusLabel(doc.status)} · {categories.find((c) => c.id === doc.category)?.label || doc.category || "Uncategorized"} · Document date: {doc.documentDate || "Unknown"}</span>
-        <span className={styles.muted}>Linked by {doc.linkedByUsername || `User #${doc.linkedByUserId}`} · {uploadTimeLabel(doc.linkedAt)}</span>
+        <span className={styles.muted}>Linked by {doc.linkedByUsername || `User #${doc.linkedByUserId} · Name unavailable`} · {uploadTimeLabel(doc.linkedAt)}</span>
         {doc.hasNewerVersion && <span>Newer version exists (#{doc.currentDocumentId}{doc.currentDocumentDeleted ? ", deleted" : ""}). This link keeps version {doc.versionNumber}.</span>}
         {doc.downloadEligible !== true && <span>Evidence unavailable for download.</span>}
         <div className={styles.actions}>

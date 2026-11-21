@@ -74,7 +74,7 @@ test("uncertain response refreshes state and history without replay",async()=>{
 });
 test("archive references are escaped plain text and history retains original basis",()=>{
   render(<DecisionSnapshot value={{closeoutStatus:"CLOSED",closure:{acceptedDate:"2026-09-20",acceptanceAtClose:{status:"ACCEPTED",acceptedByLabel:"Original donor"},evidenceLabelsAtClose:[{documentId:81,capturedName:"Original evidence"}]},archive:{status:"MARKED_ARCHIVED",digitalArchiveReference:"https://example.com/archive",physicalArchiveReference:"<script>bad()</script>"}}}/>);
-  expect(screen.getByText("https://example.com/archive").closest("a")).toBeNull();expect(screen.getByText("<script>bad()</script>")).toBeInTheDocument();expect(screen.getByText("Original evidence (#81)")).toBeInTheDocument();
+  expect(screen.getByText("https://example.com/archive").closest("a")).toBeNull();expect(screen.getByText("<script>bad()</script>")).toBeInTheDocument();expect(screen.getByText(/Original evidence \(#81\)/)).toBeInTheDocument();
 });
 test("restricted diagnostics expose no identity and exact authorized values are not combined",()=>{
   const {rerender}=render(<FinancialRow row={{recordType:"PAYMENT",recordId:999,coverage:"RESTRICTED_OR_UNAVAILABLE",summary:{paidTotal:"SECRET"}}}/>);
@@ -99,7 +99,7 @@ test("archive capability is required even when permissions are present",async()=
 });
 test("flagged recorded review remains separate from the effective date and history",async()=>{
   const data=reviewData();data.archiveReview={status:"CONFIRMED",reviewRequired:true,reviewDate:"2025-02-28",reason:"Original confirmation",basis:{acceptance:{acceptedDate:"2015-02-28",acceptedByLabel:"Original donor"},evidenceLabels:[{documentId:81,capturedName:"Exact approval"}]}};setup(data);mount();
-  expect(await screen.findByText("Confirmed · Basis needs confirmation")).toBeInTheDocument();expect(screen.getByText("2025-02-28")).toBeInTheDocument();expect(screen.getAllByText("Unavailable").length).toBeGreaterThan(0);expect(screen.getByText("Exact approval (#81)")).toBeInTheDocument();
+  expect(await screen.findByText("Confirmed · Basis needs confirmation")).toBeInTheDocument();expect(screen.getByText("2025-02-28")).toBeInTheDocument();expect(screen.getAllByText("Unavailable").length).toBeGreaterThan(0);expect(screen.getByText(/Exact approval \(#81\)/)).toBeInTheDocument();
 });
 test("archive stale failure retains reason and requires deliberate revision review",async()=>{
   const data=reviewData();setup(data,()=>{data.revision=3;return reply({message:"Review basis changed"},409);});mount();fireEvent.click(await screen.findByRole("button",{name:"Confirm review basis"}));reason();fireEvent.click(screen.getByRole("button",{name:"Save decision"}));await screen.findByText(/Review basis changed/);expect(screen.getByLabelText("Decision reason")).toHaveValue("Reviewed the project");expect(screen.getByRole("button",{name:"Save decision"})).toBeDisabled();expect(calls()).toHaveLength(1);

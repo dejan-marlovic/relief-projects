@@ -55,7 +55,7 @@ test("cap conflict preserves input and requires deliberate review, never automat
 });
 test("correction keeps source and currency and explicitly clears replacement evidence", async () => {
   setup(() => reply({ return: { id: 10 }, voidedReturn: row, returnsRevision: 3 })); mount();
-  fireEvent.click(await screen.findByText("Correct erroneous return #9"));
+  fireEvent.click(await screen.findByText(/Correct erroneous return #9/));
   fireEvent.change(screen.getByLabelText("Amount returned"), { target: { value: "400.000" } });
   fireEvent.change(screen.getByLabelText("Correction explanation"), { target: { value: "Incorrect amount entered" } });
   fireEvent.click(screen.getByText("Confirm return action"));
@@ -73,7 +73,7 @@ test("unavailable or multi-currency summaries never invent zero scalar totals", 
 });
 test("audit and success banners distinguish real returns from voids and receipt creation", () => {
   render(<FundingReturnAuditDetails event={{ parentTransactionId: 31, fundingReturnContext: { version: 1, originalReceiptId: 51, returnsRevision: 2, amount: "400.001", currency: { id: 3, label: "USD" }, reason: "Principal returned", changeReason: "Correction", documentsBefore: [{ id: 81, label: "Original advice" }] } }} />);
-  expect(screen.getByText("400.001")).toBeInTheDocument(); expect(screen.getByText("Original advice (#81)")).toBeInTheDocument();
+  expect(screen.getByText("400.001")).toBeInTheDocument(); expect(screen.getByText(/Original advice \(#81\)/)).toBeInTheDocument();
   expect(mutationNotice("/api/funding-receipts/51/returns", { method: "POST" }, { ok: true, status: 201 })).toBe("Money returned to financier recorded.");
   expect(mutationNotice("/api/funding-returns/9/void", { method: "POST" }, { ok: true, status: 200 })).toBe("Erroneous financier return voided.");
 });

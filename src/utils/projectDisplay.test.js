@@ -17,7 +17,7 @@ describe("getSelectedProjectName", () => {
   });
 
   test("falls back to the project ID until its name is available", () => {
-    expect(getSelectedProjectName([], 9)).toBe("Project #9");
+    expect(getSelectedProjectName([], 9)).toBe("Project #9 · Name unavailable");
   });
 
   test("returns an empty label when no project is selected", () => {

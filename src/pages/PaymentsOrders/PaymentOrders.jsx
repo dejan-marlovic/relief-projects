@@ -1,4 +1,4 @@
-import { namedReference } from "../../utils/recordLabels";
+import { namedReference, transactionReference } from "../../utils/recordLabels";
 import MobileRecordDeck from "../../components/MobileRecordDeck/MobileRecordDeck";
 import useArchivedProject from "../../hooks/useArchivedProject";
 import ApprovalDialog from "../../components/ApprovalDialog/ApprovalDialog";
@@ -497,7 +497,7 @@ function PaymentOrders() {
           setFieldErrors((prev) => ({ ...prev, [id]: data.fieldErrors }));
         }
 
-        const poLabel = !isCreate ? `PO#${id}` : "Payment order";
+        const poLabel = !isCreate ? namedReference("Payment order", id, orders.find(row => String(row.id) === String(id))?.paymentOrderDescription) : "Payment order";
 
         const lockedMsgFallback =
           `${poLabel} is Booked (final signature) and is read-only. ` +
@@ -556,7 +556,7 @@ function PaymentOrders() {
       if (!res.ok) {
         const data = await safeParseJsonResponse(res);
 
-        const poLabel = `PO#${id}`;
+        const poLabel = namedReference("Payment order", id, orders.find(row => String(row.id) === String(id))?.paymentOrderDescription);
         const lockedMsgFallback =
           `${poLabel} is Booked (final signature) and cannot be deleted. ` +
           `Undo/remove the Booked signature to delete it.`;
@@ -806,7 +806,7 @@ function PaymentOrders() {
         setLockedBanner(
           data?.message ||
             `Locked payment orders were not deleted: ${lockedIds
-              .map((id) => `PO#${id}`)
+              .map((id) => namedReference("Payment order", id, orders.find(row => String(row.id) === String(id))?.paymentOrderDescription))
               .join(", ")}.`,
         );
       } else {
@@ -819,7 +819,7 @@ function PaymentOrders() {
       ) {
         setFormError(
           `Payment orders not found: ${data.notFoundPaymentOrderIds
-            .map((id) => `PO#${id}`)
+            .map((id) => namedReference("Payment order", id, orders.find(row => String(row.id) === String(id))?.paymentOrderDescription))
             .join(", ")}.`,
         );
       }
@@ -1102,10 +1102,10 @@ function PaymentOrders() {
         const poAmount = summaryExcel(po);
 
         const orderRow = worksheet.addRow({
-          paymentOrderId: `PO#${po.id}`,
+          paymentOrderId: sanitizeExcelText(namedReference("Payment order", po.id, po.paymentOrderDescription)),
           transaction:
             po.transactionId != null
-              ? `TX#${po.transactionId}`
+              ? sanitizeExcelText(transactionReference(txOptions.find(tx => String(tx.id) === String(po.transactionId)), po.transactionId))
               : "Not specified",
           date: formatExcelDate(po.paymentOrderDate),
           description:
@@ -1174,9 +1174,9 @@ function PaymentOrders() {
             lineRow.getCell(1).value = line.id != null ? `L#${line.id}` : "↳";
             lineRow.getCell(2).value =
               line.transactionId != null
-                ? `TX#${line.transactionId}`
+                ? sanitizeExcelText(transactionReference(txOptions.find(tx => String(tx.id) === String(line.transactionId)), line.transactionId))
                 : po.transactionId != null
-                  ? `TX#${po.transactionId} (header)`
+                  ? `${sanitizeExcelText(transactionReference(txOptions.find(tx => String(tx.id) === String(po.transactionId)), po.transactionId))} (header)`
                   : "Not specified";
             lineRow.getCell(3).value = getOrganizationName(line.organizationId);
             lineRow.getCell(4).value = getCostDetailLabel(line.costDetailId);

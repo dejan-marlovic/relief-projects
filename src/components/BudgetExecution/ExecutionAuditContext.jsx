@@ -10,7 +10,7 @@ export default function ExecutionAuditContext({ context }) {
   return <section aria-label="Recorded execution context">
     <strong>Financial execution recorded at this event</strong>
     <dl className={styles.context}>
-      {fields.map(([label, id]) => <div key={label}><dt>{label}</dt><dd>{id == null ? "Not recorded" : `#${id}`}</dd></div>)}
+      {fields.map(([label, id]) => <div key={label}><dt>{label}</dt><dd>{id == null ? "Not recorded" : `#${id} · Name not recorded`}</dd></div>)}
       <div><dt>Recorded currency</dt><dd>{context.currencyId == null ? "Not recorded" : `${context.capturedCurrencyName || "Currency"} (#${context.currencyId})`}</dd></div>
       {context.reason && <div><dt>Reason</dt><dd>{context.reason}</dd></div>}
     </dl>

@@ -113,21 +113,21 @@ const UpdateTransaction = () => {
 
   const organizationLabelById = useMemo(() => {
     return organizations.reduce((acc, item) => {
-      acc[item.id] = item.organizationName || `Organization #${item.id}`;
+      acc[item.id] = item.organizationName || `Organization #${item.id} · Name unavailable`;
       return acc;
     }, {});
   }, [organizations]);
 
   const projectLabelById = useMemo(() => {
     return projects.reduce((acc, item) => {
-      acc[item.id] = item.projectName || `Project #${item.id}`;
+      acc[item.id] = item.projectName || `Project #${item.id} · Name unavailable`;
       return acc;
     }, {});
   }, [projects]);
 
   const statusLabelById = useMemo(() => {
     return statuses.reduce((acc, item) => {
-      acc[item.id] = item.transactionStatusName || `Status #${item.id}`;
+      acc[item.id] = item.transactionStatusName || `Status #${item.id} · Name unavailable`;
       return acc;
     }, {});
   }, [statuses]);
@@ -432,10 +432,10 @@ const UpdateTransaction = () => {
                     {transactions.map((item) => (
                       <option key={item.id} value={item.id}>
                         {projectLabelById[item.projectId] ||
-                          `Project #${item.projectId}`}{" "}
+                          `Project #${item.projectId} · Name unavailable`}{" "}
                         -{" "}
                         {statusLabelById[item.transactionStatusId] ||
-                          `Status #${item.transactionStatusId}`}{" "}
+                          `Status #${item.transactionStatusId} · Name unavailable`}{" "}
                         (id: {item.id})
                       </option>
                     ))}

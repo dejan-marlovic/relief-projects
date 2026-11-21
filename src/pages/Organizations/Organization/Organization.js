@@ -121,10 +121,10 @@ const Organization = ({
   );
 
   const orgName = (id) =>
-    organizations.find((o) => o.id === id)?.name || (id ?? "-");
+    organizations.find((o) => o.id === id)?.name || (id == null ? "-" : `Name unavailable · Reference ${id}`);
 
   const statusName = (id) =>
-    statuses.find((s) => s.id === id)?.organizationStatusName || (id ?? "-");
+    statuses.find((s) => s.id === id)?.organizationStatusName || (id == null ? "-" : `Name unavailable · Reference ${id}`);
 
   const editorRef = useScrollToEditor(isEditing);
   const open = expanded || isEditing;

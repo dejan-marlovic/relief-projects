@@ -53,7 +53,7 @@ export const getParticipantNames = (participants = [], employees = []) => {
       const fullName = [employee.firstName, employee.lastName].filter(Boolean).join(" ");
       const label =
         employee.employeeName || employee.fullName || employee.name ||
-        fullName || employee.email || `Employee #${id}`;
+        fullName || employee.email || `Employee #${id} · Name unavailable`;
       return [
         String(id),
         label,
@@ -64,7 +64,7 @@ export const getParticipantNames = (participants = [], employees = []) => {
   return asArray(participants).map((participant) => {
     const employeeId = participant.employeeId ?? participant.employee?.id;
     return employeeNames.get(String(employeeId)) ||
-      (employeeId == null ? "Employee" : `Employee #${employeeId}`);
+      (employeeId == null ? "Employee" : `Employee #${employeeId} · Name unavailable`);
   });
 };
 
@@ -127,7 +127,7 @@ export const summarizeProjectSnapshot = ({
   );
   const getOrganizationName = (organizationId) =>
     organizationNames.get(String(organizationId)) ||
-    (organizationId == null ? "Organization" : `Organization #${organizationId}`);
+    (organizationId == null ? "Organization" : `Organization #${organizationId} · Name unavailable`);
 
   return ({
   reportingTotals: reportingTotals(asArray(costDetails)),
@@ -155,7 +155,7 @@ export const summarizeProjectSnapshot = ({
   }),
   documentNames: asArray(documents).map(
     (document) => document.documentName ?? document.name ??
-      (document.id == null ? "Document" : `Document #${document.id}`)
+      (document.id == null ? "Document" : `Document #${document.id} · Name unavailable`)
   ),
 });
 };

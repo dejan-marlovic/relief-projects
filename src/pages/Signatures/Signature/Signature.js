@@ -184,12 +184,12 @@ const SignatureRow = ({
 
   const statusLabelById = (id) => {
     const hit = statusOptions.find((s) => String(s.id) === String(id));
-    return hit ? hit.label : (id ?? "-");
+    return hit ? hit.label : (id == null ? "-" : `Name unavailable · Reference ${id}`);
   };
 
   const employeeLabelById = (id) => {
     const hit = employeeOptions.find((e) => String(e.id) === String(id));
-    return hit ? hit.label : (id ?? "-");
+    return hit ? hit.label : (id == null ? "-" : `Name unavailable · Reference ${id}`);
   };
 
   const hc = (i) => (!visibleCols[i] ? styles.hiddenCol : "");
@@ -298,8 +298,8 @@ const SignatureRow = ({
   );
 
   if (compact) return (
-    <section data-mobile-tile={isCreate ? "New signature" : `Signature #${row.id}`} ref={editorRef} className={styles.compactCard} aria-label={isCreate ? "New signature" : `Signature ${row.id}`}>
-      <div className={styles.cardTitle}>{isCreate ? "New signature" : `Signature #${row.id}`}</div>
+    <section data-mobile-tile={isCreate ? "New signature" : namedReference("Signature", row.id, employeeOptions.find(employee => String(employee.id) === String(row.employeeId))?.label)} ref={editorRef} className={styles.compactCard} aria-label={isCreate ? "New signature" : `Signature ${row.id}`}>
+      <div className={styles.cardTitle}>{isCreate ? "New signature" : namedReference("Signature", row.id, employeeOptions.find(employee => String(employee.id) === String(row.employeeId))?.label)}</div>
       <div className={styles.cardSummary}>
         <div><span className={styles.fieldLabel}>Status</span>{isEditing ? selectStatus : statusLabelById(row.signatureStatusId)}</div>
         <div><span className={styles.fieldLabel}>Employee</span>{isEditing ? selectEmployee : employeeLabelById(row.employeeId)}</div>
@@ -318,7 +318,7 @@ const SignatureRow = ({
 
   return (
     <div
-      data-mobile-tile={isCreate ? "New signature" : `Signature #${row.id}`} ref={editorRef}
+      data-mobile-tile={isCreate ? "New signature" : namedReference("Signature", row.id, employeeOptions.find(employee => String(employee.id) === String(row.employeeId))?.label)} ref={editorRef}
       className={`${styles.row} ${styles.gridRow} ${
         isEven ? styles.zebraEven : ""
       } ${styles.hoverable}`}

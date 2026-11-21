@@ -66,7 +66,7 @@ test("explicit selection uses the governing decision and does not change financi
 });
 test("stale failure retains draft and blocks automatic replay until explicit review", async () => {
   const data = familyData(); setup(data, () => { data.family.revision = 5; return reply({ message: "Stale family" }, 409); }); mount();
-  fireEvent.click(await screen.findByRole("button", { name: "Void decision #44" }));
+  fireEvent.click(await screen.findByRole("button", { name: /Void decision #44/ }));
   fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "Wrong approval" } });
   fireEvent.click(screen.getByRole("button", { name: "Save decision" }));
   await screen.findByText(/Your draft is retained/);
@@ -81,7 +81,7 @@ test("stale failure retains draft and blocks automatic replay until explicit rev
 });
 test("correction has explicit replacement and no inherited evidence", async () => {
   setup(familyData()); mount();
-  fireEvent.click(await screen.findByRole("button", { name: "Correct decision #44" }));
+  fireEvent.click(await screen.findByRole("button", { name: /Correct decision #44/ }));
   await screen.findByRole("option", { name: "Donor" });
   fireEvent.change(screen.getByLabelText("Governing donor"), { target: { value: "5" } });
   fireEvent.change(screen.getByLabelText("Explanation"), { target: { value: "Corrected" } });
@@ -93,6 +93,6 @@ test("correction has explicit replacement and no inherited evidence", async () =
 test("unavailable evidence is retained and cannot be downloaded", async () => {
   setup(familyData()); mount();
   expect(await screen.findByRole("button", { name: "Unavailable" })).toBeDisabled();
-  expect(screen.getByText(/Original report · Document #81/)).toBeInTheDocument();
+  expect(screen.getByText("Original report").closest("p")).toHaveTextContent("Original report · Document #81");
   expect(screen.getByText(/Not selected — family planning total unavailable/)).toBeInTheDocument();
 });

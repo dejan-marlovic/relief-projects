@@ -28,9 +28,9 @@ test("creates one assignment with an exact string and observed revisions", async
 test("a superseded target still permits reduction but not increased assignment", async () => {
   const data = { ...envelope(), assignments: [row()], eligibility: { canCreateAssignment: false, targetBudgetId: 28 } };
   mount(data);
-  fireEvent.click(await screen.findByRole("button", { name: "Change amount #7" }));
+  fireEvent.click(await screen.findByRole("button", { name: /Change amount #7/ }));
   expect(screen.queryByLabelText("Revised cost row")).not.toBeInTheDocument();
-  expect(screen.queryByRole("button", { name: "Release assignment #7" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /Release assignment #7/ })).not.toBeInTheDocument();
   fill("1600"); fireEvent.click(screen.getByRole("button", { name: "Save assignment" }));
   await screen.findByText(/This amount change is not currently permitted/);
   expect(writes()).toHaveLength(0);
@@ -43,7 +43,7 @@ test("a superseded target still permits reduction but not increased assignment",
 test("zero uses the amount update, preserving assignment identity", async () => {
   const existing = { ...row(), minimumAmount: "0", eligibility: { canReduce: true, canRelease: true } };
   mount({ ...envelope(), assignments: [existing] });
-  fireEvent.click(await screen.findByRole("button", { name: "Release assignment #7" }));
+  fireEvent.click(await screen.findByRole("button", { name: /Release assignment #7/ }));
   fill("0"); fireEvent.click(screen.getByRole("button", { name: "Save assignment" }));
   await waitFor(() => expect(writes()).toHaveLength(1));
   expect(writes()[0][1].method).toBe("PUT");

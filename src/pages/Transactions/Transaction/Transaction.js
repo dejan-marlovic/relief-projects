@@ -212,15 +212,15 @@ const Transaction = ({
   );
 
   const orgName = (id) =>
-    organizations.find((o) => o.id === id)?.name || (id ?? "-");
+    organizations.find((o) => o.id === id)?.name || (id == null ? "-" : `Name unavailable · Reference ${id}`);
   const projectName = (id) =>
-    projects.find((p) => String(p.id) === String(id))?.projectName || (id ?? "-");
+    projects.find((p) => String(p.id) === String(id))?.projectName || (id == null ? "-" : `Name unavailable · Reference ${id}`);
   const statusName = (id) =>
-    statuses.find((s) => s.id === id)?.transactionStatusName || (id ?? "-");
+    statuses.find((s) => s.id === id)?.transactionStatusName || (id == null ? "-" : `Name unavailable · Reference ${id}`);
   const budgetName = (id) =>
     budgets.find((b) => b.id === id)
       ? budgetLabel(budgets.find((b) => b.id === id))
-      : (id ?? "-");
+      : (id == null ? "-" : `Name unavailable · Reference ${id}`);
 
   const inputDate = (
     <>
@@ -241,7 +241,7 @@ const Transaction = ({
 
   const hc = (i) => (!compact && !visibleCols[i] ? styles.hiddenCol : "");
 
-  const txIdLabel = isCreate ? "(new)" : tx?.id != null ? `TX#${tx.id}` : "-";
+  const txIdLabel = isCreate ? "(new)" : tx?.id != null ? `TX#${tx.id} · Name unavailable` : "-";
   const lifecycleStatus = tx?.lifecycleStatus || "DRAFT";
   const showSubmitLifecycle =
     !isCreate &&
@@ -491,10 +491,10 @@ const Transaction = ({
 
       <p className={styles.currencyNote}>Current budget currency: <strong>{isCreate ? "Follows selected budget" : fundingCurrencyLabel(tx.fundingCurrency)}</strong> · Current configuration, not verified historical denomination.</p>
       {Boolean(tx.id) && <RecordActivity recordLabel={namedReference("Transaction", tx.id, projects.find(p => String(p.id) === String(tx.projectId))?.projectName)}>
-        <RecordHistory entityType="TRANSACTION" entityId={tx.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} />
-        <FundingReceipts transactionId={tx.id} projectId={tx.projectId} refreshKey={`${historyRefreshKey}:${lifecycleStatus}`} editingLocked={isEditing || editingLocked} onChanged={onReceiptMutationSuccess} />
-        <FinancialDocuments entityType="TRANSACTION" entityId={tx.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} editingLocked={isEditing} />
-      <RevisionFundingAssignments transactionId={tx.id} originBudgetId={tx.budgetId} disabled={isEditing || editingLocked} refreshKey={historyRefreshKey} onChanged={onAllocationMutationSuccess} />
+        <RecordHistory recordName={tx.transactionDescription} entityType="TRANSACTION" entityId={tx.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} />
+        <FundingReceipts recordName={tx.transactionDescription} transactionId={tx.id} projectId={tx.projectId} refreshKey={`${historyRefreshKey}:${lifecycleStatus}`} editingLocked={isEditing || editingLocked} onChanged={onReceiptMutationSuccess} />
+        <FinancialDocuments recordName={tx.transactionDescription} entityType="TRANSACTION" entityId={tx.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} editingLocked={isEditing} />
+      <RevisionFundingAssignments recordName={tx.transactionDescription} transactionId={tx.id} originBudgetId={tx.budgetId} disabled={isEditing || editingLocked} refreshKey={historyRefreshKey} onChanged={onAllocationMutationSuccess} />
       </RecordActivity>}
       {expanded && !isCreate && (
         <div className={styles.expandedPanel}>

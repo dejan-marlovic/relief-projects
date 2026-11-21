@@ -180,7 +180,7 @@ function DocumentsPanel({ entityType, entityId, locked, lifecycleStatus, refresh
 function Disclosure(props) {
   const [open, setOpen] = useState(false);
   return <details className={styles.section} onToggle={(event) => { if (event.currentTarget === event.target) setOpen(event.currentTarget.open); }}>
-    <summary>Supporting documents · {labels[props.entityType]} #{props.entityId}</summary>
+    <summary>Supporting documents · {labels[props.entityType]} #{props.entityId} · {props.recordName || "Name unavailable"}</summary>
     {open && <DocumentsPanel {...props} />}
   </details>;
 }

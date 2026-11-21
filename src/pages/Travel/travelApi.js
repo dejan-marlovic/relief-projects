@@ -9,7 +9,7 @@ export const commands = {
 };
 export const titles = { ...Object.fromEntries(Object.entries(commands).map(([key, value]) => [key, value[0]])), create: "Create travel request", "actions-remove": "Remove action association", "evidence-remove": "Remove evidence association" };
 export const tripDraft = (record = {}) => Object.fromEntries(["travellerEmployeeId", "purpose", "destination", "departureDate", "returnDate", "notes"].map(key => [key, record[key] ?? ""]));
-export const employeeName = employee => employee.displayName || [employee.firstName, employee.lastName].filter(Boolean).join(" ") || `Employee #${employee.id}`;
+export const employeeName = employee => employee.displayName || [employee.firstName, employee.lastName].filter(Boolean).join(" ") || `Employee #${employee.id} · Name unavailable`;
 export function travelPayload(form) {
   const { action, draft, record } = form;
   const length = value => [...(value || "").trim()].length;

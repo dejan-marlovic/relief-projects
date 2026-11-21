@@ -10,5 +10,5 @@ test("budget names trim Unicode whitespace and count code points", () => {
 test("labels distinguish duplicate names and never fall back to long descriptions", () => {
   expect(budgetOptionLabel({ id: 7, budgetName: "Water", budgetDescription: "Long description" })).toBe("Water (ID: 7)");
   expect(budgetOptionLabel({ id: 8, budgetName: "Water" })).toBe("Water (ID: 8)");
-  expect(budgetOptionLabel({ id: 7, budgetName: " ", budgetDescription: "Long description" })).toBe("Budget #7");
+  expect(budgetOptionLabel({ id: 7, budgetName: " ", budgetDescription: "Long description" })).toBe("Budget #7 · Name unavailable");
 });

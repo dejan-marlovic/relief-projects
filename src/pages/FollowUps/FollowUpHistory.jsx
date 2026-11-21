@@ -18,8 +18,8 @@ function actionLabel(entry) {
 function valueLabel(key, value) {
   if (value == null || value === "") return "Not recorded";
   if (key === "attachment") return `${value.documentName || "Document"} · Version ${value.versionNumber ?? "unknown"} · Document #${value.documentId} · ${value.linked ? "Linked" : "Not linked"}`;
-  if (key === "assignee") return value.displayName || `Employee #${value.employeeId}`;
-  if (key.endsWith("By")) return value.username || `User #${value.userId}`;
+  if (key === "assignee") return value.displayName || `Employee #${value.employeeId} · Name unavailable`;
+  if (key.endsWith("By")) return value.username || `User #${value.userId} · Name unavailable`;
   if (key.endsWith("At")) return uploadTimeLabel(value);
   if (typeof value === "boolean") return value ? "Yes" : "No";
   return ["status", "workflowState"].includes(key) && Object.prototype.hasOwnProperty.call(states, value) ? states[value] : String(value);
@@ -63,12 +63,12 @@ export default function FollowUpHistory({ task, authFetch }) {
       {data.coverage === "PARTIAL_LEGACY" && <p className={styles.historyNotice}>Detailed history is available from the introduction of this feature. Earlier changes are not available.</p>}
       {data.coverage === "FROM_CREATION" && <p className={styles.muted}>History recorded from creation.</p>}
       {!data.content.length && <p>No detailed changes have yet been recorded.</p>}
-      <HistoryTimeline>{data.content.map(entry => <HistoryEntry key={entry.id} title={actionLabel(entry)} at={entry.occurredAt} actor={entry.actor?.employeeName || entry.actor?.username || (entry.actor?.employeeId ? `Employee #${entry.actor.employeeId}` : `User #${entry.actor?.userId}`)} metadata={<>Account: {entry.actor?.username || `User #${entry.actor?.userId}`} · Revision {entry.revision}</>} references={<><p>Entry #{entry.id} · Account #{entry.actor?.userId}{entry.actor?.employeeId != null ? ` · Employee #${entry.actor.employeeId}` : " · No employee attribution recorded"}</p><h5>Before</h5><Snapshot snapshot={entry.before} task={task} /><h5>After</h5><Snapshot snapshot={entry.after} task={task} /></>}>
+      <HistoryTimeline>{data.content.map(entry => <HistoryEntry key={entry.id} title={actionLabel(entry)} at={entry.occurredAt} actor={entry.actor?.employeeName || entry.actor?.username || (entry.actor?.employeeId ? `Employee #${entry.actor.employeeId} · Name unavailable` : `User #${entry.actor?.userId} · Name unavailable`)} metadata={<>Account: {entry.actor?.username || `User #${entry.actor?.userId} · Name unavailable`} · Revision {entry.revision}</>} references={<><p>Entry #{entry.id} · Account #{entry.actor?.userId}{entry.actor?.employeeId != null ? ` · Employee #${entry.actor.employeeId}` : " · No employee attribution recorded"}</p><h5>Before</h5><Snapshot snapshot={entry.before} task={task} /><h5>After</h5><Snapshot snapshot={entry.after} task={task} /></>}>
           {(entry.changedFields || []).map(field => <div key={field} className={styles.historyChange}><strong>{labels[field] || field}</strong>{entry.before && <p><b>Before: </b>{valueLabel(field, entry.before[field])}</p>}<p><b>{entry.before ? "After" : "Initial value"}: </b>{valueLabel(field, entry.after?.[field])}</p></div>)}
 </HistoryEntry>)}
       {data.coverage === "PARTIAL_LEGACY" && task.createdAt && data.page >= Math.max(0, data.totalPages - 1) && <li key="legacy-creation">
         <strong>Created · from existing record</strong>
-        <p className={styles.muted}>{uploadTimeLabel(task.createdAt)} · {task.createdBy?.username || (task.createdBy?.userId ? `User #${task.createdBy.userId}` : "Creator not recorded")}</p>
+        <p className={styles.muted}>{uploadTimeLabel(task.createdAt)} · {task.createdBy?.username || (task.createdBy?.userId ? `User #${task.createdBy.userId} · Name unavailable` : "Creator not recorded")}</p>
       </li>}
       </HistoryTimeline>
       <HistoryPagination displayedPage={data.page} page={page} totalPages={data?.totalPages} totalElements={data?.totalElements} onPage={setPage} disabled={loading} />

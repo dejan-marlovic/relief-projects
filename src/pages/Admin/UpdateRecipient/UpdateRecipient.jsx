@@ -289,10 +289,10 @@ const UpdateRecipient = () => {
                     {items.map((item) => (
                       <option key={item.id} value={item.id}>
                         {orgNameById[item.organizationId] ||
-                          `Organization #${item.organizationId}`}{" "}
+                          `Organization #${item.organizationId} · Name unavailable`}{" "}
                         -{" "}
                         {paymentOrderLabelById[item.paymentOrderId] ||
-                          `PO #${item.paymentOrderId}`}{" "}
+                          `PO #${item.paymentOrderId} · Name unavailable`}{" "}
                         - amount: {exactAmount(summaryAmount(item))} · {summaryText(item.amountSummary)} (id: {item.id})
                       </option>
                     ))}

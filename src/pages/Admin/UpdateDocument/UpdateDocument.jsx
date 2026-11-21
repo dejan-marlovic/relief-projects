@@ -70,14 +70,14 @@ const UpdateDocument = () => {
     return employees.reduce((acc, item) => {
       acc[item.id] =
         `${item.firstName || ""} ${item.lastName || ""}`.trim() ||
-        `Employee #${item.id}`;
+        `Employee #${item.id} · Name unavailable`;
       return acc;
     }, {});
   }, [employees]);
 
   const projectLabelById = useMemo(() => {
     return projects.reduce((acc, item) => {
-      acc[item.id] = item.projectName || item.name || `Project #${item.id}`;
+      acc[item.id] = item.projectName || item.name || `Project #${item.id} · Name unavailable`;
       return acc;
     }, {});
   }, [projects]);
@@ -322,7 +322,7 @@ const UpdateDocument = () => {
                       <option key={item.id} value={item.id}>
                         {item.documentName} -{" "}
                         {projectLabelById[item.projectId] ||
-                          `Project #${item.projectId}`}{" "}
+                          `Project #${item.projectId} · Name unavailable`}{" "}
                         (id: {item.id})
                       </option>
                     ))}

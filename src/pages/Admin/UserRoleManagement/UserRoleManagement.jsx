@@ -261,7 +261,7 @@ const UserRoleManagement = () => {
                 <tr role="row" key={user.id} className={dirty ? styles.dirtyRow : ""}>
                   <td role="cell" data-label="User">
                     <strong>{user.username}</strong>
-                    <span>{user.email || `User #${user.id}`}</span>
+                    <span>{user.email || `User #${user.id} · Name unavailable`}</span>
                   </td>
                   {roles.map((role) => (
                     <td role="cell" data-label={role.name.replaceAll("_", " ")} key={role.name}>

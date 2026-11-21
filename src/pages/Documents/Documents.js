@@ -120,7 +120,7 @@ const Documents = () => {
           String(employee.id ?? employee.employeeId),
           [employee.firstName, employee.lastName].filter(Boolean).join(" ") ||
             employee.name ||
-            `Employee #${employee.id ?? employee.employeeId}`,
+            `Employee #${employee.id ?? employee.employeeId} · Name unavailable`,
         ])
       ),
     [employees]
@@ -130,7 +130,7 @@ const Documents = () => {
     const employeeId =
       document.employeeId ?? document.employee?.id ?? document.employee?.employeeId;
     if (!employeeId) return "Unknown employee";
-    return employeeNamesById.get(String(employeeId)) || `Employee #${employeeId}`;
+    return employeeNamesById.get(String(employeeId)) || `Employee #${employeeId} · Name unavailable`;
   };
 
   useEffect(() => {

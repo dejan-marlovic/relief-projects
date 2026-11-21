@@ -332,13 +332,13 @@ const UpdateSignature = () => {
                     {items.map((item) => (
                       <option key={item.id} value={item.id}>
                         {statusNameById[item.signatureStatusId] ||
-                          `Status #${item.signatureStatusId}`}{" "}
+                          `Status #${item.signatureStatusId} · Name unavailable`}{" "}
                         -{" "}
                         {employeeNameById[item.employeeId] ||
-                          `Employee #${item.employeeId}`}{" "}
+                          `Employee #${item.employeeId} · Name unavailable`}{" "}
                         -{" "}
                         {paymentOrderLabelById[item.paymentOrderId] ||
-                          `PO #${item.paymentOrderId}`}{" "}
+                          `PO #${item.paymentOrderId} · Name unavailable`}{" "}
                         - {item.signature} (id: {item.id})
                       </option>
                     ))}

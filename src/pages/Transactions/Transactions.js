@@ -1192,7 +1192,7 @@ const Transactions = ({ refreshTrigger }) => {
 
         return costDetail
           ? `${description || "No description"} (CD#${costDetail.costDetailId})`
-          : `Cost Detail #${costDetailId}`;
+          : `Cost Detail #${costDetailId} · Name unavailable`;
       };
 
       const workbook = new ExcelJS.Workbook();

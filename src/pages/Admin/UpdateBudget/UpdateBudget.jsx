@@ -98,14 +98,14 @@ const UpdateBudget = () => {
 
   const projectNameById = useMemo(() => {
     return projects.reduce((acc, item) => {
-      acc[item.id] = item.projectName || item.name || `Project #${item.id}`;
+      acc[item.id] = item.projectName || item.name || `Project #${item.id} · Name unavailable`;
       return acc;
     }, {});
   }, [projects]);
 
   const currencyNameById = useMemo(() => {
     return currencies.reduce((acc, item) => {
-      acc[item.id] = item.name || `Currency #${item.id}`;
+      acc[item.id] = item.name || `Currency #${item.id} · Name unavailable`;
       return acc;
     }, {});
   }, [currencies]);
@@ -452,7 +452,7 @@ const UpdateBudget = () => {
                   <div className={styles.mutedHint}>
                     Project:{" "}
                     {projectNameById[selectedBudget.projectId] ||
-                      `Project #${selectedBudget.projectId}`}
+                      `Project #${selectedBudget.projectId} · Name unavailable`}
                   </div>
                 )}
               </div>
@@ -475,7 +475,7 @@ const UpdateBudget = () => {
                     <option value="">Select project</option>
                     {projects.map((item) => (
                       <option key={item.id} value={item.id}>
-                        {item.projectName || item.name || `Project #${item.id}`}{" "}
+                        {item.projectName || item.name || `Project #${item.id} · Name unavailable`}{" "}
                         (id: {item.id})
                       </option>
                     ))}

@@ -8,6 +8,12 @@ const names = {
   ownerEmployeeId: ["ownerName"], userId: ["username"], organizationId: ["organizationName"],
   donorOrganizationId: ["donorOrganizationName", "donorName"], budgetId: ["budgetName"],
   indicatorId: ["indicatorName"], transactionId: ["transactionDescription"], paymentOrderId: ["paymentOrderDescription"],
+  originBudgetId: ["originBudgetName"], targetBudgetId: ["targetBudgetName"], executableBudgetId: ["executableBudgetName"],
+  costDetailId: ["costDescription"], targetCostDetailId: ["targetCostDescription"],
+  originalReceiptId: ["originalReceiptName"], originalPaymentId: ["originalPaymentName"],
+  replacesReceiptId: ["replacesReceiptName"], replacementReceiptId: ["replacementReceiptName"],
+  replacesPaymentId: ["replacesPaymentName"], replacementPaymentId: ["replacementPaymentName"],
+  recipientId: ["recipientName", "organizationName"],
   id: ["capturedName", "capturedDocumentName", "documentName", "capturedTitle", "title", "name", "displayName", "username", "budgetName", "projectName", "organizationName", "paymentOrderDescription", "transactionDescription"],
 };
 const text = value => typeof value === "string" && value.trim() ? value : null;

@@ -22,7 +22,7 @@ export const fundingErrors = (values) => {
   return errors;
 };
 export const fundingCurrencyLabel = (observation) => observation?.source === "CURRENT_BUDGET_CONFIGURATION" && observation?.availability === "AVAILABLE" && observation.currency?.id != null
-  ? observation.currency.name || `Currency #${observation.currency.id}` : "Currency unavailable";
+  ? observation.currency.name || `Currency #${observation.currency.id} · Name unavailable` : "Currency unavailable";
 export const matchesDecimalRange = (value, range) => {
   const min = decimalUnits(range?.min), max = decimalUnits(range?.max), current = decimalUnits(value);
   if (min == null && max == null) return true;

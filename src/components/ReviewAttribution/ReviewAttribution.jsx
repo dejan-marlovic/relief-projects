@@ -21,7 +21,7 @@ export function currentReview(events, status) {
   const transitions = events.filter(e => e.previousState && e.newState && e.previousState !== e.newState);
   const latest = transitions[0];
   if (!latest || latest.newState !== status) return {};
-  const decision = e => ({ actor: { displayName: e.performedByDisplay || (e.performedBy != null ? `User #${e.performedBy}` : null) } });
+  const decision = e => ({ actor: { displayName: e.performedByDisplay || (e.performedBy != null ? `User #${e.performedBy} · Name unavailable` : null) } });
   if (status === "SUBMITTED" && latest.action === "SUBMIT") return { submission: decision(latest) };
   if (status !== "APPROVED" || latest.action !== "APPROVE") return {};
   const previous = transitions[1];

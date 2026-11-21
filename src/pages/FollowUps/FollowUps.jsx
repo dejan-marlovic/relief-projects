@@ -16,7 +16,7 @@ import { workflowLabels, workflowLabel, boardColumns, moveCommand } from "./work
 import { useUnsavedChange, useUnsavedChanges } from "../../context/UnsavedChangesContext";
 
 const buckets = { OVERDUE: "Overdue", DUE_TODAY: "Due today", UPCOMING: "Upcoming", LATER: "Later", COMPLETED: "Completed", INACTIVE: "Inactive" };
-const employeeName = (person) => person.displayName || [person.firstName, person.lastName].filter(Boolean).join(" ") || `Employee #${person.id}`;
+const employeeName = (person) => person.displayName || [person.firstName, person.lastName].filter(Boolean).join(" ") || `Employee #${person.id} · Name unavailable`;
 function draftKey(projectId, taskId) {
   try {
     const claims = JSON.parse(atob(localStorage.getItem("authToken").split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));

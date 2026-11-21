@@ -22,16 +22,16 @@ test("server totals span pages and Finance cannot correct or void", async () => 
   expect(screen.getByText(/41 receipts/)).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: /Void receipt/ })).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: /Correct receipt/ })).not.toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Download evidence #81" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: /Download evidence #81/ })).toBeDisabled();
 });
 
 test("recorded returns block receipt correction and void without disabling evidence", async () => {
   const data = envelope(); data.eligibility.canCorrect = true; data.eligibility.canVoid = true;
   data.content = [{ ...receipt, returns: { blocksSourceChanges: true } }];
   setup(data, () => reply(receipt)); mount();
-  expect(await screen.findByRole("button", { name: "Correct receipt #51" })).toBeDisabled();
-  expect(screen.getByRole("button", { name: "Void receipt #51" })).toBeDisabled();
-  expect(screen.getByRole("button", { name: "Add evidence #51" })).toBeEnabled();
+  expect(await screen.findByRole("button", { name: /Correct receipt #51/ })).toBeDisabled();
+  expect(screen.getByRole("button", { name: /Void receipt #51/ })).toBeDisabled();
+  expect(screen.getByRole("button", { name: /Add evidence #51/ })).toBeEnabled();
 });
 
 test("uncertain delivery preserves exact body and UUID across remount and retry", async () => {
@@ -51,7 +51,7 @@ test("uncertain delivery preserves exact body and UUID across remount and retry"
 test("correction defaults to no evidence and stale errors retain values and revision", async () => {
   const data = envelope(); data.eligibility.canCorrect = true;
   setup(data, () => reply({ message: "Revision changed", code: "STALE_REVISION" }, 409)); mount();
-  fireEvent.click(await screen.findByRole("button", { name: "Correct receipt #51" }));
+  fireEvent.click(await screen.findByRole("button", { name: /Correct receipt #51/ }));
   fireEvent.change(screen.getByLabelText("Amount received"), { target: { value: "4100.125" } });
   fireEvent.change(screen.getByLabelText("Reason (required)"), { target: { value: "Correct advice amount" } });
   fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
@@ -74,7 +74,7 @@ test("unavailable comparisons never display a zero remaining amount", async () =
 test.each(["void", "remove"])("Admin %s command sends the original revision and required reason", async kind => {
   const data = envelope(); data.eligibility.canVoid = true;
   setup(data, () => reply({ ...receipt, revision: 4 })); mount();
-  fireEvent.click(await screen.findByRole("button", { name: kind === "void" ? "Void receipt #51" : "Remove evidence #81" }));
+  fireEvent.click(await screen.findByRole("button", { name: kind === "void" ? /Void receipt #51/ : /Remove evidence #81/ }));
   fireEvent.change(screen.getByLabelText("Reason (required)"), { target: { value: "Wrong entry" } });
   fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
   await waitFor(() => expect(fetch.mock.calls.some(([, options]) => options?.method === "POST")).toBe(true));
@@ -88,5 +88,5 @@ test("precision rejects zero, overflow and rounding; receipt audit renders retai
   for (const value of ["0", "-1", "0.0001", "10000000000000000000"]) expect(receiptAmountError(value)).not.toBe("");
   expect(receiptAmountError("1.23000")).toBe("");
   render(<FundingReceiptAuditDetails event={{ parentTransactionId: 31, fundingReceiptContext: { version: 1, amount: "4000.125", currency: { id: 3, label: "USD" }, reason: "Duplicate", documentsBefore: [{ id: 81, label: "Old advice" }], documentsAfter: [] } }} />);
-  expect(screen.getByText("4000.125")).toBeInTheDocument(); expect(screen.getByText("Duplicate")).toBeInTheDocument(); expect(screen.getByText("Old advice (#81)")).toBeInTheDocument();
+  expect(screen.getByText("4000.125")).toBeInTheDocument(); expect(screen.getByText("Duplicate")).toBeInTheDocument(); expect(screen.getByText(/Old advice \(#81\)/)).toBeInTheDocument();
 });

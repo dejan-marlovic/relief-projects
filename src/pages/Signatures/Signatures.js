@@ -293,7 +293,7 @@ function Signatures() {
           s.signature_status_name ??
           s.name ??
           s.statusName ??
-          `Status #${s.id ?? s.signatureStatusId ?? s.signature_status_id}`,
+          `Status #${s.id ?? s.signatureStatusId ?? s.signature_status_id} · Name unavailable`,
       }));
 
       setStatusOptions(normalized.filter((x) => x.id != null));
@@ -316,7 +316,7 @@ function Signatures() {
         label:
           [e.firstName ?? e.first_name, e.lastName ?? e.last_name]
             .filter(Boolean)
-            .join(" ") || `Employee #${e.id ?? e.employeeId ?? e.employee_id}`,
+            .join(" ") || `Employee #${e.id ?? e.employeeId ?? e.employee_id} · Name unavailable`,
       }));
 
       setEmployeeOptions(normalized.filter((x) => x.id != null));
@@ -698,13 +698,13 @@ function Signatures() {
       (item) => String(item.id) === String(id),
     );
 
-    if (!paymentOrder) return `PO#${id}`;
+    if (!paymentOrder) return `PO#${id} · Name unavailable`;
 
     const description = sanitizeExcelText(paymentOrder.paymentOrderDescription);
 
     return description
       ? `PO#${paymentOrder.id} — ${description}`
-      : `PO#${paymentOrder.id}`;
+      : `PO#${paymentOrder.id} · Name unavailable`;
   };
 
   const getPaymentOrderLockLabel = (id) => {

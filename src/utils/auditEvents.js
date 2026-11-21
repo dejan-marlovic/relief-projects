@@ -46,3 +46,15 @@ export const uniqueAuditEvents = (events) => {
     return true;
   });
 };
+
+export const auditRecordName = event => {
+  const context = event.recipientReturnContext || event.fundingReturnContext || event.outgoingPaymentContext || event.fundingReceiptContext;
+  const party = context?.organization || context?.financier;
+  const titleField = { BUDGET: "budgetName", TRANSACTION: "transactionDescription", PAYMENT_ORDER: "paymentOrderDescription" }[event.entityType];
+  const titleChange = titleField && event.fieldChanges?.find(change => change.field === titleField);
+  const capturedTitle = typeof titleChange?.newValue === "string" ? titleChange.newValue : null;
+  return event.entityName || capturedTitle || event.costDetailContext?.costDescription
+    || event.allocationContext?.costDetail?.label || event.lineContext?.costDetail?.label
+    || event.recipientContext?.organization?.label || event.signatureContext?.employee?.label
+    || party?.label || party?.name || "Name not recorded";
+};

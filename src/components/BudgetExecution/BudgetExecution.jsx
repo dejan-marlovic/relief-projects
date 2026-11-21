@@ -13,7 +13,7 @@ import styles from "../ProjectCloseout/ProjectCloseout.module.scss";
 
 export function CapacityBasis({ rows = [] }) {
   return <div>{rows.map(row => <div className={styles.card} key={row.bucketId}>
-    <strong>Cost bucket #{row.bucketId}</strong>
+    <strong>Cost bucket #{row.bucketId} · {row.costDescription || row.name || "Name unavailable"}</strong>
     <dl className={styles.fields}><dt>Ceiling</dt><dd>{exactAmount(row.cap)}</dd><dt>Retained obligations</dt><dd>{exactAmount(row.obligations)}</dd><dt>Uncommitted planned capacity</dt><dd>{exactAmount(row.remaining)}</dd></dl>
   </div>)}</div>;
 }
@@ -73,7 +73,7 @@ export default function BudgetExecution({ familyId, budgetId, budgets = [], disa
     </>}
     {preview && <ScrollToForm className={styles.form} onSubmit={confirm}>
       <h4>Activation preview · {budgetReference(budgetId)}</h4><p>This observation is not a reservation. Saving revalidates all obligations.</p>
-      <p>Budget limit: {exactAmount(preview.limit)} · Planned costs: {exactAmount(preview.plannedCosts)} · Governing donor decision #{preview.donorDecisionId ?? "unavailable"}</p>
+      <p>Budget limit: {exactAmount(preview.limit)} · Planned costs: {exactAmount(preview.plannedCosts)} · Governing donor decision #{preview.donorDecisionId ?? "unavailable"} · {preview.donorName || "Name unavailable"}</p>
       {preview.blockingIssues.map((issue, i) => <p role="alert" key={i}>{issue.message}</p>)}
       <CapacityBasis rows={preview.basis} />
       {(stale || blocked) && <p role="alert">This preview cannot be submitted. Review refreshed state/history and request a fresh preview.</p>}

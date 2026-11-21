@@ -74,7 +74,7 @@ const UpdatePaymentOrder = () => {
 
   const projectLabelById = useMemo(() => {
     return projects.reduce((acc, item) => {
-      acc[item.id] = item.projectName || `Project #${item.id}`;
+      acc[item.id] = item.projectName || `Project #${item.id} · Name unavailable`;
       return acc;
     }, {});
   }, [projects]);
@@ -82,7 +82,7 @@ const UpdatePaymentOrder = () => {
   const transactionLabelById = useMemo(() => {
     return transactions.reduce((acc, item) => {
       acc[item.id] =
-        `${projectLabelById[item.projectId] || `Project #${item.projectId}`} / transaction #${item.id}`;
+        `${projectLabelById[item.projectId] || `Project #${item.projectId} · Name unavailable`} / transaction #${item.id}`;
       return acc;
     }, {});
   }, [transactions, projectLabelById]);

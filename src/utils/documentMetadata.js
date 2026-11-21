@@ -5,7 +5,7 @@ export const uploadTimeLabel = (value) => {
 };
 
 export const uploaderLabel = (document) => document.uploadedByUsername
-  || (document.uploadedByUserId ? `User #${document.uploadedByUserId}` : "Unknown");
+  || (document.uploadedByUserId ? `User #${document.uploadedByUserId} · Name unavailable` : "Unknown");
 
 export const readDocumentError = async (response, fallback) => {
   const data = await response.json().catch(() => null);

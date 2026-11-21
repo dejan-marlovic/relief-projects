@@ -7,7 +7,7 @@ import { createAuthFetch, safeReadJson } from "../../utils/http";
 import styles from "./BudgetCurrencyDialog.module.scss";
 
 const value = (number) => number == null ? "Unavailable" : String(number);
-export const currencyLabel = (currency) => currency?.label || (currency?.id ? `Currency #${currency.id}` : "Unknown currency");
+export const currencyLabel = (currency) => currency?.label || (currency?.id ? `Currency #${currency.id} · Name unavailable` : "Unknown currency");
 export function RateSnapshot({ rate }) {
   if (!rate) return null;
   return <span>1 {currencyLabel(rate.base)} → {value(rate.value)} {currencyLabel(rate.quote)} · {rate.date ? String(rate.date).replace("T", " ") : "Date unknown"} (rate #{rate.id})</span>;
@@ -36,7 +36,7 @@ export default function BudgetCurrencyDialog({ budget, currencies, rates, initia
     element.showModal();
     return () => { alive.current = false; element.close(); if (previous?.isConnected) previous.focus(); };
   }, []);
-  const name = (currencyId) => currencies.find((item) => String(item.id) === String(currencyId))?.name || `Currency #${currencyId || "?"}`;
+  const name = (currencyId) => currencies.find((item) => String(item.id) === String(currencyId))?.name || `Currency #${currencyId || "?"} · Name unavailable`;
   const invalidate = () => { setPreview(null); setAcknowledged(false); setError(""); };
   const change = (field, next) => {
     invalidate();
@@ -123,7 +123,7 @@ export default function BudgetCurrencyDialog({ budget, currencies, rates, initia
         <dl className={styles.totals}>{[["Budget limit", "budgetLimit"], ["Planned costs", "plannedCosts"], ["Remaining to allocate", "remainingToAllocate"]].map(([label, field]) => <div key={field}><dt>{label}</dt><dd><Pair pair={preview[field]} /></dd></div>)}</dl>
         <p>Excess: {value(preview.excess)} · Limit rounding adjustment: {value(preview.budgetLimitRoundingDelta)}</p>
         <p className={styles.muted}>Before → after. Unit prices are rounded to 12 decimal places; limits and calculated amounts to 3, using HALF_UP. Rounding adjustments are in the new local currency. Remaining is planning capacity.</p>
-        {(preview.costDetails || []).map((row) => <details key={row.costDetailId} className={styles.row}><summary>Cost detail #{row.costDetailId} · Local: <Pair pair={row.amountLocalCurrency} /></summary><dl>{Object.entries(columns).map(([key, label]) => <div key={key}><dt>{label}</dt><dd><Pair pair={row[key]} /></dd></div>)}</dl><p>Unit-price rounding adjustment: {value(row.unitPriceRoundingDelta)}</p></details>)}
+        {(preview.costDetails || []).map((row) => <details key={row.costDetailId} className={styles.row}><summary>Cost detail #{row.costDetailId} · {row.costDescription || budget.costDetails?.find(cost => String(cost.costDetailId) === String(row.costDetailId))?.costDescription || "Name unavailable"} · Local: <Pair pair={row.amountLocalCurrency} /></summary><dl>{Object.entries(columns).map(([key, label]) => <div key={key}><dt>{label}</dt><dd><Pair pair={row[key]} /></dd></div>)}</dl><p>Unit-price rounding adjustment: {value(row.unitPriceRoundingDelta)}</p></details>)}
         {(preview.blockingIssues || []).map((issue, index) => <p role="alert" key={index}>{issue.message}{issue.costDetailIds?.length > 0 && ` (Cost details: ${issue.costDetailIds.join(", ")})`}</p>)}
         {(preview.warnings || []).map((issue, index) => <p key={index}>Warning: {issue.message}{issue.costDetailIds?.length > 0 && ` (Cost details: ${issue.costDetailIds.join(", ")})`}</p>)}
         {preview.eligible && preview.previewToken && <><p>Preview expires: {preview.expiresAt ? new Date(preview.expiresAt).toLocaleString() : "Unknown"}.</p><label className={styles.acknowledge}><input type="checkbox" checked={acknowledged} disabled={busy} onChange={(event) => setAcknowledged(event.target.checked)} /> I have reviewed the rates, converted values and rounding, and want to convert the saved budget and cost details.</label><button disabled={busy || dirty || !acknowledged || mustReload} onClick={() => request(true)}>Confirm conversion</button></>}

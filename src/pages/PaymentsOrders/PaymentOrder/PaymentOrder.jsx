@@ -163,7 +163,7 @@ const PaymentOrder = ({
   // amount is computed by backend, display only
 
   // PO ID label (read-only)
-  const poIdLabel = isCreate ? "(new)" : po?.id != null ? `PO#${po.id}` : "-";
+  const poIdLabel = isCreate ? "(new)" : po?.id != null ? `PO#${po.id} · Name unavailable` : "-";
   const poIdWithLock =
     !isCreate && locked ? `${poIdLabel} (Booked)` : poIdLabel;
   const lifecycleStatus = po?.lifecycleStatus || "DRAFT";
@@ -405,9 +405,9 @@ const PaymentOrder = ({
     </div>
       {Boolean(po.id) && <RecordActivity recordLabel={namedReference("Payment order", po.id, po.paymentOrderDescription)}>
         <p><a href={`/payment-orders/${po.id}/report`} target="_blank" rel="noopener noreferrer">View / print payment-order report</a></p>
-        <RecordHistory entityType="PAYMENT_ORDER" entityId={po.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} />
-        <OutgoingPayments paymentOrderId={po.id} refreshKey={`${historyRefreshKey}:${lifecycleStatus}`} editingLocked={isEditing || saving || editingLocked} onChanged={onPaymentChanged} />
-        <FinancialDocuments entityType="PAYMENT_ORDER" entityId={po.id} lifecycleStatus={lifecycleStatus} locked={locked} refreshKey={historyRefreshKey} editingLocked={isEditing || saving || editingLocked} />
+        <RecordHistory recordName={po.paymentOrderDescription} entityType="PAYMENT_ORDER" entityId={po.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} />
+        <OutgoingPayments recordName={po.paymentOrderDescription} paymentOrderId={po.id} refreshKey={`${historyRefreshKey}:${lifecycleStatus}`} editingLocked={isEditing || saving || editingLocked} onChanged={onPaymentChanged} />
+        <FinancialDocuments recordName={po.paymentOrderDescription} entityType="PAYMENT_ORDER" entityId={po.id} lifecycleStatus={lifecycleStatus} locked={locked} refreshKey={historyRefreshKey} editingLocked={isEditing || saving || editingLocked} />
         <PaymentOrderFinalEvidence paymentOrderId={po.id} refreshKey={`${historyRefreshKey}:${lifecycleStatus}`} editingLocked={isEditing || saving || editingLocked} />
       </RecordActivity>}
     </>

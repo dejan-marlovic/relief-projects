@@ -10,8 +10,8 @@ export default function AllocationAuditDetails({ event }) {
   const hasChanges = event.action === "UPDATE" || (event.action === "RESTORE" &&
     (event.fieldChangesVersion != null || event.fieldChanges?.length > 0));
   return <div className={styles.details}>
-    <p>{moved ? `Moved from transaction #${event.previousParentTransactionId} to #${event.parentTransactionId}`
-      : event.parentTransactionId != null ? `Transaction #${event.parentTransactionId}` : "Transaction not recorded"}</p>
+    <p>{moved ? `Moved from transaction #${event.previousParentTransactionId} (name not recorded) to #${event.parentTransactionId} (name not recorded)`
+      : event.parentTransactionId != null ? `Transaction #${event.parentTransactionId} (name not recorded)` : "Transaction not recorded"}</p>
     {!context ? <p>No allocation context recorded.</p> : context.version !== 1 ? <p>Allocation context uses an unsupported format.</p> :
       <dl className={styles.context} aria-label="Allocation context">
         {[["Cost detail", context.costDetail, "REFERENCE"], ["Planned amount", context.plannedAmount, "DECIMAL"]].map(([label, value, type]) =>

@@ -710,7 +710,7 @@ function Recipients() {
 
     const paymentOrder = getPaymentOrderForExport(id);
 
-    if (!paymentOrder) return `PO#${id}`;
+    if (!paymentOrder) return `PO#${id} · Name unavailable`;
 
     const description = sanitizeExcelText(
       paymentOrder.paymentOrderDescription ??
@@ -720,7 +720,7 @@ function Recipients() {
 
     return description
       ? `PO#${paymentOrder.id} — ${description}`
-      : `PO#${paymentOrder.id}`;
+      : `PO#${paymentOrder.id} · Name unavailable`;
   };
 
   const getPaymentOrderState = (recipient) => {

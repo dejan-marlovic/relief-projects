@@ -11,6 +11,6 @@ export const budgetNameError = (value) => {
 export const budgetOptionLabel = (budget) => {
   const id = budget?.id ?? budget?.budgetId;
   const name = normalizeBudgetName(budget?.budgetName);
-  const label = name ? `${name} (ID: ${id})` : `Budget #${id}`;
+  const label = name ? `${name} (ID: ${id})` : `Budget #${id} · Name unavailable`;
   return budget?.revisionFamilyId ? `${label} · Revision ${budget.revisionNumber} · ${budgetFinancialRole(budget)}` : label;
 };
