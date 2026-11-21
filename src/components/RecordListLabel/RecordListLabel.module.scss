@@ -1,5 +1,9 @@
 .label {
-  display: inline-flex;
+  display: flex;
+  width: fit-content;
+  align-self: flex-start;
+  justify-self: start;
+  text-align: start;
   align-items: center;
   max-width: 100%;
   gap: .25rem;

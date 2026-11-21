@@ -1,3 +1,4 @@
+import RecordListLabel from "../../components/RecordListLabel/RecordListLabel";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import { namedReference, transactionReference } from "../../utils/recordLabels";
 import MobileRecordDeck from "../../components/MobileRecordDeck/MobileRecordDeck";
@@ -1476,7 +1477,7 @@ function PaymentOrders() {
                 />
 
                 {expandedPoId === po.id && (
-                  <div className={styles.linesPanel} data-open-record="true" data-record-inset="true"><span className="open-record-label">Viewing record</span>
+                  <div className={styles.linesPanel} data-open-record="true" data-record-inset="true"><span className="open-record-label">Viewing record</span><RecordListLabel type="payment">Payment order</RecordListLabel>
                     <PaymentOrderLines
                       paymentOrderId={po.id}
                       order={po}

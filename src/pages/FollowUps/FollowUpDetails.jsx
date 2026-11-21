@@ -1,3 +1,4 @@
+import RecordListLabel from "../../components/RecordListLabel/RecordListLabel";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import FollowUpAttachments from "./FollowUpAttachments";
 import FollowUpHistory from "./FollowUpHistory";
@@ -16,7 +17,7 @@ export default function FollowUpDetails({ task, authFetch, disabled, onAttachmen
       <span>Details &amp; activity</span><FiChevronDown aria-hidden="true" className={expanded ? styles.chevronOpen : undefined} />
     </ActionButton>
     <div id={id} className={styles.detailsBody} hidden={!expanded}>
-      <span className="open-record-label">Viewing record</span>
+      <span className="open-record-label">Viewing record</span><RecordListLabel type="followUp">Follow-up</RecordListLabel>
       <dl className={styles.taskDetails}>
         <dt>Responsible employee</dt><dd>{task.assignee?.displayName || "Unavailable"}</dd>
         <dt>Deadline</dt><dd>{task.dueDate}</dd>

@@ -1,3 +1,4 @@
+import RecordListLabel from "../../../components/RecordListLabel/RecordListLabel";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import RecordIcon from "../../../components/RecordIcon/RecordIcon";
 import { namedReference } from "../../../utils/recordLabels";
@@ -499,7 +500,7 @@ const Transaction = ({
       <RevisionFundingAssignments recordName={tx.transactionDescription} transactionId={tx.id} originBudgetId={tx.budgetId} disabled={isEditing || editingLocked} refreshKey={historyRefreshKey} onChanged={onAllocationMutationSuccess} />
       </RecordActivity>}
       {expanded && !isCreate && (
-        <div className={styles.expandedPanel} data-open-record="true"><span className="open-record-label">Viewing record</span>
+        <div className={styles.expandedPanel} data-open-record="true"><span className="open-record-label">Viewing record</span><RecordListLabel type="transaction">Transaction</RecordListLabel>
           <TransactionAllocations
             onMutationSuccess={onAllocationMutationSuccess}
             txId={tx.id}

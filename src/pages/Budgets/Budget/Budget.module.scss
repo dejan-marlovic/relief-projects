@@ -358,3 +358,6 @@ label {
 .cardTitle { @include presentation.tile-title; }
 .cardMeta { @include presentation.description; }
 .formContainer { @include presentation.surface; }
+
+// Frame the entire selected budget, including its cost breakdown.
+.budgetContainer[data-open-record="true"] { padding: clamp(.75rem, 1.5vw, 1.25rem); }

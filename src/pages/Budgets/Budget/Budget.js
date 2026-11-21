@@ -1501,7 +1501,8 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
   const hasBudget = Boolean(budget?.id);
 
   return (
-    <div className={styles.budgetContainer}>
+    <div className={styles.budgetContainer} data-open-record={hasBudget ? "true" : undefined}>
+      {hasBudget && <><span className="open-record-label">Viewing record</span><RecordListLabel type="budget">Budget</RecordListLabel></>}
       {approvalTarget && <ApprovalDialog key={approvalTarget} endpoint={`/api/budgets/${approvalTarget}`}
         recordLabel={namedReference("budget", approvalTarget, budget?.budgetName)} onCancel={() => setApprovalTarget(null)}
         onRefresh={record => { setBudget(record); setSavedBudget(record); setHistoryRefreshKey(value => value + 1); onUpdate?.(record); }}
@@ -1520,7 +1521,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
       )}
 
       {hasBudget && (
-        <div className={styles.formContainer} data-open-record="true"><div style={{ display: "flex", flexWrap: "wrap", gap: ".5rem" }}><RecordListLabel type="budget">Budget</RecordListLabel><span className="open-record-label">Viewing record</span></div>
+        <div className={styles.formContainer}>
           <div className={styles.pageHeader}>
             <div className={styles.pageHeaderText}>
               <h3 className={styles.pageTitle}><RecordIcon type="budget" />Budget Details</h3>

@@ -61,7 +61,7 @@ function TravelDetail({ openSequence = 0, id, base, projectId, authFetch, refres
     return record.permissions?.[permission] && <ActionButton editorBlocked={Boolean(form)} key={action} className={approvalStyle(action, styles)} disabled={locked} onClick={() => open(action)}><TravelActionIcon action={action} />{title}</ActionButton>;
   })}</div>;
   const editor = form && <><TravelEditor key={form.action} form={form} setForm={setForm} projectId={projectId} authFetch={authFetch} refresh={refresh} busy={busy} blocked={blocked} onSave={save} onCancel={() => setForm(null)} onReview={() => setForm(f => ({ ...f, record, expectedRevision: record.revision, reviewRequired: false, error: "", draft: f.action === "actions" ? { ...f.draft, followUp: null } : f.draft }))} /><ReadState state={reviewHistory} /><ReadState state={removalPage} /></>;
-  return <section ref={detailRef} data-open-record="true" className={styles.panel} style={{ scrollMarginTop: 16 }} aria-label="Travel request details"><span className="open-record-label">Viewing record</span>
+  return <section ref={detailRef} data-open-record="true" className={styles.panel} style={{ scrollMarginTop: 16 }} aria-label="Travel request details"><span className="open-record-label">Viewing record</span><RecordListLabel type="travel">Travel request</RecordListLabel>
     <div data-action-group="section" className={styles.actions}><ActionButton editorBlocked={Boolean(form)} disabled={!!form || busy || reportActive} onClick={onClose}><RecordIcon type="close" />Close request</ActionButton></div><ReadState state={detail} />
     {record && <><h3>{record.purpose} · Travel request #{record.id}</h3>
       <TravelSummary record={record} />

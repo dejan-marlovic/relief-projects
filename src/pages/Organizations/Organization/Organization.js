@@ -142,7 +142,7 @@ const Organization = ({
         {!isEditing && <ActionButton type="button" aria-expanded={open} onClick={() => { if (open && !confirmDiscardUnsavedChanges()) return; setExpanded(!open); }}>{open ? "Hide details" : "Show details"}</ActionButton>}
       </div>
     </header>
-    {open && <div className={styles.cardBody} data-open-record="true" data-record-inset="true"><span className="open-record-label">Viewing record</span>
+    {open && <div className={styles.cardBody} data-open-record="true" data-record-inset="true"><span className="open-record-label">Viewing record</span><RecordListLabel type="organization">Organisation</RecordListLabel>
       <section data-mobile-tile="Project relationship" data-purpose-tile="section"><h4>Project relationship</h4><p>This role belongs to the selected project. An organisation can have other roles in other projects.</p>
         {isEditing ? <>
           <label>Organisation{selectOrg()}</label><label>Role in this project{selectStatus()}</label>
