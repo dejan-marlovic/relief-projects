@@ -1,3 +1,4 @@
+import RecordIcon from "../../../components/RecordIcon/RecordIcon";
 import { namedReference } from "../../../utils/recordLabels";
 import { FinancialReviewAttribution } from "../../../components/ReviewAttribution/ReviewAttribution";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
@@ -411,7 +412,7 @@ const Transaction = ({
         <Cell className={hc(1)}>
           {compact && <span className={styles.fieldLabel}>Transaction</span>}
           <div className={styles.txIdentity}>
-            <span>{txIdLabel}</span>
+            <span><RecordIcon type="transaction" />{txIdLabel}</span>
             {!isCreate && (
               <span
                 className={`${styles.statusBadge} ${styles[`status${lifecycleStatus}`] || ""}`}

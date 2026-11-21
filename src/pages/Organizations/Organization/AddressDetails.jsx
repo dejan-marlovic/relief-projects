@@ -1,10 +1,11 @@
+import RecordIcon from "../../../components/RecordIcon/RecordIcon";
 import { useOpenEditor } from "../../../context/OpenEditorContext";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useRecordAutosave from "../../../utils/useRecordAutosave";
 import AutosaveStatus from "../../../components/ProjectClassification/AutosaveStatus";
 import { appFetch as fetch } from "../../../utils/appFetch";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FiEdit, FiLink, FiPlus, FiSave, FiStar, FiX } from "react-icons/fi";
+import { FiEdit, FiPlus, FiSave, FiStar, FiX } from "react-icons/fi";
 import { BASE_URL } from "../../../config/api";
 import styles from "./AddressDetails.module.scss";
 import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
@@ -320,12 +321,12 @@ const AddressDetails = ({ organizationId, canManage = false }) => {
             <div className={styles.actions}>
               {canManage && <button type="button" className={styles.iconCircleBtn} onClick={() => startEdit(address)} disabled={Boolean(editingId) || disabled} title="Edit address" aria-label={`Edit address ${address.id}`}><FiEdit /> Edit</button>}
               {canManage && !primary && <button type="button" className={styles.iconCircleBtn} onClick={() => makePrimary(address.id)} disabled={Boolean(editingId) || disabled} title="Make primary" aria-label={`Make address ${address.id} primary`}><FiStar /> Make primary</button>}
-              {canManage && <button type="button" className={styles.unlinkBtn} onClick={() => unlink(address.id)} disabled={associations.length <= 1 || Boolean(editingId) || disabled} title={associations.length <= 1 ? "An organization must keep one address" : "Remove from organization"} aria-label={`Remove address ${address.id} from organization`}><FiLink /> Unlink</button>}
+              {canManage && <button type="button" className={styles.unlinkBtn} onClick={() => unlink(address.id)} disabled={associations.length <= 1 || Boolean(editingId) || disabled} title={associations.length <= 1 ? "An organization must keep one address" : "Remove from organization"} aria-label={`Remove address ${address.id} from organization`}><RecordIcon type="link" /> Unlink</button>}
             </div>
           )}
         </div>
         <div className={styles.cell}><span className={styles.fieldLabel}>Type</span>{primary ? <span className={styles.primaryBadge}><FiStar /> Primary</span> : isNew ? "New" : "Additional"}</div>
-        <div className={styles.cell}><span className={styles.fieldLabel}>Street</span>{renderField(rowKey, address, "street", "Street")}</div>
+        <div className={styles.cell}><span className={styles.fieldLabel}>Street</span>{String(editingId) !== String(rowKey) && <RecordIcon type="address" />}{renderField(rowKey, address, "street", "Street")}</div>
         <div className={styles.cell}><span className={styles.fieldLabel}>City</span>{renderField(rowKey, address, "city", "City")}</div>
         <div className={styles.cell}><span className={styles.fieldLabel}>State</span>{renderField(rowKey, address, "state", "State")}</div>
         <div className={styles.cell}><span className={styles.fieldLabel}>Postal code</span>{renderField(rowKey, address, "postalCode", "Postal code")}</div>
@@ -348,7 +349,7 @@ const AddressDetails = ({ organizationId, canManage = false }) => {
               <option value="">Add an existing address…</option>
               {availableOptions.map((address) => <option key={address.id} value={address.id}>#{address.id} — {formatAddressLabel(address)}</option>)}
             </SearchableSelect>
-            <button type="button" className={styles.secondaryBtn} onClick={addExisting} disabled={!selectedAddressId || Boolean(editingId) || Boolean(busyAction)}><FiLink /> Add existing</button>
+            <button type="button" className={styles.secondaryBtn} onClick={addExisting} disabled={!selectedAddressId || Boolean(editingId) || Boolean(busyAction)}><RecordIcon type="link" /> Add existing</button>
             <button type="button" className={styles.primaryBtn} onClick={startCreate} disabled={Boolean(editingId) || Boolean(busyAction)}><FiPlus /> New Address</button>
           </div>
         )}

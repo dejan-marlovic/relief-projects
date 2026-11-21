@@ -1,3 +1,4 @@
+import RecordIcon from "../../../components/RecordIcon/RecordIcon";
 import { namedReference } from "../../../utils/recordLabels";
 import useArchivedProject from "../../../hooks/useArchivedProject";
 import { FinancialReviewAttribution } from "../../../components/ReviewAttribution/ReviewAttribution";
@@ -1520,7 +1521,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
         <div className={styles.formContainer}>
           <div className={styles.pageHeader}>
             <div className={styles.pageHeaderText}>
-              <h3 className={styles.pageTitle}>Budget Details</h3>
+              <h3 className={styles.pageTitle}><RecordIcon type="budget" />Budget Details</h3>
               <p className={styles.pageSubtitle}>
                 Draft details save after a short pause. Submission, approval and currency conversion remain manual actions.
               </p>

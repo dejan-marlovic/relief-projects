@@ -1,3 +1,4 @@
+import RecordIcon from "../../../components/RecordIcon/RecordIcon";
 import { namedReference, transactionReference } from "../../../utils/recordLabels";
 import { FinancialReviewAttribution } from "../../../components/ReviewAttribution/ReviewAttribution";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
@@ -351,7 +352,7 @@ const PaymentOrder = ({
       <Cell className={hc(1)}>
         {compact && <span className={styles.fieldLabel}>Payment order</span>}
         <div className={styles.poIdentity}>
-          <span>{poIdWithLock}</span>
+          <span><RecordIcon type="payment" />{poIdWithLock}</span>
           {!isCreate && (
             <span
               className={`${styles.statusBadge} ${styles[`status${lifecycleStatus}`] || ""}`}

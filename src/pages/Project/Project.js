@@ -1,3 +1,4 @@
+import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import useArchivedProject from "../../hooks/useArchivedProject";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import { supportsGeography, geographyExport } from "../../utils/projectGeography";
@@ -2538,7 +2539,7 @@ Approximately:
         <div className={styles.formContainer}>
           <div className={styles.pageHeader}>
             <div className={styles.pageHeaderText}>
-              <h3 className={styles.pageTitle}>Project Details</h3>
+              <h3 className={styles.pageTitle}><RecordIcon type="project" />Project Details</h3>
               <p className={styles.pageSubtitle}>
                 {getSelectedProjectName(projects, selectedProjectId)} • Update
                 project info, sectors, images, organizations, and participants.

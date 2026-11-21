@@ -1,3 +1,4 @@
+import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import useScrollToEditor from "../../hooks/useScrollToEditor";
 import { draftIsDirty, savedDraft } from "../../utils/savedDraft";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
@@ -59,8 +60,8 @@ function TravelDetail({ openSequence = 0, id, base, projectId, authFetch, refres
   })}</div>;
   const editor = form && <><TravelEditor key={form.action} form={form} setForm={setForm} projectId={projectId} authFetch={authFetch} refresh={refresh} busy={busy} blocked={blocked} onSave={save} onCancel={() => setForm(null)} onReview={() => setForm(f => ({ ...f, record, expectedRevision: record.revision, reviewRequired: false, error: "", draft: f.action === "actions" ? { ...f.draft, followUp: null } : f.draft }))} /><ReadState state={reviewHistory} /><ReadState state={removalPage} /></>;
   return <section ref={detailRef} className={styles.panel} style={{ scrollMarginTop: 16 }} aria-label="Travel request details">
-    <div className={styles.actions}><button disabled={!!form || busy || reportActive} onClick={onClose}>Close request</button></div><ReadState state={detail} />
-    {record && <><h3>{record.purpose} · Travel request #{record.id}</h3>
+    <div className={styles.actions}><button disabled={!!form || busy || reportActive} onClick={onClose}><RecordIcon type="close" />Close request</button></div><ReadState state={detail} />
+    {record && <><h3><RecordIcon type="travel" />{record.purpose} · Travel request #{record.id}</h3>
       <TravelSummary record={record} />
       <TravelSteps record={record} editingStep={formStep} plan={<>
         <h4>Trip details</h4><dl className={styles.snapshot}><dt>Traveller</dt><dd>{record.traveller?.displayName}</dd><dt>Purpose</dt><dd>{record.purpose}</dd><dt>Destination</dt><dd>{record.destination}</dd><dt>Planned dates</dt><dd>{record.departureDate} through {record.returnDate}</dd></dl>
@@ -115,7 +116,7 @@ export function TravelRegister({ projectId, authFetch, initialRequestId = null }
       <label>Departure from<input type="date" value={filters.departureFrom} onChange={e => change("departureFrom", e.target.value)} /></label><label>Departure through<input type="date" value={filters.departureTo} onChange={e => change("departureTo", e.target.value)} /></label>
       <label><input type="checkbox" checked={filters.deleted} onChange={e => change("deleted", e.target.checked)} />Show deleted requests only</label></div>
     <ReadState state={list} />{list.data?.projectDeleted && <p>This project is inactive. Retained travel requests are read-only.</p>}
-    <ul className={styles.list}>{list.data?.content.map(record => <li key={record.id}><div className={styles.heading}><h3>{record.purpose}</h3><button disabled={!!form || busy || (selected != null && selected !== record.id)} onClick={() => { setSelected(record.id); setOpenSequence(n => n + 1); }}>Open request #{record.id} · {record.purpose || "Name unavailable"}</button></div><TravelSummary record={record} /></li>)}</ul>
+    <ul className={styles.list}>{list.data?.content.map(record => <li key={record.id}><div className={styles.heading}><h3><RecordIcon type="travel" />{record.purpose}</h3><button disabled={!!form || busy || (selected != null && selected !== record.id)} onClick={() => { setSelected(record.id); setOpenSequence(n => n + 1); }}><RecordIcon type="open" />Open request #{record.id} · {record.purpose || "Name unavailable"}</button></div><TravelSummary record={record} /></li>)}</ul>
     {list.data && !list.data.content.length && <p>No travel requests match these filters.</p>}<Pagination data={list.data} page={page} setPage={setPage} label="travel requests" disabled={list.loading || busy} />
     {form && <TravelEditor form={form} setForm={setForm} projectId={projectId} authFetch={authFetch} refresh={refresh} busy={busy} blocked={list.loading || !list.data?.canCreate} onSave={create} onCancel={() => setForm(null)} onReview={() => setForm(f => ({ ...f, error: "", reviewRequired: false }))} />}
     {selected && <TravelDetail openSequence={openSequence} key={selected} id={selected} initialForm={initialEditor} base={base} projectId={projectId} authFetch={authFetch} refresh={refresh} reload={reload} onClose={() => { setSelected(null); setInitialEditor(null); }} />}

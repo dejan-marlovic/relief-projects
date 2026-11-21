@@ -1,3 +1,4 @@
+import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import DocumentLabel from "../../components/DocumentLabel/DocumentLabel";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import { HistoryTimeline, SnapshotHistoryEntry } from "../../components/ActivityHistory/ActivityHistory";
@@ -11,7 +12,7 @@ import { Attribution, HistorySnapshot, Issues, Pagination, ReadState } from "../
 import { label, useManagementRead } from "./managementApi";
 import styles from "./Management.module.scss";
 
-export function TaskLink() { return <Link to="/follow-ups" target="_blank" rel="noopener noreferrer">Open Follow-ups in a new tab</Link>; }
+export function TaskLink() { return <Link to="/follow-ups" target="_blank" rel="noopener noreferrer"><RecordIcon type="external" />Open Follow-ups in a new tab</Link>; }
 
 export function DecisionSummary({ record }) {
   const counts = record.linkedActionSummary;
@@ -36,7 +37,7 @@ export function TaskPicker({ projectId, authFetch, refresh, selected, onSelect }
   const state = useManagementRead(authFetch, `${BASE_URL}/api/projects/${projectId}/follow-ups?status=ALL&deleted=false&page=${page}&size=20`, refresh);
   return <section aria-label="Choose existing follow-up"><p>Choose an existing action for this project. Completed tasks may also be linked deliberately.</p><TaskLink /><p className={styles.muted}>Create or edit tasks there, then refresh here and link the existing task. Linking never creates, completes or duplicates a task.</p><ReadState state={state} />
     {selected && <p>Selected: #{selected.id} · {selected.title} · {workflowLabel(selected)} · Revision {selected.revision}</p>}
-    <ul className={styles.list}>{state.data?.content.filter(t => !t.isDeleted && String(t.projectId) === String(projectId)).map(t => <li key={t.id}><strong>#{t.id} · {t.title}</strong><p>{workflowLabel(t)} · Due {t.dueDate} · {t.assignee?.displayName || "Unknown assignee"}{t.assignee?.isDeleted !== false ? " · Assignee inactive or unavailable" : ""}</p><button type="button" disabled={state.loading} onClick={() => onSelect(t)}>Select follow-up #{t.id} · {t.title || "Name unavailable"}</button></li>)}</ul>
+    <ul className={styles.list}>{state.data?.content.filter(t => !t.isDeleted && String(t.projectId) === String(projectId)).map(t => <li key={t.id}><strong><RecordIcon type="followUp" />#{t.id} · {t.title}</strong><p>{workflowLabel(t)} · Due {t.dueDate} · {t.assignee?.displayName || "Unknown assignee"}{t.assignee?.isDeleted !== false ? " · Assignee inactive or unavailable" : ""}</p><button type="button" disabled={state.loading} onClick={() => onSelect(t)}>Select follow-up #{t.id} · {t.title || "Name unavailable"}</button></li>)}</ul>
     <Pagination data={state.data} page={page} setPage={setPage} label="available follow-ups" disabled={state.loading} />
   </section>;
 }
@@ -51,7 +52,7 @@ export function Associations({ kind, endpoint, authFetch, refresh, open, locked 
   const state = useManagementRead(authFetch, `${endpoint}/${kind}?includeRemoved=${removed}&page=${page}&size=20`, refresh);
   return <section aria-label={kind === "actions" ? "Linked follow-ups" : "Supporting documents"} className={styles.panel}><h3>{kind === "actions" ? "Linked follow-ups" : "Supporting documents"}</h3><label><input type="checkbox" checked={removed} onChange={e => { setRemoved(e.target.checked); setPage(0); }} />Include removed associations</label><ReadState state={state} />{downloadError && <p role="alert">{downloadError}</p>}
     {state.data?.content.map(row => <article data-mobile-tile="" className={styles.panel} key={row.id}>
-      <h4>{kind === "actions" ? `Follow-up #${row.followUpId} · ${row.capturedTitle}` : <DocumentLabel>{`${row.capturedName || `Document #${row.documentId} · Name unavailable`} · Version ${row.versionNumber ?? "unknown"}`}</DocumentLabel>}</h4>
+      <h4>{kind === "actions" && <RecordIcon type="followUp" />}{kind === "actions" ? `Follow-up #${row.followUpId} · ${row.capturedTitle}` : <DocumentLabel>{`${row.capturedName || `Document #${row.documentId} · Name unavailable`} · Version ${row.versionNumber ?? "unknown"}`}</DocumentLabel>}</h4>
       <p>{row.associationActive ? "Active association" : "Removed association"} · {label(row.availability)}</p>
       {kind === "actions" ? <>{row.current ? <><p>Current title: {row.current.title}</p><p>Current status: {workflowLabel(row.current)}{row.current.isDeleted ? " · Task deleted; not counted as completed" : ""} · Due {row.current.dueDate}</p><p>Assigned to: {row.current.assignee?.displayName || "Unknown"}{row.current.assignee?.isDeleted !== false ? " · Inactive or unavailable" : ""} · Task revision {row.current.revision}</p></> : <p>Current task metadata unavailable.</p>}<TaskLink /></> : <><p>Current name: {row.currentName || "Unavailable"} · Status: {row.currentStatus || "Unknown"}</p><button disabled={!row.downloadEligible} onClick={async () => { setDownloadError(""); try { await downloadDocument(row.documentId, authFetch); } catch (e) { setDownloadError(e.message); } }}>Download {row.capturedName || row.currentName || "Name unavailable"} · Document #{row.documentId} · Version {row.versionNumber ?? "unknown"}</button><p className={styles.muted}>Metadata availability does not verify the stored file or its contents.</p></>}
       <p>Linked <Attribution at={row.linkedAt} actor={row.linkedBy} /></p>{row.removedAt && <p>Removed <Attribution at={row.removedAt} actor={row.removedBy} /> · {row.removalReason}</p>}

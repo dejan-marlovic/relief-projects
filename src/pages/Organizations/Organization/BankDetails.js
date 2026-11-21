@@ -1,10 +1,11 @@
+import RecordIcon from "../../../components/RecordIcon/RecordIcon";
 import { useOpenEditor } from "../../../context/OpenEditorContext";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useRecordAutosave from "../../../utils/useRecordAutosave";
 import AutosaveStatus from "../../../components/ProjectClassification/AutosaveStatus";
 import { appFetch as fetch } from "../../../utils/appFetch";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FiEdit, FiLink, FiPlus, FiSave, FiX } from "react-icons/fi";
+import { FiEdit, FiPlus, FiSave, FiX } from "react-icons/fi";
 import { BASE_URL } from "../../../config/api";
 import styles from "./BankDetails.module.scss";
 import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
@@ -227,10 +228,10 @@ const BankDetails = ({ organizationId, canManage = false }) => {
           <button type="button" className={styles.dangerIconBtn} onClick={cancel} disabled={disabled} aria-label={`${isNew ? "Cancel" : "Done editing"} bank detail ${id}`}><FiX /> {isNew ? "Cancel" : "Done editing"}</button>
         </div> : <div className={styles.actions}>
           {canManage && <button type="button" className={styles.iconCircleBtn} onClick={() => startEdit(row)} disabled={Boolean(editingId) || disabled} aria-label={`Edit bank detail ${id}`}><FiEdit /> Edit</button>}
-          {canManage && <button type="button" className={styles.unlinkBtn} onClick={() => unlink(id)} disabled={Boolean(editingId) || disabled} title="Remove from organization" aria-label={`Remove bank detail ${id} from organization`}><FiLink /> Unlink</button>}
+          {canManage && <button type="button" className={styles.unlinkBtn} onClick={() => unlink(id)} disabled={Boolean(editingId) || disabled} title="Remove from organization" aria-label={`Remove bank detail ${id} from organization`}><RecordIcon type="link" /> Unlink</button>}
         </div>}
       </div>
-      <div className={styles.cell}><span className={styles.fieldLabel}>Bank name</span>{renderField(id, row, "bankName", "Bank name")}</div>
+      <div className={styles.cell}><span className={styles.fieldLabel}>Bank name</span>{!editing && <RecordIcon type="bank" />}{renderField(id, row, "bankName", "Bank name")}</div>
       <div className={styles.cell}><span className={styles.fieldLabel}>Account number</span>{renderField(id, row, "accountNumber", "Account number")}</div>
       <div className={styles.cell}><span className={styles.fieldLabel}>Branch</span>{renderField(id, row, "branchName", "Branch")}</div>
       <div className={styles.cell}><span className={styles.fieldLabel}>SWIFT</span>{renderField(id, row, "swiftCode", "SWIFT")}</div>
@@ -247,7 +248,7 @@ const BankDetails = ({ organizationId, canManage = false }) => {
           <option value="">Add an existing bank detail…</option>
           {unlinkedOptions.map((value) => <option key={value.bankId} value={value.bankId}>#{value.bankId} — {formatBankDetailLabel(value)}</option>)}
         </SearchableSelect>
-        <button type="button" className={styles.secondaryBtn} onClick={addExisting} disabled={!selectedId || Boolean(editingId) || Boolean(busyAction)}><FiLink /> Add existing</button>
+        <button type="button" className={styles.secondaryBtn} onClick={addExisting} disabled={!selectedId || Boolean(editingId) || Boolean(busyAction)}><RecordIcon type="link" /> Add existing</button>
         <button type="button" className={styles.primaryBtn} onClick={startCreate} disabled={Boolean(editingId) || Boolean(busyAction)}><FiPlus /> New Bank Detail</button>
       </div>}
     </div>

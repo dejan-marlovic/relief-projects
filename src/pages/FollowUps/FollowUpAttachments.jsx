@@ -1,3 +1,4 @@
+import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import DocumentLabel from "../../components/DocumentLabel/DocumentLabel";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import React, { useEffect, useRef, useState } from "react";
@@ -194,7 +195,7 @@ export default function FollowUpAttachments({ task, authFetch, disabled = false,
       {data.totalPages > 1 && <div className={styles.actions}><button type="button" disabled={!!editingId || busy || loading || page === 0} onClick={() => setPage(value => value - 1)}>Previous attachments</button><span>{data.totalElements} attachments · Page {data.totalPages ? data.page + 1 : 0} of {data.totalPages}</span><button type="button" disabled={!!editingId || busy || loading || page + 1 >= data.totalPages} onClick={() => setPage(value => value + 1)}>Next attachments</button></div>}
       {(data.permissions?.issues || []).map(issue => <p className={styles.muted} key={issue}>{issues[issue] || "Attachment actions are currently unavailable."}</p>)}
       {data.permissions?.canLink && <>
-        <button type="button" disabled={busy} onClick={() => setShowExisting(value => !value)}>{showExisting ? "Hide document selector" : "Link existing project document"}</button>
+        <button type="button" disabled={busy} onClick={() => setShowExisting(value => !value)}><RecordIcon type="link" />{showExisting ? "Hide document selector" : "Link existing project document"}</button>
         {showExisting && <div className={styles.attachmentEditor}>
           {documentsError && <p role="alert">{documentsError} <button type="button" onClick={() => setDocumentAttempt(value => value + 1)}>Retry project documents</button></p>}
           {!documents && !documentsError && <p role="status">Loading project documents…</p>}

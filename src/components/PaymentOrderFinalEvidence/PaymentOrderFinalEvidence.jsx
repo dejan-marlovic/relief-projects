@@ -1,3 +1,4 @@
+import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import DocumentLabel from "../DocumentLabel/DocumentLabel";
 import useRefreshLoading from "../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
@@ -131,7 +132,7 @@ export function FinalEvidencePanel({ paymentOrderId, refreshKey, editingLocked }
       {reviewRequired && <label><input type="checkbox" disabled={loading || !!error} onChange={e => { if (e.target.checked) setReviewRequired(false); }} /> I compared the refreshed collection and history and want to issue this command.</label>}
       <div className={styles.actions}><button type="submit" disabled={!allowed || busy || loading || editingLocked || reviewRequired || !form.reason.trim() || (selecting && (candidateLoading || !!candidateError || !selected))}>Save {form.action}</button><button type="button" disabled={busy} onClick={() => setForm(null)}>Cancel</button></div>
     </ScrollToForm>}
-    <p className={styles.hint}>{hasAnyRole("ADMIN", "PROJECT_MANAGER") ? <a href="/documents" target="_blank" rel="noopener noreferrer">Open Documents to upload to the order’s project</a> : "Select a file already uploaded by an authorised uploader."} Uploading and attaching are separate actions; a failed attachment never deletes the uploaded file.</p>
+    <p className={styles.hint}>{hasAnyRole("ADMIN", "PROJECT_MANAGER") ? <a href="/documents" target="_blank" rel="noopener noreferrer"><RecordIcon type="external" />Open Documents to upload to the order’s project</a> : "Select a file already uploaded by an authorised uploader."} Uploading and attaching are separate actions; a failed attachment never deletes the uploaded file.</p>
     <h4>Late evidence decision history</h4>
     {history && <><HistoryTimeline>{history.content.map(decision => <HistoryEntry key={decision.id} title={decision.action.replaceAll("_", " ").toLowerCase().replace(/^./, c => c.toUpperCase())} at={decision.occurredAt} actor={actor(decision.actor)} metadata={<>Decision #{decision.id} · Revision {decision.revision}</>} references={<>{decision.entries.map(entry => <p key={entry.id}>Attachment #{entry.id} · {entry.state} · {evidenceRole(entry.role)} · {entry.capturedDocumentName || "Name unavailable"} · Document #{entry.documentId} · Version {entry.versionNumber ?? "Unknown"}{entry.replacesEntryId && ` · Replaces #${entry.replacesEntryId}`}{entry.replacementEntryId && ` · Replaced by #${entry.replacementEntryId}`}</p>)}</>}><p>Reason: {decision.reason}</p></HistoryEntry>)}</HistoryTimeline><HistoryPagination page={page} totalPages={Math.ceil(history.totalElements / 20)} totalElements={history?.totalElements} onPage={setPage} disabled={loading || busy} /></>}
   </div>;

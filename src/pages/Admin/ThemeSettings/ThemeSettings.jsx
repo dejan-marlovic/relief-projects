@@ -1,3 +1,4 @@
+import RecordIcon from "../../../components/RecordIcon/RecordIcon";
 import React, { useMemo, useState } from "react";
 import {
   FiCheck,
@@ -218,7 +219,7 @@ function ThemeSettings() {
             disabled={isBusy}
           >
             <FiPlus aria-hidden="true" />
-            {showCreator ? "Close editor" : "Create custom theme"}
+            {showCreator && <RecordIcon type="close" />}{showCreator ? "Close editor" : "Create custom theme"}
           </button>
         </div>
 

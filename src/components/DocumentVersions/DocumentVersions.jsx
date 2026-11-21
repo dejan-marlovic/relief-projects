@@ -1,3 +1,4 @@
+import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import DocumentLabel from "../DocumentLabel/DocumentLabel";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import { HistoryTimeline, HistoryEntry } from "../ActivityHistory/ActivityHistory";
@@ -103,7 +104,7 @@ export default function DocumentVersions({ document, authFetch, categories, canE
   };
 
   return <section className={styles.metadataEditor} aria-label="Document version history">
-    <div className={styles.docActions}><h3>Version history · {document.documentName}</h3><button type="button" className={styles.downloadLink} disabled={busy} onClick={() => { if (confirmDiscardUnsavedChanges()) onClose(); }}>Close history</button>{error && <button type="button" className={styles.downloadLink} disabled={busy || loading} onClick={() => setRefresh(value => value + 1)}>Retry loading history</button>}</div>
+    <div className={styles.docActions}><h3>Version history · {document.documentName}</h3><button type="button" className={styles.downloadLink} disabled={busy} onClick={() => { if (confirmDiscardUnsavedChanges()) onClose(); }}><RecordIcon type="close" />Close history</button>{error && <button type="button" className={styles.downloadLink} disabled={busy || loading} onClick={() => setRefresh(value => value + 1)}>Retry loading history</button>}</div>
     <p className={styles.infoText}>Follow this document’s replacement chain. Each entry is an exact version with its own upload attribution and download. Upload a replacement from the current version; existing evidence links continue to reference the version originally selected. Final is a document label, not approval or proof of signing. Earlier versions are read-only.</p>
     {error && <ErrorBanner message={error} onDismiss={() => setError("")} />}
     {message && <p role="status">{message}</p>}

@@ -1,3 +1,4 @@
+import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import { HistoryPagination, HistoryTimeline, SnapshotHistoryEntry } from "../../components/ActivityHistory/ActivityHistory";
@@ -59,7 +60,7 @@ function History({ risk, endpoint, authFetch, onClose }) {
     return () => controller.abort();
   }, [endpoint, authFetch, risk.id, page, attempt]);
   return <section className={styles.panel} aria-label="Risk history"><h3>History: {risk.title}</h3><HistoryIntro>Review changes to the risk assessment, mitigation and closure decision. A scheduled review date alone does not prove a review occurred.</HistoryIntro>
-    <button onClick={onClose}>Close history</button>
+    <button onClick={onClose}><RecordIcon type="close" />Close history</button>
     {error ? <p role="alert">{error} <button onClick={() => setAttempt(v => v + 1)}>Retry history</button></p> : !data && <p role="status">Loading history…</p>}
     {data && <><HistoryTimeline>{data.content.map(event => <SnapshotHistoryEntry key={event.id} event={event} title={({ CREATE: "Created", UPDATE: "Details changed", CLOSE: "Closed", REOPEN: "Reopened", DELETE: "Deleted", RESTORE: "Restored" })[event.action] || event.action} Snapshot={Snapshot} />)}</HistoryTimeline>
       {!data.content.length && <p>No history on this page.</p>}
@@ -103,7 +104,7 @@ function Editor({ editor, employees, busy, blocked, onDraft, onSave, onCancel, l
         <label>Mitigation plan (optional)<textarea rows={4} value={draft.mitigationPlan} onChange={e => onDraft("mitigationPlan", e.target.value)} /></label>
       </> : ["close", "reopen"].includes(action) ? <label>Reason<textarea required rows={3} value={draft.reason || ""} onChange={e => onDraft("reason", e.target.value)} /></label> : <p>{action === "delete" ? "Delete this risk? Its history is retained. An administrator can restore it." : "Restore this risk with its previous open or closed status?"}</p>}
       {error && <p role="alert">{error}</p>}
-      <div className={styles.actions}><button type="submit" disabled={blocked}>{editing ? "Save risk" : "Confirm " + action}</button><button type="button" onClick={onCancel}>Close editor</button><button type="button" onClick={onDiscard}>Discard unfinished entries</button></div>
+      <div className={styles.actions}><button type="submit" disabled={blocked}>{editing ? "Save risk" : "Confirm " + action}</button><button type="button" onClick={onCancel}><RecordIcon type="close" />Close editor</button><button type="button" onClick={onDiscard}>Discard unfinished entries</button></div>
     </fieldset>
   </ScrollToForm>;
 }

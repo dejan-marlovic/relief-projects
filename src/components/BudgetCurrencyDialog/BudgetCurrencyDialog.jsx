@@ -1,3 +1,4 @@
+import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -132,6 +133,6 @@ export default function BudgetCurrencyDialog({ budget, currencies, rates, initia
     {error && <p role="alert" className={styles.notice}>{error}</p>}
     {mustReload && <button disabled={busy} onClick={reload}>Reload saved budget</button>}
     {busy && <p role="status">Loading…</p>}
-    <div className={styles.actions}><button disabled={busy || mustReload} onClick={onClose}>Close</button></div>
+    <div className={styles.actions}><button disabled={busy || mustReload} onClick={onClose}><RecordIcon type="close" />Close</button></div>
   </dialog>, document.body);
 }

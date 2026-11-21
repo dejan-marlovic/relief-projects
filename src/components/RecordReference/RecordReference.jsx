@@ -1,4 +1,5 @@
 import DocumentLabel from "../DocumentLabel/DocumentLabel";
+import RecordIcon from "../RecordIcon/RecordIcon";
 import React, { useContext } from "react";
 import { ProjectContext } from "../../context/ProjectContext";
 
@@ -17,6 +18,8 @@ const names = {
   id: ["capturedName", "capturedDocumentName", "documentName", "capturedTitle", "title", "name", "displayName", "username", "budgetName", "projectName", "organizationName", "paymentOrderDescription", "transactionDescription"],
 };
 const text = value => typeof value === "string" && value.trim() ? value : null;
+const types = { projectId: "project", followUpId: "followUp", employeeId: "person", ownerEmployeeId: "person", userId: "person", organizationId: "organization", donorOrganizationId: "organization", budgetId: "budget", originBudgetId: "budget", targetBudgetId: "budget", executableBudgetId: "budget", indicatorId: "indicator", transactionId: "transaction", paymentOrderId: "payment", recipientId: "person" };
+const decorate = (field, label) => field === "documentId" ? <DocumentLabel>{label}</DocumentLabel> : <>{types[field] && <RecordIcon type={types[field]} />}{label}</>;
 export const isRecordReference = key => Object.prototype.hasOwnProperty.call(names, key);
 export default function RecordReference({ field, value, record = {}, currentProject }) {
   const context = useContext(ProjectContext);
@@ -26,13 +29,13 @@ export default function RecordReference({ field, value, record = {}, currentProj
     || (field === "projectId" && String(record.context?.projectId) === String(value) && text(record.context?.projectName));
   if (captured) {
     const label = <>{captured} · Reference {String(value)}</>;
-    return field === "documentId" ? <DocumentLabel>{label}</DocumentLabel> : label;
+    return decorate(field, label);
   }
   if (field === "projectId") {
     const matches = item => item && String(item.id ?? item.projectId) === String(value);
     const project = matches(currentProject) ? currentProject : context?.projects?.find(matches);
     const name = text(project?.projectName) || text(project?.name);
-    if (name) return <>{name} (current name) · Reference {String(value)}</>;
+    if (name) return decorate(field, <>{name} (current name) · Reference {String(value)}</>);
   }
-  return <>Reference {String(value)} · Name not recorded</>;
+  return decorate(field, <>Reference {String(value)} · Name not recorded</>);
 }

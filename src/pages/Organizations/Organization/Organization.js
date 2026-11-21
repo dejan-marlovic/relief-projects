@@ -1,3 +1,4 @@
+import RecordIcon from "../../../components/RecordIcon/RecordIcon";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useScrollToEditor from "../../../hooks/useScrollToEditor";
 import { Link, useNavigate } from "react-router-dom";
@@ -135,7 +136,7 @@ const Organization = ({
         {!isCreate && <p>Assessment: {assessment}</p>}
       </div>
       <div className={styles.cardActions}>
-        {!isCreate && <Link to={`/organisation-assessments/${link.id}`} onClick={e => { if (!confirmDiscardUnsavedChanges()) e.preventDefault(); }}>Open assessment</Link>}
+        {!isCreate && <Link to={`/organisation-assessments/${link.id}`} onClick={e => { if (!confirmDiscardUnsavedChanges()) e.preventDefault(); }}><RecordIcon type="open" />Open assessment</Link>}
         {!isEditing && <button type="button" aria-expanded={open} onClick={() => { if (open && !confirmDiscardUnsavedChanges()) return; setExpanded(!open); }}>{open ? "Hide details" : "Show details"}</button>}
       </div>
     </header>

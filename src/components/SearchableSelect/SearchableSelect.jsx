@@ -1,3 +1,4 @@
+import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import DocumentLabel from "../DocumentLabel/DocumentLabel";
 import React, { forwardRef, useId, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -101,7 +102,7 @@ const SearchableSelect = forwardRef(function SearchableSelect({ children, onMous
           </li>)}
         </ul>
         {!matches.length && <p role="status">No matching options</p>}
-        <button type="button" onClick={close}>Close</button>
+        <button type="button" onClick={close}><RecordIcon type="close" />Close</button>
       </div>
     </div>, document.body)}
   </>;

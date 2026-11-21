@@ -1,3 +1,4 @@
+import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import { useOpenEditor } from "../../context/OpenEditorContext";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import AutosaveStatus from "../../components/ProjectClassification/AutosaveStatus";
@@ -101,7 +102,7 @@ function TaskForm({ task, projectId, employees, busy, onSave, onCancel, blocked 
       <label>Responsible employee<SearchableSelect required value={assignee} onChange={(e) => setAssignee(e.target.value)}><option value="">Select an employee</option>{task?.assignee && !employees.some((p) => p.id === task.assignee.employeeId) && <option value={task.assignee.employeeId}>{task.assignee.displayName} (retained assignment)</option>}{employees.map((p) => <option key={p.id} value={p.id}>{employeeName(p)}</option>)}</SearchableSelect></label>
     </div>
     {error && <p role="alert">{error}</p>}
-    <div className={styles.actions}><button disabled={busy || blocked || !reviewed} type="submit">{busy ? "Saving follow-up…" : "Save follow-up"}</button><button disabled={busy} type="button" onClick={onCancel}>Close</button><button disabled={busy} type="button" onClick={() => { if (window.confirm("Discard these unfinished follow-up entries?")) { clearDraft(key); onCancel(); } }}>Discard unfinished entries</button></div>
+    <div className={styles.actions}><button disabled={busy || blocked || !reviewed} type="submit">{busy ? "Saving follow-up…" : "Save follow-up"}</button><button disabled={busy} type="button" onClick={onCancel}><RecordIcon type="close" />Close</button><button disabled={busy} type="button" onClick={() => { if (window.confirm("Discard these unfinished follow-up entries?")) { clearDraft(key); onCancel(); } }}>Discard unfinished entries</button></div>
   </form>;
 }
 function Queue({ mode, projectId, authFetch }) {
@@ -285,7 +286,7 @@ function Queue({ mode, projectId, authFetch }) {
           readController.current?.abort();
           dragSource.current = task; setDragged(task); event.dataTransfer.effectAllowed = "move"; event.dataTransfer.setData("text/plain", String(task.id));
         }} onDragEnd={clearDrag}>⠿ {canDrag(task) ? "Drag to move" : "Follow-up"}</span>}
-        <div className={styles.heading}><h3>{task.title}</h3><span className={styles.badge}>{workflowLabel(task)}</span><span className={styles.badge}>{buckets[task.dueBucket] || task.dueBucket}</span></div>
+        <div className={styles.heading}><h3><RecordIcon type="followUp" />{task.title}</h3><span className={styles.badge}>{workflowLabel(task)}</span><span className={styles.badge}>{buckets[task.dueBucket] || task.dueBucket}</span></div>
         <p className={styles.muted}>{task.projectName} · Due {task.dueDate} · {task.assignee?.displayName}{task.assignee?.isDeleted !== false ? " (inactive employee)" : ""}{task.isDeleted ? " · Deleted" : ""}</p>
         {board && task.description && <p>{task.description.slice(0, 180)}{task.description.length > 180 ? "…" : ""}</p>}
         <div className={styles.actions}>

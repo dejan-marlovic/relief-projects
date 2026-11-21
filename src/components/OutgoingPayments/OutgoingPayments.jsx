@@ -1,3 +1,4 @@
+import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import useScrollToEditor from "../../hooks/useScrollToEditor";
 import DocumentLabel from "../DocumentLabel/DocumentLabel";
 import useRefreshLoading from "../../hooks/useRefreshLoading";
@@ -154,13 +155,13 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
     {error && <p role="alert">{error}{(form || pending) && " Your input has been retained. Reload and review before making a new attempt."}</p>}
     {pending && <div role="alert"><p>A payment request needs confirmation. Retry sends the exact same request and cannot create a duplicate for this request key. Do not enter it again as a new payment.</p><button type="button" disabled={busy} onClick={() => send(pending)}>Retry same request</button></div>}
     {related && <aside ref={relatedRef} style={{ scrollMarginTop: 16 }} className={styles.entry} aria-label="Related payment">
-      <h4>Related payment #{related.id} · {related.organization?.name || "Name unavailable"} · {related.status}</h4>
+      <h4><RecordIcon type="payment" />Related payment #{related.id} · {related.organization?.name || "Name unavailable"} · {related.status}</h4>
       <p>{paymentMoney(related.amount)} {paymentCurrency(related.currency)} · Paid on {related.paidDate}</p>
       <p>Entered {stamp(related.createdAt)} by {actor(related.createdBy)}</p>
       {related.voidReason && <p>Void reason: {related.voidReason}</p>}
       {related.note && <p>{related.note}</p>}
       <ul>{related.documents?.map(doc => <li key={doc.documentId}><DocumentLabel>{doc.documentName}</DocumentLabel> · Version {doc.versionNumber} <button type="button" disabled={!doc.downloadEligible || downloading != null} onClick={() => download(doc.documentId)}>Download related evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</button></li>)}</ul>
-      <button type="button" onClick={() => setRelated(null)}>Close related payment</button>
+      <button type="button" onClick={() => setRelated(null)}><RecordIcon type="close" />Close related payment</button>
     </aside>}
     {summary && <>
       <h4>{paymentStatus(summary.status)}</h4>
@@ -207,7 +208,7 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
     </ScrollToForm>}
     {!initialLoading && data?.content.length === 0 && <p>No payments on this page.</p>}
     {data?.content.map(payment => <article key={payment.id} className={`${styles.entry} ${payment.status === "VOIDED" ? styles.voided : ""}`} aria-label={`Payment ${payment.id}`}>
-      <h4>Payment #{payment.id} · {payment.organization?.name || "Name unavailable"} · {payment.status === "VOIDED" ? "Voided" : "Recorded"}</h4>
+      <h4><RecordIcon type="payment" />Payment #{payment.id} · {payment.organization?.name || "Name unavailable"} · {payment.status === "VOIDED" ? "Voided" : "Recorded"}</h4>
       <p><strong>{paymentMoney(payment.amount)} {paymentCurrency(payment.currency)}</strong> · Paid on {payment.paidDate}</p>
       {payment.currency?.labelChanged && <p className={styles.hint}>Current currency label: {payment.currency.currentName}. The recorded label above is retained.</p>}
       <p>Recipient organization: {payment.organization?.name || "Unknown"} · Entered {stamp(payment.createdAt)} by {actor(payment.createdBy)}</p>

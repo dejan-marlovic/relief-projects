@@ -1,3 +1,4 @@
+import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import useScrollToEditor from "../../hooks/useScrollToEditor";
 import DocumentLabel from "../DocumentLabel/DocumentLabel";
 import useRefreshLoading from "../../hooks/useRefreshLoading";
@@ -123,7 +124,7 @@ export function FundingReturnsPanel({ receipt, refreshKey, editingLocked, onChan
   }
   function entry(row, relatedView = false) {
     return <article key={row.id} className={styles.entry} aria-label={`Financier return ${row.id}`}>
-      <h4>Return to financier #{row.id} · {row.financier?.name || "Name unavailable"} · {row.status === "VOIDED" ? "Voided erroneous entry" : "Recorded"}</h4>
+      <h4><RecordIcon type="transaction" />Return to financier #{row.id} · {row.financier?.name || "Name unavailable"} · {row.status === "VOIDED" ? "Voided erroneous entry" : "Recorded"}</h4>
       <p><strong>{receiptMoney(row.amount)} {receiptCurrency(row.currency)}</strong> · Returned {row.returnedDate}</p>
       <p>Financier: {row.financier?.name || "Unknown"} · Original receipt #{row.originalReceiptId}</p>
       {row.currency?.labelChanged && <p>Current currency label: {row.currency.currentName}; the recorded label is retained above.</p>}
@@ -162,7 +163,7 @@ export function FundingReturnsPanel({ receipt, refreshKey, editingLocked, onChan
       {data && (reviewRequired || form.expectedReturnsRevision !== data.returnsRevision || form.expectedSourceRevision !== data.sourceRevision) && <button type="button" disabled={busy || loading || !!loadError} onClick={() => { setForm(current => ({ ...current, expectedReturnsRevision: data.returnsRevision, expectedSourceRevision: data.sourceRevision })); setReviewRequired(false); }}>Use refreshed revisions after review (keep input)</button>}
       <button type="button" disabled={busy} onClick={() => setForm(null)}>Cancel return action</button>
     </ScrollToForm>}
-    {related && <aside ref={relatedRef} style={{ scrollMarginTop: 16 }}><h4>Related return detail</h4>{entry(related, true)}<button onClick={() => setRelated(null)}>Close related return</button></aside>}
+    {related && <aside ref={relatedRef} style={{ scrollMarginTop: 16 }}><h4>Related return detail</h4>{entry(related, true)}<button onClick={() => setRelated(null)}><RecordIcon type="close" />Close related return</button></aside>}
     {!initialLoading && data?.content.length === 0 && <p>No returns on this page.</p>}
     {data?.content.map(row => entry(row))}
     {data && <div className={styles.actions}><span>{data.totalElements} returns · Page {page + 1}</span><button disabled={busy || loading || !!form || !!pending || page === 0} onClick={() => setPage(n => n - 1)}>Previous returns</button><button disabled={busy || loading || !!form || !!pending || (page + 1) * 20 >= data.totalElements} onClick={() => setPage(n => n + 1)}>Next returns</button></div>}

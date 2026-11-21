@@ -1,3 +1,4 @@
+import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import DocumentLabel from "../../components/DocumentLabel/DocumentLabel";
 import ScrollToForm from "../../components/ScrollToForm/ScrollToForm";
 import React, { useEffect, useRef, useState } from "react";
@@ -105,7 +106,7 @@ export default function ResultsEditor({ form, setForm, indicator, authFetch, pro
       {error && <p role="alert">{error}</p>}
       {form.error && <p role="alert">{form.error}</p>}
       {form.reviewRequired && <p>Draft retained. Inspect the refreshed records and history before retrying. A failed response may follow a successful save. {action === "create" && "Check every relevant list page before creating again; retrying can create a duplicate indicator."} <button type="button" disabled={blocked} onClick={onReview}>I reviewed the refreshed records; enable retry</button></p>}
-      <div className={styles.actions}>{!isIndicator && <button type="submit" disabled={blocked || form.reviewRequired || (action === "evidence" && !draft.documentId)}>Save {title.toLowerCase()}</button>}<button type="button" onClick={onCancel}>{isIndicator ? dirty ? "Discard unfinished entries" : "Close editor" : "Cancel"}</button></div>
+      <div className={styles.actions}>{!isIndicator && <button type="submit" disabled={blocked || form.reviewRequired || (action === "evidence" && !draft.documentId)}>Save {title.toLowerCase()}</button>}<button type="button" onClick={onCancel}><RecordIcon type="close" />{isIndicator ? dirty ? "Discard unfinished entries" : "Close editor" : "Cancel"}</button></div>
     </fieldset>
   </ScrollToForm>;
 }

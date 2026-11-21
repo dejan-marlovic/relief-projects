@@ -1,3 +1,4 @@
+import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import React, { useContext, useEffect, useMemo, useState } from "react";
@@ -84,7 +85,7 @@ export function Schedule({ authFetch }) {
       <p><strong>{data.from} through {data.to}</strong> · {data.businessTimezone}{data.rangeDefaulted && " · Default window"}</p>
       <p className={styles.muted}>Observed {data.observedAt}. Other plans may change between pages. Overlaps count other submitted or approved plans, including outside these filters; they are warnings, not reservations. Zero overlaps does not guarantee availability.</p>
       <ul className={styles.list}>{data.content.map(row => <li key={row.id}>
-        <div className={styles.heading}><h3>{row.purpose}</h3><button disabled={result.loading} onClick={() => open(row)}>Open travel request #{row.id} · {row.purpose || "Name unavailable"}</button></div>
+        <div className={styles.heading}><h3>{row.purpose}</h3><button disabled={result.loading} onClick={() => open(row)}><RecordIcon type="open" />Open travel request #{row.id} · {row.purpose || "Name unavailable"}</button></div>
         <p>{row.project.name} · Project #{row.project.id}</p>
         <span className={`${styles.statusBadge} ${styles[`status${row.state}`] || ""}`}>{row.state}</span>
         <p>{row.traveller.displayName} · {row.destination}{!row.traveller.active && " · Inactive traveller"}</p>

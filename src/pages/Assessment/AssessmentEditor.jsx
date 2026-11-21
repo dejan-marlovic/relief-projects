@@ -1,3 +1,4 @@
+import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import ScrollToForm from "../../components/ScrollToForm/ScrollToForm";
 import React, { useRef, useState } from "react";
 import { EvidencePicker } from "../Management/ManagementViews";
@@ -24,7 +25,7 @@ export default function AssessmentEditor({ form, setForm, projectId, authFetch, 
       {!["create", "edit", "submit", "approve", "evidence"].includes(action) && <>{action === "withdraw-approval" && <p>Withdrawal removes current approval and sets the project approval value to No. The decision stays in history. Corrections need resubmission and a new independent approval.</p>}{action === "restore" && <p>Restoration restores the retained draft or returned assessment, never approval.</p>}{action === "delete" && <p>History and evidence links remain retained. An administrator can restore this assessment.</p>}{textarea("reason", "Reason", true)}</>}
       {error && <p role="alert">{error}</p>}{form.error && <p role="alert">{form.error}</p>}
       {form.reviewRequired && <div role="alert"><p>Your draft is retained. Review the refreshed assessment, evidence and history before retrying. The earlier request may have succeeded; do not repeat it if the intended result is already recorded.</p><button type="button" disabled={reviewBlocked} onClick={onReview}>I reviewed the refreshed state; enable retry</button></div>}
-      <div className={styles.actions}>{!["create", "edit"].includes(action) && <button type="submit" className={approvalStyle(action, styles)} disabled={busy || blocked || form.reviewRequired}><TravelActionIcon action={action} />Save {commands[action][0].toLowerCase()}</button>}<button type="button" onClick={close}>Close editor</button></div>
+      <div className={styles.actions}>{!["create", "edit"].includes(action) && <button type="submit" className={approvalStyle(action, styles)} disabled={busy || blocked || form.reviewRequired}><TravelActionIcon action={action} />Save {commands[action][0].toLowerCase()}</button>}<button type="button" onClick={close}><RecordIcon type="close" />Close editor</button></div>
     </fieldset>
   </ScrollToForm>;
 }
