@@ -27,7 +27,7 @@ beforeEach(() => {
   });
 });
 const mount = () => render(<ResultsRegister projectId={2} authFetch={fetcher} />);
-async function open() { mount(); fireEvent.click(await screen.findByText("Open indicator #41")); await screen.findByText("Record result"); }
+async function open() { mount(); fireEvent.click(await screen.findByText(/Open indicator \#41 ·/)); await screen.findByText("Record result"); }
 test.each([
   ["999999999999999999.999999", "QUANTITY", true], ["0", "COUNT", true], ["1.5", "COUNT", false],
   ["100", "PERCENTAGE", true], ["100.000001", "PERCENTAGE", false], ["1.0000001", "QUANTITY", false],
@@ -52,7 +52,7 @@ test("records exact quantities and date strings with explicit evidence", async (
   expect(JSON.parse(writes()[0][1].body)).toEqual({ expectedRevision: 3, value: "9007199254740993.123456", asOfDate: "2026-09-25", notes: null, documentIds: [42] });
 });
 test("correction uses captured basis, retains date and explicitly replaces evidence", async () => {
-  await open(); fireEvent.click(screen.getByText("Correct report #91"));
+  await open(); fireEvent.click(screen.getByText(/Correct report \#91 ·/));
   expect(screen.queryByLabelText(/Measured through/)).not.toBeInTheDocument();
   fireEvent.change(screen.getByLabelText(/Reported value/), { target: { value: "300" } });
   fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "Deduplicated" } });
@@ -77,8 +77,8 @@ test("voided date reuse sends explicit predecessor and new reporting date", asyn
   await waitFor(() => expect(writes()).toHaveLength(1)); expect(JSON.parse(writes()[0][1].body)).toMatchObject({ replacesVoidedResultId: 91, asOfDate: "2026-09-20", value: "310", reason: "Fresh assessment" });
 });
 test("reader sees retained reports but no mutation controls", async () => {
-  indicator.permissions = {}; reports[0].permissions = {}; mount(); fireEvent.click(await screen.findByText("Open indicator #41"));
-  await screen.findByText(/Report #91 · effective/); expect(screen.queryByText("Record result")).not.toBeInTheDocument(); expect(screen.queryByText("Edit indicator")).not.toBeInTheDocument(); expect(screen.queryByText("Correct report #91")).not.toBeInTheDocument();
+  indicator.permissions = {}; reports[0].permissions = {}; mount(); fireEvent.click(await screen.findByText(/Open indicator \#41 ·/));
+  await screen.findByText(/Report #91 · effective/); expect(screen.queryByText("Record result")).not.toBeInTheDocument(); expect(screen.queryByText("Edit indicator")).not.toBeInTheDocument(); expect(screen.queryByText(/Correct report \#91 ·/)).not.toBeInTheDocument();
 });
 test("evidence pages expose retained associations beyond first page", async () => {
   const normal = fetcher.getMockImplementation(); fetcher.mockImplementation((url, options) => url.includes("/evidence?") ? Promise.resolve(response({ ...page([{ id: url.includes("page=1") ? 22 : 1, documentId: 42, capturedName: url.includes("page=1") ? "Older evidence" : "First evidence", versionNumber: 1, associationActive: false, availability: "DOCUMENT_DELETED", permissions: {} }]), totalElements: 21, totalPages: 2 })) : normal(url, options));
@@ -146,7 +146,7 @@ test("new indicator switches to updating the saved ID instead of creating again"
 test("a failed read offers retry without a permanent refresh button", async () => {
   fetcher.mockResolvedValueOnce(response({ message: "Temporarily unavailable" }, 503));
   mount(); fireEvent.click(await screen.findByText("Retry"));
-  await screen.findByText("Open indicator #41");
+  await screen.findByText(/Open indicator \#41 ·/);
   expect(screen.queryByText("Refresh results")).not.toBeInTheDocument();
   expect(writes()).toHaveLength(0);
 });
@@ -154,7 +154,7 @@ test("a failed read offers retry without a permanent refresh button", async () =
 
 test("first correction click opens and scrolls during focus refresh, but cannot save until reads settle", async () => {
   await open();
-  await waitFor(() => expect(screen.getByText("Correct report #91")).toBeEnabled());
+  await waitFor(() => expect(screen.getByText(/Correct report \#91 ·/)).toBeEnabled());
   const normal = fetcher.getMockImplementation();
   const pendingReads = [];
   fetcher.mockImplementation((url, options) => new Promise(resolve => pendingReads.push(() => resolve(normal(url, options)))));
@@ -163,8 +163,8 @@ test("first correction click opens and scrolls during focus refresh, but cannot 
   HTMLElement.prototype.scrollIntoView = scroll;
   try {
     fireEvent(window, new Event("focus"));
-    expect(screen.getByText("Correct report #91")).toBeEnabled();
-    fireEvent.click(screen.getByText("Correct report #91"));
+    expect(screen.getByText(/Correct report \#91 ·/)).toBeEnabled();
+    fireEvent.click(screen.getByText(/Correct report \#91 ·/));
     const form = screen.getByRole("form", { name: "Correct report" });
     expect(form).toBeInTheDocument();
     expect(scroll.mock.instances).toContain(form);

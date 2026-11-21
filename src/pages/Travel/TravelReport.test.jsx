@@ -91,15 +91,15 @@ test("uncertain successful creation cannot be replayed when refresh discovers th
 test("exact-version evidence and task links use distinct report endpoints and task revision", async () => {
   await mount(); fireEvent.click(screen.getByText("Link report document")); await screen.findByRole("option", { name: /Trip account.pdf/ }); change("Supporting document", "109"); await save("Link report document"); await waitFor(() => expect(writes()).toHaveLength(1));
   expect(JSON.parse(writes()[0][1].body)).toEqual({ documentId: 109, expectedRevision: 2, expectedTravelRevision: 6 });
-  await waitFor(() => expect(screen.getByRole("button", { name: "Link report follow-up" })).toBeEnabled()); fireEvent.click(screen.getByText("Link report follow-up")); fireEvent.click(await screen.findByText("Select follow-up #84")); await save("Link report follow-up");
+  await waitFor(() => expect(screen.getByRole("button", { name: "Link report follow-up" })).toBeEnabled()); fireEvent.click(screen.getByText("Link report follow-up")); fireEvent.click(await screen.findByText(/Select follow\-up \#84 ·/)); await save("Link report follow-up");
   await waitFor(() => expect(writes()).toHaveLength(2)); expect(JSON.parse(writes()[1][1].body)).toEqual({ followUpId: 84, expectedFollowUpRevision: 3, expectedRevision: 3, expectedTravelRevision: 6 });
 });
 test("accepted evidence distinguishes reviewed links from late additions and respects remove permission", async () => {
   data.report.state = "ACCEPTED"; data.report.permissions = { canAddEvidence: true }; data.report.currentAcceptance = { id: 190, basis: {} };
   evidence = [{ id: 51, documentId: 109, capturedName: "Reviewed.pdf", associationActive: true, includedInCurrentAcceptance: true, downloadEligible: true, versionNumber: 2, permissions: { canRemove: false } }, { id: 52, documentId: 110, capturedName: "Late.pdf", associationActive: true, includedInCurrentAcceptance: false, downloadEligible: false, permissions: { canRemove: true } }];
-  await mount(); expect(await screen.findByText("Included in accepted report submission")).toBeVisible(); expect(screen.getByText("Late association — outside the accepted report")).toBeVisible(); expect(screen.queryByText("Remove evidence association #51")).not.toBeInTheDocument();
-  fireEvent.click(screen.getByText("Download document #109 version 2")); await waitFor(() => expect(downloadDocument).toHaveBeenCalledWith(109, fetcher));
-  fireEvent.click(screen.getByText("Remove evidence association #52")); change("Report change reason", "Duplicate supporting material"); await save("Remove report document link"); await waitFor(() => expect(writes()).toHaveLength(1)); expect(writes()[0][0]).toBe(`${endpoint}/report/evidence/52/remove`);
+  await mount(); expect(await screen.findByText("Included in accepted report submission")).toBeVisible(); expect(screen.getByText("Late association — outside the accepted report")).toBeVisible(); expect(screen.queryByText(/Remove evidence association \#51 ·/)).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: /Document #109 · Version 2/ })); await waitFor(() => expect(downloadDocument).toHaveBeenCalledWith(109, fetcher));
+  fireEvent.click(screen.getByText(/Remove evidence association \#52 ·/)); change("Report change reason", "Duplicate supporting material"); await save("Remove report document link"); await waitFor(() => expect(writes()).toHaveLength(1)); expect(writes()[0][0]).toBe(`${endpoint}/report/evidence/52/remove`);
 });
 test.each([["delete", "Delete report"], ["restore", "Restore report"]])("%s preserves report identity and requires reason", async (action, title) => {
   if (action === "restore") data.report = { ...data.report, isDeleted: true, permissions: { canRestore: true } };
@@ -119,7 +119,7 @@ test("parent refresh failure retains the report editor and report editing locks 
     return normal(url, options);
   });
   render(<MemoryRouter><TravelRegister projectId={7} authFetch={fetcher} /></MemoryRouter>);
-  fireEvent.click(await screen.findByText("Open request #31")); fireEvent.click(await screen.findByText("Edit report"));
+  fireEvent.click(await screen.findByText(/Open request \#31 ·/)); fireEvent.click(await screen.findByText("Edit report"));
   change("Outcome summary (required before submission)", "Retained across parent failure");
   await waitFor(() => expect(screen.getByRole("button", { name: "Cancel travel request" })).toBeDisabled());
   expect(screen.getByRole("button", { name: "Close request" })).toBeDisabled();

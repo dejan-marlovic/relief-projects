@@ -42,7 +42,7 @@ export default function TravelReportEditor({ form, setForm, endpoint, projectId,
       {action === "actions" && <TaskPicker projectId={projectId} authFetch={authFetch} refresh={refresh} selected={draft.followUp} onSelect={value => update("followUp", value)} />}
       {action === "evidence" && <EvidencePicker projectId={projectId} authFetch={authFetch} refresh={refresh} selected={draft.documentId} onSelect={value => update("documentId", value)} />}
       {["actions", "evidence"].includes(action) && record?.state === "ACCEPTED" && <p>This is a late association, outside the accepted submission. Acceptance will not be rewritten.</p>}
-      {action.endsWith("-remove") && <p>Remove association #{form.link.id}. The document or task and retained history remain.</p>}
+      {action.endsWith("-remove") && <p>Remove association #{form.link.id} · {form.link.capturedTitle || form.link.capturedName || "Name unavailable"}. The document or task and retained history remain.</p>}
       {["edit", "basis", "return", "reopen", "delete", "restore", "evidence-remove", "actions-remove"].includes(action) && text("reason", "Report change reason", action !== "edit" || !!record?.currentSubmission)}
       {action === "edit" && !record?.currentSubmission && <p className={styles.muted}>A change reason is optional before the first report submission.</p>}
       {error && <p role="alert">{error}</p>}{form.error && <p role="alert">{form.error}</p>}

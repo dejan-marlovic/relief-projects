@@ -26,7 +26,7 @@ beforeEach(() => {
   });
 });
 const mount = () => render(<MemoryRouter><ManagementRegister projectId={7} authFetch={fetcher} /></MemoryRouter>);
-async function open() { mount(); fireEvent.click(await screen.findByText("Open record #51")); await screen.findByText("Edit observation"); }
+async function open() { mount(); fireEvent.click(await screen.findByText("Open record #51 · Missing distribution checks")); await screen.findByText("Edit observation"); }
 async function save(label) {
   const button = screen.queryByRole("button", { name: `Save ${label.toLowerCase()}` });
   if (button) { await waitFor(() => expect(button).toBeEnabled()); fireEvent.click(button); }
@@ -84,11 +84,11 @@ test("replacement response requires a reason and retains its response date", asy
   expect(screen.getByLabelText("Reason")).toBeRequired(); fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "Revised procedure" } }); await save("Record management response"); await waitFor(() => expect(writes()).toHaveLength(1)); expect(JSON.parse(writes()[0][1].body)).toMatchObject({ reason: "Revised procedure", responseDate: "2026-09-10", text: "Introduce checks" });
 });
 test("linking an existing task sends its reviewed revision without task mutations", async () => {
-  await open(); fireEvent.click(screen.getByText("Link existing follow-up")); fireEvent.click(await screen.findByText("Select follow-up #301")); await save("Link existing follow-up"); await waitFor(() => expect(writes()).toHaveLength(1));
+  await open(); fireEvent.click(screen.getByText("Link existing follow-up")); fireEvent.click(await screen.findByText(/Select follow\-up \#301 ·/)); await save("Link existing follow-up"); await waitFor(() => expect(writes()).toHaveLength(1));
   expect(writes()[0][0]).toMatch(/management-records\/51\/actions$/); expect(JSON.parse(writes()[0][1].body)).toEqual({ expectedRevision: 2, followUpId: 301, expectedFollowUpRevision: 2 });
 });
 test("task picker pagination does not submit its surrounding form", async () => {
-  await open(); fireEvent.click(screen.getByText("Link existing follow-up")); await screen.findByText("Select follow-up #301"); fireEvent.click(screen.getByText("Next available follow-ups")); await waitFor(() => expect(fetcher.mock.calls.some(([url]) => url.includes("follow-ups?") && url.includes("page=1"))).toBe(true)); expect(writes()).toHaveLength(0);
+  await open(); fireEvent.click(screen.getByText("Link existing follow-up")); await screen.findByText(/Select follow\-up \#301 ·/); fireEvent.click(screen.getByText("Next available follow-ups")); await waitFor(() => expect(fetcher.mock.calls.some(([url]) => url.includes("follow-ups?") && url.includes("page=1"))).toBe(true)); expect(writes()).toHaveLength(0);
 });
 test("resolve requires acknowledgement and sends the whole manifest, not just visible links", async () => {
   record.permissions.canResolve = true; record.requiresOutstandingActionExplanation = true; record.expectedFollowUpRevisions = { "301": 2, "399": 8 }; record.linkedActionSummary = { total: 2, completed: 0, open: 1, unavailable: 1 };
@@ -111,17 +111,17 @@ test("exact evidence picker excludes foreign documents and posts only the select
   fireEvent.change(screen.getByLabelText("Supporting document"), { target: { value: "92" } }); await save("Link supporting document"); await waitFor(() => expect(writes()).toHaveLength(1)); expect(JSON.parse(writes()[0][1].body)).toEqual({ expectedRevision: 2, documentId: 92 });
 });
 test("unavailable evidence retains captured/current names and can be removed with a reason", async () => {
-  await open(); expect(await screen.findByText(/Original evaluation.pdf/)).toBeInTheDocument(); expect(screen.getByText(/Current name: Evaluation.pdf/)).toBeInTheDocument(); expect(screen.getByText("Download document #92 version 2")).toBeDisabled();
-  fireEvent.click(screen.getByText("Remove evidence association #18")); fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "Wrong reference" } }); await save("Remove evidence association"); await waitFor(() => expect(writes()).toHaveLength(1)); expect(writes()[0][0]).toMatch(/evidence\/18\/remove$/); expect(JSON.parse(writes()[0][1].body)).toEqual({ expectedRevision: 2, reason: "Wrong reference" });
+  await open(); expect(await screen.findByRole("heading", { name: /Original evaluation.pdf/ })).toBeInTheDocument(); expect(screen.getByText(/Current name: Evaluation.pdf/)).toBeInTheDocument(); expect(screen.getByRole("button", { name: /Document #92 · Version 2/ })).toBeDisabled();
+  fireEvent.click(screen.getByText(/Remove evidence association \#18 ·/)); fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "Wrong reference" } }); await save("Remove evidence association"); await waitFor(() => expect(writes()).toHaveLength(1)); expect(writes()[0][0]).toMatch(/evidence\/18\/remove$/); expect(JSON.parse(writes()[0][1].body)).toEqual({ expectedRevision: 2, reason: "Wrong reference" });
 });
 test("resolved records expose reopen rather than editing; task changes do not reopen them", async () => {
   record.state = "RESOLVED"; record.resolutionReviewRequired = true; record.permissions = { canReopen: true, canDelete: true }; actionLinks[0].permissions = {}; evidenceLinks[0].permissions = {};
-  mount(); fireEvent.click(await screen.findByText("Open record #51")); await screen.findByText("Reopen record");
+  mount(); fireEvent.click(await screen.findByText("Open record #51 · Missing distribution checks")); await screen.findByText("Reopen record");
   expect(screen.queryByText("Edit observation")).not.toBeInTheDocument(); expect(screen.queryByText("Link existing follow-up")).not.toBeInTheDocument(); expect(screen.getAllByText("Management resolution: Recorded")).toHaveLength(2); expect(screen.getAllByText(/Review required after linked task changes/)).toHaveLength(2);
 });
 test("reader permissions do not inherit task-assignee management rights", async () => {
   record.permissions = {}; actionLinks[0].permissions = {}; evidenceLinks[0].permissions = {};
-  mount(); fireEvent.click(await screen.findByText("Open record #51")); await screen.findByText("Recorded management response");
+  mount(); fireEvent.click(await screen.findByText("Open record #51 · Missing distribution checks")); await screen.findByText("Recorded management response");
   expect(screen.queryByText("Record management response")).not.toBeInTheDocument(); expect(screen.queryByText("Edit observation")).not.toBeInTheDocument(); expect(await screen.findByText(/Current title: Sample distribution lists/)).toBeInTheDocument(); expect(writes()).toHaveLength(0);
 });
 test.each([["delete", "Delete record"], ["restore", "Restore record"], ["reopen", "Reopen record"]])("%s is explicit and revision-protected", async (action, title) => {
@@ -133,5 +133,5 @@ test("uncertain creation preserves draft and blocks automatic replay", async () 
 });
 test("association pagination and removed episodes remain accessible", async () => {
   const normal = fetcher.getMockImplementation(); fetcher.mockImplementation((url, options) => url.includes("/evidence?") ? Promise.resolve(response({ ...page([{ ...evidenceLinks[0], id: url.includes("page=1") ? 30 : 18, capturedName: url.includes("page=1") ? "Retained old version" : "First version", associationActive: false, permissions: {} }]), totalPages: 2, totalElements: 21 })) : normal(url, options));
-  await open(); const evidence = within(screen.getByRole("region", { name: "Supporting documents" })); fireEvent.click(evidence.getByLabelText("Include removed associations")); await waitFor(() => expect(fetcher.mock.calls.some(([url]) => url.includes("evidence?includeRemoved=true"))).toBe(true)); await waitFor(() => expect(evidence.getByText("Next evidence")).toBeEnabled()); fireEvent.click(evidence.getByText("Next evidence")); await screen.findByText(/Retained old version/); expect(evidence.getByText(/Removed association/)).toBeInTheDocument();
+  await open(); const evidence = within(screen.getByRole("region", { name: "Supporting documents" })); fireEvent.click(evidence.getByLabelText("Include removed associations")); await waitFor(() => expect(fetcher.mock.calls.some(([url]) => url.includes("evidence?includeRemoved=true"))).toBe(true)); await waitFor(() => expect(evidence.getByText("Next evidence")).toBeEnabled()); fireEvent.click(evidence.getByText("Next evidence")); await screen.findByRole("heading", { name: /Retained old version/ }); expect(evidence.getByText(/Removed association/)).toBeInTheDocument();
 });

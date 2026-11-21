@@ -26,7 +26,7 @@ beforeEach(() => {
   });
 });
 const mount = () => render(<MemoryRouter><TravelRegister projectId={7} authFetch={fetcher} /></MemoryRouter>);
-async function open() { mount(); fireEvent.click(await screen.findByText("Open request #31")); await screen.findByRole("region", { name: "Travel request details" }); await waitFor(() => expect(screen.getAllByText("Monitor distributions · Travel request #31")).toHaveLength(1)); for (const name of [/Plan the trip/, /Travel approval/]) { const step = screen.getByRole("button", { name }); if (step.getAttribute("aria-expanded") === "false") fireEvent.click(step); } }
+async function open() { mount(); fireEvent.click(await screen.findByText(/Open request \#31 ·/)); await screen.findByRole("region", { name: "Travel request details" }); await waitFor(() => expect(screen.getAllByText("Monitor distributions · Travel request #31")).toHaveLength(1)); for (const name of [/Plan the trip/, /Travel approval/]) { const step = screen.getByRole("button", { name }); if (step.getAttribute("aria-expanded") === "false") fireEvent.click(step); } }
 async function save(title) {
   const button = screen.queryByRole("button", { name: `Save ${title.toLowerCase()}` });
   if (button) { await waitFor(() => expect(button).toBeEnabled()); fireEvent.click(button); }
@@ -76,7 +76,7 @@ test("uncertain create retains draft and never automatically creates twice", asy
 });
 test("task link captures selected task revision and purpose; pagination does not submit", async () => {
   await open(); fireEvent.click(screen.getByText("Link existing follow-up")); const next = await screen.findByText("Next available follow-ups"); await waitFor(() => expect(next).toBeEnabled()); fireEvent.click(next); await waitFor(() => expect(fetcher.mock.calls.some(([url]) => url.includes("follow-ups?") && url.includes("page=1"))).toBe(true)); expect(writes()).toHaveLength(0);
-  fireEvent.click(await screen.findByText("Select follow-up #84")); fireEvent.change(screen.getByLabelText("Follow-up purpose"), { target: { value: "REPORTING" } }); await save("Link existing follow-up"); await waitFor(() => expect(writes()).toHaveLength(1)); expect(JSON.parse(writes()[0][1].body)).toEqual({ expectedRevision: 2, followUpId: 84, expectedFollowUpRevision: 5, purpose: "REPORTING" }); expect(writes()[0][0]).toMatch(/travel-requests\/31\/actions$/);
+  fireEvent.click(await screen.findByText(/Select follow\-up \#84 ·/)); fireEvent.change(screen.getByLabelText("Follow-up purpose"), { target: { value: "REPORTING" } }); await save("Link existing follow-up"); await waitFor(() => expect(writes()).toHaveLength(1)); expect(JSON.parse(writes()[0][1].body)).toEqual({ expectedRevision: 2, followUpId: 84, expectedFollowUpRevision: 5, purpose: "REPORTING" }); expect(writes()[0][0]).toMatch(/travel-requests\/31\/actions$/);
 });
 test("evidence sends exact version ID", async () => {
   await open(); fireEvent.click(screen.getByText("Link supporting document")); await screen.findByRole("option", { name: /ToR · Version 1/ }); fireEvent.change(screen.getByLabelText("Supporting document"), { target: { value: "109" } }); await save("Link supporting document"); await waitFor(() => expect(writes()).toHaveLength(1)); expect(JSON.parse(writes()[0][1].body)).toEqual({ documentId: 109, expectedRevision: 2 });
@@ -84,16 +84,16 @@ test("evidence sends exact version ID", async () => {
 test("approved links distinguish basis from late evidence and disable unavailable downloads", async () => {
   submitted(); record.state = "APPROVED"; record.permissions = {};
   evidenceLinks = [{ id: 1, documentId: 109, capturedName: "ToR", versionNumber: 1, includedInCurrentApproval: true, associationActive: true, downloadEligible: false, permissions: { canRemove: false } }, { id: 2, documentId: 110, capturedName: "Report", versionNumber: 2, includedInCurrentApproval: false, associationActive: true, permissions: { canRemove: true } }];
-  await open(); expect(await screen.findByText("Included in approved submission")).toBeInTheDocument(); expect(screen.getByText("Added after approval — outside the approved submission")).toBeInTheDocument(); expect(screen.getByRole("button", { name: "Download document #109 version 1" })).toBeDisabled(); expect(screen.queryByText("Remove evidence association #1")).not.toBeInTheDocument();
+  await open(); expect(await screen.findByText("Included in approved submission")).toBeInTheDocument(); expect(screen.getByText("Added after approval — outside the approved submission")).toBeInTheDocument(); expect(screen.getByRole("button", { name: /Document #109 · Version 1/ })).toBeDisabled(); expect(screen.queryByText(/Remove evidence association \#1 ·/)).not.toBeInTheDocument();
 });
 test("removal addresses association episode and includes reason", async () => {
-  evidenceLinks = [{ id: 6, documentId: 109, capturedName: "ToR", permissions: { canRemove: true } }]; await open(); fireEvent.click(await screen.findByText("Remove evidence association #6")); fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "Wrong attachment" } }); await save("Remove evidence association"); await waitFor(() => expect(writes()).toHaveLength(1)); expect(writes()[0][0]).toMatch(/evidence\/6\/remove$/); expect(JSON.parse(writes()[0][1].body)).toEqual({ expectedRevision: 2, reason: "Wrong attachment" });
+  evidenceLinks = [{ id: 6, documentId: 109, capturedName: "ToR", permissions: { canRemove: true } }]; await open(); fireEvent.click(await screen.findByText(/Remove evidence association \#6 ·/)); fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "Wrong attachment" } }); await save("Remove evidence association"); await waitFor(() => expect(writes()).toHaveLength(1)); expect(writes()[0][0]).toMatch(/evidence\/6\/remove$/); expect(JSON.parse(writes()[0][1].body)).toEqual({ expectedRevision: 2, reason: "Wrong attachment" });
 });
 test("deleted cancelled request only offers server-authorized restoration", async () => {
   record.state = "CANCELLED"; record.isDeleted = true; record.permissions = { canRestore: true }; await open(); const detail = screen.getByRole("region", { name: "Travel request details" }); expect(within(detail).queryByText("Approve travel")).not.toBeInTheDocument(); fireEvent.click(screen.getByText("Restore travel request")); expect(screen.getByText(/Restoration never reinstates approval/)).toBeInTheDocument(); fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "Restore retained record" } }); await save("Restore travel request"); await waitFor(() => expect(writes()).toHaveLength(1)); expect(writes()[0][0]).toMatch(/\/restore$/);
 });
 test("filters omit empty optional values and refresh upon returning from other work", async () => {
-  mount(); await screen.findByText("Open request #31"); expect(fetcher.mock.calls[0][0]).not.toMatch(/departureFrom|travellerEmployeeId/); fireEvent.change(screen.getByLabelText("Travel state"), { target: { value: "APPROVED" } }); await waitFor(() => expect(fetcher.mock.calls.some(([url]) => url.includes("state=APPROVED"))).toBe(true)); await waitFor(() => expect(screen.queryByText("Loading…")).not.toBeInTheDocument()); await waitFor(() => expect(screen.getByRole("button", { name: "Next travel requests" })).toBeDisabled()); const before = fetcher.mock.calls.length; fireEvent.focus(window); await waitFor(() => expect(fetcher.mock.calls.length).toBeGreaterThan(before));
+  mount(); await screen.findByText(/Open request \#31 ·/); expect(fetcher.mock.calls[0][0]).not.toMatch(/departureFrom|travellerEmployeeId/); fireEvent.change(screen.getByLabelText("Travel state"), { target: { value: "APPROVED" } }); await waitFor(() => expect(fetcher.mock.calls.some(([url]) => url.includes("state=APPROVED"))).toBe(true)); await waitFor(() => expect(screen.queryByText("Loading…")).not.toBeInTheDocument()); await waitFor(() => expect(screen.getByRole("button", { name: "Next travel requests" })).toBeDisabled()); const before = fetcher.mock.calls.length; fireEvent.focus(window); await waitFor(() => expect(fetcher.mock.calls.length).toBeGreaterThan(before));
 });
 test("past drafts are preserved and payload rejects invalid ranges and oversized fields", () => {
   const form = { action: "create", draft: { ...record, notes: "", departureDate: "2020-01-01", returnDate: "2020-01-02" } }; expect(travelPayload(form).departureDate).toBe("2020-01-01"); expect(() => travelPayload({ ...form, draft: { ...form.draft, returnDate: "2019-12-31" } })).toThrow(/valid date range/); expect(() => travelPayload({ ...form, draft: { ...form.draft, purpose: "x".repeat(2001) } })).toThrow(/purpose/);
@@ -103,7 +103,7 @@ test("successful travel decisions use specific transient notices", () => {
 });
 
 test("stepper opens the relevant stage and disclosure never writes a decision", async () => {
-  submitted(); mount(); fireEvent.click(await screen.findByText("Open request #31"));
+  submitted(); mount(); fireEvent.click(await screen.findByText(/Open request \#31 ·/));
   const plan = await screen.findByRole("button", { name: /Plan the trip/ });
   expect(plan).toHaveAttribute("aria-expanded", "false");
   expect(screen.getByRole("button", { name: /Travel approval/ })).toHaveAttribute("aria-expanded", "true");

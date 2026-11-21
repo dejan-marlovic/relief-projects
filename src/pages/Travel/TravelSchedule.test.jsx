@@ -50,17 +50,17 @@ test("custom filters require both dates and never issue partial-date queries", a
 });
 test("lookup omits traveller filter, retains selected ID, and makes no mutations", async () => {
   mount("/travel-schedule?travellerEmployeeId=99&state=ALL"); await screen.findByText("Partner monitoring");
-  fireEvent.click(screen.getByText("Find a traveller by name")); await screen.findByText("Select employee #18");
+  fireEvent.click(screen.getByText("Find a traveller by name")); await screen.findByText(/Select employee \#18 ·/);
   const lookup = fetcher.mock.calls.find(([url]) => url.includes("/travellers?"))[0];
   expect(lookup).not.toContain("travellerEmployeeId"); expect(lookup).toContain("state=ALL");
   expect(screen.getByLabelText("Traveller employee ID")).toHaveValue(99);
-  fireEvent.click(screen.getByText("Select employee #18")); expect(screen.getByLabelText("Traveller employee ID")).toHaveValue(18);
+  fireEvent.click(screen.getByText(/Select employee \#18 ·/)); expect(screen.getByLabelText("Traveller employee ID")).toHaveValue(18);
   expect(fetcher.mock.calls.every(([, options]) => !options.method)).toBe(true);
 });
 test("opening honours cancelled navigation and switches project only when confirmed; back retains filters", async () => {
   mount("/travel-schedule?projectId=7&state=ALL"); await screen.findByText("Partner monitoring");
-  confirm.mockReturnValue(false); fireEvent.click(screen.getByText("Open travel request #41")); expect(setProject).not.toHaveBeenCalled();
-  confirm.mockReturnValue(true); fireEvent.click(screen.getByText("Open travel request #41"));
+  confirm.mockReturnValue(false); fireEvent.click(screen.getByText(/Open travel request \#41 ·/)); expect(setProject).not.toHaveBeenCalled();
+  confirm.mockReturnValue(true); fireEvent.click(screen.getByText(/Open travel request \#41 ·/));
   expect(setProject).toHaveBeenCalledWith("7"); expect(screen.getByText("Destination ?projectId=7&requestId=41")).toBeInTheDocument();
   fireEvent.click(screen.getByText("Go back")); await screen.findByText("Partner monitoring"); expect(screen.getByLabelText("Plan state")).toHaveValue("ALL"); expect(screen.getByLabelText("Schedule project")).toHaveValue("7");
 });

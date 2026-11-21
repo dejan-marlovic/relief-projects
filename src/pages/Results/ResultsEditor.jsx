@@ -67,7 +67,7 @@ export default function ResultsEditor({ form, setForm, indicator, authFetch, pro
     if (needsReason || reason.trim()) body.reason = reason.trim();
     onSave(body);
   }}>
-    <h3 ref={editor}>{title}{result ? ` · Report #${result.id}` : ""}</h3>
+    <h3 ref={editor}>{title}{result ? ` · ${result.basis?.name || indicator?.name || "Name unavailable"} · Report #${result.id}` : ""}</h3>
     {missingReason && <div className={styles.attention} role="status"><strong>Reason required before saving</strong><p>Your changes have not been saved. Enter a reason below so this change can be recorded in history.</p></div>}
     {needsReason && <label className={missingReason ? styles.reasonRequired : undefined}>Reason<textarea disabled={busy} required maxLength={1000} value={reason} placeholder="Explain why you are making this change" onChange={e => setForm(f => ({ ...f, reason: e.target.value }))} /></label>}
     {isIndicator && <><p>Indicator details save automatically after a short pause once required fields are valid. Changes to an existing indicator require a reason. The editor stays open after saving.</p>{(busy || form.reviewRequired || dirty) && <p role="status">{busy ? "Saving…" : form.reviewRequired ? "Automatic saving paused. Review the refreshed records below." : "Changes not yet saved. Complete the required fields and keep this page open."}</p>}</>}

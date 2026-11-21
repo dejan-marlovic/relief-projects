@@ -25,7 +25,7 @@ function Evidence({ result, endpoint, authFetch, refresh, open, locked }) {
       <p>Linked <Attribution at={e.linkedAt} actor={e.linkedBy} /></p>
       {e.removedAt && <p>Removed <Attribution at={e.removedAt} actor={e.removedBy} /> · {e.removalReason}</p>}
       <div className={styles.actions}><button disabled={!e.downloadEligible} onClick={async () => { setError(""); try { await downloadDocument(e.documentId, authFetch); } catch (err) { setError(err.message); } }}>Download version {e.versionNumber ?? ""}</button>
-        {e.permissions?.canRemove && <button disabled={locked || state.loading} onClick={() => open("remove", result, { ...e, page })}>Remove evidence #{e.id}</button>}
+        {e.permissions?.canRemove && <button disabled={locked || state.loading} onClick={() => open("remove", result, { ...e, page })}>Remove evidence #{e.id} · {e.capturedName || "Name unavailable"}</button>}
       </div><small>Availability describes metadata; downloading checks file availability.</small>
     </article>)}
     {state.data && !state.data.content.length && <p>No evidence associations.</p>}
@@ -43,9 +43,9 @@ function Report({ result, endpoint, authFetch, refresh, open, indicator, locked 
     <details><summary>Recorded measurement basis and target</summary><MeasurementBasis basis={result.basis} /></details>
     <Issues issues={result.issues} />
     <div className={styles.actions}>
-      {result.permissions?.canCorrect && <button disabled={locked} onClick={() => open("correct", result)}>Correct report #{result.id}</button>}
-      {result.permissions?.canVoid && <button disabled={locked} onClick={() => open("void", result)}>Void report #{result.id}</button>}
-      {result.permissions?.canAddEvidence && <button disabled={locked} onClick={() => open("evidence", result)}>Add evidence to #{result.id}</button>}
+      {result.permissions?.canCorrect && <button disabled={locked} onClick={() => open("correct", result)}>Correct report #{result.id} · {indicatorName || "Name unavailable"}</button>}
+      {result.permissions?.canVoid && <button disabled={locked} onClick={() => open("void", result)}>Void report #{result.id} · {indicatorName || "Name unavailable"}</button>}
+      {result.permissions?.canAddEvidence && <button disabled={locked} onClick={() => open("evidence", result)}>Add evidence to #{result.id} · {indicatorName || "Name unavailable"}</button>}
       {result.state === "VOIDED" && indicator.permissions?.canRecordResult && <button disabled={locked} onClick={() => open("reuse", result)}>Report again for this date</button>}
       <button aria-expanded={evidenceOpen} onClick={() => setEvidenceOpen(v => !v)}>{evidenceOpen ? "Hide" : "Show"} evidence ({result.evidence?.totalElements ?? "…"})</button>
     </div>
@@ -156,7 +156,7 @@ export function ResultsRegister({ projectId, authFetch }) {
   }
   return <><div className={styles.actions}>{state.data?.canCreate && <button disabled={busy || !!form || !!selected} onClick={() => setForm({ action: "create", draft: blankIndicator() })}>Create indicator</button>}<label><input type="checkbox" checked={deleted} disabled={busy} onChange={e => { setDeleted(e.target.checked); setPage(0); }} />Show deleted indicators only</label></div><ReadState state={state} />
     {state.data?.projectDeleted && <p>This project is inactive. Retained results are read-only.</p>}
-    <ul className={styles.list}>{state.data?.content.map(i => <li key={i.id}><div className={styles.heading}><h3>{i.name}{i.isDeleted ? " · Deleted" : ""}</h3><button disabled={!!form || (selected != null && selected !== i.id)} onClick={() => setSelected(i.id)}>Open indicator #{i.id}</button></div><p>{i.periodStart} through {i.periodEnd} · Target {i.targetValue} {i.unit}</p><ResultSummary summary={i.summary} unit={i.unit} direction={i.direction} /></li>)}</ul>
+    <ul className={styles.list}>{state.data?.content.map(i => <li key={i.id}><div className={styles.heading}><h3>{i.name}{i.isDeleted ? " · Deleted" : ""}</h3><button disabled={!!form || (selected != null && selected !== i.id)} onClick={() => setSelected(i.id)}>Open indicator #{i.id} · {i.name || "Name unavailable"}</button></div><p>{i.periodStart} through {i.periodEnd} · Target {i.targetValue} {i.unit}</p><ResultSummary summary={i.summary} unit={i.unit} direction={i.direction} /></li>)}</ul>
     {state.data && !state.data.content.length && <p>No {deleted ? "deleted" : "active"} indicators on this page.</p>}
     <Pagination data={state.data} page={page} setPage={setPage} label="indicators" disabled={state.loading || busy} />
     {form && <ReadState state={current} />}

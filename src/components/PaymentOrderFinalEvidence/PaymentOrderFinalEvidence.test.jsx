@@ -26,13 +26,13 @@ beforeEach(() => {
 afterEach(() => localStorage.clear());
 const mount = () => render(<MemoryRouter><FinalEvidencePanel paymentOrderId={73} /></MemoryRouter>);
 test("uses server capabilities, protected exact downloads and existing uploader rights", async () => {
-  mount(); fireEvent.click(await screen.findByText("Download exact version #7"));
+  mount(); fireEvent.click(await screen.findByText(/Download exact version #7 ·/));
   await waitFor(() => expect(downloadDocument).toHaveBeenCalledWith(7, expect.any(Function)));
   expect(screen.queryByText(/Open Documents to upload/)).not.toBeInTheDocument();
-  expect(screen.getByText("Replace attachment #12")).toBeEnabled();
+  expect(screen.getByText(/Replace attachment #12 ·/)).toBeEnabled();
 });
 test("replacement sends one atomic command with revision and selected exact version", async () => {
-  mount(); fireEvent.click(await screen.findByText("Replace attachment #12"));
+  mount(); fireEvent.click(await screen.findByText(/Replace attachment #12 ·/));
   await screen.findByRole("option", { name: /New.pdf/ });
   fireEvent.change(screen.getByLabelText("Exact document version"), { target: { value: "42" } });
   fireEvent.change(screen.getByLabelText("Reason"), { target: { value: " Correct file " } });
@@ -45,7 +45,7 @@ test("replacement sends one atomic command with revision and selected exact vers
 test("conflicts preserve drafts and require review before another command", async () => {
   const original = appFetch.getMockImplementation();
   appFetch.mockImplementation((url, options) => options?.method === "POST" ? Promise.resolve(response({ message: "Stale revision" }, false)) : original(url, options));
-  mount(); fireEvent.click(await screen.findByText("Remove attachment #12"));
+  mount(); fireEvent.click(await screen.findByText(/Remove attachment #12 ·/));
   fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "Wrong file" } });
   fireEvent.click(screen.getByText("Save remove"));
   await screen.findByText(/Stale revision/);

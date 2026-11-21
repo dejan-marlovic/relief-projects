@@ -1,3 +1,4 @@
+import { namedReference } from "../../utils/recordLabels";
 import MobileRecordDeck from "../../components/MobileRecordDeck/MobileRecordDeck";
 import useArchivedProject from "../../hooks/useArchivedProject";
 import ApprovalDialog from "../../components/ApprovalDialog/ApprovalDialog";
@@ -1275,7 +1276,7 @@ function PaymentOrders() {
   return (
     <div className={styles.page}>
       {approvalTarget && <ApprovalDialog key={approvalTarget} endpoint={`/api/payment-orders/${approvalTarget}`}
-        recordLabel={`payment order #${approvalTarget}`} onCancel={() => setApprovalTarget(null)}
+        recordLabel={namedReference("payment order", approvalTarget, orders.find(row => String(row.id) === String(approvalTarget))?.paymentOrderDescription)} onCancel={() => setApprovalTarget(null)}
         onRefresh={record => { const updated = normalizePO(record); setOrders(current => current.map(item => item.id === updated.id ? updated : item)); setHistoryRefreshKeys(keys => ({ ...keys, [updated.id]: (keys[updated.id] || 0) + 1 })); if (updated.locked) markLocked(updated.id); }}
         onSuccess={record => { const updated = normalizePO(record); setOrders(current => current.map(item => item.id === updated.id ? updated : item)); setHistoryRefreshKeys(keys => ({ ...keys, [updated.id]: (keys[updated.id] || 0) + 1 })); if (updated.locked) markLocked(updated.id); setApprovalTarget(null); }} />}
 
@@ -1518,7 +1519,7 @@ function PaymentOrders() {
       </div>
       {returnTarget && canReviewPaymentOrders && orders.some((po) => po.id === returnTarget && paymentOrderLifecycleStatus(po) === "SUBMITTED") &&
         <ReturnReasonDialog key={returnTarget} endpoint={`/api/payment-orders/${returnTarget}/return`}
-          recordLabel={`payment order #${returnTarget}`} onCancel={() => setReturnTarget(null)}
+          recordLabel={namedReference("payment order", returnTarget, orders.find(row => String(row.id) === String(returnTarget))?.paymentOrderDescription)} onCancel={() => setReturnTarget(null)}
           onSuccess={(data) => {
             const updated = normalizePO(data);
             setOrders((current) => current.map((item) => item.id === updated.id ? updated : item));

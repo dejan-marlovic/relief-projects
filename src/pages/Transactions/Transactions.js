@@ -1,3 +1,4 @@
+import { namedReference } from "../../utils/recordLabels";
 import MobileRecordDeck from "../../components/MobileRecordDeck/MobileRecordDeck";
 import useArchivedProject from "../../hooks/useArchivedProject";
 import ApprovalDialog from "../../components/ApprovalDialog/ApprovalDialog";
@@ -1568,7 +1569,7 @@ const Transactions = ({ refreshTrigger }) => {
   return (
     <div className={styles.container}>
       {approvalTarget && <ApprovalDialog key={approvalTarget} endpoint={`/api/transactions/${approvalTarget}`}
-        recordLabel={`transaction #${approvalTarget}`} onCancel={() => setApprovalTarget(null)}
+        recordLabel={namedReference("transaction", approvalTarget, transactions.find(row => String(row.id) === String(approvalTarget))?.transactionDescription)} onCancel={() => setApprovalTarget(null)}
         onRefresh={record => { const updated = record; setTransactions(current => current.map(item => item.id === updated.id ? updated : item)); setHistoryRefreshKeys(keys => ({ ...keys, [updated.id]: (keys[updated.id] || 0) + 1 })); }}
         onSuccess={record => { const updated = record; setTransactions(current => current.map(item => item.id === updated.id ? updated : item)); setHistoryRefreshKeys(keys => ({ ...keys, [updated.id]: (keys[updated.id] || 0) + 1 })); setApprovalTarget(null); }} />}
 
@@ -1823,7 +1824,7 @@ const Transactions = ({ refreshTrigger }) => {
       </div>
       {returnTarget && canReviewTransactions && transactions.some((tx) => tx.id === returnTarget && tx.lifecycleStatus === "SUBMITTED") &&
         <ReturnReasonDialog key={returnTarget} endpoint={`/api/transactions/${returnTarget}/return`}
-          recordLabel={`transaction #${returnTarget}`} onCancel={() => setReturnTarget(null)}
+          recordLabel={namedReference("transaction", returnTarget, transactions.find(row => String(row.id) === String(returnTarget))?.transactionDescription)} onCancel={() => setReturnTarget(null)}
           onSuccess={(updated) => {
             setTransactions((current) => current.map((item) => item.id === updated.id ? updated : item));
             setFormError(""); setReturnTarget(null);

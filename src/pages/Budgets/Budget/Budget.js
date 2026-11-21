@@ -1,3 +1,4 @@
+import { namedReference } from "../../../utils/recordLabels";
 import useArchivedProject from "../../../hooks/useArchivedProject";
 import { FinancialReviewAttribution } from "../../../components/ReviewAttribution/ReviewAttribution";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
@@ -1499,7 +1500,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
   return (
     <div className={styles.budgetContainer}>
       {approvalTarget && <ApprovalDialog key={approvalTarget} endpoint={`/api/budgets/${approvalTarget}`}
-        recordLabel={`budget #${approvalTarget}`} onCancel={() => setApprovalTarget(null)}
+        recordLabel={namedReference("budget", approvalTarget, budget?.budgetName)} onCancel={() => setApprovalTarget(null)}
         onRefresh={record => { setBudget(record); setSavedBudget(record); setHistoryRefreshKey(value => value + 1); onUpdate?.(record); }}
         onSuccess={record => { setBudget(record); setSavedBudget(record); setHistoryRefreshKey(value => value + 1); onUpdate?.(record); setApprovalTarget(null); }} />}
 
@@ -1830,7 +1831,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
       <RecordHistory entityType="BUDGET" entityId={budget.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} />
       <FinancialDocuments entityType="BUDGET" entityId={savedBudget.id} lifecycleStatus={lifecycleStatus} refreshKey={historyRefreshKey} editingLocked={hasUnsavedChanges || loading || submitting || Boolean(reviewAction)} />
       {returnOpen && canReviewBudget && <ReturnReasonDialog key={budget.id}
-        endpoint={`/api/budgets/${budget.id}/return`} recordLabel={`budget #${budget.id}`}
+        endpoint={`/api/budgets/${budget.id}/return`} recordLabel={namedReference("budget", budget.id, budget?.budgetName)}
         onCancel={() => setReturnOpen(false)} onSuccess={(updated) => {
           setBudget(updated); setSavedBudget(updated); setHasUnsavedChanges(false); setFieldErrors({}); setFormError("");
           setReturnOpen(false); onUpdate?.(updated);

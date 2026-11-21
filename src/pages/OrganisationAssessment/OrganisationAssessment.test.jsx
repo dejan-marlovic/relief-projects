@@ -52,7 +52,7 @@ test("same-project exact-version evidence uses its selected ID", async () => {
 test("review basis evidence is protected while late evidence can be removed", async () => {
   existing("REVIEWED", { canWithdrawReview: true, canLinkEvidence: true }); envelope.assessment.currentDecision = { historyId: 20, decision: "NOT_RECOMMENDED_FOR_STATED_ROLE", decisionExplanation: "Insufficient capacity", basis: { context: { organizationName: "Historic partner" } } };
   links = [{ id: 1, capturedName: "Basis", associationActive: true, includedInCurrentDecision: true, permissions: {} }, { id: 2, capturedName: "Late", associationActive: true, includedInCurrentDecision: false, permissions: { canRemove: true } }];
-  mount(); await screen.findByText("Late · Version unknown"); expect(screen.queryByText("Remove evidence #1")).not.toBeInTheDocument(); expect(screen.getByText("Remove evidence #2")).toBeEnabled();
+  mount(); await screen.findByText("Late · Version unknown"); expect(screen.queryByText(/Remove evidence #1 ·/)).not.toBeInTheDocument(); expect(screen.getByText(/Remove evidence #2 ·/)).toBeEnabled();
   expect(screen.getByText("Historic partner")).toBeInTheDocument(); expect(screen.getByText("Insufficient capacity")).toBeInTheDocument();
   await start("Withdraw review"); fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "Revise capacity" } }); await save("Withdraw review");
   await waitFor(() => expect(writes).toHaveLength(1)); expect(writes[0].url).toMatch(/withdraw-review$/); expect(writes[0].body).toEqual({ expectedRevision: 3, reason: "Revise capacity" });

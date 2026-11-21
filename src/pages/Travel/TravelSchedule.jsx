@@ -77,14 +77,14 @@ export function Schedule({ authFetch }) {
     </form>
     <ReadState state={projects} />
     <button aria-expanded={lookupOpen} onClick={() => setLookupOpen(v => !v)}>Find a traveller by name</button>
-    {lookupOpen && <section className={styles.panel} aria-label="Traveller lookup"><p>Travellers represented in the applied date, project and state filters. Selecting one fills the employee ID; apply the filters to use it. Your selected ID is kept even if it is outside this lookup.</p><ReadState state={people} /><ul className={styles.list}>{people.data?.content.map(person => <li key={person.employeeId}>{person.displayName} · Employee #{person.employeeId}{!person.active && " · Inactive traveller"} <button onClick={() => change("travellerEmployeeId", String(person.employeeId))}>Select employee #{person.employeeId}</button></li>)}</ul>{people.data && !people.data.content.length && <p>No travellers on this lookup page.</p>}<Pages data={people.data} loading={people.loading} onPage={setLookupPage} name="travellers" /></section>}
+    {lookupOpen && <section className={styles.panel} aria-label="Traveller lookup"><p>Travellers represented in the applied date, project and state filters. Selecting one fills the employee ID; apply the filters to use it. Your selected ID is kept even if it is outside this lookup.</p><ReadState state={people} /><ul className={styles.list}>{people.data?.content.map(person => <li key={person.employeeId}>{person.displayName} · Employee #{person.employeeId}{!person.active && " · Inactive traveller"} <button onClick={() => change("travellerEmployeeId", String(person.employeeId))}>Select employee #{person.employeeId} · {person.displayName || "Name unavailable"}</button></li>)}</ul>{people.data && !people.data.content.length && <p>No travellers on this lookup page.</p>}<Pages data={people.data} loading={people.loading} onPage={setLookupPage} name="travellers" /></section>}
 
     <ReadState state={result} />
     {data && <>
       <p><strong>{data.from} through {data.to}</strong> · {data.businessTimezone}{data.rangeDefaulted && " · Default window"}</p>
       <p className={styles.muted}>Observed {data.observedAt}. Other plans may change between pages. Overlaps count other submitted or approved plans, including outside these filters; they are warnings, not reservations. Zero overlaps does not guarantee availability.</p>
       <ul className={styles.list}>{data.content.map(row => <li key={row.id}>
-        <div className={styles.heading}><h3>{row.purpose}</h3><button disabled={result.loading} onClick={() => open(row)}>Open travel request #{row.id}</button></div>
+        <div className={styles.heading}><h3>{row.purpose}</h3><button disabled={result.loading} onClick={() => open(row)}>Open travel request #{row.id} · {row.purpose || "Name unavailable"}</button></div>
         <p>{row.project.name} · Project #{row.project.id}</p>
         <span className={`${styles.statusBadge} ${styles[`status${row.state}`] || ""}`}>{row.state}</span>
         <p>{row.traveller.displayName} · {row.destination}{!row.traveller.active && " · Inactive traveller"}</p>

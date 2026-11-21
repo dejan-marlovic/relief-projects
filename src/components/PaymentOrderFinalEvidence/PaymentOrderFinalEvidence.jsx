@@ -110,9 +110,9 @@ export function FinalEvidencePanel({ paymentOrderId, refreshKey, editingLocked }
         {entry.replacesEntryId && <span>Replaces attachment #{entry.replacesEntryId}</span>}
         {entry.warnings?.map(item => <span key={item}>{warning(item)}</span>)}
       </div><div className={styles.actions}>
-        <button disabled={entry.document?.downloadEligible !== true || downloading !== null} onClick={() => download(entry.documentId)}>Download exact version #{entry.documentId}</button>
-        {entry.permissions?.canReplace && <button disabled={busy || editingLocked} onClick={() => start("replace", entry)}>Replace attachment #{entry.id}</button>}
-        {entry.permissions?.canRemove && <button disabled={busy || editingLocked} onClick={() => start("remove", entry)}>Remove attachment #{entry.id}</button>}
+        <button disabled={entry.document?.downloadEligible !== true || downloading !== null} onClick={() => download(entry.documentId)}>Download exact version #{entry.documentId} · {entry.capturedDocumentName || "Name unavailable"}</button>
+        {entry.permissions?.canReplace && <button disabled={busy || editingLocked} onClick={() => start("replace", entry)}>Replace attachment #{entry.id} · {entry.capturedDocumentName || "Name unavailable"}</button>}
+        {entry.permissions?.canRemove && <button disabled={busy || editingLocked} onClick={() => start("remove", entry)}>Remove attachment #{entry.id} · {entry.capturedDocumentName || "Name unavailable"}</button>}
       </div></li>)}</ul>
       {data.permissions?.canAttach && !form && <button disabled={busy || editingLocked} onClick={() => start("attach")}>Attach late evidence</button>}
     </>}
