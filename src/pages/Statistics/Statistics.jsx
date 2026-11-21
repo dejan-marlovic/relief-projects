@@ -511,7 +511,7 @@ const Statistics = () => {
   };
 
   return (
-    <div className={styles.page}>
+    <div data-page-shell="wrapper" className={styles.page}>
       <div className={styles.shell}>
         {/* Header */}
         <div className={styles.pageHeader}>
@@ -522,7 +522,7 @@ const Statistics = () => {
             </p>
           </div>
 
-          <div className={styles.headerActions}>{/* future controls */}</div>
+          <div data-action-group="header" className={styles.headerActions}>{/* future controls */}</div>
         </div>
 
         {loading && <div className={styles.loadingSkeleton} />}

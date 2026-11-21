@@ -368,7 +368,7 @@ const Documents = () => {
   const categoryOptions = categories.map((category) => <option key={category.id} value={category.id}>{category.label}</option>);
 
   return (
-    <div className={styles.page}>
+    <div data-page-shell="wrapper" className={styles.page}>
       <div className={styles.shell}>
         {/* Header */}
         <div className={styles.pageHeader}>
@@ -381,7 +381,7 @@ const Documents = () => {
             </p>
           </div>
 
-          <div className={styles.headerActions} />
+          <div data-action-group="header" className={styles.headerActions} />
         </div>
 
         {!selectedProjectId && (
@@ -497,7 +497,7 @@ const Documents = () => {
                       <span className={styles.uploadedBy}>Employee attribution: {getEmployeeLabel(doc)}</span>
                     </div>
 
-                    <div className={styles.docActions}>
+                    <div data-action-group="section" className={styles.docActions}>
                       <ActionButton type="button" className={styles.downloadLink} disabled={saving} onClick={() => { if (!confirmDiscardUnsavedChanges()) return; setEditing(null); setHistoryDocument(doc); }}>Version history</ActionButton>
                       {canUploadDocuments && doc.isCurrent === true && <ActionButton editorBlocked={Boolean(editing)} type="button" className={styles.downloadLink} disabled={saving || !categories.length || !!editing} onClick={() => { setEditing({ original: doc, category: doc.category || "UNCATEGORIZED", documentDate: doc.documentDate || "", status: doc.status || "" }); }}>Edit details</ActionButton>}
                       <ActionButton

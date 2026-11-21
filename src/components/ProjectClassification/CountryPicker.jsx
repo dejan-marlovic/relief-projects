@@ -11,7 +11,7 @@ export default function CountryPicker({ codes = [], savedCountries = [], catalog
   return <fieldset className={styles.countries}>
     <legend>Operating countries/territories (optional)</legend>
     <p className={styles.hint}>Where project activities are intended to operate. This is separate from Address and beneficiary nationality. Empty means not recorded, not global coverage.</p>
-    {codes.length ? <ul className={styles.selectedCountries}>{selected.map(entry => <li key={entry.code}>{countryLabel(entry)} <ActionButton className={styles.removeCountry} type="button" disabled={locked} onClick={() => onChange(codes.filter(code => code !== entry.code))}>Remove {entry.code}</ActionButton></li>)}</ul> : <p className={styles.hint}>Not recorded</p>}
+    {codes.length ? <ul className={styles.selectedCountries}>{selected.map(entry => <li key={entry.code}>{countryLabel(entry)} <span data-action-group="section"><ActionButton className={styles.removeCountry} type="button" disabled={locked} onClick={() => onChange(codes.filter(code => code !== entry.code))}>Remove {entry.code}</ActionButton></span></li>)}</ul> : <p className={styles.hint}>Not recorded</p>}
     {catalogue.loading && <p>Loading countries…</p>}
     {catalogue.error && <p role="alert">{catalogue.error} <ActionButton type="button" onClick={catalogue.retry}>Retry country lookup</ActionButton></p>}
     {error && <p role="alert">{error}</p>}

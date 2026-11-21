@@ -107,7 +107,7 @@ export default function ResultsEditor({ form, setForm, indicator, authFetch, pro
       {error && <p role="alert">{error}</p>}
       {form.error && <p role="alert">{form.error}</p>}
       {form.reviewRequired && <p>Draft retained. Inspect the refreshed records and history before retrying. A failed response may follow a successful save. {action === "create" && "Check every relevant list page before creating again; retrying can create a duplicate indicator."} <ActionButton type="button" disabled={blocked} onClick={onReview}>I reviewed the refreshed records; enable retry</ActionButton></p>}
-      <div className={styles.actions}>{!isIndicator && <ActionButton type="submit" disabled={blocked || form.reviewRequired || (action === "evidence" && !draft.documentId)}>Save {title.toLowerCase()}</ActionButton>}<ActionButton type="button" onClick={onCancel}><RecordIcon type="close" />{isIndicator ? dirty ? "Discard unfinished entries" : "Close editor" : "Cancel"}</ActionButton></div>
+      <div data-action-group="section" className={styles.actions}>{!isIndicator && <ActionButton type="submit" disabled={blocked || form.reviewRequired || (action === "evidence" && !draft.documentId)}>Save {title.toLowerCase()}</ActionButton>}<ActionButton type="button" onClick={onCancel}><RecordIcon type="close" />{isIndicator ? dirty ? "Discard unfinished entries" : "Close editor" : "Cancel"}</ActionButton></div>
     </fieldset>
   </ScrollToForm>;
 }

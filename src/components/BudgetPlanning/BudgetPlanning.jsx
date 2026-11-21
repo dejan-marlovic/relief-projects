@@ -63,7 +63,7 @@ export default function BudgetPlanning({ budget, refreshKey = 0, disabled = fals
       {editable && <form onSubmit={save}>
         <label>Set or confirm budget limit<input type="number" min="0.001" step="any" value={amount} disabled={busy || disabled || loading} onChange={(e) => { setAmount(e.target.value); setConfirmed(false); }} /></label>
         <label><input type="checkbox" checked={confirmed} disabled={busy || disabled || loading} onChange={(e) => setConfirmed(e.target.checked)} /> I confirm this amount is in {summary.localCurrency?.name || "the configured local currency"}. No currency conversion will be performed.</label>
-        <ActionButton type="submit" disabled={busy || disabled || loading || !confirmed || !summary.localCurrency?.id}>Save budget limit</ActionButton>
+        <span data-action-group="section"><ActionButton type="submit" disabled={busy || disabled || loading || !confirmed || !summary.localCurrency?.id}>Save budget limit</ActionButton></span>
         <p className={styles.muted}>Saves only the limit and its currency confirmation; cost details are not recalculated. Finish other edits first.</p>
       </form>}
     </>}

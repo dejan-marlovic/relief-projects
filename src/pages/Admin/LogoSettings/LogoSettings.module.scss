@@ -1,3 +1,4 @@
+@use "../../../styles/presentation" as presentation;
 @use "../../../styles/colors" as colors;
 $text-dark: colors.$text-strong;
 $text-muted: colors.$text-muted;
@@ -477,3 +478,8 @@ $error: colors.$danger-dark;
   .restoreButton { min-height: 44px; }
   .dropzoneText, .feedback, .requirementValue, .assetSectionSubtitle { overflow-wrap: anywhere; }
 }
+
+// Shared Project-page visual language.
+.pageTitle { @include presentation.page-title; }
+.pageSubtitle { @include presentation.description; }
+.cardTitle { @include presentation.tile-title; }

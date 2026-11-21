@@ -363,7 +363,7 @@ const CreateOrganization = () => {
               </div>
             </div>
 
-            <div className={styles.bottomActions}>
+            <div data-action-group="section" className={styles.bottomActions}>
               <ActionButton
                 type="button"
                 onClick={handleCreate}

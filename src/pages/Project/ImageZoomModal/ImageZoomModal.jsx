@@ -91,7 +91,7 @@ const ImageZoomModal = ({
             ) : null}
           </div>
 
-          <div className={styles.actions}>
+          <div data-action-group="section" className={styles.actions}>
             {canNav && (
               <>
                 <ActionButton

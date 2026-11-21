@@ -2523,7 +2523,7 @@ Approximately:
   }, [selectedEmployeeId, positionOptions]);
 
   return (
-    <div className={styles.projectContainer}>
+    <div data-page-shell="wrapper" className={styles.projectContainer}>
       {!hasProject && (
         <div className={styles.emptyState}>
           <FiImage />
@@ -2547,7 +2547,7 @@ Approximately:
               </p>
             </div>
 
-            <div className={styles.headerActions}>
+            <div data-action-group="header" className={styles.headerActions}>
               <ActionButton
                 type="button"
                 onClick={handleExportProject}
@@ -3316,14 +3316,14 @@ Approximately:
                               ))}
                             </SearchableSelect>
 
-                            <ActionButton
+                            <span data-action-group="section"><ActionButton
                               type="button"
                               onClick={handleAddProjectOrganization}
                               className={styles.primaryInlineBtn}
                             >
                               <FiPlus />
                               Add
-                            </ActionButton>
+                            </ActionButton></span>
                           </div>
 
                           <div className={styles.mutedNote}>
@@ -3419,14 +3419,14 @@ Approximately:
                               : "Role: (select employee)"}
                           </div>
 
-                          <ActionButton
+                          <span data-action-group="section"><ActionButton
                             type="button"
                             onClick={handleAddParticipant}
                             className={styles.primaryInlineBtn}
                           >
                             <FiPlus />
                             Add
-                          </ActionButton>
+                          </ActionButton></span>
                         </div>
 
                         {participantError && (

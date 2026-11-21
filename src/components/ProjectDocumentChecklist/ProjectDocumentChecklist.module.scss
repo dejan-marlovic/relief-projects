@@ -1,3 +1,4 @@
+@use "../../styles/presentation" as presentation;
 @use "../../styles/colors" as colors;
 .section { margin: 0.75rem 0; border: 1px solid colors.$border; border-radius: 12px; background: colors.$surface; min-width: 0; color: colors.$text; }
 .section summary { cursor: pointer; padding: 0.9rem 1rem; color: colors.$primary; font-weight: 600; overflow-wrap: anywhere; }
@@ -49,3 +50,5 @@
   .item > summary::after { grid-column: 3; grid-row: 1; }
   .checklistToolbar label { min-height: 44px; }
 }
+
+.section { @include presentation.surface; margin-block: 1.5rem; }

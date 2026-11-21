@@ -1074,7 +1074,7 @@ function Signatures() {
     : "Select a project to see signatures";
 
   return (
-    <div className={styles.page}>
+    <div data-page-shell="wrapper" className={styles.page}>
       <div className={styles.shell}>
         <div className={styles.pageHeader}>
           <div className={styles.pageHeaderText}>
@@ -1082,7 +1082,7 @@ function Signatures() {
             <p className={styles.pageSubtitle}>{subtitle}</p>
           </div>
 
-          <div className={styles.headerActions}>
+          <div data-action-group="header" className={styles.headerActions}>
             {hasActiveFilters && <ClearFiltersButton onClick={() => setFilters(emptyFilters())} />}
             <ActionButton editorBlocked={Boolean(editingId)}
               type="button"

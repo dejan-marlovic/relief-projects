@@ -1,3 +1,4 @@
+@use "../../styles/presentation" as presentation;
 @use "../../styles/colors" as colors;
 @use "../../styles/forms" as forms;
 
@@ -226,3 +227,8 @@
   .selectorLabel { white-space: normal; }
   .content { min-width: 0; }
 }
+
+// Shared Project-page visual language.
+.selectorTitle { @include presentation.page-title; }
+.selectorSubtitle { @include presentation.description; }
+.selectorCard { @include presentation.surface; }

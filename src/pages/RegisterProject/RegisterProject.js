@@ -422,7 +422,7 @@ const RegisterProject = () => {
   );
 
   return (
-    <div className={styles.registerContainer}>
+    <div data-page-shell="wrapper" className={styles.registerContainer}>
       <div className={styles.formContainer}>
         {/* Header */}
         <div className={styles.pageHeader}>
@@ -434,7 +434,7 @@ const RegisterProject = () => {
             </p>
           </div>
 
-          <div className={styles.headerActions}>
+          <div data-action-group="header" className={styles.headerActions}>
             <ActionButton
               type="button"
               onClick={handleRegister}

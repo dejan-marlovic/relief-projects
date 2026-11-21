@@ -1,3 +1,4 @@
+@use "../../../styles/presentation" as presentation;
 @use "../../../styles/colors" as colors;
 
 .themeSettings {
@@ -480,3 +481,7 @@
   .createButton, .saveThemeButton, .restoreButton { min-height: 44px; width: 100%; box-sizing: border-box; }
   .themeName, .themeDescription, .helpText, .formError, .pageSubtitle { overflow-wrap: anywhere; }
 }
+
+// Shared Project-page visual language.
+.pageTitle { @include presentation.page-title; }
+.pageSubtitle { @include presentation.description; }

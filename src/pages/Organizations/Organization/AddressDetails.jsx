@@ -314,12 +314,12 @@ const AddressDetails = ({ organizationId, canManage = false }) => {
       <div key={rowKey} ref={node => { if (isNew) newAddressRef.current = node; if (editing) activeEditorRef.current = node; }} className={`${styles.gridRow} ${styles.dataRow} ${styles.hoverable} ${primary ? styles.primaryRow : ""}`}>
         <div className={`${styles.cell} ${styles.stickyCol}`}>
           {editing ? (
-            <div className={styles.actions}>
+            <div data-action-group="section" className={styles.actions}>
               {isNew && <ActionButton type="button" className={styles.iconCircleBtn} onClick={save} disabled={disabled} title="Save" aria-label={`Save address ${rowKey}`}><FiSave /> Save</ActionButton>}
               <ActionButton type="button" className={styles.dangerIconBtn} onClick={cancel} disabled={disabled} title={isNew ? "Cancel" : "Done editing"} aria-label={`${isNew ? "Cancel" : "Done editing"} address ${rowKey}`}><FiX /> {isNew ? "Cancel" : "Done editing"}</ActionButton>
             </div>
           ) : (
-            <div className={styles.actions}>
+            <div data-action-group="section" className={styles.actions}>
               {canManage && <ActionButton editorBlocked={Boolean(editingId)} type="button" className={styles.iconCircleBtn} onClick={() => startEdit(address)} disabled={Boolean(editingId) || disabled} title="Edit address" aria-label={`Edit address ${address.id}`}><FiEdit /> Edit</ActionButton>}
               {canManage && !primary && <ActionButton editorBlocked={Boolean(editingId)} type="button" className={styles.iconCircleBtn} onClick={() => makePrimary(address.id)} disabled={Boolean(editingId) || disabled} title="Make primary" aria-label={`Make address ${address.id} primary`}><FiStar /> Make primary</ActionButton>}
               {canManage && <ActionButton editorBlocked={Boolean(editingId)} type="button" className={styles.unlinkBtn} onClick={() => unlink(address.id)} disabled={associations.length <= 1 || Boolean(editingId) || disabled} title={associations.length <= 1 ? "An organization must keep one address" : "Remove from organization"} aria-label={`Remove address ${address.id} from organization`}><RecordIcon type="link" /> Unlink</ActionButton>}
@@ -350,7 +350,7 @@ const AddressDetails = ({ organizationId, canManage = false }) => {
               <option value="">Add an existing address…</option>
               {availableOptions.map((address) => <option key={address.id} value={address.id}>#{address.id} — {formatAddressLabel(address)}</option>)}
             </SearchableSelect>
-            <ActionButton editorBlocked={Boolean(editingId)} type="button" className={styles.secondaryBtn} onClick={addExisting} disabled={!selectedAddressId || Boolean(editingId) || Boolean(busyAction)}><RecordIcon type="link" /> Add existing</ActionButton>
+            <span data-action-group="inline"><ActionButton editorBlocked={Boolean(editingId)} type="button" className={styles.secondaryBtn} onClick={addExisting} disabled={!selectedAddressId || Boolean(editingId) || Boolean(busyAction)}><RecordIcon type="link" /> Add existing</ActionButton></span>
             <ActionButton editorBlocked={Boolean(editingId)} type="button" className={styles.primaryBtn} onClick={startCreate} disabled={Boolean(editingId) || Boolean(busyAction)}><FiPlus /> New Address</ActionButton>
           </div>
         )}

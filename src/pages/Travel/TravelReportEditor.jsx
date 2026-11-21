@@ -49,7 +49,7 @@ export default function TravelReportEditor({ form, setForm, endpoint, projectId,
       {error && <p role="alert">{error}</p>}{form.error && <p role="alert">{form.error}</p>}
       {reviewRequired && <div role="alert"><p>Draft retained. Review the refreshed report, travel request, links and report history. Check whether the intended change already succeeded before enabling an explicit retry. Nothing is retried automatically.</p><ActionButton type="button" disabled={reviewBlocked} onClick={onReview}>I reviewed report and travel state; use current revisions</ActionButton></div>}
       <p className={styles.muted}>Selected travel revision: {form.expectedTravelRevision}{form.expectedRevision != null ? ` · Report revision: ${form.expectedRevision}` : " · New report"}. Refreshing retains this draft and its original revisions until you explicitly review.</p>
-      <div className={styles.actions}>{!["create", "edit"].includes(action) && <ActionButton type="submit" disabled={busy || blocked || reviewRequired} className={approvalStyle(styleAction, styles)}><TravelActionIcon action={styleAction} />Save {reportTitles[action].toLowerCase()}</ActionButton>}<ActionButton type="button" onClick={close}>Cancel report draft</ActionButton></div>
+      <div data-action-group="section" className={styles.actions}>{!["create", "edit"].includes(action) && <ActionButton type="submit" disabled={busy || blocked || reviewRequired} className={approvalStyle(styleAction, styles)}><TravelActionIcon action={styleAction} />Save {reportTitles[action].toLowerCase()}</ActionButton>}<ActionButton type="button" onClick={close}>Cancel report draft</ActionButton></div>
     </fieldset>
   </ScrollToForm>;
 }

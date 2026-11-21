@@ -217,7 +217,7 @@ const AuditHistory = () => {
           <span>To</span>
           <input type="datetime-local" name="occurredTo" value={draftFilters.occurredTo} onChange={updateDraft} />
         </label>
-        <div className={styles.filterActions}>
+        <div data-action-group="section" className={styles.filterActions}>
           <ActionButton type="submit" className={styles.primaryButton}><FiSearch aria-hidden="true" /> Apply filters</ActionButton>
           <ActionButton type="button" className={styles.secondaryButton} onClick={clearFilters}><FiX aria-hidden="true" /> Clear</ActionButton>
         </div>

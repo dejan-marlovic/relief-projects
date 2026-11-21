@@ -399,7 +399,7 @@ export default function Memos({ canEdit = false }) {
                 </label>
               </div>
 
-              {canEdit && <div className={styles.actions}>
+              {canEdit && <div data-action-group="section" className={styles.actions}>
                 <ActionButton
                   className={styles.actionBtn}
                   onClick={save}
@@ -428,7 +428,7 @@ export default function Memos({ canEdit = false }) {
                   <span> • {positionNameById(m.positionId)}</span>
                 )}
               </div>
-              {canEdit && <div className={styles.actions}>
+              {canEdit && <div data-action-group="section" className={styles.actions}>
                 <ActionButton
                   className={styles.actionBtn}
                   onClick={() => startEdit(m)}
@@ -485,7 +485,7 @@ export default function Memos({ canEdit = false }) {
             </label>
           </div>
 
-          <div className={styles.actions}>
+          <div data-action-group="section" className={styles.actions}>
             <ActionButton className={styles.actionBtn} onClick={save} title="Create">
               <FiSave />
             </ActionButton>

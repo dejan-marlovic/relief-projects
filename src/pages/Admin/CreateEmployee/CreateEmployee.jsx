@@ -386,7 +386,7 @@ const CreateEmployee = () => {
           </div>
         </div>
 
-        <div className={styles.bottomActions}>
+        <div data-action-group="section" className={styles.bottomActions}>
           <ActionButton
             type="button"
             className={styles.saveButton}

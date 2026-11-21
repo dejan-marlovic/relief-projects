@@ -180,7 +180,7 @@ const CostDetail = ({
           placeholder="EUR"
         />)}
 
-        <div className={`${styles.actions} ${styles.cellActions}`}>
+        <div data-action-group="inline" className={`${styles.actions} ${styles.cellActions}`}>
           <ActionButton
             type="button"
             disabled={busy}

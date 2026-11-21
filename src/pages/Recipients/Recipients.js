@@ -1055,7 +1055,7 @@ function Recipients() {
     : "Select a project to see recipients.";
 
   return (
-    <div className={styles.page}>
+    <div data-page-shell="wrapper" className={styles.page}>
       <div className={styles.shell}>
         <div className={styles.pageHeader}>
           <div className={styles.pageHeaderText}>
@@ -1063,7 +1063,7 @@ function Recipients() {
             <p className={styles.pageSubtitle}>{subtitle}</p>
           </div>
 
-          <div className={styles.headerActions}>
+          <div data-action-group="header" className={styles.headerActions}>
             {hasActiveFilters && <ClearFiltersButton onClick={() => setFilters(emptyFilters())} />}
             <ActionButton
               type="button"

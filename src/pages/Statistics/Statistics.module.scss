@@ -1,3 +1,4 @@
+@use "../../styles/presentation" as presentation;
 @use "../../styles/colors" as colors;
 
 /* Page padding like other pages */
@@ -317,3 +318,10 @@
 }
 
 .purposeTile { margin: 1.5rem 0; padding: 1rem; min-width: 0; border: 1px solid var(--color-primary-border); border-radius: 14px; background: var(--color-surface); }
+
+// Shared Project-page visual language.
+.pageTitle { @include presentation.page-title; }
+.pageSubtitle { @include presentation.description; }
+.shell { @include presentation.surface; }
+
+.shell { max-width: none; width: 100%; }

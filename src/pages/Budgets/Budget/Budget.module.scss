@@ -1,3 +1,4 @@
+@use "../../../styles/presentation" as presentation;
 @use "../../../styles/approval-actions" as approval;
 @use "../../../styles/colors" as colors;
 //Budget.module.scss
@@ -350,3 +351,10 @@ label {
 .saveFeedback { min-height: 1.5em; color: #52657a; font-size: .9rem; }
 .formContainer { scroll-margin-top: 1rem; }
 .saveButton:active:not(:disabled) { transform: translateY(1px); }
+
+// Shared Project-page visual language.
+.pageTitle { @include presentation.page-title; }
+.pageSubtitle { @include presentation.description; }
+.cardTitle { @include presentation.tile-title; }
+.cardMeta { @include presentation.description; }
+.formContainer { @include presentation.surface; }

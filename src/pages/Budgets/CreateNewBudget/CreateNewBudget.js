@@ -391,7 +391,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
             </p>
           </div>
 
-          <div className={styles.headerActions}>
+          <div data-action-group="header" className={styles.headerActions}>
             <ActionButton
               type="button"
               onClick={handleSave}
@@ -619,7 +619,7 @@ const CreateNewBudget = ({ onClose, onBudgetCreated }) => {
         )}
 
         {/* Bottom actions (same as Budget/Project) */}
-        <div className={styles.bottomActions}>
+        <div data-action-group="section" className={styles.bottomActions}>
           <ActionButton
             type="button"
             onClick={handleSave}

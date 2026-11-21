@@ -1,3 +1,4 @@
+@use "../../styles/presentation" as presentation;
 @use "../../styles/colors" as colors;
 /* src/pages/Organizations/Organizations.module.scss */
 @use "../../styles/forms" as forms;
@@ -212,3 +213,8 @@ fieldset.headerRow { margin: 0; border: 0; border-bottom: 1px solid colors.$bord
 
 .cardList { width: 100%; min-width: 0; }
 .cardFilters { border: 0; padding: 0; margin: 20px 0; display: flex; flex-wrap: wrap; gap: 16px; label { flex: 1 1 220px; font-weight: 600; } input, select { display: block; width: 100%; box-sizing: border-box; margin-top: 6px; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font: inherit; background: white; } }
+
+// Shared Project-page visual language.
+.pageTitle { @include presentation.page-title; }
+.pageSubtitle { @include presentation.description; }
+.shell { @include presentation.surface; }

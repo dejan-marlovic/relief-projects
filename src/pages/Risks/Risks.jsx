@@ -61,7 +61,7 @@ function History({ risk, endpoint, authFetch, onClose }) {
     return () => controller.abort();
   }, [endpoint, authFetch, risk.id, page, attempt]);
   return <section className={styles.panel} aria-label="Risk history"><h3>History: {risk.title}</h3><HistoryIntro>Review changes to the risk assessment, mitigation and closure decision. A scheduled review date alone does not prove a review occurred.</HistoryIntro>
-    <ActionButton onClick={onClose}><RecordIcon type="close" />Close history</ActionButton>
+    <span data-action-group="section"><ActionButton onClick={onClose}><RecordIcon type="close" />Close history</ActionButton></span>
     {error ? <p role="alert">{error} <ActionButton onClick={() => setAttempt(v => v + 1)}>Retry history</ActionButton></p> : !data && <p role="status">Loading history…</p>}
     {data && <><HistoryTimeline>{data.content.map(event => <SnapshotHistoryEntry key={event.id} event={event} title={({ CREATE: "Created", UPDATE: "Details changed", CLOSE: "Closed", REOPEN: "Reopened", DELETE: "Deleted", RESTORE: "Restored" })[event.action] || event.action} Snapshot={Snapshot} />)}</HistoryTimeline>
       {!data.content.length && <p>No history on this page.</p>}
@@ -105,7 +105,7 @@ function Editor({ editor, employees, busy, blocked, onDraft, onSave, onCancel, l
         <label>Mitigation plan (optional)<textarea rows={4} value={draft.mitigationPlan} onChange={e => onDraft("mitigationPlan", e.target.value)} /></label>
       </> : ["close", "reopen"].includes(action) ? <label>Reason<textarea required rows={3} value={draft.reason || ""} onChange={e => onDraft("reason", e.target.value)} /></label> : <p>{action === "delete" ? "Delete this risk? Its history is retained. An administrator can restore it." : "Restore this risk with its previous open or closed status?"}</p>}
       {error && <p role="alert">{error}</p>}
-      <div className={styles.actions}><ActionButton type="submit" disabled={blocked}>{editing ? "Save risk" : "Confirm " + action}</ActionButton><ActionButton type="button" onClick={onCancel}><RecordIcon type="close" />Close editor</ActionButton><ActionButton type="button" onClick={onDiscard}>Discard unfinished entries</ActionButton></div>
+      <div data-action-group="section" className={styles.actions}><ActionButton type="submit" disabled={blocked}>{editing ? "Save risk" : "Confirm " + action}</ActionButton><ActionButton type="button" onClick={onCancel}><RecordIcon type="close" />Close editor</ActionButton><ActionButton type="button" onClick={onDiscard}>Discard unfinished entries</ActionButton></div>
     </fieldset>
   </ScrollToForm>;
 }
@@ -251,7 +251,7 @@ function Register({ projectId, authFetch }) {
       <label><input type="checkbox" checked={filters.overdue} disabled={locked || filters.status !== "OPEN" || filters.deleted} onChange={e => changeFilter("overdue", e.target.checked)} /> Overdue reviews only</label>
       <label><input type="checkbox" checked={filters.deleted} disabled={locked} onChange={e => changeFilter("deleted", e.target.checked)} /> Deleted risks only</label>
     </div>
-    <div className={styles.actions}>{data?.canCreate && <ActionButton editorBlocked={Boolean(editor)} className={styles.primaryAction} disabled={locked || loading} onClick={() => openEditor(null, "save")}>New risk</ActionButton>}{(error || employeeError || blocked) && <ActionButton className={styles.secondaryAction} disabled={busy || loading} onClick={() => setAttempt(v => v + 1)}>Retry register</ActionButton>}</div>
+    <div data-action-group="section" className={styles.actions}>{data?.canCreate && <ActionButton editorBlocked={Boolean(editor)} className={styles.primaryAction} disabled={locked || loading} onClick={() => openEditor(null, "save")}>New risk</ActionButton>}{(error || employeeError || blocked) && <ActionButton className={styles.secondaryAction} disabled={busy || loading} onClick={() => setAttempt(v => v + 1)}>Retry register</ActionButton>}</div>
     {loading && !data && <p role="status">Loading risks…</p>}{error && <p role="alert">{error}</p>}{employeeError && <p role="alert">{employeeError} Use Retry register to retry.</p>}
     {notice && <p role={blocked ? "alert" : "status"}>{notice}</p>}
     {editor && <>
@@ -277,12 +277,12 @@ function Register({ projectId, authFetch }) {
         </WorkflowStep><WorkflowStep number={2} title="Mitigate and review" description="Maintain the mitigation plan and next review date. Review progress with the owner and update the record; a due date is a reminder, not a completed review."><p>Next review: {risk.reviewDate}</p>{risk.mitigationPlan && <p className={styles.text}><strong>Mitigation: </strong>{risk.mitigationPlan}</p>}
         </WorkflowStep><WorkflowStep number={3} title="Close or reopen the risk" description="Close with a reason when further monitoring is no longer required. Reopen if circumstances change; the decision history remains available.">{risk.closureReason && <p className={styles.text}><strong>Closure reason: </strong>{risk.closureReason}</p>}
         </WorkflowStep><details><summary>Attribution</summary><p>Created by {risk.createdBy?.username} · {uploadTimeLabel(risk.createdAt)}</p><p>Last changed by {risk.updatedBy?.username} · {uploadTimeLabel(risk.updatedAt)}</p></details>
-        <div className={styles.actions}>
+        <div data-action-group="section" className={styles.actions}>
           {[["canEdit", "save", "Edit risk"], ["canClose", "close", "Close risk"], ["canReopen", "reopen", "Reopen risk"], ["canDelete", "delete", "Delete risk"], ["canRestore", "restore", "Restore risk"]].map(([permission, action, label]) => risk.permissions?.[permission] && <ActionButton editorBlocked={Boolean(editor)} key={action} disabled={locked || loading} onClick={() => openEditor(risk, action)}>{label}</ActionButton>)}
           <ActionButton disabled={busy} onClick={() => setHistory(risk)}>View history</ActionButton>
         </div>
       </li>)}</ul>
-      <div className={styles.actions}><ActionButton editorBlocked={Boolean(editor)} disabled={locked || loading || !page} onClick={() => setPage(p => p - 1)}>Previous page</ActionButton><span>{data.totalElements} risks · Page {data.totalPages ? page + 1 : 0} of {data.totalPages}</span><ActionButton editorBlocked={Boolean(editor)} disabled={locked || loading || page + 1 >= data.totalPages} onClick={() => setPage(p => p + 1)}>Next page</ActionButton></div>
+      <div data-action-group="section" className={styles.actions}><ActionButton editorBlocked={Boolean(editor)} disabled={locked || loading || !page} onClick={() => setPage(p => p - 1)}>Previous page</ActionButton><span>{data.totalElements} risks · Page {data.totalPages ? page + 1 : 0} of {data.totalPages}</span><ActionButton editorBlocked={Boolean(editor)} disabled={locked || loading || page + 1 >= data.totalPages} onClick={() => setPage(p => p + 1)}>Next page</ActionButton></div>
     </>}
     {history && <History key={history.id} risk={history} endpoint={endpoint} authFetch={authFetch} onClose={() => setHistory(null)} />}
   </>;
@@ -291,7 +291,7 @@ export default function Risks() {
   const { selectedProjectId } = useContext(ProjectContext);
   const navigate = useNavigate();
   const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
-  return <section className={styles.page}><h2>Project risks</h2><p>Record risks, responsible people, mitigation plans and review dates. Likelihood and impact are separate assessments; no combined score is calculated.</p>
+  return <section data-page-shell="surface" className={styles.page}><h2>Project risks</h2><p>Record risks, responsible people, mitigation plans and review dates. Likelihood and impact are separate assessments; no combined score is calculated.</p>
     {selectedProjectId ? <Register key={selectedProjectId} projectId={selectedProjectId} authFetch={authFetch} /> : <p>Select a project to see its risk register.</p>}
   </section>;
 }

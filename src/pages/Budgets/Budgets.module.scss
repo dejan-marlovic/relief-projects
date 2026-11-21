@@ -1,3 +1,4 @@
+@use "../../styles/presentation" as presentation;
 @use "../../styles/colors" as colors;
 @use "../../styles/forms" as forms;
 
@@ -157,3 +158,8 @@
   .primaryBtn { min-height: 44px; }
   .budgetSection, .createFormSection { scroll-margin-top: 12px; min-width: 0; }
 }
+
+// Shared Project-page visual language.
+.pageTitle { @include presentation.page-title; }
+.pageSubtitle { @include presentation.description; }
+.shell { @include presentation.surface; }

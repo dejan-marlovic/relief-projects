@@ -1,3 +1,4 @@
+@use "../../styles/presentation" as presentation;
 @use "../../styles/colors" as colors;
 @use "../../styles/forms" as forms;
 
@@ -301,3 +302,8 @@
   .compactList { overflow: visible; flex: none; }
   .compactFilters { grid-template-columns: minmax(0, 1fr); }
 }
+
+// Shared Project-page visual language.
+.pageTitle { @include presentation.page-title; }
+.pageSubtitle { @include presentation.description; }
+.shell { @include presentation.surface; }

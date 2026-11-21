@@ -1,3 +1,4 @@
+@use "../../../../styles/presentation" as presentation;
 @use "../../../../styles/colors" as colors;
 /*CreateCostDetail.module.scss*/
 .formContainer {
@@ -51,3 +52,6 @@
   font-size: 13px;
   color: colors.$text-secondary;
 }
+
+// Shared Project-page visual language.
+.formContainer { @include presentation.surface; }

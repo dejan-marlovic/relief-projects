@@ -1568,7 +1568,7 @@ const Transactions = ({ refreshTrigger }) => {
   };
 
   return (
-    <div className={styles.container}>
+    <div data-page-shell="wrapper" className={styles.container}>
       {approvalTarget && <ApprovalDialog key={approvalTarget} endpoint={`/api/transactions/${approvalTarget}`}
         recordLabel={namedReference("transaction", approvalTarget, transactions.find(row => String(row.id) === String(approvalTarget))?.transactionDescription)} onCancel={() => setApprovalTarget(null)}
         onRefresh={record => { const updated = record; setTransactions(current => current.map(item => item.id === updated.id ? updated : item)); setHistoryRefreshKeys(keys => ({ ...keys, [updated.id]: (keys[updated.id] || 0) + 1 })); }}
@@ -1585,7 +1585,7 @@ const Transactions = ({ refreshTrigger }) => {
             </div>
           </div>
 
-          <div className={styles.headerActions}>
+          <div data-action-group="header" className={styles.headerActions}>
             {hasActiveFilters && <ClearFiltersButton onClick={() => setFilters(emptyFilters())} />}
             <ActionButton editorBlocked={Boolean(editingId)}
               type="button"

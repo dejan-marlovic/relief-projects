@@ -1275,7 +1275,7 @@ function PaymentOrders() {
   const lockedBannerText = lockedBanner && `${lockedBanner} (Editing disabled)`;
 
   return (
-    <div className={styles.page}>
+    <div data-page-shell="wrapper" className={styles.page}>
       {approvalTarget && <ApprovalDialog key={approvalTarget} endpoint={`/api/payment-orders/${approvalTarget}`}
         recordLabel={namedReference("payment order", approvalTarget, orders.find(row => String(row.id) === String(approvalTarget))?.paymentOrderDescription)} onCancel={() => setApprovalTarget(null)}
         onRefresh={record => { const updated = normalizePO(record); setOrders(current => current.map(item => item.id === updated.id ? updated : item)); setHistoryRefreshKeys(keys => ({ ...keys, [updated.id]: (keys[updated.id] || 0) + 1 })); if (updated.locked) markLocked(updated.id); }}
@@ -1288,7 +1288,7 @@ function PaymentOrders() {
             <p className={styles.pageSubtitle}>{subtitle}</p>
           </div>
 
-          <div className={styles.headerActions}>
+          <div data-action-group="header" className={styles.headerActions}>
             {hasActiveFilters && <ClearFiltersButton onClick={() => setFilters(emptyFilters())} />}
             <ActionButton editorBlocked={Boolean(editingId)}
               type="button"
@@ -1476,7 +1476,7 @@ function PaymentOrders() {
                 />
 
                 {expandedPoId === po.id && (
-                  <div className={styles.linesPanel} data-open-record="true"><span className="open-record-label">Viewing record</span>
+                  <div className={styles.linesPanel} data-open-record="true" data-record-inset="true"><span className="open-record-label">Viewing record</span>
                     <PaymentOrderLines
                       paymentOrderId={po.id}
                       order={po}

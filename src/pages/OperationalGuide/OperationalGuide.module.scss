@@ -1,3 +1,4 @@
+@use "../../styles/presentation" as presentation;
 @use "../../styles/colors" as colors;
 
 .page {
@@ -208,3 +209,8 @@
   .part ul, .part ol { margin-left: 0; padding-left: 20px; }
   .pageTitle svg, .backToTopLink svg { flex-shrink: 0; }
 }
+
+// Shared Project-page visual language.
+.pageTitle { @include presentation.page-title; }
+.pageSubtitle { @include presentation.description; }
+.shell { @include presentation.surface; }

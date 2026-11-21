@@ -1,3 +1,4 @@
+@use "../../styles/presentation" as presentation;
 @use "../../styles/colors" as colors;
 /* src/components/Transactions/Transactions.module.scss */
 @use "../../styles/forms" as forms;
@@ -370,3 +371,7 @@ fieldset.headerRow { margin: 0; border: 0; min-inline-size: 0; }
 }
 
 .fundingHelp { margin: 0 0 0.8rem; color: colors.$text-muted; font-size: 0.85rem; line-height: 1.5; }
+
+// Shared Project-page visual language.
+.cardTitle { @include presentation.tile-title; }
+.cardMeta { @include presentation.description; }

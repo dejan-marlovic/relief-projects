@@ -64,7 +64,7 @@ function Item({ item, generation, editable, documents, categories, busy, mutate:
         {applicability === "NOT_APPLICABLE" && <label>Explanation<textarea value={reason} disabled={busy} onChange={(e) => { setDirty(true); setReason(e.target.value); }} rows={3} /><small>Required, up to 1,000 characters. This replaces the current explanation.</small></label>}
         {validation && <p role="alert">{validation}</p>}
         <small>Save this decision explicitly. Document details autosave, but checklist decisions and evidence links use their own buttons.</small>
-        <ActionButton disabled={busy} type="submit">Save applicability</ActionButton>
+        <span data-action-group="section"><ActionButton disabled={busy} type="submit">Save applicability</ActionButton></span>
       </form>}
       <h4>Evidence</h4>
       {item.applicability === "NOT_APPLICABLE" && <p className={styles.muted}>Existing links are retained. Change applicability before adding evidence.</p>}
@@ -75,7 +75,7 @@ function Item({ item, generation, editable, documents, categories, busy, mutate:
         <span className={styles.muted}>Linked by {doc.linkedByUsername || `User #${doc.linkedByUserId} · Name unavailable`} · {uploadTimeLabel(doc.linkedAt)}</span>
         {doc.hasNewerVersion && <span>Newer version exists (#{doc.currentDocumentId}{doc.currentDocumentDeleted ? ", deleted" : ""}). This link keeps version {doc.versionNumber}.</span>}
         {doc.downloadEligible !== true && <span>Evidence unavailable for download.</span>}
-        <div className={styles.actions}>
+        <div data-action-group="section" className={styles.actions}>
           <ActionButton type="button" disabled={doc.downloadEligible !== true || downloading.includes(doc.documentId)} onClick={() => download(doc.documentId)}>Download linked version</ActionButton>
           <ActionButton type="button" onClick={() => showHistory({ id: doc.documentId, documentName: doc.documentName })}>Version history</ActionButton>
           {editable && <ActionButton type="button" disabled={busy || decisionChanged} onClick={() => { if (window.confirm("Remove this evidence link? The document and file will be kept.")) mutate(item, `evidence/${doc.documentId}`, "DELETE"); }}>Remove evidence link</ActionButton>}
@@ -85,7 +85,7 @@ function Item({ item, generation, editable, documents, categories, busy, mutate:
       {editable && <form className={styles.form} onSubmit={(e) => { e.preventDefault(); if (selected && canLink && availableDocuments.some(doc => String(doc.id) === selected)) mutate(item, "evidence", "POST", { documentId: Number(selected) }); }}>
         <label>Document evidence<SearchableSelect documentOptions value={selected} disabled={busy || !canLink || !availableDocuments.length} onChange={(e) => { setDirty(true); setSelected(e.target.value); }}><option value="">{availableDocuments.length ? "Select an exact document version" : "No additional document versions available"}</option>{availableDocuments.map((doc) => <option key={doc.id} value={doc.id}>{doc.documentName} · Version {doc.versionNumber} · {statusLabel(doc.status)} · {doc.isCurrent ? "Current" : "Historical"} (#{doc.id})</option>)}</SearchableSelect></label>
         {!availableDocuments.length && <p className={styles.muted}>No additional document versions available. Upload another document or adjust the evidence filters.</p>}
-        <ActionButton type="submit" disabled={busy || !canLink || !selected || !availableDocuments.some(doc => String(doc.id) === selected)}>Link evidence</ActionButton>
+        <span data-action-group="section"><ActionButton type="submit" disabled={busy || !canLink || !selected || !availableDocuments.some(doc => String(doc.id) === selected)}>Link evidence</ActionButton></span>
       </form>}
     </div>
   </details>;

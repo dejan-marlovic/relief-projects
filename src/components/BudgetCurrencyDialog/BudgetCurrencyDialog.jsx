@@ -134,6 +134,6 @@ export default function BudgetCurrencyDialog({ budget, currencies, rates, initia
     {error && <p role="alert" className={styles.notice}>{error}</p>}
     {mustReload && <ActionButton disabled={busy} onClick={reload}>Reload saved budget</ActionButton>}
     {busy && <p role="status">Loading…</p>}
-    <div className={styles.actions}><ActionButton disabled={busy || mustReload} onClick={onClose}><RecordIcon type="close" />Close</ActionButton></div>
+    <div data-action-group="section" className={styles.actions}><ActionButton disabled={busy || mustReload} onClick={onClose}><RecordIcon type="close" />Close</ActionButton></div>
   </dialog>, document.body);
 }

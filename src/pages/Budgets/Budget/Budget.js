@@ -1737,7 +1737,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
               </div>
               </fieldset>
 
-              <div className={styles.bottomActions}>
+              <div data-action-group="section" className={styles.bottomActions}>
                 <ActionButton editorBlocked={Boolean(childEditing)}
                   type="button"
                   onClick={handleExportBudget}
@@ -1809,12 +1809,10 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
         </div>
       )}
 
-      {canEditBudget && <div className={styles.bottomActions}>
-        {hasRole("ADMIN") && <label><input type="checkbox" checked={normalizeMissingInputs} disabled={loading} onChange={(event) => setNormalizeMissingInputs(event.target.checked)} /> Fill missing calculation inputs (units 1, periods 1, price 0, allocation 100%)</label>}
-        <ActionButton editorBlocked={Boolean(childEditing)} type="button" className={styles.saveButton} disabled={Boolean(savedBudget.revisionFamilyId) || loading || childEditing || submitting || Boolean(reviewAction)} title={savedBudget.revisionFamilyId ? "Revision families retain their local currency" : undefined} onClick={() => setCurrencyOpen(true)}>Change budget currency</ActionButton>
-        <ActionButton editorBlocked={Boolean(childEditing)} type="button" className={styles.saveButton} onClick={handleRecalculate} disabled={loading || childEditing || hasUnsavedChanges} title="Save or cancel edits first. Uses persisted inputs and current selected rates.">Recalculate saved costs</ActionButton>
-        {recalculationMessage && <p role="status">{recalculationMessage}</p>}
-      </div>}
+      {canEditBudget && <div data-action-group="section" className={styles.bottomActions}>{hasRole("ADMIN") && <label><input type="checkbox" checked={normalizeMissingInputs} disabled={loading} onChange={(event) => setNormalizeMissingInputs(event.target.checked)} /> Fill missing calculation inputs (units 1, periods 1, price 0, allocation 100%)</label>}
+{recalculationMessage && <p role="status">{recalculationMessage}</p>}
+<ActionButton editorBlocked={Boolean(childEditing)} type="button" className={styles.saveButton} disabled={Boolean(savedBudget.revisionFamilyId) || loading || childEditing || submitting || Boolean(reviewAction)} title={savedBudget.revisionFamilyId ? "Revision families retain their local currency" : undefined} onClick={() => setCurrencyOpen(true)}>Change budget currency</ActionButton>
+<ActionButton editorBlocked={Boolean(childEditing)} type="button" className={styles.saveButton} onClick={handleRecalculate} disabled={loading || childEditing || hasUnsavedChanges} title="Save or cancel edits first. Uses persisted inputs and current selected rates.">Recalculate saved costs</ActionButton></div>}
       {hasUnsavedChanges && <ActionButton type="button" className={styles.saveButton} disabled={loading || submitting || Boolean(reviewAction)} onClick={() => { setBudget(conflictBudget.current || savedBudget); setSavedBudget(conflictBudget.current || savedBudget); conflictBudget.current = null; setHasUnsavedChanges(false); setFieldErrors({}); setFormError(""); }}>Discard header edits</ActionButton>}
       {currencyOpen && canEditBudget && <BudgetCurrencyDialog key={`currency-${savedBudget.id}`} budget={savedBudget} currencies={currencies} rates={exchangeRates}
         initialTargetId={budget.localCurrencyId} dirty={hasUnsavedChanges}

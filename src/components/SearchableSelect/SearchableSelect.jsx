@@ -103,7 +103,7 @@ const SearchableSelect = forwardRef(function SearchableSelect({ children, onMous
           </li>)}
         </ul>
         {!matches.length && <p role="status">No matching options</p>}
-        <ActionButton type="button" onClick={close}><RecordIcon type="close" />Close</ActionButton>
+        <span data-action-group="section"><ActionButton type="button" onClick={close}><RecordIcon type="close" />Close</ActionButton></span>
       </div>
     </div>, document.body)}
   </>;

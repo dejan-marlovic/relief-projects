@@ -12,7 +12,7 @@ import {
 
 const About = () => {
   return (
-    <div className={styles.page} id="top">
+    <div data-page-shell="wrapper" className={styles.page} id="top">
       <div className={styles.shell}>
         <header className={styles.pageHeader}>
           <div className={styles.pageHeaderText}>

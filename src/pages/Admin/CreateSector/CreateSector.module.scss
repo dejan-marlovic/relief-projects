@@ -1,3 +1,4 @@
+@use "../../../styles/presentation" as presentation;
 @use "../responsiveForms" as responsive;
 @use "../../../styles/colors" as colors;
 /* src/components/Admin/CreateSector/CreateSector.module.scss */
@@ -216,3 +217,10 @@ label {
 }
 
 @include responsive.layout;
+
+// Shared Project-page visual language.
+.pageTitle { @include presentation.page-title; }
+.pageSubtitle { @include presentation.description; }
+.cardTitle { @include presentation.tile-title; }
+.cardMeta { @include presentation.description; }
+.formContainer { @include presentation.surface; }

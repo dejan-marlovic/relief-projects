@@ -1,3 +1,4 @@
+@use "../../styles/presentation" as presentation;
 @use "../../styles/colors" as colors;
 /* RegisterProject.module.scss */
 @use "../../styles/forms" as forms;
@@ -367,3 +368,10 @@ label {
   .noMedia > div { min-width: 0; overflow-wrap: anywhere; }
   .noMedia svg, .sectionTitle svg { flex-shrink: 0; }
 }
+
+// Shared Project-page visual language.
+.pageTitle { @include presentation.page-title; }
+.pageSubtitle { @include presentation.description; }
+.cardTitle { @include presentation.tile-title; }
+.cardMeta { @include presentation.description; }
+.formContainer { @include presentation.surface; }

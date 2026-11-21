@@ -218,9 +218,9 @@ const CreateCostDetail = ({ budgetId, onCreated = () => {} }) => {
 
         <div className={styles.formGroup}>
           <label style={{ visibility: "hidden" }}>Submit</label>
-          <ActionButton type="submit" className={styles.button}>
+          <span data-action-group="section"><ActionButton type="submit" className={styles.button}>
             Add Cost Detail
-          </ActionButton>
+          </ActionButton></span>
         </div>
       </div>
     </ScrollToForm>

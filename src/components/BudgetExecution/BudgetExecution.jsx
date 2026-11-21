@@ -79,7 +79,7 @@ export default function BudgetExecution({ familyId, budgetId, budgets = [], disa
       <CapacityBasis rows={preview.basis} />
       {(stale || blocked) && <p role="alert">This preview cannot be submitted. Review refreshed state/history and request a fresh preview.</p>}
       <label>Activation reason<textarea required maxLength={1000} value={reason} disabled={busy} onChange={e => setReason(e.target.value)} /></label>
-      <div className={styles.actions}><ActionButton disabled={disabled || busy || loading || !data || blocked || stale || !preview.eligibility.canActivate}>Confirm activation / reaffirmation</ActionButton><ActionButton type="button" disabled={busy} onClick={() => { setPreview(null); setReason(""); setBlocked(false); }}>Cancel activation</ActionButton></div>
+      <div data-action-group="section" className={styles.actions}><ActionButton disabled={disabled || busy || loading || !data || blocked || stale || !preview.eligibility.canActivate}>Confirm activation / reaffirmation</ActionButton><ActionButton type="button" disabled={busy} onClick={() => { setPreview(null); setReason(""); setBlocked(false); }}>Cancel activation</ActionButton></div>
     </ScrollToForm>}
   </section>;
 }

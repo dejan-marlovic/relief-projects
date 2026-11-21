@@ -1,3 +1,5 @@
+@use "./forms" as forms;
+@use "./presentation" as presentation;
 // Shared presentation for workflow pages, matching Project and Transactions.
 // Imported inside CSS modules so these rules never leak into unrelated forms.
 @mixin layout {
@@ -102,4 +104,12 @@
     .filters, .grid, .snapshot { grid-template-columns: 1fr; }
     .actions button { min-height: 44px; }
   }
+  .page > h2 { @include presentation.page-title; }
+  .page > h2 + p, .muted { @include presentation.description; }
+  .panel, .form, .list > li { @include presentation.surface; }
+  .panel > h3, .form > h3, .heading h3 { @include presentation.tile-title; }
+  .page input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]),
+  .page select { @include forms.text-input; }
+  .page textarea { @include forms.textarea-input; }
+
 }

@@ -1,3 +1,4 @@
+@use "../../styles/presentation" as presentation;
 @use "../../styles/colors" as colors;
 @use "../../styles/forms" as forms;
 
@@ -330,3 +331,8 @@
   &[data-dragging="true"], &:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
   &:disabled { opacity: 0.6; cursor: not-allowed; }
 }
+
+// Shared Project-page visual language.
+.pageTitle { @include presentation.page-title; }
+.pageSubtitle { @include presentation.description; }
+.shell { @include presentation.surface; }

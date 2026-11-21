@@ -274,7 +274,7 @@ const Layout = () => {
               {categories.map(group => <optgroup key={group.label} label={group.label}>{group.items.map(([path, label]) => <option key={path} value={path}>{label}</option>)}</optgroup>)}
               {hasRole("ADMIN") && <option value="/admin">Admin</option>}
             </SearchableSelect>
-            <div className={styles.pageActions} aria-label="Page navigation">
+            <div data-action-group="header" className={styles.pageActions} aria-label="Page navigation">
               <ActionButton type="button" disabled={pageIndex <= 0} onClick={() => movePage(-1)}>← Previous page</ActionButton>
               <ActionButton type="button" disabled={pageIndex < 0 || pageIndex >= pageItems.length - 1} onClick={() => movePage(1)}>Next page →</ActionButton>
             </div>

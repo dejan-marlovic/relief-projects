@@ -86,7 +86,7 @@ export default function ReturnReasonDialog({ endpoint, recordLabel, onSuccess, o
       <div id={`${id}-count`}>{count} / 2000 characters</div>
       <div id={`${id}-field`} className={styles.error}>{fieldError}</div>
       {error && <p role="alert" className={styles.error}>{error}</p>}
-      <div className={styles.actions}>
+      <div data-action-group="section" className={styles.actions}>
         <ActionButton type="button" disabled={busy} onClick={onCancel}>Cancel</ActionButton>
         <ActionButton type="submit" className={styles.confirmReturn} disabled={busy}><FiCornerUpLeft aria-hidden="true" />{busy ? "Returning…" : "Confirm return"}</ActionButton>
       </div>

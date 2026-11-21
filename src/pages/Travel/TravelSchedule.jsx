@@ -29,7 +29,7 @@ export function windowError(filters) {
 function Pages({ data, loading, onPage, name }) {
   if (!data) return null;
   const start = data.content.length ? data.page * data.size + 1 : 0;
-  return <div className={styles.actions}>
+  return <div data-action-group="section" className={styles.actions}>
     <ActionButton disabled={loading || data.page === 0} onClick={() => onPage(data.page - 1)}>Previous {name}</ActionButton>
     <span>{start ? `Showing ${start}–${start + data.content.length - 1} of ${data.totalElements} matching ${name}` : `${data.totalElements} matching ${name}`} · Page {data.totalPages ? data.page + 1 : 0} of {data.totalPages}</span>
     <ActionButton disabled={loading || !data.hasNext} onClick={() => onPage(data.page + 1)}>Next {name}</ActionButton>
@@ -61,7 +61,7 @@ export function Schedule({ authFetch }) {
     setSelectedProjectId(String(row.project.id));
     navigate(`/travel?projectId=${row.project.id}&requestId=${row.id}`, { state: { scheduleUrl: `${location.pathname}${location.search}` } });
   };
-  return <section className={styles.page}>
+  return <section data-page-shell="surface" className={styles.page}>
     <h2>Travel schedule</h2>
     <p>Travel across projects. This view is independent of the project selected in the header.</p>
     <p className={styles.muted}>Review planned trips that intersect your date window. Approval is separate from travel actually taking place. Open a request to manage its plan, decisions and post-trip report.</p>
@@ -75,7 +75,7 @@ export function Schedule({ authFetch }) {
       </div>
       <p className={styles.muted}>Leave both dates blank for the default window: 30 days before through 90 days after today in Stockholm. Custom windows can cover up to 366 days.</p>
       {(error || invalid) && <p role="alert">{error || invalid}</p>}
-      <div className={styles.actions}><ActionButton type="submit">Apply schedule filters</ActionButton><ActionButton type="button" onClick={() => { setParams({}); setDraft(filtersFrom(new URLSearchParams())); setError(""); }}>Reset schedule filters</ActionButton></div>
+      <div data-action-group="section" className={styles.actions}><ActionButton type="submit">Apply schedule filters</ActionButton><ActionButton type="button" onClick={() => { setParams({}); setDraft(filtersFrom(new URLSearchParams())); setError(""); }}>Reset schedule filters</ActionButton></div>
     </form>
     <ReadState state={projects} />
     <ActionButton aria-expanded={lookupOpen} onClick={() => setLookupOpen(v => !v)}>Find a traveller by name</ActionButton>

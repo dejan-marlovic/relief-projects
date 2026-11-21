@@ -586,3 +586,30 @@ $secondary-color: colors.$danger;
 .content [data-tile-description] { color: var(--color-text-muted); font-size: .875rem; line-height: 1.6; margin: .5rem 0 1rem; max-width: 85ch; overflow-wrap: anywhere; }
 
 .content [data-purpose-tile="section"] { margin-block: var(--tile-gap); padding: 1rem; border: 1px solid var(--color-primary-border); border-radius: 12px; background: var(--color-surface); }
+
+/* The layout owns the outer inset, regardless of whether a page supplies
+   a separate wrapper or uses its root as the main tile. */
+.content { padding: .25rem .5rem; }
+.content > [data-page-shell][data-page-shell] {
+  box-sizing: border-box;
+  margin: 0;
+  min-width: 0;
+  max-width: none;
+  width: 100%;
+}
+.content > [data-page-shell="wrapper"][data-page-shell] { padding: 0; }
+.content > [data-page-shell="surface"][data-page-shell] { padding: 1.25rem; }
+@media (max-width: 600px) {
+  .content { padding-inline: 0; }
+  .content > [data-page-shell="surface"][data-page-shell] { padding: .85rem; }
+}
+
+@media (max-width: 700px) {
+  .content { padding-inline: 0; padding-bottom: calc(90px + env(safe-area-inset-bottom)); }
+}
+
+// Reserve the same space whether a navigation item has an active-page subtitle.
+@media (min-width: 701px) { .nav .tabLink { min-height: 64px; } }
+@media (max-width: 700px) {
+  .layoutShell .content { padding: .25rem 0 calc(90px + env(safe-area-inset-bottom)); }
+}

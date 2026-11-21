@@ -612,7 +612,7 @@ const Admin = () => {
   };
 
   return (
-    <div className={styles.adminContainer}>
+    <div data-page-shell="wrapper" className={styles.adminContainer}>
       <div className={styles.selectorCard}>
         <div className={styles.selectorRow}>
           <div className={styles.selectorText}>

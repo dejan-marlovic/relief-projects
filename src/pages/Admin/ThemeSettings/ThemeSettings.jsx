@@ -283,7 +283,7 @@ function ThemeSettings() {
 
             {formError && <div className={styles.formError}>{formError}</div>}
 
-            <div className={styles.creatorActions}>
+            <div data-action-group="section" className={styles.creatorActions}>
               <ActionButton
                 type="submit"
                 className={styles.saveThemeButton}

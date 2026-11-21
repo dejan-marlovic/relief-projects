@@ -105,7 +105,7 @@ export default function DocumentVersions({ document, authFetch, categories, canE
   };
 
   return <section className={styles.metadataEditor} aria-label="Document version history">
-    <div className={styles.docActions}><h3>Version history · {document.documentName}</h3><ActionButton type="button" className={styles.downloadLink} disabled={busy} onClick={() => { if (confirmDiscardUnsavedChanges()) onClose(); }}><RecordIcon type="close" />Close history</ActionButton>{error && <ActionButton type="button" className={styles.downloadLink} disabled={busy || loading} onClick={() => setRefresh(value => value + 1)}>Retry loading history</ActionButton>}</div>
+    <div data-action-group="section" className={styles.docActions}><h3>Version history · {document.documentName}</h3><ActionButton type="button" className={styles.downloadLink} disabled={busy} onClick={() => { if (confirmDiscardUnsavedChanges()) onClose(); }}><RecordIcon type="close" />Close history</ActionButton>{error && <ActionButton type="button" className={styles.downloadLink} disabled={busy || loading} onClick={() => setRefresh(value => value + 1)}>Retry loading history</ActionButton>}</div>
     <p className={styles.infoText}>Follow this document’s replacement chain. Each entry is an exact version with its own upload attribution and download. Upload a replacement from the current version; existing evidence links continue to reference the version originally selected. Final is a document label, not approval or proof of signing. Earlier versions are read-only.</p>
     {error && <ErrorBanner message={error} onDismiss={() => setError("")} />}
     {message && <p role="status">{message}</p>}
@@ -116,7 +116,7 @@ export default function DocumentVersions({ document, authFetch, categories, canE
         <span>{statusLabel(version.status)} · {version.isCurrent ? "Current version" : "Historical version"} · {version.isDeleted === true ? "Deleted" : version.isDeleted === false ? "Active" : "Availability unknown"}</span>
         <span className={styles.uploadedBy}>{categories.find((item) => item.id === version.category)?.label || version.category} · Document date: {version.documentDate || "Unknown"}</span>
       </div>
-      <div className={styles.docActions}>
+      <div data-action-group="section" className={styles.docActions}>
         {version.isDeleted === false && <ActionButton type="button" className={styles.downloadLink} disabled={downloading.includes(version.id)} onClick={() => onDownload(version.id)}>Download version {version.versionNumber}</ActionButton>}
         {canEdit && version.isCurrent === true && version.isDeleted === false && <ActionButton type="button" className={styles.downloadLink} disabled={busy || !categories.length} onClick={() => { setError(""); setReplacement({ id: version.id, name: version.documentName, category: "", date: "", status: "DRAFT", file: null }); }}>Upload replacement</ActionButton>}
         {canDelete && typeof version.isDeleted === "boolean" && <ActionButton type="button" className={styles.downloadLink} disabled={busy} onClick={() => changeDeletion(version)}>{version.isDeleted ? "Restore" : "Delete"} version {version.versionNumber}</ActionButton>}
@@ -142,7 +142,7 @@ export default function DocumentVersions({ document, authFetch, categories, canE
       </ActionButton>
       <input ref={replacementInput} className={styles.hiddenFileInput} type="file" aria-label="Replacement file" disabled={busy}
         onChange={event => { chooseReplacement(event.target.files); event.target.value = ""; }} />
-      <div className={styles.docActions}><ActionButton type="submit" className={styles.downloadLink} disabled={busy}>{busy ? "Uploading…" : "Save replacement"}</ActionButton><ActionButton type="button" className={styles.downloadLink} disabled={busy} onClick={() => setReplacement(null)}>Cancel replacement</ActionButton></div>
+      <div data-action-group="section" className={styles.docActions}><ActionButton type="submit" className={styles.downloadLink} disabled={busy}>{busy ? "Uploading…" : "Save replacement"}</ActionButton><ActionButton type="button" className={styles.downloadLink} disabled={busy} onClick={() => setReplacement(null)}>Cancel replacement</ActionButton></div>
     </ScrollToForm>}
   </section>;
 }

@@ -51,7 +51,7 @@ export default function TravelReport({ endpoint: travelEndpoint, projectId, trav
     } catch (err) { if (alive.current) setForm(f => ({ ...f, error: err.message, reviewRequired: true })); }
     finally { pending.current = false; if (alive.current) { setBusy(false); reload(); } }
   }
-  const buttons = actions => <div className={styles.actions}>{actions.map(action => {
+  const buttons = actions => <div data-action-group="section" className={styles.actions}>{actions.map(action => {
     const [title, flag] = reportCommands[action];
     const styleAction = action === "accept" ? "approve" : action === "reopen" ? "return" : action;
     return record?.permissions?.[flag] && <ActionButton editorBlocked={Boolean(form)} key={action} disabled={locked} className={approvalStyle(styleAction, styles)} onClick={() => open(action)}><TravelActionIcon action={styleAction} />{title}</ActionButton>;

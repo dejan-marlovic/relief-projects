@@ -224,10 +224,10 @@ const BankDetails = ({ organizationId, canManage = false }) => {
     const disabled = Boolean(busyAction) || autosave.busy;
     return <div key={id} ref={node => { if (isNew) newRowRef.current = node; if (editing) activeEditorRef.current = node; }} className={`${styles.gridRow} ${styles.dataRow} ${index % 2 === 0 ? styles.zebraEven : ""} ${styles.hoverable}`}>
       <div className={`${styles.cell} ${styles.stickyCol}`}>
-        {editing ? <div className={styles.actions}>
+        {editing ? <div data-action-group="section" className={styles.actions}>
           {isNew && <ActionButton type="button" className={styles.iconCircleBtn} onClick={save} disabled={disabled} aria-label={`Save bank detail ${id}`}><FiSave /> Save</ActionButton>}
           <ActionButton type="button" className={styles.dangerIconBtn} onClick={cancel} disabled={disabled} aria-label={`${isNew ? "Cancel" : "Done editing"} bank detail ${id}`}><FiX /> {isNew ? "Cancel" : "Done editing"}</ActionButton>
-        </div> : <div className={styles.actions}>
+        </div> : <div data-action-group="section" className={styles.actions}>
           {canManage && <ActionButton editorBlocked={Boolean(editingId)} type="button" className={styles.iconCircleBtn} onClick={() => startEdit(row)} disabled={Boolean(editingId) || disabled} aria-label={`Edit bank detail ${id}`}><FiEdit /> Edit</ActionButton>}
           {canManage && <ActionButton editorBlocked={Boolean(editingId)} type="button" className={styles.unlinkBtn} onClick={() => unlink(id)} disabled={Boolean(editingId) || disabled} title="Remove from organization" aria-label={`Remove bank detail ${id} from organization`}><RecordIcon type="link" /> Unlink</ActionButton>}
         </div>}
@@ -249,7 +249,7 @@ const BankDetails = ({ organizationId, canManage = false }) => {
           <option value="">Add an existing bank detail…</option>
           {unlinkedOptions.map((value) => <option key={value.bankId} value={value.bankId}>#{value.bankId} — {formatBankDetailLabel(value)}</option>)}
         </SearchableSelect>
-        <ActionButton editorBlocked={Boolean(editingId)} type="button" className={styles.secondaryBtn} onClick={addExisting} disabled={!selectedId || Boolean(editingId) || Boolean(busyAction)}><RecordIcon type="link" /> Add existing</ActionButton>
+        <span data-action-group="inline"><ActionButton editorBlocked={Boolean(editingId)} type="button" className={styles.secondaryBtn} onClick={addExisting} disabled={!selectedId || Boolean(editingId) || Boolean(busyAction)}><RecordIcon type="link" /> Add existing</ActionButton></span>
         <ActionButton editorBlocked={Boolean(editingId)} type="button" className={styles.primaryBtn} onClick={startCreate} disabled={Boolean(editingId) || Boolean(busyAction)}><FiPlus /> New Bank Detail</ActionButton>
       </div>}
     </div>

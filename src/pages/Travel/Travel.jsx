@@ -55,13 +55,13 @@ function TravelDetail({ openSequence = 0, id, base, projectId, authFetch, refres
   const planActions = ["edit", "evidence", "actions"];
   const approvalActions = ["submit", "approve", "return", "withdraw-approval"];
   const formStep = form ? (planActions.includes(form.action) || kind ? "plan" : approvalActions.includes(form.action) ? "approval" : null) : null;
-  const buttons = actions => <div className={styles.actions}>{actions.map(action => {
+  const buttons = actions => <div data-action-group="section" className={styles.actions}>{actions.map(action => {
     const [title, permission] = commands[action];
     return record.permissions?.[permission] && <ActionButton editorBlocked={Boolean(form)} key={action} className={approvalStyle(action, styles)} disabled={locked} onClick={() => open(action)}><TravelActionIcon action={action} />{title}</ActionButton>;
   })}</div>;
   const editor = form && <><TravelEditor key={form.action} form={form} setForm={setForm} projectId={projectId} authFetch={authFetch} refresh={refresh} busy={busy} blocked={blocked} onSave={save} onCancel={() => setForm(null)} onReview={() => setForm(f => ({ ...f, record, expectedRevision: record.revision, reviewRequired: false, error: "", draft: f.action === "actions" ? { ...f.draft, followUp: null } : f.draft }))} /><ReadState state={reviewHistory} /><ReadState state={removalPage} /></>;
   return <section ref={detailRef} data-open-record="true" className={styles.panel} style={{ scrollMarginTop: 16 }} aria-label="Travel request details"><span className="open-record-label">Viewing record</span>
-    <div className={styles.actions}><ActionButton editorBlocked={Boolean(form)} disabled={!!form || busy || reportActive} onClick={onClose}><RecordIcon type="close" />Close request</ActionButton></div><ReadState state={detail} />
+    <div data-action-group="section" className={styles.actions}><ActionButton editorBlocked={Boolean(form)} disabled={!!form || busy || reportActive} onClick={onClose}><RecordIcon type="close" />Close request</ActionButton></div><ReadState state={detail} />
     {record && <><h3><RecordIcon type="travel" />{record.purpose} · Travel request #{record.id}</h3>
       <TravelSummary record={record} />
       <TravelSteps record={record} editingStep={formStep} plan={<>
@@ -111,7 +111,7 @@ export function TravelRegister({ projectId, authFetch, initialRequestId = null }
     } catch (error) { if (alive.current) setForm(f => ({ ...f, error: error.message, reviewRequired: true })); }
     finally { pending.current = false; if (alive.current) { setBusy(false); reload(); } }
   }
-  return <><div className={styles.actions}>{list.data?.canCreate && <ActionButton recordBlocked={Boolean(selected)} editorBlocked={Boolean(form)} disabled={!!form || !!selected || busy} onClick={() => setForm({ action: "create", draft: { ...tripDraft(), departureDate: list.data.today, returnDate: list.data.today } })}>Create travel request</ActionButton>}</div>
+  return <><div data-action-group="section" className={styles.actions}>{list.data?.canCreate && <ActionButton recordBlocked={Boolean(selected)} editorBlocked={Boolean(form)} disabled={!!form || !!selected || busy} onClick={() => setForm({ action: "create", draft: { ...tripDraft(), departureDate: list.data.today, returnDate: list.data.today } })}>Create travel request</ActionButton>}</div>
     <div className={styles.filters}><label>Travel state<SearchableSelect value={filters.state} onChange={e => change("state", e.target.value)}>{["ALL", "DRAFT", "SUBMITTED", "RETURNED", "APPROVED", "CANCELLED"].map(state => <option value={state} key={state}>{state === "ALL" ? "All states" : state.charAt(0) + state.slice(1).toLowerCase()}</option>)}</SearchableSelect></label>
       <label>Traveller employee ID<input type="number" min="1" step="1" value={filters.travellerEmployeeId} onChange={e => change("travellerEmployeeId", e.target.value)} /></label>
       <label>Departure from<input type="date" value={filters.departureFrom} onChange={e => change("departureFrom", e.target.value)} /></label><label>Departure through<input type="date" value={filters.departureTo} onChange={e => change("departureTo", e.target.value)} /></label>
@@ -138,7 +138,7 @@ export default function Travel() {
   const matching = String(selectedProjectId) === projectId;
   const scheduleUrl = location.state?.scheduleUrl;
   const back = typeof scheduleUrl === "string" && /^\/travel-schedule(?:\?|$)/.test(scheduleUrl) ? scheduleUrl : "/travel-schedule";
-  return <section className={styles.page}><h2>Travel</h2>
+  return <section data-page-shell="surface" className={styles.page}><h2>Travel</h2>
     {linked && <ActionButton onClick={() => { if (confirmDiscardUnsavedChanges()) navigate(back); }}>Back to travel schedule</ActionButton>}
     <p>Plan a project trip and request independent approval. After travel concludes, record the actual outcome and request independent report review. Travel approval and report acceptance are separate decisions; neither verifies outcomes or approves expenses. Link preparation and reporting work from Follow-ups.</p>
     {linked ? <><ReadState state={projects} />{!valid && <p role="alert">This travel link needs a valid project and request ID.</p>}{valid && projects.data && !available && <p role="alert">This project's travel is no longer available in the active project list. Refresh the schedule.</p>}{available && !matching && <><p>This request belongs to project #{projectId}, which differs from your current selection.</p><ActionButton onClick={() => { if (confirmDiscardUnsavedChanges()) setSelectedProjectId(projectId); }}>Select request's project</ActionButton><ActionButton onClick={() => { if (confirmDiscardUnsavedChanges()) navigate("/travel"); }}>View selected project's travel</ActionButton></>}{available && matching && <TravelRegister key={`${projectId}-${requestId}`} projectId={projectId} authFetch={authFetch} initialRequestId={requestId} />}</> : selectedProjectId ? <TravelRegister key={selectedProjectId} projectId={selectedProjectId} authFetch={authFetch} /> : <p>Select a project to view its travel requests.</p>}

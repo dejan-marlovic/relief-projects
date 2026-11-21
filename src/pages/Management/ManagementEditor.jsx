@@ -75,7 +75,7 @@ export default function ManagementEditor({ form, setForm, projectId, authFetch, 
       {action.endsWith("-remove") && <p>Remove association #{form.link.id} · {form.link.capturedTitle || form.link.capturedName || "Name unavailable"}. Its history is retained; the linked task or document is not deleted.</p>}
       {error && <p role="alert">{error}</p>}{form.error && <p role="alert">{form.error}</p>}
       {form.reviewRequired && <div role="alert"><p>Draft retained. Review the refreshed record, links and history before trying again. A failed response may follow a successful save.{action === "create" ? " Check the list before creating again to avoid duplicates." : ""}</p><ActionButton type="button" disabled={blocked} onClick={onReview}>I reviewed the refreshed state; enable retry</ActionButton></div>}
-      <div className={styles.actions}>{!["create", "edit"].includes(action) && <ActionButton type="submit" disabled={busy || blocked || form.reviewRequired}>Save {titles[action].toLowerCase()}</ActionButton>}<ActionButton type="button" onClick={close}><RecordIcon type="close" />Close editor</ActionButton></div>
+      <div data-action-group="section" className={styles.actions}>{!["create", "edit"].includes(action) && <ActionButton type="submit" disabled={busy || blocked || form.reviewRequired}>Save {titles[action].toLowerCase()}</ActionButton>}<ActionButton type="button" onClick={close}><RecordIcon type="close" />Close editor</ActionButton></div>
     </fieldset>
   </ScrollToForm>;
 }

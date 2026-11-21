@@ -106,7 +106,7 @@ const ColumnFilter = ({ label, type, value, options = [], onApply, onClear }) =>
         <label>From<input type="date" value={draft.from} onChange={(e) => setDraft((v) => ({ ...v, from: e.target.value }))} /></label>
         <label>To<input type="date" value={draft.to} onChange={(e) => setDraft((v) => ({ ...v, to: e.target.value }))} /></label>
       </>}
-      <div className={styles.actions}>
+      <div data-action-group="section" className={styles.actions}>
         <ActionButton type="button" onClick={clear}>Clear</ActionButton>
         <ActionButton type="button" className={styles.apply} onClick={() => { onApply(draft); setOpen(false); }}>Apply</ActionButton>
       </div>

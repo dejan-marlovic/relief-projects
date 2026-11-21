@@ -1,3 +1,4 @@
+@use "../../styles/presentation" as presentation;
 @use "../../styles/colors" as colors;
 /* src/components/Recipients/Recipients.module.scss */
 @use "../../styles/forms" as forms;
@@ -305,3 +306,8 @@
 }
 
 .mobileToolsLegend { font-size: 0.8rem; color: colors.$text-muted; margin-bottom: 8px; }
+
+// Shared Project-page visual language.
+.pageTitle { @include presentation.page-title; }
+.pageSubtitle { @include presentation.description; }
+.shell { @include presentation.surface; }

@@ -147,7 +147,7 @@ const Budgets = () => {
   }, [selectedProjectId, projects, budgets.length]);
 
   return (
-    <div className={styles.page}>
+    <div data-page-shell="wrapper" className={styles.page}>
       <div className={styles.shell}>
         <div className={styles.pageHeader}>
           <div className={styles.pageHeaderText}>
@@ -155,7 +155,7 @@ const Budgets = () => {
             <p className={styles.pageSubtitle}>{subtitle}</p>
           </div>
 
-          {canEditBudgets && <div className={styles.headerActions}>
+          {canEditBudgets && <div data-action-group="header" className={styles.headerActions}>
             <ActionButton
               type="button"
               className={styles.primaryBtn}

@@ -471,7 +471,7 @@ const TransactionAllocations = ({
             />
           </div>
 
-          <div className={styles.fieldActions}>
+          <div data-action-group="inline" className={styles.fieldActions}>
             <ActionButton
               type="button"
               className={styles.primaryInlineBtn}
@@ -610,7 +610,7 @@ const AllocationRow = ({
         />
       </div>
 
-      {canManage && <div className={styles.rowActions}>
+      {canManage && <div data-action-group="inline" className={styles.rowActions}>
         <ActionButton
           type="button"
           className={styles.iconCircleBtn}

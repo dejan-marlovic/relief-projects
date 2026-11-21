@@ -283,10 +283,19 @@ a {
 }
 
 /* Shared visual state for opened records; independent of workflow status. */
-[data-open-record="true"], details[data-record-disclosure="true"][open] {
+:root [data-open-record="true"], :root details[data-record-disclosure="true"][open] {
+  border: 1px solid var(--color-primary-border);
   border-inline-start: 3px solid var(--color-primary);
-  outline: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
-  outline-offset: -1px;
+  border-radius: 14px;
+  box-sizing: border-box;
+}
+/* Nested record bodies need breathing room inside their parent card. */
+:root [data-open-record="true"][data-record-inset] {
+  margin: .75rem;
+  padding: 1rem;
+}
+@media (max-width: 600px) {
+  :root [data-open-record="true"][data-record-inset] { margin: .5rem; padding: .75rem; }
 }
 .open-record-label, .expanded-record-label {
   display: inline-flex;
@@ -312,3 +321,35 @@ a {
 }
 .expanded-record-label { display: none; margin-inline-start: .6rem; }
 details[data-record-disclosure="true"][open] > summary > .expanded-record-label { display: inline-flex; }
+
+/* Match the Project header: actions share a right-hand anchor and spacing.
+   Inline row actions remain in their own cell; form actions follow the fields. */
+:root [data-action-group][data-action-group] {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: .6rem;
+  min-width: 0;
+  max-width: 100%;
+  text-align: start;
+}
+:root [data-action-group="header"] { margin-inline-start: auto; }
+:root [data-action-group="section"] { width: 100%; box-sizing: border-box; }
+:root [data-action-group="inline"][data-action-group] { display: inline-flex; vertical-align: top; }
+:root [data-action-group] > button,
+:root [data-action-group] > span:has(> button) {
+  max-width: 100%;
+  min-width: 0;
+  flex-shrink: 1;
+}
+:root [data-action-group] > button { white-space: normal; }
+@media (max-width: 640px) {
+  :root [data-action-group="header"] { width: 100%; }
+  :root [data-action-group] > button,
+  :root [data-action-group] > span:has(> button) { overflow-wrap: anywhere; }
+}
+
+/* A wrapped hint must not pull its disabled button away from the action edge. */
+:root [data-action-group] > span:has(> button) { align-items: flex-end; }

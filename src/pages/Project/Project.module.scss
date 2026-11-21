@@ -1,3 +1,4 @@
+@use "../../styles/presentation" as presentation;
 @use "../../styles/forms" as forms;
 @use "../../styles/colors" as colors;
 
@@ -875,3 +876,11 @@ h3 {
 .grid, .split, .imageAndFormWrapper { gap: 1.5rem; }
 .mediaColumn > .card + .card { margin-top: 1.5rem; }
 .cardMeta { max-width: 55ch; line-height: 1.6; }
+
+// Shared Project-page visual language.
+.pageTitle { @include presentation.page-title; }
+.pageSubtitle { @include presentation.description; }
+.cardTitle { @include presentation.tile-title; }
+.cardMeta { @include presentation.description; }
+.sectionHint { @include presentation.description; }
+.formContainer { @include presentation.surface; }

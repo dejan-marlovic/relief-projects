@@ -705,7 +705,7 @@ const PaymentOrderLines = ({
           />
         </div>
 
-        <div className={styles.fieldActions}>
+        <div data-action-group="inline" className={styles.fieldActions}>
           <ActionButton
             className={styles.primaryInlineBtn}
             onClick={onAdd}
@@ -931,7 +931,7 @@ const LineRow = ({
       </div>
 
       {canManage && (
-        <div className={styles.rowActions}>
+        <div data-action-group="inline" className={styles.rowActions}>
           <ActionButton
           className={styles.iconCircleBtn}
           disabled={locked}

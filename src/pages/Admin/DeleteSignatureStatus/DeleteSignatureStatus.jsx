@@ -266,7 +266,7 @@ const DeleteSignatureStatus = () => {
               </div>
             </div>
 
-            <div className={styles.bottomActions}>
+            <div data-action-group="section" className={styles.bottomActions}>
               {formError && <ActionButton
                 type="button"
                 onClick={loadSignatureStatuses}

@@ -111,7 +111,7 @@ export function FinalEvidencePanel({ paymentOrderId, refreshKey, editingLocked }
         <span>Attached {uploadTimeLabel(entry.attachedAt)} by {actor(entry.attachedBy)}</span><span>Reason: {entry.reason}</span>
         {entry.replacesEntryId && <span>Replaces attachment #{entry.replacesEntryId}</span>}
         {entry.warnings?.map(item => <span key={item}>{warning(item)}</span>)}
-      </div><div className={styles.actions}>
+      </div><div data-action-group="section" className={styles.actions}>
         <ActionButton disabled={entry.document?.downloadEligible !== true || downloading !== null} onClick={() => download(entry.documentId)}>Download exact version #{entry.documentId} · {entry.capturedDocumentName || "Name unavailable"}</ActionButton>
         {entry.permissions?.canReplace && <ActionButton editorBlocked={Boolean(editingLocked)} disabled={busy || editingLocked} onClick={() => start("replace", entry)}>Replace attachment #{entry.id} · {entry.capturedDocumentName || "Name unavailable"}</ActionButton>}
         {entry.permissions?.canRemove && <ActionButton editorBlocked={Boolean(editingLocked)} disabled={busy || editingLocked} onClick={() => start("remove", entry)}>Remove attachment #{entry.id} · {entry.capturedDocumentName || "Name unavailable"}</ActionButton>}
@@ -131,7 +131,7 @@ export function FinalEvidencePanel({ paymentOrderId, refreshKey, editingLocked }
       {form.action === "remove" && <p>The file remains available in Documents. The removed association and its reason remain in history.</p>}
       {form.action === "replace" && <p>The old association is removed only if the new attachment succeeds. Both entries remain in history.</p>}
       {reviewRequired && <label><input type="checkbox" disabled={loading || !!error} onChange={e => { if (e.target.checked) setReviewRequired(false); }} /> I compared the refreshed collection and history and want to issue this command.</label>}
-      <div className={styles.actions}><ActionButton editorBlocked={Boolean(editingLocked)} type="submit" disabled={!allowed || busy || loading || editingLocked || reviewRequired || !form.reason.trim() || (selecting && (candidateLoading || !!candidateError || !selected))}>Save {form.action}</ActionButton><ActionButton type="button" disabled={busy} onClick={() => setForm(null)}>Cancel</ActionButton></div>
+      <div data-action-group="section" className={styles.actions}><ActionButton editorBlocked={Boolean(editingLocked)} type="submit" disabled={!allowed || busy || loading || editingLocked || reviewRequired || !form.reason.trim() || (selecting && (candidateLoading || !!candidateError || !selected))}>Save {form.action}</ActionButton><ActionButton type="button" disabled={busy} onClick={() => setForm(null)}>Cancel</ActionButton></div>
     </ScrollToForm>}
     <p className={styles.hint}>{hasAnyRole("ADMIN", "PROJECT_MANAGER") ? <a href="/documents" target="_blank" rel="noopener noreferrer"><RecordIcon type="external" />Open Documents to upload to the order’s project</a> : "Select a file already uploaded by an authorised uploader."} Uploading and attaching are separate actions; a failed attachment never deletes the uploaded file.</p>
     <h4>Late evidence decision history</h4>

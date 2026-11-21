@@ -97,7 +97,7 @@ export default function ApprovalDialog({ endpoint, recordLabel, onRefresh, onSuc
       {basis && !allowed && !eligibility?.issues?.length && <p role="alert">Approval is unavailable for this submission.</p>}
       {error && <p role="alert" className={styles.error}>{error}</p>}
       {allowed && <label><input type="checkbox" checked={reviewed} disabled={busy} onChange={event => setReviewed(event.target.checked)} /> I have reviewed this submission and its supporting details.</label>}
-      <div className={styles.actions}>
+      <div data-action-group="section" className={styles.actions}>
         <ActionButton type="button" disabled={busy} onClick={onCancel}><RecordIcon type="close" />Close</ActionButton>
         <ActionButton type="button" disabled={busy} onClick={load}>Refresh for review</ActionButton>
         {allowed && <ActionButton type="submit" disabled={busy || !reviewed}>Confirm approval</ActionButton>}

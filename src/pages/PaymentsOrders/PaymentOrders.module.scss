@@ -1,3 +1,4 @@
+@use "../../styles/presentation" as presentation;
 @use "../../styles/colors" as colors;
 @use "../../styles/forms" as forms;
 
@@ -311,3 +312,8 @@ fieldset.headerRow { margin: 0; border: 0; min-inline-size: 0; }
   .headerActions > button { flex: 1 1 auto; }
   .linesPanel { padding: 0; }
 }
+
+// Shared Project-page visual language.
+.pageTitle { @include presentation.page-title; }
+.pageSubtitle { @include presentation.description; }
+.shell { @include presentation.surface; }

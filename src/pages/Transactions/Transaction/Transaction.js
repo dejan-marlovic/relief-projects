@@ -264,7 +264,7 @@ const Transaction = ({
       {/* 0: Actions */}
         <Cell className={`${styles.stickyCol} ${styles.actionsCol} ${hc(0)}`}>
           {isEditing ? (
-            <div className={styles.actions}>
+            <div data-action-group="inline" className={styles.actions}>
               {canEdit && <ActionButton
                 type="button"
                 className={styles.iconCircleBtn}
@@ -288,7 +288,7 @@ const Transaction = ({
               </ActionButton>
             </div>
           ) : (
-            <div className={styles.actions}>
+            <div data-action-group="inline" className={styles.actions}>
               {!isCreate && (
                 <input
                   type="checkbox"
