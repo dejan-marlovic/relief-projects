@@ -84,7 +84,7 @@ const Transaction = ({
 }) => {
   const ev = editedValues || {};
   const isCreate = (tx?.id ?? "") === "new";
-  const editorRef = useScrollToEditor(isEditing && !isCreate, rowRef);
+  const editorRef = useScrollToEditor(isEditing && !isCreate, rowRef, isEditing, "Transaction editor");
   const autoSave = isEditing && !isCreate && !compact;
 
   const submit = (e) => {

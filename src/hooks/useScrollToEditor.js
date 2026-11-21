@@ -1,18 +1,12 @@
 import { useCallback, useEffect, useRef } from "react";
 
-export function revealEditor(element) {
-  if (!element) return;
-  const field = Array.from(element.querySelectorAll("input, textarea, select, button"))
-    .find(control => !control.matches(":disabled, [type=hidden]") && !control.closest("[hidden]"));
-  (field || element).focus({ preventScroll: true });
-  element.scrollIntoView?.({
-    behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth",
-    block: "start",
-  });
-}
+import { revealEditor } from "../utils/revealEditor";
+import { useOpenEditor } from "../context/OpenEditorContext";
+export { revealEditor } from "../utils/revealEditor";
 
-export default function useScrollToEditor(open, forwardedRef) {
+export default function useScrollToEditor(open, forwardedRef, editorOpen = false, editorLabel) {
   const local = useRef(null);
+  useOpenEditor(local, editorOpen, editorLabel);
   const ref = useCallback(node => {
     local.current = node;
     if (typeof forwardedRef === "function") forwardedRef(node);

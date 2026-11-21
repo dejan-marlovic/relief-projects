@@ -1,9 +1,11 @@
+import { useOpenEditor } from "../../context/OpenEditorContext";
 import React, { useEffect, useRef } from "react";
 import { revealEditor } from "../../hooks/useScrollToEditor";
 
 // For action-opened editors, not permanently visible forms or filters.
 export default function ScrollToForm({ scrollKey, children, autosave, ...props }) {
   const ref = useRef(null);
+  useOpenEditor(ref, true, props["aria-label"]);
   const baseline = useRef({ key: scrollKey, value: autosave?.value });
   if (baseline.current.key !== scrollKey) baseline.current = { key: scrollKey, value: autosave?.value };
   const saved = autosave?.saved ?? baseline.current.value;

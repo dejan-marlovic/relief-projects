@@ -1,3 +1,4 @@
+import { useOpenEditor } from "../../context/OpenEditorContext";
 import DocumentLabel from "../DocumentLabel/DocumentLabel";
 import useRefreshLoading from "../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
@@ -41,6 +42,7 @@ export function CloseoutPanel({ projectId, refreshKey }) {
   const [revision, setRevision] = useState(0), [form, setForm] = useState(null), [busy, setBusy] = useState(false), [error, setError] = useState(""), [blocked, setBlocked] = useState(false);
   const [documents, setDocuments] = useState([]), [documentError, setDocumentError] = useState(""), [financeOpen, setFinanceOpen] = useState(false), [downloading, setDownloading] = useState(null);
   const alive = useRef(true), pending = useRef(false), formRef = useRef(null);
+  useOpenEditor(formRef, !!form, "Closeout decision");
   const formAction = form?.action;
   useEffect(() => {
     if (!formAction || !formRef.current) return;

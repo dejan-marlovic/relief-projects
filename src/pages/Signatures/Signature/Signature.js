@@ -53,7 +53,7 @@ const SignatureRow = ({
 }) => {
   const ev = editedValues || {};
   const isCreate = (row?.id ?? "") === "new";
-  const editorRef = useScrollToEditor(isEditing && !isCreate, rowRef);
+  const editorRef = useScrollToEditor(isEditing && !isCreate, rowRef, isEditing, "Signature editor");
   const autoSave = isEditing && !isCreate && !compact;
 
   const submit = (e) => {

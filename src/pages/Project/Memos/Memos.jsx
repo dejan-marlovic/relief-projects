@@ -11,6 +11,7 @@ import React, {
   useState,
 } from "react";
 import { ProjectContext } from "../../../context/ProjectContext";
+import { useOpenEditor } from "../../../context/OpenEditorContext";
 import styles from "./Memos.module.scss";
 import ErrorBanner from "../../../components/ErrorBanner/ErrorBanner";
 import projectStyles from "../Project.module.scss"; // ← reuse Project form styles
@@ -59,6 +60,8 @@ export default function Memos({ canEdit = false }) {
   const [error, setError] = useState("");
   const [drafts, setDrafts] = useState({}); // { [id|'new']: { text, positionId, employeeId, memoDate } }
   const [editingId, setEditingId] = useState(null);
+  const editorRef = useRef(null);
+  useOpenEditor(editorRef, editingId, "Memo editor");
   useUnsavedChange("memos-editor", editingId !== null);
   const isPhone = useMediaQuery("(max-width: 700px)");
   const [memoIndex, setMemoIndex] = useState(0);
@@ -359,7 +362,7 @@ export default function Memos({ canEdit = false }) {
       </div>}
       <div data-swipe-scope="memos" {...memoSwipes}>
       {visibleItems.map((m) => (
-        <div key={m.id} className={styles.memoCard}>
+        <div key={m.id} className={styles.memoCard} ref={editingId === m.id ? editorRef : undefined}>
           {editingId === m.id ? (
             <>
               <textarea
@@ -446,7 +449,7 @@ export default function Memos({ canEdit = false }) {
       ))}
 
       {canEdit && editingId === "new" && (
-        <div className={styles.memoCard}>
+        <div className={styles.memoCard} ref={editorRef}>
           <textarea
             ref={newMemoTextareaRef} // ✅ NEW: focus target
             className={styles.textarea}

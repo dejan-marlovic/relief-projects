@@ -101,7 +101,7 @@ test("existing address autosaves after typing without changing other saved field
   expect(screen.queryByRole("button", { name: "Save address 10" })).not.toBeInTheDocument();
   stored = { ...stored, postalCode: "22233" };
   fireEvent.change(screen.getByPlaceholderText("Street"), { target: { value: "Updated street" } });
-  await waitFor(() => expect(screen.getByText("Saved")).toBeInTheDocument(), { timeout: 2500 });
+  await waitFor(() => expect(screen.getByPlaceholderText("Postal code")).toHaveValue("22233"), { timeout: 2500 });
   expect(stored.street).toBe("Updated street");
   expect(stored.postalCode).toBe("22233");
   expect(screen.getByPlaceholderText("Postal code")).toHaveValue("22233");

@@ -1,3 +1,4 @@
+import { useOpenEditor } from "../../../context/OpenEditorContext";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useRecordAutosave from "../../../utils/useRecordAutosave";
 import AutosaveStatus from "../../../components/ProjectClassification/AutosaveStatus";
@@ -26,6 +27,8 @@ const BankDetails = ({ organizationId, canManage = false }) => {
   const [unlinkedOptions, setUnlinkedOptions] = useState([]);
   const [selectedId, setSelectedId] = useState("");
   const [editingId, setEditingId] = useState(null);
+  const activeEditorRef = useRef(null);
+  useOpenEditor(activeEditorRef, editingId, "Bank details editor");
   useEffect(() => {
     if (editingId !== "new") return;
     const row = newRowRef.current;
@@ -217,7 +220,7 @@ const BankDetails = ({ organizationId, canManage = false }) => {
     const id = isNew ? "new" : rowKeyOf(row);
     const editing = String(editingId) === String(id);
     const disabled = Boolean(busyAction) || autosave.busy;
-    return <div key={id} ref={isNew ? newRowRef : undefined} className={`${styles.gridRow} ${styles.dataRow} ${index % 2 === 0 ? styles.zebraEven : ""} ${styles.hoverable}`}>
+    return <div key={id} ref={node => { if (isNew) newRowRef.current = node; if (editing) activeEditorRef.current = node; }} className={`${styles.gridRow} ${styles.dataRow} ${index % 2 === 0 ? styles.zebraEven : ""} ${styles.hoverable}`}>
       <div className={`${styles.cell} ${styles.stickyCol}`}>
         {editing ? <div className={styles.actions}>
           {isNew && <button type="button" className={styles.iconCircleBtn} onClick={save} disabled={disabled} aria-label={`Save bank detail ${id}`}><FiSave /> Save</button>}

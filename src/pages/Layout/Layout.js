@@ -1,3 +1,4 @@
+import { OpenEditorProvider } from "../../context/OpenEditorContext";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import { isArchivedProject, visibleProjects } from "../../utils/projectArchive";
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
@@ -321,11 +322,11 @@ const Layout = () => {
         )}
       </nav>
 
-      <main ref={contentRef} className={styles.content}>
+      <OpenEditorProvider><main ref={contentRef} className={styles.content}>
         <UnsavedChangesContext.Provider value={unsavedChangesContextValue}>
           <Outlet />
         </UnsavedChangesContext.Provider>
-      </main>
+      </main></OpenEditorProvider>
       {isPhone && <MobileTileNavigation rootRef={contentRef} route={`${location.pathname}:${selectedProjectId}`} />}
     </div>
   );

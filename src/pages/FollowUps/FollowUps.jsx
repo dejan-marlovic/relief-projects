@@ -1,3 +1,4 @@
+import { useOpenEditor } from "../../context/OpenEditorContext";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import AutosaveStatus from "../../components/ProjectClassification/AutosaveStatus";
 import { notifySuccess } from "../../utils/successNotifications";
@@ -27,6 +28,7 @@ function clearDraft(key) { try { if (key) sessionStorage.removeItem(key); } catc
 const taskValues = task => ({ title: task?.title?.trim() || "", description: task?.description?.trim() || null, dueDate: task?.dueDate || "", assigneeEmployeeId: Number(task?.assignee?.employeeId || 0) });
 function TaskForm({ task, projectId, employees, busy, onSave, onCancel, blocked = false }) {
   const formRef = useRef(null);
+  useOpenEditor(formRef, true, task ? "Edit follow-up" : "New follow-up");
   const titleRef = useRef(null);
   useEffect(() => {
     const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;

@@ -1,3 +1,4 @@
+import { useOpenEditor } from "../../../context/OpenEditorContext";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import useRecordAutosave from "../../../utils/useRecordAutosave";
 import AutosaveStatus from "../../../components/ProjectClassification/AutosaveStatus";
@@ -37,6 +38,8 @@ const AddressDetails = ({ organizationId, canManage = false }) => {
   const [addressOptions, setAddressOptions] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState("");
   const [editingId, setEditingId] = useState(null);
+  const activeEditorRef = useRef(null);
+  useOpenEditor(activeEditorRef, editingId, "Address editor");
   const newAddressRef = useRef(null);
   useEffect(() => {
     if (editingId !== "new") return;
@@ -306,7 +309,7 @@ const AddressDetails = ({ organizationId, canManage = false }) => {
     const disabled = Boolean(busyAction) || autosave.busy;
 
     return (
-      <div key={rowKey} ref={isNew ? newAddressRef : undefined} className={`${styles.gridRow} ${styles.dataRow} ${styles.hoverable} ${primary ? styles.primaryRow : ""}`}>
+      <div key={rowKey} ref={node => { if (isNew) newAddressRef.current = node; if (editing) activeEditorRef.current = node; }} className={`${styles.gridRow} ${styles.dataRow} ${styles.hoverable} ${primary ? styles.primaryRow : ""}`}>
         <div className={`${styles.cell} ${styles.stickyCol}`}>
           {editing ? (
             <div className={styles.actions}>

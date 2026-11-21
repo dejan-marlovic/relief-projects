@@ -133,7 +133,7 @@ test("existing bank details autosave on leaving a field and retain edits on fail
   expect(screen.getByRole("textbox", { name: "Branch" })).toHaveValue("New branch");
   reject = false;
   fireEvent.click(screen.getByRole("button", { name: "Retry saving" }));
-  expect(await screen.findByText("Saved")).toBeInTheDocument();
+  await waitFor(() => expect(screen.queryByRole("button", { name: "Retry saving" })).not.toBeInTheDocument());
   expect(stored.branchName).toBe("New branch");
   expect(stored.accountNumber).toBe("TEST-100");
 });

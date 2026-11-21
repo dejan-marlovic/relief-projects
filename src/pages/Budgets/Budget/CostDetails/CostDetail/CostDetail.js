@@ -1,5 +1,6 @@
 import SearchableSelect from "../../../../../components/SearchableSelect/SearchableSelect";
-import React from "react";
+import React, { useRef } from "react";
+import { useOpenEditor } from "../../../../../context/OpenEditorContext";
 import styles from "./CostDetail.module.scss";
 import { FiEdit, FiTrash2, FiSave, FiX } from "react-icons/fi";
 
@@ -24,6 +25,8 @@ const CostDetail = ({
   fieldErrors = {},
   busy = false,
 }) => {
+  const editorRef = useRef(null);
+  useOpenEditor(editorRef, isEditing, "Budget cost editor");
   const ev = editedValues || {};
   const selectedCostTypeId = ev.costTypeId ?? cost.costTypeId ?? "";
   const compatibleCosts = costs.filter(
@@ -68,7 +71,7 @@ const CostDetail = ({
   if (isEditing) {
     // single-row create/edit form
     return (
-      <div className={styles.rowForm}>
+      <div className={styles.rowForm} ref={editorRef}>
         {renderField("costDescription", <input
           type="text"
           value={ev.costDescription ?? cost.costDescription ?? ""}
