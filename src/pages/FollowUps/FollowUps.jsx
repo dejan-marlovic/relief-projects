@@ -107,7 +107,7 @@ function TaskForm({ task, projectId, employees, busy, onSave, onCancel, blocked 
     <div data-action-group="section" className={styles.actions}><ActionButton disabled={busy || blocked || !reviewed} type="submit">{busy ? "Saving follow-up…" : "Save follow-up"}</ActionButton><ActionButton disabled={busy} type="button" onClick={onCancel}><RecordIcon type="close" />Close</ActionButton><ActionButton disabled={busy} type="button" onClick={() => { if (window.confirm("Discard these unfinished follow-up entries?")) { clearDraft(key); onCancel(); } }}>Discard unfinished entries</ActionButton></div>
   </form>;
 }
-function Queue({ mode, projectId, authFetch }) {
+function Queue({ mode, projectId, authFetch, scopeControls }) {
   const [filters, setFilters] = useState({ status: "OPEN", due: "", deleted: false, dueFrom: "", dueTo: "", assigneeEmployeeId: "" });
   const [view, setView] = useState(() => localStorage.getItem("follow-up-view") === "list" ? "list" : "board");
   const [dragged, setDragged] = useState(null);
@@ -305,8 +305,12 @@ function Queue({ mode, projectId, authFetch }) {
   const retryPermission = retry && (retry.action === "progress" ? retry.values.target === "TODO" ? "canReturnToTodo" : "canStartWork" : { save: "canEdit", complete: "canComplete", reopen: "canReopen", delete: "canDelete", restore: "canRestore" }[retry.action]);
   const loadedColumns = columns ? boardColumns(columns) : null;
   return <>
+    <div className={styles.queueToolbar}>{scopeControls}
     {supported && <div data-action-group="section" className={styles.actions} aria-label="Follow-up view">{["board", "list"].map(value => <ActionButton key={value} aria-pressed={(board ? "board" : "list") === value} disabled={filtersDisabled || (value === "board" && (filters.deleted || data?.projectDeleted))} onClick={() => { if ((form || retry) && !confirmDiscardUnsavedChanges()) return; setForm(null); setRetry(null); setView(value); localStorage.setItem("follow-up-view", value); }}>{value === "list" ? "List" : "Board"}</ActionButton>)}</div>}
+    </div>
     {board && <p className={styles.muted}>Drag a card by its handle to an available column, or use its action buttons. Reopening Done work requires confirmation and returns it to To do; start work separately afterwards. Deadline warnings are independent of progress. Each column has its own pages and observed total; concurrent changes can affect counts. The board updates automatically when you are not editing or moving a task.</p>}
+
+    <div data-action-group="section" className={styles.actions}>{data?.canCreate && <ActionButton disabled={taskActionsDisabled} onClick={() => setForm({ task: null })}>New follow-up</ActionButton>}</div>
     <section className={styles.filterPanel} aria-label="Filter follow-ups">
     <h3>Filter follow-ups</h3>
     <p className={styles.muted}>These controls change which tasks you see. To assign a task, use Responsible employee in its form.</p>
@@ -321,7 +325,6 @@ function Queue({ mode, projectId, authFetch }) {
     </div>
     {board && <p className={styles.muted}>Switch to List to filter by status or deadline group.</p>}
     </section>
-    <div data-action-group="section" className={styles.actions}>{data?.canCreate && <ActionButton disabled={taskActionsDisabled} onClick={() => setForm({ task: null })}>New follow-up</ActionButton>}</div>
     {loading && !data && <p role="status">Loading follow-ups…</p>}{error && <p role="alert">{error}</p>}{notice && <p role="status">{notice}</p>}
     {form && <><TaskForm task={form.task} projectId={projectId} employees={employees} busy={busy || loading} blocked={!!retry || !!error || !data || (form.task ? !form.task.permissions?.canEdit : !data?.canCreate)} onCancel={() => { setForm(null); setRetry(null); }} onSave={values => mutate(form.task, "save", values)} />{employeeError && <p role="alert">{employeeError}</p>}</>}
     {retry && <section className={styles.form} aria-label="Review failed follow-up action"><p>Your intended action and any entered text are retained. Review the refreshed task before retrying; an uncertain request may already have succeeded.</p>{freshTask && <p>Current: {freshTask.title} · {workflowLabel(freshTask)} · Revision {freshTask.revision} · Assigned to {freshTask.assignee?.displayName} · Due {freshTask.dueDate}</p>}<ActionButton disabled={busy || loading || !!error || !data || (retry.task ? !freshTask?.permissions?.[retryPermission] : !data?.canCreate)} onClick={() => { if (form) { setForm(f => ({ ...f, task: retry.task ? freshTask : null })); setRetry(null); } else mutate(freshTask, retry.action, retry.values); }}>I reviewed the refreshed state; {form ? "enable save" : "retry action"}</ActionButton><span data-action-group="section"><ActionButton disabled={busy} onClick={() => { setForm(null); setRetry(null); }}>Cancel intended action</ActionButton></span></section>}
@@ -344,10 +347,10 @@ export default function FollowUps({ initialMode = "project" }) {
   const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
   const [mode, setMode] = useState(initialMode);
   const { confirmDiscardUnsavedChanges } = useUnsavedChanges();
+  const scopeControls = <div data-action-group="section" className={styles.actions}><ActionButton aria-pressed={mode === "project"} onClick={() => { if (confirmDiscardUnsavedChanges()) setMode("project"); }}>Selected project</ActionButton><ActionButton aria-pressed={mode === "mine"} onClick={() => { if (confirmDiscardUnsavedChanges()) setMode("mine"); }}>My follow-ups</ActionButton></div>;
   return <section data-page-shell="surface" className={styles.page}><h2>Follow-ups</h2><p className={styles.muted}>Track project actions, deadlines and responsible people. Completing an action does not approve documents or satisfy a checklist.</p>
     <p className={styles.muted}>Download an open follow-up as an all-day calendar entry on its deadline. The file contains its title, description, project and responsible employee. Import it into Outlook or another calendar yourself. This is a snapshot: edits, completion and deletion do not update imported entries. Reimporting may create duplicates. No invitation or automatic notification is sent.</p>
-    <div data-action-group="section" className={styles.actions}><ActionButton aria-pressed={mode === "project"} onClick={() => { if (confirmDiscardUnsavedChanges()) setMode("project"); }}>Selected project</ActionButton><ActionButton aria-pressed={mode === "mine"} onClick={() => { if (confirmDiscardUnsavedChanges()) setMode("mine"); }}>My follow-ups</ActionButton></div>
     {mode === "mine" && <p className={styles.muted}>Your employee’s assigned work across all active projects, regardless of the project selected above.</p>}
-    {mode === "project" && !selectedProjectId ? <p>Select a project to see its follow-ups.</p> : <Queue key={`${mode}-${mode === "project" ? selectedProjectId : "all"}`} mode={mode} projectId={mode === "project" ? selectedProjectId : null} authFetch={authFetch} />}
+    {mode === "project" && !selectedProjectId ? <>{scopeControls}<p>Select a project to see its follow-ups.</p></> : <Queue key={`${mode}-${mode === "project" ? selectedProjectId : "all"}`} mode={mode} projectId={mode === "project" ? selectedProjectId : null} authFetch={authFetch} scopeControls={scopeControls} />}
   </section>;
 }

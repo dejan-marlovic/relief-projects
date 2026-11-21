@@ -70,3 +70,12 @@ button.close [aria-hidden="true"] { color: inherit; }
 }
 :root button.export { @include forms.export-button; }
 :root button.standard.export { min-height: 44px; padding: .625rem .875rem; font-size: .9rem; line-height: 1.25rem; }
+
+// New record actions follow the Follow-ups theme treatment.
+:root button.create {
+  color: var(--color-primary);
+  background: var(--color-primary-a04);
+  border-color: var(--color-primary-border);
+}
+:root button.create:hover:not(:disabled) { background: var(--color-primary-soft-hover); }
+:root button.create:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }

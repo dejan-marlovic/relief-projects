@@ -1,3 +1,4 @@
+import FilterHelp from "../../components/FilterHelp/FilterHelp";
 import RecordListLabel from "../../components/RecordListLabel/RecordListLabel";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
@@ -240,7 +241,8 @@ function Register({ projectId, authFetch }) {
   };
   const locked = busy || !!editor;
   return <>
-    <div className={styles.filters}>
+    <div data-action-group="section" className={styles.actions}>{(error || employeeError || blocked) && <ActionButton className={styles.secondaryAction} disabled={busy || loading} onClick={() => setAttempt(v => v + 1)}>Retry register</ActionButton>}{data?.canCreate && <ActionButton editorBlocked={Boolean(editor)} className={styles.primaryAction} disabled={locked || loading} onClick={() => openEditor(null, "save")}>New risk</ActionButton>}</div>
+    <div className={styles.filters}><FilterHelp title="Filter risks">Narrow risks by status, owner, likelihood, impact or review date range. Overdue reviews only limits the list to overdue reviews; Deleted risks only shows retained deleted records. Filtering does not reassign owners or change risk ratings.</FilterHelp>
       <label>Status<select value={filters.status} disabled={locked} onChange={e => changeFilter("status", e.target.value)}><option value="OPEN">Open</option><option value="CLOSED">Closed</option><option value="ALL">All statuses</option></select></label>
       <label>Owner filter<SearchableSelect value={filters.ownerEmployeeId} disabled={locked} onChange={e => changeFilter("ownerEmployeeId", e.target.value)}><option value="">All owners</option>
         {employees.map(person => <option key={person.id} value={person.id}>{employeeName(person)}</option>)}
@@ -252,7 +254,6 @@ function Register({ projectId, authFetch }) {
       <label><input type="checkbox" checked={filters.overdue} disabled={locked || filters.status !== "OPEN" || filters.deleted} onChange={e => changeFilter("overdue", e.target.checked)} /> Overdue reviews only</label>
       <label><input type="checkbox" checked={filters.deleted} disabled={locked} onChange={e => changeFilter("deleted", e.target.checked)} /> Deleted risks only</label>
     </div>
-    <div data-action-group="section" className={styles.actions}>{data?.canCreate && <ActionButton editorBlocked={Boolean(editor)} className={styles.primaryAction} disabled={locked || loading} onClick={() => openEditor(null, "save")}>New risk</ActionButton>}{(error || employeeError || blocked) && <ActionButton className={styles.secondaryAction} disabled={busy || loading} onClick={() => setAttempt(v => v + 1)}>Retry register</ActionButton>}</div>
     {loading && !data && <p role="status">Loading risks…</p>}{error && <p role="alert">{error}</p>}{employeeError && <p role="alert">{employeeError} Use Retry register to retry.</p>}
     {notice && <p role={blocked ? "alert" : "status"}>{notice}</p>}
     {editor && <>

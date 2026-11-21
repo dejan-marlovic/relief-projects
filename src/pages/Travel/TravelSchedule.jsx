@@ -1,3 +1,4 @@
+import FilterHelp from "../../components/FilterHelp/FilterHelp";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
@@ -66,7 +67,7 @@ export function Schedule({ authFetch }) {
     <p>Travel across projects. This view is independent of the project selected in the header.</p>
     <p className={styles.muted}>Review planned trips that intersect your date window. Approval is separate from travel actually taking place. Open a request to manage its plan, decisions and post-trip report.</p>
     <form onSubmit={apply}>
-      <div className={styles.filters}>
+      <div className={styles.filters}><FilterHelp title="Filter the travel schedule">Choose a date window, project, plan state or traveller, then apply the filters. Trips that overlap the window are included. This view spans projects independently of the header project selector; filters do not change travel requests.</FilterHelp>
         <label>Window from<input type="date" min="1000-01-01" max="9999-12-31" value={draft.from} onChange={e => change("from", e.target.value)} /></label>
         <label>Window through<input type="date" min="1000-01-01" max="9999-12-31" value={draft.to} onChange={e => change("to", e.target.value)} /></label>
         <label>Schedule project<SearchableSelect value={draft.projectId} onChange={e => change("projectId", e.target.value)}><option value="">All active projects</option>{draft.projectId && !projects.data?.some(p => String(p.id) === draft.projectId) && <option value={draft.projectId}>Project #{draft.projectId} (not in current lookup)</option>}{projects.data?.map(p => <option key={p.id} value={p.id}>{p.projectName || p.name}</option>)}</SearchableSelect></label>

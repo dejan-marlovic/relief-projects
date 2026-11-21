@@ -1,3 +1,4 @@
+import FilterHelp from "../FilterHelp/FilterHelp";
 import ActionButton from "../ActionButton/ActionButton";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -88,7 +89,7 @@ const ColumnFilter = ({ label, type, value, options = [], onApply, onClear }) =>
       role="dialog"
       aria-label={`Filter ${label}`}
     >
-      <strong>Filter {label}</strong>
+      <strong>Filter {label}</strong><FilterHelp>{type === "text" ? "Enter text to match within this column." : type === "select" ? "Choose one value, or All to include every value." : type === "number" ? "Set a minimum, maximum, or both. Leave a bound blank for no limit on that side." : "Choose a start date, end date, or both. Leave a date blank for no limit on that side."} Apply updates the visible rows; Clear removes this column’s filter. Other filters remain active. This does not edit records.</FilterHelp>
       {type === "text" && <label>Contains
         <input type="text" value={draft} autoFocus onChange={(e) => setDraft(e.target.value)} />
       </label>}

@@ -51,7 +51,7 @@
 @include workspace.layout;
 
 .filterPanel { padding: 1.2rem; margin: 1rem 0; border: 1px solid colors.$primary-border; border-radius: 14px; background: colors.$primary-a04; }
-.filterPanel h3 { margin: 0 0 .5rem; color: colors.$primary; }
+.filterPanel h3 { margin: 0 0 .4rem; color: var(--color-text-strong); font-size: 1rem; line-height: 1.5; }
 .filterPanel p { margin: .4rem 0; max-width: 75ch; }
 .filterPanel .filters { align-items: end; }
 .form { border: 1px solid colors.$primary-border; background: colors.$surface; padding: 1.4rem; }
@@ -90,3 +90,17 @@
 .attachmentDrop small { color: colors.$text-muted; }
 
 .form button[type="submit"]:active:not(:disabled), .attachmentEditor button[type="submit"]:active:not(:disabled) { background: colors.$primary; color: white; transform: translateY(1px); }
+
+.queueToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: .75rem 1.25rem;
+  margin: 1rem 0;
+}
+:root .queueToolbar > [data-action-group][data-action-group] {
+  width: auto;
+  margin: 0;
+  align-items: center;
+}

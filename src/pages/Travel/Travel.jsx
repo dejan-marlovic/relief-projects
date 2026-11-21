@@ -1,3 +1,4 @@
+import FilterHelp from "../../components/FilterHelp/FilterHelp";
 import RecordListLabel from "../../components/RecordListLabel/RecordListLabel";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
@@ -112,8 +113,9 @@ export function TravelRegister({ projectId, authFetch, initialRequestId = null }
     } catch (error) { if (alive.current) setForm(f => ({ ...f, error: error.message, reviewRequired: true })); }
     finally { pending.current = false; if (alive.current) { setBusy(false); reload(); } }
   }
-  return <><div data-action-group="section" className={styles.actions}>{list.data?.canCreate && <ActionButton recordBlocked={Boolean(selected)} editorBlocked={Boolean(form)} disabled={!!form || !!selected || busy} onClick={() => setForm({ action: "create", draft: { ...tripDraft(), departureDate: list.data.today, returnDate: list.data.today } })}>Create travel request</ActionButton>}</div>
-    <div className={styles.filters}><label>Travel state<SearchableSelect value={filters.state} onChange={e => change("state", e.target.value)}>{["ALL", "DRAFT", "SUBMITTED", "RETURNED", "APPROVED", "CANCELLED"].map(state => <option value={state} key={state}>{state === "ALL" ? "All states" : state.charAt(0) + state.slice(1).toLowerCase()}</option>)}</SearchableSelect></label>
+  return <>
+    <div data-action-group="section" className={styles.actions}>{list.data?.canCreate && <ActionButton recordBlocked={Boolean(selected)} editorBlocked={Boolean(form)} disabled={!!form || !!selected || busy} onClick={() => setForm({ action: "create", draft: { ...tripDraft(), departureDate: list.data.today, returnDate: list.data.today } })}>Create travel request</ActionButton>}</div>
+    <div className={styles.filters}><FilterHelp title="Filter travel requests">Filter by request state, traveller employee ID and departure date range. Show deleted requests only switches to retained deleted requests. These controls do not change trip plans or approvals.</FilterHelp><label>Travel state<SearchableSelect value={filters.state} onChange={e => change("state", e.target.value)}>{["ALL", "DRAFT", "SUBMITTED", "RETURNED", "APPROVED", "CANCELLED"].map(state => <option value={state} key={state}>{state === "ALL" ? "All states" : state.charAt(0) + state.slice(1).toLowerCase()}</option>)}</SearchableSelect></label>
       <label>Traveller employee ID<input type="number" min="1" step="1" value={filters.travellerEmployeeId} onChange={e => change("travellerEmployeeId", e.target.value)} /></label>
       <label>Departure from<input type="date" value={filters.departureFrom} onChange={e => change("departureFrom", e.target.value)} /></label><label>Departure through<input type="date" value={filters.departureTo} onChange={e => change("departureTo", e.target.value)} /></label>
       <label><input type="checkbox" checked={filters.deleted} onChange={e => change("deleted", e.target.checked)} />Show deleted requests only</label></div>

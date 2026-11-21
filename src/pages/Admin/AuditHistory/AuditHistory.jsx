@@ -1,3 +1,4 @@
+import FilterHelp from "../../../components/FilterHelp/FilterHelp";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import RecordReference from "../../../components/RecordReference/RecordReference";
@@ -160,7 +161,7 @@ const AuditHistory = () => {
         </ActionButton>
       </div>
 
-      <form className={styles.filters} onSubmit={applyFilters}>
+      <form className={styles.filters} onSubmit={applyFilters}><FilterHelp title="Filter activity history">Choose criteria to narrow the retained activity entries, then apply the filters. Filtering changes the displayed history only; it does not change records or remove audit entries.</FilterHelp>
         <label>
           <span>Record type</span>
           <SearchableSelect name="entityType" value={draftFilters.entityType} onChange={updateDraft}>

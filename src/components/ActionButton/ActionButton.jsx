@@ -57,9 +57,10 @@ const ActionButton = forwardRef(function ActionButton({ children, className, edi
   const Icon = match?.[1];
   const danger = match?.[2] === "danger";
   const textAction = Boolean(match && textOf(children));
+  const createAction = !selectionControl && /^(new|create|register)\b/i.test(label);
   const exportAction = !selectionControl && /^export\b/i.test(label);
   const close = !selectionControl && (/^close\b/i.test(label) && !/^close (risk|project)\b/i.test(label) || /^done editing\b/i.test(label));
-  const button = <button {...props} ref={ref} title={hint ? [props.title, hint].filter(Boolean).join(" — ") : props.title} aria-describedby={[props["aria-describedby"], hint && hintId].filter(Boolean).join(" ") || undefined} className={[className, textAction && styles.standard, exportAction && styles.export, danger && styles.danger, close && styles.close].filter(Boolean).join(" ") || undefined}>
+  const button = <button {...props} ref={ref} title={hint ? [props.title, hint].filter(Boolean).join(" — ") : props.title} aria-describedby={[props["aria-describedby"], hint && hintId].filter(Boolean).join(" ") || undefined} className={[className, textAction && styles.standard, createAction && styles.create, exportAction && styles.export, danger && styles.danger, close && styles.close].filter(Boolean).join(" ") || undefined}>
     {Icon && !hasIcon(children) && <span className={styles.icon} aria-hidden="true"><Icon focusable="false" /></span>}{children}
   </button>;
   return hint ? <span className={styles.hintedAction}>{button}<span id={hintId} className={styles.hint}>{hint}</span></span> : button;
