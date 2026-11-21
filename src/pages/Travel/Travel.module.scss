@@ -75,3 +75,6 @@
 @media (prefers-reduced-motion: reduce) { .stepToggle > svg { transition: none; } }
 
 @include workspace.layout;
+
+// Separate the request actions from the state and approval summary.
+.list > li > .heading + .summary { margin-block-start: 1rem; }
