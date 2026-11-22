@@ -1,3 +1,5 @@
+import FilterPanel from "../../components/FilterPanel/FilterPanel";
+import RecordHeader from "../../components/RecordHeader/RecordHeader";
 import RecordExcerpt from "../../components/RecordCard/RecordExcerpt";
 import RecordCard, { RecordCardActions } from "../../components/RecordCard/RecordCard";
 import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
@@ -290,7 +292,7 @@ function Queue({ mode, projectId, authFetch, scopeControls }) {
           readController.current?.abort();
           dragSource.current = task; setDragged(task); event.dataTransfer.effectAllowed = "move"; event.dataTransfer.setData("text/plain", String(task.id));
         }} onDragEnd={clearDrag}>⠿ {canDrag(task) ? "Drag to move" : "Follow-up"}</span>}
-        <div className={styles.heading}><h3><RecordIcon type="followUp" />{task.title}</h3><span className={styles.badge}>{workflowLabel(task)}</span><span className={styles.badge}>{buckets[task.dueBucket] || task.dueBucket}</span></div>
+        <RecordHeader as="div" className={styles.heading}><h3><RecordIcon type="followUp" />{task.title}</h3><span className={styles.badge}>{workflowLabel(task)}</span><span className={styles.badge}>{buckets[task.dueBucket] || task.dueBucket}</span></RecordHeader>
         <p className={styles.muted}>{task.projectName} · Due {task.dueDate} · {task.assignee?.displayName}{task.assignee?.isDeleted !== false ? " (inactive employee)" : ""}{task.isDeleted ? " · Deleted" : ""}</p>
         <RecordExcerpt text={task.description} />
         <RecordCardActions as="div" placement="section" className={styles.actions}>
@@ -313,9 +315,9 @@ function Queue({ mode, projectId, authFetch, scopeControls }) {
     {board && <GuidanceNote className={styles.muted}>Drag a card by its handle to an available column, or use its action buttons. Reopening Done work requires confirmation and returns it to To do; start work separately afterwards. Deadline warnings are independent of progress. Each column has its own pages and observed total; concurrent changes can affect counts. The board updates automatically when you are not editing or moving a task.</GuidanceNote>}
 
     <div data-action-group="section" className={styles.actions}>{data?.canCreate && <ActionButton disabled={taskActionsDisabled} onClick={() => setForm({ task: null })}>New follow-up</ActionButton>}</div>
-    <section className={styles.filterPanel} aria-label="Filter follow-ups">
-    <h3>Filter follow-ups</h3>
-    <GuidanceNote className={styles.muted}>These controls change which tasks you see. To assign a task, use Responsible employee in its form.</GuidanceNote>
+    <FilterPanel as="section" showHeading title="Filter follow-ups" guidance={<> These controls change which tasks you see. To assign a task, use Responsible employee in its form. </>} className={styles.filterPanel} aria-label="Filter follow-ups">
+
+
     {form && <p className={styles.muted}>Close or save your draft to change filters.</p>}
     <div className={styles.filters}>
       {!board && <><label>Status<select value={filters.status} disabled={filtersDisabled || board} onChange={(e) => changeFilter("status", e.target.value)}><option value="OPEN">Open</option><option value="COMPLETED">Completed</option><option value="ALL">All statuses</option></select></label>
@@ -326,7 +328,7 @@ function Queue({ mode, projectId, authFetch, scopeControls }) {
       {mode === "project" && <label><input type="checkbox" checked={filters.deleted} disabled={filtersDisabled} onChange={(e) => changeFilter("deleted", e.target.checked)} /> Deleted follow-ups only</label>}
     </div>
     {board && <p className={styles.muted}>Switch to List to filter by status or deadline group.</p>}
-    </section>
+    </FilterPanel>
     {loading && !data && <p role="status">Loading follow-ups…</p>}{error && <p role="alert">{error}</p>}{notice && <p role="status">{notice}</p>}
     {form && <><TaskForm task={form.task} projectId={projectId} employees={employees} busy={busy || loading} blocked={!!retry || !!error || !data || (form.task ? !form.task.permissions?.canEdit : !data?.canCreate)} onCancel={() => { setForm(null); setRetry(null); }} onSave={values => mutate(form.task, "save", values)} />{employeeError && <p role="alert">{employeeError}</p>}</>}
     {retry && <section className={styles.form} aria-label="Review failed follow-up action"><p>Your intended action and any entered text are retained. Review the refreshed task before retrying; an uncertain request may already have succeeded.</p>{freshTask && <p>Current: {freshTask.title} · {workflowLabel(freshTask)} · Revision {freshTask.revision} · Assigned to {freshTask.assignee?.displayName} · Due {freshTask.dueDate}</p>}<ActionButton disabled={busy || loading || !!error || !data || (retry.task ? !freshTask?.permissions?.[retryPermission] : !data?.canCreate)} onClick={() => { if (form) { setForm(f => ({ ...f, task: retry.task ? freshTask : null })); setRetry(null); } else mutate(freshTask, retry.action, retry.values); }}>I reviewed the refreshed state; {form ? "enable save" : "retry action"}</ActionButton><span data-action-group="section"><ActionButton disabled={busy} onClick={() => { setForm(null); setRetry(null); }}>Cancel intended action</ActionButton></span></section>}

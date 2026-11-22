@@ -1,3 +1,4 @@
+import RecordHeader from "../../../components/RecordHeader/RecordHeader";
 import RecordCard, { RecordCardActions } from "../../../components/RecordCard/RecordCard";
 import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../../components/ActionButton/ActionButton";
@@ -1562,10 +1563,10 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
               <div className={styles.grid}>
                 {/* Left card */}
                 <div data-mobile-tile="Summary" className={styles.card}>
-                  <div className={styles.cardHeader}>
+                  <RecordHeader as="div" className={styles.cardHeader}>
                     <div className={styles.cardTitle}>Summary</div>
                     <div className={styles.cardMeta}>Description & totals</div>
-                  </div>
+                  </RecordHeader>
 <GuidanceNote data-tile-description="">Review the budget’s description, dates and planning details before working on its costs.</GuidanceNote>
 
                   <div className={styles.formGroup}>
@@ -1617,10 +1618,10 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
 
                 {/* Right card */}
                 <div data-mobile-tile="Currencies & rates" className={styles.card}>
-                  <div className={styles.cardHeader}>
+                  <RecordHeader as="div" className={styles.cardHeader}>
                     <div className={styles.cardTitle}>Currencies & rates</div>
                     <div className={styles.cardMeta}>Local + reporting</div>
-                  </div>
+                  </RecordHeader>
 <GuidanceNote data-tile-description="">Choose the currencies and exchange-rate basis used for this budget’s amounts.</GuidanceNote>
 
                   <div className={styles.row2}>
@@ -1841,10 +1842,10 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
         }} />}
       {budget?.id && (
         <div data-mobile-tile="Cost details" className={styles.card}>
-          <div className={styles.cardHeader}>
+          <RecordHeader as="div" className={styles.cardHeader}>
             <div className={styles.cardTitle}>Cost details</div>
             <div className={styles.cardMeta}>Breakdown</div>
-          </div>
+          </RecordHeader>
 <GuidanceNote data-tile-description="">Break the budget into cost items and inspect their amounts and allocations.</GuidanceNote>
 
           <CostDetails

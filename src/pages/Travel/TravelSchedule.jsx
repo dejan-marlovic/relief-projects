@@ -1,5 +1,5 @@
+import FilterPanel from "../../components/FilterPanel/FilterPanel";
 import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
-import FilterHelp from "../../components/FilterHelp/FilterHelp";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
@@ -68,13 +68,13 @@ export function Schedule({ authFetch }) {
     <p>Travel across projects. This view is independent of the project selected in the header.</p>
     <GuidanceNote className={styles.muted}>Review planned trips that intersect your date window. Approval is separate from travel actually taking place. Open a request to manage its plan, decisions and post-trip report.</GuidanceNote>
     <form onSubmit={apply}>
-      <div className={styles.filters}><FilterHelp title="Filter the travel schedule">Choose a date window, project, plan state or traveller, then apply the filters. Trips that overlap the window are included. This view spans projects independently of the header project selector; filters do not change travel requests.</FilterHelp>
+      <FilterPanel as="div" title="Filter the travel schedule" guidance={<>Choose a date window, project, plan state or traveller, then apply the filters. Trips that overlap the window are included. This view spans projects independently of the header project selector; filters do not change travel requests.</>} className={styles.filters}>
         <label>Window from<input type="date" min="1000-01-01" max="9999-12-31" value={draft.from} onChange={e => change("from", e.target.value)} /></label>
         <label>Window through<input type="date" min="1000-01-01" max="9999-12-31" value={draft.to} onChange={e => change("to", e.target.value)} /></label>
         <label>Schedule project<SearchableSelect value={draft.projectId} onChange={e => change("projectId", e.target.value)}><option value="">All active projects</option>{draft.projectId && !projects.data?.some(p => String(p.id) === draft.projectId) && <option value={draft.projectId}>Project #{draft.projectId} (not in current lookup)</option>}{projects.data?.map(p => <option key={p.id} value={p.id}>{p.projectName || p.name}</option>)}</SearchableSelect></label>
         <label>Plan state<SearchableSelect value={draft.state} onChange={e => change("state", e.target.value)}>{states.map(state => <option key={state} value={state}>{state === "PLANNED" ? "Submitted and approved" : state === "ALL" ? "All states" : label(state)}</option>)}</SearchableSelect></label>
         <label>Traveller employee ID<input type="number" min="1" step="1" value={draft.travellerEmployeeId} onChange={e => change("travellerEmployeeId", e.target.value)} /></label>
-      </div>
+      </FilterPanel>
       <GuidanceNote className={styles.muted}>Leave both dates blank for the default window: 30 days before through 90 days after today in Stockholm. Custom windows can cover up to 366 days.</GuidanceNote>
       {(error || invalid) && <p role="alert">{error || invalid}</p>}
       <div data-action-group="section" className={styles.actions}><ActionButton type="submit">Apply schedule filters</ActionButton><ActionButton type="button" onClick={() => { setParams({}); setDraft(filtersFrom(new URLSearchParams())); setError(""); }}>Reset schedule filters</ActionButton></div>

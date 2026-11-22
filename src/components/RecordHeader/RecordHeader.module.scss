@@ -1,0 +1,9 @@
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  min-width: 0;
+  > h3, > h4 { margin: 0; overflow-wrap: anywhere; }
+}

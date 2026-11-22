@@ -1,7 +1,7 @@
+import FilterPanel from "../../components/FilterPanel/FilterPanel";
 import UploadAndAttach, { UploadDropzone } from "../../components/UploadAndAttach/UploadAndAttach";
 import RecordCard, { RecordCardActions } from "../../components/RecordCard/RecordCard";
 import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
-import FilterHelp from "../../components/FilterHelp/FilterHelp";
 import RecordListLabel from "../../components/RecordListLabel/RecordListLabel";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import DocumentLabel from "../../components/DocumentLabel/DocumentLabel";
@@ -455,12 +455,12 @@ const Documents = () => {
 
             {/* Section heading */}
             <h3 className={styles.sectionTitle}>Files for this project</h3>
-            <FilterHelp title="Filter documents">Choose current versions or all active versions, then narrow by category if needed. All active versions includes retained earlier versions. These controls only change this list; they do not change a document’s category, status or version.</FilterHelp>
-            <div className={styles.metadataControls}>
+
+            <FilterPanel title="Filter documents" guidance={<> Choose current versions or all active versions, then narrow by category if needed. All active versions includes retained earlier versions. These controls only change this list; they do not change a document’s category, status or version. </>} className={styles.metadataControls}>
               <label>Versions shown<select value={currentOnly ? "current" : "all"} disabled={!!editing} onChange={(e) => { setCurrentOnly(e.target.value === "current"); setEditing(null); }}><option value="current">Current versions</option><option value="all">All active versions</option></select></label>
               <label>Filter by category<SearchableSelect value={categoryFilter} disabled={!!editing || !categories.length} onChange={(e) => { setCategoryFilter(e.target.value); setEditing(null); }}><option value="">All categories</option>{categoryOptions}</SearchableSelect></label>
               {listError && <ActionButton type="button" onClick={() => setListRevision(value => value + 1)} disabled={loading}>Retry loading documents</ActionButton>}
-            </div>
+            </FilterPanel>
             {editing && <ScrollToForm className={styles.metadataEditor} onSubmit={event => event.preventDefault()} onBlur={metadataSave.flush}>
               <h4>Edit details · {editing.original.documentName}</h4>
               <AutosaveStatus save={metadataSave} />

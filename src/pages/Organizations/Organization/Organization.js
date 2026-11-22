@@ -1,3 +1,4 @@
+import RecordHeader from "../../../components/RecordHeader/RecordHeader";
 import RecordCard, { RecordCardActions } from "../../../components/RecordCard/RecordCard";
 import RecordListLabel from "../../../components/RecordListLabel/RecordListLabel";
 import ActionButton from "../../../components/ActionButton/ActionButton";
@@ -133,7 +134,7 @@ const Organization = ({
   const editorRef = useScrollToEditor(expanded || isEditing, undefined, isEditing, "Organisation relationship editor");
   const open = expanded || isEditing;
   return <RecordCard as="article"  data-mobile-tile={isCreate ? "New organization" : orgName(link.organizationId)} ref={editorRef} tabIndex={-1} className={styles.relationshipCard}>
-    <header className={styles.cardHeader}>
+    <RecordHeader as="header" className={styles.cardHeader}>
       <div>{!isCreate && <RecordListLabel type="organization">Organisation</RecordListLabel>}<h3>{isCreate ? "Add organisation to this project" : orgName(link.organizationId)}</h3>
         {!isCreate && <p><strong>Role in this project:</strong> {statusName(link.organizationStatusId)}</p>}
         {!isCreate && <p>Assessment: {assessment}</p>}
@@ -142,7 +143,7 @@ const Organization = ({
         {!isCreate && <Link to={`/organisation-assessments/${link.id}`} onClick={e => { if (!confirmDiscardUnsavedChanges()) e.preventDefault(); }}><RecordIcon type="open" />Open assessment</Link>}
         {!isEditing && <ActionButton type="button" aria-expanded={open} onClick={() => { if (open && !confirmDiscardUnsavedChanges()) return; setExpanded(!open); }}>{open ? "Hide details" : "Show details"}</ActionButton>}
       </RecordCardActions>
-    </header>
+    </RecordHeader>
     {open && <RecordCard as="div" variant="detail" viewing type="organization" label={<> Organisation </>} className={styles.cardBody}  data-record-inset="true">
       <section data-mobile-tile="Project relationship" data-purpose-tile="section"><h4>Project relationship</h4><p>This role belongs to the selected project. An organisation can have other roles in other projects.</p>
         {isEditing ? <>
