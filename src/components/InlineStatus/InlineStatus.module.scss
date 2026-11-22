@@ -1,0 +1,21 @@
+:root .status {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin-block: .5rem;
+  padding: .3rem .6rem;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+  background: var(--color-primary-a04);
+  color: var(--color-text-secondary);
+  font-size: .8rem;
+  font-weight: 500;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  > svg { flex: 0 0 auto; width: 1rem; height: 1rem; }
+  &.success { color: var(--color-success-dark, var(--color-text)); background: var(--color-success-soft); border-color: var(--color-success-border); }
+  &.pending { color: var(--color-primary); border-color: var(--color-primary-border); }
+}

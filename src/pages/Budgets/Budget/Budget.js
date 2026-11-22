@@ -1,3 +1,4 @@
+import InlineStatus from "../../../components/InlineStatus/InlineStatus";
 import RecordHeader from "../../../components/RecordHeader/RecordHeader";
 import RecordCard, { RecordCardActions } from "../../../components/RecordCard/RecordCard";
 import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
@@ -1542,7 +1543,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
             </div>
           </div>
 
-          <p role="status" className={styles.saveFeedback}>{loading ? "Saving or updating budget…" : hasUnsavedChanges ? "Changes waiting to save…" : "Saved"}</p>
+          <InlineStatus tone={loading || hasUnsavedChanges ? "pending" : "success"}>{loading ? "Saving or updating budget…" : hasUnsavedChanges ? "Changes waiting to save…" : "Saved"}</InlineStatus>
           {formError && (
             <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
           )}
