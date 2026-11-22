@@ -1,3 +1,4 @@
+import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import MobileRecordDeck from "../../components/MobileRecordDeck/MobileRecordDeck";
 import useArchivedProject from "../../hooks/useArchivedProject";
@@ -432,7 +433,7 @@ const Organizations = () => {
           </div>
         </div>
 
-        <p>Existing organisation and role selections save automatically. Addresses and bank details save after a short typing pause or when you leave a field. Adding and removing records remain separate actions.</p>
+        <GuidanceNote title="Saving organisation details">Existing organisation and role selections save automatically. Addresses and bank details save after a short typing pause or when you leave a field. Adding and removing records remain separate actions.</GuidanceNote>
         <AutosaveStatus save={autosave} />
         {formError && <ErrorBanner message={formError} onDismiss={() => setFormError("")} />}
 
