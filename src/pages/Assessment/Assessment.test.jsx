@@ -124,3 +124,18 @@ test("payload validation and notices keep assessment separate from ordinary proj
   expect(() => assessmentPayload("edit", { ...draftFrom(), rationale: "a".repeat(4001) }, null)).toThrow("4000");
   expect(mutationNotice("/api/projects/7/assessment/approve", { method: "POST" }, { ok: true })).toBe("Assessment approval recorded.");
 });
+
+test("shared record styling appears only for a saved assessment", async () => {
+  const view = mount();
+  await screen.findByText("Legacy Yes — no recorded decision");
+  expect(screen.getByRole("region", {name:"Prepare project assessment"})).not.toHaveAttribute("data-open-record");
+  expect(screen.queryByText("Viewing record")).not.toBeInTheDocument();
+  view.unmount();
+  existing(); mount();
+  const card = await screen.findByRole("region", {name:"Project assessment record"});
+  expect(card).toHaveAttribute("data-record-card", "true");
+  expect(card).toHaveAttribute("data-open-record", "true");
+  expect(card.children[0]).toHaveTextContent("Viewing record");
+  expect(card.children[1]).toHaveTextContent("Project assessment");
+  expect(screen.getByRole("button", {name:"Edit assessment"}).parentElement).toHaveAttribute("data-action-group", "section");
+});

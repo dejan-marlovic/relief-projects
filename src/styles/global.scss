@@ -412,3 +412,17 @@ details[data-record-disclosure="true"][open] > summary > .expanded-record-label 
   border: 2px solid color-mix(in srgb, var(--color-primary) 38%, var(--color-surface));
   border-inline-start: 3px solid var(--color-primary);
 }
+
+// A record owns the strongest frame. Ordinary nested sections and records use
+// quiet separators; controls, alerts, status badges and focus rings are untouched.
+:root [data-record-card="true"] :is(
+  section:not([role="alert"]):not([role="note"]):not([role="status"]),
+  [data-purpose-tile]:not([role="alert"]):not([role="note"]):not([role="status"]),
+  details[data-record-disclosure="true"],
+  [data-record-card="true"][data-record-item="card"],
+  [data-record-card="true"][data-open-record="true"]
+) {
+  border-color: var(--color-border-subtle);
+  border-width: 1px;
+  box-shadow: none;
+}
