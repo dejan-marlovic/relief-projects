@@ -1,3 +1,4 @@
+import { ErrorState } from "../../components/ReadState/ReadState";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import useArchivedProject from "../../hooks/useArchivedProject";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
@@ -184,7 +185,7 @@ const Budgets = () => {
           </div>
         )}
 
-        {readError && <p role="alert">{readError}</p>}
+        {readError && <ErrorState>{readError}</ErrorState>}
         <div className={styles.budgetList}>
           {!selectedProjectId ? (
             <p className={styles.noData}>

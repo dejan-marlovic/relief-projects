@@ -1,3 +1,4 @@
+import { ErrorState } from "../../components/ReadState/ReadState";
 import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
@@ -74,8 +75,8 @@ export default function ManagementEditor({ form, setForm, projectId, authFetch, 
       {action === "reopen" && <p>Reopening allows changes and later reaffirmation. The previous decision stays in history; linked tasks and evidence remain.</p>}
       {action === "delete" && <p>This hides the record from the active register and retains its state, responses and links. An administrator can restore it.</p>}
       {action.endsWith("-remove") && <p>Remove association #{form.link.id} · {form.link.capturedTitle || form.link.capturedName || "Name unavailable"}. Its history is retained; the linked task or document is not deleted.</p>}
-      {error && <p role="alert">{error}</p>}{form.error && <p role="alert">{form.error}</p>}
-      {form.reviewRequired && <div role="alert"><p>Draft retained. Review the refreshed record, links and history before trying again. A failed response may follow a successful save.{action === "create" ? " Check the list before creating again to avoid duplicates." : ""}</p><ActionButton type="button" disabled={blocked} onClick={onReview}>I reviewed the refreshed state; enable retry</ActionButton></div>}
+      {error && <ErrorState>{error}</ErrorState>}{form.error && <ErrorState>{form.error}</ErrorState>}
+      {form.reviewRequired && <ErrorState as="div" ><p>Draft retained. Review the refreshed record, links and history before trying again. A failed response may follow a successful save.{action === "create" ? " Check the list before creating again to avoid duplicates." : ""}</p><ActionButton type="button" disabled={blocked} onClick={onReview}>I reviewed the refreshed state; enable retry</ActionButton></ErrorState>}
       <div data-action-group="section" className={styles.actions}>{!["create", "edit"].includes(action) && <ActionButton type="submit" disabled={busy || blocked || form.reviewRequired}>Save {titles[action].toLowerCase()}</ActionButton>}<ActionButton type="button" onClick={close}><RecordIcon type="close" />Close editor</ActionButton></div>
     </fieldset>
   </ScrollToForm>;

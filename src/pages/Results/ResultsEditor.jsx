@@ -1,3 +1,4 @@
+import { EmptyState, ErrorState } from "../../components/ReadState/ReadState";
 import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
@@ -17,7 +18,7 @@ export function DocumentChoices({ authFetch, projectId, selected, onChange, refr
   const docs = Array.isArray(state.data) ? state.data.filter(d => d.isDeleted === false && String(d.projectId) === String(projectId)) : [];
   return <fieldset><legend>Supporting documents · exact versions</legend><GuidanceNote className={styles.muted}>Choose up to 20 versions explicitly. Historical versions are included. Evidence supports a report; it does not verify it.</GuidanceNote><ReadState state={state} />
     <div className={styles.documents}>{docs.map(d => <label key={d.id}><input type="checkbox" checked={selected.includes(d.id)} onChange={e => onChange(e.target.checked ? [...selected, d.id] : selected.filter(id => id !== d.id))} disabled={!selected.includes(d.id) && selected.length >= 20} /><DocumentLabel>{d.documentName || `Document #${d.id} · Name unavailable`}</DocumentLabel> · Version {d.versionNumber ?? "unknown"} · #{d.id} · {d.status || "Unknown status"}</label>)}</div>
-    {state.data && !docs.length && <p>No active document versions available for this project.</p>}
+    {state.data && !docs.length && <EmptyState>No active document versions available for this project.</EmptyState>}
     {selected.some(id => !docs.some(d => d.id === id)) && <p>Some selected versions are not in the current list. Review their availability before saving. <ActionButton type="button" onClick={() => onChange([])}>Clear selection</ActionButton></p>}
   </fieldset>;
 }
@@ -105,8 +106,8 @@ export default function ResultsEditor({ form, setForm, indicator, authFetch, pro
       {action === "delete" && <p>The indicator will be hidden from the active list. Its reports and history remain available; an administrator can restore it.</p>}
       {action === "remove" && <p>This removes the active association, retaining its document version and history.</p>}
 
-      {error && <p role="alert">{error}</p>}
-      {form.error && <p role="alert">{form.error}</p>}
+      {error && <ErrorState>{error}</ErrorState>}
+      {form.error && <ErrorState>{form.error}</ErrorState>}
       {form.reviewRequired && <p>Draft retained. Inspect the refreshed records and history before retrying. A failed response may follow a successful save. {action === "create" && "Check every relevant list page before creating again; retrying can create a duplicate indicator."} <ActionButton type="button" disabled={blocked} onClick={onReview}>I reviewed the refreshed records; enable retry</ActionButton></p>}
       <div data-action-group="section" className={styles.actions}>{!isIndicator && <ActionButton type="submit" disabled={blocked || form.reviewRequired || (action === "evidence" && !draft.documentId)}>Save {title.toLowerCase()}</ActionButton>}<ActionButton type="button" onClick={onCancel}><RecordIcon type="close" />{isIndicator ? dirty ? "Discard unfinished entries" : "Close editor" : "Cancel"}</ActionButton></div>
     </fieldset>

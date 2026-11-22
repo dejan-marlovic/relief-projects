@@ -1,3 +1,4 @@
+import { LoadingState, ErrorState, EmptyState } from "../../components/ReadState/ReadState";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordReference from "../../components/RecordReference/RecordReference";
 import { HistoryPagination, HistoryTimeline, HistoryEntry } from "../../components/ActivityHistory/ActivityHistory";
@@ -58,12 +59,12 @@ export default function FollowUpHistory({ task, authFetch }) {
   return <section aria-label="Follow-up history" className={styles.history}>
     <h4>Activity history</h4>
     <p className={styles.muted}>Newest changes first. Expand an entry to see what changed.</p>
-    {loading && !data && <p role="status">Loading history…</p>}
-    {error && <div role="alert"><p>{error} {data ? "Showing the previously loaded history." : "History is unavailable; this does not mean there were no changes."}</p><ActionButton type="button" onClick={() => setAttempt(v => v + 1)}>Retry history</ActionButton></div>}
+    {loading && !data && <LoadingState>Loading history…</LoadingState>}
+    {error && <ErrorState as="div" ><p>{error} {data ? "Showing the previously loaded history." : "History is unavailable; this does not mean there were no changes."}</p><ActionButton type="button" onClick={() => setAttempt(v => v + 1)}>Retry history</ActionButton></ErrorState>}
     {data && <>
       {data.coverage === "PARTIAL_LEGACY" && <p className={styles.historyNotice}>Detailed history is available from the introduction of this feature. Earlier changes are not available.</p>}
       {data.coverage === "FROM_CREATION" && <p className={styles.muted}>History recorded from creation.</p>}
-      {!data.content.length && <p>No detailed changes have yet been recorded.</p>}
+      {!data.content.length && <EmptyState>No detailed changes have yet been recorded.</EmptyState>}
       <HistoryTimeline>{data.content.map(entry => <HistoryEntry key={entry.id} title={actionLabel(entry)} at={entry.occurredAt} actor={entry.actor?.employeeName || entry.actor?.username || (entry.actor?.employeeId ? `Employee #${entry.actor.employeeId} · Name unavailable` : `User #${entry.actor?.userId} · Name unavailable`)} metadata={<>Account: {entry.actor?.username || `User #${entry.actor?.userId} · Name unavailable`} · Revision {entry.revision}</>} references={<><p>Entry #{entry.id} · Account #{entry.actor?.userId}{entry.actor?.employeeId != null ? ` · Employee #${entry.actor.employeeId}` : " · No employee attribution recorded"}</p><h5>Before</h5><Snapshot snapshot={entry.before} task={task} /><h5>After</h5><Snapshot snapshot={entry.after} task={task} /></>}>
           {(entry.changedFields || []).map(field => <div key={field} className={styles.historyChange}><strong>{labels[field] || field}</strong>{entry.before && <p><b>Before: </b>{valueLabel(field, entry.before[field])}</p>}<p><b>{entry.before ? "After" : "Initial value"}: </b>{valueLabel(field, entry.after?.[field])}</p></div>)}
 </HistoryEntry>)}

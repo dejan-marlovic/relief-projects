@@ -1,3 +1,4 @@
+import { ErrorState } from "../../components/ReadState/ReadState";
 import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import { draftIsDirty, savedDraft } from "../../utils/savedDraft";
@@ -62,9 +63,9 @@ export default function TravelReport({ endpoint: travelEndpoint, projectId, trav
   return <section aria-label="Post-trip reporting">
     <GuidanceNote className={styles.muted}>After travel concludes—or when it was not taken—record what actually happened, then request independent review. Reports and acceptance remain separate from travel authorization, payments and task completion.</GuidanceNote>
     {(mismatchedTravel || (state.data && !validEnvelope) || state.error) && <ActionButton disabled={busy} onClick={reload}>Retry report and travel</ActionButton>}<ReadState state={state} />
-    {state.data && !validEnvelope && <p role="alert">Report response unavailable. Refresh after checking the backend deployment.</p>}
+    {state.data && !validEnvelope && <ErrorState>Report response unavailable. Refresh after checking the backend deployment.</ErrorState>}
     {awaitingSavedReport && <p role="status">Refreshing the saved report before enabling another change…</p>}
-    {mismatchedTravel && <p role="alert">The travel request changed. Refresh report and travel together before making a report decision.</p>}
+    {mismatchedTravel && <ErrorState>The travel request changed. Refresh report and travel together before making a report decision.</ErrorState>}
     <Issues issues={data?.issues} />
     <details><summary>Current live travel plan and authorization</summary><dl className={styles.snapshot}><dt>Traveller</dt><dd>{travel.traveller?.displayName}</dd><dt>Purpose</dt><dd>{travel.purpose}</dd><dt>Destination</dt><dd>{travel.destination}</dd><dt>Planned dates</dt><dd>{travel.departureDate} through {travel.returnDate}</dd><dt>Authorization state</dt><dd>{label(travel.state)}</dd></dl><p>This is the current request, separate from the report’s captured plan and actual dates.</p></details>
     <WorkflowStep number={3} title="Report the actual outcome" description="Choose a saved approval or an explicit unapproved plan basis. Record actual dates, outcome and any differences. Add exact report documents and existing follow-ups; nothing is inherited automatically from the trip plan." keepOpen={!!form && !reviewForm}>

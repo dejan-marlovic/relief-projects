@@ -1,3 +1,4 @@
+import { EmptyState } from "../../../components/ReadState/ReadState";
 import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import useMediaQuery from "../../../hooks/useMediaQuery";
@@ -503,7 +504,7 @@ export default function Memos({ canEdit = false }) {
 
       </div>
       {!loading && items.length === 0 && editingId !== "new" && (
-        <p className={styles.note}>No memos for this project yet.</p>
+        <EmptyState className={styles.note}>No memos for this project yet.</EmptyState>
       )}
     </div>
   );

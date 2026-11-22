@@ -1,3 +1,4 @@
+import { ErrorState } from "../../../components/ReadState/ReadState";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
@@ -286,7 +287,7 @@ const UpdateDocument = () => {
         {formError && (
           <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
-        {categoryError && <div role="alert">{categoryError} <ActionButton type="button" onClick={retryCategories}>Retry categories</ActionButton></div>}
+        {categoryError && <ErrorState as="div" >{categoryError} <ActionButton type="button" onClick={retryCategories}>Retry categories</ActionButton></ErrorState>}
 
         {successMessage && (
           <div className={styles.successBanner}>
@@ -341,7 +342,7 @@ const UpdateDocument = () => {
                 <div className={styles.formGroup}>
                   <DocumentStatus className={inputClass("status")} value={form.status} allowUnknown={!selectedDocument?.status} disabled={!form.selectedId || saving || historical} onChange={(e) => setForm((previous) => ({ ...previous, status: e.target.value }))} />
                   <small>Final is a descriptive label, not approval or proof of signing.</small>
-                  {fieldErrors.status && <span role="alert">{fieldErrors.status}</span>}
+                  {fieldErrors.status && <ErrorState as="span" >{fieldErrors.status}</ErrorState>}
                 </div>
 
                 <div className={styles.formGroup}>
@@ -396,13 +397,13 @@ const UpdateDocument = () => {
                   <SearchableSelect id="document-category" name="category" className={inputClass("category")} value={form.category} onChange={handleInputChange} disabled={!form.selectedId || saving || historical || !categories.length}>
                     {categories.map((category) => <option key={category.id} value={category.id}>{category.label}</option>)}
                   </SearchableSelect>
-                  {fieldErrors.category && <span role="alert">{fieldErrors.category}</span>}
+                  {fieldErrors.category && <ErrorState as="span" >{fieldErrors.category}</ErrorState>}
                 </div>
                 <div className={styles.formGroup}>
                   <label htmlFor="document-date">Document date (optional)</label>
                   <input id="document-date" name="documentDate" className={inputClass("documentDate")} type="date" min="1000-01-01" max="9999-12-31" value={form.documentDate} onChange={handleInputChange} disabled={!form.selectedId || saving || historical} />
                   <small>Leave empty to clear the document date.</small>
-                  {fieldErrors.documentDate && <span role="alert">{fieldErrors.documentDate}</span>}
+                  {fieldErrors.documentDate && <ErrorState as="span" >{fieldErrors.documentDate}</ErrorState>}
                 </div>
                 {selectedDocument && <div className={styles.formGroup}>
                   <span>Uploaded by {uploaderLabel(selectedDocument)}</span>

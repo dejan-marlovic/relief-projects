@@ -1,3 +1,4 @@
+import { ErrorState } from "../../../components/ReadState/ReadState";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import React, { useEffect, useMemo, useState } from "react";
@@ -207,7 +208,7 @@ const CreateBankDetail = () => {
                 value={form.accountNumber}
                 onChange={handleChange}
               />
-                  {fieldErrors.accountNumber && <div role="alert">{fieldErrors.accountNumber}</div>}
+                  {fieldErrors.accountNumber && <ErrorState as="div" >{fieldErrors.accountNumber}</ErrorState>}
             </div>
 
             <div className={styles.formGroup}>
@@ -230,7 +231,7 @@ const CreateBankDetail = () => {
                 value={form.swiftCode}
                 onChange={handleChange}
               />
-                  {fieldErrors.swiftCode && <div role="alert">{fieldErrors.swiftCode}</div>}
+                  {fieldErrors.swiftCode && <ErrorState as="div" >{fieldErrors.swiftCode}</ErrorState>}
             </div>
           </div>
         </div>

@@ -1,3 +1,4 @@
+import { ErrorState } from "../../components/ReadState/ReadState";
 import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
@@ -43,8 +44,8 @@ export default function TravelEditor({ form, setForm, projectId, authFetch, refr
       {["actions", "evidence"].includes(action) && record.state === "APPROVED" && <p>Added after approval: this link will remain outside the original approved submission.</p>}
       {action.endsWith("-remove") && <p>Remove association #{form.link.id} · {form.link.capturedTitle || form.link.capturedName || "Name unavailable"}. The task or document and retained association history are preserved.</p>}
       {reasonRequired && text("reason", "Reason")}
-      {error && <p role="alert">{error}</p>}{form.error && <p role="alert">{form.error}</p>}
-      {form.reviewRequired && <div role="alert"><p>Draft retained. Review the refreshed request, decision basis, links and history before retrying. A failed response may follow a successful save.{action === "create" ? " Check the list before creating again to avoid duplicates." : ""}</p><ActionButton type="button" disabled={blocked} onClick={onReview}>I reviewed the refreshed state; enable retry</ActionButton></div>}
+      {error && <ErrorState>{error}</ErrorState>}{form.error && <ErrorState>{form.error}</ErrorState>}
+      {form.reviewRequired && <ErrorState as="div" ><p>Draft retained. Review the refreshed request, decision basis, links and history before retrying. A failed response may follow a successful save.{action === "create" ? " Check the list before creating again to avoid duplicates." : ""}</p><ActionButton type="button" disabled={blocked} onClick={onReview}>I reviewed the refreshed state; enable retry</ActionButton></ErrorState>}
       <div data-action-group="section" className={styles.actions}>{!["create", "edit"].includes(action) && <ActionButton type="submit" className={approvalStyle(action, styles)} disabled={busy || blocked || form.reviewRequired}><TravelActionIcon action={action} />Save {titles[action].toLowerCase()}</ActionButton>}<ActionButton type="button" onClick={close}><RecordIcon type="close" />Close editor</ActionButton></div>
     </fieldset>
   </ScrollToForm>;

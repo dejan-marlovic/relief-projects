@@ -1,3 +1,4 @@
+import { LoadingState, ErrorState } from "../ReadState/ReadState";
 import AttachmentItem from "../AttachmentItem/AttachmentItem";
 import ActionButton from "../ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
@@ -101,7 +102,7 @@ export function FinalEvidencePanel({ paymentOrderId, refreshKey, editingLocked }
   return <div className={styles.panel}>
     <p className={styles.hint}><strong>Not part of the approval decision.</strong> Select an externally prepared signed order or combined evidence file. These descriptions do not verify signatures, settlement or completeness. No payment entry is required.</p>
     {(error || actionError || candidateError || reviewRequired) && <ActionButton disabled={busy || loading} onClick={() => setTick(n => n + 1)}>Retry late evidence and history</ActionButton>}
-    {initialLoading && <p role="status">Loading late evidence…</p>}{error && <p role="alert">{error}</p>}{actionError && <p role="alert">{actionError}</p>}{message && <p role="status">{message}</p>}
+    {initialLoading && <LoadingState>Loading late evidence…</LoadingState>}{error && <ErrorState>{error}</ErrorState>}{actionError && <ErrorState>{actionError}</ErrorState>}{message && <p role="status">{message}</p>}
     {editingLocked && <p>Finish editing the order before changing evidence.</p>}
     {data && <>
       <ul>{data.issues?.map(issue => <li key={issue.code}>{issue.message}</li>)}</ul>
@@ -123,7 +124,7 @@ export function FinalEvidencePanel({ paymentOrderId, refreshKey, editingLocked }
       <h4>{form.action === "attach" ? "Attach late evidence" : `${form.action === "remove" ? "Remove" : "Replace"} attachment #${form.entryId}`}</h4>
       {selecting && <>
         <p>All active exact versions from the header transaction’s project are listed, including historical versions. FINANCE classification is suggested, not required.</p>
-        {candidateError && <p role="alert">{candidateError}</p>}
+        {candidateError && <ErrorState>{candidateError}</ErrorState>}
         <label>Exact document version<SearchableSelect documentOptions required disabled={busy || candidateLoading} value={form.documentId} onChange={e => setForm({ ...form, documentId: e.target.value })}><option value="">{candidateLoading ? "Loading documents…" : "Select a version"}</option>{docs.filter(doc => !data?.entries.some(entry => entry.documentId === doc.id && entry.id !== form.entryId)).map(doc => <option key={doc.id} value={doc.id}>{doc.documentName || "Name unavailable"} · #{doc.id} · Version {doc.versionNumber ?? "Unknown"} · {doc.status || "Status unknown"}{doc.isCurrent ? " · Current" : " · Historical"}</option>)}</SearchableSelect></label>
         {selected && <p>Selected exact version #{selected.id}: {selected.status || "Unknown status"}{!selected.isCurrent && " · Historical version"}. This selection will not follow future replacements.</p>}
         <label>Evidence description<SearchableSelect value={form.role} disabled={busy} onChange={e => setForm({ ...form, role: e.target.value })}>{["SIGNED_PAYMENT_ORDER", "COMBINED_PAYMENT_EVIDENCE"].map(role => <option key={role} value={role}>{evidenceRole(role)}</option>)}</SearchableSelect></label>

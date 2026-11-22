@@ -1,3 +1,4 @@
+import { ErrorState } from "../ReadState/ReadState";
 import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import React from "react";
 import FundingReturnSummary from "../FundingReturns/FundingReturnSummary";
@@ -25,7 +26,7 @@ export function Observation({ value }) {
   return <div>
     <p><strong>{value.status === "NO_RECORDED_WARNINGS" ? "No recorded warnings" : "Attention required"}</strong> · Observed {stamp(value.observedAt)}</p>
     <GuidanceNote className={styles.hint}>This is an observation, not a completeness certificate. Decision state and readiness are read separately; other workflows can change afterwards.</GuidanceNote>
-    {financial.status !== "COMPLETE" && <p role="alert">Financial coverage is partial or unavailable. Missing diagnostics do not mean there are no warnings.</p>}
+    {financial.status !== "COMPLETE" && <ErrorState>Financial coverage is partial or unavailable. Missing diagnostics do not mean there are no warnings.</ErrorState>}
     <dl className={styles.fields}>{[["Checklist coverage", readable(coverage.checklist)], ["Risk coverage", readable(coverage.risks)], ["Follow-up coverage", readable(coverage.followUps)], ["Financial coverage", `${readable(financial.status)} · ${financial.recordsAssessed ?? "Unknown"} assessed / ${financial.recordsConsidered ?? "Unknown"} considered`], ["Financial completion", "Not assessed by this feature"], ["Storage and filing contents", "Not checked"]].map(([label, text]) => <React.Fragment key={label}><dt>{label}</dt><dd>{text}</dd></React.Fragment>)}</dl>
     <ul>{value.warnings?.map((warning, index) => <li key={`${warning.code}-${index}`}><strong>{readable(warning.code)} ({warning.count})</strong>: {warning.message}</li>)}</ul>
   </div>;

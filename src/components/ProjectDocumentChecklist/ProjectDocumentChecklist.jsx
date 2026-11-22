@@ -1,3 +1,4 @@
+import { ErrorState, EmptyState, LoadingState } from "../ReadState/ReadState";
 import AttachmentItem from "../AttachmentItem/AttachmentItem";
 import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import ActionButton from "../ActionButton/ActionButton";
@@ -56,7 +57,7 @@ function Item({ item, generation, editable, documents, categories, busy, mutate:
       <span className={styles.badge}>{states[item.state] || item.state}{evidence.length > 0 ? ` · ${evidence.length} linked` : ""}</span>
     </summary>
     <div className={styles.body}>
-      {dirty && item.revision !== draftRevision && <p role="alert">This item changed while you were editing. Your draft is retained; saving will check for a conflict. <ActionButton type="button" disabled={busy} onClick={() => { if (window.confirm("Discard this draft and use the latest saved checklist values?")) setDirty(false); }}>Use latest saved values</ActionButton></p>}
+      {dirty && item.revision !== draftRevision && <ErrorState>This item changed while you were editing. Your draft is retained; saving will check for a conflict. <ActionButton type="button" disabled={busy} onClick={() => { if (window.confirm("Discard this draft and use the latest saved checklist values?")) setDirty(false); }}>Use latest saved values</ActionButton></ErrorState>}
       <p>{item.guidance}</p>
       <p className={styles.muted}>{item.applicabilitySource === "DEFAULT" ? "Default applicability — no user decision recorded." : `Explicit decision by ${actor(item.applicabilityChangedBy)} · ${uploadTimeLabel(item.applicabilityChangedAt)}`}</p>
       {item.notApplicableReason && <p><strong>Not applicable because:</strong> {item.notApplicableReason}</p>}
@@ -64,13 +65,13 @@ function Item({ item, generation, editable, documents, categories, busy, mutate:
       {editable && <form onSubmit={save} className={styles.form}>
         <label>Applicability<select value={applicability} disabled={busy} onChange={(e) => { setDirty(true); setApplicability(e.target.value); }}><option value="APPLICABLE">Applicable</option><option value="NOT_ASSESSED">Needs assessment</option><option value="NOT_APPLICABLE">Not applicable</option></select></label>
         {applicability === "NOT_APPLICABLE" && <label>Explanation<textarea value={reason} disabled={busy} onChange={(e) => { setDirty(true); setReason(e.target.value); }} rows={3} /><small>Required, up to 1,000 characters. This replaces the current explanation.</small></label>}
-        {validation && <p role="alert">{validation}</p>}
+        {validation && <ErrorState>{validation}</ErrorState>}
         <small>Save this decision explicitly. Document details autosave, but checklist decisions and evidence links use their own buttons.</small>
         <span data-action-group="section"><ActionButton disabled={busy} type="submit">Save applicability</ActionButton></span>
       </form>}
       <h4>Evidence</h4>
       {item.applicability === "NOT_APPLICABLE" && <GuidanceNote className={styles.muted}>Existing links are retained. Change applicability before adding evidence.</GuidanceNote>}
-      {!evidence.length && <p className={styles.muted}>No evidence linked.</p>}
+      {!evidence.length && <EmptyState className={styles.muted}>No evidence linked.</EmptyState>}
       <ul className={styles.evidence}>{evidence.map((doc) => <AttachmentItem key={doc.documentId}>
         <strong><DocumentLabel>{doc.documentName}</DocumentLabel></strong>
         <span>Version {doc.versionNumber} · {statusLabel(doc.status)} · {categories.find((c) => c.id === doc.category)?.label || doc.category || "Uncategorized"} · Document date: {doc.documentDate || "Unknown"}</span>
@@ -86,7 +87,7 @@ function Item({ item, generation, editable, documents, categories, busy, mutate:
       {editable && !canLink && <GuidanceNote className={styles.muted}>Save Applicable above before adding evidence. Existing links remain available.</GuidanceNote>}
       {editable && <form className={styles.form} onSubmit={(e) => { e.preventDefault(); if (selected && canLink && availableDocuments.some(doc => String(doc.id) === selected)) mutate(item, "evidence", "POST", { documentId: Number(selected) }); }}>
         <label>Document evidence<SearchableSelect documentOptions value={selected} disabled={busy || !canLink || !availableDocuments.length} onChange={(e) => { setDirty(true); setSelected(e.target.value); }}><option value="">{availableDocuments.length ? "Select an exact document version" : "No additional document versions available"}</option>{availableDocuments.map((doc) => <option key={doc.id} value={doc.id}>{doc.documentName} · Version {doc.versionNumber} · {statusLabel(doc.status)} · {doc.isCurrent ? "Current" : "Historical"} (#{doc.id})</option>)}</SearchableSelect></label>
-        {!availableDocuments.length && <p className={styles.muted}>No additional document versions available. Upload another document or adjust the evidence filters.</p>}
+        {!availableDocuments.length && <EmptyState className={styles.muted}>No additional document versions available. Upload another document or adjust the evidence filters.</EmptyState>}
         <span data-action-group="section"><ActionButton type="submit" disabled={busy || !canLink || !selected || !availableDocuments.some(doc => String(doc.id) === selected)}>Link evidence</ActionButton></span>
       </form>}
     </div>
@@ -183,8 +184,8 @@ function Panel({ projectId, authFetch, categories, refreshKey }) {
   return <div className={styles.panel}>
     <WorkflowIntro>Work through each requirement in one card: save whether it applies, then attach supporting document versions when it is Applicable. A checkmark means evidence is recorded, not reviewed or approved.</WorkflowIntro>
     {error && <ActionButton type="button" disabled={loading || busy} onClick={() => setRevision((v) => v + 1)}>Retry loading checklist</ActionButton>}
-    {loading && !data && <p role="status">Loading checklist…</p>}
-    {error && <p role="alert">{error}</p>}
+    {loading && !data && <LoadingState>Loading checklist…</LoadingState>}
+    {error && <ErrorState>{error}</ErrorState>}
     {notice && <p role="status">{notice}</p>}
     {data && <>
       {!data.editable && <GuidanceNote className={styles.muted}>Read-only. Only Admin and Project Manager can change a checklist on an active project.</GuidanceNote>}
@@ -195,7 +196,7 @@ function Panel({ projectId, authFetch, categories, refreshKey }) {
         <label>Evidence category<SearchableSelect value={category} disabled={busy} onChange={(e) => setCategory(e.target.value)}><option value="">All categories</option>{categories.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</SearchableSelect></label>
         <label><input type="checkbox" checked={historical} disabled={busy} onChange={(e) => setHistorical(e.target.checked)} /> Include active historical versions</label>
         <GuidanceNote className={styles.muted}>These filters only help find documents. Upload files below, then select evidence explicitly. Uploads remain if linking fails. To switch versions, link the new version before removing the old one; if removal fails, both links remain.</GuidanceNote>
-        {documentError && <p role="alert">{documentError}</p>}
+        {documentError && <ErrorState>{documentError}</ErrorState>}
       </div>}
       {[...data.items].filter((item) => !attentionOnly || !settled(item.state)).sort((a, b) => a.order - b.order).map((item) => <Item key={item.itemKey} generation={generation} item={item} editable={data.editable} documents={documents} categories={categories} busy={busy} mutate={mutate} download={download} downloading={downloading} showHistory={setHistory} />)}
       </WorkflowStep>

@@ -1,3 +1,4 @@
+import { ErrorState } from "../../../components/ReadState/ReadState";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
@@ -348,7 +349,7 @@ const UpdateBankDetail = () => {
                     onChange={handleInputChange}
                     disabled={!form.selectedId || saving}
                   />
-                  {fieldErrors.accountNumber && <div role="alert">{fieldErrors.accountNumber}</div>}
+                  {fieldErrors.accountNumber && <ErrorState as="div" >{fieldErrors.accountNumber}</ErrorState>}
                 </div>
 
                 <div className={styles.formGroup}>
@@ -373,7 +374,7 @@ const UpdateBankDetail = () => {
                     onChange={handleInputChange}
                     disabled={!form.selectedId || saving}
                   />
-                  {fieldErrors.swiftCode && <div role="alert">{fieldErrors.swiftCode}</div>}
+                  {fieldErrors.swiftCode && <ErrorState as="div" >{fieldErrors.swiftCode}</ErrorState>}
                 </div>
               </div>
             </div>

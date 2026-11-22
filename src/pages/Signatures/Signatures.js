@@ -1,3 +1,4 @@
+import { EmptyState } from "../../components/ReadState/ReadState";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import MobileRecordDeck from "../../components/MobileRecordDeck/MobileRecordDeck";
 import useArchivedProject from "../../hooks/useArchivedProject";
@@ -1226,7 +1227,7 @@ function Signatures() {
           ) : items.length === 0 ? (
             <p className={styles.noData}>No signatures for this project.</p>
           ) : displayedItems.length === 0 ? (
-            <p className={styles.noData}>No signatures match your filters.</p>
+            <EmptyState className={styles.noData}>No signatures match your filters.</EmptyState>
           ) : (
             <MobileRecordDeck key={selectedProjectId} label="Signature" locked={editingId !== null || saving} creating={editingId === "new"}>
             {displayedItems.map((s, idx) => (

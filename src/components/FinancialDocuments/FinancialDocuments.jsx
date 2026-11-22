@@ -1,3 +1,4 @@
+import { LoadingState, ErrorState, EmptyState } from "../ReadState/ReadState";
 import AttachmentItem from "../AttachmentItem/AttachmentItem";
 import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import ActionButton from "../ActionButton/ActionButton";
@@ -144,16 +145,16 @@ function DocumentsPanel({ entityType, entityId, locked, lifecycleStatus, refresh
     {entityType === "PAYMENT_ORDER" && <GuidanceNote className={styles.hint}>Ordinary supporting documents — approval-time inclusion not recorded. Late payment evidence is managed separately.</GuidanceNote>}
     <GuidanceNote className={styles.hint}>Links keep the exact file version you select. A replacement never changes existing supporting evidence. Draft and Final are descriptive labels.</GuidanceNote>
     {(listError || actionError || candidateError) && <ActionButton type="button" onClick={refresh} disabled={loading || busy}>Retry supporting documents</ActionButton>}
-    {initialLoading && <p role="status">Loading supporting documents…</p>}
-    {listError && <p role="alert">{listError}</p>}
-    {actionError && <p role="alert">{actionError}</p>}
+    {initialLoading && <LoadingState>Loading supporting documents…</LoadingState>}
+    {listError && <ErrorState>{listError}</ErrorState>}
+    {actionError && <ErrorState>{actionError}</ErrorState>}
     {message && <p role="status">{message}</p>}
-    {categoryError && <p role="alert">{categoryError} <ActionButton type="button" onClick={retryCategories}>Retry categories</ActionButton></p>}
+    {categoryError && <ErrorState>{categoryError} <ActionButton type="button" onClick={retryCategories}>Retry categories</ActionButton></ErrorState>}
     {!initialLoading && <>
       {ownershipMessage && <p className={styles.hint}>{ownershipMessage}</p>}
       {!roleCanManage && <p className={styles.hint}>Only Admin and Finance can change supporting-document links.</p>}
       {roleCanManage && !canManage && <p className={styles.hint}>{editingLocked ? "Finish editing this record before changing document links." : "Links can be changed only on active Draft or Returned records. Submitted, Approved and Booked records are read-only."}</p>}
-      {!listError && links.length === 0 && <p>No supporting documents linked.</p>}
+      {!listError && links.length === 0 && <EmptyState>No supporting documents linked.</EmptyState>}
       <ul className={styles.list}>{links.map((link) => <AttachmentItem key={link.documentId}>
         <div className={styles.info}>
           <strong><DocumentLabel>{link.documentName}</DocumentLabel></strong>
@@ -170,7 +171,7 @@ function DocumentsPanel({ entityType, entityId, locked, lifecycleStatus, refresh
       </AttachmentItem>)}</ul>
       {canLink && <form className={styles.picker} onSubmit={(event) => { event.preventDefault(); if (selectedId) mutate(selectedId); }}>
         <label><input type="checkbox" checked={includeHistorical} disabled={busy} onChange={(event) => setIncludeHistorical(event.target.checked)} /> Include active historical versions</label>
-        {candidateError && <p role="alert">{candidateError}</p>}
+        {candidateError && <ErrorState>{candidateError}</ErrorState>}
         <label>Project document<SearchableSelect documentOptions value={selectedId} disabled={busy || candidateLoading} onChange={(event) => setSelectedId(event.target.value)}><option value="">{candidateLoading ? "Loading documents…" : "Select an exact document version"}</option>{selectable.map((doc) => <option key={doc.id} value={doc.id}>{doc.documentName} · Version {doc.versionNumber} · {statusLabel(doc.status)}{doc.isCurrent ? " · Current" : " · Historical"} (#{doc.id})</option>)}</SearchableSelect></label>
         <div data-action-group="section" className={styles.actions}><ActionButton type="submit" disabled={!selectedId || busy || candidateLoading}><RecordIcon type="link" />Link selected version</ActionButton>{selectedId && <ActionButton type="button" onClick={() => { const doc = selectable.find((item) => String(item.id) === selectedId); if (doc) setHistory(doc); }}>Preview version history</ActionButton>}</div>
         {!candidateLoading && !candidateError && !selectable.length && <p>No unlinked documents in this view. Try including historical versions or upload a project document first.</p>}

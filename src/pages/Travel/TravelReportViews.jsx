@@ -1,3 +1,4 @@
+import { EmptyState } from "../../components/ReadState/ReadState";
 import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import { HistoryTimeline, SnapshotHistoryEntry } from "../../components/ActivityHistory/ActivityHistory";
 import { uploadTimeLabel } from "../../utils/documentMetadata";
@@ -40,7 +41,7 @@ export function ReportHistory({ endpoint, authFetch, refresh }) {
   return <section aria-label="Retained report history" className={styles.panel}><h3>Report history</h3>
     <HistoryIntro>Newest first. Report edits, submissions, acceptance and corrections are retained separately from travel authorization history.</HistoryIntro>
     <ReadState state={state} /><HistoryTimeline>{state.data?.content?.map(event => <SnapshotHistoryEntry key={event.id} event={event} title={label(event.action)} Snapshot={HistorySnapshot} />)}</HistoryTimeline>
-    {state.data?.content?.length === 0 && <p>No report history on this page.</p>}<Pagination history data={state.data} page={page} setPage={setPage} label="report history" disabled={state.loading} />
+    {state.data?.content?.length === 0 && <EmptyState>No report history on this page.</EmptyState>}<Pagination history data={state.data} page={page} setPage={setPage} label="report history" disabled={state.loading} />
   </section>;
 }
 
@@ -55,7 +56,7 @@ export function ApprovalBasisPicker({ endpoint, authFetch, refresh, value, onCha
     <ReadState state={state} />{approvals.map(event => <article key={event.id} className={styles.panel}>
       <label><input type="radio" name={basisGroup} checked={String(value) === String(event.id)} onChange={() => onChange(String(event.id))} />Use retained approval #{event.id}</label><Attribution at={event.occurredAt} actor={event.actor} />
       <details><summary>Inspect retained approval #{event.id}</summary><HistorySnapshot value={event.after} /></details>
-    </article>)}{state.data && !approvals.length && <p>No approvals on this history page. Check earlier pages or explicitly choose the unapproved observation.</p>}
+    </article>)}{state.data && !approvals.length && <EmptyState>No approvals on this history page. Check earlier pages or explicitly choose the unapproved observation.</EmptyState>}
     <Pagination data={state.data} page={page} setPage={setPage} label="approval history" disabled={state.loading} />
   </section>;
 }

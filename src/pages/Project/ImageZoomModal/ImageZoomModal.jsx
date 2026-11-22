@@ -1,3 +1,4 @@
+import { EmptyState } from "../../../components/ReadState/ReadState";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import React, { useEffect, useId, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
@@ -168,7 +169,7 @@ const ImageZoomModal = ({
               alt={alt || "Zoomed cover"}
               className={styles.image}
               draggable={false}
-            /> : <p>No image available.</p>}
+            /> : <EmptyState>No image available.</EmptyState>}
           </div>
 
           {caption && caption.trim() ? (

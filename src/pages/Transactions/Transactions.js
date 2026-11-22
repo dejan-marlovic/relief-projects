@@ -1,3 +1,4 @@
+import { EmptyState } from "../../components/ReadState/ReadState";
 import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import { namedReference } from "../../utils/recordLabels";
@@ -1754,7 +1755,7 @@ const Transactions = ({ refreshTrigger }) => {
           ) : transactions.length === 0 ? (
             <p className={styles.noData}>No transactions for this project.</p>
           ) : displayedTransactions.length === 0 ? (
-            <p className={styles.noData}>No transactions match your filters.</p>
+            <EmptyState className={styles.noData}>No transactions match your filters.</EmptyState>
           ) : (
             <MobileRecordDeck key={selectedProjectId} label="Transaction" locked={editingId !== null || saving} creating={editingId === "new"}>
             {displayedTransactions.map((tx, idx) => (

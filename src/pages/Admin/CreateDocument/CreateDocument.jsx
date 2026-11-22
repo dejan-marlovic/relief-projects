@@ -1,3 +1,4 @@
+import { ErrorState } from "../../../components/ReadState/ReadState";
 import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
@@ -161,7 +162,7 @@ const CreateDocument = () => {
         {formError && (
           <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
-        {categoryError && <div role="alert">{categoryError} <ActionButton type="button" onClick={retryCategories}>Retry categories</ActionButton></div>}
+        {categoryError && <ErrorState as="div" >{categoryError} <ActionButton type="button" onClick={retryCategories}>Retry categories</ActionButton></ErrorState>}
 
         <div className={styles.grid}>
           <div data-mobile-tile="Relations" className={styles.card}>
@@ -199,17 +200,17 @@ const CreateDocument = () => {
               <SearchableSelect id="new-document-category" name="category" className={inputClass("category")} value={form.category} onChange={handleChange} disabled={loading || !categories.length}>
                 {categories.map((category) => <option key={category.id} value={category.id}>{category.label}</option>)}
               </SearchableSelect>
-              {fieldErrors.category && <span role="alert">{fieldErrors.category}</span>}
+              {fieldErrors.category && <ErrorState as="span" >{fieldErrors.category}</ErrorState>}
             </div>
             <div className={styles.formGroup}>
               <DocumentStatus className={inputClass("status")} value={form.status} disabled={loading} onChange={(e) => setForm((previous) => ({ ...previous, status: e.target.value }))} />
               <small>Final is a descriptive label, not approval or proof of signing.</small>
-              {fieldErrors.status && <span role="alert">{fieldErrors.status}</span>}
+              {fieldErrors.status && <ErrorState as="span" >{fieldErrors.status}</ErrorState>}
             </div>
             <div className={styles.formGroup}>
               <label htmlFor="new-document-date">Document date (optional)</label>
               <input id="new-document-date" name="documentDate" type="date" min="1000-01-01" max="9999-12-31" className={inputClass("documentDate")} value={form.documentDate} onChange={handleChange} disabled={loading} />
-              {fieldErrors.documentDate && <span role="alert">{fieldErrors.documentDate}</span>}
+              {fieldErrors.documentDate && <ErrorState as="span" >{fieldErrors.documentDate}</ErrorState>}
             </div>
             <div className={styles.formGroup}>
               <label>File</label>

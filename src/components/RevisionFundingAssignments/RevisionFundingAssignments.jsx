@@ -1,3 +1,4 @@
+import { LoadingState, ErrorState } from "../ReadState/ReadState";
 import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import ActionButton from "../ActionButton/ActionButton";
 import useRefreshLoading from "../../hooks/useRefreshLoading";
@@ -67,7 +68,7 @@ export function AssignmentPanel({ transactionId, originBudgetId, disabled = fals
     <GuidanceNote className={styles.hint}>Use unused approved funding from this existing award on revised costs. Each assignment is one allocation, not a new award or another balance. Receipts and actual payments do not change this capacity.</GuidanceNote>
     <GuidanceNote className={styles.hint}>Original allocations on an APPROVED transaction remain reserved even when uncommitted. This workflow cannot release those allocations. Recorded governing approval does not verify every award's donor conditions.</GuidanceNote>
     {(error || blocked) && <ActionButton disabled={busy || loading} onClick={() => { setError(""); setTick(n => n + 1); }}>Retry funding assignments</ActionButton>}
-    {initialLoading && <p role="status">Loading assignments…</p>}{error && <p role="alert">{error}</p>}
+    {initialLoading && <LoadingState>Loading assignments…</LoadingState>}{error && <ErrorState>{error}</ErrorState>}
     {data && <><dl className={styles.fields}><dt>Original award budget</dt><dd>#{originBudgetId ?? "unavailable"} · Name unavailable</dd><dt>Executable use plan</dt><dd>{data.eligibility.targetBudgetId == null ? "Not activated" : `Budget #${data.eligibility.targetBudgetId} · Name unavailable`}</dd><dt>Currency</dt><dd>{data.funding.currency ? `${data.funding.currency.name || "Currency"} (#${data.funding.currency.id})` : "Unavailable"}</dd><dt>Approved funding</dt><dd>{exactAmount(data.funding.approved)}</dd><dt>Obligations counted once</dt><dd>{exactAmount(data.funding.obligations)}</dd><dt>Unused approved funding</dt><dd>{exactAmount(data.funding.unassignedApprovedFunding)}</dd></dl>
       <GuidanceNote className={styles.hint}>Unused approved funding is not cash. Target-row and shared family ceilings also apply. Currency is the current configured denomination, not verified historical meaning.</GuidanceNote>
       {(data.issues || []).map((issue, i) => <p key={i}>{issue.message}</p>)}
@@ -88,7 +89,7 @@ export function AssignmentPanel({ transactionId, originBudgetId, disabled = fals
       <label>Assignment amount<input required type="text" inputMode="decimal" value={form.amount} onChange={e => change("amount", e.target.value)} /></label>
       <label>Assignment reason<textarea required maxLength={1000} value={form.reason} onChange={e => change("reason", e.target.value)} /></label>
       <label><input type="checkbox" required checked={form.acknowledged} onChange={e => change("acknowledged", e.target.checked)} /> I understand this uses unused approved funding, not cash, and cannot release original approved allocations. Zero releases only this managed assignment subject to commitment coverage.</label>
-      {(blocked || stale) && <><p role="alert">Review refreshed assignments and transaction history. If creation already succeeded, cancel this draft and use the existing assignment's amount control.</p><ActionButton type="button" disabled={loading || !data || Boolean(form.id && !assignment)} onClick={() => { setForm(old => ({ ...old, expectedFamilyRevision: data.familyRevision, expectedExecutionRevision: data.executionRevision, expectedAssignmentRevision: assignment?.revision })); setBlocked(false); setError(""); }}>I reviewed state and history; use current revisions</ActionButton></>}
+      {(blocked || stale) && <><ErrorState>Review refreshed assignments and transaction history. If creation already succeeded, cancel this draft and use the existing assignment's amount control.</ErrorState><ActionButton type="button" disabled={loading || !data || Boolean(form.id && !assignment)} onClick={() => { setForm(old => ({ ...old, expectedFamilyRevision: data.familyRevision, expectedExecutionRevision: data.executionRevision, expectedAssignmentRevision: assignment?.revision })); setBlocked(false); setError(""); }}>I reviewed state and history; use current revisions</ActionButton></>}
       <div data-action-group="section" className={styles.actions}><ActionButton disabled={busy || blocked || stale || loading || !data}>Save assignment</ActionButton><ActionButton type="button" onClick={() => { setForm(null); setBlocked(false); setError(""); }}>Cancel assignment</ActionButton></div>
     </fieldset></ScrollToForm>}
   </div>;

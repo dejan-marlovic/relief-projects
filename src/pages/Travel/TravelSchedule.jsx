@@ -1,3 +1,4 @@
+import { ErrorState, EmptyState } from "../../components/ReadState/ReadState";
 import FilterPanel from "../../components/FilterPanel/FilterPanel";
 import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../components/ActionButton/ActionButton";
@@ -76,12 +77,12 @@ export function Schedule({ authFetch }) {
         <label>Traveller employee ID<input type="number" min="1" step="1" value={draft.travellerEmployeeId} onChange={e => change("travellerEmployeeId", e.target.value)} /></label>
       </FilterPanel>
       <GuidanceNote className={styles.muted}>Leave both dates blank for the default window: 30 days before through 90 days after today in Stockholm. Custom windows can cover up to 366 days.</GuidanceNote>
-      {(error || invalid) && <p role="alert">{error || invalid}</p>}
+      {(error || invalid) && <ErrorState>{error || invalid}</ErrorState>}
       <div data-action-group="section" className={styles.actions}><ActionButton type="submit">Apply schedule filters</ActionButton><ActionButton type="button" onClick={() => { setParams({}); setDraft(filtersFrom(new URLSearchParams())); setError(""); }}>Reset schedule filters</ActionButton></div>
     </form>
     <ReadState state={projects} />
     <ActionButton aria-expanded={lookupOpen} onClick={() => setLookupOpen(v => !v)}>Find a traveller by name</ActionButton>
-    {lookupOpen && <section className={styles.panel} aria-label="Traveller lookup"><p>Travellers represented in the applied date, project and state filters. Selecting one fills the employee ID; apply the filters to use it. Your selected ID is kept even if it is outside this lookup.</p><ReadState state={people} /><ul className={styles.list}>{people.data?.content.map(person => <li key={person.employeeId}>{person.displayName} · Employee #{person.employeeId}{!person.active && " · Inactive traveller"} <ActionButton onClick={() => change("travellerEmployeeId", String(person.employeeId))}>Select employee #{person.employeeId} · {person.displayName || "Name unavailable"}</ActionButton></li>)}</ul>{people.data && !people.data.content.length && <p>No travellers on this lookup page.</p>}<Pages data={people.data} loading={people.loading} onPage={setLookupPage} name="travellers" /></section>}
+    {lookupOpen && <section className={styles.panel} aria-label="Traveller lookup"><p>Travellers represented in the applied date, project and state filters. Selecting one fills the employee ID; apply the filters to use it. Your selected ID is kept even if it is outside this lookup.</p><ReadState state={people} /><ul className={styles.list}>{people.data?.content.map(person => <li key={person.employeeId}>{person.displayName} · Employee #{person.employeeId}{!person.active && " · Inactive traveller"} <ActionButton onClick={() => change("travellerEmployeeId", String(person.employeeId))}>Select employee #{person.employeeId} · {person.displayName || "Name unavailable"}</ActionButton></li>)}</ul>{people.data && !people.data.content.length && <EmptyState>No travellers on this lookup page.</EmptyState>}<Pages data={people.data} loading={people.loading} onPage={setLookupPage} name="travellers" /></section>}
 
     <ReadState state={result} />
     {data && <>

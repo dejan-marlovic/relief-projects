@@ -1,3 +1,4 @@
+import { ErrorState } from "../ReadState/ReadState";
 import ActionButton from "../ActionButton/ActionButton";
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -85,7 +86,7 @@ export default function ReturnReasonDialog({ endpoint, recordLabel, onSuccess, o
         onChange={(event) => { setReason(event.target.value); setFieldError(""); }} />
       <div id={`${id}-count`}>{count} / 2000 characters</div>
       <div id={`${id}-field`} className={styles.error}>{fieldError}</div>
-      {error && <p role="alert" className={styles.error}>{error}</p>}
+      {error && <ErrorState  className={styles.error}>{error}</ErrorState>}
       <div data-action-group="section" className={styles.actions}>
         <ActionButton type="button" disabled={busy} onClick={onCancel}>Cancel</ActionButton>
         <ActionButton type="submit" className={styles.confirmReturn} disabled={busy}><FiCornerUpLeft aria-hidden="true" />{busy ? "Returning…" : "Confirm return"}</ActionButton>

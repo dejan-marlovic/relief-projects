@@ -1,3 +1,4 @@
+import { ErrorState } from "../ReadState/ReadState";
 import ActionButton from "../ActionButton/ActionButton";
 import React, { useEffect, useRef } from "react";
 import { FiAlertCircle, FiX } from "react-icons/fi";
@@ -25,10 +26,10 @@ const ErrorBanner = ({ message, onDismiss, className = "" }) => {
   if (!message) return null;
 
   return (
-    <div
+    <ErrorState as="div"
       ref={bannerRef}
       className={`${styles.banner} ${className}`.trim()}
-      role="alert"
+
       aria-live="polite"
     >
       <FiAlertCircle className={styles.icon} aria-hidden="true" />
@@ -44,7 +45,7 @@ const ErrorBanner = ({ message, onDismiss, className = "" }) => {
           <FiX aria-hidden="true" />
         </ActionButton>
       )}
-    </div>
+    </ErrorState>
   );
 };
 

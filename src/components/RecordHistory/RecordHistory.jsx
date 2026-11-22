@@ -1,3 +1,4 @@
+import { LoadingState, ErrorState, EmptyState } from "../ReadState/ReadState";
 import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import ActionButton from "../ActionButton/ActionButton";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
@@ -66,10 +67,10 @@ function HistoryPage({ entityType, entityId, includeChildren }) {
       <span>Activity history · newest first</span>
       {(error) && <ActionButton type="button" disabled={loading} onClick={() => { setPage(0); setRefresh((value) => value + 1); }}>Retry history</ActionButton>}
     </div>
-    {loading && !result && <p role="status">Loading record history…</p>}
-    {error && <p role="alert">{error}</p>}
+    {loading && !result && <LoadingState>Loading record history…</LoadingState>}
+    {error && <ErrorState>{error}</ErrorState>}
     {result && <>
-      {result.content.length === 0 ? <p role="status">No record history yet.</p> :
+      {result.content.length === 0 ? <EmptyState>No record history yet.</EmptyState> :
         <HistoryTimeline aria-label={`${labels[entityType]} #${entityId} history`}>{result.content.map(event => <HistoryEntry key={event.id} title={<>{auditActionLabel(event)}<span> · {auditRecordName(event)}</span></>} at={event.occurredAt} actor={event.performedByDisplay || (event.performedBy ? `User #${event.performedBy} · Name unavailable` : "Unknown user")} references={<p>Entry #{event.id} · {event.entityType || entityType} #{event.entityId || entityId}{event.performedBy != null && <> · User #{event.performedBy}</>}</p>}>
 {event.entityType === "RECIPIENT_RETURN" ? <RecipientReturnAuditDetails event={event} /> : event.entityType === "FUNDING_RETURN" ? <FundingReturnAuditDetails event={event} /> : event.entityType === "OUTGOING_PAYMENT" ? <OutgoingPaymentAuditDetails event={event} /> : event.entityType === "FUNDING_RECEIPT" ? <FundingReceiptAuditDetails event={event} /> : event.entityType === "RECIPIENT" ? <RecipientAuditDetails event={event} /> : event.entityType === "SIGNATURE" ? <SignatureAuditDetails event={event} /> : event.entityType === "COST_DETAIL" ? <CostDetailAuditDetails event={event} /> : event.entityType === "COST_DETAIL_ALLOCATION" ? <AllocationAuditDetails event={event} /> : event.entityType === "PAYMENT_ORDER_LINE" ? <LineAuditDetails event={event} /> : event.action === "UPDATE" ? <AuditFieldChanges event={event} /> : hasAuditTransition(event) ? <>{readable(event.previousState)} → {readable(event.newState)}</> : "—"}<TransactionCurrencyContext event={event} /><PaymentCurrencyContext event={event} /><ReturnReason event={event} /></HistoryEntry>)}</HistoryTimeline>}
       <HistoryPagination page={page} totalPages={result.totalPages} totalElements={result.totalElements} onPage={setPage} disabled={loading} />

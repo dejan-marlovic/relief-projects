@@ -1,3 +1,4 @@
+import { EmptyState } from "../../components/ReadState/ReadState";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import MobileRecordDeck from "../../components/MobileRecordDeck/MobileRecordDeck";
 import useArchivedProject from "../../hooks/useArchivedProject";
@@ -474,7 +475,7 @@ function Recipients() {
               "paymentOrderId": "Booked payment orders are read-only."
             }
           }
-       
+
           safeParseJsonResponse should not crash if the backend returns:
 
             an empty response;
@@ -1223,7 +1224,7 @@ function Recipients() {
           ) : items.length === 0 ? (
             <p className={styles.noData}>No recipients for this project.</p>
           ) : displayedItems.length === 0 ? (
-            <p className={styles.noData}>No recipients match your filters.</p>
+            <EmptyState className={styles.noData}>No recipients match your filters.</EmptyState>
           ) : (
             <MobileRecordDeck key={selectedProjectId} label="Recipient" locked={editingId !== null || saving} creating={editingId === "new"}>
             {displayedItems.map((r, idx) => (

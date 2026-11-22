@@ -1,3 +1,4 @@
+import { LoadingState, ErrorState, EmptyState } from "../ReadState/ReadState";
 import RecordExcerpt from "../RecordCard/RecordExcerpt";
 import AttachmentItem from "../AttachmentItem/AttachmentItem";
 import RecordCard, { RecordCardActions } from "../RecordCard/RecordCard";
@@ -155,10 +156,10 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
   return <div className={styles.panel}>
     <GuidanceNote className={styles.hint}>Record money paid to the recipient. This records a user-entered fact; it does not execute a bank payment or change commitments, signatures or Booked status. These entries do not increase spending capacity and are not bank reconciliation. Voiding corrects an entry; it does not record a refund.</GuidanceNote>
     <div data-action-group="section" className={styles.actions}>{(loadError || error || documentError || !!pending) && <ActionButton type="button" disabled={busy || loading} onClick={refresh}>Retry payments</ActionButton>}{can("create") && !form && !pending && <ActionButton type="button" onClick={() => open("create")}>Record outgoing payment</ActionButton>}</div>
-    {initialLoading && <p role="status">Loading payments…</p>}
-    {loadError && <p role="alert">{loadError}</p>}
-    {error && <p role="alert">{error}{(form || pending) && " Your input has been retained. Reload and review before making a new attempt."}</p>}
-    {pending && <div role="alert"><p>A payment request needs confirmation. Retry sends the exact same request and cannot create a duplicate for this request key. Do not enter it again as a new payment.</p><ActionButton type="button" disabled={busy} onClick={() => send(pending)}>Retry same request</ActionButton></div>}
+    {initialLoading && <LoadingState>Loading payments…</LoadingState>}
+    {loadError && <ErrorState>{loadError}</ErrorState>}
+    {error && <ErrorState>{error}{(form || pending) && " Your input has been retained. Reload and review before making a new attempt."}</ErrorState>}
+    {pending && <ErrorState as="div" ><p>A payment request needs confirmation. Retry sends the exact same request and cannot create a duplicate for this request key. Do not enter it again as a new payment.</p><ActionButton type="button" disabled={busy} onClick={() => send(pending)}>Retry same request</ActionButton></ErrorState>}
     {related && <aside ref={relatedRef} style={{ scrollMarginTop: 16 }} className={styles.entry} aria-label="Related payment">
       <h4><RecordIcon type="payment" />Related payment #{related.id} · {related.organization?.name || "Name unavailable"} · {related.status}</h4>
       <p>{paymentMoney(related.amount)} {paymentCurrency(related.currency)} · Paid on {related.paidDate}</p>
@@ -199,7 +200,7 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
         {form.kind === "remove" && <p>Remove the association to {form.document.documentName}? The file and historical audit evidence remain.</p>}
         {evidenceForm && <>
           <label><input type="checkbox" checked={historical} onChange={event => { setHistorical(event.target.checked); setForm(current => ({ ...current, documentIds: [], documentId: "" })); }} /> Include active historical document versions</label>
-          {documentError && <p role="alert">{documentError}</p>}
+          {documentError && <ErrorState>{documentError}</ErrorState>}
           <label>{form.kind === "add" ? "Exact document version" : "Evidence versions (optional; select one or more)"}<SearchableSelect documentOptions multiple={form.kind !== "add"} required={form.kind === "add"} value={form.kind === "add" ? form.documentId : form.documentIds} onChange={event => form.kind === "add" ? change("documentId", event.target.value) : change("documentIds", Array.from(event.target.selectedOptions, option => option.value))}>
             {form.kind === "add" && <option value="">Select a document version</option>}
             {documents.filter(doc => form.kind !== "add" || !form.payment.documents?.some(link => link.documentId === doc.id)).map(doc => <option key={doc.id} value={doc.id}>{doc.documentName} · v{doc.versionNumber} · {doc.status || "Unknown status"} · {doc.isCurrent ? "Current" : "Historical"} (#{doc.id})</option>)}
@@ -211,7 +212,7 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
       <div data-action-group="section" className={styles.actions}><ActionButton type="button" disabled={busy} onClick={() => { setForm(null); setError(""); }}>Cancel</ActionButton><ActionButton type="button" disabled={busy || loading} onClick={refresh}>Reload for review (keep input)</ActionButton></div>
       {form.payment && data && !data.content.some(row => row.id === form.payment.id && row.revision === form.payment.revision) && <p role="status">This draft keeps the original revision. Cancel and reopen the action after reviewing current payments to use a new revision.</p>}
     </ScrollToForm>}
-    {!initialLoading && data?.content.length === 0 && <p>No payments on this page.</p>}
+    {!initialLoading && data?.content.length === 0 && <EmptyState>No payments on this page.</EmptyState>}
     {data?.content.map(payment => <RecordCard as="article" type="payment" label={<> Payment </>}  key={payment.id} className={`${styles.entry} ${payment.status === "VOIDED" ? styles.voided : ""}`} aria-label={`Payment ${payment.id}`}>
       <h4>Payment #{payment.id} · {payment.organization?.name || "Name unavailable"} · {payment.status === "VOIDED" ? "Voided" : "Recorded"}</h4>
       <p><strong>{paymentMoney(payment.amount)} {paymentCurrency(payment.currency)}</strong> · Paid on {payment.paidDate}</p>
@@ -223,7 +224,7 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
       {payment.replacementPaymentId && <p>Replaced by <ActionButton type="button" onClick={() => showRelated(payment.replacementPaymentId)}>payment #{payment.replacementPaymentId}</ActionButton>.</p>}
       <ul className={styles.evidence}>{payment.documents?.map(doc => <AttachmentItem key={doc.documentId}><DocumentLabel>{doc.documentName}</DocumentLabel> · v{doc.versionNumber} · {doc.status || "Unknown status"}{doc.hasNewerVersion && " · Newer version exists; this evidence retains its version"}{!doc.downloadEligible && " · Unavailable for download"}<RecordCardActions as="div" placement="section" className={styles.actions}><ActionButton type="button" disabled={!doc.downloadEligible || downloading != null} onClick={() => download(doc.documentId)}>Download evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</ActionButton>{payment.status === "RECORDED" && can("remove", payment) && <ActionButton editorBlocked={Boolean(form)} type="button" disabled={busy || !!form || !!pending} onClick={() => open("remove", payment, doc)}>Remove evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</ActionButton>}</RecordCardActions></AttachmentItem>)}</ul>
       <details><summary>Payment action availability</summary>{[...(payment.eligibility?.voidIssues || []), ...(payment.eligibility?.correctionIssues || []), ...(payment.eligibility?.evidenceIssues || [])].filter((issue, index, all) => all.findIndex(item => item.code === issue.code && item.message === issue.message) === index).map((issue, index) => <p key={index}>{issue.message}</p>)}</details>
-      {!payment.documents?.length && <p className={styles.hint}>No evidence linked.</p>}
+      {!payment.documents?.length && <EmptyState className={styles.hint}>No evidence linked.</EmptyState>}
       {payment.status === "RECORDED" && <RecordCardActions as="div" placement="section" className={styles.actions}>{[["add", "Add evidence"], ["correct", "Correct payment"], ["void", "Void payment"]].map(([kind, label]) => can(kind, payment) && <ActionButton editorBlocked={Boolean(form)} key={kind} type="button" disabled={busy || !!form || !!pending} onClick={() => open(kind, payment)}>{label} #{payment.id} · {payment.organization?.name || "Name unavailable"}</ActionButton>)}</RecordCardActions>}
       {payment.returns ? <RecipientReturns payment={{ ...payment, paymentOrderId }} refreshKey={`${revision}:${refreshKey}`} editingLocked={editingLocked || busy || !!form || !!pending} onChanged={() => { refresh(); onChanged?.(); }} /> : <p className={styles.hint}>Recipient-return information unavailable. Refresh after backend deployment; missing information does not mean zero returns.</p>}
     </RecordCard>)}

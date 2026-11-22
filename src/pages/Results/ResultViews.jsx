@@ -8,7 +8,7 @@ import { uploadTimeLabel } from "../../utils/documentMetadata";
 import styles from "./Results.module.scss";
 
 export function Issues({ issues = [] }) { return issues.map((issue, i) => <div className={styles.attention} key={i} role="note"><strong>Needs attention</strong><p>{issue.message}</p></div>); }
-export function ReadState({ state, onRetry = state.retry, retryLabel = "Retry", retryDisabled = false }) { return <>{state.loading && state.data == null && <p role="status">Loading…</p>}{state.error && <p role="alert">{state.error} {onRetry ? <ActionButton type="button" disabled={state.loading || retryDisabled} onClick={onRetry}>{retryLabel}</ActionButton> : "Reload the page to try again."}</p>}</>; }
+export { default as ReadState } from "../../components/ReadState/ReadState";
 export function Pagination({ data, page, setPage, label, disabled, history = false }) {
   if (history) return <HistoryPagination page={page} totalPages={data?.totalPages} totalElements={data?.totalElements} onPage={setPage} disabled={disabled} />;
   return <div data-action-group="section" className={styles.actions}><ActionButton type="button" disabled={disabled || !page} onClick={() => setPage(n => n - 1)}>Previous {label}</ActionButton><span>{data?.totalElements ?? "…"} entries · Page {data?.totalPages ? page + 1 : 0} of {data?.totalPages ?? "…"}</span><ActionButton type="button" disabled={disabled || !data || page + 1 >= data.totalPages} onClick={() => setPage(n => n + 1)}>Next {label}</ActionButton></div>;

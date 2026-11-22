@@ -1,3 +1,4 @@
+import { ErrorState, LoadingState, EmptyState } from "../../components/ReadState/ReadState";
 import FilterPanel from "../../components/FilterPanel/FilterPanel";
 import RecordHeader from "../../components/RecordHeader/RecordHeader";
 import RecordExcerpt from "../../components/RecordCard/RecordExcerpt";
@@ -67,9 +68,9 @@ function History({ risk, endpoint, authFetch, onClose }) {
   }, [endpoint, authFetch, risk.id, page, attempt]);
   return <section className={styles.panel} aria-label="Risk history"><h3>History: {risk.title}</h3><HistoryIntro>Review changes to the risk assessment, mitigation and closure decision. A scheduled review date alone does not prove a review occurred.</HistoryIntro>
     <span data-action-group="section"><ActionButton onClick={onClose}><RecordIcon type="close" />Close history</ActionButton></span>
-    {error ? <p role="alert">{error} <ActionButton onClick={() => setAttempt(v => v + 1)}>Retry history</ActionButton></p> : !data && <p role="status">Loading history…</p>}
+    {error ? <ErrorState>{error} <ActionButton onClick={() => setAttempt(v => v + 1)}>Retry history</ActionButton></ErrorState> : !data && <LoadingState>Loading history…</LoadingState>}
     {data && <><HistoryTimeline>{data.content.map(event => <SnapshotHistoryEntry key={event.id} event={event} title={({ CREATE: "Created", UPDATE: "Details changed", CLOSE: "Closed", REOPEN: "Reopened", DELETE: "Deleted", RESTORE: "Restored" })[event.action] || event.action} Snapshot={Snapshot} />)}</HistoryTimeline>
-      {!data.content.length && <p>No history on this page.</p>}
+      {!data.content.length && <EmptyState>No history on this page.</EmptyState>}
       <HistoryPagination page={page} totalPages={data?.totalPages} totalElements={data?.totalElements} onPage={setPage} disabled={!data} />
     </>}
   </section>;
@@ -109,7 +110,7 @@ function Editor({ editor, employees, busy, blocked, onDraft, onSave, onCancel, l
         </div>
         <label>Mitigation plan (optional)<textarea rows={4} value={draft.mitigationPlan} onChange={e => onDraft("mitigationPlan", e.target.value)} /></label>
       </> : ["close", "reopen"].includes(action) ? <label>Reason<textarea required rows={3} value={draft.reason || ""} onChange={e => onDraft("reason", e.target.value)} /></label> : <p>{action === "delete" ? "Delete this risk? Its history is retained. An administrator can restore it." : "Restore this risk with its previous open or closed status?"}</p>}
-      {error && <p role="alert">{error}</p>}
+      {error && <ErrorState>{error}</ErrorState>}
       <div data-action-group="section" className={styles.actions}><ActionButton type="submit" disabled={blocked}>{editing ? "Save risk" : "Confirm " + action}</ActionButton><ActionButton type="button" onClick={onCancel}><RecordIcon type="close" />Close editor</ActionButton><ActionButton type="button" onClick={onDiscard}>Discard unfinished entries</ActionButton></div>
     </fieldset>
   </ScrollToForm>;
@@ -257,7 +258,7 @@ function Register({ projectId, authFetch }) {
       <label><input type="checkbox" checked={filters.overdue} disabled={locked || filters.status !== "OPEN" || filters.deleted} onChange={e => changeFilter("overdue", e.target.checked)} /> Overdue reviews only</label>
       <label><input type="checkbox" checked={filters.deleted} disabled={locked} onChange={e => changeFilter("deleted", e.target.checked)} /> Deleted risks only</label>
     </FilterPanel>
-    {loading && !data && <p role="status">Loading risks…</p>}{error && <p role="alert">{error}</p>}{employeeError && <p role="alert">{employeeError} Use Retry register to retry.</p>}
+    {loading && !data && <LoadingState>Loading risks…</LoadingState>}{error && <ErrorState>{error}</ErrorState>}{employeeError && <ErrorState>{employeeError} Use Retry register to retry.</ErrorState>}
     {notice && <p role={blocked ? "alert" : "status"}>{notice}</p>}
     {editor && <>
       <Editor key={editor.action} editor={editor} employees={employees} busy={busy} blocked={blocked} onDraft={(key, value) => setEditor(old => ({ ...old, autoPaused: false, draft: { ...old.draft, [key]: value } }))} onSave={mutate} onCancel={cancelEditor} localSaved={localSaved} onDiscard={() => { if (window.confirm("Discard unfinished entries? Changes already saved to the project will remain.")) { clearAssessmentDraft(editor.storageKey); setEditor(null); setBlocked(false); setLatest(null); setNotice(""); setAttempt(v => v + 1); } }} />
@@ -273,7 +274,7 @@ function Register({ projectId, authFetch }) {
     {data && <>
       <p className={styles.muted}>Business date: {data.today} · {data.businessTimezone}. Review dates are the next planned review, not evidence that a review took place.</p>
       {data.projectDeleted && <p>This project is inactive. Its risks and history are read-only.</p>}
-      {!loading && !data.content.length && <p>No risks match these filters.</p>}
+      {!loading && !data.content.length && <EmptyState>No risks match these filters.</EmptyState>}
       <ul className={styles.list}>{data.content.map(risk => <RecordCard as="li" type="record" label={<> Risk </>}  data-mobile-tile={risk.title} key={risk.id}>
         <RecordHeader as="div" className={styles.heading}><h3>{risk.title}</h3><span>{buckets[risk.reviewBucket] || risk.reviewBucket}{risk.isDeleted ? " · Deleted" : ""}</span></RecordHeader>
         <p>{risk.ownerName}{risk.ownerInactive ? " (inactive employee)" : ""} · Review {risk.reviewDate} · {risk.status === "CLOSED" ? "Closed" : "Open"}</p>

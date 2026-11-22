@@ -1,3 +1,4 @@
+import { ErrorState } from "../ReadState/ReadState";
 import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import React from "react";
 import { classificationFields } from "../../utils/projectClassification";
@@ -10,7 +11,7 @@ export default function ClassificationFields({ values, onChange, errors = {}, di
       {label} (optional)
       {name === "targetGroupDescription" ? <textarea name={name} value={values[name] || ""} onChange={onChange} disabled={disabled} aria-invalid={!!errors[name]} placeholder="Not recorded" /> : <input name={name} value={values[name] || ""} onChange={onChange} disabled={disabled} aria-invalid={!!errors[name]} placeholder="Not recorded" />}
       <small>{(values[name] || "").length} / {max} characters</small>
-      {errors[name] && <span role="alert">{errors[name]}</span>}
+      {errors[name] && <ErrorState as="span" >{errors[name]}</ErrorState>}
     </label>)}
     <GuidanceNote className={styles.hint}>Changing the target group can require assessment resubmission before approval, or review of an existing approval. Language titles alone do not affect assessment decisions.</GuidanceNote>
   </div>;

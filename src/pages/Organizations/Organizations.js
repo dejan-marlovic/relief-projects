@@ -1,3 +1,4 @@
+import { EmptyState } from "../../components/ReadState/ReadState";
 import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import MobileRecordDeck from "../../components/MobileRecordDeck/MobileRecordDeck";
@@ -448,11 +449,11 @@ const Organizations = () => {
               Select a project to see its organizations.
             </p>
           ) : links.length === 0 ? (
-            <p className={styles.noData}>
+            <EmptyState className={styles.noData}>
               No organizations linked to this project.
-            </p>
+            </EmptyState>
           ) : displayedLinks.length === 0 ? (
-            <p className={styles.noData}>No organizations match your filters.</p>
+            <EmptyState className={styles.noData}>No organizations match your filters.</EmptyState>
           ) : (
             <MobileRecordDeck key={selectedProjectId} label="Organization" locked={editingId !== null || saving} creating={editingId === "new"}>
             {displayedLinks.map((link) => (

@@ -1,3 +1,4 @@
+import { EmptyState } from "../../../components/ReadState/ReadState";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import RecordIcon from "../../../components/RecordIcon/RecordIcon";
 import { useOpenEditor } from "../../../context/OpenEditorContext";
@@ -359,7 +360,7 @@ const AddressDetails = ({ organizationId, canManage = false }) => {
       {canManage && <p>Existing details save automatically after a short typing pause or when you leave a field. Wait for the corner save notification before leaving. New records still require Save.</p>}
     <AutosaveStatus save={autosave} />
     {formError && <ErrorBanner message={formError} onDismiss={() => setFormError("")} />}
-      {!associations.length && editingId !== "new" && <p className={styles.noData}>No active addresses linked to this organization.</p>}
+      {!associations.length && editingId !== "new" && <EmptyState className={styles.noData}>No active addresses linked to this organization.</EmptyState>}
 
       <div className={styles.table}>
         <div className={`${styles.gridRow} ${styles.headerRow}`}>

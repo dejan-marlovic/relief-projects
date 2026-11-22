@@ -1,3 +1,4 @@
+import { ErrorState } from "../ReadState/ReadState";
 import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import ActionButton from "../ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
@@ -94,9 +95,9 @@ export default function ApprovalDialog({ endpoint, recordLabel, onRefresh, onSuc
         {record.approvedAmount != null && <p>Approved funding: {record.approvedAmount}</p>}
         {record.amount != null && <p>Amount: {record.amount}</p>}
         <GuidanceNote>Review the record and its supporting details before confirming. Financial prerequisites are checked again when you approve.</GuidanceNote></>}
-      {eligibility?.issues?.map((issue, index) => <p role="alert" key={index}>{issue.message}</p>)}
-      {basis && !allowed && !eligibility?.issues?.length && <p role="alert">Approval is unavailable for this submission.</p>}
-      {error && <p role="alert" className={styles.error}>{error}</p>}
+      {eligibility?.issues?.map((issue, index) => <ErrorState  key={index}>{issue.message}</ErrorState>)}
+      {basis && !allowed && !eligibility?.issues?.length && <ErrorState>Approval is unavailable for this submission.</ErrorState>}
+      {error && <ErrorState  className={styles.error}>{error}</ErrorState>}
       {allowed && <label><input type="checkbox" checked={reviewed} disabled={busy} onChange={event => setReviewed(event.target.checked)} /> I have reviewed this submission and its supporting details.</label>}
       <div data-action-group="section" className={styles.actions}>
         <ActionButton type="button" disabled={busy} onClick={onCancel}><RecordIcon type="close" />Close</ActionButton>

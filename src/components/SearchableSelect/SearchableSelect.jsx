@@ -1,3 +1,4 @@
+import { EmptyState } from "../ReadState/ReadState";
 import ActionButton from "../ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import DocumentLabel from "../DocumentLabel/DocumentLabel";
@@ -102,7 +103,7 @@ const SearchableSelect = forwardRef(function SearchableSelect({ children, onMous
             {option.selected && <span aria-hidden="true">✓ </span>}{option.group && `${option.group} — `}{documentOptions && option.value ? <DocumentLabel>{option.label}</DocumentLabel> : option.label}
           </li>)}
         </ul>
-        {!matches.length && <p role="status">No matching options</p>}
+        {!matches.length && <EmptyState>No matching options</EmptyState>}
         <span data-action-group="section"><ActionButton type="button" onClick={close}><RecordIcon type="close" />Close</ActionButton></span>
       </div>
     </div>, document.body)}

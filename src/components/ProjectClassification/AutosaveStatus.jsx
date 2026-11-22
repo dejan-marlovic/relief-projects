@@ -1,3 +1,4 @@
+import { ErrorState } from "../ReadState/ReadState";
 import ActionButton from "../ActionButton/ActionButton";
 import React from "react";
 
@@ -5,7 +6,7 @@ const labels = { organizationId: "Organisation", organizationStatusId: "Organisa
 export default function AutosaveStatus({ save }) {
   return <div aria-live="polite">
     {save.message && save.message !== "Saved" && !save.error && <p role="status">{save.message}</p>}
-    {save.error && <><p role="alert">{save.error}</p>
+    {save.error && <><ErrorState>{save.error}</ErrorState>
       {save.conflicts && <><p>Currently saved values:</p><ul>{Object.entries(save.conflicts).map(([key, value]) => <li key={key}>{labels[key] || key}: {String(value ?? "Not recorded")}</li>)}</ul></>}
       {save.conflicts?.projectCoverImage !== undefined ? <p>The picture list changed. Copy your caption, reload the page and apply it to the correct picture.</p> : <ActionButton type="button" disabled={save.busy} onClick={save.conflicts ? save.acceptConflicts : save.retry}>{save.conflicts ? "Keep my edits and retry" : "Retry saving"}</ActionButton>}
     </>}

@@ -1,3 +1,4 @@
+import { LoadingState, ErrorState, EmptyState } from "../ReadState/ReadState";
 import RecordExcerpt from "../RecordCard/RecordExcerpt";
 import AttachmentItem from "../AttachmentItem/AttachmentItem";
 import RecordCard, { RecordCardActions } from "../RecordCard/RecordCard";
@@ -156,10 +157,10 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
   return <div className={styles.panel}>
     <GuidanceNote className={styles.hint}>Record incoming money against approved funding. These entries do not increase spending capacity and are not bank reconciliation. Voiding corrects an entry; it does not record a refund.</GuidanceNote>
     <div data-action-group="section" className={styles.actions}>{(loadError || error || documentError || !!pending) && <ActionButton type="button" disabled={busy || loading} onClick={refresh}>Retry receipts</ActionButton>}{can("create") && !form && !pending && <ActionButton type="button" onClick={() => open("create")}>Record funding receipt</ActionButton>}</div>
-    {initialLoading && <p role="status">Loading receipts…</p>}
-    {loadError && <p role="alert">{loadError}</p>}
-    {error && <p role="alert">{error}{(form || pending) && " Your input has been retained. Reload and review before making a new attempt."}</p>}
-    {pending && <div role="alert"><p>A receipt request needs confirmation. Retry sends the exact same request and cannot create a duplicate for this request key. Do not enter it again as a new receipt.</p><ActionButton type="button" disabled={busy} onClick={() => send(pending)}>Retry same request</ActionButton></div>}
+    {initialLoading && <LoadingState>Loading receipts…</LoadingState>}
+    {loadError && <ErrorState>{loadError}</ErrorState>}
+    {error && <ErrorState>{error}{(form || pending) && " Your input has been retained. Reload and review before making a new attempt."}</ErrorState>}
+    {pending && <ErrorState as="div" ><p>A receipt request needs confirmation. Retry sends the exact same request and cannot create a duplicate for this request key. Do not enter it again as a new receipt.</p><ActionButton type="button" disabled={busy} onClick={() => send(pending)}>Retry same request</ActionButton></ErrorState>}
     {related && <aside ref={relatedRef} style={{ scrollMarginTop: 16 }} className={styles.entry} aria-label="Related receipt">
       <h4><RecordIcon type="transaction" />Related receipt #{related.id} · {related.financier?.name || "Name unavailable"} · {related.status}</h4>
       <p>{receiptMoney(related.amount)} {receiptCurrency(related.currency)} · Arrived {related.receivedDate}</p>
@@ -196,7 +197,7 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
         {form.kind === "remove" && <p>Remove the association to {form.document.documentName}? The file and historical audit evidence remain.</p>}
         {evidenceForm && <>
           <label><input type="checkbox" checked={historical} onChange={event => { setHistorical(event.target.checked); setForm(current => ({ ...current, documentIds: [], documentId: "" })); }} /> Include active historical document versions</label>
-          {documentError && <p role="alert">{documentError}</p>}
+          {documentError && <ErrorState>{documentError}</ErrorState>}
           <label>{form.kind === "add" ? "Exact document version" : "Evidence versions (optional; select one or more)"}<SearchableSelect documentOptions multiple={form.kind !== "add"} required={form.kind === "add"} value={form.kind === "add" ? form.documentId : form.documentIds} onChange={event => form.kind === "add" ? change("documentId", event.target.value) : change("documentIds", Array.from(event.target.selectedOptions, option => option.value))}>
             {form.kind === "add" && <option value="">Select a document version</option>}
             {documents.filter(doc => form.kind !== "add" || !form.receipt.documents?.some(link => link.documentId === doc.id)).map(doc => <option key={doc.id} value={doc.id}>{doc.documentName} · v{doc.versionNumber} · {doc.status || "Unknown status"} · {doc.isCurrent ? "Current" : "Historical"} (#{doc.id})</option>)}
@@ -208,7 +209,7 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
       <div data-action-group="section" className={styles.actions}><ActionButton type="button" disabled={busy} onClick={() => { setForm(null); setError(""); }}>Cancel</ActionButton><ActionButton type="button" disabled={busy || loading} onClick={refresh}>Reload for review (keep input)</ActionButton></div>
       {form.receipt && data && !data.content.some(row => row.id === form.receipt.id && row.revision === form.receipt.revision) && <p role="status">This draft keeps the original revision. Cancel and reopen the action after reviewing current receipts to use a new revision.</p>}
     </ScrollToForm>}
-    {!initialLoading && data?.content.length === 0 && <p>No receipts on this page.</p>}
+    {!initialLoading && data?.content.length === 0 && <EmptyState>No receipts on this page.</EmptyState>}
     {data?.content.map(receipt => <RecordCard as="article" type="transaction" label={<> Receipt </>}  key={receipt.id} className={`${styles.entry} ${receipt.status === "VOIDED" ? styles.voided : ""}`} aria-label={`Receipt ${receipt.id}`}>
       <h4>Receipt #{receipt.id} · {receipt.financier?.name || "Name unavailable"} · {receipt.status === "VOIDED" ? "Voided" : "Recorded"}</h4>
       <p><strong>{receiptMoney(receipt.amount)} {receiptCurrency(receipt.currency)}</strong> · Arrived {receipt.receivedDate}</p>
@@ -219,7 +220,7 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
       {receipt.replacesReceiptId && <p>Corrects <ActionButton type="button" onClick={() => showRelated(receipt.replacesReceiptId)}>receipt #{receipt.replacesReceiptId}</ActionButton>.</p>}
       {receipt.replacementReceiptId && <p>Replaced by <ActionButton type="button" onClick={() => showRelated(receipt.replacementReceiptId)}>receipt #{receipt.replacementReceiptId}</ActionButton>.</p>}
       <ul className={styles.evidence}>{receipt.documents?.map(doc => <AttachmentItem key={doc.documentId}><DocumentLabel>{doc.documentName}</DocumentLabel> · v{doc.versionNumber} · {doc.status || "Unknown status"}{doc.hasNewerVersion && " · Newer version exists; this evidence retains its version"}{!doc.downloadEligible && " · Unavailable for download"}<RecordCardActions as="div" placement="section" className={styles.actions}><ActionButton type="button" disabled={!doc.downloadEligible || downloading != null} onClick={() => download(doc.documentId)}>Download evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</ActionButton>{receipt.status === "RECORDED" && can("remove") && <ActionButton editorBlocked={Boolean(form)} type="button" disabled={busy || !!form || !!pending} onClick={() => open("remove", receipt, doc)}>Remove evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</ActionButton>}</RecordCardActions></AttachmentItem>)}</ul>
-      {!receipt.documents?.length && <p className={styles.hint}>No evidence linked.</p>}
+      {!receipt.documents?.length && <EmptyState className={styles.hint}>No evidence linked.</EmptyState>}
       {receipt.returns?.blocksSourceChanges && <p>Recorded returns prevent correcting or voiding this receipt. Do not void genuine returned money to bypass this guard.</p>}
       {receipt.returns?.sourceChangeIssues?.map(issue => <p key={issue.code}>{issue.message}</p>)}
       {receipt.status === "RECORDED" && <RecordCardActions as="div" placement="section" className={styles.actions}>{[["add", "Add evidence"], ["correct", "Correct receipt"], ["void", "Void receipt"]].map(([kind, label]) => can(kind) && <ActionButton editorBlocked={Boolean(form)} key={kind} type="button" disabled={busy || !!form || !!pending || (["correct", "void"].includes(kind) && receipt.returns?.blocksSourceChanges)} onClick={() => open(kind, receipt)}>{label} #{receipt.id} · {receipt.financier?.name || "Name unavailable"}</ActionButton>)}</RecordCardActions>}

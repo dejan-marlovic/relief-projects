@@ -1,3 +1,4 @@
+import { ErrorState } from "../../components/ReadState/ReadState";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import DocumentLabel from "../../components/DocumentLabel/DocumentLabel";
 import { namedReference } from "../../utils/recordLabels";
@@ -76,7 +77,7 @@ export function ReportContent({ data, onDownload, downloading, downloadError }) 
     <Table title="Recorded signature metadata" headers={["Signature", "Named employee", "Recorded status", "Date (local)"]} rows={data.signatures.map(row => [`#${row.id}`, identity(row.employee), identity(row.status), value(row.signatureDate)])} />
     <p>Recorded signature metadata does not verify a signature on this report. The named employee is not necessarily the user who entered the record.</p>
     <section><h2>Exact-version supporting-document index</h2><p>Current associations only, including evidence on voided payments and recipient returns. Removed associations remain outside this report. FINAL is a document status, not proof of signing. Download permission and storage availability are checked again when requested.</p>
-      {downloadError && <p role="alert" className={styles.noPrint}>{downloadError}</p>}
+      {downloadError && <ErrorState  className={styles.noPrint}>{downloadError}</ErrorState>}
       {!data.documents.length && <p>No current supporting-document associations.</p>}
       {data.documents.map(({ document: doc, associations }) => <div className={styles.document} key={doc.documentId}>
         <h3><DocumentLabel>{doc.documentName || "Name unavailable"} · Document #{doc.documentId}</DocumentLabel></h3>
@@ -119,7 +120,7 @@ export default function PaymentOrderReport() {
   async function download(documentId) { setDownloading(documentId); setDownloadError(""); try { await downloadDocument(documentId, authFetch); } catch (e) { setDownloadError(e.message); } finally { setDownloading(null); } }
   return <main className={styles.page}>
     <nav className={styles.noPrint} aria-label="Report actions"><a href="/payments">Payments</a><ActionButton disabled={loading} onClick={() => setRefresh(n => n + 1)}>Refresh whole report</ActionButton><ActionButton disabled={loading || !data || !!error} onClick={() => window.print()}>Print / Save as PDF</ActionButton></nav>
-    {loading && <p>Loading payment-order report…</p>}{error && <p role="alert">{error}</p>}
+    {loading && <p>Loading payment-order report…</p>}{error && <ErrorState>{error}</ErrorState>}
     {data && !error && <ReportContent data={data} onDownload={download} downloading={downloading} downloadError={downloadError} />}
   </main>;
 }

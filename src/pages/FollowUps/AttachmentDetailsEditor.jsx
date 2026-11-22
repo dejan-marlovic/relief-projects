@@ -1,3 +1,4 @@
+import { ErrorState, LoadingState } from "../../components/ReadState/ReadState";
 import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
@@ -61,8 +62,8 @@ export default function AttachmentDetailsEditor({ item, projectId, authFetch, ca
   }} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) save.flush(); }}>
     <h5>Edit details · {item.documentName}</h5>
     <GuidanceNote className={styles.muted}>These document details are shared everywhere this version is linked. Changes save after a short pause or when you leave the form. Final is a label, not approval or proof of signing.</GuidanceNote>
-    {error && <p role="alert">{error} <ActionButton type="button" onClick={() => setAttempt(n => n + 1)}>Retry document details</ActionButton></p>}
-    {!form && !error && <p role="status">Loading document details…</p>}
+    {error && <ErrorState>{error} <ActionButton type="button" onClick={() => setAttempt(n => n + 1)}>Retry document details</ActionButton></ErrorState>}
+    {!form && !error && <LoadingState>Loading document details…</LoadingState>}
     <div className={styles.saveFeedback}><AutosaveStatus save={save} /></div>
     {form && <><div className={styles.grid}>
       <label>Category<SearchableSelect autoFocus value={form.category} disabled={disabled || save.busy} onChange={e => edit("category", e.target.value)}>{categories.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}</SearchableSelect></label>

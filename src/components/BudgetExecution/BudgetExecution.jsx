@@ -1,3 +1,4 @@
+import { LoadingState, ErrorState } from "../ReadState/ReadState";
 import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import ActionButton from "../ActionButton/ActionButton";
 import { budgetOptionLabel } from "../../utils/budgetDisplay";
@@ -65,9 +66,9 @@ export default function BudgetExecution({ familyId, budgetId, budgets = [], disa
     <h4>Financial execution</h4>
     <GuidanceNote className={styles.hint}>Activation applies one set of shared cost ceilings. Existing funding and commitments keep their original references. Uncommitted planned capacity is not available cash or funding.</GuidanceNote>
     {(error || blocked) && <ActionButton disabled={loading || busy} onClick={() => setTick(n => n + 1)}>Retry execution</ActionButton>}
-    {initialLoading && <p role="status">Loading execution…</p>}{error && <p role="alert">{error}</p>}
+    {initialLoading && <LoadingState>Loading execution…</LoadingState>}{error && <ErrorState>{error}</ErrorState>}
     {data && <><dl className={styles.fields}><dt>Status</dt><dd>{data.executionStatus.replaceAll("_", " ")}</dd><dt>Origin budget</dt><dd>{budgetReference(data.originBudgetId)}</dd><dt>Current plan</dt><dd>{data.currentPlanBudgetId == null ? "Not selected" : budgetReference(data.currentPlanBudgetId)}</dd><dt>Executable budget</dt><dd>{data.executableBudgetId == null ? "Not activated; original-budget rules apply" : budgetReference(data.executableBudgetId)}</dd><dt>Currency</dt><dd>{data.currency?.name || "Unknown"} {data.currency?.id != null && `(#${data.currency.id})`}</dd><dt>Coverage</dt><dd>{data.coverage?.capacity?.replaceAll("_", " ") || "Unavailable"}</dd><dt>Retained obligations</dt><dd>{exactAmount(data.obligations)}</dd><dt>Uncommitted planned capacity</dt><dd>{exactAmount(data.uncommittedPlannedCapacity)}</dd></dl>
-      {data.executionStatus === "SUSPENDED" && <p role="alert">Execution suspended. New or increased commitments need explicit reaffirmation with valid donor approval. Retained history and otherwise permitted reductions remain available.</p>}
+      {data.executionStatus === "SUSPENDED" && <ErrorState>Execution suspended. New or increased commitments need explicit reaffirmation with valid donor approval. Retained history and otherwise permitted reductions remain available.</ErrorState>}
       {data.executableBudgetId != null && data.executableBudgetId !== data.currentPlanBudgetId && <p>Current planning and financial execution use different revisions.</p>}
       {(data.issues || []).map((issue, i) => <p key={i}>{issue.message}</p>)}
       <details><summary>Shared cost ceilings</summary><CapacityBasis rows={data.buckets} /></details>
@@ -76,9 +77,9 @@ export default function BudgetExecution({ familyId, budgetId, budgets = [], disa
     {preview && <ScrollToForm className={styles.form} onSubmit={confirm}>
       <h4>Activation preview · {budgetReference(budgetId)}</h4><p>This observation is not a reservation. Saving revalidates all obligations.</p>
       <p>Budget limit: {exactAmount(preview.limit)} · Planned costs: {exactAmount(preview.plannedCosts)} · Governing donor decision #{preview.donorDecisionId ?? "unavailable"} · {preview.donorName || "Name unavailable"}</p>
-      {preview.blockingIssues.map((issue, i) => <p role="alert" key={i}>{issue.message}</p>)}
+      {preview.blockingIssues.map((issue, i) => <ErrorState  key={i}>{issue.message}</ErrorState>)}
       <CapacityBasis rows={preview.basis} />
-      {(stale || blocked) && <p role="alert">This preview cannot be submitted. Review refreshed state/history and request a fresh preview.</p>}
+      {(stale || blocked) && <ErrorState>This preview cannot be submitted. Review refreshed state/history and request a fresh preview.</ErrorState>}
       <label>Activation reason<textarea required maxLength={1000} value={reason} disabled={busy} onChange={e => setReason(e.target.value)} /></label>
       <div data-action-group="section" className={styles.actions}><ActionButton disabled={disabled || busy || loading || !data || blocked || stale || !preview.eligibility.canActivate}>Confirm activation / reaffirmation</ActionButton><ActionButton type="button" disabled={busy} onClick={() => { setPreview(null); setReason(""); setBlocked(false); }}>Cancel activation</ActionButton></div>
     </ScrollToForm>}

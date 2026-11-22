@@ -1,3 +1,4 @@
+import { ErrorState, LoadingState } from "../ReadState/ReadState";
 import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import ActionButton from "../ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
@@ -127,14 +128,14 @@ export default function BudgetCurrencyDialog({ budget, currencies, rates, initia
         <p>Excess: {value(preview.excess)} · Limit rounding adjustment: {value(preview.budgetLimitRoundingDelta)}</p>
         <GuidanceNote className={styles.muted}>Before → after. Unit prices are rounded to 12 decimal places; limits and calculated amounts to 3, using HALF_UP. Rounding adjustments are in the new local currency. Remaining is planning capacity.</GuidanceNote>
         {(preview.costDetails || []).map((row) => <details key={row.costDetailId} className={styles.row}><summary>Cost detail #{row.costDetailId} · {row.costDescription || budget.costDetails?.find(cost => String(cost.costDetailId) === String(row.costDetailId))?.costDescription || "Name unavailable"} · Local: <Pair pair={row.amountLocalCurrency} /></summary><dl>{Object.entries(columns).map(([key, label]) => <div key={key}><dt>{label}</dt><dd><Pair pair={row[key]} /></dd></div>)}</dl><p>Unit-price rounding adjustment: {value(row.unitPriceRoundingDelta)}</p></details>)}
-        {(preview.blockingIssues || []).map((issue, index) => <p role="alert" key={index}>{issue.message}{issue.costDetailIds?.length > 0 && ` (Cost details: ${issue.costDetailIds.join(", ")})`}</p>)}
+        {(preview.blockingIssues || []).map((issue, index) => <ErrorState  key={index}>{issue.message}{issue.costDetailIds?.length > 0 && ` (Cost details: ${issue.costDetailIds.join(", ")})`}</ErrorState>)}
         {(preview.warnings || []).map((issue, index) => <p key={index}>Warning: {issue.message}{issue.costDetailIds?.length > 0 && ` (Cost details: ${issue.costDetailIds.join(", ")})`}</p>)}
         {preview.eligible && preview.previewToken && <><p>Preview expires: {preview.expiresAt ? new Date(preview.expiresAt).toLocaleString() : "Unknown"}.</p><label className={styles.acknowledge}><input type="checkbox" checked={acknowledged} disabled={busy} onChange={(event) => setAcknowledged(event.target.checked)} /> I have reviewed the rates, converted values and rounding, and want to convert the saved budget and cost details.</label><ActionButton disabled={busy || dirty || !acknowledged || mustReload} onClick={() => request(true)}>Confirm conversion</ActionButton></>}
       </section>}
     </section>}
-    {error && <p role="alert" className={styles.notice}>{error}</p>}
+    {error && <ErrorState  className={styles.notice}>{error}</ErrorState>}
     {mustReload && <ActionButton disabled={busy} onClick={reload}>Reload saved budget</ActionButton>}
-    {busy && <p role="status">Loading…</p>}
+    {busy && <LoadingState>Loading…</LoadingState>}
     <div data-action-group="section" className={styles.actions}><ActionButton disabled={busy || mustReload} onClick={onClose}><RecordIcon type="close" />Close</ActionButton></div>
   </dialog>, document.body);
 }

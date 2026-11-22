@@ -1,3 +1,4 @@
+import { LoadingState, ErrorState } from "../ReadState/ReadState";
 import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import ActionButton from "../ActionButton/ActionButton";
 import useRefreshLoading from "../../hooks/useRefreshLoading";
@@ -54,7 +55,7 @@ export default function BudgetPlanning({ budget, refreshKey = 0, disabled = fals
     <h3>Budget planning</h3>
     <GuidanceNote className={styles.muted}>Remaining to allocate is room for planned costs, not cash or a payment balance.</GuidanceNote>
     {(error) && <ActionButton type="button" disabled={busy || loading} onClick={() => setRefresh((v) => v + 1)}>Retry planning summary</ActionButton>}
-    {initialLoading && <p role="status">Loading planning summary…</p>}{error && <p role="alert">{error}</p>}{message && <p role="status">{message}</p>}
+    {initialLoading && <LoadingState>Loading planning summary…</LoadingState>}{error && <ErrorState>{error}</ErrorState>}{message && <p role="status">{message}</p>}
     {summary && <>
       <p><strong>{labels[summary.status] || summary.status}</strong></p>
       <dl className={styles.totals}><div><dt>Budget limit ({summary.localCurrency?.name || "currency unavailable"}){!summary.limitCurrencyConfirmed ? " — meaning unconfirmed" : ""}</dt><dd>{summary.budgetLimit ?? "Unavailable"}</dd></div><div><dt>Planned costs</dt><dd>{summary.plannedCosts ?? "Unavailable"}</dd></div><div><dt>Remaining to allocate</dt><dd>{summary.remainingToAllocate ?? "Unavailable"}</dd></div></dl>

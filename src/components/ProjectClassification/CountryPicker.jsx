@@ -1,3 +1,4 @@
+import { ErrorState } from "../ReadState/ReadState";
 import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import ActionButton from "../ActionButton/ActionButton";
 import React, { useState } from "react";
@@ -14,8 +15,8 @@ export default function CountryPicker({ codes = [], savedCountries = [], catalog
     <GuidanceNote className={styles.hint}>Where project activities are intended to operate. This is separate from Address and beneficiary nationality. Empty means not recorded, not global coverage.</GuidanceNote>
     {codes.length ? <ul className={styles.selectedCountries}>{selected.map(entry => <li key={entry.code}>{countryLabel(entry)} <span data-action-group="section"><ActionButton className={styles.removeCountry} type="button" disabled={locked} onClick={() => onChange(codes.filter(code => code !== entry.code))}>Remove {entry.code}</ActionButton></span></li>)}</ul> : <p className={styles.hint}>Not recorded</p>}
     {catalogue.loading && <p>Loading countries…</p>}
-    {catalogue.error && <p role="alert">{catalogue.error} <ActionButton type="button" onClick={catalogue.retry}>Retry country lookup</ActionButton></p>}
-    {error && <p role="alert">{error}</p>}
+    {catalogue.error && <ErrorState>{catalogue.error} <ActionButton type="button" onClick={catalogue.retry}>Retry country lookup</ActionButton></ErrorState>}
+    {error && <ErrorState>{error}</ErrorState>}
     {catalogue.data && <>
       <label>Search countries or codes<input type="search" value={search} onChange={e => setSearch(e.target.value)} disabled={locked} /></label>
       <p className={styles.hint}>{codes.length} / {catalogue.data.maxSelections} selected</p>

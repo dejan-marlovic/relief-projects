@@ -1,3 +1,4 @@
+import { ErrorState } from "../../components/ReadState/ReadState";
 import FilterPanel from "../../components/FilterPanel/FilterPanel";
 import UploadAndAttach, { UploadDropzone } from "../../components/UploadAndAttach/UploadAndAttach";
 import RecordCard, { RecordCardActions } from "../../components/RecordCard/RecordCard";
@@ -395,7 +396,7 @@ const Documents = () => {
 
         {selectedProjectId && (
           <>
-            {categoryError && <div role="alert" className={styles.errorBanner}>{categoryError} <ActionButton type="button" onClick={retryCategories}>Retry categories</ActionButton></div>}
+            {categoryError && <ErrorState as="div"  className={styles.errorBanner}>{categoryError} <ActionButton type="button" onClick={retryCategories}>Retry categories</ActionButton></ErrorState>}
             <ProjectDocumentChecklist key={selectedProjectId} projectId={selectedProjectId} authFetch={authFetch} categories={categories} refreshKey={listRevision} />
             {/* Error banner */}
             {anyError && (

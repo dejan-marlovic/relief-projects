@@ -1,3 +1,4 @@
+import { EmptyState } from "../../components/ReadState/ReadState";
 import RecordCard from "../../components/RecordCard/RecordCard";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import { namedReference, transactionReference } from "../../utils/recordLabels";
@@ -1431,7 +1432,7 @@ function PaymentOrders() {
           ) : orders.length === 0 ? (
             <p className={styles.noData}>No payment orders for this project.</p>
           ) : displayedOrders.length === 0 ? (
-            <p className={styles.noData}>No payment orders match your filters.</p>
+            <EmptyState className={styles.noData}>No payment orders match your filters.</EmptyState>
           ) : (
             <MobileRecordDeck key={selectedProjectId} label="Payment order" locked={editingId !== null || saving} creating={editingId === "new"}>
             {displayedOrders.map((po, idx) => (

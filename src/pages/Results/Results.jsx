@@ -1,3 +1,4 @@
+import { ErrorState, EmptyState } from "../../components/ReadState/ReadState";
 import FilterPanel from "../../components/FilterPanel/FilterPanel";
 import RecordHeader from "../../components/RecordHeader/RecordHeader";
 import RecordExcerpt from "../../components/RecordCard/RecordExcerpt";
@@ -26,7 +27,7 @@ import styles from "./Results.module.scss";
 function Evidence({ result, endpoint, authFetch, refresh, open, locked }) {
   const [page, setPage] = useState(0), [error, setError] = useState("");
   const state = useIndicatorRead(authFetch, `${endpoint}/results/${result.id}/evidence?page=${page}&size=20`, refresh);
-  return <section aria-label={`Evidence for report ${result.id}`}><ReadState state={state} />{error && <p role="alert">{error}</p>}
+  return <section aria-label={`Evidence for report ${result.id}`}><ReadState state={state} />{error && <ErrorState>{error}</ErrorState>}
     {state.data?.content.map(e => <AttachmentItem as="article" data-mobile-tile="" className={styles.panel} key={e.id}>
       <strong><DocumentLabel>{e.capturedName || `Document #${e.documentId} · Name unavailable`} · Version {e.versionNumber ?? "unknown"}</DocumentLabel></strong>
       <p>{e.associationActive ? "Linked" : "Association removed"} · {words(e.availability)} · {e.currentStatus || "Unknown document status"}</p>
@@ -128,7 +129,7 @@ function IndicatorDetail({ openSequence = 0, id, endpoint: base, authFetch, refr
     {form && <><ReadState state={currentResult} /><ReadState state={currentEvidence} /><ReadState state={reviewHistory} /></>}
     {inspectId && <section className={styles.panel}><h4>Existing report for this date</h4><ReadState state={inspected} />{inspected.data?.result && indicator && <><p>Review this entry. Cancel the retained new-report draft before choosing an explicit correction.</p><Report result={inspected.data.result} endpoint={endpoint} authFetch={authFetch} refresh={refresh} open={open} indicator={indicator} locked={locked} /></>}<RecordCardActions as="span" placement="section"><ActionButton onClick={() => setInspectId(null)}><RecordIcon type="close" />Close existing report</ActionButton></RecordCardActions></section>}
     <WorkflowStep number={2} title="Record and review results" description="Use Record result to enter the cumulative measurement through a reporting date. Correct or void an inaccurate report explicitly, and link supporting versions where useful. Numeric comparison is not outcome verification."><h3>Reports</h3><FilterPanel as="div" title="Filter reports" guidance={<>Choose report state and reporting date range to narrow this list. These filters do not change the latest-result summary, which uses all effective reports. Clear the dates to remove the date restriction.</>} className={styles.filters}><label>Report state<select value={filters.state} onChange={e => { setPage(0); setFilters(f => ({ ...f, state: e.target.value })); }}><option value="ALL">All, including corrected and voided</option><option value="EFFECTIVE">Effective only</option></select></label><label>Reporting date from<input type="date" value={filters.from} onChange={e => { setPage(0); setFilters(f => ({ ...f, from: e.target.value })); }} /></label><label>Reporting date to<input type="date" value={filters.to} onChange={e => { setPage(0); setFilters(f => ({ ...f, to: e.target.value })); }} /></label></FilterPanel>
-    <ReadState state={reports} />{indicator && reports.data?.content.map(result => <Report key={result.id} result={result} endpoint={endpoint} authFetch={authFetch} refresh={refresh} open={open} indicator={indicator} locked={locked} />)}{reports.data && !reports.data.content.length && <p>No reports match these filters.</p>}<Pagination data={reports.data} page={page} setPage={setPage} label="reports" disabled={reports.loading} />
+    <ReadState state={reports} />{indicator && reports.data?.content.map(result => <Report key={result.id} result={result} endpoint={endpoint} authFetch={authFetch} refresh={refresh} open={open} indicator={indicator} locked={locked} />)}{reports.data && !reports.data.content.length && <EmptyState>No reports match these filters.</EmptyState>}<Pagination data={reports.data} page={page} setPage={setPage} label="reports" disabled={reports.loading} />
     </WorkflowStep><History endpoint={endpoint} authFetch={authFetch} refresh={refresh} />
   </RecordCard>;
 }

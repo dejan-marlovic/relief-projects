@@ -1,3 +1,4 @@
+import { ErrorState } from "../ReadState/ReadState";
 import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import ActionButton from "../ActionButton/ActionButton";
 import CountryPicker from "./CountryPicker";
@@ -60,7 +61,7 @@ export default function ProjectClassification({ projectId, authFetch, canEdit, o
   return <section data-mobile-tile="Language titles, target group & operating countries" className={styles.section} onBlur={save.flush}>
     <h3>Language titles, target group & operating countries</h3>
     <GuidanceNote data-tile-description="">Describe the intended participants, record translated titles and identify where the project operates. These details help users understand its scope.</GuidanceNote>
-    {error && <p role="alert">{error} <ActionButton onClick={() => setAttempt(n => n + 1)}>Retry loading optional details</ActionButton></p>}
+    {error && <ErrorState>{error} <ActionButton onClick={() => setAttempt(n => n + 1)}>Retry loading optional details</ActionButton></ErrorState>}
     {!original && !error && <p>Loading optional details…</p>}
     {original && !supportsClassification(original) && <p>Optional details are unavailable on this backend. You can add them after the backend is updated.</p>}
     {supportsClassification(original) && <>
