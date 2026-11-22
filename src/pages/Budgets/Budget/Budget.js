@@ -1,5 +1,5 @@
+import RecordCard, { RecordCardActions } from "../../../components/RecordCard/RecordCard";
 import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
-import RecordListLabel from "../../../components/RecordListLabel/RecordListLabel";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import RecordIcon from "../../../components/RecordIcon/RecordIcon";
 import { namedReference } from "../../../utils/recordLabels";
@@ -1502,8 +1502,8 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
   const hasBudget = Boolean(budget?.id);
 
   return (
-    <div className={styles.budgetContainer} data-open-record={hasBudget ? "true" : undefined}>
-      {hasBudget && <><span className="open-record-label">Viewing record</span><RecordListLabel type="budget">Budget</RecordListLabel></>}
+    <RecordCard as="div" variant="detail" className={styles.budgetContainer} viewing={hasBudget} type="budget" label={hasBudget ? "Budget" : null}>
+
       {approvalTarget && <ApprovalDialog key={approvalTarget} endpoint={`/api/budgets/${approvalTarget}`}
         recordLabel={namedReference("budget", approvalTarget, budget?.budgetName)} onCancel={() => setApprovalTarget(null)}
         onRefresh={record => { setBudget(record); setSavedBudget(record); setHistoryRefreshKey(value => value + 1); onUpdate?.(record); }}
@@ -1740,7 +1740,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
               </div>
               </fieldset>
 
-              <div data-action-group="section" className={styles.bottomActions}>
+              <RecordCardActions as="div" placement="section" className={styles.bottomActions}>
                 <ActionButton editorBlocked={Boolean(childEditing)}
                   type="button"
                   onClick={handleExportBudget}
@@ -1806,16 +1806,16 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
                   <FiTrash2 />
                   Delete budget
                 </ActionButton>}
-              </div>
+              </RecordCardActions>
             </>
           )}
         </div>
       )}
 
-      {canEditBudget && <div data-action-group="section" className={styles.bottomActions}>{hasRole("ADMIN") && <label><input type="checkbox" checked={normalizeMissingInputs} disabled={loading} onChange={(event) => setNormalizeMissingInputs(event.target.checked)} /> Fill missing calculation inputs (units 1, periods 1, price 0, allocation 100%)</label>}
+      {canEditBudget && <RecordCardActions as="div" placement="section" className={styles.bottomActions}>{hasRole("ADMIN") && <label><input type="checkbox" checked={normalizeMissingInputs} disabled={loading} onChange={(event) => setNormalizeMissingInputs(event.target.checked)} /> Fill missing calculation inputs (units 1, periods 1, price 0, allocation 100%)</label>}
 {recalculationMessage && <p role="status">{recalculationMessage}</p>}
 <ActionButton editorBlocked={Boolean(childEditing)} type="button" className={styles.saveButton} disabled={Boolean(savedBudget.revisionFamilyId) || loading || childEditing || submitting || Boolean(reviewAction)} title={savedBudget.revisionFamilyId ? "Revision families retain their local currency" : undefined} onClick={() => setCurrencyOpen(true)}>Change budget currency</ActionButton>
-<ActionButton editorBlocked={Boolean(childEditing)} type="button" className={styles.saveButton} onClick={handleRecalculate} disabled={loading || childEditing || hasUnsavedChanges} title="Save or cancel edits first. Uses persisted inputs and current selected rates.">Recalculate saved costs</ActionButton></div>}
+<ActionButton editorBlocked={Boolean(childEditing)} type="button" className={styles.saveButton} onClick={handleRecalculate} disabled={loading || childEditing || hasUnsavedChanges} title="Save or cancel edits first. Uses persisted inputs and current selected rates.">Recalculate saved costs</ActionButton></RecordCardActions>}
       {hasUnsavedChanges && <ActionButton type="button" className={styles.saveButton} disabled={loading || submitting || Boolean(reviewAction)} onClick={() => { setBudget(conflictBudget.current || savedBudget); setSavedBudget(conflictBudget.current || savedBudget); conflictBudget.current = null; setHasUnsavedChanges(false); setFieldErrors({}); setFormError(""); }}>Discard header edits</ActionButton>}
       {currencyOpen && canEditBudget && <BudgetCurrencyDialog key={`currency-${savedBudget.id}`} budget={savedBudget} currencies={currencies} rates={exchangeRates}
         initialTargetId={budget.localCurrencyId} dirty={hasUnsavedChanges}
@@ -1859,7 +1859,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
           />
         </div>
       )}
-    </div>
+    </RecordCard>
   );
 };
 

@@ -1,3 +1,4 @@
+import RecordCard, { RecordCardActions } from "../../components/RecordCard/RecordCard";
 import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import FilterHelp from "../../components/FilterHelp/FilterHelp";
 import RecordListLabel from "../../components/RecordListLabel/RecordListLabel";
@@ -490,7 +491,7 @@ const Documents = () => {
             {documents.length > 0 && (
               <ul className={styles.documentsList}>
                 {documents.map((doc) => (
-                  <li data-record-item="card" data-mobile-tile={doc.documentName} key={doc.id} className={styles.documentItem}>
+                  <RecordCard as="li"  data-mobile-tile={doc.documentName} key={doc.id} className={styles.documentItem}>
                     <div className={styles.docInfo}><RecordListLabel type="document">Document</RecordListLabel>
                       <span className={styles.docName}>{doc.documentName}</span>
                       <span className={styles.uploadedBy}>{statusLabel(doc.status)} · Version {doc.versionNumber || 1} · {doc.isCurrent === true ? "Current" : doc.isCurrent === false ? "Historical · read-only" : "Version state unknown"}</span>
@@ -501,7 +502,7 @@ const Documents = () => {
                       <span className={styles.uploadedBy}>Employee attribution: {getEmployeeLabel(doc)}</span>
                     </div>
 
-                    <div data-action-group="section" className={styles.docActions}>
+                    <RecordCardActions as="div" placement="section" className={styles.docActions}>
                       <ActionButton type="button" className={styles.downloadLink} disabled={saving} onClick={() => { if (!confirmDiscardUnsavedChanges()) return; setEditing(null); setHistoryDocument(doc); }}>Version history</ActionButton>
                       {canUploadDocuments && doc.isCurrent === true && <ActionButton editorBlocked={Boolean(editing)} type="button" className={styles.downloadLink} disabled={saving || !categories.length || !!editing} onClick={() => { setEditing({ original: doc, category: doc.category || "UNCATEGORIZED", documentDate: doc.documentDate || "", status: doc.status || "" }); }}>Edit details</ActionButton>}
                       <ActionButton
@@ -527,8 +528,8 @@ const Documents = () => {
                         <FiTrash2 />
                         <span className={styles.mobileActionLabel}>Delete</span>
                       </ActionButton>}
-                    </div>
-                  </li>
+                    </RecordCardActions>
+                  </RecordCard>
                 ))}
               </ul>
             )}

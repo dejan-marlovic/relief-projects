@@ -40,6 +40,7 @@ test("frozen payload excludes definition and unknown baseline remains null", () 
 });
 test("latest snapshot uses captured target and never sums snapshots", () => {
   render(<ResultSummary unit="households" summary={{ latestResult: { value: "450", asOfDate: "2026-09-25", basis: { targetValue: "500", unit: "households" } }, recordedTargetValue: "500", currentTargetValue: "600", comparisonStatus: "TARGET_CHANGED", recordedBasisTargetMet: false }} />);
+  fireEvent.click(screen.getByRole("button", { name: "Show guidance" }));
   expect(screen.getByText("450 households")).toBeInTheDocument(); expect(screen.getByText(/Current target: 600/)).toBeInTheDocument(); expect(screen.queryByText(/770/)).not.toBeInTheDocument(); expect(screen.getByText(/Reports are not added/)).toBeInTheDocument();
 });
 test("records exact quantities and date strings with explicit evidence", async () => {

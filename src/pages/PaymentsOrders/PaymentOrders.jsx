@@ -1,4 +1,4 @@
-import RecordListLabel from "../../components/RecordListLabel/RecordListLabel";
+import RecordCard from "../../components/RecordCard/RecordCard";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import { namedReference, transactionReference } from "../../utils/recordLabels";
 import MobileRecordDeck from "../../components/MobileRecordDeck/MobileRecordDeck";
@@ -1477,7 +1477,7 @@ function PaymentOrders() {
                 />
 
                 {expandedPoId === po.id && (
-                  <div className={styles.linesPanel} data-open-record="true" data-record-inset="true"><span className="open-record-label">Viewing record</span><RecordListLabel type="payment">Payment order</RecordListLabel>
+                  <RecordCard as="div" variant="detail" viewing type="payment" label={<> Payment order </>} className={styles.linesPanel}  data-record-inset="true">
                     <PaymentOrderLines
                       paymentOrderId={po.id}
                       order={po}
@@ -1491,7 +1491,7 @@ function PaymentOrders() {
                         await Promise.all([fetchOrders(selectedProjectId), fetchTxOptions(selectedProjectId)]);
                       }}
                     />
-                  </div>
+                  </RecordCard>
                 )}
               </React.Fragment>
             ))}

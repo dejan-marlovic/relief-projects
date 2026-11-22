@@ -1,6 +1,6 @@
+import RecordCard, { RecordCardActions } from "../../components/RecordCard/RecordCard";
 import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import FilterHelp from "../../components/FilterHelp/FilterHelp";
-import RecordListLabel from "../../components/RecordListLabel/RecordListLabel";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import useScrollToEditor from "../../hooks/useScrollToEditor";
@@ -63,8 +63,8 @@ function TravelDetail({ openSequence = 0, id, base, projectId, authFetch, refres
     return record.permissions?.[permission] && <ActionButton editorBlocked={Boolean(form)} key={action} className={approvalStyle(action, styles)} disabled={locked} onClick={() => open(action)}><TravelActionIcon action={action} />{title}</ActionButton>;
   })}</div>;
   const editor = form && <><TravelEditor key={form.action} form={form} setForm={setForm} projectId={projectId} authFetch={authFetch} refresh={refresh} busy={busy} blocked={blocked} onSave={save} onCancel={() => setForm(null)} onReview={() => setForm(f => ({ ...f, record, expectedRevision: record.revision, reviewRequired: false, error: "", draft: f.action === "actions" ? { ...f.draft, followUp: null } : f.draft }))} /><ReadState state={reviewHistory} /><ReadState state={removalPage} /></>;
-  return <section ref={detailRef} data-open-record="true" className={styles.panel} style={{ scrollMarginTop: 16 }} aria-label="Travel request details"><span className="open-record-label">Viewing record</span><RecordListLabel type="travel">Travel request</RecordListLabel>
-    <div data-action-group="section" className={styles.actions}><ActionButton editorBlocked={Boolean(form)} disabled={!!form || busy || reportActive} onClick={onClose}><RecordIcon type="close" />Close request</ActionButton></div><ReadState state={detail} />
+  return <RecordCard as="section" variant="detail" viewing type="travel" label={<> Travel request </>} ref={detailRef}  className={styles.panel} style={{ scrollMarginTop: 16 }} aria-label="Travel request details">
+    <RecordCardActions as="div" placement="section" className={styles.actions}><ActionButton editorBlocked={Boolean(form)} disabled={!!form || busy || reportActive} onClick={onClose}><RecordIcon type="close" />Close request</ActionButton></RecordCardActions><ReadState state={detail} />
     {record && <><h3>{record.purpose} · Travel request #{record.id}</h3>
       <TravelSummary record={record} />
       <TravelSteps record={record} editingStep={formStep} plan={<>
@@ -85,7 +85,7 @@ function TravelDetail({ openSequence = 0, id, base, projectId, authFetch, refres
     {record && <section aria-label="Request administration"><h4>Request actions</h4>{buttons(["cancel", "delete", "restore"])}{!formStep && editor}</section>}
     {!record && editor}
     <TravelHistory endpoint={endpoint} authFetch={authFetch} refresh={refresh} />
-  </section>;
+  </RecordCard>;
 }
 
 const initialFilters = { state: "ALL", deleted: false, travellerEmployeeId: "", departureFrom: "", departureTo: "" };
@@ -121,7 +121,7 @@ export function TravelRegister({ projectId, authFetch, initialRequestId = null }
       <label>Departure from<input type="date" value={filters.departureFrom} onChange={e => change("departureFrom", e.target.value)} /></label><label>Departure through<input type="date" value={filters.departureTo} onChange={e => change("departureTo", e.target.value)} /></label>
       <label><input type="checkbox" checked={filters.deleted} onChange={e => change("deleted", e.target.checked)} />Show deleted requests only</label></div>
     <ReadState state={list} />{list.data?.projectDeleted && <p>This project is inactive. Retained travel requests are read-only.</p>}
-    <ul className={styles.list}>{list.data?.content.map(record => <li data-record-item="card" key={record.id}><RecordListLabel type="travel">Travel request</RecordListLabel><div className={styles.heading}><h3><RecordIcon type="travel" />{record.purpose}</h3><ActionButton recordBlocked={selected != null && selected !== record.id} editorBlocked={Boolean(form)} disabled={!!form || busy || (selected != null && selected !== record.id)} onClick={() => { setSelected(record.id); setOpenSequence(n => n + 1); }}><RecordIcon type="open" />Open request #{record.id} · {record.purpose || "Name unavailable"}</ActionButton></div><TravelSummary record={record} /></li>)}</ul>
+    <ul className={styles.list}>{list.data?.content.map(record => <RecordCard as="li" type="travel" label={<> Travel request </>}  key={record.id}><div className={styles.heading}><h3><RecordIcon type="travel" />{record.purpose}</h3><RecordCardActions placement="header"><ActionButton recordBlocked={selected != null && selected !== record.id} editorBlocked={Boolean(form)} disabled={!!form || busy || (selected != null && selected !== record.id)} onClick={() => { setSelected(record.id); setOpenSequence(n => n + 1); }}><RecordIcon type="open" />Open request #{record.id} · {record.purpose || "Name unavailable"}</ActionButton></RecordCardActions></div><TravelSummary record={record} /></RecordCard>)}</ul>
     {list.data && !list.data.content.length && <p>No travel requests match these filters.</p>}<Pagination data={list.data} page={page} setPage={setPage} label="travel requests" disabled={list.loading || busy} />
     {form && <TravelEditor form={form} setForm={setForm} projectId={projectId} authFetch={authFetch} refresh={refresh} busy={busy} blocked={list.loading || !list.data?.canCreate} onSave={create} onCancel={() => setForm(null)} onReview={() => setForm(f => ({ ...f, error: "", reviewRequired: false }))} />}
     {selected && <TravelDetail openSequence={openSequence} key={selected} id={selected} initialForm={initialEditor} base={base} projectId={projectId} authFetch={authFetch} refresh={refresh} reload={reload} onClose={() => { setSelected(null); setInitialEditor(null); }} />}

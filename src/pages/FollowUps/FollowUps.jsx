@@ -1,5 +1,5 @@
+import RecordCard, { RecordCardActions } from "../../components/RecordCard/RecordCard";
 import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
-import RecordListLabel from "../../components/RecordListLabel/RecordListLabel";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import { useOpenEditor } from "../../context/OpenEditorContext";
@@ -283,7 +283,7 @@ function Queue({ mode, projectId, authFetch, scopeControls }) {
     if (command.action === "reopen" && !window.confirm("Reopen this follow-up? Its current completion attribution will be cleared.")) return;
     mutate(task, command.action, command.values);
   };
-  const renderTask = task => <li data-record-item="card" data-mobile-tile={task.title} key={task.id} className={dragged?.id === task.id ? styles.dragging : undefined}><RecordListLabel type="followUp">Follow-up</RecordListLabel>
+  const renderTask = task => <RecordCard as="li" type="followUp" label={<> Follow-up </>}  data-mobile-tile={task.title} key={task.id} className={dragged?.id === task.id ? styles.dragging : undefined}>
         {board && <span className={styles.dragHandle} draggable={!!canDrag(task)} title={canDrag(task) ? "Drag to an available column, or use the action buttons" : "Use available task actions"} onDragStart={event => {
           if (!canDrag(task)) { event.preventDefault(); return; }
           readController.current?.abort();
@@ -292,7 +292,7 @@ function Queue({ mode, projectId, authFetch, scopeControls }) {
         <div className={styles.heading}><h3><RecordIcon type="followUp" />{task.title}</h3><span className={styles.badge}>{workflowLabel(task)}</span><span className={styles.badge}>{buckets[task.dueBucket] || task.dueBucket}</span></div>
         <p className={styles.muted}>{task.projectName} · Due {task.dueDate} · {task.assignee?.displayName}{task.assignee?.isDeleted !== false ? " (inactive employee)" : ""}{task.isDeleted ? " · Deleted" : ""}</p>
         {board && task.description && <p>{task.description.slice(0, 180)}{task.description.length > 180 ? "…" : ""}</p>}
-        <div data-action-group="section" className={styles.actions}>
+        <RecordCardActions as="div" placement="section" className={styles.actions}>
           {canExportFollowUp(task) && <ActionButton disabled={busy || loading} onClick={() => { setError(""); setNotice(""); try { downloadFollowUpCalendar(task); setNotice("Calendar file downloaded. Import it into your calendar; later changes must be updated there manually."); } catch (err) { setError(err.message); } }}>Download calendar entry (.ics)</ActionButton>}
           {task.permissions?.canEdit && <ActionButton disabled={taskActionsDisabled} onClick={() => setForm({ task })}>Edit follow-up</ActionButton>}
           {supported && task.permissions?.canStartWork && <ActionButton disabled={taskActionsDisabled} onClick={() => mutate(task, "progress", { target: "IN_PROGRESS" })}>Start work</ActionButton>}
@@ -301,8 +301,8 @@ function Queue({ mode, projectId, authFetch, scopeControls }) {
           {task.permissions?.canReopen && <ActionButton disabled={taskActionsDisabled} onClick={() => { if (window.confirm("Reopen this follow-up? Its current completion attribution will be cleared.")) mutate(task, "reopen"); }}>Reopen</ActionButton>}
           {task.permissions?.canDelete && <ActionButton disabled={taskActionsDisabled} onClick={() => { if (window.confirm("Delete this follow-up? An administrator can restore it.")) mutate(task, "delete"); }}>Delete follow-up</ActionButton>}
           {task.permissions?.canRestore && <ActionButton disabled={taskActionsDisabled} onClick={() => mutate(task, "restore")}>Restore follow-up</ActionButton>}
-        </div><FollowUpDetails task={task} authFetch={authFetch} disabled={taskActionsDisabled} onAttachmentOperation={attachmentOperation} observation={revision} />
-      </li>;
+        </RecordCardActions><FollowUpDetails task={task} authFetch={authFetch} disabled={taskActionsDisabled} onAttachmentOperation={attachmentOperation} observation={revision} />
+      </RecordCard>;
   const retryPermission = retry && (retry.action === "progress" ? retry.values.target === "TODO" ? "canReturnToTodo" : "canStartWork" : { save: "canEdit", complete: "canComplete", reopen: "canReopen", delete: "canDelete", restore: "canRestore" }[retry.action]);
   const loadedColumns = columns ? boardColumns(columns) : null;
   return <>

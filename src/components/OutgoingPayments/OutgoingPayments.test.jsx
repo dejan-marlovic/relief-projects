@@ -26,6 +26,7 @@ test("recipient excess stays primary when the whole order still has remaining co
   expect(await screen.findByText("Over paid")).toBeInTheDocument();
   expect(screen.getByText("Recipient excess").parentElement).toHaveTextContent("1000.000001");
   expect(screen.getByText("Order remaining").parentElement).toHaveTextContent("2999.999999");
+  fireEvent.click(within(screen.getByText("Whole-order comparison").closest("details")).getByText("Show guidance"));
   expect(screen.getByText(/Order remaining is not authorization/)).toBeInTheDocument();
   expect(screen.getByText(/41 payments/)).toBeInTheDocument();
   expect(screen.getByRole("button", { name: /Add evidence #41/ })).toBeEnabled();

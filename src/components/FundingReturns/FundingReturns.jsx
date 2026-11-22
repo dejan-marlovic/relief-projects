@@ -1,5 +1,5 @@
+import RecordCard, { RecordCardActions } from "../RecordCard/RecordCard";
 import GuidanceNote from "../GuidanceNote/GuidanceNote";
-import RecordListLabel from "../RecordListLabel/RecordListLabel";
 import ActionButton from "../ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import useScrollToEditor from "../../hooks/useScrollToEditor";
@@ -126,7 +126,7 @@ export function FundingReturnsPanel({ receipt, refreshKey, editingLocked, onChan
     try { await downloadDocument(id, authFetch); } catch (e) { if (alive.current) setError(e.message); } finally { if (alive.current) setDownloading(null); }
   }
   function entry(row, relatedView = false) {
-    return <article data-record-item="card" key={row.id} className={styles.entry} aria-label={`Financier return ${row.id}`}><RecordListLabel type="payment">Financier return</RecordListLabel>
+    return <RecordCard as="article" type="payment" label={<> Financier return </>}  key={row.id} className={styles.entry} aria-label={`Financier return ${row.id}`}>
       <h4>Return to financier #{row.id} · {row.financier?.name || "Name unavailable"} · {row.status === "VOIDED" ? "Voided erroneous entry" : "Recorded"}</h4>
       <p><strong>{receiptMoney(row.amount)} {receiptCurrency(row.currency)}</strong> · Returned {row.returnedDate}</p>
       <p>Financier: {row.financier?.name || "Unknown"} · Original receipt #{row.originalReceiptId}</p>
@@ -136,11 +136,11 @@ export function FundingReturnsPanel({ receipt, refreshKey, editingLocked, onChan
       {row.voidedAt && <p>Voided {stamp(row.voidedAt)} by {actor(row.voidedBy)} · {row.voidReason}</p>}
       {row.replacesReturnId && <ActionButton type="button" onClick={() => showRelated(row.replacesReturnId)}>View original return #{row.replacesReturnId}</ActionButton>}
       {row.replacementReturnId && <ActionButton type="button" onClick={() => showRelated(row.replacementReturnId)}>View replacement return #{row.replacementReturnId}</ActionButton>}
-      <ul className={styles.evidence}>{row.documents?.map(doc => <li key={doc.documentId}><DocumentLabel>{doc.documentName || "Name unavailable"}</DocumentLabel> · Version {doc.versionNumber ?? "Unknown"} · {doc.status || "Status unknown"}{doc.hasNewerVersion && " · Newer version exists; this link retains the selected version"}{!doc.downloadEligible && " · Download unavailable"}<div data-action-group="section" className={styles.actions}><ActionButton disabled={!doc.downloadEligible || downloading !== null} onClick={() => download(doc.documentId)}>Download return evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</ActionButton>{!relatedView && can("remove", row) && <ActionButton editorBlocked={Boolean(form)} disabled={busy || !!form || !!pending} onClick={() => open("remove", row, doc)}>Remove return evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</ActionButton>}</div></li>)}</ul>
+      <ul className={styles.evidence}>{row.documents?.map(doc => <li key={doc.documentId}><DocumentLabel>{doc.documentName || "Name unavailable"}</DocumentLabel> · Version {doc.versionNumber ?? "Unknown"} · {doc.status || "Status unknown"}{doc.hasNewerVersion && " · Newer version exists; this link retains the selected version"}{!doc.downloadEligible && " · Download unavailable"}<RecordCardActions as="div" placement="section" className={styles.actions}><ActionButton disabled={!doc.downloadEligible || downloading !== null} onClick={() => download(doc.documentId)}>Download return evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</ActionButton>{!relatedView && can("remove", row) && <ActionButton editorBlocked={Boolean(form)} disabled={busy || !!form || !!pending} onClick={() => open("remove", row, doc)}>Remove return evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</ActionButton>}</RecordCardActions></li>)}</ul>
       {!row.documents?.length && <p>No evidence linked.</p>}
       {summaryIssues(row.eligibility).map(issue => <p key={issue.code}>{issue.message}</p>)}
-      {!relatedView && <div data-action-group="section" className={styles.actions}>{[["add", "Add evidence"], ["correct", "Correct erroneous return"], ["void", "Void erroneous return"]].map(([action, label]) => can(action, row) && <ActionButton editorBlocked={Boolean(form)} key={action} disabled={busy || !!form || !!pending} onClick={() => open(action, row)}>{label} #{row.id} · {row.financier?.name || "Name unavailable"}</ActionButton>)}</div>}
-    </article>;
+      {!relatedView && <RecordCardActions as="div" placement="section" className={styles.actions}>{[["add", "Add evidence"], ["correct", "Correct erroneous return"], ["void", "Void erroneous return"]].map(([action, label]) => can(action, row) && <ActionButton editorBlocked={Boolean(form)} key={action} disabled={busy || !!form || !!pending} onClick={() => open(action, row)}>{label} #{row.id} · {row.financier?.name || "Name unavailable"}</ActionButton>)}</RecordCardActions>}
+    </RecordCard>;
   }
   const financial = ["create", "correct"].includes(kind), evidence = ["create", "correct", "add"].includes(kind);
   useAutomaticRefresh(refresh, loading || busy || !!form || !!pending || !!related || !!downloading);

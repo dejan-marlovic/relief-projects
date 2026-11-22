@@ -1,3 +1,4 @@
+import RecordCard from "../../components/RecordCard/RecordCard";
 import RecordListLabel from "../../components/RecordListLabel/RecordListLabel";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import FollowUpAttachments from "./FollowUpAttachments";
@@ -12,7 +13,7 @@ export default function FollowUpDetails({ task, authFetch, disabled, onAttachmen
   const [expanded, setExpanded] = useState(false);
   return <>
     {authFetch && Number.isInteger(task.attachmentCount) && <FollowUpAttachments task={task} authFetch={authFetch} disabled={disabled} onOperation={onAttachmentOperation} observation={observation} />}
-    <div className={styles.details} data-open-record={expanded ? "true" : undefined} data-record-inset="true">
+    <RecordCard as="div" variant="detail" className={styles.details} data-open-record={expanded ? "true" : undefined} data-record-inset="true">
     <ActionButton type="button" className={styles.detailsToggle} aria-expanded={expanded} aria-controls={id} onClick={() => setExpanded(value => !value)}>
       <span>Details &amp; activity</span><FiChevronDown aria-hidden="true" className={expanded ? styles.chevronOpen : undefined} />
     </ActionButton>
@@ -25,5 +26,5 @@ export default function FollowUpDetails({ task, authFetch, disabled, onAttachmen
       </dl>
       {expanded && authFetch && <FollowUpHistory key={`${task.projectId}-${task.id}`} task={task} authFetch={authFetch} />}
     </div>
-  </div></>;
+  </RecordCard></>;
 }

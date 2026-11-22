@@ -1,6 +1,6 @@
+import RecordCard, { RecordCardActions } from "../../components/RecordCard/RecordCard";
 import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import FilterHelp from "../../components/FilterHelp/FilterHelp";
-import RecordListLabel from "../../components/RecordListLabel/RecordListLabel";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
@@ -272,7 +272,7 @@ function Register({ projectId, authFetch }) {
       <p className={styles.muted}>Business date: {data.today} · {data.businessTimezone}. Review dates are the next planned review, not evidence that a review took place.</p>
       {data.projectDeleted && <p>This project is inactive. Its risks and history are read-only.</p>}
       {!loading && !data.content.length && <p>No risks match these filters.</p>}
-      <ul className={styles.list}>{data.content.map(risk => <li data-record-item="card" data-mobile-tile={risk.title} key={risk.id}><RecordListLabel type="record">Risk</RecordListLabel>
+      <ul className={styles.list}>{data.content.map(risk => <RecordCard as="li" type="record" label={<> Risk </>}  data-mobile-tile={risk.title} key={risk.id}>
         <div className={styles.heading}><h3>{risk.title}</h3><span>{buckets[risk.reviewBucket] || risk.reviewBucket}{risk.isDeleted ? " · Deleted" : ""}</span></div>
         <p>{risk.ownerName}{risk.ownerInactive ? " (inactive employee)" : ""} · Review {risk.reviewDate} · {risk.status === "CLOSED" ? "Closed" : "Open"}</p>
         <WorkflowIntro>Identify the risk, assess its likelihood and impact, and maintain a mitigation plan. Revisit the assessment as circumstances change; close or reopen it with an explicit decision.</WorkflowIntro><WorkflowStep number={1} title="Identify and assess" description="Describe what could go wrong, assign an owner and assess likelihood and impact. Use Edit risk to revise the assessment."><p>Likelihood: {rating(risk.likelihood)} · Impact: {rating(risk.impact)}</p>
@@ -280,11 +280,11 @@ function Register({ projectId, authFetch }) {
         </WorkflowStep><WorkflowStep number={2} title="Mitigate and review" description="Maintain the mitigation plan and next review date. Review progress with the owner and update the record; a due date is a reminder, not a completed review."><p>Next review: {risk.reviewDate}</p>{risk.mitigationPlan && <p className={styles.text}><strong>Mitigation: </strong>{risk.mitigationPlan}</p>}
         </WorkflowStep><WorkflowStep number={3} title="Close or reopen the risk" description="Close with a reason when further monitoring is no longer required. Reopen if circumstances change; the decision history remains available.">{risk.closureReason && <p className={styles.text}><strong>Closure reason: </strong>{risk.closureReason}</p>}
         </WorkflowStep><details><summary>Attribution</summary><p>Created by {risk.createdBy?.username} · {uploadTimeLabel(risk.createdAt)}</p><p>Last changed by {risk.updatedBy?.username} · {uploadTimeLabel(risk.updatedAt)}</p></details>
-        <div data-action-group="section" className={styles.actions}>
+        <RecordCardActions as="div" placement="section" className={styles.actions}>
           {[["canEdit", "save", "Edit risk"], ["canClose", "close", "Close risk"], ["canReopen", "reopen", "Reopen risk"], ["canDelete", "delete", "Delete risk"], ["canRestore", "restore", "Restore risk"]].map(([permission, action, label]) => risk.permissions?.[permission] && <ActionButton editorBlocked={Boolean(editor)} key={action} disabled={locked || loading} onClick={() => openEditor(risk, action)}>{label}</ActionButton>)}
           <ActionButton disabled={busy} onClick={() => setHistory(risk)}>View history</ActionButton>
-        </div>
-      </li>)}</ul>
+        </RecordCardActions>
+      </RecordCard>)}</ul>
       <div data-action-group="section" className={styles.actions}><ActionButton editorBlocked={Boolean(editor)} disabled={locked || loading || !page} onClick={() => setPage(p => p - 1)}>Previous page</ActionButton><span>{data.totalElements} risks · Page {data.totalPages ? page + 1 : 0} of {data.totalPages}</span><ActionButton editorBlocked={Boolean(editor)} disabled={locked || loading || page + 1 >= data.totalPages} onClick={() => setPage(p => p + 1)}>Next page</ActionButton></div>
     </>}
     {history && <History key={history.id} risk={history} endpoint={endpoint} authFetch={authFetch} onClose={() => setHistory(null)} />}

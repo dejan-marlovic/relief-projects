@@ -1,3 +1,4 @@
+import RecordCard, { RecordCardActions } from "../../../components/RecordCard/RecordCard";
 import RecordListLabel from "../../../components/RecordListLabel/RecordListLabel";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import RecordIcon from "../../../components/RecordIcon/RecordIcon";
@@ -131,30 +132,30 @@ const Organization = ({
 
   const editorRef = useScrollToEditor(expanded || isEditing, undefined, isEditing, "Organisation relationship editor");
   const open = expanded || isEditing;
-  return <article data-record-item={isCreate ? undefined : "card"} data-mobile-tile={isCreate ? "New organization" : orgName(link.organizationId)} ref={editorRef} tabIndex={-1} className={styles.relationshipCard}>
+  return <RecordCard as="article"  data-mobile-tile={isCreate ? "New organization" : orgName(link.organizationId)} ref={editorRef} tabIndex={-1} className={styles.relationshipCard}>
     <header className={styles.cardHeader}>
       <div>{!isCreate && <RecordListLabel type="organization">Organisation</RecordListLabel>}<h3>{isCreate ? "Add organisation to this project" : orgName(link.organizationId)}</h3>
         {!isCreate && <p><strong>Role in this project:</strong> {statusName(link.organizationStatusId)}</p>}
         {!isCreate && <p>Assessment: {assessment}</p>}
       </div>
-      <div data-action-group="section" className={styles.cardActions}>
+      <RecordCardActions as="div" placement="section" className={styles.cardActions}>
         {!isCreate && <Link to={`/organisation-assessments/${link.id}`} onClick={e => { if (!confirmDiscardUnsavedChanges()) e.preventDefault(); }}><RecordIcon type="open" />Open assessment</Link>}
         {!isEditing && <ActionButton type="button" aria-expanded={open} onClick={() => { if (open && !confirmDiscardUnsavedChanges()) return; setExpanded(!open); }}>{open ? "Hide details" : "Show details"}</ActionButton>}
-      </div>
+      </RecordCardActions>
     </header>
-    {open && <div className={styles.cardBody} data-open-record="true" data-record-inset="true"><span className="open-record-label">Viewing record</span><RecordListLabel type="organization">Organisation</RecordListLabel>
+    {open && <RecordCard as="div" variant="detail" viewing type="organization" label={<> Organisation </>} className={styles.cardBody}  data-record-inset="true">
       <section data-mobile-tile="Project relationship" data-purpose-tile="section"><h4>Project relationship</h4><p>This role belongs to the selected project. An organisation can have other roles in other projects.</p>
         {isEditing ? <>
           <label>Organisation{selectOrg()}</label><label>Role in this project{selectStatus()}</label>
-          <div data-action-group="section" className={styles.cardActions}>
+          <RecordCardActions as="div" placement="section" className={styles.cardActions}>
             {canManage && isCreate && <ActionButton type="button" disabled={saving} onClick={submit} aria-label="Save"><FiSave /> Add relationship</ActionButton>}
             <ActionButton type="button" disabled={saving} onClick={onCancel}><FiX />{isCreate ? "Cancel" : "Done editing"}</ActionButton>
-          </div>
+          </RecordCardActions>
         </> : null}
-        <div data-action-group="section" className={styles.relationshipActions}>
+        <RecordCardActions as="div" placement="section" className={styles.relationshipActions}>
           {!isEditing && canManage && <ActionButton editorBlocked={Boolean(editingLocked)} type="button" disabled={saving || editingLocked} onClick={onEdit} aria-label="Edit"><FiEdit /> Edit relationship</ActionButton>}
           {!isCreate && <ActionButton type="button" onClick={() => setShowReviews(v => !v)} aria-expanded={showReviews}>Assessments across projects and roles</ActionButton>}
-        </div>
+        </RecordCardActions>
         {!isCreate && showReviews && <div className={styles.reviewsPanel}><OrganisationReviews organizationId={link.organizationId} authFetch={authFetch} /></div>}
       </section>
       {!isCreate && link.organizationId && <section data-mobile-tile="Addresses" data-purpose-tile="section"><h4>Addresses</h4><p>Addresses belong to the organisation and are shared across its projects.</p>
@@ -165,8 +166,8 @@ const Organization = ({
         <ActionButton type="button" aria-expanded={showBankDetails} onClick={() => { if (showBankDetails && !confirmDiscardUnsavedChanges()) return; setShowBankDetails(v => !v); }}>{showBankDetails ? "Hide bank details" : "Show bank details"}</ActionButton>
         {showBankDetails && <BankDetails organizationId={link.organizationId} canManage={canManageBankDetails} />}
       </section>}
-      {!isCreate && canManage && <footer className={styles.removal}><span data-action-group="section"><ActionButton editorBlocked={Boolean(editingLocked)} type="button" disabled={saving || editingLocked} onClick={() => onDelete(link.id)} aria-label="Delete organization relation"><FiTrash2 /> Remove from this project</ActionButton></span><small>Removes this project relationship, not the organisation itself.</small></footer>}
-    </div>}
-  </article>;
+      {!isCreate && canManage && <footer className={styles.removal}><RecordCardActions as="span" placement="section"><ActionButton editorBlocked={Boolean(editingLocked)} type="button" disabled={saving || editingLocked} onClick={() => onDelete(link.id)} aria-label="Delete organization relation"><FiTrash2 /> Remove from this project</ActionButton></RecordCardActions><small>Removes this project relationship, not the organisation itself.</small></footer>}
+    </RecordCard>}
+  </RecordCard>;
 };
 export default Organization;
