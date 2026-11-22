@@ -1,3 +1,4 @@
+import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
@@ -30,7 +31,7 @@ export default function TravelEditor({ form, setForm, projectId, authFetch, refr
       {editing && <><ReadState state={employees} /><label>Traveller<SearchableSelect required value={draft.travellerEmployeeId} onChange={e => update("travellerEmployeeId", e.target.value)}><option value="">Select an employee</option>{record?.traveller && !people.some(p => p.id === record.travellerEmployeeId) && <option value={record.travellerEmployeeId}>{record.traveller.displayName} (retained traveller)</option>}{people.map(p => <option key={p.id} value={p.id}>{employeeName(p)}</option>)}</SearchableSelect></label>
         {text("purpose", "Purpose")}<label>Destination<input required value={draft.destination} onChange={e => update("destination", e.target.value)} /></label>
         <div className={styles.grid}>{[["departureDate", "Planned departure"], ["returnDate", "Planned return"]].map(([key, name]) => <label key={key}>{name}<input type="date" required min={key === "returnDate" ? draft.departureDate || "1000-01-01" : "1000-01-01"} max="9999-12-31" value={draft[key]} onChange={e => update(key, e.target.value)} /></label>)}</div>
-        {text("notes", "Notes (optional)", false)}<p className={styles.muted}>One employee per request. Past drafts can be saved; submission and approval require departure today or later. Keep notes to general operational information.</p></>}
+        {text("notes", "Notes (optional)", false)}<GuidanceNote className={styles.muted}>One employee per request. Past drafts can be saved; submission and approval require departure today or later. Keep notes to general operational information.</GuidanceNote></>}
       {["submit", "approve"].includes(action) && <>{text("note", action === "approve" ? "Approval note" : "Submission note (optional)", action === "approve")}<p>{action === "approve" ? `Approve submission #${record.currentSubmission.id}. Another independent person must approve: the traveller, creator and latest submitter cannot approve, including as ADMIN.` : "Submitting freezes the trip details and current links until a decision is made."}</p></>}
       {action === "return" && <p>Return submission #{record.currentSubmission.id} for changes. This grants no travel approval.</p>}
       {action === "withdraw-approval" && <p>Withdraw approval #{record.currentApproval.id}. Earlier approval stays in history; changes require resubmission and a new approval.</p>}

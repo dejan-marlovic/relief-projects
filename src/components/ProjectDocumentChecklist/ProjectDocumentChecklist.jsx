@@ -1,3 +1,4 @@
+import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import ActionButton from "../ActionButton/ActionButton";
 import DocumentLabel from "../DocumentLabel/DocumentLabel";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
@@ -67,7 +68,7 @@ function Item({ item, generation, editable, documents, categories, busy, mutate:
         <span data-action-group="section"><ActionButton disabled={busy} type="submit">Save applicability</ActionButton></span>
       </form>}
       <h4>Evidence</h4>
-      {item.applicability === "NOT_APPLICABLE" && <p className={styles.muted}>Existing links are retained. Change applicability before adding evidence.</p>}
+      {item.applicability === "NOT_APPLICABLE" && <GuidanceNote className={styles.muted}>Existing links are retained. Change applicability before adding evidence.</GuidanceNote>}
       {!evidence.length && <p className={styles.muted}>No evidence linked.</p>}
       <ul className={styles.evidence}>{evidence.map((doc) => <li key={doc.documentId}>
         <strong><DocumentLabel>{doc.documentName}</DocumentLabel></strong>
@@ -81,7 +82,7 @@ function Item({ item, generation, editable, documents, categories, busy, mutate:
           {editable && <ActionButton type="button" disabled={busy || decisionChanged} onClick={() => { if (window.confirm("Remove this evidence link? The document and file will be kept.")) mutate(item, `evidence/${doc.documentId}`, "DELETE"); }}>Remove evidence link</ActionButton>}
         </div>
       </li>)}</ul>
-      {editable && !canLink && <p className={styles.muted}>Save Applicable above before adding evidence. Existing links remain available.</p>}
+      {editable && !canLink && <GuidanceNote className={styles.muted}>Save Applicable above before adding evidence. Existing links remain available.</GuidanceNote>}
       {editable && <form className={styles.form} onSubmit={(e) => { e.preventDefault(); if (selected && canLink && availableDocuments.some(doc => String(doc.id) === selected)) mutate(item, "evidence", "POST", { documentId: Number(selected) }); }}>
         <label>Document evidence<SearchableSelect documentOptions value={selected} disabled={busy || !canLink || !availableDocuments.length} onChange={(e) => { setDirty(true); setSelected(e.target.value); }}><option value="">{availableDocuments.length ? "Select an exact document version" : "No additional document versions available"}</option>{availableDocuments.map((doc) => <option key={doc.id} value={doc.id}>{doc.documentName} · Version {doc.versionNumber} · {statusLabel(doc.status)} · {doc.isCurrent ? "Current" : "Historical"} (#{doc.id})</option>)}</SearchableSelect></label>
         {!availableDocuments.length && <p className={styles.muted}>No additional document versions available. Upload another document or adjust the evidence filters.</p>}
@@ -185,14 +186,14 @@ function Panel({ projectId, authFetch, categories, refreshKey }) {
     {error && <p role="alert">{error}</p>}
     {notice && <p role="status">{notice}</p>}
     {data && <>
-      {!data.editable && <p className={styles.muted}>Read-only. Only Admin and Project Manager can change a checklist on an active project.</p>}
+      {!data.editable && <GuidanceNote className={styles.muted}>Read-only. Only Admin and Project Manager can change a checklist on an active project.</GuidanceNote>}
       <div className={styles.checklistToolbar}><strong>Checklist items</strong><label><input type="checkbox" checked={attentionOnly} onChange={(event) => { if (confirmDiscardUnsavedChanges()) setAttentionOnly(event.target.checked); }} /> Needs attention only</label></div>
       {attentionOnly && data.items.every((item) => settled(item.state)) && <p className={styles.muted}>No items need attention. Turn off the filter to review recorded evidence and not-applicable decisions.</p>}
       <WorkflowStep number={1} title="Review requirements and attach evidence" description="Open a requirement, save its applicability and link supporting document versions in the same card. Upload missing files in Documents below. Replacement uploads do not change existing evidence links.">
       {data.editable && <div className={styles.form}>
         <label>Evidence category<SearchableSelect value={category} disabled={busy} onChange={(e) => setCategory(e.target.value)}><option value="">All categories</option>{categories.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</SearchableSelect></label>
         <label><input type="checkbox" checked={historical} disabled={busy} onChange={(e) => setHistorical(e.target.checked)} /> Include active historical versions</label>
-        <p className={styles.muted}>These filters only help find documents. Upload files below, then select evidence explicitly. Uploads remain if linking fails. To switch versions, link the new version before removing the old one; if removal fails, both links remain.</p>
+        <GuidanceNote className={styles.muted}>These filters only help find documents. Upload files below, then select evidence explicitly. Uploads remain if linking fails. To switch versions, link the new version before removing the old one; if removal fails, both links remain.</GuidanceNote>
         {documentError && <p role="alert">{documentError}</p>}
       </div>}
       {[...data.items].filter((item) => !attentionOnly || !settled(item.state)).sort((a, b) => a.order - b.order).map((item) => <Item key={item.itemKey} generation={generation} item={item} editable={data.editable} documents={documents} categories={categories} busy={busy} mutate={mutate} download={download} downloading={downloading} showHistory={setHistory} />)}
@@ -205,9 +206,9 @@ function Panel({ projectId, authFetch, categories, refreshKey }) {
       </div>
       <div className={styles.counts}>{Object.entries(counts).map(([key, label]) => <span key={key}><strong>{data.summary[key]}</strong> {label}</span>)}</div>
       <p className={styles.muted}>{data.summary.totalItems} items · {data.summary.evidenceLinks} evidence links · {data.summary.unavailableEvidenceLinks} unavailable links · Definition {data.definitionVersion}</p>
-      <p className={styles.muted}>These totals cover the whole checklist, including items hidden by Needs attention only. Turn that filter off to review evidence already recorded and Not applicable explanations.</p>
+      <GuidanceNote className={styles.muted}>These totals cover the whole checklist, including items hidden by Needs attention only. Turn that filter off to review evidence already recorded and Not applicable explanations.</GuidanceNote>
       </WorkflowStep>
-      <p className={styles.muted}>Attribution shows the latest decisions and current links, not a full change history. Earlier explanations are replaced.</p>
+      <GuidanceNote className={styles.muted}>Attribution shows the latest decisions and current links, not a full change history. Earlier explanations are replaced.</GuidanceNote>
     </>}
     {history && <DocumentVersions key={history.id} document={history} authFetch={authFetch} categories={categories} canEdit={false} canDelete={false} onDownload={download} downloading={downloading} revision={revision + refreshKey} onChanged={() => setRevision((v) => v + 1)} onClose={() => setHistory(null)} />}
   </div>;

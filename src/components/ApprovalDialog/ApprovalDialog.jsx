@@ -1,3 +1,4 @@
+import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import ActionButton from "../ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
@@ -92,7 +93,7 @@ export default function ApprovalDialog({ endpoint, recordLabel, onRefresh, onSuc
         <p>Status: {record.lifecycleStatus}</p>
         {record.approvedAmount != null && <p>Approved funding: {record.approvedAmount}</p>}
         {record.amount != null && <p>Amount: {record.amount}</p>}
-        <p>Review the record and its supporting details before confirming. Financial prerequisites are checked again when you approve.</p></>}
+        <GuidanceNote>Review the record and its supporting details before confirming. Financial prerequisites are checked again when you approve.</GuidanceNote></>}
       {eligibility?.issues?.map((issue, index) => <p role="alert" key={index}>{issue.message}</p>)}
       {basis && !allowed && !eligibility?.issues?.length && <p role="alert">Approval is unavailable for this submission.</p>}
       {error && <p role="alert" className={styles.error}>{error}</p>}

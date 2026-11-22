@@ -1,3 +1,4 @@
+import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordReference, { isRecordReference } from "../../components/RecordReference/RecordReference";
 import { HistoryPagination } from "../../components/ActivityHistory/ActivityHistory";
@@ -24,7 +25,7 @@ export function ResultSummary({ summary, unit, direction }) {
       {summary.comparisonStatus === "TARGET_CHANGED" ? <p role="note">Target changed. Current target: {showValue(summary.currentTargetValue)} {unit}. This report keeps its earlier target; comparison with the current target is unavailable. Recorded target: {summary.recordedBasisTargetMet == null ? "comparison unavailable" : summary.recordedBasisTargetMet ? "met numerically" : "not met numerically"}.</p>
         : <p>{summary.reportedTargetMet == null ? "Target comparison unavailable." : summary.reportedTargetMet ? "Reported value meets the numeric target." : "Reported value has not met the numeric target."}</p>}
     </>}
-    <p className={styles.muted}>Latest by reporting date across all effective reports, regardless of filters or pages. Reports are not added together. Numeric comparison is not verification.</p>
+    <GuidanceNote className={styles.muted}>Latest by reporting date across all effective reports, regardless of filters or pages. Reports are not added together. Numeric comparison is not verification.</GuidanceNote>
   </section>;
 }
 export function MeasurementBasis({ basis }) {

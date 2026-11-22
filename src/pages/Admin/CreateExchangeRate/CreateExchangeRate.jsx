@@ -1,3 +1,4 @@
+import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
@@ -299,7 +300,7 @@ const CreateExchangeRate = () => {
           </div>
         </div>
 
-        {draftMessage && <p role="status" className={styles.mutedHint}>{draftMessage}</p>}
+        {draftMessage && <GuidanceNote role="status" className={styles.mutedHint}>{draftMessage}</GuidanceNote>}
         {formError && (
           <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
@@ -382,15 +383,15 @@ const CreateExchangeRate = () => {
                     </div>
                   )}
                   {baseId && String(baseId) === String(quoteId) && (
-                    <p className={styles.mutedHint}>Matching currencies use a rate of exactly 1 (for example, 1 SEK = 1 SEK).</p>
+                    <GuidanceNote className={styles.mutedHint}>Matching currencies use a rate of exactly 1 (for example, 1 SEK = 1 SEK).</GuidanceNote>
                   )}
                 </div>
 
                 {currencies.length === 0 && (
-                  <div className={styles.mutedHint}>
+                  <GuidanceNote className={styles.mutedHint}>
                     No currencies found. Create currencies first (Admin →
                     Currency).
-                  </div>
+                  </GuidanceNote>
                 )}
               </div>
 
@@ -415,10 +416,10 @@ const CreateExchangeRate = () => {
                   {hasError("rate") && (
                     <div className={styles.fieldError}>{fieldErrors.rate}</div>
                   )}
-                  <div className={styles.mutedHint}>
+                  <GuidanceNote className={styles.mutedHint}>
                     Meaning: <strong>1</strong> unit of base currency equals{" "}
                     <strong>rate</strong> units of quote currency.
-                  </div>
+                  </GuidanceNote>
                 </div>
 
                 <div className={styles.formGroup}>
@@ -438,9 +439,9 @@ const CreateExchangeRate = () => {
                   )}
                 </div>
 
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   Each currency pair can have one rate for a given date and time.
-                </div>
+                </GuidanceNote>
               </div>
             </div>
 

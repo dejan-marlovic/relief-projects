@@ -8,6 +8,7 @@ test("collapsing a step retains its draft and explains it while collapsed", () =
     return <WorkflowStep number={1} title="Prepare" description="Describe the work before submission."><label>Draft<input value={draft} onChange={event => setDraft(event.target.value)} /></label></WorkflowStep>;
   }
   render(<Example />);
+  fireEvent.click(screen.getByRole("button", { name: "Show about this step" }));
   const input = screen.getByRole("textbox", { name: "Draft" });
   fireEvent.change(input, { target: { value: "Unsaved work" } });
   const toggle = screen.getByRole("button", { name: /Prepare/ });

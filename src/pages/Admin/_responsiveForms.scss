@@ -1,3 +1,4 @@
+@use "../../styles/presentation" as presentation;
 // Included by each form module so selectors remain locally scoped.
 @mixin layout {
   @media (max-width: 1100px) {
@@ -20,3 +21,6 @@
     .formGroup { gap: 6px; }
   }
 }
+
+// Shared explanatory text matches workflow guidance.
+.mutedHint { @include presentation.description; }

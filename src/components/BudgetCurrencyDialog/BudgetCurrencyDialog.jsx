@@ -1,3 +1,4 @@
+import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import ActionButton from "../ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import SearchableSelect from "../SearchableSelect/SearchableSelect";
@@ -124,7 +125,7 @@ export default function BudgetCurrencyDialog({ budget, currencies, rates, initia
         <ul>{(preview.outputRates || []).map((rate, index) => <li key={index}>{rate.slot}: <RateSnapshot rate={rate} /></li>)}</ul>
         <dl className={styles.totals}>{[["Budget limit", "budgetLimit"], ["Planned costs", "plannedCosts"], ["Remaining to allocate", "remainingToAllocate"]].map(([label, field]) => <div key={field}><dt>{label}</dt><dd><Pair pair={preview[field]} /></dd></div>)}</dl>
         <p>Excess: {value(preview.excess)} · Limit rounding adjustment: {value(preview.budgetLimitRoundingDelta)}</p>
-        <p className={styles.muted}>Before → after. Unit prices are rounded to 12 decimal places; limits and calculated amounts to 3, using HALF_UP. Rounding adjustments are in the new local currency. Remaining is planning capacity.</p>
+        <GuidanceNote className={styles.muted}>Before → after. Unit prices are rounded to 12 decimal places; limits and calculated amounts to 3, using HALF_UP. Rounding adjustments are in the new local currency. Remaining is planning capacity.</GuidanceNote>
         {(preview.costDetails || []).map((row) => <details key={row.costDetailId} className={styles.row}><summary>Cost detail #{row.costDetailId} · {row.costDescription || budget.costDetails?.find(cost => String(cost.costDetailId) === String(row.costDetailId))?.costDescription || "Name unavailable"} · Local: <Pair pair={row.amountLocalCurrency} /></summary><dl>{Object.entries(columns).map(([key, label]) => <div key={key}><dt>{label}</dt><dd><Pair pair={row[key]} /></dd></div>)}</dl><p>Unit-price rounding adjustment: {value(row.unitPriceRoundingDelta)}</p></details>)}
         {(preview.blockingIssues || []).map((issue, index) => <p role="alert" key={index}>{issue.message}{issue.costDetailIds?.length > 0 && ` (Cost details: ${issue.costDetailIds.join(", ")})`}</p>)}
         {(preview.warnings || []).map((issue, index) => <p key={index}>Warning: {issue.message}{issue.costDetailIds?.length > 0 && ` (Cost details: ${issue.costDetailIds.join(", ")})`}</p>)}

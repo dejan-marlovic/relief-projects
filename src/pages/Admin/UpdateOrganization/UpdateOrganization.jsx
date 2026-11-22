@@ -1,3 +1,4 @@
+import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
@@ -321,11 +322,11 @@ const UpdateOrganization = () => {
                 </div>
 
                 {selectedOrganization && (
-                  <div className={styles.mutedHint}>
+                  <GuidanceNote className={styles.mutedHint}>
                     Current address:{" "}
                     {addressLabelById[selectedOrganization.addressId] ||
                       `Address #${selectedOrganization.addressId || "N/A"}`}
-                  </div>
+                  </GuidanceNote>
                 )}
               </div>
 
@@ -388,11 +389,11 @@ const UpdateOrganization = () => {
                   </SearchableSelect>
                 </div>
 
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   Organization status is not updated here because it belongs to
                   the project-organization relationship, not the organization
                   itself.
-                </div>
+                </GuidanceNote>
               </div>
             </div>
 

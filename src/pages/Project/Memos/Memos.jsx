@@ -1,3 +1,4 @@
+import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import useMediaQuery from "../../../hooks/useMediaQuery";
 import useSwipeNavigation from "../../../hooks/useSwipeNavigation";
@@ -349,7 +350,7 @@ export default function Memos({ canEdit = false }) {
         )}
       </div>
 
-      <p data-tile-description="">Read and maintain project notes, including their author and date. Notes provide context; they do not record approval or complete a follow-up.</p>
+      <GuidanceNote data-tile-description="">Read and maintain project notes, including their author and date. Notes provide context; they do not record approval or complete a follow-up.</GuidanceNote>
 
       {loading && !items.length && <p className={styles.note}>Loading…</p>}
       {error && (

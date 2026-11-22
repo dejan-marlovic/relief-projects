@@ -1,3 +1,4 @@
+import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 import React, { useEffect, useMemo, useState } from "react";
@@ -219,9 +220,9 @@ const CreateDocument = () => {
                 onChange={handleChange}
               />
               {form.file && (
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   Selected: {form.file.name}
-                </div>
+                </GuidanceNote>
               )}
             </div>
           </div>

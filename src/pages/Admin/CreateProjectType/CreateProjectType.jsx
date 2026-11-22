@@ -1,3 +1,4 @@
+import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 // src/components/Admin/CreateProjectType/CreateProjectType.jsx
 
@@ -197,9 +198,9 @@ const CreateProjectType = () => {
                   )}
                 </div>
 
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   Note: project type name should be unique.
-                </div>
+                </GuidanceNote>
               </div>
 
               {/* Card 2 */}
@@ -209,7 +210,7 @@ const CreateProjectType = () => {
                   <div className={styles.cardMeta}>Help & examples</div>
                 </div>
 
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   Project Types are master data used to classify projects for:
                   <ul style={{ margin: "0.4rem 0 0 1rem" }}>
                     <li>
@@ -225,7 +226,7 @@ const CreateProjectType = () => {
                       reporting.
                     </li>
                   </ul>
-                </div>
+                </GuidanceNote>
               </div>
             </div>
 

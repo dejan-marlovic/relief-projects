@@ -1,3 +1,4 @@
+import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import ActionButton from "../ActionButton/ActionButton";
 import useRefreshLoading from "../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
@@ -63,12 +64,12 @@ export function AssignmentPanel({ transactionId, originBudgetId, disabled = fals
   };
   useAutomaticRefresh(() => setTick(v => v + 1), loading || busy || !!form);
   return <div className={styles.panel}>
-    <p className={styles.hint}>Use unused approved funding from this existing award on revised costs. Each assignment is one allocation, not a new award or another balance. Receipts and actual payments do not change this capacity.</p>
-    <p className={styles.hint}>Original allocations on an APPROVED transaction remain reserved even when uncommitted. This workflow cannot release those allocations. Recorded governing approval does not verify every award's donor conditions.</p>
+    <GuidanceNote className={styles.hint}>Use unused approved funding from this existing award on revised costs. Each assignment is one allocation, not a new award or another balance. Receipts and actual payments do not change this capacity.</GuidanceNote>
+    <GuidanceNote className={styles.hint}>Original allocations on an APPROVED transaction remain reserved even when uncommitted. This workflow cannot release those allocations. Recorded governing approval does not verify every award's donor conditions.</GuidanceNote>
     {(error || blocked) && <ActionButton disabled={busy || loading} onClick={() => { setError(""); setTick(n => n + 1); }}>Retry funding assignments</ActionButton>}
     {initialLoading && <p role="status">Loading assignments…</p>}{error && <p role="alert">{error}</p>}
     {data && <><dl className={styles.fields}><dt>Original award budget</dt><dd>#{originBudgetId ?? "unavailable"} · Name unavailable</dd><dt>Executable use plan</dt><dd>{data.eligibility.targetBudgetId == null ? "Not activated" : `Budget #${data.eligibility.targetBudgetId} · Name unavailable`}</dd><dt>Currency</dt><dd>{data.funding.currency ? `${data.funding.currency.name || "Currency"} (#${data.funding.currency.id})` : "Unavailable"}</dd><dt>Approved funding</dt><dd>{exactAmount(data.funding.approved)}</dd><dt>Obligations counted once</dt><dd>{exactAmount(data.funding.obligations)}</dd><dt>Unused approved funding</dt><dd>{exactAmount(data.funding.unassignedApprovedFunding)}</dd></dl>
-      <p className={styles.hint}>Unused approved funding is not cash. Target-row and shared family ceilings also apply. Currency is the current configured denomination, not verified historical meaning.</p>
+      <GuidanceNote className={styles.hint}>Unused approved funding is not cash. Target-row and shared family ceilings also apply. Currency is the current configured denomination, not verified historical meaning.</GuidanceNote>
       {(data.issues || []).map((issue, i) => <p key={i}>{issue.message}</p>)}
       {!form && data.eligibility.canCreateAssignment && <ActionButton disabled={disabled || busy || loading} onClick={() => open()}>Assign unused funding to revised costs</ActionButton>}
       {!data.assignments.length && <p>No revision funding assignments.</p>}
@@ -77,7 +78,7 @@ export function AssignmentPanel({ transactionId, originBudgetId, disabled = fals
         <p>Original budget #{row.originBudgetId} · {row.originBudgetName || "Name unavailable"} → Use plan #{row.targetBudgetId} · {row.targetBudgetName || "Name unavailable"} · Cost detail #{row.targetCostDetailId} · {row.targetCostDescription || "Name unavailable"} · Allocation #{row.allocationId}</p>
         <dl className={styles.fields}><dt>Assigned amount</dt><dd>{exactAmount(row.amount)}</dd><dt>Minimum to cover commitments</dt><dd>{exactAmount(row.minimumAmount)}</dd><dt>Maximum additional assignment now</dt><dd>{exactAmount(row.maximumAdditionalAmount)}</dd></dl>
         <p className={styles.hint}>Creation authorized by execution decision #{row.executionDecisionId}. This historical reference does not change when another plan is activated.</p>
-        {!row.eligibility.canIncrease && <p className={styles.hint}>Increase unavailable; current target, execution and capacity restrictions apply.</p>}
+        {!row.eligibility.canIncrease && <GuidanceNote className={styles.hint}>Increase unavailable; current target, execution and capacity restrictions apply.</GuidanceNote>}
         {!form && <div data-action-group="section" className={styles.actions}>{(row.eligibility.canIncrease || row.eligibility.canReduce) && <ActionButton disabled={disabled || busy || loading} onClick={() => open(row)}>Change amount #{row.id} · {row.targetCostDescription || "Name unavailable"}</ActionButton>}{row.eligibility.canRelease && <ActionButton disabled={disabled || busy || loading} onClick={() => open(row, true)}>Release assignment #{row.id} · {row.targetCostDescription || "Name unavailable"}</ActionButton>}</div>}
       </article>)}
     </>}

@@ -1,3 +1,4 @@
+import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 // src/components/Admin/CreateProjectStatus/CreateProjectStatus.jsx
 
@@ -197,9 +198,9 @@ const CreateProjectStatus = () => {
                   )}
                 </div>
 
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   Tip: keep names short and consistent (max 50 characters).
-                </div>
+                </GuidanceNote>
               </div>
 
               {/* Card 2 */}
@@ -209,7 +210,7 @@ const CreateProjectStatus = () => {
                   <div className={styles.cardMeta}>Projects + reporting</div>
                 </div>
 
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   <ul style={{ margin: "0.4rem 0 0 1rem" }}>
                     <li>
                       Project Status will be selectable when creating or editing{" "}
@@ -225,7 +226,7 @@ const CreateProjectStatus = () => {
                       <strong>Closed</strong>.
                     </li>
                   </ul>
-                </div>
+                </GuidanceNote>
               </div>
             </div>
 

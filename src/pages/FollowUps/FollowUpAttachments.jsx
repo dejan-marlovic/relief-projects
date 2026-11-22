@@ -1,3 +1,4 @@
+import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import DocumentLabel from "../../components/DocumentLabel/DocumentLabel";
@@ -168,7 +169,7 @@ export default function FollowUpAttachments({ task, authFetch, disabled = false,
 
   return <section className={styles.attachments} aria-label="Follow-up attachments">
     <h4><FiLink aria-hidden="true" /> Attachments <span className={styles.attachmentCount}>{task.attachmentCount} attachment{task.attachmentCount === 1 ? "" : "s"}</span></h4>
-    <p className={styles.muted}>Files stay in Project Documents. Removing a link only removes it from this card. Each link keeps the exact version selected.</p>
+    <GuidanceNote className={styles.muted}>Files stay in Project Documents. Removing a link only removes it from this card. Each link keeps the exact version selected.</GuidanceNote>
     {loading && !data && <p role="status">Loading attachments…</p>}
     {readError && <div role="alert"><p>{readError} {data ? "Showing previously loaded attachments." : "Attachments are unavailable."}</p><ActionButton type="button" disabled={busy} onClick={() => setAttempt(value => value + 1)}>Retry attachments</ActionButton></div>}
     {error && <p role="alert">{error}</p>}
@@ -200,14 +201,14 @@ export default function FollowUpAttachments({ task, authFetch, disabled = false,
         {showExisting && <div className={styles.attachmentEditor}>
           {documentsError && <p role="alert">{documentsError} <ActionButton type="button" onClick={() => setDocumentAttempt(value => value + 1)}>Retry project documents</ActionButton></p>}
           {!documents && !documentsError && <p role="status">Loading project documents…</p>}
-          {documents && <><label>Exact document version<SearchableSelect documentOptions value={selected} disabled={blocked} onChange={event => setSelected(event.target.value)}><option value="">Select a document version</option>{documents.map(doc => <option key={doc.id} value={doc.id}>{doc.documentName} · Version {doc.versionNumber} · {doc.isCurrent ? "Current" : "Historical"} · #{doc.id}</option>)}</SearchableSelect></label>{!documents.length && <p>No active project documents available.</p>}<p className={styles.muted}>Includes active historical versions. Linking an already attached version does not create a duplicate.</p><span data-action-group="section"><ActionButton editorBlocked={Boolean(editingId)} type="button" disabled={!!editingId || blocked || !selected} onClick={() => run(() => command(Number(selected)))}>Link selected version</ActionButton></span></>}
+          {documents && <><label>Exact document version<SearchableSelect documentOptions value={selected} disabled={blocked} onChange={event => setSelected(event.target.value)}><option value="">Select a document version</option>{documents.map(doc => <option key={doc.id} value={doc.id}>{doc.documentName} · Version {doc.versionNumber} · {doc.isCurrent ? "Current" : "Historical"} · #{doc.id}</option>)}</SearchableSelect></label>{!documents.length && <p>No active project documents available.</p>}<GuidanceNote className={styles.muted}>Includes active historical versions. Linking an already attached version does not create a duplicate.</GuidanceNote><span data-action-group="section"><ActionButton editorBlocked={Boolean(editingId)} type="button" disabled={!!editingId || blocked || !selected} onClick={() => run(() => command(Number(selected)))}>Link selected version</ActionButton></span></>}
         </div>}
       </>}
       {data.permissions?.canUpload && <div className={styles.attachmentEditor}>
         <h5>Upload and attach</h5>
         {categoryError && <p role="alert">{categoryError} <ActionButton type="button" onClick={retryCategories}>Retry categories</ActionButton></p>}
         <div className={styles.grid}><label>Upload category<SearchableSelect value={category} disabled={blocked} onChange={event => setCategory(event.target.value)}>{categories.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</SearchableSelect></label><label>Upload status<select value={status} disabled={blocked} onChange={event => setStatus(event.target.value)}><option value="DRAFT">Draft</option><option value="FINAL">Final</option></select></label><label>Document date (optional)<input type="date" min="1000-01-01" max="9999-12-31" value={date} disabled={blocked} onChange={event => setDate(event.target.value)} /></label></div>
-        <p className={styles.muted}>You can upload using the defaults: Uncategorized and Draft. Change the details first if needed; the date is optional. Final is a descriptive label, not approval or proof of signing.</p>
+        <GuidanceNote className={styles.muted}>You can upload using the defaults: Uncategorized and Draft. Change the details first if needed; the date is optional. Final is a descriptive label, not approval or proof of signing.</GuidanceNote>
         <ActionButton type="button" className={styles.attachmentDrop} disabled={!canUpload || !!chosenFile} onClick={() => input.current?.click()} onDragOver={event => { event.preventDefault(); event.stopPropagation(); }} onDrop={event => { event.preventDefault(); event.stopPropagation(); if (!canUpload || chosenFile) return; if (event.dataTransfer.files.length !== 1) { setError("Choose one file at a time."); return; } setChosenFile(event.dataTransfer.files[0]); }}><FiUploadCloud aria-hidden="true" /><span>Choose a file, or drag and drop it here</span><small>{ALLOWED_FORMATS_LABEL} · max {MAX_UPLOAD_MB}MB</small></ActionButton>
         <input ref={input} type="file" aria-label="Upload follow-up attachment" hidden accept={FILE_INPUT_ACCEPT} disabled={busy || !!uploaded || uncertainUpload || reviewRequired || !data.permissions?.canUpload} onChange={event => { const file = event.target.files?.[0]; event.target.value = ""; if (file) setChosenFile(file); }} />
       </div>}

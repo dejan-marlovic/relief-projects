@@ -1,3 +1,4 @@
+import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import { OpenEditorProvider } from "../../context/OpenEditorContext";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
@@ -6,7 +7,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import styles from "./Layout.module.scss";
 import { ProjectContext } from "../../context/ProjectContext";
-import { FiLogOut, FiLayers, FiInfo } from "react-icons/fi";
+import { FiLogOut, FiLayers } from "react-icons/fi";
 import { useBranding } from "../../context/BrandingContext";
 import { useAuth } from "../../context/AuthContext";
 import { UnsavedChangesContext } from "../../context/UnsavedChangesContext";
@@ -190,18 +191,14 @@ const Layout = () => {
           </p>
         </div>
 
-        <aside className={styles.projectContextNote} aria-label="Project context">
-          <FiInfo aria-hidden="true" />
-          <div>
-            <strong>{isTravelSchedulePage ? "Across projects" : selectedProject ? "Your selected project" : "Project context"}</strong>
+        <GuidanceNote className={styles.projectContextNote} aria-label="Project context" title={isTravelSchedulePage ? "Across projects" : selectedProject ? "Your selected project" : "Project context"}>
             <p>
               {isTravelSchedulePage ? "The travel schedule uses its own project and date filters. Opening a request selects its project and takes you to Travel." : <>Most tabs show data for your selected project, including budgets,
               transactions and payment orders. {hideSelector
                 ? "Use the Project selector on a project page to switch projects. This page is not filtered by that selection."
                 : "Use the Project selector to switch projects."}</>}
             </p>
-          </div>
-        </aside>
+        </GuidanceNote>
 
         <div className={styles.headerRight}>
           {!hideSelector && (

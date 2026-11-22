@@ -228,3 +228,6 @@ label {
 .cardTitle { @include presentation.tile-title; }
 .cardMeta { @include presentation.description; }
 .formContainer { @include presentation.surface; }
+
+// Shared explanatory text matches workflow guidance.
+.mutedHint { @include presentation.description; }

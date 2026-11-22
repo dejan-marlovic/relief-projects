@@ -1,3 +1,4 @@
+import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import ActionButton from "../ActionButton/ActionButton";
 import useRefreshLoading from "../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
@@ -51,7 +52,7 @@ export default function BudgetPlanning({ budget, refreshKey = 0, disabled = fals
   useAutomaticRefresh(() => setRefresh(v => v + 1), loading || busy || disabled || confirmed || String(amount) !== String(summary?.budgetLimit ?? ""));
   return <section className={styles.panel} aria-label="Budget planning">
     <h3>Budget planning</h3>
-    <p className={styles.muted}>Remaining to allocate is room for planned costs, not cash or a payment balance.</p>
+    <GuidanceNote className={styles.muted}>Remaining to allocate is room for planned costs, not cash or a payment balance.</GuidanceNote>
     {(error) && <ActionButton type="button" disabled={busy || loading} onClick={() => setRefresh((v) => v + 1)}>Retry planning summary</ActionButton>}
     {initialLoading && <p role="status">Loading planning summary…</p>}{error && <p role="alert">{error}</p>}{message && <p role="status">{message}</p>}
     {summary && <>
@@ -64,7 +65,7 @@ export default function BudgetPlanning({ budget, refreshKey = 0, disabled = fals
         <label>Set or confirm budget limit<input type="number" min="0.001" step="any" value={amount} disabled={busy || disabled || loading} onChange={(e) => { setAmount(e.target.value); setConfirmed(false); }} /></label>
         <label><input type="checkbox" checked={confirmed} disabled={busy || disabled || loading} onChange={(e) => setConfirmed(e.target.checked)} /> I confirm this amount is in {summary.localCurrency?.name || "the configured local currency"}. No currency conversion will be performed.</label>
         <span data-action-group="section"><ActionButton type="submit" disabled={busy || disabled || loading || !confirmed || !summary.localCurrency?.id}>Save budget limit</ActionButton></span>
-        <p className={styles.muted}>Saves only the limit and its currency confirmation; cost details are not recalculated. Finish other edits first.</p>
+        <GuidanceNote className={styles.muted}>Saves only the limit and its currency confirmation; cost details are not recalculated. Finish other edits first.</GuidanceNote>
       </form>}
     </>}
   </section>;

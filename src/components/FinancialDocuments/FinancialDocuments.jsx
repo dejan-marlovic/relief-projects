@@ -1,3 +1,4 @@
+import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import ActionButton from "../ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import DocumentLabel from "../DocumentLabel/DocumentLabel";
@@ -139,8 +140,8 @@ function DocumentsPanel({ entityType, entityId, locked, lifecycleStatus, refresh
   const selectable = candidates.filter((doc) => !links.some((link) => link.documentId === doc.id));
   useAutomaticRefresh(refresh, loading || busy || candidateLoading || !!selectedId || downloading.length > 0);
   return <div className={styles.panel}>
-    {entityType === "PAYMENT_ORDER" && <p className={styles.hint}>Ordinary supporting documents — approval-time inclusion not recorded. Late payment evidence is managed separately.</p>}
-    <p className={styles.hint}>Links keep the exact file version you select. A replacement never changes existing supporting evidence. Draft and Final are descriptive labels.</p>
+    {entityType === "PAYMENT_ORDER" && <GuidanceNote className={styles.hint}>Ordinary supporting documents — approval-time inclusion not recorded. Late payment evidence is managed separately.</GuidanceNote>}
+    <GuidanceNote className={styles.hint}>Links keep the exact file version you select. A replacement never changes existing supporting evidence. Draft and Final are descriptive labels.</GuidanceNote>
     {(listError || actionError || candidateError) && <ActionButton type="button" onClick={refresh} disabled={loading || busy}>Retry supporting documents</ActionButton>}
     {initialLoading && <p role="status">Loading supporting documents…</p>}
     {listError && <p role="alert">{listError}</p>}
@@ -172,7 +173,7 @@ function DocumentsPanel({ entityType, entityId, locked, lifecycleStatus, refresh
         <label>Project document<SearchableSelect documentOptions value={selectedId} disabled={busy || candidateLoading} onChange={(event) => setSelectedId(event.target.value)}><option value="">{candidateLoading ? "Loading documents…" : "Select an exact document version"}</option>{selectable.map((doc) => <option key={doc.id} value={doc.id}>{doc.documentName} · Version {doc.versionNumber} · {statusLabel(doc.status)}{doc.isCurrent ? " · Current" : " · Historical"} (#{doc.id})</option>)}</SearchableSelect></label>
         <div data-action-group="section" className={styles.actions}><ActionButton type="submit" disabled={!selectedId || busy || candidateLoading}><RecordIcon type="link" />Link selected version</ActionButton>{selectedId && <ActionButton type="button" onClick={() => { const doc = selectable.find((item) => String(item.id) === selectedId); if (doc) setHistory(doc); }}>Preview version history</ActionButton>}</div>
         {!candidateLoading && !candidateError && !selectable.length && <p>No unlinked documents in this view. Try including historical versions or upload a project document first.</p>}
-        <p className={styles.hint}>To change evidence, link the new version first, then remove the old link. Removing a link does not delete the document. Uploads remain available in the project's Documents tab for users with upload permission.</p>
+        <GuidanceNote className={styles.hint}>To change evidence, link the new version first, then remove the old link. Removing a link does not delete the document. Uploads remain available in the project's Documents tab for users with upload permission.</GuidanceNote>
       </form>}
     </>}
     {history && <DocumentVersions key={history.id} document={history} authFetch={authFetch} categories={categories} canEdit={false} canDelete={false} onDownload={download} downloading={downloading} revision={revision} onChanged={refresh} onClose={() => setHistory(null)} />}

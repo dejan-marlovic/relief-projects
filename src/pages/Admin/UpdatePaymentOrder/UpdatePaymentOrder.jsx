@@ -1,3 +1,4 @@
+import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
@@ -419,9 +420,9 @@ const UpdatePaymentOrder = () => {
                 </div>
 
                 {selectedPaymentOrder?.amount !== undefined && (
-                  <div className={styles.mutedHint}>
+                  <GuidanceNote className={styles.mutedHint}>
                     Current computed amount: <PaymentAmount record={selectedPaymentOrder} />
-                  </div>
+                  </GuidanceNote>
                 )}
               </div>
             </div>

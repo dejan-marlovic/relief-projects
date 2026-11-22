@@ -1,3 +1,4 @@
+import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
@@ -59,7 +60,7 @@ export default function AttachmentDetailsEditor({ item, projectId, authFetch, ca
     else save.flush();
   }} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) save.flush(); }}>
     <h5>Edit details · {item.documentName}</h5>
-    <p className={styles.muted}>These document details are shared everywhere this version is linked. Changes save after a short pause or when you leave the form. Final is a label, not approval or proof of signing.</p>
+    <GuidanceNote className={styles.muted}>These document details are shared everywhere this version is linked. Changes save after a short pause or when you leave the form. Final is a label, not approval or proof of signing.</GuidanceNote>
     {error && <p role="alert">{error} <ActionButton type="button" onClick={() => setAttempt(n => n + 1)}>Retry document details</ActionButton></p>}
     {!form && !error && <p role="status">Loading document details…</p>}
     <div className={styles.saveFeedback}><AutosaveStatus save={save} /></div>

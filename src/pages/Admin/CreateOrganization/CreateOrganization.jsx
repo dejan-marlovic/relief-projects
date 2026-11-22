@@ -1,3 +1,4 @@
+import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 // src/components/Admin/CreateOrganization/CreateOrganization.jsx
@@ -312,10 +313,10 @@ const CreateOrganization = () => {
                   )}
                 </div>
 
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   Tip: Keep contact details generic, such as a main inbox or
                   switchboard, unless you model contacts separately.
-                </div>
+                </GuidanceNote>
               </div>
 
               <div data-mobile-tile="Address" className={styles.card}>
@@ -349,17 +350,17 @@ const CreateOrganization = () => {
                 </div>
 
                 {addresses.length === 0 && (
-                  <div className={styles.mutedHint}>
+                  <GuidanceNote className={styles.mutedHint}>
                     No addresses found. Create an address first in Admin →
                     Address.
-                  </div>
+                  </GuidanceNote>
                 )}
 
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   Organization status is not selected here because it belongs to
                   the project-organization relationship, not the organization
                   itself.
-                </div>
+                </GuidanceNote>
               </div>
             </div>
 

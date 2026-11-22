@@ -1,3 +1,4 @@
+import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import FilterHelp from "../../components/FilterHelp/FilterHelp";
 import RecordListLabel from "../../components/RecordListLabel/RecordListLabel";
 import ActionButton from "../../components/ActionButton/ActionButton";
@@ -174,5 +175,5 @@ export default function Results() {
   const { selectedProjectId } = useContext(ProjectContext);
   const navigate = useNavigate();
   const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
-  return <section data-page-shell="surface" className={styles.page}><h2>Project results & indicators</h2><p>Track user-reported measurements against defined targets. Each report covers the full period from its start through the reporting date. Repeated reports are never added together, and supporting documents do not certify outcomes.</p>{selectedProjectId ? <ResultsRegister key={selectedProjectId} projectId={selectedProjectId} authFetch={authFetch} /> : <p>Select a project to view its results.</p>}</section>;
+  return <section data-page-shell="surface" className={styles.page}><h2>Project results & indicators</h2><GuidanceNote>Track user-reported measurements against defined targets. Each report covers the full period from its start through the reporting date. Repeated reports are never added together, and supporting documents do not certify outcomes.</GuidanceNote>{selectedProjectId ? <ResultsRegister key={selectedProjectId} projectId={selectedProjectId} authFetch={authFetch} /> : <p>Select a project to view its results.</p>}</section>;
 }

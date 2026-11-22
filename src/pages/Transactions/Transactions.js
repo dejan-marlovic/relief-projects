@@ -1,3 +1,4 @@
+import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import { namedReference } from "../../utils/recordLabels";
 import MobileRecordDeck from "../../components/MobileRecordDeck/MobileRecordDeck";
@@ -1661,7 +1662,7 @@ const Transactions = ({ refreshTrigger }) => {
             </ActionButton>}
           </div>
         </div>
-<p className={styles.sectionDescription} data-tile-description="">Review funding transactions for the selected project. Expand a record to inspect allocations, receipts and activity.</p>
+<GuidanceNote className={styles.sectionDescription} data-tile-description="">Review funding transactions for the selected project. Expand a record to inspect allocations, receipts and activity.</GuidanceNote>
 
         <details className={styles.fundingHelp}><summary>About funding amounts</summary><p>Requested and approved funding are separate; approval does not mean funds received. Own contribution is a recorded flag, not an amount or percentage.</p></details>
         {formError && (

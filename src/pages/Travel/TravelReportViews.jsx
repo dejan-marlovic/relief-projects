@@ -1,3 +1,4 @@
+import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import { HistoryTimeline, SnapshotHistoryEntry } from "../../components/ActivityHistory/ActivityHistory";
 import { uploadTimeLabel } from "../../utils/documentMetadata";
 import React, { useId, useState } from "react";
@@ -12,7 +13,7 @@ export function ReportBasis({ basis }) {
     <p><strong>{basis.kind === "RECORDED_APPROVAL" ? `Recorded approval #${basis.approvalId}` : "Unapproved plan observation"}</strong></p>
     <dl className={styles.snapshot}><dt>Traveller</dt><dd>{basis.traveller?.displayName} (#{basis.traveller?.employeeId})</dd><dt>Purpose</dt><dd>{basis.purpose}</dd><dt>Destination</dt><dd>{basis.destination}</dd><dt>Captured planned dates</dt><dd>{basis.departureDate} through {basis.returnDate}</dd></dl>
     {basis.approvalRecordedAt && <p>Approval recorded {uploadTimeLabel(basis.approvalRecordedAt)}</p>}
-    <p className={styles.muted}>This saved basis stays separate from the live travel plan and the actual account. Reporting does not grant retrospective travel approval.</p>
+    <GuidanceNote className={styles.muted}>This saved basis stays separate from the live travel plan and the actual account. Reporting does not grant retrospective travel approval.</GuidanceNote>
   </section>;
 }
 export function ReportAccount({ report }) {
@@ -48,7 +49,7 @@ export function ApprovalBasisPicker({ endpoint, authFetch, refresh, value, onCha
   const [page, setPage] = useState(0);
   const state = useTravelRead(authFetch, `${endpoint}/history?page=${page}&size=20`, refresh);
   const approvals = state.data?.content?.filter(event => event.action === "APPROVE") || [];
-  return <section aria-label="Choose report plan basis"><p>Choose the retained approval that describes this trip, including a withdrawn approval when appropriate. Or explicitly capture the current plan without approval. Nothing is selected automatically.</p>
+  return <section aria-label="Choose report plan basis"><GuidanceNote>Choose the retained approval that describes this trip, including a withdrawn approval when appropriate. Or explicitly capture the current plan without approval. Nothing is selected automatically.</GuidanceNote>
     <label><input type="radio" name={basisGroup} checked={value === "unapproved"} onChange={() => onChange("unapproved")} />Use current plan as an unapproved observation</label>
     <p>Selected basis: {value === "" ? "None selected" : value === "unapproved" ? "Unapproved plan observation" : `Recorded approval #${value}`}</p>
     <ReadState state={state} />{approvals.map(event => <article key={event.id} className={styles.panel}>

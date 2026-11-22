@@ -1,3 +1,4 @@
+import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
@@ -193,12 +194,12 @@ const RestoreUser = () => {
                   </SearchableSelect>
                 </div>
 
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   This screen needs endpoints like:
                   <code> GET /api/users/deleted </code>
                   and
                   <code> PUT /api/users/{`{id}`}/restore</code>.
-                </div>
+                </GuidanceNote>
               </div>
 
               <div data-mobile-tile="Selected user details" className={styles.card}>

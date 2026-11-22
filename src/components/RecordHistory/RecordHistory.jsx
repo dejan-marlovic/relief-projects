@@ -1,3 +1,4 @@
+import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import ActionButton from "../ActionButton/ActionButton";
 import useAutomaticRefresh from "../../hooks/useAutomaticRefresh";
 import { HistoryPagination, HistoryTimeline, HistoryEntry } from "../ActivityHistory/ActivityHistory";
@@ -60,7 +61,7 @@ function HistoryPage({ entityType, entityId, includeChildren }) {
   const { loading, error, result } = state;
   useAutomaticRefresh(() => setRefresh(v => v + 1), loading);
   return <div className={styles.panel}>
-    <p>Review the recorded changes to this record. Each entry identifies the action, actor and saved changes; before and after values describe that event, not the current record. History records activity, not completion of a workflow.</p>
+    <GuidanceNote>Review the recorded changes to this record. Each entry identifies the action, actor and saved changes; before and after values describe that event, not the current record. History records activity, not completion of a workflow.</GuidanceNote>
     <div className={styles.toolbar}>
       <span>Activity history · newest first</span>
       {(error) && <ActionButton type="button" disabled={loading} onClick={() => { setPage(0); setRefresh((value) => value + 1); }}>Retry history</ActionButton>}

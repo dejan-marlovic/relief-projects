@@ -1,3 +1,4 @@
+import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import RecordListLabel from "../../components/RecordListLabel/RecordListLabel";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
@@ -93,7 +94,7 @@ function TaskForm({ task, projectId, employees, busy, onSave, onCancel, blocked 
     flush(true);
   }}>
     <h3>{task ? "Edit follow-up" : "New follow-up"}</h3>
-    <p className={styles.muted}>Details save automatically after a short pause or when you leave a field. A new follow-up is created once its title, deadline and responsible employee are filled in. A corner notification confirms when your changes are saved.</p>
+    <GuidanceNote className={styles.muted}>Details save automatically after a short pause or when you leave a field. A new follow-up is created once its title, deadline and responsible employee are filled in. A corner notification confirms when your changes are saved.</GuidanceNote>
     <div className={styles.saveFeedback}><AutosaveStatus save={{ message: busy ? "Saving…" : blocked ? "Automatic saving paused. Review the message below before saving again." : !dirty ? "" : !reviewed ? "Check the restored draft before saving." : valid ? "Changes waiting to save…" : "Complete the required fields to save." }} /></div>
     <p className={`${styles.muted} ${styles.draftHint}`}>{dirty && !stored ? "Keep this page open until your changes are saved; tab recovery is unavailable." : "Unfinished entries are also kept in this tab until saved. Closing the tab removes these drafts."}</p>
     {!reviewed && <div className={styles.recovery}><p>Unfinished entries have been restored. Check the current task and board before saving; an earlier save may already have succeeded.</p><label><input type="checkbox" checked={reviewed} onChange={e => setReviewed(e.target.checked)} /> I have checked the current records</label></div>}
@@ -308,12 +309,12 @@ function Queue({ mode, projectId, authFetch, scopeControls }) {
     <div className={styles.queueToolbar}>{scopeControls}
     <div data-action-group="section" className={styles.actions} aria-label="Follow-up view" aria-hidden={!supported} style={{ visibility: supported ? "visible" : "hidden" }}>{["board", "list"].map(value => <ActionButton key={value} aria-pressed={(board ? "board" : "list") === value} disabled={filtersDisabled || (value === "board" && (filters.deleted || data?.projectDeleted))} onClick={() => { if ((form || retry) && !confirmDiscardUnsavedChanges()) return; setForm(null); setRetry(null); setView(value); localStorage.setItem("follow-up-view", value); }}>{value === "list" ? "List" : "Board"}</ActionButton>)}</div>
     </div>
-    {board && <p className={styles.muted}>Drag a card by its handle to an available column, or use its action buttons. Reopening Done work requires confirmation and returns it to To do; start work separately afterwards. Deadline warnings are independent of progress. Each column has its own pages and observed total; concurrent changes can affect counts. The board updates automatically when you are not editing or moving a task.</p>}
+    {board && <GuidanceNote className={styles.muted}>Drag a card by its handle to an available column, or use its action buttons. Reopening Done work requires confirmation and returns it to To do; start work separately afterwards. Deadline warnings are independent of progress. Each column has its own pages and observed total; concurrent changes can affect counts. The board updates automatically when you are not editing or moving a task.</GuidanceNote>}
 
     <div data-action-group="section" className={styles.actions}>{data?.canCreate && <ActionButton disabled={taskActionsDisabled} onClick={() => setForm({ task: null })}>New follow-up</ActionButton>}</div>
     <section className={styles.filterPanel} aria-label="Filter follow-ups">
     <h3>Filter follow-ups</h3>
-    <p className={styles.muted}>These controls change which tasks you see. To assign a task, use Responsible employee in its form.</p>
+    <GuidanceNote className={styles.muted}>These controls change which tasks you see. To assign a task, use Responsible employee in its form.</GuidanceNote>
     {form && <p className={styles.muted}>Close or save your draft to change filters.</p>}
     <div className={styles.filters}>
       {!board && <><label>Status<select value={filters.status} disabled={filtersDisabled || board} onChange={(e) => changeFilter("status", e.target.value)}><option value="OPEN">Open</option><option value="COMPLETED">Completed</option><option value="ALL">All statuses</option></select></label>
@@ -348,9 +349,9 @@ export default function FollowUps({ initialMode = "project" }) {
   const [mode, setMode] = useState(initialMode);
   const { confirmDiscardUnsavedChanges } = useUnsavedChanges();
   const scopeControls = <div data-action-group="section" className={styles.actions}><ActionButton aria-pressed={mode === "project"} onClick={() => { if (confirmDiscardUnsavedChanges()) setMode("project"); }}>Selected project</ActionButton><ActionButton aria-pressed={mode === "mine"} onClick={() => { if (confirmDiscardUnsavedChanges()) setMode("mine"); }}>My follow-ups</ActionButton></div>;
-  return <section data-page-shell="surface" className={styles.page}><h2>Follow-ups</h2><p className={styles.muted}>Track project actions, deadlines and responsible people. Completing an action does not approve documents or satisfy a checklist.</p>
-    <p className={styles.muted}>Download an open follow-up as an all-day calendar entry on its deadline. The file contains its title, description, project and responsible employee. Import it into Outlook or another calendar yourself. This is a snapshot: edits, completion and deletion do not update imported entries. Reimporting may create duplicates. No invitation or automatic notification is sent.</p>
-    <p className={styles.muted}>Selected project shows that project’s follow-ups. My follow-ups shows your employee’s assigned work across all active projects, regardless of the project selected above.</p>
+  return <section data-page-shell="surface" className={styles.page}><h2>Follow-ups</h2><GuidanceNote title="About follow-ups" className={styles.muted}>Track project actions, deadlines and responsible people. Completing an action does not approve documents or satisfy a checklist.</GuidanceNote>
+    <GuidanceNote title="Calendar downloads" className={styles.muted}>Download an open follow-up as an all-day calendar entry on its deadline. The file contains its title, description, project and responsible employee. Import it into Outlook or another calendar yourself. This is a snapshot: edits, completion and deletion do not update imported entries. Reimporting may create duplicates. No invitation or automatic notification is sent.</GuidanceNote>
+    <GuidanceNote title="Which follow-ups are shown" className={styles.muted}>Selected project shows that project’s follow-ups. My follow-ups shows your employee’s assigned work across all active projects, regardless of the project selected above.</GuidanceNote>
     {mode === "project" && !selectedProjectId ? <>{scopeControls}<p>Select a project to see its follow-ups.</p></> : <Queue key={`${mode}-${mode === "project" ? selectedProjectId : "all"}`} mode={mode} projectId={mode === "project" ? selectedProjectId : null} authFetch={authFetch} scopeControls={scopeControls} />}
   </section>;
 }

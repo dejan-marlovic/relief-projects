@@ -1,3 +1,4 @@
+import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import ActionButton from "../ActionButton/ActionButton";
 import React, { useState } from "react";
 import { countryLabel } from "../../utils/projectGeography";
@@ -10,7 +11,7 @@ export default function CountryPicker({ codes = [], savedCountries = [], catalog
   const selected = codes.map(code => choices.find(entry => entry.code === code) || savedCountries.find(entry => entry.code === code) || { code, label: null, issue: true });
   return <fieldset className={styles.countries}>
     <legend>Operating countries/territories (optional)</legend>
-    <p className={styles.hint}>Where project activities are intended to operate. This is separate from Address and beneficiary nationality. Empty means not recorded, not global coverage.</p>
+    <GuidanceNote className={styles.hint}>Where project activities are intended to operate. This is separate from Address and beneficiary nationality. Empty means not recorded, not global coverage.</GuidanceNote>
     {codes.length ? <ul className={styles.selectedCountries}>{selected.map(entry => <li key={entry.code}>{countryLabel(entry)} <span data-action-group="section"><ActionButton className={styles.removeCountry} type="button" disabled={locked} onClick={() => onChange(codes.filter(code => code !== entry.code))}>Remove {entry.code}</ActionButton></span></li>)}</ul> : <p className={styles.hint}>Not recorded</p>}
     {catalogue.loading && <p>Loading countries…</p>}
     {catalogue.error && <p role="alert">{catalogue.error} <ActionButton type="button" onClick={catalogue.retry}>Retry country lookup</ActionButton></p>}
@@ -20,6 +21,6 @@ export default function CountryPicker({ codes = [], savedCountries = [], catalog
       <p className={styles.hint}>{codes.length} / {catalogue.data.maxSelections} selected</p>
       <div className={styles.countryChoices}>{choices.filter(entry => entry.selectable && !codes.includes(entry.code) && `${entry.label} ${entry.code}`.toLowerCase().includes(search.toLowerCase())).map(entry => <label key={entry.code}><input type="checkbox" checked={false} disabled={locked || codes.length >= catalogue.data.maxSelections} onChange={() => onChange([...codes, entry.code])} />{entry.label} ({entry.code})</label>)}</div>
     </>}
-    <p className={styles.hint}>Changing operating countries may require assessment resubmission or review. It does not change the project's address.</p>
+    <GuidanceNote className={styles.hint}>Changing operating countries may require assessment resubmission or review. It does not change the project's address.</GuidanceNote>
   </fieldset>;
 }

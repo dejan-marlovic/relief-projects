@@ -1,3 +1,4 @@
+import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
@@ -450,11 +451,11 @@ const UpdateBudget = () => {
                 </div>
 
                 {selectedBudget && (
-                  <div className={styles.mutedHint}>
+                  <GuidanceNote className={styles.mutedHint}>
                     Project:{" "}
                     {projectNameById[selectedBudget.projectId] ||
                       `Project #${selectedBudget.projectId} · Name unavailable`}
-                  </div>
+                  </GuidanceNote>
                 )}
               </div>
 

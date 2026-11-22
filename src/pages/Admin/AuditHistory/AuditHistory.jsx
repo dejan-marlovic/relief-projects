@@ -1,3 +1,4 @@
+import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import FilterHelp from "../../../components/FilterHelp/FilterHelp";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
@@ -154,7 +155,7 @@ const AuditHistory = () => {
       <div className={styles.header}>
         <div>
           <h3>Record audit history</h3>
-          <p>Record activity for budgets, transactions, payment orders, payment-order lines, transaction allocations, budget cost details, signatures, and recipients.</p>
+          <GuidanceNote>Record activity for budgets, transactions, payment orders, payment-order lines, transaction allocations, budget cost details, signatures, and recipients.</GuidanceNote>
         </div>
         <ActionButton type="button" className={styles.refreshButton} onClick={() => setRefreshKey((value) => value + 1)} disabled={loading}>
           <FiRefreshCw aria-hidden="true" /> Refresh

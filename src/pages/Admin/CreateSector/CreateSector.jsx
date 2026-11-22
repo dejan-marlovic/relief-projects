@@ -1,3 +1,4 @@
+import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 // src/components/Admin/CreateSector/CreateSector.jsx
 
@@ -269,9 +270,9 @@ const CreateSector = () => {
                   )}
                 </div>
 
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   Note: both code and description should be unique.
-                </div>
+                </GuidanceNote>
               </div>
 
               {/* Card 2 */}
@@ -281,7 +282,7 @@ const CreateSector = () => {
                   <div className={styles.cardMeta}>Help & examples</div>
                 </div>
 
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   Sectors are master data used to classify project activities
                   and improve reporting:
                   <ul style={{ margin: "0.4rem 0 0 1rem" }}>
@@ -294,9 +295,9 @@ const CreateSector = () => {
                       HEA, etc.).
                     </li>
                   </ul>
-                </div>
+                </GuidanceNote>
 
-                <div
+                <GuidanceNote
                   className={styles.mutedHint}
                   style={{ marginTop: "0.6rem" }}
                 >
@@ -320,7 +321,7 @@ const CreateSector = () => {
                       Multipurpose Programme Design
                     </li>
                   </ul>
-                </div>
+                </GuidanceNote>
               </div>
             </div>
 

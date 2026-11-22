@@ -1,3 +1,4 @@
+import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
@@ -217,9 +218,9 @@ const DeleteSignatureStatus = () => {
                   </SearchableSelect>
                 </div>
 
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   Only active signature statuses are shown in the dropdown.
-                </div>
+                </GuidanceNote>
               </div>
 
               <div data-mobile-tile="" className={styles.card}>

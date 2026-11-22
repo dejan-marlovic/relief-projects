@@ -1,3 +1,4 @@
+import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 // src/components/Admin/CreateTransactionStatus/CreateTransactionStatus.jsx
 
@@ -250,9 +251,9 @@ const CreateTransactionStatus = () => {
                   )}
                 </div>
 
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   Tip: keep names consistent so reporting stays clean.
-                </div>
+                </GuidanceNote>
               </div>
 
               {/* Card 2 */}
@@ -262,7 +263,7 @@ const CreateTransactionStatus = () => {
                   <div className={styles.cardMeta}>Transactions</div>
                 </div>
 
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   Transaction statuses are master data used for:
                   <ul style={{ margin: "0.4rem 0 0 1rem" }}>
                     <li>Filtering and dashboards (e.g. show all “Pending”).</li>
@@ -271,7 +272,7 @@ const CreateTransactionStatus = () => {
                     </li>
                     <li>Grouping reports and exports by status.</li>
                   </ul>
-                </div>
+                </GuidanceNote>
               </div>
             </div>
 

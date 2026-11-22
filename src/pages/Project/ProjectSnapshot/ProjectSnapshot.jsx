@@ -1,3 +1,4 @@
+import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import { selectedPlanningBudgets } from "../../../utils/budgetRevisions";
 import { appFetch as fetch } from "../../../utils/appFetch";
@@ -329,7 +330,7 @@ const ProjectSnapshot = ({
         <div className={styles.chartGrid}>
           <div data-mobile-tile="Operational activity" className={styles.chartCard}>
             <div className={styles.chartTitle}>Operational activity</div>
-<p data-tile-description="">Compare counts of records in this project. These counts show recorded activity, not confirmed delivery or financial totals.</p>
+<GuidanceNote data-tile-description="">Compare counts of records in this project. These counts show recorded activity, not confirmed delivery or financial totals.</GuidanceNote>
             <div className={styles.chartSubtitle}>Record counts across the selected project</div>
             <div className={styles.chartWrap}>
               <ResponsiveContainer width="100%" height={isPhone ? Math.max(280, chartData.length * 60) : 300}>
@@ -351,7 +352,7 @@ const ProjectSnapshot = ({
 
           <div data-mobile-tile="Project participants" className={styles.chartCard}>
             <div className={styles.chartTitle}>Project participants</div>
-<p data-tile-description="">See how the project’s participants are distributed across their recorded roles.</p>
+<GuidanceNote data-tile-description="">See how the project’s participants are distributed across their recorded roles.</GuidanceNote>
             <div className={styles.chartSubtitle}>Participants grouped by role</div>
             {participantRoles.length > 0 ? (
               <>

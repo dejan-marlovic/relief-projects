@@ -336,3 +336,6 @@
 .pageTitle { @include presentation.page-title; }
 .pageSubtitle { @include presentation.description; }
 .shell { @include presentation.surface; }
+
+// Shared explanatory text matches workflow guidance.
+.infoText { @include presentation.description; }

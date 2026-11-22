@@ -1,3 +1,4 @@
+import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import ScrollToForm from "../../components/ScrollToForm/ScrollToForm";
 import React, { useRef, useState } from "react";
@@ -27,12 +28,12 @@ export default function TravelReportEditor({ form, setForm, endpoint, projectId,
       {["create", "basis"].includes(action) && <ApprovalBasisPicker endpoint={endpoint} authFetch={authFetch} refresh={refresh} value={draft.basisApprovalId} onChange={value => update("basisApprovalId", value)} />}
       {["create", "edit"].includes(action) && <>
         <label>Reported outcome<select value={draft.outcome} onChange={e => update("outcome", e.target.value)}><option value="">Not assessed — draft</option><option value="COMPLETED">Completed travel</option><option value="PARTIALLY_COMPLETED">Partially completed — concluded but curtailed</option><option value="NOT_TAKEN">Not taken — no travel occurred</option></select></label>
-        <p>Record actual dates yourself; planned dates are not proof of travel. Ongoing travel or unknown actual dates should remain a draft. For Not taken, explicitly clear both date fields.</p>
+        <GuidanceNote>Record actual dates yourself; planned dates are not proof of travel. Ongoing travel or unknown actual dates should remain a draft. For Not taken, explicitly clear both date fields.</GuidanceNote>
         <div className={styles.grid}>{[["actualDepartureDate", "Actual departure"], ["actualReturnDate", "Actual return"]].map(([key, title]) => <label key={key}>{title}<input type="date" min={key === "actualReturnDate" ? draft.actualDepartureDate || "1000-01-01" : "1000-01-01"} max={today} value={draft[key]} onChange={e => update(key, e.target.value)} /></label>)}</div>
         {text("outcomeSummary", "Outcome summary (required before submission)")}
         <label>Material differences from purpose, destination or scope<select value={draft.materialDifferences} onChange={e => update("materialDifferences", e.target.value)}><option value="">Not assessed</option><option value="false">No material differences</option><option value="true">Yes — explain below</option></select></label>
         {text("explanation", "Explanation of differences or exceptional authorization")}
-        <p className={styles.muted}>Explain partial or untaken travel, changed dates, material differences, an unapproved or withdrawn basis, cancellation or approval recorded after departure. Partial and untaken outcomes require Yes for material differences. An incomplete draft can be saved; submission checks completeness.</p>
+        <GuidanceNote className={styles.muted}>Explain partial or untaken travel, changed dates, material differences, an unapproved or withdrawn basis, cancellation or approval recorded after departure. Partial and untaken outcomes require Yes for material differences. An incomplete draft can be saved; submission checks completeness.</GuidanceNote>
       </>}
       {action === "submit" && <>{text("note", "Report submission note (optional)")}<p>Submit the saved account and its current links for independent review. Submission freezes report content and associations; it does not change travel authorization or complete tasks.</p></>}
       {action === "accept" && <><ReportDecisions report={record} />{text("note", "Report review note", true)}<p>Accept report submission #{record.currentSubmission?.id}. You must be independent of the report creator, latest submitter and captured traveller, including their Employee identities. Acceptance is not verification of outcomes, travel authorization, expense approval or reconciliation.</p></>}

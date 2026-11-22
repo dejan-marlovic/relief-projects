@@ -1,3 +1,4 @@
+import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import RecordListLabel from "../RecordListLabel/RecordListLabel";
 import ActionButton from "../ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
@@ -150,7 +151,7 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
   const evidenceForm = form && ["create", "correct", "add"].includes(form.kind);
   useAutomaticRefresh(refresh, loading || busy || !!form || !!pending || !!related || !!downloading);
   return <div className={styles.panel}>
-    <p className={styles.hint}>Record money paid to the recipient. This records a user-entered fact; it does not execute a bank payment or change commitments, signatures or Booked status. These entries do not increase spending capacity and are not bank reconciliation. Voiding corrects an entry; it does not record a refund.</p>
+    <GuidanceNote className={styles.hint}>Record money paid to the recipient. This records a user-entered fact; it does not execute a bank payment or change commitments, signatures or Booked status. These entries do not increase spending capacity and are not bank reconciliation. Voiding corrects an entry; it does not record a refund.</GuidanceNote>
     <div data-action-group="section" className={styles.actions}>{(loadError || error || documentError || !!pending) && <ActionButton type="button" disabled={busy || loading} onClick={refresh}>Retry payments</ActionButton>}{can("create") && !form && !pending && <ActionButton type="button" onClick={() => open("create")}>Record outgoing payment</ActionButton>}</div>
     {initialLoading && <p role="status">Loading payments…</p>}
     {loadError && <p role="alert">{loadError}</p>}
@@ -171,9 +172,9 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
       <p>Recipient: <strong>{eligibility.recipient?.organizationName || binding?.organization?.name || "Unavailable"}</strong>{eligibility.recipient?.id && ` (#${eligibility.recipient.id})`}</p>
       <dl className={styles.totals}>{[["Paid", summary.paidTotal], ["Recipient commitments", summary.recipientCommitment], ["Recipient remaining", summary.recipientRemaining], ["Recipient excess", summary.recipientExcess]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{paymentMoney(value)}</dd></div>)}</dl>
       {summary.status === "OVER_PAID" && <p role="status">Payments exceed this recipient’s commitments. The excess does not increase spending capacity.</p>}
-      <p className={styles.hint}>Commitment comparisons use gross paid. Recipient returns do not change these statuses, remaining amounts or spending capacity.</p>
+      <GuidanceNote className={styles.hint}>Commitment comparisons use gross paid. Recipient returns do not change these statuses, remaining amounts or spending capacity.</GuidanceNote>
       <RecipientReturnSummary summary={summary.returns} />
-      <details><summary>Whole-order comparison</summary><p className={styles.hint}>Order remaining is not authorization to pay that amount to this recipient. The order can include other organizations’ commitments. These totals describe the same payments; do not add them to recipient totals.</p><dl className={styles.totals}>{[["Order commitments", summary.orderCommitment], ["Order remaining", summary.orderRemaining], ["Order excess", summary.orderExcess]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{paymentMoney(value)}</dd></div>)}</dl></details>
+      <details><summary>Whole-order comparison</summary><GuidanceNote className={styles.hint}>Order remaining is not authorization to pay that amount to this recipient. The order can include other organizations’ commitments. These totals describe the same payments; do not add them to recipient totals.</GuidanceNote><dl className={styles.totals}>{[["Order commitments", summary.orderCommitment], ["Order remaining", summary.orderRemaining], ["Order excess", summary.orderExcess]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{paymentMoney(value)}</dd></div>)}</dl></details>
       <p className={styles.hint}>Comparison: {summary.comparisonStatus === "AVAILABLE" ? "Available" : summary.comparisonStatus === "UNCONFIRMED" ? "Awaiting explicit denomination confirmation" : "Unavailable; unknown amounts are not zero"}.</p>
       {summary.totalsByCurrency?.map(total => <p key={total.currencyId}>Recorded {total.recordedLabel} (#{total.currencyId}): {paymentMoney(total.amount)}</p>)}
       {[...(summary.issues || []), ...(eligibility.recordingIssues || [])].filter((issue, index, all) => all.findIndex(item => JSON.stringify(item) === JSON.stringify(issue)) === index).map((issue, index) => <p key={index} role="status">{issue.message}</p>)}
@@ -190,7 +191,7 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
           <label>External reference (optional)<input maxLength={150} value={form.externalReference} onChange={event => change("externalReference", event.target.value)} /></label>
           <label>Note (optional)<textarea maxLength={1000} value={form.note} onChange={event => change("note", event.target.value)} /></label>
           {form.kind === "create" && form.confirmRequired && <label><input required type="checkbox" checked={form.confirmation} onChange={event => change("confirmation", event.target.checked)} /> I adopt {paymentCurrency(form.currency)} as the denomination of this order’s commitments for payment comparison. This confirms an interpretation now, not historical verification.</label>}
-          {form.kind === "correct" && <p className={styles.hint}>This will void the original and create a new payment. Original evidence stays with the original; select evidence explicitly for the replacement.</p>}
+          {form.kind === "correct" && <GuidanceNote className={styles.hint}>This will void the original and create a new payment. Original evidence stays with the original; select evidence explicitly for the replacement.</GuidanceNote>}
         </>}
         {["void", "correct", "remove"].includes(form.kind) && <label>Reason (required)<textarea required maxLength={1000} value={form.reason} onChange={event => change("reason", event.target.value)} /></label>}
         {form.kind === "remove" && <p>Remove the association to {form.document.documentName}? The file and historical audit evidence remain.</p>}
@@ -201,7 +202,7 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
             {form.kind === "add" && <option value="">Select a document version</option>}
             {documents.filter(doc => form.kind !== "add" || !form.payment.documents?.some(link => link.documentId === doc.id)).map(doc => <option key={doc.id} value={doc.id}>{doc.documentName} · v{doc.versionNumber} · {doc.status || "Unknown status"} · {doc.isCurrent ? "Current" : "Historical"} (#{doc.id})</option>)}
           </SearchableSelect></label>
-          <p className={styles.hint}>Links retain the exact selected version. Upload new files in Documents. Draft/Final does not mean evidence has been verified.</p>
+          <GuidanceNote className={styles.hint}>Links retain the exact selected version. Upload new files in Documents. Draft/Final does not mean evidence has been verified.</GuidanceNote>
         </>}
         <ActionButton type="submit">{busy ? "Saving…" : "Confirm"}</ActionButton>
       </fieldset>

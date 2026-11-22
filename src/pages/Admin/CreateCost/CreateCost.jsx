@@ -1,3 +1,4 @@
+import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import SearchableSelect from "../../../components/SearchableSelect/SearchableSelect";
 // src/components/Admin/CreateCost/CreateCost.jsx
@@ -297,16 +298,16 @@ const CreateCost = () => {
                 </div>
 
                 {costTypes.length === 0 && (
-                  <div className={styles.mutedHint}>
+                  <GuidanceNote className={styles.mutedHint}>
                     No cost types found. Create cost types first (Admin → Cost
                     Type).
-                  </div>
+                  </GuidanceNote>
                 )}
 
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   Tip: keep cost names consistent (e.g. “Rent” vs “Office rent”)
                   so reporting stays clean.
-                </div>
+                </GuidanceNote>
               </div>
 
               {/* Card 2 */}
@@ -316,7 +317,7 @@ const CreateCost = () => {
                   <div className={styles.cardMeta}>Budgets + cost details</div>
                 </div>
 
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   <ul style={{ margin: "0.4rem 0 0 1rem" }}>
                     <li>
                       Costs are the <strong>specific items</strong> you select
@@ -333,7 +334,7 @@ const CreateCost = () => {
                       grouping/reporting in <strong>Cost Details</strong>.
                     </li>
                   </ul>
-                </div>
+                </GuidanceNote>
               </div>
             </div>
 

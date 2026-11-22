@@ -1,3 +1,4 @@
+import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import RecordIcon from "../../../components/RecordIcon/RecordIcon";
 import React, { useMemo, useState } from "react";
@@ -374,11 +375,11 @@ function ThemeSettings() {
         </div>
 
         <div className={styles.footer}>
-          <div className={styles.helpText}>
+          <GuidanceNote className={styles.helpText}>
             <strong>Server-managed setting:</strong> The selected theme and custom
             themes are shared by every user and device. Browser storage is used
             only as a startup cache.
-          </div>
+          </GuidanceNote>
 
           {selectedTheme !== "default" && (
             <ActionButton

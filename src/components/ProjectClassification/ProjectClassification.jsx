@@ -1,3 +1,4 @@
+import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import ActionButton from "../ActionButton/ActionButton";
 import CountryPicker from "./CountryPicker";
 import { supportsGeography, geographyExport, useCountryCatalogue } from "../../utils/projectGeography";
@@ -58,7 +59,7 @@ export default function ProjectClassification({ projectId, authFetch, canEdit, o
   }
   return <section data-mobile-tile="Language titles, target group & operating countries" className={styles.section} onBlur={save.flush}>
     <h3>Language titles, target group & operating countries</h3>
-    <p data-tile-description="">Describe the intended participants, record translated titles and identify where the project operates. These details help users understand its scope.</p>
+    <GuidanceNote data-tile-description="">Describe the intended participants, record translated titles and identify where the project operates. These details help users understand its scope.</GuidanceNote>
     {error && <p role="alert">{error} <ActionButton onClick={() => setAttempt(n => n + 1)}>Retry loading optional details</ActionButton></p>}
     {!original && !error && <p>Loading optional details…</p>}
     {original && !supportsClassification(original) && <p>Optional details are unavailable on this backend. You can add them after the backend is updated.</p>}
@@ -66,7 +67,7 @@ export default function ProjectClassification({ projectId, authFetch, canEdit, o
       {canEdit ? <ClassificationFields values={draft} onChange={e => change(e.target.name, e.target.value)} errors={errors} /> : <dl>{classificationFields.map(f => <React.Fragment key={f.name}><dt>{f.label}</dt><dd>{original[f.name] || "Not recorded"}</dd></React.Fragment>)}</dl>}
       {supportsGeography(original) && (canEdit ? <CountryPicker codes={draft.operatingCountryCodes} savedCountries={original.operatingCountries} catalogue={catalogue} onChange={codes => change("operatingCountryCodes", codes, true)} /> : <dl><dt>Operating countries/territories</dt><dd>{geographyExport(original)}</dd></dl>)}
       <p className={styles.hint}>{projectApprovalLabel(original)}</p>
-      {canEdit && <><p className={styles.hint}>These details save automatically. Wait for the corner save notification before leaving.</p><AutosaveStatus save={save} /></>}
+      {canEdit && <><GuidanceNote className={styles.hint}>These details save automatically. Wait for the corner save notification before leaving.</GuidanceNote><AutosaveStatus save={save} /></>}
     </>}
   </section>;
 }

@@ -1,3 +1,4 @@
+import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 // src/components/Admin/CreateCostType/CreateCostType.jsx
 
@@ -201,11 +202,11 @@ const CreateCostType = () => {
                   )}
                 </div>
 
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   This is a <strong>high-level grouping</strong>. It will be
                   available when you create <strong>Budgets</strong> and also
                   used to group <strong>Cost Details</strong>.
-                </div>
+                </GuidanceNote>
               </div>
 
               {/* Card 2 */}
@@ -215,7 +216,7 @@ const CreateCostType = () => {
                   <div className={styles.cardMeta}>Budgets + grouping</div>
                 </div>
 
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   <ul style={{ margin: "0.4rem 0 0 1rem" }}>
                     <li>
                       You typically only need a few Cost Types, for example:
@@ -240,7 +241,7 @@ const CreateCostType = () => {
                     </li>
                     <li>Name is required and max 255 characters.</li>
                   </ul>
-                </div>
+                </GuidanceNote>
               </div>
             </div>
 

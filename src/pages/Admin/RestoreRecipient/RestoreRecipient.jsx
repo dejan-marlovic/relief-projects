@@ -1,3 +1,4 @@
+import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
@@ -314,14 +315,14 @@ const RestoreRecipient = () => {
                   </SearchableSelect>
                 </div>
 
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   This screen needs endpoints like:
                   <code> GET /api/recipients/deleted </code>,
                   <code> GET /api/organizations/active </code>,
                   <code> GET /api/payment-orders/active </code>
                   and
                   <code> PUT /api/recipients/{`{id}`}/restore</code>.
-                </div>
+                </GuidanceNote>
               </div>
 
               <div data-mobile-tile="" className={styles.card}>

@@ -1,3 +1,4 @@
+import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import FilterHelp from "../../components/FilterHelp/FilterHelp";
 import RecordListLabel from "../../components/RecordListLabel/RecordListLabel";
 import ActionButton from "../../components/ActionButton/ActionButton";
@@ -293,7 +294,7 @@ export default function Risks() {
   const { selectedProjectId } = useContext(ProjectContext);
   const navigate = useNavigate();
   const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
-  return <section data-page-shell="surface" className={styles.page}><h2>Project risks</h2><p>Record risks, responsible people, mitigation plans and review dates. Likelihood and impact are separate assessments; no combined score is calculated.</p>
+  return <section data-page-shell="surface" className={styles.page}><h2>Project risks</h2><GuidanceNote>Record risks, responsible people, mitigation plans and review dates. Likelihood and impact are separate assessments; no combined score is calculated.</GuidanceNote>
     {selectedProjectId ? <Register key={selectedProjectId} projectId={selectedProjectId} authFetch={authFetch} /> : <p>Select a project to see its risk register.</p>}
   </section>;
 }

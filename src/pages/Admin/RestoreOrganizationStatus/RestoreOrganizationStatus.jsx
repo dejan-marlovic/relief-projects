@@ -1,3 +1,4 @@
+import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
@@ -219,12 +220,12 @@ const RestoreOrganizationStatus = () => {
                   </SearchableSelect>
                 </div>
 
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   This screen needs endpoints like:
                   <code> GET /api/organization-statuses/deleted </code>
                   and
                   <code> PUT /api/organization-statuses/{`{id}`}/restore</code>.
-                </div>
+                </GuidanceNote>
               </div>
 
               <div data-mobile-tile="" className={styles.card}>

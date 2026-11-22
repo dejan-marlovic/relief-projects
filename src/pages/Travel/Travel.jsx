@@ -1,3 +1,4 @@
+import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import FilterHelp from "../../components/FilterHelp/FilterHelp";
 import RecordListLabel from "../../components/RecordListLabel/RecordListLabel";
 import ActionButton from "../../components/ActionButton/ActionButton";
@@ -69,7 +70,7 @@ function TravelDetail({ openSequence = 0, id, base, projectId, authFetch, refres
       <TravelSteps record={record} editingStep={formStep} plan={<>
         <h4>Trip details</h4><dl className={styles.snapshot}><dt>Traveller</dt><dd>{record.traveller?.displayName}</dd><dt>Purpose</dt><dd>{record.purpose}</dd><dt>Destination</dt><dd>{record.destination}</dd><dt>Planned dates</dt><dd>{record.departureDate} through {record.returnDate}</dd></dl>
         {record.notes && <p className={styles.text}>{record.notes}</p>}<p>Created <Attribution at={record.createdAt} actor={record.createdBy} /></p>
-        <p className={styles.muted}>Supporting documents and follow-ups are optional. Later additions remain separate from an earlier approval.</p>
+        <GuidanceNote className={styles.muted}>Supporting documents and follow-ups are optional. Later additions remain separate from an earlier approval.</GuidanceNote>
         {buttons(planActions)}{formStep === "plan" && editor}
         <Associations kind="actions" endpoint={endpoint} authFetch={authFetch} refresh={refresh} open={open} locked={locked} approved={record.state === "APPROVED"} />
         <Associations kind="evidence" endpoint={endpoint} authFetch={authFetch} refresh={refresh} open={open} locked={locked} approved={record.state === "APPROVED"} />

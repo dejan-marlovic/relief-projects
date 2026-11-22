@@ -1,3 +1,4 @@
+import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import FilterHelp from "../../components/FilterHelp/FilterHelp";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
@@ -65,7 +66,7 @@ export function Schedule({ authFetch }) {
   return <section data-page-shell="surface" className={styles.page}>
     <h2>Travel schedule</h2>
     <p>Travel across projects. This view is independent of the project selected in the header.</p>
-    <p className={styles.muted}>Review planned trips that intersect your date window. Approval is separate from travel actually taking place. Open a request to manage its plan, decisions and post-trip report.</p>
+    <GuidanceNote className={styles.muted}>Review planned trips that intersect your date window. Approval is separate from travel actually taking place. Open a request to manage its plan, decisions and post-trip report.</GuidanceNote>
     <form onSubmit={apply}>
       <div className={styles.filters}><FilterHelp title="Filter the travel schedule">Choose a date window, project, plan state or traveller, then apply the filters. Trips that overlap the window are included. This view spans projects independently of the header project selector; filters do not change travel requests.</FilterHelp>
         <label>Window from<input type="date" min="1000-01-01" max="9999-12-31" value={draft.from} onChange={e => change("from", e.target.value)} /></label>
@@ -74,7 +75,7 @@ export function Schedule({ authFetch }) {
         <label>Plan state<SearchableSelect value={draft.state} onChange={e => change("state", e.target.value)}>{states.map(state => <option key={state} value={state}>{state === "PLANNED" ? "Submitted and approved" : state === "ALL" ? "All states" : label(state)}</option>)}</SearchableSelect></label>
         <label>Traveller employee ID<input type="number" min="1" step="1" value={draft.travellerEmployeeId} onChange={e => change("travellerEmployeeId", e.target.value)} /></label>
       </div>
-      <p className={styles.muted}>Leave both dates blank for the default window: 30 days before through 90 days after today in Stockholm. Custom windows can cover up to 366 days.</p>
+      <GuidanceNote className={styles.muted}>Leave both dates blank for the default window: 30 days before through 90 days after today in Stockholm. Custom windows can cover up to 366 days.</GuidanceNote>
       {(error || invalid) && <p role="alert">{error || invalid}</p>}
       <div data-action-group="section" className={styles.actions}><ActionButton type="submit">Apply schedule filters</ActionButton><ActionButton type="button" onClick={() => { setParams({}); setDraft(filtersFrom(new URLSearchParams())); setError(""); }}>Reset schedule filters</ActionButton></div>
     </form>

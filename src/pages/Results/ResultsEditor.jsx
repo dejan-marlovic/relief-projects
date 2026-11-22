@@ -1,3 +1,4 @@
+import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import DocumentLabel from "../../components/DocumentLabel/DocumentLabel";
@@ -14,7 +15,7 @@ export const indicatorDirty = form => !!form && (!['create', 'edit'].includes(fo
 export function DocumentChoices({ authFetch, projectId, selected, onChange, refresh }) {
   const state = useIndicatorRead(authFetch, `${BASE_URL}/api/documents/project/${projectId}`, refresh);
   const docs = Array.isArray(state.data) ? state.data.filter(d => d.isDeleted === false && String(d.projectId) === String(projectId)) : [];
-  return <fieldset><legend>Supporting documents · exact versions</legend><p className={styles.muted}>Choose up to 20 versions explicitly. Historical versions are included. Evidence supports a report; it does not verify it.</p><ReadState state={state} />
+  return <fieldset><legend>Supporting documents · exact versions</legend><GuidanceNote className={styles.muted}>Choose up to 20 versions explicitly. Historical versions are included. Evidence supports a report; it does not verify it.</GuidanceNote><ReadState state={state} />
     <div className={styles.documents}>{docs.map(d => <label key={d.id}><input type="checkbox" checked={selected.includes(d.id)} onChange={e => onChange(e.target.checked ? [...selected, d.id] : selected.filter(id => id !== d.id))} disabled={!selected.includes(d.id) && selected.length >= 20} /><DocumentLabel>{d.documentName || `Document #${d.id} · Name unavailable`}</DocumentLabel> · Version {d.versionNumber ?? "unknown"} · #{d.id} · {d.status || "Unknown status"}</label>)}</div>
     {state.data && !docs.length && <p>No active document versions available for this project.</p>}
     {selected.some(id => !docs.some(d => d.id === id)) && <p>Some selected versions are not in the current list. Review their availability before saving. <ActionButton type="button" onClick={() => onChange([])}>Clear selection</ActionButton></p>}
@@ -78,7 +79,7 @@ export default function ResultsEditor({ form, setForm, indicator, authFetch, pro
         {input("name", "Indicator name", { required: true, maxLength: 200, pattern: ".*\\S.*" })}
         {frozen && <p>Reporting has started. The measurement definition, unit, dates and baseline are frozen, even if reports are voided. Name, notes and target can still change with a reason. Earlier reports retain their recorded targets.</p>}
         <fieldset disabled={frozen}><label>Definition and population<textarea required maxLength={4000} value={draft.definition} onChange={e => change("definition", e.target.value)} rows={3} /></label>
-          <p className={styles.muted}>Explain who or what is counted, how duplicates are excluded, and—for percentages—the cumulative numerator and denominator.</p>
+          <GuidanceNote className={styles.muted}>Explain who or what is counted, how duplicates are excluded, and—for percentages—the cumulative numerator and denominator.</GuidanceNote>
           <div className={styles.grid}><label>Measurement type<select value={draft.measurementType} onChange={e => change("measurementType", e.target.value)}><option value="COUNT">Count (whole numbers)</option><option value="QUANTITY">Quantity</option><option value="PERCENTAGE">Percentage (0–100)</option></select></label>
             {draft.measurementType !== "PERCENTAGE" ? input("unit", "Unit", { required: true, maxLength: 80, pattern: ".*\\S.*" }) : <p>Unit: %</p>}
             <label>Target direction<select value={draft.direction} onChange={e => change("direction", e.target.value)}><option value="HIGHER_IS_BETTER">Higher is better (at least)</option><option value="LOWER_IS_BETTER">Lower is better (at most)</option></select></label>

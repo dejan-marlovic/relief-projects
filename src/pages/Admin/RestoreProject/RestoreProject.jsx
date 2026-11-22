@@ -1,3 +1,4 @@
+import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
@@ -353,7 +354,7 @@ const RestoreProject = () => {
                   </SearchableSelect>
                 </div>
 
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   This screen needs endpoints like:
                   <code> GET /api/projects/deleted </code>,
                   <code> GET /api/project-statuses/active </code>,
@@ -362,7 +363,7 @@ const RestoreProject = () => {
                   <code> GET /api/projects/active </code>
                   and
                   <code> PUT /api/projects/{`{id}`}/restore</code>.
-                </div>
+                </GuidanceNote>
               </div>
 
               <div data-mobile-tile="" className={styles.card}>

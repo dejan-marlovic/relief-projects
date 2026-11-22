@@ -1,3 +1,4 @@
+import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import React from "react";
 import FundingReturnSummary from "../FundingReturns/FundingReturnSummary";
 import RecipientReturnSummary from "../RecipientReturns/RecipientReturnSummary";
@@ -23,7 +24,7 @@ export function Observation({ value }) {
   const coverage = value.coverage || {}, financial = coverage.financial || {};
   return <div>
     <p><strong>{value.status === "NO_RECORDED_WARNINGS" ? "No recorded warnings" : "Attention required"}</strong> · Observed {stamp(value.observedAt)}</p>
-    <p className={styles.hint}>This is an observation, not a completeness certificate. Decision state and readiness are read separately; other workflows can change afterwards.</p>
+    <GuidanceNote className={styles.hint}>This is an observation, not a completeness certificate. Decision state and readiness are read separately; other workflows can change afterwards.</GuidanceNote>
     {financial.status !== "COMPLETE" && <p role="alert">Financial coverage is partial or unavailable. Missing diagnostics do not mean there are no warnings.</p>}
     <dl className={styles.fields}>{[["Checklist coverage", readable(coverage.checklist)], ["Risk coverage", readable(coverage.risks)], ["Follow-up coverage", readable(coverage.followUps)], ["Financial coverage", `${readable(financial.status)} · ${financial.recordsAssessed ?? "Unknown"} assessed / ${financial.recordsConsidered ?? "Unknown"} considered`], ["Financial completion", "Not assessed by this feature"], ["Storage and filing contents", "Not checked"]].map(([label, text]) => <React.Fragment key={label}><dt>{label}</dt><dd>{text}</dd></React.Fragment>)}</dl>
     <ul>{value.warnings?.map((warning, index) => <li key={`${warning.code}-${index}`}><strong>{readable(warning.code)} ({warning.count})</strong>: {warning.message}</li>)}</ul>
@@ -38,7 +39,7 @@ export function FinancialRow({ row }) {
     {s.totalsByCurrency?.map(t => <p key={t.currencyId}>Recorded {t.recordedLabel} (#{t.currencyId}): {String(t.amount)}</p>)}
     {!payment && <><p>Funding comparisons use gross receipts; returns do not change the recorded closeout decision.</p><FundingReturnSummary summary={s.returns} /></>}
     {payment && <RecipientReturnSummary summary={s.returns} />}
-    {payment && <p className={styles.hint}>Order remaining is not authorization to pay this recipient. This is an order-level diagnostic, not an amount attributed to this project.</p>}
+    {payment && <GuidanceNote className={styles.hint}>Order remaining is not authorization to pay this recipient. This is an order-level diagnostic, not an amount attributed to this project.</GuidanceNote>}
     <ul>{s.issues?.map((issue,index) => <li key={index}>{issue.message || readable(issue.code)}</li>)}</ul>
   </article>;
 }

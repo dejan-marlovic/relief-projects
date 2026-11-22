@@ -1,3 +1,4 @@
+import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 // src/components/Admin/CreateOrganizationStatus/CreateOrganizationStatus.jsx
 
@@ -207,12 +208,12 @@ const CreateOrganizationStatus = () => {
                   )}
                 </div>
 
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   Examples: <strong>Financier</strong>, <strong>Partner</strong>
                   , <strong>Lead</strong>, <strong>Funder</strong>,{" "}
                   <strong>Donor</strong>, <strong>Implementing Partner</strong>,{" "}
                   <strong>Default</strong>.
-                </div>
+                </GuidanceNote>
               </div>
 
               {/* Card 2 */}
@@ -222,7 +223,7 @@ const CreateOrganizationStatus = () => {
                   <div className={styles.cardMeta}>Organizations</div>
                 </div>
 
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   <ul style={{ margin: "0.4rem 0 0 1rem" }}>
                     <li>
                       Organization status in your projects (e.g. Donor vs
@@ -237,7 +238,7 @@ const CreateOrganizationStatus = () => {
                       <strong>Donors</strong>” or group partners by role.
                     </li>
                   </ul>
-                </div>
+                </GuidanceNote>
               </div>
             </div>
 

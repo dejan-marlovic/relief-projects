@@ -1,3 +1,4 @@
+import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import useArchivedProject from "../../hooks/useArchivedProject";
@@ -2643,7 +2644,7 @@ Approximately:
                       : "No images"}
                   </div>
                 </div>
-<p data-tile-description="">Upload and browse project images. Captions provide context for each image; images do not verify project results.</p>
+<GuidanceNote data-tile-description="">Upload and browse project images. Captions provide context for each image; images do not verify project results.</GuidanceNote>
 
                 {/* ✅ MOVED HERE: Upload block above the cover image */}
                 {canEditProject && <div className={styles.sectionRowStack}>
@@ -2845,7 +2846,7 @@ Approximately:
                           Identify the project and record its codes and estimated costs.
                         </div>
                       </div>
-<p data-tile-description="">Review the project’s identifying information and administrative details.</p>
+<GuidanceNote data-tile-description="">Review the project’s identifying information and administrative details.</GuidanceNote>
 
                       <div className={styles.formGroup}>
                         <label>Project Name:</label>
@@ -2942,7 +2943,7 @@ Approximately:
                           Status, dates, address
                         </div>
                       </div>
-<p data-tile-description="">Record the planned project dates, any revised start date, and the project’s type and status.</p>
+<GuidanceNote data-tile-description="">Record the planned project dates, any revised start date, and the project’s type and status.</GuidanceNote>
 
                       <div className={styles.formGroup}>
                         <label>Project Status:</label>
@@ -3326,10 +3327,10 @@ Approximately:
                             </ActionButton></span>
                           </div>
 
-                          <div className={styles.mutedNote}>
+                          <GuidanceNote className={styles.mutedNote}>
                             An organization stays available until it has been
                             linked with every possible status for this project.
-                          </div>
+                          </GuidanceNote>
                         </div>
                       </div>
 
@@ -3438,10 +3439,10 @@ Approximately:
                           </div>
                         )}
 
-                        <div className={styles.mutedNote}>
+                        <GuidanceNote className={styles.mutedNote}>
                           Employees already added to this project are hidden
                           from the dropdown.
-                        </div>
+                        </GuidanceNote>
                       </div>
                     </div>
                   </div>

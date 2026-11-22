@@ -1,3 +1,4 @@
+import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import RecordListLabel from "../RecordListLabel/RecordListLabel";
 import ActionButton from "../ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
@@ -151,7 +152,7 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
   const evidenceForm = form && ["create", "correct", "add"].includes(form.kind);
   useAutomaticRefresh(refresh, loading || busy || !!form || !!pending || !!related || !!downloading);
   return <div className={styles.panel}>
-    <p className={styles.hint}>Record incoming money against approved funding. These entries do not increase spending capacity and are not bank reconciliation. Voiding corrects an entry; it does not record a refund.</p>
+    <GuidanceNote className={styles.hint}>Record incoming money against approved funding. These entries do not increase spending capacity and are not bank reconciliation. Voiding corrects an entry; it does not record a refund.</GuidanceNote>
     <div data-action-group="section" className={styles.actions}>{(loadError || error || documentError || !!pending) && <ActionButton type="button" disabled={busy || loading} onClick={refresh}>Retry receipts</ActionButton>}{can("create") && !form && !pending && <ActionButton type="button" onClick={() => open("create")}>Record funding receipt</ActionButton>}</div>
     {initialLoading && <p role="status">Loading receipts…</p>}
     {loadError && <p role="alert">{loadError}</p>}
@@ -170,7 +171,7 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
       <h4>{receiptStatus(summary.status)}</h4>
       <p className={styles.hint}>Current funding currency: {receiptCurrency(currency)}. Totals include all pages and exclude voided entries.</p>
       <dl className={styles.totals}>{[["Approved funding", summary.approvedFunding], ["Received", summary.receivedTotal], ["Remaining to receive", summary.remainingToReceive], ["Excess received", summary.excessReceived]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{receiptMoney(value)}</dd></div>)}</dl>
-      <p className={styles.hint}>These are gross receipts versus approved funding; recorded returns do not change remaining-to-receive or excess comparisons.</p>
+      <GuidanceNote className={styles.hint}>These are gross receipts versus approved funding; recorded returns do not change remaining-to-receive or excess comparisons.</GuidanceNote>
       <FundingReturnSummary summary={summary.returns} />
       {summary.status === "OVER_RECEIVED" && <p role="status">Receipts exceed approved funding. The excess does not increase spending capacity.</p>}
       {summary.totalsByCurrency?.map(total => <p key={total.currencyId}>Recorded {total.recordedLabel} (#{total.currencyId}): {receiptMoney(total.amount)}</p>)}
@@ -187,7 +188,7 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
           <label>External reference (optional)<input maxLength={150} value={form.externalReference} onChange={event => change("externalReference", event.target.value)} /></label>
           <label>Note (optional)<textarea maxLength={1000} value={form.note} onChange={event => change("note", event.target.value)} /></label>
           {form.kind === "create" && form.confirmRequired && <label><input required type="checkbox" checked={form.confirmation} onChange={event => change("confirmation", event.target.checked)} /> I adopt {receiptCurrency(form.currency)} as the denomination of this transaction’s approved funding. This confirms an interpretation now, not historical verification.</label>}
-          {form.kind === "correct" && <p className={styles.hint}>This will void the original and create a new receipt. Original evidence stays with the original; select evidence explicitly for the replacement.</p>}
+          {form.kind === "correct" && <GuidanceNote className={styles.hint}>This will void the original and create a new receipt. Original evidence stays with the original; select evidence explicitly for the replacement.</GuidanceNote>}
         </>}
         {["void", "correct", "remove"].includes(form.kind) && <label>Reason (required)<textarea required maxLength={1000} value={form.reason} onChange={event => change("reason", event.target.value)} /></label>}
         {form.kind === "remove" && <p>Remove the association to {form.document.documentName}? The file and historical audit evidence remain.</p>}
@@ -198,7 +199,7 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
             {form.kind === "add" && <option value="">Select a document version</option>}
             {documents.filter(doc => form.kind !== "add" || !form.receipt.documents?.some(link => link.documentId === doc.id)).map(doc => <option key={doc.id} value={doc.id}>{doc.documentName} · v{doc.versionNumber} · {doc.status || "Unknown status"} · {doc.isCurrent ? "Current" : "Historical"} (#{doc.id})</option>)}
           </SearchableSelect></label>
-          <p className={styles.hint}>Links retain the exact selected version. Upload new files in Documents. Draft/Final does not mean evidence has been verified.</p>
+          <GuidanceNote className={styles.hint}>Links retain the exact selected version. Upload new files in Documents. Draft/Final does not mean evidence has been verified.</GuidanceNote>
         </>}
         <ActionButton type="submit">{busy ? "Saving…" : "Confirm"}</ActionButton>
       </fieldset>
@@ -220,7 +221,7 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
       {receipt.returns?.blocksSourceChanges && <p>Recorded returns prevent correcting or voiding this receipt. Do not void genuine returned money to bypass this guard.</p>}
       {receipt.returns?.sourceChangeIssues?.map(issue => <p key={issue.code}>{issue.message}</p>)}
       {receipt.status === "RECORDED" && <div data-action-group="section" className={styles.actions}>{[["add", "Add evidence"], ["correct", "Correct receipt"], ["void", "Void receipt"]].map(([kind, label]) => can(kind) && <ActionButton editorBlocked={Boolean(form)} key={kind} type="button" disabled={busy || !!form || !!pending || (["correct", "void"].includes(kind) && receipt.returns?.blocksSourceChanges)} onClick={() => open(kind, receipt)}>{label} #{receipt.id} · {receipt.financier?.name || "Name unavailable"}</ActionButton>)}</div>}
-      {receipt.returns ? <FundingReturns receipt={receipt} refreshKey={`${revision}:${refreshKey}`} editingLocked={editingLocked || busy || !!form || !!pending} onChanged={() => { refresh(); onChanged?.(); }} /> : <p className={styles.hint}>Returns feature unavailable for this receipt. Refresh after backend deployment; absence does not mean zero returns.</p>}
+      {receipt.returns ? <FundingReturns receipt={receipt} refreshKey={`${revision}:${refreshKey}`} editingLocked={editingLocked || busy || !!form || !!pending} onChanged={() => { refresh(); onChanged?.(); }} /> : <GuidanceNote className={styles.hint}>Returns feature unavailable for this receipt. Refresh after backend deployment; absence does not mean zero returns.</GuidanceNote>}
     </article>)}
     {data && <div data-action-group="section" className={styles.actions}><span>{data.totalElements} receipts · Page {page + 1} of {Math.max(1, Math.ceil(data.totalElements / 20))}</span><ActionButton editorBlocked={Boolean(form)} type="button" disabled={busy || loading || !!form || !!pending || page === 0} onClick={() => setPage(value => value - 1)}>Previous receipts</ActionButton><ActionButton editorBlocked={Boolean(form)} type="button" disabled={busy || loading || !!form || !!pending || (page + 1) * 20 >= data.totalElements} onClick={() => setPage(value => value + 1)}>Next receipts</ActionButton></div>}
   </div>;

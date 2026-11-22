@@ -1,3 +1,4 @@
+import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import { draftIsDirty, savedDraft } from "../../utils/savedDraft";
 import ReviewAttribution from "../../components/ReviewAttribution/ReviewAttribution";
@@ -59,7 +60,7 @@ export default function TravelReport({ endpoint: travelEndpoint, projectId, trav
   const reviewForm = form && ["submit", "accept", "return", "reopen"].includes(form.action);
   const editor = form && <><TravelReportEditor key={form.action} form={form} setForm={setForm} endpoint={travelEndpoint} projectId={projectId} authFetch={authFetch} refresh={refresh} today={data?.today} busy={busy} blocked={blocked} reviewRequired={reviewRequired} reviewBlocked={reviewBlocked} onSave={save} onCancel={() => setForm(null)} onReview={() => setForm(f => ({ ...f, record, expectedRevision: record?.revision, expectedTravelRevision: data.travelRevision, reviewRequired: false, error: "", draft: f.action === "actions" ? { ...f.draft, followUp: null } : f.draft }))} /><ReadState state={history} /><ReadState state={removal} /></>;
   return <section aria-label="Post-trip reporting">
-    <p className={styles.muted}>After travel concludes—or when it was not taken—record what actually happened, then request independent review. Reports and acceptance remain separate from travel authorization, payments and task completion.</p>
+    <GuidanceNote className={styles.muted}>After travel concludes—or when it was not taken—record what actually happened, then request independent review. Reports and acceptance remain separate from travel authorization, payments and task completion.</GuidanceNote>
     {(mismatchedTravel || (state.data && !validEnvelope) || state.error) && <ActionButton disabled={busy} onClick={reload}>Retry report and travel</ActionButton>}<ReadState state={state} />
     {state.data && !validEnvelope && <p role="alert">Report response unavailable. Refresh after checking the backend deployment.</p>}
     {awaitingSavedReport && <p role="status">Refreshing the saved report before enabling another change…</p>}

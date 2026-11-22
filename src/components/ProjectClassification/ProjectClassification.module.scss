@@ -1,3 +1,4 @@
+@use "../../styles/presentation" as presentation;
 @use "../../styles/colors" as colors;
 @use "../../styles/forms" as forms;
 
@@ -63,3 +64,6 @@
   .countryChoices label { min-height: 44px; box-sizing: border-box; }
   .selectedCountries .removeCountry { min-height: 44px; }
 }
+
+// Shared explanatory text matches workflow guidance.
+.hint { @include presentation.description; }

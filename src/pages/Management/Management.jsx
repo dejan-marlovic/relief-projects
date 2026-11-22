@@ -1,3 +1,4 @@
+import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import FilterHelp from "../../components/FilterHelp/FilterHelp";
 import RecordListLabel from "../../components/RecordListLabel/RecordListLabel";
 import ActionButton from "../../components/ActionButton/ActionButton";
@@ -107,5 +108,5 @@ export default function Management() {
   const { selectedProjectId } = useContext(ProjectContext);
   const navigate = useNavigate();
   const authFetch = useMemo(() => createAuthFetch(navigate), [navigate]);
-  return <section data-page-shell="surface" className={styles.page}><h2>Findings & lessons</h2><p>Record observations, learning and management responses. Link actions from Follow-ups and exact supporting document versions. Resolution is an attributed management decision; it does not complete tasks or verify outcomes.</p>{selectedProjectId ? <ManagementRegister key={selectedProjectId} projectId={selectedProjectId} authFetch={authFetch} /> : <p>Select a project to view its findings and lessons.</p>}</section>;
+  return <section data-page-shell="surface" className={styles.page}><h2>Findings & lessons</h2><GuidanceNote>Record observations, learning and management responses. Link actions from Follow-ups and exact supporting document versions. Resolution is an attributed management decision; it does not complete tasks or verify outcomes.</GuidanceNote>{selectedProjectId ? <ManagementRegister key={selectedProjectId} projectId={selectedProjectId} authFetch={authFetch} /> : <p>Select a project to view its findings and lessons.</p>}</section>;
 }

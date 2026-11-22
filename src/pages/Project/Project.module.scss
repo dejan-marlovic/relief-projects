@@ -839,3 +839,6 @@ h3 {
 .cardMeta { @include presentation.description; }
 .sectionHint { @include presentation.description; }
 .formContainer { @include presentation.surface; }
+
+// Shared explanatory text matches workflow guidance.
+.mutedNote { @include presentation.description; }

@@ -1,3 +1,4 @@
+import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import SearchableSelect from "../../components/SearchableSelect/SearchableSelect";
 import CountryPicker from "../../components/ProjectClassification/CountryPicker";
@@ -588,7 +589,7 @@ const RegisterProject = () => {
                   <div className={styles.cardTitle}>Classification</div>
                   <div className={styles.cardMeta}>Status, type & address</div>
                 </div>
-<p data-tile-description="">Classify the project so it can be grouped and found in project views.</p>
+<GuidanceNote data-tile-description="">Classify the project so it can be grouped and found in project views.</GuidanceNote>
 
                 <div className={styles.formGroup}>
                   <label>Project Status</label>

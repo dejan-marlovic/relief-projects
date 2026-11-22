@@ -1,3 +1,4 @@
+import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import ActionButton from "../ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import DocumentLabel from "../DocumentLabel/DocumentLabel";
@@ -106,7 +107,7 @@ export default function DocumentVersions({ document, authFetch, categories, canE
 
   return <section className={styles.metadataEditor} aria-label="Document version history">
     <div data-action-group="section" className={styles.docActions}><h3>Version history · {document.documentName}</h3><ActionButton type="button" className={styles.downloadLink} disabled={busy} onClick={() => { if (confirmDiscardUnsavedChanges()) onClose(); }}><RecordIcon type="close" />Close history</ActionButton>{error && <ActionButton type="button" className={styles.downloadLink} disabled={busy || loading} onClick={() => setRefresh(value => value + 1)}>Retry loading history</ActionButton>}</div>
-    <p className={styles.infoText}>Follow this document’s replacement chain. Each entry is an exact version with its own upload attribution and download. Upload a replacement from the current version; existing evidence links continue to reference the version originally selected. Final is a document label, not approval or proof of signing. Earlier versions are read-only.</p>
+    <GuidanceNote className={styles.infoText}>Follow this document’s replacement chain. Each entry is an exact version with its own upload attribution and download. Upload a replacement from the current version; existing evidence links continue to reference the version originally selected. Final is a document label, not approval or proof of signing. Earlier versions are read-only.</GuidanceNote>
     {error && <ErrorBanner message={error} onDismiss={() => setError("")} />}
     {message && <p role="status">{message}</p>}
     {loading && !chain && <p>Loading version history…</p>}
@@ -124,7 +125,7 @@ export default function DocumentVersions({ document, authFetch, categories, canE
     </HistoryEntry>)}</HistoryTimeline>}
     {replacement && <ScrollToForm onSubmit={replace} className={styles.metadataEditor}>
       <h4>Replace {replacement.name}</h4>
-      <p className={styles.infoText}>This creates a new version. Category is inherited unless changed; document date starts empty and status starts as Draft.</p>
+      <GuidanceNote className={styles.infoText}>This creates a new version. Category is inherited unless changed; document date starts empty and status starts as Draft.</GuidanceNote>
       <div className={styles.metadataControls}>
         <label>Replacement category<SearchableSelect disabled={busy} value={replacement.category} onChange={(e) => setReplacement({ ...replacement, category: e.target.value })}><option value="">Inherit current category</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</SearchableSelect></label>
         <label>Replacement document date<input type="date" min="1000-01-01" max="9999-12-31" disabled={busy} value={replacement.date} onChange={(e) => setReplacement({ ...replacement, date: e.target.value })} /></label>

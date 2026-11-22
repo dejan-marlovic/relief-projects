@@ -1,3 +1,4 @@
+import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 // src/components/Admin/CreateAddress/CreateAddress.jsx
 
@@ -288,10 +289,10 @@ const CreateAddress = () => {
                   )}
                 </div>
 
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   Tip: keep formatting consistent so addresses are easy to
                   search and group.
-                </div>
+                </GuidanceNote>
               </div>
 
               {/* Card 2 */}
@@ -303,7 +304,7 @@ const CreateAddress = () => {
                   </div>
                 </div>
 
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   <ul style={{ margin: "0.4rem 0 0 1rem" }}>
                     <li>
                       Addresses can be linked to <strong>Organizations</strong>{" "}
@@ -313,7 +314,7 @@ const CreateAddress = () => {
                       Street + city are required; other fields are optional.
                     </li>
                   </ul>
-                </div>
+                </GuidanceNote>
               </div>
             </div>
 

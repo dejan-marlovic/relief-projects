@@ -1,3 +1,4 @@
+import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import FilterHelp from "../../components/FilterHelp/FilterHelp";
 import RecordListLabel from "../../components/RecordListLabel/RecordListLabel";
 import ActionButton from "../../components/ActionButton/ActionButton";
@@ -387,7 +388,7 @@ const Documents = () => {
         </div>
 
         {!selectedProjectId && (
-          <p className={styles.infoText}>Please select a project first.</p>
+          <GuidanceNote className={styles.infoText}>Please select a project first.</GuidanceNote>
         )}
 
         {selectedProjectId && (
@@ -419,8 +420,8 @@ const Documents = () => {
                   <label>Upload category<SearchableSelect value={uploadCategory} disabled={uploading || !categories.length} onChange={(e) => setUploadCategory(e.target.value)}>{categoryOptions}</SearchableSelect></label>
                   <label>Document date (optional)<input type="date" min="1000-01-01" max="9999-12-31" value={uploadDate} disabled={uploading} onChange={(e) => setUploadDate(e.target.value)} /></label>
                 </div>
-                <p className={styles.infoText}>Choose details before selecting a file. The document date is the date on the document, not its upload date.</p>
-                <p className={styles.infoText}>Final is a descriptive label, not approval or proof of signing.</p>
+                <GuidanceNote className={styles.infoText}>Choose details before selecting a file. The document date is the date on the document, not its upload date.</GuidanceNote>
+                <GuidanceNote className={styles.infoText}>Final is a descriptive label, not approval or proof of signing.</GuidanceNote>
                 {/* Upload area */}
                 <div
                   onDrop={handleDrop}
@@ -473,7 +474,7 @@ const Documents = () => {
                 <label>Category<SearchableSelect value={editing.category} disabled={saving || !categories.length} onChange={(e) => editMetadata("category", e.target.value)}>{categoryOptions}</SearchableSelect></label>
                 <label>Document date<input type="date" min="1000-01-01" max="9999-12-31" value={editing.documentDate} disabled={saving} onChange={(e) => editMetadata("documentDate", e.target.value, false)} /></label>
               </div>
-              <p className={styles.infoText}>Leave the date empty to clear it. Choose Uncategorized to remove a classification.</p>
+              <GuidanceNote className={styles.infoText}>Leave the date empty to clear it. Choose Uncategorized to remove a classification.</GuidanceNote>
               <ActionButton className={styles.downloadLink} type="button" disabled={saving} onClick={closeEditor}>Done editing</ActionButton>
             </ScrollToForm>}
             {historyDocument && <DocumentVersions key={`${selectedProjectId}-${historyDocument.id}`} document={historyDocument} authFetch={authFetch} categories={categories} canEdit={canUploadDocuments} canDelete={canDeleteDocuments} onDownload={handleDownload} downloading={downloading} revision={listRevision} onChanged={() => { setListRevision((value) => value + 1); }} onClose={() => setHistoryDocument(null)} validateFile={validateDocumentFile} />}

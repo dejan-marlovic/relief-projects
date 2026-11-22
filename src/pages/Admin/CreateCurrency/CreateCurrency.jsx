@@ -1,3 +1,4 @@
+import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 // src/components/Admin/CreateCurrency/CreateCurrency.jsx
 
@@ -218,9 +219,9 @@ const CreateCurrency = () => {
                   )}
                 </div>
 
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   Note: name and description should be unique.
-                </div>
+                </GuidanceNote>
               </div>
 
               {/* Card 2 */}
@@ -230,7 +231,7 @@ const CreateCurrency = () => {
                   <div className={styles.cardMeta}>Validation</div>
                 </div>
 
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   <ul style={{ margin: "0.4rem 0 0 1rem" }}>
                     <li>
                       Use a short code for name (e.g. <strong>USD</strong>,{" "}
@@ -244,7 +245,7 @@ const CreateCurrency = () => {
                       dropdowns.
                     </li>
                   </ul>
-                </div>
+                </GuidanceNote>
               </div>
             </div>
 

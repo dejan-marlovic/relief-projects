@@ -485,3 +485,6 @@
 // Shared Project-page visual language.
 .pageTitle { @include presentation.page-title; }
 .pageSubtitle { @include presentation.description; }
+
+// Shared explanatory text matches workflow guidance.
+.helpText { @include presentation.description; }

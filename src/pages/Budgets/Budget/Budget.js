@@ -1,3 +1,4 @@
+import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import RecordListLabel from "../../../components/RecordListLabel/RecordListLabel";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import RecordIcon from "../../../components/RecordIcon/RecordIcon";
@@ -1565,7 +1566,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
                     <div className={styles.cardTitle}>Summary</div>
                     <div className={styles.cardMeta}>Description & totals</div>
                   </div>
-<p data-tile-description="">Review the budget’s description, dates and planning details before working on its costs.</p>
+<GuidanceNote data-tile-description="">Review the budget’s description, dates and planning details before working on its costs.</GuidanceNote>
 
                   <div className={styles.formGroup}>
                 <label htmlFor={`budget-name-${budget.id || budget.selectedId || "new"}`}>Budget name</label>
@@ -1620,7 +1621,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
                     <div className={styles.cardTitle}>Currencies & rates</div>
                     <div className={styles.cardMeta}>Local + reporting</div>
                   </div>
-<p data-tile-description="">Choose the currencies and exchange-rate basis used for this budget’s amounts.</p>
+<GuidanceNote data-tile-description="">Choose the currencies and exchange-rate basis used for this budget’s amounts.</GuidanceNote>
 
                   <div className={styles.row2}>
                     <div className={styles.formGroup}>
@@ -1844,7 +1845,7 @@ const Budget = ({ budget: initialBudget, onUpdate, onDelete, onRevisionsChanged 
             <div className={styles.cardTitle}>Cost details</div>
             <div className={styles.cardMeta}>Breakdown</div>
           </div>
-<p data-tile-description="">Break the budget into cost items and inspect their amounts and allocations.</p>
+<GuidanceNote data-tile-description="">Break the budget into cost items and inspect their amounts and allocations.</GuidanceNote>
 
           <CostDetails
             onMutationSuccess={refreshChildHistory}

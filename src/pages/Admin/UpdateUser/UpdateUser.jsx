@@ -1,3 +1,4 @@
+import GuidanceNote from "../../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../../components/ActionButton/ActionButton";
 import useRefreshLoading from "../../../hooks/useRefreshLoading";
 import useAutomaticRefresh from "../../../hooks/useAutomaticRefresh";
@@ -398,11 +399,11 @@ const UpdateUser = () => {
                   )}
                 </div>
 
-                <div className={styles.mutedHint}>
+                <GuidanceNote className={styles.mutedHint}>
                   Note: your current backend requires passwordHash in PUT, so
                   this screen asks for a new password every time you update a
                   user.
-                </div>
+                </GuidanceNote>
               </div>
             </div>
 

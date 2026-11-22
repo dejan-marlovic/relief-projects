@@ -1,3 +1,4 @@
+import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import RecordListLabel from "../RecordListLabel/RecordListLabel";
 import ActionButton from "../ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
@@ -147,7 +148,7 @@ export function RecipientReturnsPanel({ payment, refreshKey, editingLocked, onCh
   useAutomaticRefresh(refresh, loading || busy || !!form || !!pending || !!related || !!downloading);
   return <div className={styles.panel}>
     <p>Original payment #{payment.id} · Recipient #{payment.recipientId ?? "Unknown"} · {payment.organization?.name || "Organisation unavailable"} · Paid {payment.paidDate} · {paymentCurrency(payment.currency)}</p>
-    <p className={styles.hint}>Record principal actually received back from this payment’s recipient. This keeps the original payment recorded and does not execute a transfer or increase spending capacity. Voiding is only for erroneous entries.</p>
+    <GuidanceNote className={styles.hint}>Record principal actually received back from this payment’s recipient. This keeps the original payment recorded and does not execute a transfer or increase spending capacity. Voiding is only for erroneous entries.</GuidanceNote>
     {(loadError || error || documentError || !!pending) && <ActionButton disabled={busy || loading} onClick={refresh}>Retry returns</ActionButton>}
     {initialLoading && <p role="status">Loading returns…</p>}{loadError && <p role="alert">{loadError}</p>}{error && <p role="alert">{error} Your input is retained.</p>}
     {pending && <div role="alert"><p>A return command needs confirmation. Retry sends the identical request ID and body; do not enter the movement again.</p><ActionButton disabled={busy} onClick={() => send(pending)}>Retry same return request</ActionButton></div>}
@@ -161,7 +162,7 @@ export function RecipientReturnsPanel({ payment, refreshKey, editingLocked, onCh
         {kind === "correct" && <><label>Correction explanation<textarea required maxLength={1000} value={form.correctionReason} onChange={e => change("correctionReason", e.target.value)} /></label><p>The erroneous return is voided and replaced atomically against the same payment. Select replacement evidence explicitly; nothing is inherited.</p></>}
         {kind === "void" && <p>Only invalidate an entry that was wrong. Do not void genuine returned money to unlock a payment correction.</p>}
         {kind === "remove" && <p>Remove the association to {form.document.documentName || `document #${form.document.documentId} · Name unavailable`}? The file and audit history remain.</p>}
-        {evidence && <>{documentError && <p role="alert">{documentError}</p>}<label>{kind === "add" ? "Exact document version" : "Evidence versions (optional)"}<SearchableSelect documentOptions required={kind === "add"} multiple={kind !== "add"} value={kind === "add" ? form.documentId : form.documentIds} onChange={e => kind === "add" ? change("documentId", e.target.value) : change("documentIds", Array.from(e.target.selectedOptions, option => option.value))}>{kind === "add" && <option value="">Select a version</option>}{documents.filter(doc => kind !== "add" || !form.row.documents?.some(link => link.documentId === doc.id)).map(doc => <option key={doc.id} value={doc.id}>{doc.documentName || "Name unavailable"} · #{doc.id} · v{doc.versionNumber} · {doc.status || "Unknown status"} · {doc.isCurrent ? "Current" : "Historical"}</option>)}</SearchableSelect></label><p className={styles.hint}>Optional evidence links retain exact versions; they do not certify bank movement, signatures or completeness. Upload files through Documents separately.</p></>}
+        {evidence && <>{documentError && <p role="alert">{documentError}</p>}<label>{kind === "add" ? "Exact document version" : "Evidence versions (optional)"}<SearchableSelect documentOptions required={kind === "add"} multiple={kind !== "add"} value={kind === "add" ? form.documentId : form.documentIds} onChange={e => kind === "add" ? change("documentId", e.target.value) : change("documentIds", Array.from(e.target.selectedOptions, option => option.value))}>{kind === "add" && <option value="">Select a version</option>}{documents.filter(doc => kind !== "add" || !form.row.documents?.some(link => link.documentId === doc.id)).map(doc => <option key={doc.id} value={doc.id}>{doc.documentName || "Name unavailable"} · #{doc.id} · v{doc.versionNumber} · {doc.status || "Unknown status"} · {doc.isCurrent ? "Current" : "Historical"}</option>)}</SearchableSelect></label><GuidanceNote className={styles.hint}>Optional evidence links retain exact versions; they do not certify bank movement, signatures or completeness. Upload files through Documents separately.</GuidanceNote></>}
         <ActionButton disabled={reviewRequired || !can(kind, currentRow) || (kind === "add" && !!documentError)} type="submit">Confirm return action</ActionButton>
       </fieldset>
       {reviewRequired && <p>Review refreshed entries before preparing another command. No retry has been sent.</p>}
@@ -172,7 +173,7 @@ export function RecipientReturnsPanel({ payment, refreshKey, editingLocked, onCh
     {!initialLoading && data?.content.length === 0 && <p>No returns on this page.</p>}
     {data?.content.map(row => entry(row))}
     {data && <div data-action-group="section" className={styles.actions}><span>{data.totalElements} returns · Page {page + 1}</span><ActionButton editorBlocked={Boolean(form)} disabled={busy || loading || !!form || !!pending || page === 0} onClick={() => setPage(n => n - 1)}>Previous returns</ActionButton><ActionButton editorBlocked={Boolean(form)} disabled={busy || loading || !!form || !!pending || (page + 1) * 20 >= data.totalElements} onClick={() => setPage(n => n + 1)}>Next returns</ActionButton></div>}
-    <p className={styles.hint}>Retained return and evidence activity appears in this payment order’s History with child activity included.</p>
+    <GuidanceNote className={styles.hint}>Retained return and evidence activity appears in this payment order’s History with child activity included.</GuidanceNote>
   </div>;
 }
 
