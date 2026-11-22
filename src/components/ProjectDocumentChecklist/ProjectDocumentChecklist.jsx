@@ -1,3 +1,4 @@
+import AttachmentItem from "../AttachmentItem/AttachmentItem";
 import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import ActionButton from "../ActionButton/ActionButton";
 import DocumentLabel from "../DocumentLabel/DocumentLabel";
@@ -70,7 +71,7 @@ function Item({ item, generation, editable, documents, categories, busy, mutate:
       <h4>Evidence</h4>
       {item.applicability === "NOT_APPLICABLE" && <GuidanceNote className={styles.muted}>Existing links are retained. Change applicability before adding evidence.</GuidanceNote>}
       {!evidence.length && <p className={styles.muted}>No evidence linked.</p>}
-      <ul className={styles.evidence}>{evidence.map((doc) => <li key={doc.documentId}>
+      <ul className={styles.evidence}>{evidence.map((doc) => <AttachmentItem key={doc.documentId}>
         <strong><DocumentLabel>{doc.documentName}</DocumentLabel></strong>
         <span>Version {doc.versionNumber} · {statusLabel(doc.status)} · {categories.find((c) => c.id === doc.category)?.label || doc.category || "Uncategorized"} · Document date: {doc.documentDate || "Unknown"}</span>
         <span className={styles.muted}>Linked by {doc.linkedByUsername || `User #${doc.linkedByUserId} · Name unavailable`} · {uploadTimeLabel(doc.linkedAt)}</span>
@@ -81,7 +82,7 @@ function Item({ item, generation, editable, documents, categories, busy, mutate:
           <ActionButton type="button" onClick={() => showHistory({ id: doc.documentId, documentName: doc.documentName })}>Version history</ActionButton>
           {editable && <ActionButton type="button" disabled={busy || decisionChanged} onClick={() => { if (window.confirm("Remove this evidence link? The document and file will be kept.")) mutate(item, `evidence/${doc.documentId}`, "DELETE"); }}>Remove evidence link</ActionButton>}
         </div>
-      </li>)}</ul>
+      </AttachmentItem>)}</ul>
       {editable && !canLink && <GuidanceNote className={styles.muted}>Save Applicable above before adding evidence. Existing links remain available.</GuidanceNote>}
       {editable && <form className={styles.form} onSubmit={(e) => { e.preventDefault(); if (selected && canLink && availableDocuments.some(doc => String(doc.id) === selected)) mutate(item, "evidence", "POST", { documentId: Number(selected) }); }}>
         <label>Document evidence<SearchableSelect documentOptions value={selected} disabled={busy || !canLink || !availableDocuments.length} onChange={(e) => { setDirty(true); setSelected(e.target.value); }}><option value="">{availableDocuments.length ? "Select an exact document version" : "No additional document versions available"}</option>{availableDocuments.map((doc) => <option key={doc.id} value={doc.id}>{doc.documentName} · Version {doc.versionNumber} · {statusLabel(doc.status)} · {doc.isCurrent ? "Current" : "Historical"} (#{doc.id})</option>)}</SearchableSelect></label>

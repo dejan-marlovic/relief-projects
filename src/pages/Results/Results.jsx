@@ -1,3 +1,4 @@
+import AttachmentItem from "../../components/AttachmentItem/AttachmentItem";
 import RecordCard, { RecordCardActions } from "../../components/RecordCard/RecordCard";
 import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import FilterHelp from "../../components/FilterHelp/FilterHelp";
@@ -24,7 +25,7 @@ function Evidence({ result, endpoint, authFetch, refresh, open, locked }) {
   const [page, setPage] = useState(0), [error, setError] = useState("");
   const state = useIndicatorRead(authFetch, `${endpoint}/results/${result.id}/evidence?page=${page}&size=20`, refresh);
   return <section aria-label={`Evidence for report ${result.id}`}><ReadState state={state} />{error && <p role="alert">{error}</p>}
-    {state.data?.content.map(e => <article data-mobile-tile="" className={styles.panel} key={e.id}>
+    {state.data?.content.map(e => <AttachmentItem as="article" data-mobile-tile="" className={styles.panel} key={e.id}>
       <strong><DocumentLabel>{e.capturedName || `Document #${e.documentId} · Name unavailable`} · Version {e.versionNumber ?? "unknown"}</DocumentLabel></strong>
       <p>{e.associationActive ? "Linked" : "Association removed"} · {words(e.availability)} · {e.currentStatus || "Unknown document status"}</p>
       <p>Linked <Attribution at={e.linkedAt} actor={e.linkedBy} /></p>
@@ -32,7 +33,7 @@ function Evidence({ result, endpoint, authFetch, refresh, open, locked }) {
       <div data-action-group="section" className={styles.actions}><ActionButton disabled={!e.downloadEligible} onClick={async () => { setError(""); try { await downloadDocument(e.documentId, authFetch); } catch (err) { setError(err.message); } }}>Download version {e.versionNumber ?? ""}</ActionButton>
         {e.permissions?.canRemove && <ActionButton editorBlocked="registered" disabled={locked || state.loading} onClick={() => open("remove", result, { ...e, page })}>Remove evidence #{e.id} · {e.capturedName || "Name unavailable"}</ActionButton>}
       </div><small>Availability describes metadata; downloading checks file availability.</small>
-    </article>)}
+    </AttachmentItem>)}
     {state.data && !state.data.content.length && <p>No evidence associations.</p>}
     <Pagination data={state.data} page={page} setPage={setPage} label="evidence" disabled={state.loading} />
   </section>;

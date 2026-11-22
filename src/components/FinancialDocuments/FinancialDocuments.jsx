@@ -1,3 +1,4 @@
+import AttachmentItem from "../AttachmentItem/AttachmentItem";
 import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import ActionButton from "../ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
@@ -153,7 +154,7 @@ function DocumentsPanel({ entityType, entityId, locked, lifecycleStatus, refresh
       {!roleCanManage && <p className={styles.hint}>Only Admin and Finance can change supporting-document links.</p>}
       {roleCanManage && !canManage && <p className={styles.hint}>{editingLocked ? "Finish editing this record before changing document links." : "Links can be changed only on active Draft or Returned records. Submitted, Approved and Booked records are read-only."}</p>}
       {!listError && links.length === 0 && <p>No supporting documents linked.</p>}
-      <ul className={styles.list}>{links.map((link) => <li key={link.documentId}>
+      <ul className={styles.list}>{links.map((link) => <AttachmentItem key={link.documentId}>
         <div className={styles.info}>
           <strong><DocumentLabel>{link.documentName}</DocumentLabel></strong>
           <span>Version {link.versionNumber} · {statusLabel(link.status)} · {categoryLabel(link.category)} · Document date: {link.documentDate || "Unknown"}</span>
@@ -166,7 +167,7 @@ function DocumentsPanel({ entityType, entityId, locked, lifecycleStatus, refresh
           <ActionButton type="button" onClick={() => setHistory({ id: link.documentId, documentName: link.documentName })}>Version history</ActionButton>
           {canManage && <ActionButton type="button" disabled={busy} onClick={() => mutate(link.documentId, true)}>Remove link</ActionButton>}
         </div>
-      </li>)}</ul>
+      </AttachmentItem>)}</ul>
       {canLink && <form className={styles.picker} onSubmit={(event) => { event.preventDefault(); if (selectedId) mutate(selectedId); }}>
         <label><input type="checkbox" checked={includeHistorical} disabled={busy} onChange={(event) => setIncludeHistorical(event.target.checked)} /> Include active historical versions</label>
         {candidateError && <p role="alert">{candidateError}</p>}

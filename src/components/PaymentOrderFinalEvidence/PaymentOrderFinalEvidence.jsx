@@ -1,3 +1,4 @@
+import AttachmentItem from "../AttachmentItem/AttachmentItem";
 import ActionButton from "../ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
 import DocumentLabel from "../DocumentLabel/DocumentLabel";
@@ -105,7 +106,7 @@ export function FinalEvidencePanel({ paymentOrderId, refreshKey, editingLocked }
     {data && <>
       <ul>{data.issues?.map(issue => <li key={issue.code}>{issue.message}</li>)}</ul>
       {!data.entries.length && <p>No late payment evidence attached.</p>}
-      <ul className={styles.list}>{data.entries.map(entry => <li key={entry.id}><div className={styles.info}>
+      <ul className={styles.list}>{data.entries.map(entry => <AttachmentItem key={entry.id}><div className={styles.info}>
         <strong><DocumentLabel>{entry.capturedDocumentName || "Name unavailable"} · Attachment #{entry.id}</DocumentLabel></strong>
         <span>{evidenceRole(entry.role)} · Document #{entry.documentId} · Version {entry.versionNumber ?? "Unknown"} · {entry.document?.status || "Status unknown"}</span>
         <span>Attached {uploadTimeLabel(entry.attachedAt)} by {actor(entry.attachedBy)}</span><span>Reason: {entry.reason}</span>
@@ -115,7 +116,7 @@ export function FinalEvidencePanel({ paymentOrderId, refreshKey, editingLocked }
         <ActionButton disabled={entry.document?.downloadEligible !== true || downloading !== null} onClick={() => download(entry.documentId)}>Download exact version #{entry.documentId} · {entry.capturedDocumentName || "Name unavailable"}</ActionButton>
         {entry.permissions?.canReplace && <ActionButton editorBlocked={Boolean(editingLocked)} disabled={busy || editingLocked} onClick={() => start("replace", entry)}>Replace attachment #{entry.id} · {entry.capturedDocumentName || "Name unavailable"}</ActionButton>}
         {entry.permissions?.canRemove && <ActionButton editorBlocked={Boolean(editingLocked)} disabled={busy || editingLocked} onClick={() => start("remove", entry)}>Remove attachment #{entry.id} · {entry.capturedDocumentName || "Name unavailable"}</ActionButton>}
-      </div></li>)}</ul>
+      </div></AttachmentItem>)}</ul>
       {data.permissions?.canAttach && !form && <ActionButton editorBlocked={Boolean(editingLocked)} disabled={busy || editingLocked} onClick={() => start("attach")}>Attach late evidence</ActionButton>}
     </>}
     {form && <ScrollToForm className={styles.picker} onSubmit={save}>

@@ -1,3 +1,4 @@
+import UploadAndAttach, { UploadDropzone } from "../../components/UploadAndAttach/UploadAndAttach";
 import RecordCard, { RecordCardActions } from "../../components/RecordCard/RecordCard";
 import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import FilterHelp from "../../components/FilterHelp/FilterHelp";
@@ -415,7 +416,7 @@ const Documents = () => {
             )}
 
             {canUploadDocuments && (
-              <>
+              <UploadAndAttach title="Upload document">
                 <div className={styles.metadataControls}>
                   <DocumentStatus label="Upload status" value={uploadStatus} disabled={uploading} onChange={(e) => setUploadStatus(e.target.value)} />
                   <label>Upload category<SearchableSelect value={uploadCategory} disabled={uploading || !categories.length} onChange={(e) => setUploadCategory(e.target.value)}>{categoryOptions}</SearchableSelect></label>
@@ -424,18 +425,12 @@ const Documents = () => {
                 <GuidanceNote className={styles.infoText}>Choose details before selecting a file. The document date is the date on the document, not its upload date.</GuidanceNote>
                 <GuidanceNote className={styles.infoText}>Final is a descriptive label, not approval or proof of signing.</GuidanceNote>
                 {/* Upload area */}
-                <div
+                <UploadDropzone
                   onDrop={handleDrop}
                   onDragOver={handleDragOver}
                   onClick={handleClickPicker}
-                  className={styles.uploadArea}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") handleClickPicker();
-                  }}
                   aria-label="Upload document"
-                  aria-disabled={uploading || !categories.length}
+                  disabled={uploading || !categories.length}
                 >
                   <FiUploadCloud size={24} className={styles.uploadIcon} />
                   <span>
@@ -446,7 +441,7 @@ const Documents = () => {
                   <span className={styles.uploadFormats}>
                     {ALLOWED_FORMATS_LABEL} • max {MAX_UPLOAD_MB}MB
                   </span>
-                </div>
+                </UploadDropzone>
 
                 <input
                   id="documentFileInput"
@@ -455,7 +450,7 @@ const Documents = () => {
                   className={styles.hiddenFileInput}
                   onChange={handleFileInput}
                 />
-              </>
+              </UploadAndAttach>
             )}
 
             {/* Section heading */}

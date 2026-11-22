@@ -1,3 +1,4 @@
+import AttachmentItem from "../AttachmentItem/AttachmentItem";
 import RecordCard, { RecordCardActions } from "../RecordCard/RecordCard";
 import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import ActionButton from "../ActionButton/ActionButton";
@@ -164,7 +165,7 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
       <p>Entered {stamp(related.createdAt)} by {actor(related.createdBy)}</p>
       {related.voidReason && <p>Void reason: {related.voidReason}</p>}
       {related.note && <p>{related.note}</p>}
-      <ul>{related.documents?.map(doc => <li key={doc.documentId}><DocumentLabel>{doc.documentName}</DocumentLabel> · Version {doc.versionNumber} <span data-action-group="section"><ActionButton type="button" disabled={!doc.downloadEligible || downloading != null} onClick={() => download(doc.documentId)}>Download related evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</ActionButton></span></li>)}</ul>
+      <ul>{related.documents?.map(doc => <AttachmentItem key={doc.documentId}><DocumentLabel>{doc.documentName}</DocumentLabel> · Version {doc.versionNumber} <span data-action-group="section"><ActionButton type="button" disabled={!doc.downloadEligible || downloading != null} onClick={() => download(doc.documentId)}>Download related evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</ActionButton></span></AttachmentItem>)}</ul>
       <span data-action-group="section"><ActionButton type="button" onClick={() => setRelated(null)}><RecordIcon type="close" />Close related receipt</ActionButton></span>
     </aside>}
     {summary && <>
@@ -216,7 +217,7 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
       {receipt.status === "VOIDED" && <p>Voided {stamp(receipt.voidedAt)} by {actor(receipt.voidedBy)} · {receipt.voidReason}</p>}
       {receipt.replacesReceiptId && <p>Corrects <ActionButton type="button" onClick={() => showRelated(receipt.replacesReceiptId)}>receipt #{receipt.replacesReceiptId}</ActionButton>.</p>}
       {receipt.replacementReceiptId && <p>Replaced by <ActionButton type="button" onClick={() => showRelated(receipt.replacementReceiptId)}>receipt #{receipt.replacementReceiptId}</ActionButton>.</p>}
-      <ul className={styles.evidence}>{receipt.documents?.map(doc => <li key={doc.documentId}><DocumentLabel>{doc.documentName}</DocumentLabel> · v{doc.versionNumber} · {doc.status || "Unknown status"}{doc.hasNewerVersion && " · Newer version exists; this evidence retains its version"}{!doc.downloadEligible && " · Unavailable for download"}<RecordCardActions as="div" placement="section" className={styles.actions}><ActionButton type="button" disabled={!doc.downloadEligible || downloading != null} onClick={() => download(doc.documentId)}>Download evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</ActionButton>{receipt.status === "RECORDED" && can("remove") && <ActionButton editorBlocked={Boolean(form)} type="button" disabled={busy || !!form || !!pending} onClick={() => open("remove", receipt, doc)}>Remove evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</ActionButton>}</RecordCardActions></li>)}</ul>
+      <ul className={styles.evidence}>{receipt.documents?.map(doc => <AttachmentItem key={doc.documentId}><DocumentLabel>{doc.documentName}</DocumentLabel> · v{doc.versionNumber} · {doc.status || "Unknown status"}{doc.hasNewerVersion && " · Newer version exists; this evidence retains its version"}{!doc.downloadEligible && " · Unavailable for download"}<RecordCardActions as="div" placement="section" className={styles.actions}><ActionButton type="button" disabled={!doc.downloadEligible || downloading != null} onClick={() => download(doc.documentId)}>Download evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</ActionButton>{receipt.status === "RECORDED" && can("remove") && <ActionButton editorBlocked={Boolean(form)} type="button" disabled={busy || !!form || !!pending} onClick={() => open("remove", receipt, doc)}>Remove evidence #{doc.documentId} · {doc.documentName || "Name unavailable"}</ActionButton>}</RecordCardActions></AttachmentItem>)}</ul>
       {!receipt.documents?.length && <p className={styles.hint}>No evidence linked.</p>}
       {receipt.returns?.blocksSourceChanges && <p>Recorded returns prevent correcting or voiding this receipt. Do not void genuine returned money to bypass this guard.</p>}
       {receipt.returns?.sourceChangeIssues?.map(issue => <p key={issue.code}>{issue.message}</p>)}

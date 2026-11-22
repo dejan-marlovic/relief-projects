@@ -1,0 +1,29 @@
+:root .item {
+  padding: .65rem .75rem;
+  margin-block: .4rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: transparent;
+  box-shadow: none;
+  min-width: 0;
+  font-size: .85rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  > p { margin-block: .3rem; }
+  > h4 { margin-block: 0 .3rem; font-size: .9rem; }
+  > strong { font-size: .9rem; }
+  > [data-action-group] { margin-block-start: .5rem; gap: .4rem; }
+  > [data-action-group] > button,
+  > [data-action-group] > span > button {
+    min-height: 34px;
+    padding: .35rem .55rem;
+    font-size: .8rem;
+    line-height: 1.4;
+  }
+  > details { margin-block-start: .35rem; }
+  > details > summary { cursor: pointer; color: var(--color-text-secondary); }
+}
+@media (pointer: coarse) {
+  :root .item > [data-action-group] > button,
+  :root .item > [data-action-group] > span > button { min-height: 44px; }
+}

@@ -47,6 +47,7 @@ test("links a historical exact ID against the task project and observed revision
 });
 test("first file selection survives a focus refresh and uploads once with unchanged defaults", async () => {
   const view = mount();
+  fireEvent.click(await screen.findByText("Upload and attach"));
   await waitFor(() => expect(screen.getByRole("button", {name:/Choose a file, or drag/})).toBeEnabled());
   let finish;
   const original = fetch.getMockImplementation();
@@ -126,6 +127,7 @@ test("background refresh keeps rendered attachments and paging is bounded", asyn
 });
 test("upload respects shared busy lock and rejects unsupported files", async () => {
   const view=mount({disabled:true}); await screen.findByText("Upload and attach");
+  fireEvent.click(screen.getByText("Upload and attach"));
   expect(screen.getByRole("button", { name: /Choose a file, or drag/ })).toBeDisabled();
   view.rerender(<FollowUpAttachments task={task} authFetch={fetch} onOperation={onOperation} />);
   await waitFor(()=>expect(screen.getByLabelText("Upload follow-up attachment")).toBeEnabled());

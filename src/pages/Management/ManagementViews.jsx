@@ -1,3 +1,4 @@
+import AttachmentItem from "../../components/AttachmentItem/AttachmentItem";
 import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../components/ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
@@ -53,13 +54,13 @@ export function Associations({ kind, endpoint, authFetch, refresh, open, locked 
   const [page, setPage] = useState(0), [removed, setRemoved] = useState(false), [downloadError, setDownloadError] = useState("");
   const state = useManagementRead(authFetch, `${endpoint}/${kind}?includeRemoved=${removed}&page=${page}&size=20`, refresh);
   return <section aria-label={kind === "actions" ? "Linked follow-ups" : "Supporting documents"} className={styles.panel}><h3>{kind === "actions" ? "Linked follow-ups" : "Supporting documents"}</h3><label><input type="checkbox" checked={removed} onChange={e => { setRemoved(e.target.checked); setPage(0); }} />Include removed associations</label><ReadState state={state} />{downloadError && <p role="alert">{downloadError}</p>}
-    {state.data?.content.map(row => <article data-mobile-tile="" className={styles.panel} key={row.id}>
+    {state.data?.content.map(row => <AttachmentItem as="article" compact={kind !== "actions"} data-mobile-tile="" className={styles.panel} key={row.id}>
       <h4>{kind === "actions" && <RecordIcon type="followUp" />}{kind === "actions" ? `Follow-up #${row.followUpId} · ${row.capturedTitle}` : <DocumentLabel>{`${row.capturedName || `Document #${row.documentId} · Name unavailable`} · Version ${row.versionNumber ?? "unknown"}`}</DocumentLabel>}</h4>
       <p>{row.associationActive ? "Active association" : "Removed association"} · {label(row.availability)}</p>
       {kind === "actions" ? <>{row.current ? <><p>Current title: {row.current.title}</p><p>Current status: {workflowLabel(row.current)}{row.current.isDeleted ? " · Task deleted; not counted as completed" : ""} · Due {row.current.dueDate}</p><p>Assigned to: {row.current.assignee?.displayName || "Unknown"}{row.current.assignee?.isDeleted !== false ? " · Inactive or unavailable" : ""} · Task revision {row.current.revision}</p></> : <p>Current task metadata unavailable.</p>}<TaskLink /></> : <><p>Current name: {row.currentName || "Unavailable"} · Status: {row.currentStatus || "Unknown"}</p><span data-action-group="section"><ActionButton disabled={!row.downloadEligible} onClick={async () => { setDownloadError(""); try { await downloadDocument(row.documentId, authFetch); } catch (e) { setDownloadError(e.message); } }}>Download {row.capturedName || row.currentName || "Name unavailable"} · Document #{row.documentId} · Version {row.versionNumber ?? "unknown"}</ActionButton></span><GuidanceNote className={styles.muted}>Metadata availability does not verify the stored file or its contents.</GuidanceNote></>}
       <p>Linked <Attribution at={row.linkedAt} actor={row.linkedBy} /></p>{row.removedAt && <p>Removed <Attribution at={row.removedAt} actor={row.removedBy} /> · {row.removalReason}</p>}
       {row.permissions?.canRemove && <span data-action-group="section"><ActionButton editorBlocked="registered" disabled={locked || state.loading} onClick={() => open(`${kind}-remove`, { ...row, page, includeRemoved: removed })}>Remove {kind === "actions" ? "action" : "evidence"} association #{row.id} · {row.capturedTitle || row.capturedName || "Name unavailable"}</ActionButton></span>}
-    </article>)}{state.data && !state.data.content.length && <p>No associations on this page.</p>}
+    </AttachmentItem>)}{state.data && !state.data.content.length && <p>No associations on this page.</p>}
     <Pagination data={state.data} page={page} setPage={setPage} label={kind} disabled={state.loading} />
   </section>;
 }

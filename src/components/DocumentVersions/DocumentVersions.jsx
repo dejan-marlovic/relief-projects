@@ -1,3 +1,4 @@
+import { UploadDropzone } from "../UploadAndAttach/UploadAndAttach";
 import GuidanceNote from "../GuidanceNote/GuidanceNote";
 import ActionButton from "../ActionButton/ActionButton";
 import RecordIcon from "../../components/RecordIcon/RecordIcon";
@@ -132,7 +133,7 @@ export default function DocumentVersions({ document, authFetch, categories, canE
         <DocumentStatus label="Replacement status" value={replacement.status} disabled={busy} onChange={(e) => setReplacement({ ...replacement, status: e.target.value })} />
 
       </div>
-      <ActionButton type="button" className={`${styles.uploadArea} ${styles.replacementUpload}`} disabled={busy} aria-label="Choose replacement file" data-dragging={dragging}
+      <UploadDropzone disabled={busy} aria-label="Choose replacement file" data-dragging={dragging}
         onClick={() => replacementInput.current?.click()}
         onDragOver={event => { event.preventDefault(); if (!busy) setDragging(true); }}
         onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget)) setDragging(false); }}
@@ -140,7 +141,7 @@ export default function DocumentVersions({ document, authFetch, categories, canE
         <FiUploadCloud size={24} className={styles.uploadIcon} />
         <span>{busy ? "Uploading…" : replacement.file ? replacement.file.name : "Choose a file, or drag and drop it here"}</span>
         <span className={styles.uploadFormats}>{replacement.file ? "Choose or drop another file to change your selection." : "Select one replacement file."} Upload starts when you choose Save replacement.</span>
-      </ActionButton>
+      </UploadDropzone>
       <input ref={replacementInput} className={styles.hiddenFileInput} type="file" aria-label="Replacement file" disabled={busy}
         onChange={event => { chooseReplacement(event.target.files); event.target.value = ""; }} />
       <div data-action-group="section" className={styles.docActions}><ActionButton type="submit" className={styles.downloadLink} disabled={busy}>{busy ? "Uploading…" : "Save replacement"}</ActionButton><ActionButton type="button" className={styles.downloadLink} disabled={busy} onClick={() => setReplacement(null)}>Cancel replacement</ActionButton></div>
