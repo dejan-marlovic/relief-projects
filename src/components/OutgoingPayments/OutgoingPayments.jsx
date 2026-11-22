@@ -1,3 +1,4 @@
+import RecordExcerpt from "../RecordCard/RecordExcerpt";
 import AttachmentItem from "../AttachmentItem/AttachmentItem";
 import RecordCard, { RecordCardActions } from "../RecordCard/RecordCard";
 import GuidanceNote from "../GuidanceNote/GuidanceNote";
@@ -216,7 +217,7 @@ export function PaymentsPanel({ paymentOrderId, refreshKey, editingLocked, onCha
       <p><strong>{paymentMoney(payment.amount)} {paymentCurrency(payment.currency)}</strong> · Paid on {payment.paidDate}</p>
       {payment.currency?.labelChanged && <p className={styles.hint}>Current currency label: {payment.currency.currentName}. The recorded label above is retained.</p>}
       <p>Recipient organization: {payment.organization?.name || "Unknown"} · Entered {stamp(payment.createdAt)} by {actor(payment.createdBy)}</p>
-      {payment.externalReference && <p>Reference: {payment.externalReference}</p>}{payment.note && <p>Note: {payment.note}</p>}
+      {payment.externalReference && <p>Reference: {payment.externalReference}</p>}<RecordExcerpt text={payment.note} label="Note" />
       {payment.status === "VOIDED" && <p>Voided {stamp(payment.voidedAt)} by {actor(payment.voidedBy)} · {payment.voidReason}</p>}
       {payment.replacesPaymentId && <p>Corrects <ActionButton type="button" onClick={() => showRelated(payment.replacesPaymentId)}>payment #{payment.replacesPaymentId}</ActionButton>.</p>}
       {payment.replacementPaymentId && <p>Replaced by <ActionButton type="button" onClick={() => showRelated(payment.replacementPaymentId)}>payment #{payment.replacementPaymentId}</ActionButton>.</p>}

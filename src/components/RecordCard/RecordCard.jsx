@@ -7,7 +7,7 @@ const RecordCard = forwardRef(function RecordCard({
   as: Element = "article", variant = "card", type = "record", label,
   viewing = false, children, ...props
 }, ref) {
-  return <Element ref={ref} data-record-item={variant === "card" ? "card" : undefined}
+  return <Element ref={ref} data-record-card="true" data-record-item={variant === "card" ? "card" : undefined}
     data-open-record={viewing ? "true" : undefined} {...props}>
     {viewing && <span className="open-record-label">Viewing record</span>}
     {label && <RecordListLabel type={type}>{label}</RecordListLabel>}

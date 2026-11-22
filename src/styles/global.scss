@@ -355,10 +355,11 @@ details[data-record-disclosure="true"][open] > summary > .expanded-record-label 
 :root [data-action-group] > span:has(> button) { align-items: flex-end; }
 
 // Saved list entries share an edge without introducing another nested outline.
-:root [data-record-item="card"] {
+:root [data-record-card="true"][data-record-item="card"] {
   min-width: 0;
-  border-color: var(--color-primary-border);
+  border: 2px solid color-mix(in srgb, var(--color-primary) 38%, var(--color-surface));
   border-radius: 14px;
+  box-sizing: border-box;
   box-shadow: 0 2px 6px var(--color-primary-a04);
 }
 
@@ -403,3 +404,11 @@ details[data-record-disclosure="true"][open] > summary > .expanded-record-label 
 }
 :root [data-financial-toolbar] button > svg { width: 1rem; height: 1rem; flex-shrink: 0; }
 :root [data-financial-toolbar] > div { min-width: 0; max-width: 100%; }
+
+// List cards and opened panels share the financial record border treatment.
+// Explicit shared-card selectors take precedence over page-specific surfaces.
+:root [data-record-card="true"][data-record-item="card"],
+:root [data-record-card="true"][data-open-record="true"] {
+  border: 2px solid color-mix(in srgb, var(--color-primary) 38%, var(--color-surface));
+  border-inline-start: 3px solid var(--color-primary);
+}

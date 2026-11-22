@@ -1,3 +1,4 @@
+import RecordExcerpt from "../../components/RecordCard/RecordExcerpt";
 import RecordCard, { RecordCardActions } from "../../components/RecordCard/RecordCard";
 import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import ActionButton from "../../components/ActionButton/ActionButton";
@@ -291,7 +292,7 @@ function Queue({ mode, projectId, authFetch, scopeControls }) {
         }} onDragEnd={clearDrag}>⠿ {canDrag(task) ? "Drag to move" : "Follow-up"}</span>}
         <div className={styles.heading}><h3><RecordIcon type="followUp" />{task.title}</h3><span className={styles.badge}>{workflowLabel(task)}</span><span className={styles.badge}>{buckets[task.dueBucket] || task.dueBucket}</span></div>
         <p className={styles.muted}>{task.projectName} · Due {task.dueDate} · {task.assignee?.displayName}{task.assignee?.isDeleted !== false ? " (inactive employee)" : ""}{task.isDeleted ? " · Deleted" : ""}</p>
-        {board && task.description && <p>{task.description.slice(0, 180)}{task.description.length > 180 ? "…" : ""}</p>}
+        <RecordExcerpt text={task.description} />
         <RecordCardActions as="div" placement="section" className={styles.actions}>
           {canExportFollowUp(task) && <ActionButton disabled={busy || loading} onClick={() => { setError(""); setNotice(""); try { downloadFollowUpCalendar(task); setNotice("Calendar file downloaded. Import it into your calendar; later changes must be updated there manually."); } catch (err) { setError(err.message); } }}>Download calendar entry (.ics)</ActionButton>}
           {task.permissions?.canEdit && <ActionButton disabled={taskActionsDisabled} onClick={() => setForm({ task })}>Edit follow-up</ActionButton>}

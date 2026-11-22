@@ -1,3 +1,4 @@
+import RecordExcerpt from "../RecordCard/RecordExcerpt";
 import AttachmentItem from "../AttachmentItem/AttachmentItem";
 import RecordCard, { RecordCardActions } from "../RecordCard/RecordCard";
 import GuidanceNote from "../GuidanceNote/GuidanceNote";
@@ -213,7 +214,7 @@ export function ReceiptsPanel({ transactionId, projectId, refreshKey, editingLoc
       <p><strong>{receiptMoney(receipt.amount)} {receiptCurrency(receipt.currency)}</strong> · Arrived {receipt.receivedDate}</p>
       {receipt.currency?.labelChanged && <p className={styles.hint}>Current currency label: {receipt.currency.currentName}. The recorded label above is retained.</p>}
       <p>Financier: {receipt.financier?.name || "Unknown"} · Entered {stamp(receipt.createdAt)} by {actor(receipt.createdBy)}</p>
-      {receipt.externalReference && <p>Reference: {receipt.externalReference}</p>}{receipt.note && <p>Note: {receipt.note}</p>}
+      {receipt.externalReference && <p>Reference: {receipt.externalReference}</p>}<RecordExcerpt text={receipt.note} label="Note" />
       {receipt.status === "VOIDED" && <p>Voided {stamp(receipt.voidedAt)} by {actor(receipt.voidedBy)} · {receipt.voidReason}</p>}
       {receipt.replacesReceiptId && <p>Corrects <ActionButton type="button" onClick={() => showRelated(receipt.replacesReceiptId)}>receipt #{receipt.replacesReceiptId}</ActionButton>.</p>}
       {receipt.replacementReceiptId && <p>Replaced by <ActionButton type="button" onClick={() => showRelated(receipt.replacementReceiptId)}>receipt #{receipt.replacementReceiptId}</ActionButton>.</p>}

@@ -1,3 +1,4 @@
+import RecordExcerpt from "../../components/RecordCard/RecordExcerpt";
 import RecordCard, { RecordCardActions } from "../../components/RecordCard/RecordCard";
 import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
 import FilterHelp from "../../components/FilterHelp/FilterHelp";
@@ -275,11 +276,15 @@ function Register({ projectId, authFetch }) {
       <ul className={styles.list}>{data.content.map(risk => <RecordCard as="li" type="record" label={<> Risk </>}  data-mobile-tile={risk.title} key={risk.id}>
         <div className={styles.heading}><h3>{risk.title}</h3><span>{buckets[risk.reviewBucket] || risk.reviewBucket}{risk.isDeleted ? " · Deleted" : ""}</span></div>
         <p>{risk.ownerName}{risk.ownerInactive ? " (inactive employee)" : ""} · Review {risk.reviewDate} · {risk.status === "CLOSED" ? "Closed" : "Open"}</p>
-        <WorkflowIntro>Identify the risk, assess its likelihood and impact, and maintain a mitigation plan. Revisit the assessment as circumstances change; close or reopen it with an explicit decision.</WorkflowIntro><WorkflowStep number={1} title="Identify and assess" description="Describe what could go wrong, assign an owner and assess likelihood and impact. Use Edit risk to revise the assessment."><p>Likelihood: {rating(risk.likelihood)} · Impact: {rating(risk.impact)}</p>
+        <p>Likelihood: {rating(risk.likelihood)} · Impact: {rating(risk.impact)}</p>
+        <RecordExcerpt text={risk.description} /><RecordExcerpt text={risk.mitigationPlan} label="Mitigation" />
+        <details><summary>Risk details and workflow</summary>
+        <WorkflowIntro>Identify the risk, assess its likelihood and impact, and maintain a mitigation plan. Revisit the assessment as circumstances change; close or reopen it with an explicit decision.</WorkflowIntro><WorkflowStep number={1} title="Identify and assess" description="Describe what could go wrong, assign an owner and assess likelihood and impact. Use Edit risk to revise the assessment.">
         {risk.description && <p className={styles.text}>{risk.description}</p>}
         </WorkflowStep><WorkflowStep number={2} title="Mitigate and review" description="Maintain the mitigation plan and next review date. Review progress with the owner and update the record; a due date is a reminder, not a completed review."><p>Next review: {risk.reviewDate}</p>{risk.mitigationPlan && <p className={styles.text}><strong>Mitigation: </strong>{risk.mitigationPlan}</p>}
         </WorkflowStep><WorkflowStep number={3} title="Close or reopen the risk" description="Close with a reason when further monitoring is no longer required. Reopen if circumstances change; the decision history remains available.">{risk.closureReason && <p className={styles.text}><strong>Closure reason: </strong>{risk.closureReason}</p>}
         </WorkflowStep><details><summary>Attribution</summary><p>Created by {risk.createdBy?.username} · {uploadTimeLabel(risk.createdAt)}</p><p>Last changed by {risk.updatedBy?.username} · {uploadTimeLabel(risk.updatedAt)}</p></details>
+        </details>
         <RecordCardActions as="div" placement="section" className={styles.actions}>
           {[["canEdit", "save", "Edit risk"], ["canClose", "close", "Close risk"], ["canReopen", "reopen", "Reopen risk"], ["canDelete", "delete", "Delete risk"], ["canRestore", "restore", "Restore risk"]].map(([permission, action, label]) => risk.permissions?.[permission] && <ActionButton editorBlocked={Boolean(editor)} key={action} disabled={locked || loading} onClick={() => openEditor(risk, action)}>{label}</ActionButton>)}
           <ActionButton disabled={busy} onClick={() => setHistory(risk)}>View history</ActionButton>

@@ -1,3 +1,4 @@
+import RecordExcerpt from "../RecordCard/RecordExcerpt";
 import AttachmentItem from "../AttachmentItem/AttachmentItem";
 import RecordCard, { RecordCardActions } from "../RecordCard/RecordCard";
 import GuidanceNote from "../GuidanceNote/GuidanceNote";
@@ -133,7 +134,7 @@ export function FundingReturnsPanel({ receipt, refreshKey, editingLocked, onChan
       <p>Financier: {row.financier?.name || "Unknown"} · Original receipt #{row.originalReceiptId}</p>
       {row.currency?.labelChanged && <p>Current currency label: {row.currency.currentName}; the recorded label is retained above.</p>}
       <p>Entered {stamp(row.createdAt)} by {actor(row.createdBy)} · Reason: {row.reason}</p>
-      {row.externalReference && <p>Reference: {row.externalReference}</p>}{row.note && <p>Note: {row.note}</p>}
+      {row.externalReference && <p>Reference: {row.externalReference}</p>}<RecordExcerpt text={row.note} label="Note" />
       {row.voidedAt && <p>Voided {stamp(row.voidedAt)} by {actor(row.voidedBy)} · {row.voidReason}</p>}
       {row.replacesReturnId && <ActionButton type="button" onClick={() => showRelated(row.replacesReturnId)}>View original return #{row.replacesReturnId}</ActionButton>}
       {row.replacementReturnId && <ActionButton type="button" onClick={() => showRelated(row.replacementReturnId)}>View replacement return #{row.replacementReturnId}</ActionButton>}
