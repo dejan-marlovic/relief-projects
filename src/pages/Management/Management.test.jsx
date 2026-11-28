@@ -26,6 +26,26 @@ beforeEach(() => {
   });
 });
 const mount = () => render(<MemoryRouter><ManagementRegister projectId={7} authFetch={fetcher} /></MemoryRouter>);
+
+test("creating after viewing a record keeps scroll at the editor, not the saved record header", async () => {
+  const original = HTMLElement.prototype.scrollIntoView;
+  const targets = [];
+  HTMLElement.prototype.scrollIntoView = function () { targets.push(this); };
+  try {
+    await open();
+    fireEvent.click(screen.getByRole("button", { name: "Close record" }));
+    fireEvent.click(screen.getByRole("button", { name: "Create finding or lesson" }));
+    fireEvent.change(screen.getByLabelText("Title"), { target: { value: "Temporary finding" } });
+    fireEvent.change(screen.getByLabelText("Observation"), { target: { value: "Training only" } });
+    fireEvent.change(screen.getByLabelText("Source type"), { target: { value: "REVIEW" } });
+    targets.length = 0;
+    await save("Create finding or lesson");
+    await screen.findByRole("heading", { name: "Edit observation" });
+    await waitFor(() => expect(screen.getByLabelText("Observation")).toBeEnabled());
+    expect(targets.length).toBeGreaterThan(0);
+    expect(targets.every(target => target.tagName === "FORM")).toBe(true);
+  } finally { HTMLElement.prototype.scrollIntoView = original; }
+});
 async function open() { mount(); fireEvent.click(await screen.findByText("Open record #51 · Missing distribution checks")); await screen.findByText("Edit observation"); }
 async function save(label) {
   const button = screen.queryByRole("button", { name: `Save ${label.toLowerCase()}` });

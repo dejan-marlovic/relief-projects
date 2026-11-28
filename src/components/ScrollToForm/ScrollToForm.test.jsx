@@ -4,6 +4,21 @@ import ScrollToForm from "./ScrollToForm";
 
 afterEach(() => jest.restoreAllMocks());
 
+test("confirmed autosave does not scroll or steal focus when creation becomes editing", () => {
+  const original = Element.prototype.scrollIntoView;
+  const scroll = jest.fn();
+  Element.prototype.scrollIntoView = scroll;
+  try {
+    const view = (action, saved) => <ScrollToForm scrollKey={action} autosave={{ value: "draft", saved, blocked: true }}><input aria-label="First" /><textarea aria-label="Notes" /></ScrollToForm>;
+    const { rerender } = render(view("create"));
+    screen.getByLabelText("Notes").focus();
+    scroll.mockClear();
+    rerender(view("edit", "draft"));
+    expect(scroll).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("Notes")).toHaveFocus();
+  } finally { Element.prototype.scrollIntoView = original; }
+});
+
 test("focuses an available field once on opening, not on edits; scrolls again for another action", () => {
   const original = Element.prototype.scrollIntoView;
   const scroll = jest.fn();

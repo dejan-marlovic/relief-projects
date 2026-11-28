@@ -27,8 +27,9 @@ import styles from "./Travel.module.scss";
 
 function TravelDetail({ openSequence = 0, id, base, projectId, authFetch, refresh, reload, onClose, initialForm }) {
   const endpoint = `${base}/${id}`;
+  const initialOpenSequence = useRef(openSequence).current;
   const detail = useTravelRead(authFetch, endpoint, refresh);
-  const detailRef = useScrollToEditor((!!detail.data && (!initialForm || openSequence > 0)) ? openSequence + 1 : false);
+  const detailRef = useScrollToEditor((!!detail.data && (!initialForm || openSequence !== initialOpenSequence)) ? openSequence + 1 : false);
   const [form, setForm] = useState(initialForm || null), [busy, setBusy] = useState(false);
   const [reportActive, setReportActive] = useState(false);
   const pending = useRef(false), alive = useRef(true);

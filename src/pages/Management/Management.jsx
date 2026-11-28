@@ -24,6 +24,7 @@ import styles from "./Management.module.scss";
 
 function RecordDetail({ openSequence = 0, id, base, projectId, authFetch, refresh, reload, onClose, initialForm }) {
   const endpoint = `${base}/${id}`;
+  const initialOpenSequence = useRef(openSequence).current;
   const detail = useManagementRead(authFetch, endpoint, refresh);
   const [form, setForm] = useState(initialForm || null), [busy, setBusy] = useState(false);
   const pending = useRef(false), alive = useRef(true);
@@ -33,7 +34,7 @@ function RecordDetail({ openSequence = 0, id, base, projectId, authFetch, refres
   const kind = form?.action?.endsWith("-remove") ? form.action.split("-")[0] : null;
   const removalPage = useManagementRead(authFetch, kind ? `${endpoint}/${kind}?includeRemoved=${form.link.includeRemoved}&page=${form.link.page}&size=20` : null, refresh);
   const record = detail.data;
-  const detailRef = useScrollToEditor((!!record && (!initialForm || openSequence > 0)) ? openSequence + 1 : false);
+  const detailRef = useScrollToEditor((!!record && (!initialForm || openSequence !== initialOpenSequence)) ? openSequence + 1 : false);
   const permitted = !!record && (kind ? removalPage.data?.content.some(link => link.id === form.link.id && link.permissions?.canRemove) : record.permissions?.[commandPermission[form?.action]]);
   const blocked = !record || detail.loading || removalPage.loading || !permitted || (form?.reviewRequired && (reviewHistory.loading || !reviewHistory.data));
   const locked = busy || !!form || detail.loading;
