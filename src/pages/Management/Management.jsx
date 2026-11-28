@@ -85,19 +85,23 @@ export function ManagementRegister({ projectId, authFetch }) {
   const query = new URLSearchParams({ ...filters, page, size: 20 });
   const list = useManagementRead(authFetch, `${base}?${query}`, refresh);
   useAutomaticRefresh(reload, !!form || busy || !!selected || list.loading);
-  const [initialEditor, setInitialEditor] = useState(null);
+  const savedRecord = useManagementRead(authFetch, form?.record?.id ? `${base}/${form.record.id}` : null, refresh);
+  const editorBlocked = form?.action === "edit"
+    ? savedRecord.loading || !savedRecord.data?.permissions?.canEdit
+    : list.loading || !list.data?.canCreate;
   useUnsavedChange(`new-management-${projectId}`, busy || draftIsDirty(form));
   const change = (key, value) => { setFilters(f => ({ ...f, [key]: value })); setPage(0); };
   async function create(body) {
-    if (pending.current || form.reviewRequired || list.loading || !list.data?.canCreate) return;
+    if (pending.current || form.reviewRequired || editorBlocked) return;
     pending.current = true; setBusy(true);
     try {
-      const record = await authFetch(base, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then(readManagement);
+      const record = await authFetch(form.action === "edit" ? `${base}/${form.record.id}` : base, { method: form.action === "edit" ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form.action === "edit" ? { ...body, expectedRevision: form.expectedRevision } : body) }).then(readManagement);
       if (!record.id) throw new Error("The save response was incomplete. Review the refreshed list before retrying.");
       const editor = savedDraft(form, record);
-      if (alive.current) { setInitialEditor(editor); setForm(null); setSelected(record.id); setFilters({ type: "ALL", state: "ALL", deleted: false }); setPage(0); }
-    } catch (e) { if (alive.current) setForm(f => ({ ...f, error: e.message, reviewRequired: true })); }
-    finally { pending.current = false; if (alive.current) { setBusy(false); reload(); } }
+      // Keep the mounted editor and the list above it stable until the user closes it.
+      if (alive.current) setForm(editor);
+    } catch (e) { if (form.action === "create") reload(); if (alive.current) setForm(f => ({ ...f, error: e.message, reviewRequired: true })); }
+    finally { pending.current = false; if (alive.current) { setBusy(false); savedRecord.retry(); } }
   }
   return <>
     <div data-action-group="section" className={styles.actions}>{list.data?.canCreate && <ActionButton recordBlocked={Boolean(selected)} editorBlocked={Boolean(form)} disabled={!!form || !!selected || busy} onClick={() => setForm({ action: "create", draft: { ...blankObservation(), observedDate: list.data.today } })}>Create finding or lesson</ActionButton>}</div>
@@ -105,8 +109,8 @@ export function ManagementRegister({ projectId, authFetch }) {
     <ReadState state={list} />{list.data?.projectDeleted && <p>This project is inactive. Retained records are read-only.</p>}
     <ul className={styles.list}>{list.data?.content.map(record => <RecordCard as="li" type={record.type === "LESSON" ? "lesson" : "finding"} label={<> {record.type === "LESSON" ? "Lesson" : "Finding"} </>}  key={record.id}><RecordHeader as="div" className={styles.heading}><h3><RecordIcon type={record.type === "LESSON" ? "lesson" : "finding"} />{record.title}</h3><RecordCardActions placement="header"><ActionButton recordBlocked={selected != null && selected !== record.id} editorBlocked={Boolean(form)} disabled={!!form || busy || (selected != null && selected !== record.id)} onClick={() => { setSelected(record.id); setOpenSequence(n => n + 1); }}><RecordIcon type="open" />Open record #{record.id} · {record.title || "Name unavailable"}</ActionButton></RecordCardActions></RecordHeader><RecordMeta>{label(record.type)} · Observed {record.observedDate}</RecordMeta><RecordExcerpt text={record.observation} label="Observation" /><DecisionSummary record={record} /></RecordCard>)}</ul>
     {list.data && !list.data.content.length && <EmptyState>No records match these filters.</EmptyState>}<Pagination data={list.data} page={page} setPage={setPage} label="records" disabled={list.loading || busy} />
-    {form && <ManagementEditor form={form} setForm={setForm} projectId={projectId} authFetch={authFetch} refresh={refresh} today={list.data?.today} busy={busy} blocked={list.loading || !list.data?.canCreate} onSave={create} onCancel={() => setForm(null)} onReview={() => setForm(f => ({ ...f, error: "", reviewRequired: false }))} />}
-    {selected && <RecordDetail openSequence={openSequence} key={selected} id={selected} initialForm={initialEditor} base={base} projectId={projectId} authFetch={authFetch} refresh={refresh} reload={reload} onClose={() => { setSelected(null); setInitialEditor(null); }} />}
+    {form && <ManagementEditor form={form} setForm={setForm} projectId={projectId} authFetch={authFetch} refresh={refresh} today={list.data?.today} busy={busy} blocked={editorBlocked} onSave={create} onCancel={() => { setForm(null); reload(); }} onReview={() => setForm(f => ({ ...f, ...(f.action === "edit" ? { record: savedRecord.data, expectedRevision: savedRecord.data.revision } : {}), error: "", reviewRequired: false }))} />}
+    {selected && <RecordDetail openSequence={openSequence} key={selected} id={selected} base={base} projectId={projectId} authFetch={authFetch} refresh={refresh} reload={reload} onClose={() => { setSelected(null); }} />}
   </>;
 }
 export default function Management() {

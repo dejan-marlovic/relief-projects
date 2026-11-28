@@ -27,7 +27,7 @@ beforeEach(() => {
 });
 const mount = () => render(<MemoryRouter><ManagementRegister projectId={7} authFetch={fetcher} /></MemoryRouter>);
 
-test("creating after viewing a record keeps scroll at the editor, not the saved record header", async () => {
+test.each(["FINDING", "LESSON"])("autosaving %s preserves the editor and focus without scrolling", async type => {
   const original = HTMLElement.prototype.scrollIntoView;
   const targets = [];
   HTMLElement.prototype.scrollIntoView = function () { targets.push(this); };
@@ -38,12 +38,19 @@ test("creating after viewing a record keeps scroll at the editor, not the saved 
     fireEvent.change(screen.getByLabelText("Title"), { target: { value: "Temporary finding" } });
     fireEvent.change(screen.getByLabelText("Observation"), { target: { value: "Training only" } });
     fireEvent.change(screen.getByLabelText("Source type"), { target: { value: "REVIEW" } });
+    fireEvent.change(screen.getByLabelText("Record type"), { target: { value: type } });
+    const field = screen.getByLabelText("Observation");
+    const formNode = field.closest("form");
+    await act(async () => { await new Promise(resolve => setTimeout(resolve, 80)); });
+    field.focus();
     targets.length = 0;
     await save("Create finding or lesson");
     await screen.findByRole("heading", { name: "Edit observation" });
     await waitFor(() => expect(screen.getByLabelText("Observation")).toBeEnabled());
-    expect(targets.length).toBeGreaterThan(0);
-    expect(targets.every(target => target.tagName === "FORM")).toBe(true);
+    expect(screen.getByLabelText("Observation")).toBe(field);
+    expect(field.closest("form")).toBe(formNode);
+    expect(field).toHaveFocus();
+    expect(targets).toHaveLength(0);
   } finally { HTMLElement.prototype.scrollIntoView = original; }
 });
 async function open() { mount(); fireEvent.click(await screen.findByText("Open record #51 · Missing distribution checks")); await screen.findByText("Edit observation"); }

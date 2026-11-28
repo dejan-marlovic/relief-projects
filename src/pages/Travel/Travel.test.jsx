@@ -41,7 +41,12 @@ test("create sends only trip inputs and date-only values without automatic task 
   mount(); fireEvent.click(await screen.findByText("Create travel request")); await screen.findByRole("option", { name: "Alex Example" });
   fireEvent.change(screen.getByLabelText("Traveller"), { target: { value: "18" } });
   fireEvent.change(screen.getByLabelText("Purpose"), { target: { value: " Visit partner " } }); fireEvent.change(screen.getByLabelText("Destination"), { target: { value: " Amman " } });
+  const field = screen.getByLabelText("Purpose");
+  const formNode = field.closest("form");
   await save("Create travel request"); await waitFor(() => expect(writes()).toHaveLength(1));
+  await screen.findByRole("heading", { name: "Edit trip details" });
+  expect(screen.getByLabelText("Purpose")).toBe(field);
+  expect(field.closest("form")).toBe(formNode);
   expect(JSON.parse(writes()[0][1].body)).toEqual({ travellerEmployeeId: 18, purpose: "Visit partner", destination: "Amman", departureDate: "2026-10-02", returnDate: "2026-10-02", notes: null });
 });
 test("submitted request uses permissions, displays frozen basis and sends exact submission ID", async () => {
