@@ -156,6 +156,7 @@ function Signatures() {
 
   // ref for new row (scroll-into-view)
   const newRowRef = useRef(null);
+  const tableRef = useRef(null);
 
   const toggleCol = (i) => {
     if (i === 0) return;
@@ -1016,7 +1017,7 @@ function Signatures() {
     }
   };
 
-  const { widths: columnWidths, resize: resizeColumn } = useColumnWidths("signatures", BASE_COL_WIDTHS);
+  const { widths: columnWidths, resize: resizeColumn, reset: resetColumn, fittedDefaults } = useColumnWidths("signatures", BASE_COL_WIDTHS, { tableRef, compact });
   const gridCols = useMemo(() => {
     const parts = columnWidths.map((w, i) =>
       visibleCols[i] ? `${w}px` : "0px",
@@ -1190,7 +1191,7 @@ function Signatures() {
           </details>
           <label className={styles.selectAll}><input type="checkbox" checked={allVisibleSelected} disabled={!selectableSignatures.length} onChange={(event) => toggleSelectAllVisible(event.target.checked)} />Select all visible ({displayedItems.length})</label>
         </fieldset>}
-        <div className={`${styles.table} ${compact ? styles.compactList : ""}`} style={{ "--sig-grid-cols": gridCols }}>
+        <div ref={tableRef} className={`${styles.table} ${compact ? styles.compactList : ""}`} style={{ "--sig-grid-cols": gridCols }}>
           {!compact && <div className={`${styles.gridRow} ${styles.headerRow}`}>
             {headerLabels.map((h, i) => (
               <div
@@ -1215,7 +1216,7 @@ function Signatures() {
                 ) : (
                   <div className={styles.sortAndFilterHeader}><SortableHeader label={h} sortKey={HEADER_SORT_KEYS[i]} sortConfig={sortConfig} onSort={toggleSort} /><ColumnFilter label={h} type={HEADER_SORT_KEYS[i] === "status" ? "select" : HEADER_SORT_KEYS[i] === "paymentOrderId" ? "number" : HEADER_SORT_KEYS[i] === "date" ? "date" : "text"} value={filters[HEADER_SORT_KEYS[i]]} options={HEADER_SORT_KEYS[i] === "status" ? statusOptions.map((s)=>({value:s.id,label:s.label})) : []} onApply={(v)=>setFilters((c)=>({...c,[HEADER_SORT_KEYS[i]]:v}))} onClear={()=>setFilters((c)=>({...c,[HEADER_SORT_KEYS[i]]:emptyFilters()[HEADER_SORT_KEYS[i]]}))} /></div>
                 )}
-                {!compact && visibleCols[i] && <ColumnResize label={h} width={columnWidths[i]} defaultWidth={BASE_COL_WIDTHS[i]} onResize={width => resizeColumn(i, width)} />}
+                {!compact && visibleCols[i] && <ColumnResize label={h} width={columnWidths[i]} defaultWidth={fittedDefaults[i]} onReset={() => resetColumn(i)} onResize={width => resizeColumn(i, width)} />}
               </div>
             ))}
           </div>}

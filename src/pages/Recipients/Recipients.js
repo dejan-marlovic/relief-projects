@@ -158,6 +158,7 @@ function Recipients() {
   const [fieldErrors, setFieldErrors] = useState({}); // { [rowId]: { fieldName: message } }
 
   const newRowRef = useRef(null);
+  const tableRef = useRef(null);
 
   const toggleCol = (i) => {
     if (i === 0) return; // keep Actions visible
@@ -991,7 +992,7 @@ function Recipients() {
     }
   };
 
-  const { widths: columnWidths, resize: resizeColumn } = useColumnWidths("recipients", BASE_COL_WIDTHS);
+  const { widths: columnWidths, resize: resizeColumn, reset: resetColumn, fittedDefaults } = useColumnWidths("recipients", BASE_COL_WIDTHS, { tableRef, compact });
   const gridCols = useMemo(() => {
     const parts = columnWidths.map((w, i) =>
       visibleCols[i] ? `${w}px` : "0px",
@@ -1187,7 +1188,7 @@ function Recipients() {
           </details>
           <label className={styles.mobileSelectAll}><input type="checkbox" checked={allVisibleSelected} disabled={!selectableRecipients.length} onChange={(event) => toggleSelectAllVisible(event.target.checked)} /> Select all visible ({displayedItems.length})</label>
         </fieldset>}
-        <div className={styles.table} style={{ "--rec-grid-cols": gridCols, "--rec-tablet-cols": ["130px", "minmax(140px, 1fr)", "140px", "110px"].map((width, index) => visibleCols[index] ? width : "0px").join(" ") }}>
+        <div ref={tableRef} className={styles.table} style={{ "--rec-grid-cols": gridCols, "--rec-tablet-cols": ["130px", "minmax(140px, 1fr)", "140px", "110px"].map((width, index) => visibleCols[index] ? width : "0px").join(" ") }}>
           {!compact && <div className={`${styles.gridRow} ${styles.headerRow}`}>
             {headerLabels.map((h, i) => (
               <div
@@ -1212,7 +1213,7 @@ function Recipients() {
                 ) : (
                   <div className={styles.sortAndFilterHeader}><SortableHeader label={h} sortKey={HEADER_SORT_KEYS[i]} sortConfig={sortConfig} onSort={toggleSort} /><ColumnFilter label={h} type={HEADER_SORT_KEYS[i] === "organization" ? "text" : "number"} value={filters[HEADER_SORT_KEYS[i]]} onApply={(v)=>setFilters((c)=>({...c,[HEADER_SORT_KEYS[i]]:v}))} onClear={()=>setFilters((c)=>({...c,[HEADER_SORT_KEYS[i]]:emptyFilters()[HEADER_SORT_KEYS[i]]}))} /></div>
                 )}
-                {!compact && visibleCols[i] && <ColumnResize label={h} width={columnWidths[i]} defaultWidth={BASE_COL_WIDTHS[i]} onResize={width => resizeColumn(i, width)} />}
+                {!compact && visibleCols[i] && <ColumnResize label={h} width={columnWidths[i]} defaultWidth={fittedDefaults[i]} onReset={() => resetColumn(i)} onResize={width => resizeColumn(i, width)} />}
               </div>
             ))}
           </div>}

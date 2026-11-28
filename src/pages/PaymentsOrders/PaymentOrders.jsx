@@ -209,6 +209,7 @@ function PaymentOrders() {
   const [returnTarget, setReturnTarget] = useState(null);
 
   const newRowRef = useRef(null);
+  const tableRef = useRef(null);
 
   const toggleCol = (i) => {
     if (i === 0) return;
@@ -669,7 +670,7 @@ function PaymentOrders() {
     }
   };
 
-  const { widths: columnWidths, resize: resizeColumn } = useColumnWidths("payments", BASE_COL_WIDTHS);
+  const { widths: columnWidths, resize: resizeColumn, reset: resetColumn, fittedDefaults } = useColumnWidths("payments", BASE_COL_WIDTHS, { tableRef, compact });
   const gridCols = useMemo(() => {
     const parts = columnWidths.map((w, i) =>
       visibleCols[i] ? `${w}px` : "0px",
@@ -1391,7 +1392,7 @@ function PaymentOrders() {
           <ErrorBanner message={formError} onDismiss={() => setFormError("")} />
         )}
 
-        <div className={styles.table} style={{ "--po-grid-cols": gridCols }}>
+        <div ref={tableRef} className={styles.table} style={{ "--po-grid-cols": gridCols }}>
           <FilterContainer {...(compact ? { className: styles.filterDisclosure } : {})}>
           {compact && <summary>Sort, filter &amp; select</summary>}
           <fieldset aria-label="Payment order controls" disabled={compact && (editingId !== null || saving)} className={`${styles.gridRow} ${styles.headerRow}`}>
@@ -1419,7 +1420,7 @@ function PaymentOrders() {
                 ) : (
                   <div className={styles.sortAndFilterHeader}><SortableHeader label={h} sortKey={HEADER_SORT_KEYS[i]} sortConfig={sortConfig} onSort={toggleSort} /><ColumnFilter label={h} type={["id","transactionId","amount"].includes(HEADER_SORT_KEYS[i]) ? "number" : HEADER_SORT_KEYS[i] === "date" ? "date" : "text"} value={filters[HEADER_SORT_KEYS[i]]} onApply={(v)=>setFilters((c)=>({...c,[HEADER_SORT_KEYS[i]]:v}))} onClear={()=>setFilters((c)=>({...c,[HEADER_SORT_KEYS[i]]:emptyFilters()[HEADER_SORT_KEYS[i]]}))} /></div>
                 )}
-                {!compact && visibleCols[i] && <ColumnResize label={h} width={columnWidths[i]} defaultWidth={BASE_COL_WIDTHS[i]} onResize={width => resizeColumn(i, width)} />}
+                {!compact && visibleCols[i] && <ColumnResize label={h} width={columnWidths[i]} defaultWidth={fittedDefaults[i]} onReset={() => resetColumn(i)} onResize={width => resizeColumn(i, width)} />}
               </div>
             ))}
           </fieldset>

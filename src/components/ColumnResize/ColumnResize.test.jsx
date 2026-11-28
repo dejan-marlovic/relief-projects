@@ -1,6 +1,6 @@
-import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
-import ColumnResize, { useColumnWidths } from "./ColumnResize";
+import React, { useRef } from "react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import ColumnResize, { useColumnWidths, fitActionColumn } from "./ColumnResize";
 
 const defaults = [120, 200];
 function Example() {
@@ -43,4 +43,39 @@ test("drag uses pointer capture and stops changing width after release", () => {
     fireEvent.pointerMove(handle, { clientX: 300 });
     expect(handle).toHaveAttribute("aria-valuenow", "320");
   } finally { window.PointerEvent = previous; }
+});
+
+
+test("fits visible action controls and ignores hidden controls", () => {
+  const table = document.createElement('div');
+  table.innerHTML = '<div><div data-financial-row-actions="true"><input type="checkbox" /><button>Edit</button><button>Delete</button></div></div>';
+  const controls = [...table.querySelectorAll('input,button')];
+  controls.forEach(control => {
+    control.getClientRects = () => [{}];
+    control.getBoundingClientRect = () => ({ width: 34 });
+  });
+  expect(fitActionColumn(table)).toBe(142);
+  controls[1].getClientRects = () => [];
+  controls[2].getClientRects = () => [];
+  expect(fitActionColumn(table)).toBe(110);
+});
+
+test("automatic Actions width can be overridden, persisted and reset to fit", async () => {
+  localStorage.setItem('table-column-widths:v1:fit', '[190,200]');
+  function Fitted() {
+    const ref = useRef(null);
+    const { widths, resize, reset, fittedDefaults } = useColumnWidths('fit', [190, 200], { tableRef: ref });
+    return <div ref={ref}><ColumnResize label="Actions" width={widths[0]} defaultWidth={fittedDefaults[0]} onResize={width => resize(0, width)} onReset={() => reset(0)} /></div>;
+  }
+  const first = render(<Fitted />);
+  let handle = screen.getByRole('separator');
+  expect(handle).toHaveAttribute('aria-valuenow', '110');
+  fireEvent.keyDown(handle, { key: 'ArrowRight', shiftKey: true });
+  expect(handle).toHaveAttribute('aria-valuenow', '160');
+  first.unmount();
+  render(<Fitted />);
+  handle = screen.getByRole('separator');
+  expect(handle).toHaveAttribute('aria-valuenow', '160');
+  fireEvent.keyDown(handle, { key: 'Home' });
+  await waitFor(() => expect(handle).toHaveAttribute('aria-valuenow', '110'));
 });

@@ -658,7 +658,7 @@ const Transactions = ({ refreshTrigger }) => {
     }
   };
 
-  const { widths: columnWidths, resize: resizeColumn } = useColumnWidths("transactions", BASE_COL_WIDTHS);
+  const { widths: columnWidths, resize: resizeColumn, reset: resetColumn, fittedDefaults } = useColumnWidths("transactions", BASE_COL_WIDTHS, { tableRef, compact });
   const gridCols = useMemo(() => {
     const parts = columnWidths.map((w, i) =>
       visibleCols[i] ? `${w}px` : "0px",
@@ -1705,7 +1705,7 @@ const Transactions = ({ refreshTrigger }) => {
                 ) : (
                   h
                 )}
-                {!compact && visibleCols[i] && <ColumnResize label={h} width={columnWidths[i]} defaultWidth={BASE_COL_WIDTHS[i]} onResize={width => resizeColumn(i, width)} />}
+                {!compact && visibleCols[i] && <ColumnResize label={h} width={columnWidths[i]} defaultWidth={fittedDefaults[i]} onReset={() => resetColumn(i)} onResize={width => resizeColumn(i, width)} />}
               </div>
             ))}
           </fieldset>
