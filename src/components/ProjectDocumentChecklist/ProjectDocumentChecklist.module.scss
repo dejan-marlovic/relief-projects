@@ -22,8 +22,7 @@
 .evidence { list-style: none; padding: 0; }
 .evidence li { display: flex; flex-direction: column; gap: 0.4rem; padding: 1rem 0; border-bottom: 1px solid colors.$border; overflow-wrap: anywhere; }
 @media (max-width: 700px) { .body { padding: 0 0.65rem 0.65rem; } .form { padding: 0.6rem; } }
-.item summary::after { content: "+"; color: colors.$primary; }
-.item[open] > summary::after { content: "−"; }
+
 .form textarea:focus-visible { outline: 2px solid colors.$primary; outline-offset: 2px; }
 
 .intro { color: colors.$text-secondary; line-height: 1.6; max-width: 75ch; }
@@ -44,10 +43,11 @@
 .itemHeading small { color: colors.$text-muted; font-size: .8rem; font-weight: 400; line-height: 1.4; }
 .badge { padding: .3rem .6rem; border-radius: 1rem; background: colors.$primary-a04; font-weight: 500; }
 .item[open] > summary { border-bottom: 1px solid colors.$border; margin-bottom: .75rem; }
+.item > summary::before { grid-column: 4; grid-row: 1; }
 @media(max-width: 700px) {
   .item > summary { grid-template-columns: 1.5rem minmax(0, 1fr) 1rem; gap: .6rem; padding: .8rem; }
   .item .badge { grid-column: 2; justify-self: start; }
-  .item > summary::after { grid-column: 3; grid-row: 1; }
+  .item > summary::before { grid-column: 3; grid-row: 1; }
   .checklistToolbar label { min-height: 44px; }
 }
 

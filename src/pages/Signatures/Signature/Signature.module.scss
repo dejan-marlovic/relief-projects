@@ -219,8 +219,7 @@
 .cardDetails {
   margin-top: 12px;
   summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 8px; color: colors.$primary; font-weight: 600; }
-  summary::before { content: "+"; }
-  &[open] summary::before { content: "−"; }
+
 }
 .detailFields { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; padding: 4px 0 12px; }
 .cardActions.cell { padding-top: 12px; margin-top: 12px; border-top: 1px solid colors.$border-subtle; overflow: visible; }

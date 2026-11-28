@@ -62,8 +62,8 @@
 .page button.stepToggle { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; padding: 1rem; text-align: left; background: var(--color-primary-a04); border-radius: 10px; }
 .page button.stepToggle:disabled { opacity: 1; cursor: default; }
 .stepToggle strong { font-size: 1.05rem; }
-.stepToggle > svg { flex-shrink: 0; transition: transform .15s; }
-.chevronOpen { transform: rotate(180deg); }
+.stepToggle > svg { flex-shrink: 0; transform: rotate(-90deg); }
+.stepToggle > svg.chevronOpen { transform: rotate(0); }
 .stepStatus { display: inline-block; margin-left: .75rem; font-size: .8rem; font-weight: 600; color: var(--color-text); }
 .stepDescription { display: block; margin-top: .4rem; color: var(--color-text-muted); font-size: .85rem; overflow-wrap: anywhere; }
 .stepBody { padding: .5rem 1rem; border: 1px solid var(--color-border); border-top: 0; border-radius: 0 0 10px 10px; }

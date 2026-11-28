@@ -332,7 +332,8 @@ $secondary-color: colors.$danger;
 .groupTrigger { cursor: pointer; font-family: inherit; min-width: 8rem; }
 .groupTitle { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; }
 .groupTrigger[aria-expanded="true"] { background: colors.$primary-soft; border-color: colors.$primary-border; }
-.groupTrigger[aria-expanded="true"] svg { transform: rotate(180deg); }
+.groupTrigger svg { transform: rotate(-90deg); }
+.groupTrigger[aria-expanded="true"] svg { transform: rotate(0); }
 .dropdown {
   position: absolute;
   top: calc(100% + 8px);

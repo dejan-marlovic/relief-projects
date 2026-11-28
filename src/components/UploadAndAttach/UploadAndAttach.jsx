@@ -4,7 +4,7 @@ import styles from './UploadAndAttach.module.scss';
 
 // Presentation only: upload permissions, validation and linking stay with callers.
 export default function UploadAndAttach({ title = 'Upload and attach', children }) {
-  return <details className={styles.panel}>
+  return <details className={styles.panel} data-custom-disclosure-icon="true">
     <summary><FiUploadCloud aria-hidden="true" /><span>{title}</span><FiChevronDown className={styles.chevron} aria-hidden="true" /></summary>
     <div className={styles.body}>{children}</div>
   </details>;

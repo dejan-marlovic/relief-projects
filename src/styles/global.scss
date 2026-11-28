@@ -426,3 +426,22 @@ details[data-record-disclosure="true"][open] > summary > .expanded-record-label 
   border-width: 1px;
   box-shadow: none;
 }
+// Shared disclosure cue: right when collapsed, down when expanded.
+:root details:not([data-custom-disclosure-icon]) > summary {
+  list-style: none;
+}
+:root details:not([data-custom-disclosure-icon]) > summary::-webkit-details-marker { display: none; }
+:root details:not([data-custom-disclosure-icon]) > summary::marker { content: ""; }
+:root details:not([data-custom-disclosure-icon]) > summary::before {
+  content: "";
+  display: inline-block;
+  flex: 0 0 auto;
+  width: .45em;
+  height: .45em;
+  margin-inline-end: .65em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  vertical-align: .1em;
+}
+:root details:not([data-custom-disclosure-icon])[open] > summary::before { transform: rotate(45deg); }
