@@ -1,6 +1,6 @@
 import ActionButton from "../components/ActionButton/ActionButton";
 import RecordIcon from "../components/RecordIcon/RecordIcon";
-import React, { useCallback, useContext, useEffect, useId, useMemo, useState } from "react";
+import React, { useCallback, useContext, useLayoutEffect, useId, useMemo, useState } from "react";
 import { OpenEditorState as OpenEditorContext } from "./OpenEditorState";
 import { revealEditor } from "../utils/revealEditor";
 import styles from "./OpenEditorContext.module.scss";
@@ -9,7 +9,7 @@ import styles from "./OpenEditorContext.module.scss";
 export function useOpenEditor(ref, open = true, label) {
   const { register } = useContext(OpenEditorContext);
   const id = useId();
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!open || !ref.current) return undefined;
     const element = ref.current;
     const name = label || element.getAttribute("aria-label") || element.querySelector("h2,h3,h4")?.textContent || "Record editor";

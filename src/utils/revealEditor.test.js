@@ -21,6 +21,7 @@ test("measures the newly mounted notice after layout and cancels stale reveals",
     flush();
     expect(form.style.scrollMarginTop).toBe("100px");
     expect(form.scrollIntoView).toHaveBeenCalledTimes(1);
+    expect(form.scrollIntoView).toHaveBeenCalledWith({ behavior: "auto", block: "start" });
     const cancel = revealEditor(form);
     flush(); cancel(); flush();
     expect(form.scrollIntoView).toHaveBeenCalledTimes(1);

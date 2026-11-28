@@ -18,7 +18,10 @@ export function revealEditor(element) {
       const notice = element.ownerDocument.querySelector("[data-open-editor-notice]");
       element.style.scrollMarginTop = `${Math.ceil(notice?.getBoundingClientRect().height || 0) + 16}px`;
       element.scrollIntoView?.({
-        behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth",
+        // Newly opened forms also insert notices and disabled-action hints.
+        // Avoid an animated scroll that browser anchoring can interrupt as
+        // those controls settle. Record navigation can still scroll smoothly.
+        behavior: element.matches("form") || window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth",
         block: "start",
       });
     });

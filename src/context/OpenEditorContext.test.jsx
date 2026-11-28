@@ -34,3 +34,20 @@ test("read-only details do not register as editors, and closing an inline editor
   rerender(view(false));
   expect(screen.queryByText("Editor open")).not.toBeInTheDocument();
 });
+
+
+test("first resolution opening measures the notice before scrolling", async () => {
+  const original = Element.prototype.scrollIntoView;
+  const scroll = jest.fn();
+  Element.prototype.scrollIntoView = scroll;
+  const rect = jest.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function () {
+    return { height: this.hasAttribute("data-open-editor-notice") ? 213 : 0 };
+  });
+  try {
+    render(<React.StrictMode><OpenEditorProvider><ScrollToForm scrollKey="resolve" aria-label="Record management resolution"><textarea aria-label="Reason" /></ScrollToForm></OpenEditorProvider></React.StrictMode>);
+    await waitFor(() => expect(scroll).toHaveBeenCalledTimes(1));
+    expect(screen.getByRole("form")).toHaveStyle({ scrollMarginTop: "229px" });
+    expect(scroll).toHaveBeenCalledWith({ behavior: "auto", block: "start" });
+    expect(screen.getByLabelText("Reason")).toHaveFocus();
+  } finally { rect.mockRestore(); Element.prototype.scrollIntoView = original; }
+});

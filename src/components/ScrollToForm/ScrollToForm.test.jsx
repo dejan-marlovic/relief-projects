@@ -37,7 +37,7 @@ test("focuses an available field once on opening, not on edits; scrolls again fo
     const view = action => <ScrollToForm scrollKey={action}><input disabled /><input aria-label="Title" defaultValue="Risk" /></ScrollToForm>;
     const { rerender } = render(view("edit"));
     expect(document.activeElement).toBe(screen.getByLabelText("Title"));
-    await waitFor(() => expect(scroll).toHaveBeenCalledWith({ behavior: "smooth", block: "start" }));
+    await waitFor(() => expect(scroll).toHaveBeenCalledWith({ behavior: "auto", block: "start" }));
     rerender(view("edit"));
     await waitFor(() => expect(scroll).toHaveBeenCalledTimes(1));
     rerender(view("close"));
