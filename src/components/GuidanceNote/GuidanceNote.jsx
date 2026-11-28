@@ -14,7 +14,7 @@ export default function GuidanceNote({ title = "Guidance", children, className =
     }
   }, [open]);
   const change = () => { restoreFocus.current = true; setOpen(value => !value); };
-  return <aside {...props} className={`${styles.note} ${className}`} aria-label={props['aria-label'] || title}>
+  return <aside {...props} data-guidance-open={open} className={`${styles.note} ${className}`} aria-label={props['aria-label'] || title}>
     <FiInfo className={styles.info} aria-hidden="true" />
     <div className={styles.content}>
       {open && <><strong>{title}</strong><div id={id} className={styles.text}>{children}</div></>}

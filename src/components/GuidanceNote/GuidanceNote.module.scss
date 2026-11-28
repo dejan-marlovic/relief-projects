@@ -15,6 +15,11 @@
   text-align: start;
   .info { color: var(--color-primary); flex-shrink: 0; margin-top: .2rem; }
   .content { flex: 1; min-width: 0; }
+  &[data-guidance-open="false"] {
+    align-items: center;
+    .info { margin-top: 0; }
+    .content { display: flex; align-items: center; }
+  }
   strong { color: var(--color-text-strong); font-size: .85rem; font-weight: 600; }
   .text { margin-top: .3rem; }
   .text > p { margin: 0; }
