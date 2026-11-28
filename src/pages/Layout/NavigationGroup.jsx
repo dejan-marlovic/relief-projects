@@ -32,8 +32,10 @@ export default function NavigationGroup({ label, items, isActive, open, onToggle
     if (event.key === "Escape" && open) { event.preventDefault(); onClose(); trigger.current?.focus(); }
   }}>
     <ActionButton ref={trigger} type="button" className={`${styles.tabLink} ${styles.groupTrigger} ${current ? styles.active : ""}`} aria-expanded={open} aria-controls={id} onClick={onToggle}>
-      <span className={styles.groupTitle}>{label}<FiChevronDown aria-hidden="true" /></span>
-      {current && <span className={styles.projectTabSubtitle}>{current[1]}</span>}
+      <span className={styles.groupTitle}>
+        <span>{label}{current && <span className={styles.projectTabSubtitle}>{current[1]}</span>}</span>
+        <FiChevronDown aria-hidden="true" />
+      </span>
     </ActionButton>
     {open && <ul id={id} className={styles.dropdown} aria-label={label}>{items.map(([path, name]) => <li key={path}><Link to={path} aria-current={isActive(path) ? "page" : undefined} onClick={event => {
       if (!isActive(path) && !confirmNavigation()) { event.preventDefault(); return; }

@@ -330,7 +330,7 @@ $secondary-color: colors.$danger;
 
 .groupItem { position: relative; }
 .groupTrigger { cursor: pointer; font-family: inherit; min-width: 8rem; }
-.groupTitle { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; }
+.groupTitle { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; text-align: left; }
 .groupTrigger[aria-expanded="true"] { background: colors.$primary-soft; border-color: colors.$primary-border; }
 .groupTrigger svg { transform: rotate(-90deg); }
 .groupTrigger[aria-expanded="true"] svg { transform: rotate(0); }
