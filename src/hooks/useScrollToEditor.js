@@ -12,6 +12,6 @@ export default function useScrollToEditor(open, forwardedRef, editorOpen = false
     if (typeof forwardedRef === "function") forwardedRef(node);
     else if (forwardedRef) forwardedRef.current = node;
   }, [forwardedRef]);
-  useEffect(() => { if (open) revealEditor(local.current); }, [open]);
+  useEffect(() => { if (open) return revealEditor(local.current); }, [open]);
   return ref;
 }

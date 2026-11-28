@@ -1,10 +1,20 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import ScrollToForm from "./ScrollToForm";
 
 afterEach(() => jest.restoreAllMocks());
 
-test("confirmed autosave does not scroll or steal focus when creation becomes editing", () => {
+test("first opening still scrolls after StrictMode effect cleanup", async () => {
+  const original = Element.prototype.scrollIntoView;
+  const scroll = jest.fn();
+  Element.prototype.scrollIntoView = scroll;
+  try {
+    render(<React.StrictMode><ScrollToForm scrollKey="response"><input aria-label="Response" /></ScrollToForm></React.StrictMode>);
+    await waitFor(() => expect(scroll).toHaveBeenCalledTimes(1));
+  } finally { Element.prototype.scrollIntoView = original; }
+});
+
+test("confirmed autosave does not scroll or steal focus when creation becomes editing", async () => {
   const original = Element.prototype.scrollIntoView;
   const scroll = jest.fn();
   Element.prototype.scrollIntoView = scroll;
@@ -19,7 +29,7 @@ test("confirmed autosave does not scroll or steal focus when creation becomes ed
   } finally { Element.prototype.scrollIntoView = original; }
 });
 
-test("focuses an available field once on opening, not on edits; scrolls again for another action", () => {
+test("focuses an available field once on opening, not on edits; scrolls again for another action", async () => {
   const original = Element.prototype.scrollIntoView;
   const scroll = jest.fn();
   Element.prototype.scrollIntoView = scroll;
@@ -27,15 +37,15 @@ test("focuses an available field once on opening, not on edits; scrolls again fo
     const view = action => <ScrollToForm scrollKey={action}><input disabled /><input aria-label="Title" defaultValue="Risk" /></ScrollToForm>;
     const { rerender } = render(view("edit"));
     expect(document.activeElement).toBe(screen.getByLabelText("Title"));
-    expect(scroll).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
+    await waitFor(() => expect(scroll).toHaveBeenCalledWith({ behavior: "smooth", block: "start" }));
     rerender(view("edit"));
-    expect(scroll).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(scroll).toHaveBeenCalledTimes(1));
     rerender(view("close"));
-    expect(scroll).toHaveBeenCalledTimes(2);
+    await waitFor(() => expect(scroll).toHaveBeenCalledTimes(2));
   } finally { Element.prototype.scrollIntoView = original; }
 });
 
-test("respects reduced motion and focuses the form when no fields are ready", () => {
+test("respects reduced motion and focuses the form when no fields are ready", async () => {
   const original = Element.prototype.scrollIntoView;
   const media = window.matchMedia;
   const scroll = jest.fn();
@@ -44,6 +54,6 @@ test("respects reduced motion and focuses the form when no fields are ready", ()
   try {
     render(<ScrollToForm aria-label="Loading editor"><p>Loading</p></ScrollToForm>);
     expect(document.activeElement).toBe(screen.getByRole("form", { name: "Loading editor" }));
-    expect(scroll).toHaveBeenCalledWith({ behavior: "auto", block: "start" });
+    await waitFor(() => expect(scroll).toHaveBeenCalledWith({ behavior: "auto", block: "start" }));
   } finally { Element.prototype.scrollIntoView = original; window.matchMedia = media; }
 });

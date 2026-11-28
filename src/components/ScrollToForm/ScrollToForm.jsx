@@ -20,12 +20,14 @@ export default function ScrollToForm({ scrollKey, children, autosave, ...props }
     return () => clearTimeout(timer);
   }, [dirty, autosave?.value, autosave?.blocked, saved]);
   const previousScrollKey = useRef({ initialized: false, key: undefined });
-  const confirmedAutosave = !!autosave?.saved;
+  const confirmedAutosave = useRef(false);
+  confirmedAutosave.current = !!autosave?.saved;
   useEffect(() => {
     const previous = previousScrollKey.current;
-    const savedCreation = previous.key === "create" && scrollKey === "edit" && confirmedAutosave;
-    if (!savedCreation && (!previous.initialized || previous.key !== scrollKey)) revealEditor(ref.current);
+    const savedCreation = previous.key === "create" && scrollKey === "edit" && confirmedAutosave.current;
+    const cancel = !savedCreation ? revealEditor(ref.current) : undefined;
     previousScrollKey.current = { initialized: true, key: scrollKey };
-  }, [scrollKey, confirmedAutosave]);
+    return cancel;
+  }, [scrollKey]);
   return <form ref={ref} tabIndex={-1} {...props}>{autosave && (autosave.busy || autosave.paused || dirty || !autosave.saved) && <p role="status">{autosave.busy ? "Saving changes…" : autosave.paused ? "Automatic saving paused. Review the message below." : dirty ? "Valid details save automatically after a short pause. Complete any required fields. Keep this page open until saved." : "Changes save automatically after a short pause. Saving does not submit or approve this record."}</p>}{children}</form>;
 }
