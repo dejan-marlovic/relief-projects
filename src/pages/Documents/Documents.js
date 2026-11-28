@@ -490,7 +490,7 @@ const Documents = () => {
                 {documents.map((doc) => (
                   <RecordCard as="li"  data-mobile-tile={doc.documentName} key={doc.id} className={styles.documentItem}>
                     <div className={styles.docInfo}><RecordListLabel type="document">Document</RecordListLabel>
-                      <span className={styles.docName}>{doc.documentName}</span>
+                      <span data-record-title="true" className={styles.docName}>{doc.documentName}</span>
                       <RecordMeta as="span">{statusLabel(doc.status)} · Version {doc.versionNumber || 1} · {doc.isCurrent === true ? "Current" : doc.isCurrent === false ? "Historical · read-only" : "Version state unknown"}</RecordMeta>
                       <RecordMeta as="span">
                         {categories.find((item) => item.id === doc.category)?.label || doc.category || "Uncategorized"} · Document date: {doc.documentDate || "Unknown"}

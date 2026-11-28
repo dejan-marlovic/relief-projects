@@ -445,3 +445,10 @@ details[data-record-disclosure="true"][open] > summary > .expanded-record-label 
   vertical-align: .1em;
 }
 :root details:not([data-custom-disclosure-icon])[open] > summary::before { transform: rotate(45deg); }
+
+// Give record names a consistent emphasis without bolding metadata or content.
+:root [data-record-card="true"] > :is(h2, h3, h4),
+:root [data-record-header="true"] :is(h2, h3, h4),
+:root [data-record-title="true"] {
+  font-weight: 700;
+}
