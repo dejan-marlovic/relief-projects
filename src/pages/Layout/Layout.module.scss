@@ -276,11 +276,11 @@ $secondary-color: colors.$danger;
 }
 
 .tabLink.active {
-  border-color: colors.$primary-border-strong;
+  border-color: colors.$primary-border;
   background: colors.$primary-soft;
   color: colors.$primary-dark;
   font-weight: 700;
-  box-shadow: inset 0 -2px 0 colors.$primary;
+  box-shadow: none;
 }
 
 /* Responsive */
@@ -331,7 +331,7 @@ $secondary-color: colors.$danger;
 .groupItem { position: relative; }
 .groupTrigger { cursor: pointer; font-family: inherit; min-width: 8rem; }
 .groupTitle { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; }
-.groupTrigger[aria-expanded="true"] { background: colors.$primary-soft; border-color: colors.$primary-border-strong; }
+.groupTrigger[aria-expanded="true"] { background: colors.$primary-soft; border-color: colors.$primary-border; }
 .groupTrigger[aria-expanded="true"] svg { transform: rotate(180deg); }
 .dropdown {
   position: absolute;
@@ -351,7 +351,7 @@ $secondary-color: colors.$danger;
   li { margin: 0; }
   a { display: block; padding: .8rem .9rem; border-radius: 8px; color: colors.$text-secondary; text-decoration: none; white-space: nowrap; }
   a:hover, a[aria-current="page"] { background: colors.$primary-soft; color: colors.$primary-dark; }
-  a[aria-current="page"] { font-weight: 700; box-shadow: inset 3px 0 0 colors.$primary; }
+  a[aria-current="page"] { font-weight: 700; }
   a:focus-visible { outline: 2px solid colors.$primary; outline-offset: -2px; }
 }
 
@@ -532,11 +532,11 @@ $secondary-color: colors.$danger;
   }
 
   .tabLink.active:not(.adminTab) {
-    background: colors.$primary;
-    color: colors.$text-on-primary;
-    border-color: colors.$primary;
-    box-shadow: colors.$shadow-small;
-    .projectTabSubtitle { color: inherit; }
+    background: colors.$primary-soft;
+    color: colors.$primary-dark;
+    border-color: colors.$primary-border;
+    box-shadow: none;
+    .projectTabSubtitle { color: colors.$text-muted; }
   }
 
   .groupTitle > svg {
