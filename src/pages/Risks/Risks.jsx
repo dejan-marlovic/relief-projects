@@ -1,3 +1,4 @@
+import RecordMeta from "../../components/RecordMeta/RecordMeta";
 import { ErrorState, LoadingState, EmptyState } from "../../components/ReadState/ReadState";
 import FilterPanel from "../../components/FilterPanel/FilterPanel";
 import RecordHeader from "../../components/RecordHeader/RecordHeader";
@@ -277,7 +278,7 @@ function Register({ projectId, authFetch }) {
       {!loading && !data.content.length && <EmptyState>No risks match these filters.</EmptyState>}
       <ul className={styles.list}>{data.content.map(risk => <RecordCard as="li" type="record" label={<> Risk </>}  data-mobile-tile={risk.title} key={risk.id}>
         <RecordHeader as="div" className={styles.heading}><h3>{risk.title}</h3><span>{buckets[risk.reviewBucket] || risk.reviewBucket}{risk.isDeleted ? " · Deleted" : ""}</span></RecordHeader>
-        <p>{risk.ownerName}{risk.ownerInactive ? " (inactive employee)" : ""} · Review {risk.reviewDate} · {risk.status === "CLOSED" ? "Closed" : "Open"}</p>
+        <RecordMeta>{risk.ownerName}{risk.ownerInactive ? " (inactive employee)" : ""} · Review {risk.reviewDate} · {risk.status === "CLOSED" ? "Closed" : "Open"}</RecordMeta>
         <p>Likelihood: {rating(risk.likelihood)} · Impact: {rating(risk.impact)}</p>
         <RecordExcerpt text={risk.description} /><RecordExcerpt text={risk.mitigationPlan} label="Mitigation" />
         <details><summary>Risk details and workflow</summary>

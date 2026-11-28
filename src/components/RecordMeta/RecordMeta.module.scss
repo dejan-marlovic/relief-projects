@@ -1,0 +1,16 @@
+:root [data-record-meta="true"].meta {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: .4rem 0 .65rem;
+  padding: .35rem .6rem;
+  border-radius: 6px;
+  background: var(--color-primary-a04);
+  color: var(--color-text-secondary);
+  font-size: .85rem;
+  font-weight: 400;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}

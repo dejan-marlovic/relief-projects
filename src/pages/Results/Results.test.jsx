@@ -168,7 +168,7 @@ test("first correction click opens and scrolls during focus refresh, but cannot 
     fireEvent.click(screen.getByText(/Correct report \#91 ·/));
     const form = screen.getByRole("form", { name: "Correct report" });
     expect(form).toBeInTheDocument();
-    expect(scroll.mock.instances).toContain(form);
+    await waitFor(() => expect(scroll.mock.instances).toContain(form));
     expect(screen.getByLabelText("Reason")).toHaveFocus();
     expect(screen.getByText("Save correct report")).toBeDisabled();
     expect(writes()).toHaveLength(0);

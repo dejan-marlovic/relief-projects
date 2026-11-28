@@ -1,3 +1,4 @@
+import RecordMeta from "../../components/RecordMeta/RecordMeta";
 import { ErrorState, LoadingState, EmptyState } from "../../components/ReadState/ReadState";
 import FilterPanel from "../../components/FilterPanel/FilterPanel";
 import RecordHeader from "../../components/RecordHeader/RecordHeader";
@@ -294,7 +295,7 @@ function Queue({ mode, projectId, authFetch, scopeControls }) {
           dragSource.current = task; setDragged(task); event.dataTransfer.effectAllowed = "move"; event.dataTransfer.setData("text/plain", String(task.id));
         }} onDragEnd={clearDrag}>⠿ {canDrag(task) ? "Drag to move" : "Follow-up"}</span>}
         <RecordHeader as="div" className={styles.heading}><h3><RecordIcon type="followUp" />{task.title}</h3><span className={styles.badge}>{workflowLabel(task)}</span><span className={styles.badge}>{buckets[task.dueBucket] || task.dueBucket}</span></RecordHeader>
-        <p className={styles.muted}>{task.projectName} · Due {task.dueDate} · {task.assignee?.displayName}{task.assignee?.isDeleted !== false ? " (inactive employee)" : ""}{task.isDeleted ? " · Deleted" : ""}</p>
+        <RecordMeta>{task.projectName} · Due {task.dueDate} · {task.assignee?.displayName}{task.assignee?.isDeleted !== false ? " (inactive employee)" : ""}{task.isDeleted ? " · Deleted" : ""}</RecordMeta>
         <RecordExcerpt text={task.description} />
         <RecordCardActions as="div" placement="section" className={styles.actions}>
           {canExportFollowUp(task) && <ActionButton disabled={busy || loading} onClick={() => { setError(""); setNotice(""); try { downloadFollowUpCalendar(task); setNotice("Calendar file downloaded. Import it into your calendar; later changes must be updated there manually."); } catch (err) { setError(err.message); } }}>Download calendar entry (.ics)</ActionButton>}

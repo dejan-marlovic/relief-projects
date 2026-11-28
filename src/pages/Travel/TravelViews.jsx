@@ -1,3 +1,4 @@
+import RecordMeta from "../../components/RecordMeta/RecordMeta";
 import { ErrorState, EmptyState } from "../../components/ReadState/ReadState";
 import AttachmentItem from "../../components/AttachmentItem/AttachmentItem";
 import GuidanceNote from "../../components/GuidanceNote/GuidanceNote";
@@ -17,8 +18,8 @@ export function TravelSummary({ record }) {
   const counts = record.linkedActionSummary;
   return <section className={styles.summary} aria-label="Travel state and linked work"><ReviewAttribution status={record?.state} submission={record.currentSubmission} approval={record.currentApproval} />
     <h4><span className={`${styles.statusBadge} ${styles[`status${record.state}`] || ""}`} aria-label={`Travel status: ${record.state}`}>{record.state}</span>{record.isDeleted ? " · Deleted request" : ""}</h4>
-    <p>{record.traveller?.displayName || `Employee #${record.travellerEmployeeId} · Name unavailable`} · {record.destination}</p>
-    <p>Planned: {record.departureDate} through {record.returnDate}</p>
+    <RecordMeta>{record.traveller?.displayName || `Employee #${record.travellerEmployeeId} · Name unavailable`} · {record.destination}</RecordMeta>
+    <RecordMeta>Planned: {record.departureDate} through {record.returnDate}</RecordMeta>
     {record.hasCurrentAuthorization && <p>Travel approval recorded. This does not confirm travel, booking, payment or completed tasks.</p>}
     {record.state === "RETURNED" && <p>Changes require resubmission and a new approval.</p>}
     {record.state === "CANCELLED" && <p>Cancelled — retained record. Restoration cannot reopen or approve it.</p>}
