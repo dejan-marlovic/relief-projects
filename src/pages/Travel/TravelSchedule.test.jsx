@@ -27,7 +27,7 @@ function mount(url = "/travel-schedule") {
 const calls = () => fetcher.mock.calls.filter(([url]) => /travel-schedule\?/.test(url));
 test("defaults are independent of selected project, retain full dates and distinguish deleted reports", async () => {
   mount(); await screen.findByText("Partner monitoring");
-  expect(calls()[0][0]).toContain("state=PLANNED&page=0&size=50");
+  expect(calls()[0][0]).toContain("state=ALL&page=0&size=50");
   expect(calls()[0][0]).not.toContain("projectId");
   expect(calls()[0][1].cache).toBe("no-store");
   expect(screen.getByText("Planned: 2026-09-01 through 2026-11-13")).toBeInTheDocument();

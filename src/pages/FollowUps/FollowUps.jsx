@@ -113,7 +113,7 @@ function TaskForm({ task, projectId, employees, busy, onSave, onCancel, blocked 
   </form>;
 }
 function Queue({ mode, projectId, authFetch, scopeControls }) {
-  const [filters, setFilters] = useState({ status: "OPEN", due: "", deleted: false, dueFrom: "", dueTo: "", assigneeEmployeeId: "" });
+  const [filters, setFilters] = useState({ status: "ALL", due: "", deleted: false, dueFrom: "", dueTo: "", assigneeEmployeeId: "" });
   const [view, setView] = useState(() => localStorage.getItem("follow-up-view") === "list" ? "list" : "board");
   const [dragged, setDragged] = useState(null);
   const [dropTarget, setDropTarget] = useState(null);
@@ -321,7 +321,7 @@ function Queue({ mode, projectId, authFetch, scopeControls }) {
 
     {form && <p className={styles.muted}>Close or save your draft to change filters.</p>}
     <div className={styles.filters}>
-      {!board && <><label>Status<select value={filters.status} disabled={filtersDisabled || board} onChange={(e) => changeFilter("status", e.target.value)}><option value="OPEN">Open</option><option value="COMPLETED">Completed</option><option value="ALL">All statuses</option></select></label>
+      {!board && <><label>Status<select value={filters.status} disabled={filtersDisabled || board} onChange={(e) => changeFilter("status", e.target.value)}><option value="ALL">All statuses</option><option value="OPEN">Open</option><option value="COMPLETED">Completed</option></select></label>
       <label>Deadline group<SearchableSelect value={filters.due} disabled={filtersDisabled || board || filters.status !== "OPEN" || filters.deleted} onChange={(e) => changeFilter("due", e.target.value)}><option value="">All deadlines</option>{Object.entries(buckets).slice(0, 4).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</SearchableSelect></label></>}
       <label>Due from<input type="date" value={filters.dueFrom} disabled={filtersDisabled} onChange={(e) => changeFilter("dueFrom", e.target.value)} /></label>
       <label>Due through<input type="date" value={filters.dueTo} disabled={filtersDisabled} onChange={(e) => changeFilter("dueTo", e.target.value)} /></label>

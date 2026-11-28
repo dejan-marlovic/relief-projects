@@ -15,9 +15,9 @@ import { ReadState } from "../Results/ResultViews";
 import { label, useTravelRead } from "./travelApi";
 import styles from "./Travel.module.scss";
 
-const states = ["PLANNED", "ALL", "DRAFT", "SUBMITTED", "APPROVED", "RETURNED", "CANCELLED"];
+const states = ["ALL", "PLANNED", "DRAFT", "SUBMITTED", "APPROVED", "RETURNED", "CANCELLED"];
 const fields = ["from", "to", "projectId", "travellerEmployeeId", "state"];
-const filtersFrom = params => Object.fromEntries(fields.map(key => [key, params.get(key) || (key === "state" ? "PLANNED" : "")]));
+const filtersFrom = params => Object.fromEntries(fields.map(key => [key, params.get(key) || (key === "state" ? "ALL" : "")]));
 export function scheduleQuery(filters, page = 0, travellers = false) {
   return new URLSearchParams({ ...Object.fromEntries(fields.filter(key => !(travellers && key === "travellerEmployeeId")).filter(key => filters[key]).map(key => [key, filters[key]])), page, size: 50 }).toString();
 }

@@ -54,6 +54,8 @@ async function save(label) {
 }
 test("create explains the open-record lock even without an editor", async () => {
   await open();
+  expect(screen.getByLabelText("Management state")).toHaveValue("ALL");
+  expect(fetcher.mock.calls.some(([url]) => url.includes("state=ALL"))).toBe(true);
   const create = screen.getByRole("button", { name: "Create finding or lesson" });
   expect(create).toBeDisabled();
   expect(create).toHaveAccessibleDescription("Close the open record before using this action.");

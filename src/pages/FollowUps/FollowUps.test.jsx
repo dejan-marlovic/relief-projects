@@ -86,6 +86,8 @@ test("stale action reloads without retry", async () => {
 });
 test("clears incompatible deadline filter when selecting completed or deleted", async () => {
   mount(); await screen.findByText("Prepare report");
+  expect(screen.getByLabelText("Status")).toHaveValue("ALL");
+  fireEvent.change(screen.getByLabelText("Status"), { target: { value: "OPEN" } });
   fireEvent.change(screen.getByLabelText("Deadline group"), { target: { value: "OVERDUE" } });
   await waitFor(() => expect(fetch.mock.calls.some(([url]) => url.includes("due=OVERDUE"))).toBe(true));
   fireEvent.change(screen.getByLabelText("Status"), { target: { value: "COMPLETED" } });

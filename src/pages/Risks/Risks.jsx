@@ -117,7 +117,7 @@ function Editor({ editor, employees, busy, blocked, onDraft, onSave, onCancel, l
 }
 function Register({ projectId, authFetch }) {
   const endpoint = `${BASE_URL}/api/projects/${projectId}/risks`;
-  const [filters, setFilters] = useState({ status: "OPEN", deleted: false, overdue: false, ownerEmployeeId: "", likelihood: "", impact: "", reviewFrom: "", reviewTo: "" });
+  const [filters, setFilters] = useState({ status: "ALL", deleted: false, overdue: false, ownerEmployeeId: "", likelihood: "", impact: "", reviewFrom: "", reviewTo: "" });
   const [page, setPage] = useState(0);
   const [attempt, setAttempt] = useState(0);
   const [data, setData] = useState(null);
@@ -247,7 +247,7 @@ function Register({ projectId, authFetch }) {
   return <>
     <div data-action-group="section" className={styles.actions}>{(error || employeeError || blocked) && <ActionButton className={styles.secondaryAction} disabled={busy || loading} onClick={() => setAttempt(v => v + 1)}>Retry register</ActionButton>}{data?.canCreate && <ActionButton editorBlocked={Boolean(editor)} className={styles.primaryAction} disabled={locked || loading} onClick={() => openEditor(null, "save")}>New risk</ActionButton>}</div>
     <FilterPanel as="div" title="Filter risks" guidance={<>Narrow risks by status, owner, likelihood, impact or review date range. Overdue reviews only limits the list to overdue reviews; Deleted risks only shows retained deleted records. Filtering does not reassign owners or change risk ratings.</>} className={styles.filters}>
-      <label>Status<select value={filters.status} disabled={locked} onChange={e => changeFilter("status", e.target.value)}><option value="OPEN">Open</option><option value="CLOSED">Closed</option><option value="ALL">All statuses</option></select></label>
+      <label>Status<select value={filters.status} disabled={locked} onChange={e => changeFilter("status", e.target.value)}><option value="ALL">All statuses</option><option value="OPEN">Open</option><option value="CLOSED">Closed</option></select></label>
       <label>Owner filter<SearchableSelect value={filters.ownerEmployeeId} disabled={locked} onChange={e => changeFilter("ownerEmployeeId", e.target.value)}><option value="">All owners</option>
         {employees.map(person => <option key={person.id} value={person.id}>{employeeName(person)}</option>)}
         {data?.content.filter((risk, index, rows) => !employees.some(person => String(person.id) === String(risk.ownerEmployeeId)) && rows.findIndex(other => other.ownerEmployeeId === risk.ownerEmployeeId) === index).map(risk => <option key={risk.ownerEmployeeId} value={risk.ownerEmployeeId}>{risk.ownerName} (retained owner)</option>)}

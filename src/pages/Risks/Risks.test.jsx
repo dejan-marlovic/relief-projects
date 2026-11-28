@@ -109,6 +109,8 @@ test("history displays immutable before/after snapshots and attribution", async 
 });
 test("filters are project scoped and incompatible overdue filtering is cleared", async () => {
   mount(); await screen.findByText("Delivery delay");
+  expect(screen.getByLabelText("Status")).toHaveValue("ALL");
+  fireEvent.change(screen.getByLabelText("Status"), { target: { value: "OPEN" } });
   fireEvent.click(screen.getByLabelText("Overdue reviews only"));
   await waitFor(() => expect(fetch.mock.calls.some(([url]) => url.includes("overdue=true"))).toBe(true));
   fireEvent.change(screen.getByLabelText("Status"), { target: { value: "CLOSED" } });
